@@ -5,8 +5,7 @@ export type InferPayload<P extends Payload> =
   P['encoding'] extends infer E extends string
     ? {
         encoding: SchemaEncodingToDataEncoding<E>
-        body: InferPayloadData<P>
-        data vs body
+        body: InferPayloadBody<P>
       }
     : undefined
 
@@ -21,16 +20,16 @@ export type InferPayloadEncoding<P extends Payload> =
     ? SchemaEncodingToDataEncoding<P['encoding']>
     : undefined
 
-export type InferPayloadData<P extends Payload> =
+export type InferPayloadBody<P extends Payload> =
   P['encoding'] extends undefined
-    ? undefined
-    : P['encoding'] extends `*/*`
-      ? Uint8Array // encoding/decoding is disabled
-      : P['schema'] extends Schema
-        ? Infer<P['schema']>
-        : P['encoding'] extends `text/${string}`
-          ? string
-          : LexValue
+    ? undefined // No encoding, no payload
+    : P['schema'] extends Schema
+      ? Infer<P['schema']>
+      : P['encoding'] extends `text/${string}`
+        ? string
+        : P['encoding'] extends `application/json`
+          ? LexValue
+          : Uint8Array
 
 export type PayloadSchema<E extends string | undefined> = E extends undefined
   ? undefined

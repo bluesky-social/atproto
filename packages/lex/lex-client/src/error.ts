@@ -126,7 +126,7 @@ export class XrpcResponseError<
     public readonly payload: Payload<B>,
     options?: ErrorOptions,
   ) {
-    super(payload.data.error, payload.data.message, options)
+    super(payload.body.error, payload.body.message, options)
   }
 }
 

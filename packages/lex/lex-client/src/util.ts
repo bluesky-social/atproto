@@ -1,11 +1,7 @@
-import { LexValue } from '@atproto/lex-data'
 import { DidString } from '@atproto/lex-schema'
 
-export type Payload<
-  D extends LexValue = LexValue,
-  E extends string = string,
-> = {
-  data: D
+export type Payload<B = unknown, E extends string = string> = {
+  body: B
   encoding: E
 }
 

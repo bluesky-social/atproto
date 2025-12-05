@@ -1,6 +1,6 @@
 import {
   InferPayload,
-  InferPayloadData,
+  InferPayloadBody,
   InferPayloadEncoding,
   Procedure,
   Query,
@@ -16,8 +16,8 @@ export type InferMethodInput<M extends Method> = M extends Procedure
   ? InferPayload<M['input']>
   : never
 
-export type InferMethodInputData<M extends Method> = M extends Procedure
-  ? InferPayloadData<M['input']>
+export type InferMethodInputBody<M extends Method> = M extends Procedure
+  ? InferPayloadBody<M['input']>
   : never
 
 export type InferMethodInputEncoding<M extends Method> = M extends Procedure
@@ -28,10 +28,10 @@ export type InferMethodOutput<M extends Method> = M extends Procedure | Query
   ? InferPayload<M['output']>
   : never
 
-export type InferMethodOutputData<M extends Method> = M extends
+export type InferMethodOutputBody<M extends Method> = M extends
   | Procedure
   | Query
-  ? InferPayloadData<M['output']>
+  ? InferPayloadBody<M['output']>
   : never
 
 export type InferMethodOutputEncoding<M extends Method> = M extends

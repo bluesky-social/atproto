@@ -16,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         // Always allowed. "email" access is checked in the handler.
       },
     }),
-    handler: async ({ auth, req, input, params }) => {
+    handler: async ({ auth, req }) => {
       if (ctx.entrywayClient) {
         const { headers } = await ctx.entrywayAuthHeaders(
           req,
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
 
         return {
           encoding: 'application/json',
-          data: output(auth, data),
+          body: output(auth, data),
         }
       }
 

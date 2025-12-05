@@ -1,10 +1,11 @@
 import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
 import {
-  InferMethodInputData,
+  InferMethodInputBody,
   InferMethodParams,
   Params,
   ParamsSchema,
+  Payload as LexPayload,
   Procedure,
   Query,
   Restricted,
@@ -14,7 +15,7 @@ import { Agent } from './agent.js'
 import { KnownError, XrpcError } from './error.js'
 import { XrpcResponse } from './response.js'
 import { BinaryData, CallOptions, Namespace, getMain } from './types.js'
-import { buildAtprotoHeaders, isBlobLike } from './util.js'
+import { Payload, buildAtprotoHeaders, isBlobLike } from './util.js'
 
 // If all params are optional, allow omitting the params object
 type XrpcParamsOptions<P extends Params> =
@@ -32,7 +33,7 @@ type XrpcBodyOptions<B> = never extends B
 
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   CallOptions &
-    XrpcBodyOptions<ToBodyInit<InferMethodInputData<M>>> &
+    XrpcBodyOptions<ToBodyInit<InferMethodInputBody<M>>> &
     XrpcParamsOptions<InferMethodParams<M>>
 
 export async function xrpc<const M extends Query | Procedure>(
@@ -94,8 +95,8 @@ function xrpcRequestInit<T extends Procedure | Query>(
     const input = xrpcProcedureInput(schema, options)
 
     // @NOTE Caller can override content-type header by setting it explicitly
-    if (input?.type !== undefined && !headers.has('content-type')) {
-      headers.set('content-type', input.type)
+    if (input?.encoding !== undefined && !headers.has('content-type')) {
+      headers.set('content-type', input.encoding)
     }
 
     return {
@@ -123,9 +124,9 @@ function xrpcRequestInit<T extends Procedure | Query>(
 }
 
 function xrpcProcedureInput(
-  schema: Procedure,
+  schema: { input: LexPayload },
   options: CallOptions & { body?: LexValue | BinaryData },
-): null | { body: BodyInit; type: string } {
+): null | Payload<BodyInit> {
   const { body } = options
   const { encoding } = schema.input
 
@@ -153,14 +154,13 @@ function xrpcProcedureInput(
     // @NOTE Not using isLexValue because we don't need to deep-check here (pref)
     // @NOTE Not using !isBodyInit because strings and Uint8Arrays are allowed
     if (isLexScalar(body) || isPlainObject(body) || Array.isArray(body)) {
-      const type = 'application/json; charset=utf-8'
       return {
+        encoding: 'application/json; charset=utf-8',
         body: lexStringify(
           options.validateRequest && schema.input.schema
             ? schema.input.schema.parse(body)
             : body,
         ),
-        type,
       }
     }
   } else if (encoding === '*/*' || encoding === 'application/octet-stream') {
@@ -169,22 +169,30 @@ function xrpcProcedureInput(
       body instanceof ArrayBuffer ||
       body instanceof ReadableStream
     ) {
-      const type = encoding === '*/*' ? 'application/octet-stream' : encoding
-      return { body, type }
+      return {
+        encoding: encoding === '*/*' ? 'application/octet-stream' : encoding,
+        body,
+      }
     }
 
     if (isBlobLike(body)) {
-      const type =
-        encoding === '*/*' ? body.type || 'application/octet-stream' : encoding
-      return { body, type }
+      return {
+        encoding:
+          encoding === '*/*'
+            ? body.type || 'application/octet-stream'
+            : encoding,
+        body,
+      }
     }
 
     if (typeof body === 'string') {
-      const type =
-        encoding === '*/*'
-          ? 'text/plain; charset=utf-8'
-          : 'application/octet-stream'
-      return { body, type }
+      return {
+        encoding:
+          encoding === '*/*'
+            ? 'text/plain; charset=utf-8'
+            : 'application/octet-stream',
+        body,
+      }
     }
   } else {
     throw new TypeError(`Unsupported encoding: ${encoding}`)

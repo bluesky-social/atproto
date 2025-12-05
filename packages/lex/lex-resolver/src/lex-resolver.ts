@@ -178,8 +178,8 @@ export class LexResolver {
       headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
       params: { did, collection, rkey },
     }).then(
-      ({ data }) => {
-        return verifyRecordProof(data, did, key, collection, rkey).catch(
+      ({ body }) => {
+        return verifyRecordProof(body, did, key, collection, rkey).catch(
           (cause) => {
             throw new LexResolverError(
               nsid,

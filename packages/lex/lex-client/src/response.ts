@@ -1,6 +1,6 @@
 import { lexParse } from '@atproto/lex-json'
 import {
-  InferMethodOutputData,
+  InferMethodOutputBody,
   InferMethodOutputEncoding,
   Procedure,
   Query,
@@ -17,7 +17,7 @@ import { Payload } from './util.js'
 
 export type XrpcResponsePayload<M extends Procedure | Query> =
   InferMethodOutputEncoding<M> extends infer E extends string
-    ? Payload<NonNullable<InferMethodOutputData<M>>, E>
+    ? Payload<NonNullable<InferMethodOutputBody<M>>, E>
     : null
 
 /**
@@ -55,8 +55,8 @@ export class XrpcResponse<const M extends Procedure | Query>
     return this.payload?.encoding as InferMethodOutputEncoding<M>
   }
 
-  get data() {
-    return this.payload?.data as InferMethodOutputData<M>
+  get body() {
+    return this.payload?.body as InferMethodOutputBody<M>
   }
 
   static async createFromResponse<const M extends Procedure | Query>(
@@ -93,7 +93,7 @@ export class XrpcResponse<const M extends Procedure | Query>
       if (
         payload !== null &&
         payload.encoding === 'application/json' &&
-        xrpcErrorBodySchema.matches(payload.data)
+        xrpcErrorBodySchema.matches(payload.body)
       ) {
         throw new XrpcResponseError(
           response.status,
@@ -143,7 +143,7 @@ export class XrpcResponse<const M extends Procedure | Query>
 
       // Assert valid response body.
       if (schema.output.schema && options?.validateResponse !== false) {
-        const result = schema.output.schema.safeParse(payload.data, {
+        const result = schema.output.schema.safeParse(payload.body, {
           allowTransform: false,
         })
 
@@ -188,7 +188,7 @@ async function readPayload(
     if (body.byteLength === 0) return null
 
     // If we got data despite no content-type, treat it as binary
-    return { encoding: 'application/octet-stream', data: new Uint8Array(body) }
+    return { encoding: 'application/octet-stream', body: new Uint8Array(body) }
   }
 
   if (!options.asBinaryData) {
@@ -198,15 +198,15 @@ async function readPayload(
       // JSON then converting to Lex (?)
 
       // @TODO verify statement above
-      return { encoding, data: lexParse(await response.text()) }
+      return { encoding, body: lexParse(await response.text()) }
     }
 
     if (encoding.startsWith('text/')) {
-      return { encoding, data: await response.text() }
+      return { encoding, body: await response.text() }
     }
   }
 
-  return { encoding, data: new Uint8Array(await response.arrayBuffer()) }
+  return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
 }
 
 function encodingMatches(

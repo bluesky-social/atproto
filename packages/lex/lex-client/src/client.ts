@@ -3,7 +3,7 @@ import {
   AtIdentifierString,
   DidString,
   Infer,
-  InferMethodOutputData,
+  InferMethodOutputBody,
   InferProcedureInputBody,
   InferProcedureOutputBody,
   InferQueryOutputBody,
@@ -92,30 +92,30 @@ export type RecordKeyOptions<
 
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
   RecordKeyOptions<T, 'tid'>
-export type CreateOutput = InferMethodOutputData<
+export type CreateOutput = InferMethodOutputBody<
   typeof com.atproto.repo.createRecord.main
 >
 
 export type DeleteOptions<T extends RecordSchema> = DeleteRecordOptions &
   RecordKeyOptions<T>
-export type DeleteOutput = InferMethodOutputData<
+export type DeleteOutput = InferMethodOutputBody<
   typeof com.atproto.repo.deleteRecord.main
 >
 export type GetOptions<T extends RecordSchema> = GetRecordOptions &
   RecordKeyOptions<T>
 export type GetOutput<T extends RecordSchema> = Omit<
-  InferMethodOutputData<typeof com.atproto.repo.getRecord.main>,
+  InferMethodOutputBody<typeof com.atproto.repo.getRecord.main>,
   'value'
 > & { value: Infer<T> }
 
 export type PutOptions<T extends RecordSchema> = PutRecordOptions &
   RecordKeyOptions<T>
-export type PutOutput = InferMethodOutputData<
+export type PutOutput = InferMethodOutputBody<
   typeof com.atproto.repo.putRecord.main
 >
 
 export type ListOptions = ListRecordsOptions
-export type ListOutput<T extends RecordSchema> = InferMethodOutputData<
+export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
   typeof com.atproto.repo.listRecords.main
 > & {
   records: ListRecord<T>[]
@@ -376,13 +376,13 @@ export class Client implements Agent {
     }
 
     if (method instanceof Procedure) {
-      const body = arg as LexValue | undefined
+      const body = arg as BinaryData | undefined
       const result = await this.xrpc(method, { ...options, body })
-      return result.data
+      return result.body
     } else if (method instanceof Query) {
       const params = arg as Params | undefined
       const result = await this.xrpc(method, { ...options, params })
-      return result.data
+      return result.body
     } else {
       throw new TypeError('Invalid lexicon')
     }
@@ -410,7 +410,7 @@ export class Client implements Agent {
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
-    return response.data
+    return response.body
   }
 
   public async delete<const T extends RecordSchema>(
@@ -431,7 +431,7 @@ export class Client implements Agent {
       options.rkey ?? getLiteralRecordKey(schema),
     )
     const response = await this.deleteRecord(schema.$type, rkey, options)
-    return response.data
+    return response.body
   }
 
   public async get<const T extends RecordSchema>(
@@ -452,8 +452,8 @@ export class Client implements Agent {
       options.rkey ?? getLiteralRecordKey(schema),
     )
     const response = await this.getRecord(schema.$type, rkey, options)
-    const value = schema.parse(response.data.value) as Infer<T>
-    return { ...response.data, value }
+    const value = schema.parse(response.body.value) as Infer<T>
+    return { ...response.body, value }
   }
 
   public async put<const T extends RecordSchema>(
@@ -477,7 +477,7 @@ export class Client implements Agent {
     if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
-    return response.data
+    return response.body
   }
 
   async list<const T extends RecordSchema>(
@@ -485,7 +485,7 @@ export class Client implements Agent {
     options?: ListOptions,
   ): Promise<ListOutput<T>> {
     const schema = getMain(ns)
-    const { data: body } = await this.listRecords(schema.$type, options)
+    const { body } = await this.listRecords(schema.$type, options)
 
     const records: ListRecord<T>[] = []
     const invalid: LexMap[] = []
@@ -507,7 +507,7 @@ export class Client implements Agent {
       ...options,
       body,
     })
-    return response.data.blob
+    return response.body.blob
   }
 }
 

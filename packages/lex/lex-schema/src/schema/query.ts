@@ -1,10 +1,10 @@
 import { NsidString } from '../core.js'
 import { Infer } from '../validation.js'
 import { ParamsSchema } from './params.js'
-import { InferPayloadData, Payload } from './payload.js'
+import { InferPayloadBody, Payload } from './payload.js'
 
 export type InferQueryParameters<Q extends Query> = Infer<Q['parameters']>
-export type InferQueryOutputBody<Q extends Query> = InferPayloadData<
+export type InferQueryOutputBody<Q extends Query> = InferPayloadBody<
   Q['output']
 >
 
