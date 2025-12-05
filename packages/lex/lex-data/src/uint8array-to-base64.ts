@@ -3,10 +3,8 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 
 const Buffer = NodeJSBuffer
 
-export type ToBase64Options = {
-  /** @default 'base64' */
-  alphabet?: 'base64' | 'base64url'
-}
+/** @default 'base64' */
+export type Alphabet = 'base64' | 'base64url'
 
 declare global {
   interface Uint8Array {
@@ -25,22 +23,19 @@ export const toBase64Native =
   typeof Uint8Array.prototype.toBase64 === 'function'
     ? function toBase64Native(
         bytes: Uint8Array,
-        options?: ToBase64Options,
+        alphabet: Alphabet = 'base64',
       ): string {
-        return bytes.toBase64!({
-          alphabet: options?.alphabet ?? 'base64',
-          omitPadding: true,
-        })
+        return bytes.toBase64!({ alphabet, omitPadding: true })
       }
     : null
 
 export const toBase64Node = Buffer
   ? function toBase64Node(
       bytes: Uint8Array,
-      options?: ToBase64Options,
+      alphabet: Alphabet = 'base64',
     ): string {
       const buffer = bytes instanceof Buffer ? bytes : Buffer.from(bytes)
-      const b64 = buffer.toString(options?.alphabet ?? 'base64')
+      const b64 = buffer.toString(alphabet)
 
       // @NOTE We strip padding for strict compatibility with
       // uint8arrays.toString behavior. Tests failing because of the presence of
@@ -56,7 +51,7 @@ export const toBase64Node = Buffer
 
 export function toBase64Ponyfill(
   bytes: Uint8Array,
-  options?: ToBase64Options,
+  alphabet: Alphabet = 'base64',
 ): string {
-  return toString(bytes, options?.alphabet ?? 'base64')
+  return toString(bytes, alphabet)
 }

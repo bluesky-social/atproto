@@ -75,7 +75,7 @@ for (const fromBase64 of [
         })
 
         it(`decodes ${JSON.stringify(base64url)} (base64url)`, () => {
-          const decoded = fromBase64(base64url, { alphabet: 'base64url' })
+          const decoded = fromBase64(base64url, 'base64url')
           expect(decoded).toBeInstanceOf(Uint8Array)
           expect(ui8Equals(decoded, buffer)).toBe(true)
         })

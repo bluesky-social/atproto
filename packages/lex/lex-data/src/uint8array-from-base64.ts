@@ -3,10 +3,8 @@ import { NodeJSBuffer } from './lib/nodejs-buffer.js'
 
 const Buffer = NodeJSBuffer
 
-export type FromBase64Options = {
-  /** @default 'base64' */
-  alphabet?: 'base64' | 'base64url'
-}
+/** @default 'base64' */
+export type Alphabet = 'base64' | 'base64url'
 
 declare global {
   interface Uint8ArrayConstructor {
@@ -28,10 +26,10 @@ export const fromBase64Native =
   typeof Uint8Array.fromBase64 === 'function'
     ? function fromBase64Native(
         b64: string,
-        options?: FromBase64Options,
+        alphabet: Alphabet = 'base64',
       ): Uint8Array {
         return Uint8Array.fromBase64!(b64, {
-          alphabet: options?.alphabet ?? 'base64',
+          alphabet,
           lastChunkHandling: 'loose',
         })
       }
@@ -40,9 +38,9 @@ export const fromBase64Native =
 export const fromBase64Node = Buffer
   ? function fromBase64Node(
       b64: string,
-      options?: FromBase64Options,
+      alphabet: Alphabet = 'base64',
     ): Uint8Array {
-      const bytes = Buffer.from(b64, options?.alphabet ?? 'base64')
+      const bytes = Buffer.from(b64, alphabet)
       verifyBase64ForBytes(b64, bytes)
       // Convert to Uint8Array because even though Buffer is a sub class of
       // Uint8Array, it serializes differently to Uint8Array (e.g. in JSON) and
@@ -53,9 +51,8 @@ export const fromBase64Node = Buffer
 
 export function fromBase64Ponyfill(
   b64: string,
-  options?: FromBase64Options,
+  alphabet: Alphabet = 'base64',
 ): Uint8Array {
-  const alphabet = options?.alphabet ?? 'base64'
   const bytes = fromString(b64, b64.endsWith('=') ? `${alphabet}pad` : alphabet)
   verifyBase64ForBytes(b64, bytes)
   return bytes

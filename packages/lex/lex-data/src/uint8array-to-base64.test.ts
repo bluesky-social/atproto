@@ -82,7 +82,7 @@ for (const toBase64 of [
         const expected = buffer.toString('base64url')
 
         it(`encodes ${JSON.stringify(string)} as ${JSON.stringify(expected)}`, () => {
-          const encoded = toBase64(buffer, { alphabet: 'base64url' })
+          const encoded = toBase64(buffer, 'base64url')
           expect(encoded).toBe(expected)
         })
       }
@@ -104,7 +104,7 @@ for (const toBase64 of [
       it('uses - and _ for base64url alphabet', () => {
         // Same bytes should use - and _ in base64url
         const bytes = new Uint8Array([0xfb, 0xff, 0xbf])
-        const encoded = toBase64(bytes, { alphabet: 'base64url' })
+        const encoded = toBase64(bytes, 'base64url')
         expect(encoded).toContain('-')
         expect(encoded).toContain('_')
         expect(encoded).not.toContain('+')
