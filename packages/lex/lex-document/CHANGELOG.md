@@ -1,5 +1,14 @@
 # @atproto/lex-document
 
+## 0.0.5
+
+### Patch Changes
+
+- [#4416](https://github.com/bluesky-social/atproto/pull/4416) [`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Align lexicon document validation with the spec
+
+- Updated dependencies []:
+  - @atproto/lex-schema@0.0.4
+
 ## 0.0.4
 
 ### Patch Changes

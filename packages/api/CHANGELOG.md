@@ -1,5 +1,18 @@
 # @atproto/api
 
+## 0.18.5
+
+### Patch Changes
+
+- [#4418](https://github.com/bluesky-social/atproto/pull/4418) [`308f432`](https://github.com/bluesky-social/atproto/commit/308f432f7aef196b4df0a6dc7c5367ab5a8b8964) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Expand return type of relationships in app.bsky.graph.getRelationships
+
+- [#4423](https://github.com/bluesky-social/atproto/pull/4423) [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763) Thanks [@foysalit](https://github.com/foysalit)! - Add min length for required comment fields in ozone events
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab), [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/lexicon@0.6.0
+  - @atproto/common-web@0.4.7
+  - @atproto/xrpc@0.7.7
+
 ## 0.18.4
 
 ### Patch Changes

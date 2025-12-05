@@ -1,5 +1,11 @@
 # @atproto/lex-data
 
+## 0.0.3
+
+### Patch Changes
+
+- [#4422](https://github.com/bluesky-social/atproto/pull/4422) [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for base64url encoding/decoding
+
 ## 0.0.2
 
 ### Patch Changes

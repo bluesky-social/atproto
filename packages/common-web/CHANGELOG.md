@@ -1,5 +1,15 @@
 # @atproto/common-web
 
+## 0.4.7
+
+### Patch Changes
+
+- [#4422](https://github.com/bluesky-social/atproto/pull/4422) [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Restore `utf8ToB64Url` and `b64UrlToUtf8` utilities
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/lex-data@0.0.3
+  - @atproto/lex-json@0.0.3
+
 ## 0.4.6
 
 ### Patch Changes
