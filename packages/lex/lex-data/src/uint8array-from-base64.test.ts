@@ -59,16 +59,32 @@ for (const fromBase64 of [
         const buffer = Buffer.from(string, 'utf8')
         const base64 = buffer.toString('base64')
         const base64Unpadded = base64.replace(/=+$/, '')
+        const base64url = buffer.toString('base64url')
+        const base64urlUnpadded = base64url.replace(/=+$/, '')
 
-        it(`decodes ${JSON.stringify(string)}`, () => {
+        it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64)}`, () => {
           const decoded = fromBase64(base64)
           expect(decoded).toBeInstanceOf(Uint8Array)
           expect(ui8Equals(decoded, buffer)).toBe(true)
         })
 
+        it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64url)}`, () => {
+          const decoded = fromBase64(base64url, { alphabet: 'base64url' })
+          expect(decoded).toBeInstanceOf(Uint8Array)
+          expect(ui8Equals(decoded, buffer)).toBe(true)
+        })
+
         if (base64 !== base64Unpadded) {
-          it(`decodes ${JSON.stringify(string)} (unpadded)`, () => {
+          it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64Unpadded)}`, () => {
             const decoded = fromBase64(base64Unpadded)
+            expect(decoded).toBeInstanceOf(Uint8Array)
+            expect(ui8Equals(decoded, buffer)).toBe(true)
+          })
+
+          it(`decodes ${JSON.stringify(string)} from ${JSON.stringify(base64urlUnpadded)}`, () => {
+            const decoded = fromBase64(base64urlUnpadded, {
+              alphabet: 'base64url',
+            })
             expect(decoded).toBeInstanceOf(Uint8Array)
             expect(ui8Equals(decoded, buffer)).toBe(true)
           })
