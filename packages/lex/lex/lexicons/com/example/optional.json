@@ -1,0 +1,23 @@
+{
+  "lexicon": 1,
+  "id": "com.example.optional",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "ref",
+            "ref": "com.example.kitchenSink#object"
+          },
+          "array": { "type": "array", "items": { "type": "string" } },
+          "boolean": { "type": "boolean" },
+          "integer": { "type": "integer" },
+          "string": { "type": "string" }
+        }
+      }
+    }
+  }
+}

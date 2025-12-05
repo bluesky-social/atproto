@@ -258,6 +258,15 @@ export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
       'account_record_status_stats.processedCount',
       'account_record_status_stats.takendownCount',
     ])
+    .leftJoin('account_strike', (join) =>
+      join.onRef('moderation_subject_status.did', '=', 'account_strike.did'),
+    )
+    .select([
+      'account_strike.activeStrikeCount as strikeCount',
+      'account_strike.totalStrikeCount',
+      'account_strike.firstStrikeAt',
+      'account_strike.lastStrikeAt',
+    ])
 }
 
 // Based on a given moderation action event, this function will update the moderation status of the subject

@@ -43,6 +43,8 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
     | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
     | $Typed<ToolsOzoneModerationDefs.RevokeAccountCredentialsEvent>
+    | $Typed<ToolsOzoneModerationDefs.ScheduleTakedownEvent>
+    | $Typed<ToolsOzoneModerationDefs.CancelScheduledTakedownEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>

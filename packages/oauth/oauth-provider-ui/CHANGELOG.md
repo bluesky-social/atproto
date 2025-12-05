@@ -1,5 +1,23 @@
 # @atproto/oauth-provider-ui
 
+## 0.3.6
+
+### Patch Changes
+
+- [#4382](https://github.com/bluesky-social/atproto/pull/4382) [`be8e6c1`](https://github.com/bluesky-social/atproto/commit/be8e6c1f25814202b98e2616a217599a6c46e0db) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `toScopes()` utility on `IncludeScope`
+
+## 0.3.5
+
+## 0.3.4
+
+### Patch Changes
+
+- [#4301](https://github.com/bluesky-social/atproto/pull/4301) [`f496fa2c4`](https://github.com/bluesky-social/atproto/commit/f496fa2c4d9316229523454c691c75c269aba21e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Set dark background on authorization page's `<body>` in dark mode
+
+## 0.3.3
+
+## 0.3.2
+
 ## 0.3.1
 
 ### Patch Changes

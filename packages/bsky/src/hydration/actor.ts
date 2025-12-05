@@ -38,6 +38,15 @@ export type Actor = {
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
+  /**
+   * Debug information for internal development
+   */
+  debug?: {
+    pagerank?: number
+    accountTags?: string[]
+    profileTags?: string[]
+    [key: string]: unknown
+  }
 }
 
 export type VerificationHydrationState = {
@@ -170,7 +179,7 @@ export class ActorHydrator {
         return acc.set(did, null)
       }
 
-      const profile = actor.profile
+      const profile = actor.profile?.record
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
@@ -213,6 +222,12 @@ export class ActorHydrator {
         }
       }
 
+      const debug = {
+        pagerank: actor.pagerank,
+        accountTags: actor.tags,
+        profileTags: actor.profileTags,
+      }
+
       return acc.set(did, {
         did,
         handle: parseString(actor.handle),
@@ -233,6 +248,7 @@ export class ActorHydrator {
         allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
           actor.allowActivitySubscriptionsFrom,
         ),
+        debug,
       })
     }, new HydrationMap<Actor>())
   }

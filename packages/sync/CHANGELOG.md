@@ -1,5 +1,29 @@
 # @atproto/sync
 
+## 0.1.38
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/xrpc-server@0.10.0
+  - @atproto/common@0.5.0
+  - @atproto/identity@0.4.10
+  - @atproto/lexicon@0.5.2
+  - @atproto/repo@0.8.11
+
+## 0.1.37
+
+### Patch Changes
+
+- Updated dependencies [[`1dd20d3a8`](https://github.com/bluesky-social/atproto/commit/1dd20d3a81cda29392d8d63d13082254ec5f68a8)]:
+  - @atproto/xrpc-server@0.9.6
+
+## 0.1.36
+
+### Patch Changes
+
+- [#4038](https://github.com/bluesky-social/atproto/pull/4038) [`756ab5d87`](https://github.com/bluesky-social/atproto/commit/756ab5d87fea75e8648a6bdd545d8b441bfb2dd6) Thanks [@knotbin](https://github.com/knotbin)! - filtercollections wildcard endings
+
 ## 0.1.35
 
 ### Patch Changes

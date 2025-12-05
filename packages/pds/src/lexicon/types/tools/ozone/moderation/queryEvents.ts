@@ -59,6 +59,8 @@ export type QueryParams = {
     | 'reset'
     | 'blocked'
     | (string & {})
+  /** If specified, only events where strikeCount value is set are returned. */
+  withStrike?: boolean
   cursor?: string
 }
 export type InputSchema = undefined

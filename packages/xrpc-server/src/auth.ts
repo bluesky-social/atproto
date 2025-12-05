@@ -1,4 +1,3 @@
-import * as ui8 from 'uint8arrays'
 import * as common from '@atproto/common'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
@@ -46,9 +45,9 @@ export const createServiceJwt = async (
     jti,
   })
   const toSignStr = `${jsonToB64Url(header)}.${jsonToB64Url(payload)}`
-  const toSign = ui8.fromString(toSignStr, 'utf8')
-  const sig = await keypair.sign(toSign)
-  return `${toSignStr}.${ui8.toString(sig, 'base64url')}`
+  const toSign = Buffer.from(toSignStr, 'utf8')
+  const sig = Buffer.from(await keypair.sign(toSign))
+  return `${toSignStr}.${sig.toString('base64url')}`
 }
 
 export const createServiceAuthHeaders = async (params: ServiceJwtParams) => {
@@ -59,7 +58,7 @@ export const createServiceAuthHeaders = async (params: ServiceJwtParams) => {
 }
 
 const jsonToB64Url = (json: Record<string, unknown>): string => {
-  return common.utf8ToB64Url(JSON.stringify(json))
+  return Buffer.from(JSON.stringify(json)).toString('base64url')
 }
 
 export type VerifySignatureWithKeyFn = (
@@ -122,8 +121,8 @@ export const verifyJwt = async (
     )
   }
 
-  const msgBytes = ui8.fromString(parts.slice(0, 2).join('.'), 'utf8')
-  const sigBytes = ui8.fromString(sig, 'base64url')
+  const msgBytes = Buffer.from(parts.slice(0, 2).join('.'), 'utf8')
+  const sigBytes = Buffer.from(sig, 'base64url')
 
   const signingKey = await getSigningKey(payload.iss, false)
   const { alg } = header
@@ -182,7 +181,7 @@ export const cryptoVerifySignatureWithKey: VerifySignatureWithKeyFn = async (
 }
 
 const parseB64UrlToJson = (b64: string) => {
-  return JSON.parse(common.b64UrlToUtf8(b64))
+  return JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'))
 }
 
 const parseHeader = (b64: string): ServiceJwtHeaders => {

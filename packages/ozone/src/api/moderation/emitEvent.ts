@@ -20,14 +20,14 @@ import {
   isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
+import { httpLogger } from '../../logger'
 import { subjectFromInput } from '../../mod-service/subject'
-import { ProtectedTagSettingKey } from '../../setting/constants'
 import { SettingService } from '../../setting/service'
-import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
 import { getEventType } from '../util'
+import { assertProtectedTagAction, getProtectedTags } from './util'
 
 const handleModerationEvent = async ({
   ctx,
@@ -122,7 +122,9 @@ const handleModerationEvent = async ({
     ])
   }
 
-  if (isTakedownEvent || isReverseTakedownEvent) {
+  const isTakedownOrReverseTakedownEvent =
+    isTakedownEvent || isReverseTakedownEvent
+  if (isTakedownOrReverseTakedownEvent || isLabelEvent) {
     const status = await moderationService.getStatus(subject)
 
     if (status?.takendown && isTakedownEvent) {
@@ -140,7 +142,14 @@ const handleModerationEvent = async ({
       )
 
       if (protectedTags) {
-        assertProtectedTagAction(protectedTags, status.tags, createdBy, auth)
+        assertProtectedTagAction({
+          protectedTags,
+          subjectTags: status.tags,
+          actionAuthor: createdBy,
+          isAdmin: auth.credentials.isAdmin,
+          isModerator: auth.credentials.isModerator,
+          isTriage: auth.credentials.isTriage,
+        })
       }
     }
 
@@ -157,13 +166,20 @@ const handleModerationEvent = async ({
       throw new InvalidRequestError('Email can only be sent to a repo subject')
     }
     const { content, subjectLine } = event
-    await retryHttp(() =>
-      ctx.modService(db).sendEmail({
-        subject: subjectLine,
-        content,
-        recipientDid: subject.did,
-      }),
-    )
+    // on error, don't fail the whole event. instead, log the event data with isDelivered false
+    try {
+      await retryHttp(() =>
+        ctx.modService(db).sendEmail({
+          subject: subjectLine,
+          content,
+          recipientDid: subject.did,
+        }),
+      )
+      event.isDelivered = true
+    } catch (err) {
+      event.isDelivered = false
+      httpLogger.error({ err, event }, 'failed to send mod event email')
+    }
   }
 
   if (isModEventDivert(event) && subject.isRecord()) {
@@ -231,7 +247,16 @@ const handleModerationEvent = async ({
     if (subject.isRepo()) {
       if (isTakedownEvent) {
         const isSuspend = !!result.event.durationInHours
-        await moderationTxn.takedownRepo(subject, result.event.id, isSuspend)
+        await moderationTxn.takedownRepo(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+          isSuspend,
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRepo(subject)
       }
@@ -239,7 +264,15 @@ const handleModerationEvent = async ({
 
     if (subject.isRecord()) {
       if (isTakedownEvent) {
-        await moderationTxn.takedownRecord(subject, result.event.id)
+        await moderationTxn.takedownRecord(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRecord(subject)
       }
@@ -317,68 +350,6 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const assertProtectedTagAction = (
-  protectedTags: ProtectedTagSetting,
-  subjectTags: string[],
-  actionAuthor: string,
-  auth: ModeratorOutput | AdminTokenOutput,
-) => {
-  subjectTags.forEach((tag) => {
-    if (!Object.hasOwn(protectedTags, tag)) return
-    if (
-      protectedTags[tag]['moderators'] &&
-      !protectedTags[tag]['moderators'].includes(actionAuthor)
-    ) {
-      throw new InvalidRequestError(
-        `Not allowed to action on protected tag: ${tag}`,
-      )
-    }
-
-    if (protectedTags[tag]['roles']) {
-      if (auth.credentials.isAdmin) {
-        if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleAdmin',
-          )
-        ) {
-          return
-        }
-        throw new InvalidRequestError(
-          `Not allowed to action on protected tag: ${tag}`,
-        )
-      }
-
-      if (auth.credentials.isModerator) {
-        if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleModerator',
-          )
-        ) {
-          return
-        }
-
-        throw new InvalidRequestError(
-          `Not allowed to action on protected tag: ${tag}`,
-        )
-      }
-
-      if (auth.credentials.isTriage) {
-        if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleTriage',
-          )
-        ) {
-          return
-        }
-
-        throw new InvalidRequestError(
-          `Not allowed to action on protected tag: ${tag}`,
-        )
-      }
-    }
-  })
-}
-
 const assertTagAuth = async (
   settingService: SettingService,
   serviceDid: string,
@@ -427,25 +398,6 @@ const assertTagAuth = async (
       }
     }
   }
-}
-
-const getProtectedTags = async (
-  settingService: SettingService,
-  serviceDid: string,
-) => {
-  const protectedTagSetting = await settingService.query({
-    keys: [ProtectedTagSettingKey],
-    scope: 'instance',
-    did: serviceDid,
-    limit: 1,
-  })
-
-  // if no protected tags are configured, then no need to do further check
-  if (!protectedTagSetting.options.length) {
-    return
-  }
-
-  return protectedTagSetting.options[0].value as ProtectedTagSetting
 }
 
 const validateLabels = (labels: string[]) => {

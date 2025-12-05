@@ -1,19 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { useAuthContext } from '../auth/auth-provider.tsx'
+import * as app from '../lexicons/app.ts'
+import { useAuthenticatedBskyClient } from '../providers/BskyClientProvider.tsx'
 
 export function useGetActorProfileQuery() {
-  const { agent } = useAuthContext()
+  const client = useAuthenticatedBskyClient()
 
   return useQuery({
-    queryKey: ['profile', agent?.assertDid ?? null],
-    queryFn: async () => {
-      if (!agent) return null
-      const { data } = await agent.com.atproto.repo.getRecord({
-        repo: agent.assertDid,
-        collection: 'app.bsky.actor.profile',
-        rkey: 'self',
-      })
-      return data
+    queryKey: ['profile', client.did],
+    queryFn: async ({ signal }) => {
+      return client.get(app.bsky.actor.profile, { signal })
     },
   })
 }

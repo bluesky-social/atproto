@@ -269,7 +269,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -318,7 +317,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -367,7 +365,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -416,7 +413,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -469,7 +465,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -525,7 +520,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -581,7 +575,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -637,7 +630,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -693,7 +685,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -749,7 +740,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -811,7 +801,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -867,7 +856,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -923,7 +911,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -979,7 +966,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1035,7 +1021,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1098,7 +1083,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1161,7 +1145,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'random',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1224,7 +1207,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'oldest',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1287,7 +1269,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'oldest',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: ['foo', 'bar'],
@@ -1414,12 +1395,10 @@ describe('agent', () => {
           {
             $type: 'app.bsky.actor.defs#threadViewPref',
             sort: 'oldest',
-            prioritizeFollowedUsers: true,
           },
           {
             $type: 'app.bsky.actor.defs#threadViewPref',
             sort: 'newest',
-            prioritizeFollowedUsers: false,
           },
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
@@ -1477,7 +1456,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1542,7 +1520,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1608,7 +1585,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1670,7 +1646,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1732,7 +1707,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1794,7 +1768,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1822,7 +1795,6 @@ describe('agent', () => {
       })
       await agent.setThreadViewPrefs({
         sort: 'oldest',
-        prioritizeFollowedUsers: true,
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await agent.bskyAppQueueNudges('three')
@@ -1868,7 +1840,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'oldest',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1949,7 +1920,6 @@ describe('agent', () => {
           {
             $type: 'app.bsky.actor.defs#threadViewPref',
             sort: 'oldest',
-            prioritizeFollowedUsers: true,
           },
         ].sort(byType),
       )
@@ -2988,7 +2958,7 @@ describe('agent', () => {
 
         describe(`getSavedFeedType`, () => {
           it(`works`, () => {
-            expect(getSavedFeedType('foo')).toBe('unknown')
+            expect(getSavedFeedType('at://foo.com')).toBe('unknown')
             expect(getSavedFeedType(feedUri())).toBe('feed')
             expect(getSavedFeedType(listUri())).toBe('list')
             expect(

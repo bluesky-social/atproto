@@ -53,7 +53,9 @@ export type KeyUsage = (typeof KEY_USAGE)[number]
  * @see {@link https://www.iana.org/assignments/jose/jose.xhtml#web-key-parameters IANA "JSON Web Key Parameters" registry}
  */
 const jwkBaseSchema = z.object({
-  kty: z.string().min(1).optional(),
+  kty: z.string().min(1),
+  alg: z.string().min(1).optional(),
+  kid: z.string().min(1).optional(),
   use: z.enum(['sig', 'enc']).optional(),
   key_ops: z
     .array(keyUsageSchema)
@@ -64,8 +66,6 @@ const jwkBaseSchema = z.object({
       message: 'key_ops must not contain duplicates',
     })
     .optional(),
-  alg: z.string().min(1).optional(),
-  kid: z.string().min(1).optional(),
 
   x5c: z.array(z.string()).optional(), // X.509 Certificate Chain
   x5t: z.string().min(1).optional(), // X.509 Certificate SHA-1 Thumbprint
@@ -208,6 +208,10 @@ export type Jwk = z.output<typeof jwkSchema>
 export const jwkValidator = jwkSchema
 
 export const jwkPubSchema = jwkSchema
+  .refine(hasKid, {
+    message: '"kid" is required',
+    path: ['kid'],
+  })
   // @NOTE for legacy reasons, we don't impose the presence of either "use" or "key_ops"
   .refine(isPublicJwk, {
     message: 'private key not allowed',
@@ -215,10 +219,6 @@ export const jwkPubSchema = jwkSchema
   .refine((k): boolean => !k.key_ops || k.key_ops.every(isPublicKeyUsage), {
     message: '"key_ops" must not contain private key usage for public keys',
     path: ['key_ops'],
-  })
-  .refine(hasKid, {
-    message: '"kid" is required',
-    path: ['kid'],
   })
 
 export type PublicJwk = z.output<typeof jwkPubSchema>

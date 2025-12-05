@@ -10,7 +10,7 @@ import { AddressInfo } from 'node:net'
 import { type Browser, type Page, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // @ts-expect-error (json file)
-import files from '@atproto/oauth-client-browser-example'
+import files from '@atproto/oauth-client-browser-example' with { type: 'json' }
 
 class PageHelper implements AsyncDisposable {
   constructor(protected readonly page: Page) {}
@@ -124,7 +124,7 @@ describe('oauth', () => {
       handle_resolver: network.pds.url,
       sign_up_url: network.pds.url,
       env: 'test',
-      scope: `atproto account:email identity:* repo:*`,
+      scope: `atproto account:email identity:* repo:* rpc:app.bsky.actor.getPreferences?aud=*`,
     })}`
   })
 
@@ -142,7 +142,9 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      await page.clickOnButton('Login or signup')
+      await page.clickOnButton(
+        `Login or signup with ${new URL(network.pds.url).host}`,
+      )
     })
 
     await page.checkTitle('Authentification')
@@ -331,7 +333,7 @@ function clientHandler(
 
   if (file) {
     res
-      .writeHead(200, 'OK', { 'content-type': file.type })
+      .writeHead(200, 'OK', { 'content-type': file.mime })
       .end(Buffer.from(file.data, 'base64'))
   } else if (next) {
     next()

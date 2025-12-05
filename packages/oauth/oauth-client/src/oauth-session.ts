@@ -14,7 +14,7 @@ const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
-export type { AtprotoOAuthScope }
+export type { AtprotoDid, AtprotoOAuthScope }
 export type TokenInfo = {
   expiresAt?: Date
   expired?: boolean

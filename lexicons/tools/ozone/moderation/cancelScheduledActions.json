@@ -1,0 +1,64 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderation.cancelScheduledActions",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Cancel all pending scheduled moderation actions for specified subjects",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["subjects"],
+          "properties": {
+            "subjects": {
+              "type": "array",
+              "maxLength": 100,
+              "items": {
+                "type": "string",
+                "format": "did"
+              },
+              "description": "Array of DID subjects to cancel scheduled actions for"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment describing the reason for cancellation"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "#cancellationResults"
+        }
+      }
+    },
+    "cancellationResults": {
+      "type": "object",
+      "required": ["succeeded", "failed"],
+      "properties": {
+        "succeeded": {
+          "type": "array",
+          "items": { "type": "string", "format": "did" },
+          "description": "DIDs for which all pending scheduled actions were successfully cancelled"
+        },
+        "failed": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "#failedCancellation" },
+          "description": "DIDs for which cancellation failed with error details"
+        }
+      }
+    },
+    "failedCancellation": {
+      "type": "object",
+      "required": ["did", "error"],
+      "properties": {
+        "did": { "type": "string", "format": "did" },
+        "error": { "type": "string" },
+        "errorCode": { "type": "string" }
+      }
+    }
+  }
+}

@@ -17,6 +17,9 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+import * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+import * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
@@ -145,6 +148,7 @@ import * as ComAtprotoIdentitySubmitPlcOperation from './types/com/atproto/ident
 import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/updateHandle.js'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+import * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 import * as ComAtprotoRepoApplyWrites from './types/com/atproto/repo/applyWrites.js'
 import * as ComAtprotoRepoCreateRecord from './types/com/atproto/repo/createRecord.js'
@@ -270,6 +274,7 @@ export class AppNS {
 export class AppBskyNS {
   _server: Server
   actor: AppBskyActorNS
+  ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
@@ -283,6 +288,7 @@ export class AppBskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new AppBskyActorNS(server)
+    this.ageassurance = new AppBskyAgeassuranceNS(server)
     this.bookmark = new AppBskyBookmarkNS(server)
     this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
@@ -383,6 +389,50 @@ export class AppBskyActorNS {
     >,
   ) {
     const nsid = 'app.bsky.actor.searchActorsTypeahead' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyAgeassuranceNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  begin<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyAgeassuranceBegin.QueryParams,
+      AppBskyAgeassuranceBegin.HandlerInput,
+      AppBskyAgeassuranceBegin.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.ageassurance.begin' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConfig<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyAgeassuranceGetConfig.QueryParams,
+      AppBskyAgeassuranceGetConfig.HandlerInput,
+      AppBskyAgeassuranceGetConfig.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.ageassurance.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyAgeassuranceGetState.QueryParams,
+      AppBskyAgeassuranceGetState.HandlerInput,
+      AppBskyAgeassuranceGetState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.ageassurance.getState' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -2107,6 +2157,18 @@ export class ComAtprotoLexiconNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  resolveLexicon<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoLexiconResolveLexicon.QueryParams,
+      ComAtprotoLexiconResolveLexicon.HandlerInput,
+      ComAtprotoLexiconResolveLexicon.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.lexicon.resolveLexicon' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

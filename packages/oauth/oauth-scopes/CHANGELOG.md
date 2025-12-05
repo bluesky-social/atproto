@@ -1,5 +1,44 @@
 # @atproto/oauth-scopes
 
+## 0.3.0
+
+### Minor Changes
+
+- [#4383](https://github.com/bluesky-social/atproto/pull/4383) [`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace `@atproto/lexicon` with `@atproto/lex-document`
+
+- [#4353](https://github.com/bluesky-social/atproto/pull/4353) [`0adc852`](https://github.com/bluesky-social/atproto/commit/0adc852c31ffa154c1b93e38182c35880ecdb4ba) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use arrays to represent "account" permission's `action` attribute, allowing multiple actions to be specified for that resource.
+
+### Patch Changes
+
+- [#4382](https://github.com/bluesky-social/atproto/pull/4382) [`be8e6c1`](https://github.com/bluesky-social/atproto/commit/be8e6c1f25814202b98e2616a217599a6c46e0db) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `toScopes()` utility on `IncludeScope`
+
+- [#4382](https://github.com/bluesky-social/atproto/pull/4382) [`be8e6c1`](https://github.com/bluesky-social/atproto/commit/be8e6c1f25814202b98e2616a217599a6c46e0db) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove ability to define `blob` permission in permission sets
+
+- [#4383](https://github.com/bluesky-social/atproto/pull/4383) [`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace `@atproto/lexicon-resolver` with `@atproto/lex-resolver`
+
+- [#4353](https://github.com/bluesky-social/atproto/pull/4353) [`0adc852`](https://github.com/bluesky-social/atproto/commit/0adc852c31ffa154c1b93e38182c35880ecdb4ba) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow lexicon permission data to be readonly
+
+- [#4382](https://github.com/bluesky-social/atproto/pull/4382) [`be8e6c1`](https://github.com/bluesky-social/atproto/commit/be8e6c1f25814202b98e2616a217599a6c46e0db) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disallow `rpc` permissions with specific `aud` in permission-sets
+
+- Updated dependencies [[`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e), [`bcae2b7`](https://github.com/bluesky-social/atproto/commit/bcae2b77b68da6dc2ec202651c8bf41fd5769f69), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea)]:
+  - @atproto/did@0.2.3
+  - @atproto/syntax@0.4.2
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/did@0.2.2
+  - @atproto/lexicon@0.5.2
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3)]:
+  - @atproto/did@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

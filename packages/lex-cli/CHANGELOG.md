@@ -1,5 +1,18 @@
 # @atproto/lex-cli
 
+## 0.9.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.5.2
+
+## 0.9.6
+
+### Patch Changes
+
+- [#4294](https://github.com/bluesky-social/atproto/pull/4294) [`ac1d29ec0`](https://github.com/bluesky-social/atproto/commit/ac1d29ec0f105b4579491f563e2abd73f36c1df3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export record types using the `Main` identifier
+
 ## 0.9.5
 
 ### Patch Changes

@@ -1,14 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { useSignedInContext } from '../auth/auth-provider.tsx'
+import * as com from '../lexicons/com.ts'
+import { useAuthenticationContext } from '../providers/AuthenticationProvider.tsx'
 
 export function useGetSessionQuery() {
-  const { agent } = useSignedInContext()
+  const { client } = useAuthenticationContext()
 
   return useQuery({
-    queryKey: ['session', agent.assertDid],
-    queryFn: async () => {
-      const { data } = await agent.com.atproto.server.getSession()
-      return data
-    },
+    queryKey: ['session', client.did],
+    queryFn: async () => client.call(com.atproto.server.getSession),
   })
 }

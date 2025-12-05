@@ -19,6 +19,12 @@ export function asAtprotoOAuthScope<I extends string>(input: I) {
   throw new TypeError(`Value must contain "${ATPROTO_SCOPE_VALUE}" scope value`)
 }
 
+export function assertAtprotoOAuthScope(
+  input: string,
+): asserts input is AtprotoOAuthScope {
+  void asAtprotoOAuthScope(input)
+}
+
 export const atprotoOAuthScopeSchema = z.string().refine(isAtprotoOAuthScope, {
   message: 'Invalid ATProto OAuth scope',
 })

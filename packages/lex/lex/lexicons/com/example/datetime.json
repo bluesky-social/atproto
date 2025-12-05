@@ -1,0 +1,16 @@
+{
+  "lexicon": 1,
+  "id": "com.example.datetime",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "datetime": { "type": "string", "format": "datetime" }
+        }
+      }
+    }
+  }
+}

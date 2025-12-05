@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`scheduled action management listScheduledActions allows moderators to list all scheduled actions 1`] = `
+Array [
+  Object {
+    "action": "takedown",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "did": "user(0)",
+    "eventData": Object {
+      "$type": "tools.ozone.moderation.scheduleAction#takedown",
+      "comment": "test",
+      "policies": Array [
+        "spam",
+      ],
+    },
+    "executeAfter": "1970-01-01T00:00:00.000Z",
+    "executeUntil": "1970-01-01T00:00:00.000Z",
+    "id": 3,
+    "randomizeExecution": true,
+    "status": "pending",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "action": "takedown",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "did": "user(2)",
+    "eventData": Object {
+      "$type": "tools.ozone.moderation.scheduleAction#takedown",
+      "comment": "test",
+      "policies": Array [
+        "spam",
+      ],
+    },
+    "executeAt": "1970-01-01T00:00:00.000Z",
+    "id": 2,
+    "randomizeExecution": false,
+    "status": "pending",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+  Object {
+    "action": "takedown",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(1)",
+    "did": "user(3)",
+    "eventData": Object {
+      "$type": "tools.ozone.moderation.scheduleAction#takedown",
+      "comment": "test",
+      "policies": Array [
+        "spam",
+      ],
+    },
+    "executeAt": "1970-01-01T00:00:00.000Z",
+    "id": 1,
+    "randomizeExecution": false,
+    "status": "pending",
+    "updatedAt": "1970-01-01T00:00:00.000Z",
+  },
+]
+`;

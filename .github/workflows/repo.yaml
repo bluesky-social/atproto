@@ -19,7 +19,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: package.json
+          node-version-file: '.nvmrc'
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache
@@ -41,6 +41,9 @@ jobs:
           path: |
             packages/*/dist
             packages/*/*/dist
+            packages/lex/*/src/lexicons
+            packages/lex/*/tests/lexicons
+            packages/oauth/oauth-client-browser-example/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
           retention-days: 1
   test:
@@ -57,7 +60,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: package.json
+          node-version-file: '.nvmrc'
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache
@@ -87,7 +90,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: package.json
+          node-version-file: '.nvmrc'
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache

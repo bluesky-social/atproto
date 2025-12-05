@@ -1,5 +1,11 @@
 # @atproto/crypto
 
+## 0.4.5
+
+### Patch Changes
+
+- [#4384](https://github.com/bluesky-social/atproto/pull/4384) [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `formatDidKey` return type to `did:key:${string}`
+
 ## 0.4.4
 
 ### Patch Changes

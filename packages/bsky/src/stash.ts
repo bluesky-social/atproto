@@ -1,6 +1,9 @@
+/* eslint-disable import/no-deprecated */
+
 import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
+import { Event as AgeAssuranceEventV2 } from './lexicon/types/app/bsky/ageassurance/defs'
 import { Bookmark } from './lexicon/types/app/bsky/bookmark/defs'
 import {
   Preferences,
@@ -20,6 +23,8 @@ export const Namespaces = {
     'app.bsky.notification.defs#subjectActivitySubscription' satisfies PickNSID<SubjectActivitySubscription>,
   AppBskyUnspeccedDefsAgeAssuranceEvent:
     'app.bsky.unspecced.defs#ageAssuranceEvent' satisfies PickNSID<AgeAssuranceEvent>,
+  AppBskyAgeassuranceDefsEvent:
+    'app.bsky.ageassurance.defs#event' satisfies PickNSID<AgeAssuranceEventV2>,
 }
 
 export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]

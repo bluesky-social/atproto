@@ -33,6 +33,10 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
+        featureGates: ctx.featureGates.checkGates(
+          [ctx.featureGates.ids.ThreadsV2ReplyRankingExploration],
+          ctx.featureGates.user({ did: viewer ?? '' }),
+        ),
       })
 
       return {
@@ -89,7 +93,6 @@ const presentation = (
     above: calculateAbove(ctx, params),
     below: calculateBelow(ctx, skeleton.anchor, params),
     branchingFactor: params.branchingFactor,
-    prioritizeFollowedUsers: params.prioritizeFollowedUsers,
     sort: params.sort,
   })
 

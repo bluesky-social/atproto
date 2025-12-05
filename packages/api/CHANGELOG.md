@@ -1,5 +1,97 @@
 # @atproto/api
 
+## 0.18.4
+
+### Patch Changes
+
+- [#4407](https://github.com/bluesky-social/atproto/pull/4407) [`90f1569`](https://github.com/bluesky-social/atproto/commit/90f15698ee63d9a7374f1206754eda5d530873d7) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds ageassurance namespace, methods, and utils for Age Assurance V2
+
+- Updated dependencies [[`bcae2b7`](https://github.com/bluesky-social/atproto/commit/bcae2b77b68da6dc2ec202651c8bf41fd5769f69)]:
+  - @atproto/syntax@0.4.2
+  - @atproto/common-web@0.4.6
+
+## 0.18.3
+
+### Patch Changes
+
+- [#4347](https://github.com/bluesky-social/atproto/pull/4347) [`69f53d6`](https://github.com/bluesky-social/atproto/commit/69f53d632d84f255cafa8b10698184048a71b97b) Thanks [@bnewbold](https://github.com/bnewbold)! - lexicon updates to have fully-qualified token refs in knownValue lists
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.5
+
+## 0.18.2
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/common-web@0.4.4
+  - @atproto/lexicon@0.5.2
+  - @atproto/xrpc@0.7.6
+
+## 0.18.1
+
+### Patch Changes
+
+- [#4340](https://github.com/bluesky-social/atproto/pull/4340) [`032abf6b5`](https://github.com/bluesky-social/atproto/commit/032abf6b500fd36f3c0fc1af83bf62caae44fa6e) Thanks [@foysalit](https://github.com/foysalit)! - Add optional email data to scheduled action api in ozone
+
+- [#4344](https://github.com/bluesky-social/atproto/pull/4344) [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc) Thanks [@foysalit](https://github.com/foysalit)! - Add targetServices param to takedown events allowing mods to specify which service to apply takedown on
+
+## 0.18.0
+
+### Minor Changes
+
+- [#4227](https://github.com/bluesky-social/atproto/pull/4227) [`94ddc8219`](https://github.com/bluesky-social/atproto/commit/94ddc8219c144475df622137ab88895255136eda) Thanks [@bnewbold](https://github.com/bnewbold)! - Introduce `com.atproto.lexicon.resolveLexicon` lexicon method
+
+### Patch Changes
+
+- [#4269](https://github.com/bluesky-social/atproto/pull/4269) [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Deprecate and remove `prioritizeFollowedUsers` setting from preferences response types and `getPostThreadV2` query params.
+
+## 0.17.7
+
+### Patch Changes
+
+- [#4317](https://github.com/bluesky-social/atproto/pull/4317) [`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `via` to `follow` record to mirror `like` records and provide a way to reference the starter pack that the follow originated from.
+
+## 0.17.6
+
+### Patch Changes
+
+- [#4314](https://github.com/bluesky-social/atproto/pull/4314) [`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add debug field to `PostView` and `ProfileView*` (see cdb6b27fc6be1e858476d8c55fd0c37561b972b4)
+
+## 0.17.5
+
+### Patch Changes
+
+- [#4279](https://github.com/bluesky-social/atproto/pull/4279) [`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031) Thanks [@foysalit](https://github.com/foysalit)! - Add strike system to ozone
+
+## 0.17.4
+
+### Patch Changes
+
+- [#4299](https://github.com/bluesky-social/atproto/pull/4299) [`a8e307ef4`](https://github.com/bluesky-social/atproto/commit/a8e307ef4851b164ee38bb5149343631e329f143) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Record types are now exported as both `.Record` (as they used to) and `.Main` (for consistency)
+
+## 0.17.3
+
+### Patch Changes
+
+- [#4268](https://github.com/bluesky-social/atproto/pull/4268) [`386f583cf`](https://github.com/bluesky-social/atproto/commit/386f583cffa2c596a12be4e98dde498f3b8670f6) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Bump threadgate `hiddenReplies` field `maxLength` to 300.
+
+## 0.17.2
+
+### Patch Changes
+
+- [#4262](https://github.com/bluesky-social/atproto/pull/4262) [`1cb5b9b80`](https://github.com/bluesky-social/atproto/commit/1cb5b9b80c20a054f7fbacd89d0d440dc2241d81) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Finalize report reason lexicons, update migration map in Ozone
+
+## 0.17.1
+
+### Patch Changes
+
+- [#4216](https://github.com/bluesky-social/atproto/pull/4216) [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Create a dedicated type for the `proxy` property
+
+- [#4216](https://github.com/bluesky-social/atproto/pull/4216) [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve validation when setting an `Agent`'s `proxy` property
+
+- [#4241](https://github.com/bluesky-social/atproto/pull/4241) [`591de1952`](https://github.com/bluesky-social/atproto/commit/591de19524639341a7dd64ee75c482c645c186fd) Thanks [@foysalit](https://github.com/foysalit)! - Add scheduled action api to ozone
+
 ## 0.17.0
 
 ### Minor Changes
@@ -793,7 +885,7 @@
   `AtpAgent`.
 
   ```ts
-  import { Agent, AtpAgent } from "@atproto/api";
+  import { Agent, AtpAgent } from '@atproto/api'
 
   async function setupAgent(
     service: string,
@@ -805,30 +897,30 @@
       persistSession: (evt, session) => {
         // handle session update
       },
-    });
+    })
 
-    await agent.login(username, password);
+    await agent.login(username, password)
 
-    return agent;
+    return agent
   }
   ```
 
   ```ts
-  import { Agent } from "@atproto/api";
+  import { Agent } from '@atproto/api'
 
   async function doStuffWithAgent(agent: Agent, arg: string) {
-    return agent.resolveHandle(arg);
+    return agent.resolveHandle(arg)
   }
   ```
 
   ```ts
-  import { Agent, AtpAgent } from "@atproto/api";
+  import { Agent, AtpAgent } from '@atproto/api'
 
   class MyClass {
-    agent: Agent;
+    agent: Agent
 
     constructor() {
-      this.agent = new AtpAgent();
+      this.agent = new AtpAgent()
     }
   }
   ```
@@ -906,24 +998,24 @@
   <td>
 
   ```ts
-  import { AtpBaseClient, ComAtprotoSyncSubscribeRepos } from "@atproto/api";
+  import { AtpBaseClient, ComAtprotoSyncSubscribeRepos } from '@atproto/api'
 
-  const baseClient = new AtpBaseClient();
+  const baseClient = new AtpBaseClient()
 
-  baseClient.xrpc.lex.assertValidXrpcMessage("io.example.doStuff", {
+  baseClient.xrpc.lex.assertValidXrpcMessage('io.example.doStuff', {
     // ...
-  });
+  })
   ```
 
   </td>
   <td>
 
   ```ts
-  import { lexicons } from "@atproto/api";
+  import { lexicons } from '@atproto/api'
 
-  lexicons.assertValidXrpcMessage("io.example.doStuff", {
+  lexicons.assertValidXrpcMessage('io.example.doStuff', {
     // ...
-  });
+  })
   ```
 
   </td>
@@ -940,23 +1032,23 @@
   <td>
 
   ```ts
-  import { BskyAgent } from "@atproto/api";
+  import { BskyAgent } from '@atproto/api'
 
   class MyAgent extends BskyAgent {
-    private accessToken?: string;
+    private accessToken?: string
 
     async createOrRefreshSession(identifier: string, password: string) {
       // custom logic here
 
-      this.accessToken = "my-access-jwt";
+      this.accessToken = 'my-access-jwt'
     }
 
     async doStuff() {
-      return this.call("io.example.doStuff", {
+      return this.call('io.example.doStuff', {
         headers: {
           Authorization: this.accessToken && `Bearer ${this.accessToken}`,
         },
-      });
+      })
     }
   }
   ```
@@ -965,11 +1057,11 @@
   <td>
 
   ```ts
-  import { Agent } from "@atproto/api";
+  import { Agent } from '@atproto/api'
 
   class MyAgent extends Agent {
-    private accessToken?: string;
-    public did?: string;
+    private accessToken?: string
+    public did?: string
 
     constructor(private readonly service: string | URL) {
       super({
@@ -978,21 +1070,21 @@
           Authorization: () =>
             this.accessToken ? `Bearer ${this.accessToken}` : null,
         },
-      });
+      })
     }
 
     clone(): MyAgent {
-      const agent = new MyAgent(this.service);
-      agent.accessToken = this.accessToken;
-      agent.did = this.did;
-      return this.copyInto(agent);
+      const agent = new MyAgent(this.service)
+      agent.accessToken = this.accessToken
+      agent.did = this.did
+      return this.copyInto(agent)
     }
 
     async createOrRefreshSession(identifier: string, password: string) {
       // custom logic here
 
-      this.did = "did:example:123";
-      this.accessToken = "my-access-jwt";
+      this.did = 'did:example:123'
+      this.accessToken = 'my-access-jwt'
     }
   }
   ```
@@ -1011,38 +1103,38 @@
   <td>
 
   ```ts
-  import { BskyAgent } from "@atproto/api";
-  import { RateLimitThreshold } from "rate-limit-threshold";
+  import { BskyAgent } from '@atproto/api'
+  import { RateLimitThreshold } from 'rate-limit-threshold'
 
-  const agent = new BskyAgent();
-  const limiter = new RateLimitThreshold(3000, 300_000);
+  const agent = new BskyAgent()
+  const limiter = new RateLimitThreshold(3000, 300_000)
 
-  const origCall = agent.api.xrpc.call;
+  const origCall = agent.api.xrpc.call
   agent.api.xrpc.call = async function (...args) {
-    await limiter.wait();
-    return origCall.call(this, ...args);
-  };
+    await limiter.wait()
+    return origCall.call(this, ...args)
+  }
   ```
 
   </td>
   <td>
 
   ```ts
-  import { AtpAgent } from "@atproto/api";
-  import { RateLimitThreshold } from "rate-limit-threshold";
+  import { AtpAgent } from '@atproto/api'
+  import { RateLimitThreshold } from 'rate-limit-threshold'
 
   class LimitedAtpAgent extends AtpAgent {
     constructor(options: AtpAgentOptions) {
-      const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch;
-      const limiter = new RateLimitThreshold(3000, 300_000);
+      const fetch: typeof globalThis.fetch = options.fetch ?? globalThis.fetch
+      const limiter = new RateLimitThreshold(3000, 300_000)
 
       super({
         ...options,
         fetch: async (...args) => {
-          await limiter.wait();
-          return fetch(...args);
+          await limiter.wait()
+          return fetch(...args)
         },
-      });
+      })
     }
   }
   ```
@@ -1063,40 +1155,40 @@
   <td>
 
   ```ts
-  import { BskyAgent, defaultFetchHandler } from "@atproto/api";
+  import { BskyAgent, defaultFetchHandler } from '@atproto/api'
 
   BskyAgent.configure({
     fetch: async (httpUri, httpMethod, httpHeaders, httpReqBody) => {
-      const ua = httpHeaders["User-Agent"];
+      const ua = httpHeaders['User-Agent']
 
-      httpHeaders["User-Agent"] = ua ? `${ua} ${userAgent}` : userAgent;
+      httpHeaders['User-Agent'] = ua ? `${ua} ${userAgent}` : userAgent
 
-      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody);
+      return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
     },
-  });
+  })
   ```
 
   </td>
   <td>
 
   ```ts
-  import { AtpAgent } from "@atproto/api";
+  import { AtpAgent } from '@atproto/api'
 
   class MyAtpAgent extends AtpAgent {
     constructor(options: AtpAgentOptions) {
-      const fetch = options.fetch ?? globalThis.fetch;
+      const fetch = options.fetch ?? globalThis.fetch
 
       super({
         ...options,
         fetch: async (url, init) => {
-          const headers = new Headers(init.headers);
+          const headers = new Headers(init.headers)
 
-          const ua = headersList.get("User-Agent");
-          headersList.set("User-Agent", ua ? `${ua} ${userAgent}` : userAgent);
+          const ua = headersList.get('User-Agent')
+          headersList.set('User-Agent', ua ? `${ua} ${userAgent}` : userAgent)
 
-          return fetch(url, { ...init, headers });
+          return fetch(url, { ...init, headers })
         },
-      });
+      })
     }
   }
   ```
@@ -1155,7 +1247,7 @@
      */
     url: string,
     init: RequestInit,
-  ) => Promise<Response>;
+  ) => Promise<Response>
   ```
 
   A noticeable change that has been introduced is that the `uri` field of the
@@ -1193,7 +1285,7 @@
   <td>
 
   ```ts
-  import client, { defaultFetchHandler } from "@atproto/xrpc";
+  import client, { defaultFetchHandler } from '@atproto/xrpc'
 
   client.fetch = function (
     httpUri: string,
@@ -1202,50 +1294,50 @@
     httpReqBody: unknown,
   ) {
     // Custom logic here
-    return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody);
-  };
+    return defaultFetchHandler(httpUri, httpMethod, httpHeaders, httpReqBody)
+  }
 
   client.addLexicon({
     lexicon: 1,
-    id: "io.example.doStuff",
+    id: 'io.example.doStuff',
     defs: {},
-  });
+  })
 
-  const instance = client.service("http://my-service.com");
+  const instance = client.service('http://my-service.com')
 
-  instance.setHeader("my-header", "my-value");
+  instance.setHeader('my-header', 'my-value')
 
-  await instance.call("io.example.doStuff");
+  await instance.call('io.example.doStuff')
   ```
 
   </td>
   <td>
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     async (url, init) => {
-      const headers = new Headers(init.headers);
+      const headers = new Headers(init.headers)
 
-      headers.set("my-header", "my-value");
+      headers.set('my-header', 'my-value')
 
       // Custom logic here
 
-      const fullUrl = new URL(url, "http://my-service.com");
+      const fullUrl = new URL(url, 'http://my-service.com')
 
-      return fetch(fullUrl, { ...init, headers });
+      return fetch(fullUrl, { ...init, headers })
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
 
-  await instance.call("io.example.doStuff");
+  await instance.call('io.example.doStuff')
   ```
 
   </td>
@@ -1257,62 +1349,62 @@
   previous example can be simplified to:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
-  const instance = new XrpcClient("http://my-service.com", [
+  const instance = new XrpcClient('http://my-service.com', [
     {
       lexicon: 1,
-      id: "io.example.doStuff",
+      id: 'io.example.doStuff',
       defs: {},
     },
-  ]);
+  ])
   ```
 
   If you need to add static headers to all requests, you can instead instantiate
   the `XrpcClient` as follows:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     {
-      service: "http://my-service.com",
+      service: 'http://my-service.com',
       headers: {
-        "my-header": "my-value",
+        'my-header': 'my-value',
       },
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
   ```
 
   If you need the headers or service url to be dynamic, you can define them using
   functions:
 
   ```ts
-  import { XrpcClient } from "@atproto/xrpc";
+  import { XrpcClient } from '@atproto/xrpc'
 
   const instance = new XrpcClient(
     {
-      service: () => "http://my-service.com",
+      service: () => 'http://my-service.com',
       headers: {
-        "my-header": () => "my-value",
-        "my-ignored-header": () => null, // ignored
+        'my-header': () => 'my-value',
+        'my-ignored-header': () => null, // ignored
       },
     },
     [
       {
         lexicon: 1,
-        id: "io.example.doStuff",
+        id: 'io.example.doStuff',
         defs: {},
       },
     ],
-  );
+  )
   ```
 
 - [#2483](https://github.com/bluesky-social/atproto/pull/2483) [`b934b396b`](https://github.com/bluesky-social/atproto/commit/b934b396b13ba32bf2bf7e75ecdf6871e5f310dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add the ability to use `fetch()` compatible `BodyInit` body when making XRPC calls.

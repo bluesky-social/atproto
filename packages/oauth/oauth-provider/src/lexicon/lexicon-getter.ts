@@ -1,8 +1,4 @@
-import {
-  LexiconResolutionError,
-  LexiconResolver,
-  resolveLexicon,
-} from '@atproto/lexicon-resolver'
+import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
 import { Nsid } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
@@ -16,19 +12,16 @@ import { LexiconData, LexiconStore } from './lexicon-store.js'
  * @private
  */
 export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
-  constructor(store: LexiconStore, resolver: LexiconResolver = resolveLexicon) {
+  constructor(store: LexiconStore, lexResolver: LexResolver) {
     super(
       async (input, options, storedData) => {
         const now = new Date()
-        // @TODO We would want to be able to explicit that the Lexicon needs
-        // to be fresh, which is not possible yet with the current interface
-        // of LexiconResolver.
-        const result = await resolver(input).catch((err) => {
+        const result = await lexResolver.get(input, options).catch((err) => {
           // We swallow LexiconResolutionError errors, returning potentially
           // "null" values here to avoid hammering the resolver with requests
           // for the same lexicon that is known to be unavailable. The getter
           // should be called again based on the isStale() function below.
-          if (err instanceof LexiconResolutionError) return undefined
+          if (err instanceof LexResolverError) return undefined
 
           // Unexpected error are propagated
           throw err

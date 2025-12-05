@@ -258,7 +258,18 @@ export class AccountManager {
     })
 
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.store.resetPasswordRequest(input)
+      const account = await this.store.resetPasswordRequest(input)
+
+      if (!account) {
+        return // Silently ignore to prevent user enumeration
+      }
+
+      await this.hooks.onResetPasswordRequested?.call(null, {
+        input,
+        deviceId,
+        deviceMetadata,
+        account,
+      })
     })
   }
 
@@ -274,7 +285,18 @@ export class AccountManager {
     })
 
     return constantTime(TIMING_ATTACK_MITIGATION_DELAY, async () => {
-      await this.store.resetPasswordConfirm(input)
+      const account = await this.store.resetPasswordConfirm(input)
+
+      if (!account) {
+        throw new InvalidRequestError('Invalid token')
+      }
+
+      await this.hooks.onResetPasswordConfirmed?.call(null, {
+        input,
+        deviceId,
+        deviceMetadata,
+        account,
+      })
     })
   }
 

@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { TID, check, dataToCborBlock } from '@atproto/common'
 import {

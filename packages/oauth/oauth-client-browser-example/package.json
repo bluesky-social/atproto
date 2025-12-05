@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-browser-example",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "license": "MIT",
   "description": "Example single page application app using ATPROTO OAuth",
   "keywords": [
@@ -18,43 +18,28 @@
     "directory": "packages/oauth/oauth-client-browser"
   },
   "type": "commonjs",
-  "exports": {
-    ".": {
-      "default": "./dist/files.json"
-    }
-  },
+  "exports": "./dist/files.json",
   "files": [
     "dist"
   ],
   "devDependencies": {
     "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
-    "@atproto/api": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
+    "@atproto/lex": "workspace:*",
     "@atproto/oauth-client-browser": "workspace:*",
-    "@atproto/oauth-types": "workspace:*",
-    "@atproto/xrpc": "workspace:*",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-html": "^1.0.4",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-swc": "^0.4.0",
-    "@swc/helpers": "^0.5.15",
+    "@tailwindcss/vite": "^4.1.3",
     "@tanstack/react-query": "^5.71.10",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.33",
+    "@vitejs/plugin-react-swc": "^3.8.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-json-view": "^1.21.3",
-    "rollup": "^4.13.0",
-    "rollup-plugin-postcss": "^4.0.2",
-    "rollup-plugin-serve": "^1.1.1",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.6.3"
+    "tailwindcss": "^4.1.3",
+    "vite": "^6.2.0"
   },
   "scripts": {
-    "build": "rollup --config rollup.config.js",
-    "dev": "rollup --config rollup.config.js --watch"
+    "prebuild": "lex build --clear --lexicons ../../../lexicons --out ./src/lexicons",
+    "build": "vite build --emptyOutDir -- ignore additional npm args",
+    "dev": "vite --port 8080 --host 127.0.0.1"
   }
 }

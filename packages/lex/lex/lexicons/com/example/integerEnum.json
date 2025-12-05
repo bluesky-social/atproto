@@ -1,0 +1,19 @@
+{
+  "lexicon": 1,
+  "id": "com.example.integerEnum",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "integer": {
+            "type": "integer",
+            "enum": [1, 2]
+          }
+        }
+      }
+    }
+  }
+}

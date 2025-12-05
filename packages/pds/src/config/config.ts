@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
+import { ensureValidDid } from '@atproto/syntax'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -320,8 +321,11 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         },
       }
 
-  const lexiconCfg: LexiconResolverConfig = {
-    didAuthority: env.lexiconDidAuthority,
+  const lexiconCfg: LexiconResolverConfig = {}
+
+  if (env.lexiconDidAuthority != null) {
+    ensureValidDid(env.lexiconDidAuthority)
+    lexiconCfg.didAuthority = env.lexiconDidAuthority
   }
 
   return {
@@ -469,7 +473,7 @@ export type OAuthConfig = {
 }
 
 export type LexiconResolverConfig = {
-  didAuthority?: string
+  didAuthority?: `did:${string}:${string}`
 }
 
 export type InvitesConfig =

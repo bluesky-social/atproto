@@ -58,6 +58,7 @@ export abstract class Key<J extends Jwk = Jwk> {
       ...this.jwk,
       d: undefined,
       k: undefined,
+      use: undefined,
       key_ops: buildPublicKeyOps(this.keyOps) ?? PUBLIC_KEY_USAGE,
     })
 
@@ -115,12 +116,12 @@ export abstract class Key<J extends Jwk = Jwk> {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
-  get revoked() {
-    return this.jwk.revoked
+  get isRevoked() {
+    return this.jwk.revoked != null
   }
 
   isActive(options?: ActivityCheckOptions) {
-    if (!options?.allowRevoked && this.revoked) return false
+    if (!options?.allowRevoked && this.isRevoked) return false
 
     const tolerance = options?.clockTolerance ?? 0
     if (tolerance !== Infinity) {
@@ -166,7 +167,9 @@ export abstract class Key<J extends Jwk = Jwk> {
         (this.use === 'enc' && isEncKeyUsage(opts.usage))
       if (!matchesUse) return false
 
-      // @NOTE This is only relevant when "key_ops" and "use" are undefined
+      // @NOTE This is only relevant when "key_ops" and "use" are undefined.
+      // This line also ensures that when "opts.usage" is a private key usage
+      // (e.g. "sign"), the key is indeed a private key.
       const matchesKeyType = this.isPrivate || isPublicKeyUsage(opts.usage)
       if (!matchesKeyType) return false
     }

@@ -698,7 +698,7 @@ export async function blockDeletionAuth(
       await r(alice)
     })
 
-    // User configured to only be seend by authenticated users.
+    // User configured to only be seen by authenticated users.
     // Requires the test sets a `!no-unauthenticated` label for this user.
     await r(auth, async (r) => {
       // Another auth-only to show that the parent chain is preserved in the thread.

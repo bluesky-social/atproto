@@ -15,7 +15,29 @@ const authResponseSchema = z.object({
 })
 
 const EXTERNAL_PAYLOAD_CHAR_LIMIT = 200
+/**
+ * Thrown when the provided external payload exceeds KWS's character limit.
+ * This is most commonly caused by DIDs that are too long, such as for
+ * `did:web` DIDs. But it's very rare, and the client has special handling for
+ * this case.
+ */
 export class KwsExternalPayloadError extends Error {}
+
+export type KWSSendEmailRequestCommon = {
+  email: string
+  location: string
+  language: string
+  externalPayload: string
+}
+
+export type KWSSendEmailRequest =
+  | (KWSSendEmailRequestCommon & {
+      userContext: 'adult'
+    })
+  | (KWSSendEmailRequestCommon & {
+      userContext: 'age'
+      minimumAge: number
+    })
 
 export class KwsClient {
   constructor(public cfg: KwsConfig) {}
@@ -68,6 +90,9 @@ export class KwsClient {
     })
   }
 
+  /**
+   * @deprecated Use `sendAdultVerifiedFlowEmail` or `sendAgeVerifiedFlowEmail` instead.
+   */
   async sendEmail({
     countryCode,
     email,
@@ -112,5 +137,61 @@ export class KwsClient {
     }
 
     return res.json()
+  }
+
+  /**
+   * Sends a KWS verification email with the given properties.
+   */
+  async email(props: KWSSendEmailRequest) {
+    const res = await this.fetchWithAuth(
+      `${this.cfg.apiOrigin}/v1/verifications/send-email`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': this.cfg.userAgent,
+        },
+        body: JSON.stringify(props),
+      },
+    )
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      log.error(
+        {
+          status: res.status,
+          statusText: res.statusText,
+          errorText,
+          flow: props.userContext,
+        },
+        'Failed to send KWS email',
+      )
+      throw new Error('Failed to send KWS email')
+    }
+
+    return res.json()
+  }
+
+  /**
+   * Sends an email to the user initiating an `adult` verification flow, which
+   * results in `adult-verified` events/webhooks.
+   */
+  async sendAdultVerifiedFlowEmail(props: KWSSendEmailRequestCommon) {
+    return this.email({
+      ...props,
+      userContext: 'adult',
+    })
+  }
+
+  /**
+   * Sends an email to the user initiating an `age` verification flow, which
+   * results in `age-verified` events/webhooks.
+   */
+  async sendAgeVerifiedFlowEmail(props: KWSSendEmailRequestCommon) {
+    return this.email({
+      ...props,
+      userContext: 'age',
+      minimumAge: 16, // KWS required value
+    })
   }
 }

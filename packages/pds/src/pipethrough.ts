@@ -585,6 +585,9 @@ const defaultService = (
     case ids.ToolsOzoneSafelinkRemoveRule:
     case ids.ToolsOzoneSafelinkQueryEvents:
     case ids.ToolsOzoneSafelinkQueryRules:
+    case ids.ToolsOzoneModerationListScheduledActions:
+    case ids.ToolsOzoneModerationCancelScheduledActions:
+    case ids.ToolsOzoneModerationScheduleAction:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.modService,

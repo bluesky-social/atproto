@@ -19,6 +19,10 @@ import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 import * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+import * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+import * as AppBskyAgeassuranceDefs from './types/app/bsky/ageassurance/defs.js'
+import * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+import * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 import * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
@@ -182,6 +186,7 @@ import * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 import * as ComAtprotoLabelDefs from './types/com/atproto/label/defs.js'
 import * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 import * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+import * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 import * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema.js'
 import * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 import * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs.js'
@@ -253,6 +258,7 @@ import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -263,8 +269,10 @@ import * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 import * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -309,6 +317,10 @@ export * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferenc
 export * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 export * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
 export * as AppBskyActorStatus from './types/app/bsky/actor/status.js'
+export * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+export * as AppBskyAgeassuranceDefs from './types/app/bsky/ageassurance/defs.js'
+export * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+export * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 export * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 export * as AppBskyBookmarkDefs from './types/app/bsky/bookmark/defs.js'
 export * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
@@ -472,6 +484,7 @@ export * as ComAtprotoIdentityUpdateHandle from './types/com/atproto/identity/up
 export * as ComAtprotoLabelDefs from './types/com/atproto/label/defs.js'
 export * as ComAtprotoLabelQueryLabels from './types/com/atproto/label/queryLabels.js'
 export * as ComAtprotoLabelSubscribeLabels from './types/com/atproto/label/subscribeLabels.js'
+export * as ComAtprotoLexiconResolveLexicon from './types/com/atproto/lexicon/resolveLexicon.js'
 export * as ComAtprotoLexiconSchema from './types/com/atproto/lexicon/schema.js'
 export * as ComAtprotoModerationCreateReport from './types/com/atproto/moderation/createReport.js'
 export * as ComAtprotoModerationDefs from './types/com/atproto/moderation/defs.js'
@@ -543,6 +556,7 @@ export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/comm
 export * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
 export * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/communication/updateTemplate.js'
 export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
+export * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
 export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
@@ -553,8 +567,10 @@ export * as ToolsOzoneModerationGetRepo from './types/tools/ozone/moderation/get
 export * as ToolsOzoneModerationGetReporterStats from './types/tools/ozone/moderation/getReporterStats.js'
 export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/getRepos.js'
 export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
+export * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
+export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -636,12 +652,11 @@ export const TOOLS_OZONE_MODERATION = {
 }
 export const TOOLS_OZONE_REPORT = {
   DefsReasonAppeal: 'tools.ozone.report.defs#reasonAppeal',
-  DefsReasonViolenceAnimalWelfare:
-    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+  DefsReasonOther: 'tools.ozone.report.defs#reasonOther',
+  DefsReasonViolenceAnimal: 'tools.ozone.report.defs#reasonViolenceAnimal',
   DefsReasonViolenceThreats: 'tools.ozone.report.defs#reasonViolenceThreats',
   DefsReasonViolenceGraphicContent:
     'tools.ozone.report.defs#reasonViolenceGraphicContent',
-  DefsReasonViolenceSelfHarm: 'tools.ozone.report.defs#reasonViolenceSelfHarm',
   DefsReasonViolenceGlorification:
     'tools.ozone.report.defs#reasonViolenceGlorification',
   DefsReasonViolenceExtremistContent:
@@ -652,21 +667,16 @@ export const TOOLS_OZONE_REPORT = {
   DefsReasonSexualAbuseContent:
     'tools.ozone.report.defs#reasonSexualAbuseContent',
   DefsReasonSexualNCII: 'tools.ozone.report.defs#reasonSexualNCII',
-  DefsReasonSexualSextortion: 'tools.ozone.report.defs#reasonSexualSextortion',
   DefsReasonSexualDeepfake: 'tools.ozone.report.defs#reasonSexualDeepfake',
   DefsReasonSexualAnimal: 'tools.ozone.report.defs#reasonSexualAnimal',
   DefsReasonSexualUnlabeled: 'tools.ozone.report.defs#reasonSexualUnlabeled',
   DefsReasonSexualOther: 'tools.ozone.report.defs#reasonSexualOther',
   DefsReasonChildSafetyCSAM: 'tools.ozone.report.defs#reasonChildSafetyCSAM',
   DefsReasonChildSafetyGroom: 'tools.ozone.report.defs#reasonChildSafetyGroom',
-  DefsReasonChildSafetyMinorPrivacy:
-    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
-  DefsReasonChildSafetyEndangerment:
-    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+  DefsReasonChildSafetyPrivacy:
+    'tools.ozone.report.defs#reasonChildSafetyPrivacy',
   DefsReasonChildSafetyHarassment:
     'tools.ozone.report.defs#reasonChildSafetyHarassment',
-  DefsReasonChildSafetyPromotion:
-    'tools.ozone.report.defs#reasonChildSafetyPromotion',
   DefsReasonChildSafetyOther: 'tools.ozone.report.defs#reasonChildSafetyOther',
   DefsReasonHarassmentTroll: 'tools.ozone.report.defs#reasonHarassmentTroll',
   DefsReasonHarassmentTargeted:
@@ -681,27 +691,20 @@ export const TOOLS_OZONE_REPORT = {
     'tools.ozone.report.defs#reasonMisleadingImpersonation',
   DefsReasonMisleadingSpam: 'tools.ozone.report.defs#reasonMisleadingSpam',
   DefsReasonMisleadingScam: 'tools.ozone.report.defs#reasonMisleadingScam',
-  DefsReasonMisleadingSyntheticContent:
-    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
-  DefsReasonMisleadingMisinformation:
-    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+  DefsReasonMisleadingElections:
+    'tools.ozone.report.defs#reasonMisleadingElections',
   DefsReasonMisleadingOther: 'tools.ozone.report.defs#reasonMisleadingOther',
   DefsReasonRuleSiteSecurity: 'tools.ozone.report.defs#reasonRuleSiteSecurity',
-  DefsReasonRuleStolenContent:
-    'tools.ozone.report.defs#reasonRuleStolenContent',
   DefsReasonRuleProhibitedSales:
     'tools.ozone.report.defs#reasonRuleProhibitedSales',
   DefsReasonRuleBanEvasion: 'tools.ozone.report.defs#reasonRuleBanEvasion',
   DefsReasonRuleOther: 'tools.ozone.report.defs#reasonRuleOther',
-  DefsReasonCivicElectoralProcess:
-    'tools.ozone.report.defs#reasonCivicElectoralProcess',
-  DefsReasonCivicDisclosure: 'tools.ozone.report.defs#reasonCivicDisclosure',
-  DefsReasonCivicInterference:
-    'tools.ozone.report.defs#reasonCivicInterference',
-  DefsReasonCivicMisinformation:
-    'tools.ozone.report.defs#reasonCivicMisinformation',
-  DefsReasonCivicImpersonation:
-    'tools.ozone.report.defs#reasonCivicImpersonation',
+  DefsReasonSelfHarmContent: 'tools.ozone.report.defs#reasonSelfHarmContent',
+  DefsReasonSelfHarmED: 'tools.ozone.report.defs#reasonSelfHarmED',
+  DefsReasonSelfHarmStunts: 'tools.ozone.report.defs#reasonSelfHarmStunts',
+  DefsReasonSelfHarmSubstances:
+    'tools.ozone.report.defs#reasonSelfHarmSubstances',
+  DefsReasonSelfHarmOther: 'tools.ozone.report.defs#reasonSelfHarmOther',
 }
 export const TOOLS_OZONE_TEAM = {
   DefsRoleAdmin: 'tools.ozone.team.defs#roleAdmin',
@@ -743,6 +746,7 @@ export class AppNS {
 export class AppBskyNS {
   _client: XrpcClient
   actor: AppBskyActorNS
+  ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
@@ -756,6 +760,7 @@ export class AppBskyNS {
   constructor(client: XrpcClient) {
     this._client = client
     this.actor = new AppBskyActorNS(client)
+    this.ageassurance = new AppBskyAgeassuranceNS(client)
     this.bookmark = new AppBskyBookmarkNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
@@ -1028,6 +1033,49 @@ export class AppBskyActorStatusRecord {
       undefined,
       { collection: 'app.bsky.actor.status', ...params },
       { headers },
+    )
+  }
+}
+
+export class AppBskyAgeassuranceNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  begin(
+    data?: AppBskyAgeassuranceBegin.InputSchema,
+    opts?: AppBskyAgeassuranceBegin.CallOptions,
+  ): Promise<AppBskyAgeassuranceBegin.Response> {
+    return this._client
+      .call('app.bsky.ageassurance.begin', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyAgeassuranceBegin.toKnownErr(e)
+      })
+  }
+
+  getConfig(
+    params?: AppBskyAgeassuranceGetConfig.QueryParams,
+    opts?: AppBskyAgeassuranceGetConfig.CallOptions,
+  ): Promise<AppBskyAgeassuranceGetConfig.Response> {
+    return this._client.call(
+      'app.bsky.ageassurance.getConfig',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getState(
+    params?: AppBskyAgeassuranceGetState.QueryParams,
+    opts?: AppBskyAgeassuranceGetState.CallOptions,
+  ): Promise<AppBskyAgeassuranceGetState.Response> {
+    return this._client.call(
+      'app.bsky.ageassurance.getState',
+      params,
+      undefined,
+      opts,
     )
   }
 }
@@ -3998,6 +4046,17 @@ export class ComAtprotoLexiconNS {
     this._client = client
     this.schema = new ComAtprotoLexiconSchemaRecord(client)
   }
+
+  resolveLexicon(
+    params?: ComAtprotoLexiconResolveLexicon.QueryParams,
+    opts?: ComAtprotoLexiconResolveLexicon.CallOptions,
+  ): Promise<ComAtprotoLexiconResolveLexicon.Response> {
+    return this._client
+      .call('com.atproto.lexicon.resolveLexicon', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoLexiconResolveLexicon.toKnownErr(e)
+      })
+  }
 }
 
 export class ComAtprotoLexiconSchemaRecord {
@@ -4910,6 +4969,18 @@ export class ToolsOzoneModerationNS {
     this._client = client
   }
 
+  cancelScheduledActions(
+    data?: ToolsOzoneModerationCancelScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationCancelScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationCancelScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.cancelScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   emitEvent(
     data?: ToolsOzoneModerationEmitEvent.InputSchema,
     opts?: ToolsOzoneModerationEmitEvent.CallOptions,
@@ -5019,6 +5090,18 @@ export class ToolsOzoneModerationNS {
     )
   }
 
+  listScheduledActions(
+    data?: ToolsOzoneModerationListScheduledActions.InputSchema,
+    opts?: ToolsOzoneModerationListScheduledActions.CallOptions,
+  ): Promise<ToolsOzoneModerationListScheduledActions.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.listScheduledActions',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   queryEvents(
     params?: ToolsOzoneModerationQueryEvents.QueryParams,
     opts?: ToolsOzoneModerationQueryEvents.CallOptions,
@@ -5039,6 +5122,18 @@ export class ToolsOzoneModerationNS {
       'tools.ozone.moderation.queryStatuses',
       params,
       undefined,
+      opts,
+    )
+  }
+
+  scheduleAction(
+    data?: ToolsOzoneModerationScheduleAction.InputSchema,
+    opts?: ToolsOzoneModerationScheduleAction.CallOptions,
+  ): Promise<ToolsOzoneModerationScheduleAction.Response> {
+    return this._client.call(
+      'tools.ozone.moderation.scheduleAction',
+      opts?.qp,
+      data,
       opts,
     )
   }

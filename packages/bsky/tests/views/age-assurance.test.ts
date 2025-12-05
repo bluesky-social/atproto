@@ -58,6 +58,8 @@ describe('age assurance views', () => {
           userAgent: 'userAgent',
           verificationSecret,
           webhookSecret,
+          ageVerifiedWebhookSecret: 'ageVerifiedWebhookSecret',
+          ageVerifiedRedirectSecret: 'ageVerifiedRedirectSecret',
         },
       },
     })

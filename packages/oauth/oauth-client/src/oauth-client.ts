@@ -22,7 +22,7 @@ import { FALLBACK_ALG } from './constants.js'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import {
-  IdentityResolverOptions,
+  CreateIdentityResolverOptions,
   createIdentityResolver,
 } from './identity-resolver.js'
 import {
@@ -71,7 +71,7 @@ export {
   type StateStore,
 }
 
-export type OAuthClientOptions = IdentityResolverOptions & {
+export type OAuthClientOptions = CreateIdentityResolverOptions & {
   // Config
   responseMode: OAuthResponseMode
   clientMetadata: Readonly<OAuthClientMetadataInput>
@@ -131,7 +131,7 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
       throw new TypeError(`Failed to fetch client metadata: ${response.status}`)
     }
 
-    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html#section-4.1
+    // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-4.1
     const mime = response.headers.get('content-type')?.split(';')[0].trim()
     if (mime !== 'application/json') {
       response.body?.cancel?.()

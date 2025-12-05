@@ -1,5 +1,151 @@
 # @atproto/dev-env
 
+## 0.3.193
+
+### Patch Changes
+
+- Updated dependencies [[`bcae2b7`](https://github.com/bluesky-social/atproto/commit/bcae2b77b68da6dc2ec202651c8bf41fd5769f69), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea), [`90f1569`](https://github.com/bluesky-social/atproto/commit/90f15698ee63d9a7374f1206754eda5d530873d7)]:
+  - @atproto/syntax@0.4.2
+  - @atproto/crypto@0.4.5
+  - @atproto/bsky@0.0.199
+  - @atproto/api@0.18.4
+  - @atproto/ozone@0.1.159
+  - @atproto/pds@0.4.197
+  - @atproto/common-web@0.4.6
+  - @atproto/xrpc-server@0.10.2
+
+## 0.3.192
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/common-web@0.4.4
+  - @atproto/xrpc-server@0.10.0
+  - @atproto/api@0.18.2
+  - @atproto/identity@0.4.10
+  - @atproto/lexicon@0.5.2
+  - @atproto/bsky@0.0.198
+  - @atproto/ozone@0.1.157
+  - @atproto/pds@0.4.195
+  - @atproto/sync@0.1.38
+  - @atproto/bsync@0.0.23
+  - @atproto/crypto@0.4.4
+
+## 0.3.191
+
+### Patch Changes
+
+- [#4344](https://github.com/bluesky-social/atproto/pull/4344) [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc) Thanks [@foysalit](https://github.com/foysalit)! - Add targetServices param to takedown events allowing mods to specify which service to apply takedown on
+
+- Updated dependencies [[`032abf6b5`](https://github.com/bluesky-social/atproto/commit/032abf6b500fd36f3c0fc1af83bf62caae44fa6e), [`9115325c7`](https://github.com/bluesky-social/atproto/commit/9115325c7b36f0293f87f79bb8edb49f72fec2bc), [`1dd20d3a8`](https://github.com/bluesky-social/atproto/commit/1dd20d3a81cda29392d8d63d13082254ec5f68a8)]:
+  - @atproto/ozone@0.1.156
+  - @atproto/api@0.18.1
+  - @atproto/pds@0.4.194
+  - @atproto/bsky@0.0.197
+  - @atproto/xrpc-server@0.9.6
+  - @atproto/sync@0.1.37
+
+## 0.3.190
+
+### Patch Changes
+
+- Updated dependencies [[`f8e56b387`](https://github.com/bluesky-social/atproto/commit/f8e56b387fcd3bc8405225c1bbdef66ca5dc1591), [`3628cebfb`](https://github.com/bluesky-social/atproto/commit/3628cebfbb04ba49f326bbf411a2d15de2900302), [`82e75bf6c`](https://github.com/bluesky-social/atproto/commit/82e75bf6c1b31daa834386edce35c8aa4c787229)]:
+  - @atproto/bsky@0.0.196
+  - @atproto/ozone@0.1.155
+  - @atproto/pds@0.4.193
+
+## 0.3.189
+
+### Patch Changes
+
+- Updated dependencies [[`94ddc8219`](https://github.com/bluesky-social/atproto/commit/94ddc8219c144475df622137ab88895255136eda), [`756ab5d87`](https://github.com/bluesky-social/atproto/commit/756ab5d87fea75e8648a6bdd545d8b441bfb2dd6), [`39b5c08e0`](https://github.com/bluesky-social/atproto/commit/39b5c08e0799468eba0c3bf50f4f5a8104c35f34)]:
+  - @atproto/api@0.18.0
+  - @atproto/sync@0.1.36
+  - @atproto/bsky@0.0.195
+  - @atproto/ozone@0.1.154
+  - @atproto/pds@0.4.192
+
+## 0.3.188
+
+### Patch Changes
+
+- Updated dependencies [[`15fe80c39`](https://github.com/bluesky-social/atproto/commit/15fe80c39ff428652dfaa6b30c0bdb59a145aac6)]:
+  - @atproto/api@0.17.7
+  - @atproto/bsky@0.0.194
+  - @atproto/ozone@0.1.153
+  - @atproto/pds@0.4.191
+
+## 0.3.187
+
+### Patch Changes
+
+- Updated dependencies [[`7c1429fe3`](https://github.com/bluesky-social/atproto/commit/7c1429fe36226d0d57e57c037ba4221d2fbd57ee), [`cdb6b27fc`](https://github.com/bluesky-social/atproto/commit/cdb6b27fc6be1e858476d8c55fd0c37561b972b4)]:
+  - @atproto/api@0.17.6
+  - @atproto/bsky@0.0.193
+  - @atproto/ozone@0.1.152
+  - @atproto/pds@0.4.190
+
+## 0.3.186
+
+### Patch Changes
+
+- [#4279](https://github.com/bluesky-social/atproto/pull/4279) [`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031) Thanks [@foysalit](https://github.com/foysalit)! - Add strike system to ozone
+
+- Updated dependencies [[`601401afc`](https://github.com/bluesky-social/atproto/commit/601401afce9f4da2e8a257f8dcca996dd64e6031)]:
+  - @atproto/ozone@0.1.151
+  - @atproto/api@0.17.5
+  - @atproto/pds@0.4.189
+  - @atproto/bsky@0.0.192
+
+## 0.3.185
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/pds@0.4.188
+  - @atproto/bsky@0.0.191
+  - @atproto/ozone@0.1.150
+
+## 0.3.184
+
+### Patch Changes
+
+- Updated dependencies [[`a8e307ef4`](https://github.com/bluesky-social/atproto/commit/a8e307ef4851b164ee38bb5149343631e329f143)]:
+  - @atproto/api@0.17.4
+  - @atproto/pds@0.4.187
+  - @atproto/bsky@0.0.191
+  - @atproto/ozone@0.1.150
+
+## 0.3.183
+
+### Patch Changes
+
+- Updated dependencies [[`ca768fe1b`](https://github.com/bluesky-social/atproto/commit/ca768fe1b0ba1662140b6eea550683d8675fa56e), [`386f583cf`](https://github.com/bluesky-social/atproto/commit/386f583cffa2c596a12be4e98dde498f3b8670f6)]:
+  - @atproto/ozone@0.1.149
+  - @atproto/api@0.17.3
+  - @atproto/bsky@0.0.190
+  - @atproto/pds@0.4.186
+
+## 0.3.182
+
+### Patch Changes
+
+- Updated dependencies [[`1cb5b9b80`](https://github.com/bluesky-social/atproto/commit/1cb5b9b80c20a054f7fbacd89d0d440dc2241d81)]:
+  - @atproto/ozone@0.1.148
+  - @atproto/api@0.17.2
+  - @atproto/bsky@0.0.189
+  - @atproto/pds@0.4.185
+
+## 0.3.181
+
+### Patch Changes
+
+- Updated dependencies [[`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3), [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3), [`591de1952`](https://github.com/bluesky-social/atproto/commit/591de19524639341a7dd64ee75c482c645c186fd)]:
+  - @atproto/api@0.17.1
+  - @atproto/ozone@0.1.147
+  - @atproto/pds@0.4.184
+  - @atproto/bsky@0.0.188
+
 ## 0.3.180
 
 ### Patch Changes

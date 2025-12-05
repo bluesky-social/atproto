@@ -8,6 +8,7 @@ import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
+  REVIEWNONE,
   REVIEWOPEN,
   RepoView,
   RepoViewDetail,
@@ -127,7 +128,12 @@ export const getReviewState = (reviewState?: string) => {
   throw new InvalidRequestError('Invalid review state')
 }
 
-const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
+const reviewStates = new Set([
+  REVIEWCLOSED,
+  REVIEWESCALATED,
+  REVIEWOPEN,
+  REVIEWNONE,
+])
 
 const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventTakedown',
@@ -152,6 +158,8 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#ageAssuranceEvent',
   'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
   'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+  'tools.ozone.moderation.defs#scheduleTakedownEvent',
+  'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
 ])
 
 export const getMemberRole = (role: string) => {
@@ -211,3 +219,34 @@ const safelinkPatterns = new Set(['domain', 'url'])
 const safelinkActions = new Set(['block', 'warn', 'whitelist'])
 const safelinkReasons = new Set(['csam', 'spam', 'phishing', 'none'])
 const safelinkEventTypes = new Set(['addRule', 'updateRule', 'removeRule'])
+
+export const getScheduledActionType = (action: string): ScheduledActionType => {
+  if (scheduledActionTypes.has(action)) {
+    return action as ScheduledActionType
+  }
+  throw new InvalidRequestError('Invalid scheduled action type')
+}
+
+export const getScheduledActionStatus = (
+  status: string,
+): ScheduledActionStatus => {
+  if (scheduledActionStatuses.has(status)) {
+    return status as ScheduledActionStatus
+  }
+  throw new InvalidRequestError('Invalid scheduled action status')
+}
+
+export type ScheduledActionType = 'takedown'
+export type ScheduledActionStatus =
+  | 'pending'
+  | 'executed'
+  | 'cancelled'
+  | 'failed'
+
+const scheduledActionTypes = new Set(['takedown'])
+const scheduledActionStatuses = new Set([
+  'pending',
+  'executed',
+  'cancelled',
+  'failed',
+])

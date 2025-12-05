@@ -123,13 +123,17 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
+    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
+    })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
       indexedAtEpoch: config.indexedAtEpoch,
       threadTagsBumpDown: [...config.threadTagsBumpDown],
       threadTagsHide: [...config.threadTagsHide],
+      visibilityTagHide: config.visibilityTagHide,
+      visibilityTagRankPrefix: config.visibilityTagRankPrefix,
     })
 
     const bsyncClient = createBsyncClient({
