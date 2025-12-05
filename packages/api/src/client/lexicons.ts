@@ -15509,6 +15509,7 @@ export const schemaDict = {
           },
           comment: {
             type: 'string',
+            minLength: 1,
             description: 'Comment describing the reason for the override.',
           },
         },
@@ -15520,6 +15521,7 @@ export const schemaDict = {
         required: ['comment'],
         properties: {
           comment: {
+            minLength: 1,
             type: 'string',
             description: 'Comment describing the reason for the revocation.',
           },
