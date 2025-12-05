@@ -1,10 +1,8 @@
 import { fromString } from 'uint8arrays/from-string'
 import { NodeJSBuffer } from './lib/nodejs-buffer.js'
+import { Base64Alphabet } from './uint8array-base64.js'
 
 const Buffer = NodeJSBuffer
-
-/** @default 'base64' */
-export type Alphabet = 'base64' | 'base64url'
 
 declare global {
   interface Uint8ArrayConstructor {
@@ -26,7 +24,7 @@ export const fromBase64Native =
   typeof Uint8Array.fromBase64 === 'function'
     ? function fromBase64Native(
         b64: string,
-        alphabet: Alphabet = 'base64',
+        alphabet: Base64Alphabet = 'base64',
       ): Uint8Array {
         return Uint8Array.fromBase64!(b64, {
           alphabet,
@@ -38,7 +36,7 @@ export const fromBase64Native =
 export const fromBase64Node = Buffer
   ? function fromBase64Node(
       b64: string,
-      alphabet: Alphabet = 'base64',
+      alphabet: Base64Alphabet = 'base64',
     ): Uint8Array {
       const bytes = Buffer.from(b64, alphabet)
       verifyBase64ForBytes(b64, bytes)
@@ -51,7 +49,7 @@ export const fromBase64Node = Buffer
 
 export function fromBase64Ponyfill(
   b64: string,
-  alphabet: Alphabet = 'base64',
+  alphabet: Base64Alphabet = 'base64',
 ): Uint8Array {
   const bytes = fromString(b64, b64.endsWith('=') ? `${alphabet}pad` : alphabet)
   verifyBase64ForBytes(b64, bytes)
