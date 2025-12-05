@@ -1,5 +1,13 @@
 # @atproto/oauth-client-expo
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.5.11
+  - @atproto/oauth-client-browser@0.3.37
+
 ## 0.0.4
 
 ### Patch Changes

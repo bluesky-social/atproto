@@ -1,5 +1,14 @@
 # @atproto/lex-cbor
 
+## 0.0.3
+
+### Patch Changes
+
+- [#4411](https://github.com/bluesky-social/atproto/pull/4411) [`7e1d458`](https://github.com/bluesky-social/atproto/commit/7e1d45877bca0f615e7b1313cfcc66823b3de758) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update name of dist files
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/lex-data@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes

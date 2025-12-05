@@ -1,5 +1,15 @@
 # @atproto/lex-builder
 
+## 0.0.6
+
+### Patch Changes
+
+- [#4413](https://github.com/bluesky-social/atproto/pull/4413) [`e39ca11`](https://github.com/bluesky-social/atproto/commit/e39ca114accac65070dcdd424a181821aad6d99d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for NodeJS version <18.18, 19.x, <20.4 and 21.x
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab)]:
+  - @atproto/lex-document@0.0.5
+  - @atproto/lex-schema@0.0.4
+
 ## 0.0.5
 
 ### Patch Changes
