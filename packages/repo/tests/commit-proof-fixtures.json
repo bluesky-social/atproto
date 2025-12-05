@@ -10,9 +10,7 @@
       "F1/085263",
       "G0/765327"
     ],
-    "adds": [
-      "D2/269196"
-    ],
+    "adds": ["D2/269196"],
     "dels": [],
     "rootBeforeCommit": "bafyreicraprx2xwnico4tuqir3ozsxpz46qkcpox3obf5bagicqwurghpy",
     "rootAfterCommit": "bafyreihvay6pazw3dfa47u5d2tn3rd6pa57sr37bo5bqyvjuqc73ib65my",
@@ -27,15 +25,8 @@
   {
     "comment": "two deep leafless split",
     "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
-    "keys": [
-      "A0/374913",
-      "B0/601692",
-      "D0/952776",
-      "E0/670489"
-    ],
-    "adds": [
-      "C2/014073"
-    ],
+    "keys": ["A0/374913", "B0/601692", "D0/952776", "E0/670489"],
+    "adds": ["C2/014073"],
     "dels": [],
     "rootBeforeCommit": "bafyreialm5sgf7pijawbschsjpdevid5rss5ip3d4n4w6cc4mhu53sfl4i",
     "rootAfterCommit": "bafyreibxh4iztp5l2yshz3ectg2qjpeyprpw2gogao3pvceowpq3k3thya",
@@ -50,14 +41,8 @@
   {
     "comment": "add on edge with neighbor two layers down",
     "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
-    "keys": [
-      "A0/374913",
-      "B2/827649",
-      "C0/451630"
-    ],
-    "adds": [
-      "D2/269196"
-    ],
+    "keys": ["A0/374913", "B2/827649", "C0/451630"],
+    "adds": ["D2/269196"],
     "dels": [],
     "rootBeforeCommit": "bafyreigc6ay2qwfk7kuevvrczummpd64nknfo4yxpaooknfymzyb7u3ntq",
     "rootAfterCommit": "bafyreign6kxoll35r5f2ske6hjx7vg56aw3jn6r5hcopgrepzafpvohr2a",
@@ -70,19 +55,9 @@
   {
     "comment": "merge and split in multi-op commit",
     "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
-    "keys": [
-      "A0/374913",
-      "B2/827649",
-      "D2/269196",
-      "E0/670489"
-    ],
-    "adds": [
-      "C2/014073"
-    ],
-    "dels": [
-      "B2/827649",
-      "D2/269196"
-    ],
+    "keys": ["A0/374913", "B2/827649", "D2/269196", "E0/670489"],
+    "adds": ["C2/014073"],
+    "dels": ["B2/827649", "D2/269196"],
     "rootBeforeCommit": "bafyreiceld4icym4qjmdcn3dfgtxt7t66hdgyhvigessgmkvb56dx6amgi",
     "rootAfterCommit": "bafyreigkalika3taqauapfha556lo36zzcjoiifny5xeru6yis3nxw5ruq",
     "blocksInProof": [
@@ -104,13 +79,8 @@
       "F0/697858",
       "H0/131238"
     ],
-    "adds": [
-      "A2/827942",
-      "G2/611528"
-    ],
-    "dels": [
-      "C2/014073"
-    ],
+    "adds": ["A2/827942", "G2/611528"],
+    "dels": ["C2/014073"],
     "rootBeforeCommit": "bafyreigr3plnts7dax6yokvinbhcqpyicdfgg6npvvyx6okc5jo55slfqi",
     "rootAfterCommit": "bafyreiftrcrbhrwmi37u4egedlg56gk3jeh3tvmqvwgowoifuklfysyx54",
     "blocksInProof": [
