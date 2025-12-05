@@ -174,7 +174,7 @@ export class TestOzone {
         },
         'sev-7': {
           needsTakedown: true,
-          description: 'Sever violation, immedate account takedown',
+          description: 'Sever violation, immediate account takedown',
         },
         'custom-sev': {
           strikeCount: 4,

@@ -783,7 +783,7 @@ export class MST {
 
   // A covering proof is all MST nodes (leaves excluded) needed to prove the value of a given leaf
   // and its siblings to its immediate right and left (if applicable)
-  // We simply find the immediately preceeding node and then walk from that node until we reach the
+  // We simply find the immediately preceding node and then walk from that node until we reach the
   // first key that is greater than the requested key (the right sibling)
   async getCoveringProof(key: string): Promise<BlockMap> {
     const [self, left, right] = await Promise.all([
