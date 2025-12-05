@@ -11,6 +11,13 @@ import aaGetState from './app/bsky/ageassurance/getState'
 import createBookmark from './app/bsky/bookmark/createBookmark'
 import deleteBookmark from './app/bsky/bookmark/deleteBookmark'
 import getBookmarks from './app/bsky/bookmark/getBookmarks'
+import dismissMatch from './app/bsky/contact/dismissMatch'
+import getMatches from './app/bsky/contact/getMatches'
+import getSyncStatus from './app/bsky/contact/getSyncStatus'
+import importContacts from './app/bsky/contact/importContacts'
+import removeData from './app/bsky/contact/removeData'
+import startPhoneVerification from './app/bsky/contact/startPhoneVerification'
+import verifyPhone from './app/bsky/contact/verifyPhone'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
@@ -94,6 +101,13 @@ export default function (server: Server, ctx: AppContext) {
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
   getBookmarks(server, ctx)
+  dismissMatch(server, ctx)
+  getMatches(server, ctx)
+  getSyncStatus(server, ctx)
+  importContacts(server, ctx)
+  removeData(server, ctx)
+  startPhoneVerification(server, ctx)
+  verifyPhone(server, ctx)
   getActorFeeds(server, ctx)
   getSuggestedFeeds(server, ctx)
   getAuthorFeed(server, ctx)

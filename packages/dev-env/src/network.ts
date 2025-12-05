@@ -67,6 +67,8 @@ export class TestNetwork extends TestNetworkNoAppView {
       port: bskyPort,
       plcUrl: plc.url,
       pdsPort,
+      rolodexUrl: process.env.BSKY_ROLODEX_URL,
+      rolodexIgnoreBadTls: true,
       repoProvider: `ws://localhost:${pdsPort}`,
       dbPostgresSchema: `appview_${dbPostgresSchema}`,
       dbPostgresUrl,
