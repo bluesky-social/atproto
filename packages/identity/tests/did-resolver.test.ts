@@ -1,6 +1,7 @@
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
 import getPort from 'get-port'
+import { Did, didDocument } from '@atproto/common-web'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { DidDocument, DidResolver } from '../src'
 import { DidWebDb } from './web/db'
@@ -42,7 +43,7 @@ describe('did resolver', () => {
   const pds = 'https://service.test'
   let signingKey: Secp256k1Keypair
   let rotationKey: Secp256k1Keypair
-  let webDid: string
+  let webDid: Did
   let plcDid: string
   let didWebDoc: DidDocument
   let didPlcDoc: DidDocument
@@ -58,7 +59,7 @@ describe('did resolver', () => {
       rotationKeys: [rotationKey.did()],
       signer: rotationKey,
     })
-    didPlcDoc = await client.getDocument(plcDid)
+    didPlcDoc = didDocument.parse(await client.getDocument(plcDid))
     const domain = encodeURIComponent(`localhost:${webServer.port}`)
     webDid = `did:web:${domain}`
     didWebDoc = {
