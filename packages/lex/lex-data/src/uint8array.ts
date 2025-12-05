@@ -10,7 +10,7 @@ import {
   toBase64Ponyfill,
 } from './uint8array-to-base64.js'
 
-export type { Base64Alphabet as Alphabet }
+export type { Base64Alphabet }
 
 // @TODO drop dependency on uint8arrays package once Uint8Array.fromBase64 /
 // Uint8Array.prototype.toBase64 is widely supported, and mark fromBase64 /
