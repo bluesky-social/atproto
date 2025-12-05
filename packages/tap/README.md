@@ -12,12 +12,14 @@ import { Tap, SimpleIndexer } from '@atproto/tap'
 const tap = new Tap('http://localhost:8080')
 
 const indexer = new SimpleIndexer()
+
 // handle events pertaining to a repo's account or identity
 indexer.user(async (evt) => {
   console.log(
     `${evt.user.did} updated identity. handle: ${evt.user.handle}. status: ${evt.user.status}`,
   )
 })
+
 // handle events pertaining to a the creation, update, or deletion of a record
 indexer.record(async (evt) => {
   const uri = `at://${evt.record.did}/${evt.record.collection}/${evt.record.rkey}`
@@ -29,6 +31,7 @@ indexer.record(async (evt) => {
     console.log(`record deleted at ${uri}`)
   }
 })
+
 // without a handler, errors will end up as unhandled exceptions
 indexer.error((err) => console.error(err))
 
