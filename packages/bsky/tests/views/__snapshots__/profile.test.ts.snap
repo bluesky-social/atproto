@@ -598,6 +598,109 @@ Object {
 }
 `;
 
+exports[`pds profile views returns empty profile for actor that exists but has no profile 1`] = `
+Object {
+  "profiles": Array [
+    Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+        "feedgens": 0,
+        "labeler": false,
+        "lists": 0,
+        "starterPacks": 0,
+      },
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(0)@jpeg",
+      "createdAt": "1970-01-01T00:00:00.000Z",
+      "description": "hi im bob label_me",
+      "did": "user(0)",
+      "displayName": "bobby",
+      "followersCount": 2,
+      "followsCount": 2,
+      "handle": "bob.test",
+      "indexedAt": "1970-01-01T00:00:00.000Z",
+      "labels": Array [],
+      "postsCount": 3,
+      "viewer": Object {
+        "blockedBy": false,
+        "followedBy": "record(1)",
+        "following": "record(0)",
+        "knownFollowers": Object {
+          "count": 1,
+          "followers": Array [
+            Object {
+              "associated": Object {
+                "activitySubscription": Object {
+                  "allowSubscriptions": "followers",
+                },
+                "chat": Object {
+                  "allowIncoming": "none",
+                },
+              },
+              "did": "user(2)",
+              "handle": "dan.test",
+              "labels": Array [],
+              "viewer": Object {
+                "blockedBy": false,
+                "following": "record(2)",
+                "muted": false,
+              },
+            },
+          ],
+        },
+        "muted": false,
+      },
+    },
+    Object {
+      "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
+        "feedgens": 0,
+        "labeler": false,
+        "lists": 0,
+        "starterPacks": 0,
+      },
+      "did": "user(3)",
+      "followersCount": 0,
+      "followsCount": 0,
+      "handle": "noprofile.test",
+      "labels": Array [],
+      "postsCount": 0,
+      "viewer": Object {
+        "blockedBy": false,
+        "muted": false,
+      },
+    },
+  ],
+}
+`;
+
+exports[`pds profile views returns empty profile if actor exists but has no profile 1`] = `
+Object {
+  "associated": Object {
+    "activitySubscription": Object {
+      "allowSubscriptions": "followers",
+    },
+    "feedgens": 0,
+    "labeler": false,
+    "lists": 0,
+    "starterPacks": 0,
+  },
+  "did": "user(0)",
+  "followersCount": 0,
+  "followsCount": 0,
+  "handle": "noprofile.test",
+  "labels": Array [],
+  "postsCount": 0,
+  "viewer": Object {
+    "blockedBy": false,
+    "muted": false,
+  },
+}
+`;
+
 exports[`pds profile views status returns active status when within the duration 1`] = `
 Object {
   "embed": Object {
