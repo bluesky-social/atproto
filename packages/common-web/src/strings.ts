@@ -1,8 +1,10 @@
 import {
   LanguageTag,
+  fromBase64,
   graphemeLen,
   isLanguage,
   parseLanguage,
+  toBase64,
   utf8Len,
 } from '@atproto/lex-data'
 
@@ -34,3 +36,17 @@ export { parseLanguageLegacy as parseLanguage }
  * @deprecated Use {@link isLanguage} from `@atproto/lex-data` instead.
  */
 export const validateLanguage = isLanguage
+
+/**
+ * @deprecated Use {@link toBase64} from `@atproto/lex-data` instead.
+ */
+export const utf8ToB64Url = (utf8: string): string => {
+  return toBase64(new TextEncoder().encode(utf8), 'base64url')
+}
+
+/**
+ * @deprecated Use {@link fromBase64} from `@atproto/lex-data` instead.
+ */
+export const b64UrlToUtf8 = (b64: string): string => {
+  return new TextDecoder().decode(fromBase64(b64, 'base64url'))
+}

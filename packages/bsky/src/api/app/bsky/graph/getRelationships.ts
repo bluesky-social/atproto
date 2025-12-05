@@ -26,6 +26,10 @@ export default function (server: Server, ctx: AppContext) {
               did,
               following: subject.following,
               followedBy: subject.followedBy,
+              blocking: subject.blocking,
+              blockedBy: subject.blockedBy,
+              blockingByList: subject.blockingByList,
+              blockedByList: subject.blockedByList,
             }
           : {
               $type: 'app.bsky.graph.defs#notFoundActor',
