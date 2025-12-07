@@ -3,7 +3,6 @@ import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
-import * as ui8 from 'uint8arrays'
 import { MINUTE } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { LexiconDoc } from '@atproto/lexicon'
@@ -322,6 +321,10 @@ const createPrivateKeyObject = async (
 ): Promise<KeyObject> => {
   const raw = await privateKey.export()
   const encoder = new KeyEncoder('secp256k1')
-  const key = encoder.encodePrivate(ui8.toString(raw, 'hex'), 'raw', 'pem')
+  const key = encoder.encodePrivate(
+    Buffer.from(raw).toString('hex'),
+    'raw',
+    'pem',
+  )
   return createPrivateKey({ format: 'pem', key })
 }

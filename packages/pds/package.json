@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.193",
+  "version": "0.4.197",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -42,10 +42,11 @@
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "@atproto/lexicon": "workspace:^",
-    "@atproto/lexicon-resolver": "workspace:^",
-    "@atproto/oauth-scopes": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
+    "@atproto/oauth-scopes": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",

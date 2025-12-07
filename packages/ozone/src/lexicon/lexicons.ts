@@ -1196,6 +1196,394 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyAgeassuranceBegin: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.begin',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate Age Assurance for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive Age Assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the Age Assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+              regionCode: {
+                type: 'string',
+                description:
+                  "An optional ISO 3166-2 code of the user's region or state within the country.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#state',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+          {
+            name: 'RegionNotSupported',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyAgeassuranceDefs: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.defs',
+    defs: {
+      access: {
+        description:
+          "The access level granted based on Age Assurance data we've processed.",
+        type: 'string',
+        knownValues: ['unknown', 'none', 'safe', 'full'],
+      },
+      status: {
+        type: 'string',
+        description: 'The status of the Age Assurance process.',
+        knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+      },
+      state: {
+        type: 'object',
+        description: "The user's computed Age Assurance state.",
+        required: ['status', 'access'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#status',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      stateMetadata: {
+        type: 'object',
+        description:
+          'Additional metadata needed to compute Age Assurance state client-side.',
+        required: [],
+        properties: {
+          accountCreatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The account creation timestamp.',
+          },
+        },
+      },
+      config: {
+        type: 'object',
+        description: '',
+        required: ['regions'],
+        properties: {
+          regions: {
+            type: 'array',
+            description: 'The per-region Age Assurance configuration.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.ageassurance.defs#configRegion',
+            },
+          },
+        },
+      },
+      configRegion: {
+        type: 'object',
+        description: 'The Age Assurance configuration for a specific region.',
+        required: ['countryCode', 'rules'],
+        properties: {
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code this configuration applies to.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country.',
+          },
+          rules: {
+            type: 'array',
+            description:
+              'The ordered list of Age Assurance rules that apply to this region. Rules should be applied in order, and the first matching rule determines the access level granted. The rules array should always include a default rule as the last item.',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.ageassurance.defs#configRegionRuleDefault',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountNewerThan',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountOlderThan',
+              ],
+            },
+          },
+        },
+      },
+      configRegionRuleDefault: {
+        type: 'object',
+        description: 'Age Assurance rule that applies by default.',
+        required: ['access'],
+        properties: {
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountNewerThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is equal-to or newer than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountOlderThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is older than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      event: {
+        type: 'object',
+        description: 'Object used to store Age Assurance data in stash.',
+        required: ['createdAt', 'status', 'access', 'attemptId', 'countryCode'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the Age Assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+          access: {
+            description:
+              "The access level granted based on Age Assurance data we've processed.",
+            type: 'string',
+            knownValues: ['unknown', 'none', 'safe', 'full'],
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for Age Assurance.',
+          },
+          initIp: {
+            type: 'string',
+            description:
+              'The IP address used when initiating the Age Assurance flow.',
+          },
+          initUa: {
+            type: 'string',
+            description:
+              'The user agent used when initiating the Age Assurance flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description:
+              'The IP address used when completing the Age Assurance flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description:
+              'The user agent used when completing the Age Assurance flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns Age Assurance configuration for use on the client.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#config',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetState: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns server-computed Age Assurance state, if available, and any additional metadata needed to compute Age Assurance state client-side.',
+        parameters: {
+          type: 'params',
+          required: ['countryCode'],
+          properties: {
+            countryCode: {
+              type: 'string',
+            },
+            regionCode: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['state', 'metadata'],
+            properties: {
+              state: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#state',
+              },
+              metadata: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#stateMetadata',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyBookmarkCreateBookmark: {
     lexicon: 1,
     id: 'app.bsky.bookmark.createBookmark',
@@ -4072,6 +4460,30 @@ export const schemaDict = {
             format: 'at-uri',
             description:
               'if the actor is followed by this DID, contains the AT-URI of the follow record',
+          },
+          blocking: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID, this is the AT-URI of the block record',
+          },
+          blockedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID, contains the AT-URI of the block record',
+          },
+          blockingByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID via a block list, this is the AT-URI of the listblock record',
+          },
+          blockedByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record',
           },
         },
       },
@@ -14832,10 +15244,10 @@ export const schemaDict = {
       subjectReviewState: {
         type: 'string',
         knownValues: [
-          'lex:tools.ozone.moderation.defs#reviewOpen',
-          'lex:tools.ozone.moderation.defs#reviewEscalated',
-          'lex:tools.ozone.moderation.defs#reviewClosed',
-          'lex:tools.ozone.moderation.defs#reviewNone',
+          'tools.ozone.moderation.defs#reviewOpen',
+          'tools.ozone.moderation.defs#reviewEscalated',
+          'tools.ozone.moderation.defs#reviewClosed',
+          'tools.ozone.moderation.defs#reviewNone',
         ],
       },
       reviewOpen: {
@@ -14888,6 +15300,15 @@ export const schemaDict = {
             type: 'string',
             description:
               "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          targetServices: {
+            type: 'array',
+            items: {
+              type: 'string',
+              knownValues: ['appview', 'pds'],
+            },
+            description:
+              'List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services.',
           },
           strikeCount: {
             type: 'integer',
@@ -15028,15 +15449,29 @@ export const schemaDict = {
             format: 'datetime',
             description: 'The date and time of this write operation.',
           },
-          status: {
-            type: 'string',
-            description: 'The status of the age assurance process.',
-            knownValues: ['unknown', 'pending', 'assured'],
-          },
           attemptId: {
             type: 'string',
             description:
               'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
           },
           initIp: {
             type: 'string',
@@ -15068,8 +15503,13 @@ export const schemaDict = {
               'The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.',
             knownValues: ['assured', 'reset', 'blocked'],
           },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
           comment: {
             type: 'string',
+            minLength: 1,
             description: 'Comment describing the reason for the override.',
           },
         },
@@ -15081,6 +15521,7 @@ export const schemaDict = {
         required: ['comment'],
         properties: {
           comment: {
+            minLength: 1,
             type: 'string',
             description: 'Comment describing the reason for the revocation.',
           },
@@ -15196,6 +15637,11 @@ export const schemaDict = {
             format: 'datetime',
             description:
               'When the strike should expire. If not provided, the strike never expires.',
+          },
+          isDelivered: {
+            type: 'boolean',
+            description:
+              "Indicates whether the email was successfully delivered to the user's inbox.",
           },
         },
       },
@@ -16730,6 +17176,12 @@ export const schemaDict = {
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
+              knownValues: [
+                'tools.ozone.moderation.defs#reviewOpen',
+                'tools.ozone.moderation.defs#reviewClosed',
+                'tools.ozone.moderation.defs#reviewEscalated',
+                'tools.ozone.moderation.defs#reviewNone',
+              ],
             },
             ignoreSubjects: {
               type: 'array',
@@ -16949,6 +17401,31 @@ export const schemaDict = {
             },
             description:
               'Names/Keywords of the policies that drove the decision.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user when takedown is applied.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          emailContent: {
+            type: 'string',
+            description: 'Email content to be sent to the user upon takedown.',
+          },
+          emailSubject: {
+            type: 'string',
+            description:
+              'Subject of the email to be sent to the user upon takedown.',
           },
         },
       },
@@ -18557,10 +19034,10 @@ export const schemaDict = {
           role: {
             type: 'string',
             knownValues: [
-              'lex:tools.ozone.team.defs#roleAdmin',
-              'lex:tools.ozone.team.defs#roleModerator',
-              'lex:tools.ozone.team.defs#roleTriage',
-              'lex:tools.ozone.team.defs#roleVerifier',
+              'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -19116,6 +19593,10 @@ export const ids = {
   AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
   AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
   AppBskyActorStatus: 'app.bsky.actor.status',
+  AppBskyAgeassuranceBegin: 'app.bsky.ageassurance.begin',
+  AppBskyAgeassuranceDefs: 'app.bsky.ageassurance.defs',
+  AppBskyAgeassuranceGetConfig: 'app.bsky.ageassurance.getConfig',
+  AppBskyAgeassuranceGetState: 'app.bsky.ageassurance.getState',
   AppBskyBookmarkCreateBookmark: 'app.bsky.bookmark.createBookmark',
   AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
   AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',

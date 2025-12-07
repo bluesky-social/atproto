@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { WebSocket } from 'ws'
 import { AtpAgent } from '@atproto/api'
@@ -342,7 +344,7 @@ describe('repo subscribe repos', () => {
     const seqSlice = seqs.slice(midPoint + 1)
     expect(evts.length).toBe(seqSlice.length)
     for (let i = 0; i < evts.length; i++) {
-      const evt = evts[i].body as CommitEvt
+      const evt = evts[i].body as unknown as CommitEvt
       const seq = seqSlice[i]
       const seqEvt = cborDecode(seq.event) as { commit: CID }
       expect(evt.time).toEqual(seq.sequencedAt)

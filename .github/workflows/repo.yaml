@@ -41,6 +41,9 @@ jobs:
           path: |
             packages/*/dist
             packages/*/*/dist
+            packages/lex/*/src/lexicons
+            packages/lex/*/tests/lexicons
+            packages/oauth/oauth-client-browser-example/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
           retention-days: 1
   test:

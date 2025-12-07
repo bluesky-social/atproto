@@ -1,6 +1,6 @@
 {
   "name": "@atproto/ozone",
-  "version": "0.1.155",
+  "version": "0.1.159",
   "license": "MIT",
   "description": "Backend service for moderating the Bluesky network.",
   "keywords": [
@@ -34,6 +34,7 @@
     "@atproto/identity": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/syntax": "workspace:^",
+    "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.1",

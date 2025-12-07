@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { z } from 'zod'
 import { validateLanguage } from '@atproto/common-web'
 import { isValidNsid } from '@atproto/syntax'
@@ -266,15 +268,6 @@ export const lexXrpcBody = z.object({
 })
 export type LexXrpcBody = z.infer<typeof lexXrpcBody>
 
-export const lexXrpcSubscriptionMessage = z.object({
-  description: z.string().optional(),
-  // @NOTE using discriminatedUnion with a refined schema requires zod >= 4
-  schema: z.union([lexRefVariant, lexObject]).optional(),
-})
-export type LexXrpcSubscriptionMessage = z.infer<
-  typeof lexXrpcSubscriptionMessage
->
-
 export const lexXrpcError = z.object({
   name: z.string(),
   description: z.string().optional(),
@@ -304,7 +297,10 @@ export const lexXrpcSubscription = z.object({
   type: z.literal('subscription'),
   description: z.string().optional(),
   parameters: lexXrpcParameters.optional(),
-  message: lexXrpcSubscriptionMessage.optional(),
+  message: z.object({
+    description: z.string().optional(),
+    schema: lexRefUnion,
+  }),
   errors: lexXrpcError.array().optional(),
 })
 export type LexXrpcSubscription = z.infer<typeof lexXrpcSubscription>

@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { sql } from 'kysely'
 import { CID } from 'multiformats/cid'
 import {

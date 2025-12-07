@@ -11,6 +11,7 @@ import express, {
   Router,
 } from 'express'
 import { check, schema } from '@atproto/common'
+import { LexMap, LexValue } from '@atproto/lex-data'
 import {
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -406,7 +407,7 @@ export class Server {
               }
               const type = item?.['$type']
               if (!check.is(item, schema.map) || typeof type !== 'string') {
-                yield new MessageFrame(item)
+                yield new MessageFrame(item as LexValue)
                 continue
               }
               const split = type.split('#')
@@ -419,8 +420,7 @@ export class Server {
               } else {
                 t = type
               }
-              const clone = { ...item }
-              delete clone['$type']
+              const { $type: _, ...clone } = item as LexMap
               yield new MessageFrame(clone, { type: t })
             }
           } catch (err) {

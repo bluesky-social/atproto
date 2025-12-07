@@ -25,7 +25,7 @@ export async function* byMessage(ws: WebSocket, options?: DuplexOptions) {
   }
 }
 
-export function ensureChunkIsMessage(chunk: Uint8Array): MessageFrame<unknown> {
+export function ensureChunkIsMessage(chunk: Uint8Array): MessageFrame {
   const frame = Frame.fromBytes(chunk)
   if (frame.isMessage()) {
     return frame

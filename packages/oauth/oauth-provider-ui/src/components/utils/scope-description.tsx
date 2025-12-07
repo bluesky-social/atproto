@@ -134,10 +134,7 @@ function IncludeScopePermissions({
 
   const permissions = useMemo(() => {
     if (!permissionSet) return null
-    const parsedPermissions = includeScope.toPermissions(permissionSet)
-    return new ScopePermissionsTransition(
-      parsedPermissions.map((p) => p.toString()),
-    )
+    return new ScopePermissionsTransition(includeScope.toScopes(permissionSet))
   }, [includeScope, permissionSet])
 
   return (

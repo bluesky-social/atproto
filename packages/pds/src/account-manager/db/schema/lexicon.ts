@@ -1,4 +1,4 @@
-import type { LexiconDoc } from '@atproto/oauth-provider'
+import type { LexiconDocument } from '@atproto/oauth-provider'
 import { DateISO, JsonEncoded } from '../../../db/cast'
 
 export interface Lexicon {
@@ -7,7 +7,7 @@ export interface Lexicon {
   updatedAt: DateISO
   lastSucceededAt: null | DateISO
   uri: null | string
-  lexicon: null | JsonEncoded<LexiconDoc>
+  lexicon: null | JsonEncoded<LexiconDocument>
 }
 
 export const tableName = 'lexicon'

@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 
 export const vectors = [
   {
@@ -65,7 +65,7 @@ export const vectors = [
       },
     },
     ipld: {
-      a: CID.parse(
+      a: parseCid(
         'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
       ),
       b: new Uint8Array([
@@ -75,7 +75,7 @@ export const vectors = [
       ]),
       c: {
         $type: 'blob',
-        ref: CID.parse(
+        ref: parseCid(
           'bafkreiccldh766hwcnuxnf2wh6jgzepf2nlu2lvcllt63eww5p6chi4ity',
         ),
         mimeType: 'image/jpeg',
@@ -114,10 +114,10 @@ export const vectors = [
       },
     ],
     ipld: [
-      CID.parse('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
-      CID.parse('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
-      CID.parse('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
-      CID.parse('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
+      parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
+      parseCid('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
+      parseCid('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
+      parseCid('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
     ],
     cbor: new Uint8Array([
       132, 216, 42, 88, 37, 0, 1, 113, 18, 32, 101, 6, 42, 90, 90, 0, 252, 22,
@@ -166,10 +166,10 @@ export const vectors = [
         b: [
           {
             d: [
-              CID.parse(
+              parseCid(
                 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
               ),
-              CID.parse(
+              parseCid(
                 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
               ),
             ],

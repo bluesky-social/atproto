@@ -11,7 +11,7 @@
   "packageManager": "pnpm@8.15.9+sha512.499434c9d8fdd1a2794ebf4552b3b25c0a633abcee5bb15e7b5de90f32f47b513aca98cd5cfd001c31f0db454bc3804edccd578501e4ca293a6816166bbd9f81",
   "scripts": {
     "lint:fix": "pnpm lint --fix",
-    "lint": "eslint . --ext .ts,.js,.tsx,.jsx",
+    "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
     "style:fix": "prettier --write .",
     "style": "prettier --check .",
     "verify": "pnpm --stream '/^verify:.+$/'",
@@ -21,7 +21,7 @@
     "format": "pnpm lint:fix && pnpm style:fix",
     "precodegen": "pnpm run --recursive --stream --filter '@atproto/lex-cli...' build --force",
     "codegen": "pnpm run --sort --recursive --stream --parallel codegen",
-    "build": "pnpm run --sort --recursive --stream '/^(build|build:.+)$/'",
+    "build": "pnpm run --sort --recursive --stream build",
     "i18n": "pnpm run --parallel i18n:extract",
     "dev": "NODE_ENV=development pnpm run --recursive --parallel --stream '/^(dev|dev:.+)$/'",
     "dev:tsc": "tsc --build tsconfig.json --preserveWatchOutput --watch",
@@ -33,8 +33,8 @@
   },
   "devDependencies": {
     "@atproto/dev-env": "workspace:^",
-    "@changesets/changelog-github": "^0.4.8",
-    "@changesets/cli": "^2.26.2",
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
     "@swc/core": "^1.3.42",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^28.1.4",
@@ -64,6 +64,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "packages/lex/*",
       "packages/oauth/*",
       "packages/internal/*"
     ]

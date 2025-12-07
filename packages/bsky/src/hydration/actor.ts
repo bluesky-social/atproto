@@ -179,7 +179,7 @@ export class ActorHydrator {
         return acc.set(did, null)
       }
 
-      const profile = actor.profile
+      const profile = actor.profile?.record
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 

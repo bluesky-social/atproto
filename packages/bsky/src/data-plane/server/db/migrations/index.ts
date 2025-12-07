@@ -55,3 +55,4 @@ export * as _20250611T140649895Z from './20250611T140649895Z-add-activity-subscr
 export * as _20250627T025331240Z from './20250627T025331240Z-add-actor-age-assurance-columns'
 export * as _20250812T183735692Z from './20250812T183735692Z-add-bookmarks'
 export * as _20250813T174955711Z from './20250813T174955711Z-add-post-agg-bookmarks'
+export * as _20251120T004738098Z from './20251120T004738098Z-update-actor-age-assurance-v2'

@@ -2958,7 +2958,7 @@ describe('agent', () => {
 
         describe(`getSavedFeedType`, () => {
           it(`works`, () => {
-            expect(getSavedFeedType('foo')).toBe('unknown')
+            expect(getSavedFeedType('at://foo.com')).toBe('unknown')
             expect(getSavedFeedType(feedUri())).toBe('feed')
             expect(getSavedFeedType(listUri())).toBe('list')
             expect(
