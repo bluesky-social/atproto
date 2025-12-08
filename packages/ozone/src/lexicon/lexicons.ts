@@ -1785,7 +1785,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1823,7 +1823,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.',
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
         parameters: {
           type: 'params',
           properties: {
@@ -1873,7 +1873,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "Gets the user's current contact import status. Requires authentication.",
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.",
         parameters: {
           type: 'params',
           properties: {},
@@ -1908,7 +1908,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.',
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1967,7 +1967,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.',
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1998,7 +1998,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.',
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -2035,7 +2035,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.',
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
         input: {
           encoding: 'application/json',
           schema: {
