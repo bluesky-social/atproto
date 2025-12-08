@@ -1,5 +1,22 @@
 # @atproto/ozone
 
+## 0.1.160
+
+### Patch Changes
+
+- [#4419](https://github.com/bluesky-social/atproto/pull/4419) [`cfa01ed`](https://github.com/bluesky-social/atproto/commit/cfa01edb9cd769b49327b8875b890d84fa8956d2) Thanks [@foysalit](https://github.com/foysalit)! - Fix email delivery status for ozone send email event
+
+- [#4423](https://github.com/bluesky-social/atproto/pull/4423) [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763) Thanks [@foysalit](https://github.com/foysalit)! - Add min length for required comment fields in ozone events
+
+- [#4427](https://github.com/bluesky-social/atproto/pull/4427) [`7eb99f2`](https://github.com/bluesky-social/atproto/commit/7eb99f2ac7049ddf8aea050e77e0236c1277909a) Thanks [@foysalit](https://github.com/foysalit)! - Store and expose age assurance event's access property
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab), [`380aa3b`](https://github.com/bluesky-social/atproto/commit/380aa3bfe73b5c4e59961c27ae988786b69c129d), [`308f432`](https://github.com/bluesky-social/atproto/commit/308f432f7aef196b4df0a6dc7c5367ab5a8b8964), [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763)]:
+  - @atproto/lexicon@0.6.0
+  - @atproto/api@0.18.5
+  - @atproto/common@0.5.3
+  - @atproto/xrpc-server@0.10.3
+  - @atproto/xrpc@0.7.7
+
 ## 0.1.159
 
 ### Patch Changes
