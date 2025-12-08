@@ -271,6 +271,7 @@ export class ModerationViews {
 
     if (isAgeAssuranceEvent(event)) {
       event.status = ifString(meta.status)!
+      event.access = ifString(meta.access)!
       event.createdAt = ifString(meta.createdAt)!
       event.attemptId = ifString(meta.attemptId)!
       event.initIp = ifString(meta.initIp)
@@ -281,6 +282,7 @@ export class ModerationViews {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       event.status = ifString(meta.status)!
+      event.access = ifString(meta.access)!
     }
 
     if (isScheduleTakedownEvent(event)) {
