@@ -144,23 +144,13 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       rules: [
         {
           $type: ids.IfAssuredOverAge,
-          age: 18,
+          age: 16,
           access: 'full',
         },
         {
           $type: ids.IfDeclaredOverAge,
-          age: 18,
+          age: 16,
           access: 'full',
-        },
-        {
-          $type: ids.IfAssuredOverAge,
-          age: 16,
-          access: 'safe',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
-          age: 16,
-          access: 'safe',
         },
         {
           $type: ids.Default,
