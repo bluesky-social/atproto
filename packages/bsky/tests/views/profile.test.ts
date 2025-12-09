@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyEmbedExternal, ComGermnetworkId, AtpAgent } from '@atproto/api'
+import { AppBskyEmbedExternal, ComGermnetworkDeclaration, AtpAgent } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
@@ -457,11 +457,11 @@ describe('pds profile views', () => {
   })
 
   describe('germ', () => {
-    const germDeclaration: ComGermnetworkId.Main = {
-      $type: 'com.germnetwork.id',
+    const germDeclaration: ComGermnetworkDeclaration.Main = {
+      $type: 'com.germnetwork.declaration',
       version: "1",
-      currentKey: "TODO-key",
-      keyPackage: "TODO-key"
+      currentKey: "TODO-key-bytes",
+      keyPackage: "TODO-key-bytes"
     }
 
     it(`omits germ record if doesn't exist`, async () => {
@@ -481,7 +481,7 @@ describe('pds profile views', () => {
       await sc.agent.com.atproto.repo.createRecord(
         {
           repo: alice,
-          collection: ids.ComGermnetworkId,
+          collection: ids.ComGermnetworkDeclaration,
           rkey: 'self',
           record: germDeclaration,
         },

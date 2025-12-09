@@ -4,7 +4,7 @@ import { Selectable, sql } from 'kysely'
 import {
   AppBskyNotificationDeclaration,
   ChatBskyActorDeclaration,
-  ComGermnetworkId,
+  ComGermnetworkDeclaration,
 } from '@atproto/api'
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'
@@ -40,7 +40,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       (did) => `at://${did}/app.bsky.notification.declaration/self`,
     )
     const germDeclarationUris = dids.map(
-      (did) => `at://${did}/com.germnetwork.id/self`,
+      (did) => `at://${did}/com.germnetwork.declaration/self`,
     )
     const { ref } = db.db.dynamic
     const [
@@ -101,7 +101,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         chatDeclarations.records[i].record,
       )
 
-      const germDeclaration = parseRecordBytes<ComGermnetworkId.Record>(
+      const germDeclaration = parseRecordBytes<ComGermnetworkDeclaration.Record>(
         germDeclarations.records[i].record,
       )
 

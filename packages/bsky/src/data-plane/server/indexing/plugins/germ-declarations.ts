@@ -8,7 +8,7 @@ import { RecordProcessor } from '../processor'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 
-const lexId = lex.ids.ComGermnetworkId
+const lexId = lex.ids.ComGermnetworkDeclaration
 
 const insertFn = async (
   _db: DatabaseSchema,
