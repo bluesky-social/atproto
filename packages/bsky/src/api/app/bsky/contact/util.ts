@@ -1,8 +1,8 @@
 import { ConnectError } from '@connectrpc/connect'
 import {
-  MethodNotImplementedError,
-  InvalidRequestError,
   InternalServerError,
+  InvalidRequestError,
+  MethodNotImplementedError,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../..'
 import { RolodexClient } from '../../../../rolodex'
@@ -32,7 +32,7 @@ export async function callRolodexClient<T>(caller: T) {
       /**
        * https://connectrpc.com/docs/protocol#error-end-stream
        */
-      const error = e.details?.at(0) as
+      const details = e.details?.at(0) as
         | {
             debug: {
               reason: string
@@ -40,10 +40,7 @@ export async function callRolodexClient<T>(caller: T) {
             }
           }
         | undefined
-
-      const reason = error?.debug?.reason
-      const message = error?.debug?.message
-
+      const reason = details?.debug?.reason // e.g. INVALID_DID
       // Handle known error reasons
       if (reason) {
         if (reason === 'INTERNAL_ERROR') {
@@ -52,7 +49,7 @@ export async function callRolodexClient<T>(caller: T) {
           })
         } else {
           throw new InvalidRequestError(
-            message ?? 'An error occurred',
+            e.message ?? 'An error occurred',
             reason, // should match Rolodex error codes
             {
               cause: e,
@@ -61,7 +58,6 @@ export async function callRolodexClient<T>(caller: T) {
         }
       }
     }
-
     throw e
   }
 }
