@@ -1776,6 +1776,24 @@ export const schemaDict = {
           },
         },
       },
+      notification: {
+        description:
+          'A stash object to be sent via bsync representing a notification to be created.',
+        type: 'object',
+        required: ['from', 'to'],
+        properties: {
+          from: {
+            description: 'The DID of who this notification comes from.',
+            type: 'string',
+            format: 'did',
+          },
+          to: {
+            description: 'The DID of who this notification should go to.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
     },
   },
   AppBskyContactDismissMatch: {
@@ -1988,6 +2006,43 @@ export const schemaDict = {
             description: 'TODO',
           },
         ],
+      },
+    },
+  },
+  AppBskyContactSendNotification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.sendNotification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "WARNING: This is unstable and under active development, don't use it while this warning is here. System endpoint to send notifications related to contact imports. Requires role authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['from', 'to'],
+            properties: {
+              from: {
+                description: 'The DID of who this notification comes from.',
+                type: 'string',
+                format: 'did',
+              },
+              to: {
+                description: 'The DID of who this notification should go to.',
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -19949,6 +20004,7 @@ export const ids = {
   AppBskyContactGetSyncStatus: 'app.bsky.contact.getSyncStatus',
   AppBskyContactImportContacts: 'app.bsky.contact.importContacts',
   AppBskyContactRemoveData: 'app.bsky.contact.removeData',
+  AppBskyContactSendNotification: 'app.bsky.contact.sendNotification',
   AppBskyContactStartPhoneVerification:
     'app.bsky.contact.startPhoneVerification',
   AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',
