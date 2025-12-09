@@ -401,6 +401,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#declaredAgePref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
@@ -504,6 +505,28 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of account owner.',
+          },
+        },
+      },
+      declaredAgePref: {
+        type: 'object',
+        description:
+          "Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.",
+        properties: {
+          isOverAge13: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 13 years of age.',
+          },
+          isOverAge16: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 16 years of age.',
+          },
+          isOverAge18: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 18 years of age.',
           },
         },
       },

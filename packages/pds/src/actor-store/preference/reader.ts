@@ -1,5 +1,11 @@
 import { ActorDb } from '../db'
-import { PrefAllowedOptions, prefAllowed } from './util'
+import {
+  DECLARED_AGE_PREF,
+  PERSONAL_DETAILS_PREF,
+  PrefAllowedOptions,
+  getAgeFromDatestring,
+  prefAllowed,
+} from './util'
 
 export class PreferenceReader {
   constructor(public db: ActorDb) {}
@@ -13,10 +19,28 @@ export class PreferenceReader {
       .orderBy('id')
       .selectAll()
       .execute()
-    return prefsRes
+
+    const prefs = prefsRes
       .filter((pref) => !namespace || prefMatchNamespace(namespace, pref.name))
-      .filter((pref) => prefAllowed(pref.name, opts))
       .map((pref) => JSON.parse(pref.valueJson) as AccountPreference)
+    const personalDetailsPref = prefs.find(
+      (pref) => pref.$type === PERSONAL_DETAILS_PREF,
+    )
+
+    if (personalDetailsPref) {
+      if (typeof personalDetailsPref.birthDate === 'string') {
+        const age = getAgeFromDatestring(personalDetailsPref.birthDate)
+        const declaredAgePref: AccountPreference = {
+          $type: DECLARED_AGE_PREF,
+          isOverAge13: age >= 13,
+          isOverAge16: age >= 16,
+          isOverAge18: age >= 18,
+        }
+        prefs.push(declaredAgePref)
+      }
+    }
+
+    return prefs.filter((pref) => prefAllowed(pref.$type, opts))
   }
 }
 
