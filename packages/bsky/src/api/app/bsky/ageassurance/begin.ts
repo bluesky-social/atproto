@@ -39,10 +39,7 @@ export default function (server: Server, ctx: AppContext) {
       const actorInfo = await getAgeVerificationState(ctx, actorDid)
 
       if (actorInfo?.ageAssuranceStatus) {
-        if (
-          actorInfo.ageAssuranceStatus.status !== 'unknown' &&
-          actorInfo.ageAssuranceStatus.status !== 'pending'
-        ) {
+        if (actorInfo.ageAssuranceStatus.status === 'blocked') {
           throw new InvalidRequestError(
             `Cannot initiate age assurance flow from current state: ${actorInfo.ageAssuranceStatus.status}`,
             'InvalidInitiation',

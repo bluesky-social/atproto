@@ -519,7 +519,14 @@ describe('age assurance v2 views', () => {
   })
 
   describe('misc', () => {
-    it('cannot re-init from terminal state', async () => {
+    /**
+     * We only block re-init if the user is in a `blocked` state, which is not
+     * testable using the local dataplane at the moment. The test below
+     * reflects v1 handling.
+     *
+     * Skipping for now, but this handling is implemented in v2.
+     */
+    it.skip('cannot re-init from terminal state', async () => {
       await kws.redirectV2({
         externalPayload: serializeKWSExternalPayloadV2({
           version: KWSExternalPayloadVersion.V2,
