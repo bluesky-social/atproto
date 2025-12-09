@@ -276,6 +276,7 @@
           "#savedFeedsPref",
           "#savedFeedsPrefV2",
           "#personalDetailsPref",
+          "#declaredAgePref",
           "#feedViewPref",
           "#threadViewPref",
           "#interestsPref",
@@ -373,6 +374,16 @@
           "type": "string",
           "format": "datetime",
           "description": "The birth date of account owner."
+        }
+      }
+    },
+    "declaredAgePref": {
+      "type": "object",
+      "required": ["isDeclaredOverAgeMinimum"],
+      "properties": {
+        "isDeclaredOverAgeMinimum": {
+          "type": "boolean",
+          "description": "Read-only computed property. Indicates if the user has declared that they are over the minimum age required to use the Bluesky. Absence of this pref in the response indicates that the user has not made a declaration."
         }
       }
     },

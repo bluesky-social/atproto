@@ -900,6 +900,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -955,6 +956,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1010,6 +1012,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1065,6 +1068,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1127,6 +1131,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1189,6 +1194,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1251,6 +1257,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1375,6 +1382,10 @@ describe('agent', () => {
             birthDate: '2021-09-11T18:05:42.556Z',
           },
           {
+            $type: 'app.bsky.actor.defs#declaredAgePref',
+            isDeclaredOverAgeMinimum: false,
+          },
+          {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
@@ -1445,6 +1456,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1509,6 +1521,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1574,6 +1587,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1635,6 +1649,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1696,6 +1711,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1757,6 +1773,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1829,6 +1846,7 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        isDeclaredOverAgeMinimum: false,
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1907,7 +1925,10 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#personalDetailsPref',
             birthDate: '2023-09-11T18:05:42.556Z',
           },
-
+          {
+            $type: 'app.bsky.actor.defs#declaredAgePref',
+            isDeclaredOverAgeMinimum: false,
+          },
           {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',

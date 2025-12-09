@@ -401,6 +401,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#declaredAgePref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
@@ -504,6 +505,17 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of account owner.',
+          },
+        },
+      },
+      declaredAgePref: {
+        type: 'object',
+        required: ['isDeclaredOverAgeMinimum'],
+        properties: {
+          isDeclaredOverAgeMinimum: {
+            type: 'boolean',
+            description:
+              'Non-writeable computed property. Indicates if the user has declared that they are over the minimum age required to use the Bluesky. Absence of this pref in the response indicates that the user has not made a declaration.',
           },
         },
       },

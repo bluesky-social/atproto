@@ -214,7 +214,12 @@ describe('user preferences', () => {
       {},
       { headers: appPassHeaders },
     )
-    expect(res.data.preferences).toEqual([])
+    expect(res.data.preferences).toEqual([
+      {
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isDeclaredOverAgeMinimum: false,
+      },
+    ])
   })
 
   it('does not write permissioned preferences with an app password', async () => {
@@ -249,5 +254,77 @@ describe('user preferences', () => {
       (pref) => pref.$type === 'app.bsky.actor.defs#personalDetailsPref',
     )
     expect(scopedPref).toBeDefined()
+  })
+
+  describe('personalDetailsPref and declaredAgePref', () => {
+    it('declaredAgePref is computed and returned for authed user', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#personalDetailsPref',
+              birthDate: new Date(1970, 0, 1).toISOString(),
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const res = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+      expect(res.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isDeclaredOverAgeMinimum: true,
+      })
+    })
+
+    it('declaredAgePref is computed and returned for app password', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#personalDetailsPref',
+              birthDate: new Date(1970, 0, 1).toISOString(),
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const res = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: appPassHeaders },
+      )
+      expect(res.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isDeclaredOverAgeMinimum: true,
+      })
+    })
+
+    it('user cannot set declaredAgePref', async () => {
+      await agent.api.app.bsky.actor.putPreferences(
+        {
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#personalDetailsPref',
+              birthDate: new Date(1970, 0, 1).toISOString(),
+            },
+            {
+              $type: 'app.bsky.actor.defs#declaredAgePref',
+              isDeclaredOverAgeMinimum: false, // won't be written
+            },
+          ],
+        },
+        { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
+      )
+      const res = await agent.api.app.bsky.actor.getPreferences(
+        {},
+        { headers: sc.getHeaders(sc.dids.alice) },
+      )
+      expect(res.data.preferences).toContainEqual({
+        $type: 'app.bsky.actor.defs#declaredAgePref',
+        isDeclaredOverAgeMinimum: true,
+      })
+    })
   })
 })

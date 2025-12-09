@@ -259,6 +259,7 @@ export type Preferences = (
   | $Typed<SavedFeedsPref>
   | $Typed<SavedFeedsPrefV2>
   | $Typed<PersonalDetailsPref>
+  | $Typed<DeclaredAgePref>
   | $Typed<FeedViewPref>
   | $Typed<ThreadViewPref>
   | $Typed<InterestsPref>
@@ -368,6 +369,22 @@ export function isPersonalDetailsPref<V>(v: V) {
 
 export function validatePersonalDetailsPref<V>(v: V) {
   return validate<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
+}
+
+export interface DeclaredAgePref {
+  $type?: 'app.bsky.actor.defs#declaredAgePref'
+  /** Non-writeable computed property. Indicates if the user has declared that they are over the minimum age required to use the Bluesky. Absence of this pref in the response indicates that the user has not made a declaration. */
+  isDeclaredOverAgeMinimum: boolean
+}
+
+const hashDeclaredAgePref = 'declaredAgePref'
+
+export function isDeclaredAgePref<V>(v: V) {
+  return is$typed(v, id, hashDeclaredAgePref)
+}
+
+export function validateDeclaredAgePref<V>(v: V) {
+  return validate<DeclaredAgePref & V>(v, id, hashDeclaredAgePref)
 }
 
 export interface FeedViewPref {
