@@ -1,5 +1,5 @@
-import express, { RequestHandler, Router } from 'express'
 import { Timestamp } from '@bufbuild/protobuf'
+import express, { RequestHandler, Router } from 'express'
 import { AppContext } from '../context'
 import { httpLogger as log } from '../logger'
 import { SitemapPageType } from '../proto/bsky_pb'
