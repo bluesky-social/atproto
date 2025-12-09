@@ -371,9 +371,10 @@ export function validatePersonalDetailsPref<V>(v: V) {
   return validate<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
 }
 
+/** Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration. */
 export interface DeclaredAgePref {
   $type?: 'app.bsky.actor.defs#declaredAgePref'
-  /** Non-writeable computed property. Indicates if the user has declared that they are over the minimum age required to use the Bluesky. Absence of this pref in the response indicates that the user has not made a declaration. */
+  /** Indicates if the user has declared that they are over the minimum age required to use the Bluesky. */
   isDeclaredOverAgeMinimum: boolean
 }
 
