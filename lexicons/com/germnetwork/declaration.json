@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.germnetwork.id",
+  "id": "com.germnetwork.declaration",
   "defs": {
     "main": {
       "type": "record",
@@ -8,7 +8,7 @@
       "key": "literal:self",
       "record": {
         "type": "object",
-        "required": ["version", "currentKey", "keyPackage"],
+        "required": ["version", "currentKey"],
         "properties": {
           "version": {
             "type": "string"
@@ -17,10 +17,6 @@
             "type": "bytes"
           },
           "messageMe": { "type": "ref", "ref": "#messageMe" },
-          "myMessengerOverrideUrl": {
-            "type": "string",
-            "format": "uri"
-          },
           "keyPackage": {
             "type": "bytes"
           },
@@ -41,7 +37,7 @@
         },
         "showButtonTo": {
           "type": "string",
-          "enum": ["usersIFollow", "everyone"]
+          "knownValues": ["usersIFollow", "everyone"]
         }
       }
     }
