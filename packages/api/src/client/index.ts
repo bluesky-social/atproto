@@ -252,7 +252,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
-import * as ComGermnetworkId from './types/com/germnetwork/id.js'
+import * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -551,7 +551,7 @@ export * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
-export * as ComGermnetworkId from './types/com/germnetwork/id.js'
+export * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -4856,15 +4856,15 @@ export class ComAtprotoTempNS {
 
 export class ComGermnetworkNS {
   _client: XrpcClient
-  id: ComGermnetworkIdRecord
+  declaration: ComGermnetworkDeclarationRecord
 
   constructor(client: XrpcClient) {
     this._client = client
-    this.id = new ComGermnetworkIdRecord(client)
+    this.declaration = new ComGermnetworkDeclarationRecord(client)
   }
 }
 
-export class ComGermnetworkIdRecord {
+export class ComGermnetworkDeclarationRecord {
   _client: XrpcClient
 
   constructor(client: XrpcClient) {
@@ -4875,10 +4875,10 @@ export class ComGermnetworkIdRecord {
     params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
   ): Promise<{
     cursor?: string
-    records: { uri: string; value: ComGermnetworkId.Record }[]
+    records: { uri: string; value: ComGermnetworkDeclaration.Record }[]
   }> {
     const res = await this._client.call('com.atproto.repo.listRecords', {
-      collection: 'com.germnetwork.id',
+      collection: 'com.germnetwork.declaration',
       ...params,
     })
     return res.data
@@ -4886,9 +4886,13 @@ export class ComGermnetworkIdRecord {
 
   async get(
     params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
-  ): Promise<{ uri: string; cid: string; value: ComGermnetworkId.Record }> {
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ComGermnetworkDeclaration.Record
+  }> {
     const res = await this._client.call('com.atproto.repo.getRecord', {
-      collection: 'com.germnetwork.id',
+      collection: 'com.germnetwork.declaration',
       ...params,
     })
     return res.data
@@ -4899,10 +4903,10 @@ export class ComGermnetworkIdRecord {
       ComAtprotoRepoCreateRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: Un$Typed<ComGermnetworkId.Record>,
+    record: Un$Typed<ComGermnetworkDeclaration.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    const collection = 'com.germnetwork.id'
+    const collection = 'com.germnetwork.declaration'
     const res = await this._client.call(
       'com.atproto.repo.createRecord',
       undefined,
@@ -4922,10 +4926,10 @@ export class ComGermnetworkIdRecord {
       ComAtprotoRepoPutRecord.InputSchema,
       'collection' | 'record'
     >,
-    record: Un$Typed<ComGermnetworkId.Record>,
+    record: Un$Typed<ComGermnetworkDeclaration.Record>,
     headers?: Record<string, string>,
   ): Promise<{ uri: string; cid: string }> {
-    const collection = 'com.germnetwork.id'
+    const collection = 'com.germnetwork.declaration'
     const res = await this._client.call(
       'com.atproto.repo.putRecord',
       undefined,
@@ -4942,7 +4946,7 @@ export class ComGermnetworkIdRecord {
     await this._client.call(
       'com.atproto.repo.deleteRecord',
       undefined,
-      { collection: 'com.germnetwork.id', ...params },
+      { collection: 'com.germnetwork.declaration', ...params },
       { headers },
     )
   }

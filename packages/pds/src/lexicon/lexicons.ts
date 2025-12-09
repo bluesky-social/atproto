@@ -251,6 +251,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
           },
+          germ: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedGerm',
+          },
         },
       },
       profileAssociatedChat: {
@@ -260,6 +264,20 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedGerm: {
+        type: 'object',
+        required: ['showButtonTo', 'messageMeUrl'],
+        properties: {
+          messageMeUrl: {
+            type: 'string',
+            format: 'uri',
+          },
+          showButtonTo: {
+            type: 'string',
+            knownValues: ['usersIFollow', 'everyone'],
           },
         },
       },

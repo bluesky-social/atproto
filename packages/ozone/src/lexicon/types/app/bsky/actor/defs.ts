@@ -121,6 +121,7 @@ export interface ProfileAssociated {
   labeler?: boolean
   chat?: ProfileAssociatedChat
   activitySubscription?: ProfileAssociatedActivitySubscription
+  germ?: ProfileAssociatedGerm
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -146,6 +147,22 @@ export function isProfileAssociatedChat<V>(v: V) {
 
 export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
+}
+
+export interface ProfileAssociatedGerm {
+  $type?: 'app.bsky.actor.defs#profileAssociatedGerm'
+  messageMeUrl: string
+  showButtonTo: 'usersIFollow' | 'everyone' | (string & {})
+}
+
+const hashProfileAssociatedGerm = 'profileAssociatedGerm'
+
+export function isProfileAssociatedGerm<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedGerm)
+}
+
+export function validateProfileAssociatedGerm<V>(v: V) {
+  return validate<ProfileAssociatedGerm & V>(v, id, hashProfileAssociatedGerm)
 }
 
 export interface ProfileAssociatedActivitySubscription {

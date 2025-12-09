@@ -8,15 +8,14 @@ import { type $Typed, is$typed as _is$typed, type OmitKey } from '../../../util'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'com.germnetwork.id'
+const id = 'com.germnetwork.declaration'
 
 export interface Main {
-  $type: 'com.germnetwork.id'
+  $type: 'com.germnetwork.declaration'
   version: string
   currentKey: Uint8Array
   messageMe?: MessageMe
-  myMessengerOverrideUrl?: string
-  keyPackage: Uint8Array
+  keyPackage?: Uint8Array
   continuityProofs?: Uint8Array[]
   [k: string]: unknown
 }
@@ -38,9 +37,9 @@ export {
 }
 
 export interface MessageMe {
-  $type?: 'com.germnetwork.id#messageMe'
+  $type?: 'com.germnetwork.declaration#messageMe'
   messageMeUrl: string
-  showButtonTo: 'usersIFollow' | 'everyone'
+  showButtonTo: 'usersIFollow' | 'everyone' | (string & {})
 }
 
 const hashMessageMe = 'messageMe'

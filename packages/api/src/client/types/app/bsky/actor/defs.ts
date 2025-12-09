@@ -12,7 +12,6 @@ import {
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
-import type * as ComGermnetworkId from '../../../com/germnetwork/id.js'
 import type * as AppBskyNotificationDefs from '../notification/defs.js'
 import type * as AppBskyFeedThreadgate from '../feed/threadgate.js'
 import type * as AppBskyFeedPostgate from '../feed/postgate.js'
@@ -122,7 +121,7 @@ export interface ProfileAssociated {
   labeler?: boolean
   chat?: ProfileAssociatedChat
   activitySubscription?: ProfileAssociatedActivitySubscription
-  germ?: ComGermnetworkId.Main
+  germ?: ProfileAssociatedGerm
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -148,6 +147,22 @@ export function isProfileAssociatedChat<V>(v: V) {
 
 export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
+}
+
+export interface ProfileAssociatedGerm {
+  $type?: 'app.bsky.actor.defs#profileAssociatedGerm'
+  messageMeUrl: string
+  showButtonTo: 'usersIFollow' | 'everyone' | (string & {})
+}
+
+const hashProfileAssociatedGerm = 'profileAssociatedGerm'
+
+export function isProfileAssociatedGerm<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedGerm)
+}
+
+export function validateProfileAssociatedGerm<V>(v: V) {
+  return validate<ProfileAssociatedGerm & V>(v, id, hashProfileAssociatedGerm)
 }
 
 export interface ProfileAssociatedActivitySubscription {

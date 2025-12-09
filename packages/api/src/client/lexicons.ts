@@ -253,7 +253,7 @@ export const schemaDict = {
           },
           germ: {
             type: 'ref',
-            ref: 'lex:com.germnetwork.id',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedGerm',
           },
         },
       },
@@ -264,6 +264,20 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedGerm: {
+        type: 'object',
+        required: ['showButtonTo', 'messageMeUrl'],
+        properties: {
+          messageMeUrl: {
+            type: 'string',
+            format: 'uri',
+          },
+          showButtonTo: {
+            type: 'string',
+            knownValues: ['usersIFollow', 'everyone'],
           },
         },
       },
@@ -14374,9 +14388,9 @@ export const schemaDict = {
       },
     },
   },
-  ComGermnetworkId: {
+  ComGermnetworkDeclaration: {
     lexicon: 1,
-    id: 'com.germnetwork.id',
+    id: 'com.germnetwork.declaration',
     defs: {
       main: {
         type: 'record',
@@ -14384,7 +14398,7 @@ export const schemaDict = {
         key: 'literal:self',
         record: {
           type: 'object',
-          required: ['version', 'currentKey', 'keyPackage'],
+          required: ['version', 'currentKey'],
           properties: {
             version: {
               type: 'string',
@@ -14394,11 +14408,7 @@ export const schemaDict = {
             },
             messageMe: {
               type: 'ref',
-              ref: 'lex:com.germnetwork.id#messageMe',
-            },
-            myMessengerOverrideUrl: {
-              type: 'string',
-              format: 'uri',
+              ref: 'lex:com.germnetwork.declaration#messageMe',
             },
             keyPackage: {
               type: 'bytes',
@@ -14422,7 +14432,7 @@ export const schemaDict = {
           },
           showButtonTo: {
             type: 'string',
-            enum: ['usersIFollow', 'everyone'],
+            knownValues: ['usersIFollow', 'everyone'],
           },
         },
       },
@@ -19889,7 +19899,7 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
-  ComGermnetworkId: 'com.germnetwork.id',
+  ComGermnetworkDeclaration: 'com.germnetwork.declaration',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',
