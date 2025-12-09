@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.18.6
+
+### Patch Changes
+
+- [#4432](https://github.com/bluesky-social/atproto/pull/4432) [`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new read-only `#declaredAgePref` with computed age flags e.g. `isOverAge18`.
+
+- [#4430](https://github.com/bluesky-social/atproto/pull/4430) [`f4cef84`](https://github.com/bluesky-social/atproto/commit/f4cef84494114ca927c66428920ca3dc24ad2b1e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.contact.sendNotification endpoint
+
 ## 0.18.5
 
 ### Patch Changes

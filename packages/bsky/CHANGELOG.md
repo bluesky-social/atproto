@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.201
+
+### Patch Changes
+
+- [#4428](https://github.com/bluesky-social/atproto/pull/4428) [`6fab394`](https://github.com/bluesky-social/atproto/commit/6fab3940f6d09b4e9888e6c4140a70d3e4ebcb00) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Allow users to re-initiate Age Assurance so long as they're not in a `blocked` state.
+
+- Updated dependencies [[`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41), [`f4cef84`](https://github.com/bluesky-social/atproto/commit/f4cef84494114ca927c66428920ca3dc24ad2b1e)]:
+  - @atproto/api@0.18.6
+
 ## 0.0.200
 
 ### Patch Changes
