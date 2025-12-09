@@ -14,7 +14,7 @@ import {
 } from '../../../../pipeline'
 import { RolodexClient } from '../../../../rolodex'
 import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented } from './util'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)
@@ -48,12 +48,13 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actor = params.hydrateCtx.viewer
-  // TODO: Error handling.
-  const { cursor, subjects } = await ctx.rolodexClient.getMatches({
-    actor: params.hydrateCtx.viewer,
-    limit: params.limit,
-    cursor: params.cursor,
-  })
+  const { cursor, subjects } = await callRolodexClient(
+    ctx.rolodexClient.getMatches({
+      actor: params.hydrateCtx.viewer,
+      limit: params.limit,
+      cursor: params.cursor,
+    }),
+  )
   return {
     actor,
     subjects,
