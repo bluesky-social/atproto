@@ -43,7 +43,31 @@ export interface Response {
   data: OutputSchema
 }
 
-export class TODOError extends XRPCError {
+export class INVALID_DIDError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class INVALID_CONTACTSError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class INVALID_CONTACTS_COUNTError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class INVALID_TOKENError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class INTERNAL_ERRORError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -51,7 +75,12 @@ export class TODOError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'TODO') return new TODOError(e)
+    if (e.error === 'INVALID_DID') return new INVALID_DIDError(e)
+    if (e.error === 'INVALID_CONTACTS') return new INVALID_CONTACTSError(e)
+    if (e.error === 'INVALID_CONTACTS_COUNT')
+      return new INVALID_CONTACTS_COUNTError(e)
+    if (e.error === 'INVALID_TOKEN') return new INVALID_TOKENError(e)
+    if (e.error === 'INTERNAL_ERROR') return new INTERNAL_ERRORError(e)
   }
 
   return e

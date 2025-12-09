@@ -43,7 +43,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'TODO'
+  error?:
+    | 'INVALID_DID'
+    | 'INVALID_CONTACTS'
+    | 'INVALID_CONTACTS_COUNT'
+    | 'INVALID_TOKEN'
+    | 'INTERNAL_ERROR'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

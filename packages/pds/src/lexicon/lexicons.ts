@@ -1850,8 +1850,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
@@ -1900,8 +1902,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INVALID_LIMIT',
+          },
+          {
+            name: 'INVALID_INCOMING_CURSOR',
+          },
+          {
+            name: 'INVALID_OUTGOING_CURSOR',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
@@ -1935,8 +1948,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
@@ -1994,8 +2009,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INVALID_CONTACTS',
+          },
+          {
+            name: 'INVALID_CONTACTS_COUNT',
+          },
+          {
+            name: 'INVALID_TOKEN',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
@@ -2025,8 +2051,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
@@ -2099,8 +2127,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'RATE_LIMIT_EXCEEDED',
+          },
+          {
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INVALID_PHONE',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
@@ -2149,8 +2185,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'RATE_LIMIT_EXCEEDED',
+          },
+          {
+            name: 'INVALID_DID',
+          },
+          {
+            name: 'INVALID_PHONE',
+          },
+          {
+            name: 'INVALID_CODE',
+          },
+          {
+            name: 'INTERNAL_ERROR',
           },
         ],
       },
