@@ -145,11 +145,11 @@ export interface BskyPreferences {
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
   /**
-   * Read-only computed property. Indicates if the user has declared that
-   * they are over the minimum age required to use the Bluesky. If undefined,
-   * the user has not made a declaration.
+   * Read-only preference containing value(s) inferred from the user's declared
+   * birthdate. Absence of this preference object in the response indicates
+   * that the user has not made a declaration.
    */
-  isDeclaredOverAgeMinimum: boolean | undefined
+  declaredAge?: AppBskyActorDefs.DeclaredAgePref
   interests: BskyInterestsPreference
   bskyAppState: {
     queuedNudges: string[]

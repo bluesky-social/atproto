@@ -510,14 +510,23 @@ export const schemaDict = {
       },
       declaredAgePref: {
         type: 'object',
-        required: ['isDeclaredOverAgeMinimum'],
         description:
           "Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.",
         properties: {
-          isDeclaredOverAgeMinimum: {
+          isOverAge13: {
             type: 'boolean',
             description:
-              'Indicates if the user has declared that they are over the minimum age required to use the Bluesky.',
+              'Indicates if the user has declared that they are over 13 years of age.',
+          },
+          isOverAge16: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 16 years of age.',
+          },
+          isOverAge18: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 18 years of age.',
           },
         },
       },

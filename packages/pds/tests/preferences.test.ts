@@ -217,7 +217,9 @@ describe('user preferences', () => {
     expect(res.data.preferences).toEqual([
       {
         $type: 'app.bsky.actor.defs#declaredAgePref',
-        isDeclaredOverAgeMinimum: false,
+        isOverAge13: false,
+        isOverAge16: false,
+        isOverAge18: false,
       },
     ])
   })
@@ -257,13 +259,15 @@ describe('user preferences', () => {
   })
 
   describe('personalDetailsPref and declaredAgePref', () => {
+    const birthDate = new Date(1970, 0, 1).toISOString()
+
     it('declaredAgePref is computed and returned for authed user', async () => {
       await agent.api.app.bsky.actor.putPreferences(
         {
           preferences: [
             {
               $type: 'app.bsky.actor.defs#personalDetailsPref',
-              birthDate: new Date(1970, 0, 1).toISOString(),
+              birthDate,
             },
           ],
         },
@@ -275,7 +279,9 @@ describe('user preferences', () => {
       )
       expect(res.data.preferences).toContainEqual({
         $type: 'app.bsky.actor.defs#declaredAgePref',
-        isDeclaredOverAgeMinimum: true,
+        isOverAge13: true,
+        isOverAge16: true,
+        isOverAge18: true,
       })
     })
 
@@ -285,7 +291,7 @@ describe('user preferences', () => {
           preferences: [
             {
               $type: 'app.bsky.actor.defs#personalDetailsPref',
-              birthDate: new Date(1970, 0, 1).toISOString(),
+              birthDate,
             },
           ],
         },
@@ -297,7 +303,9 @@ describe('user preferences', () => {
       )
       expect(res.data.preferences).toContainEqual({
         $type: 'app.bsky.actor.defs#declaredAgePref',
-        isDeclaredOverAgeMinimum: true,
+        isOverAge13: true,
+        isOverAge16: true,
+        isOverAge18: true,
       })
     })
 
@@ -307,11 +315,13 @@ describe('user preferences', () => {
           preferences: [
             {
               $type: 'app.bsky.actor.defs#personalDetailsPref',
-              birthDate: new Date(1970, 0, 1).toISOString(),
+              birthDate,
             },
             {
               $type: 'app.bsky.actor.defs#declaredAgePref',
-              isDeclaredOverAgeMinimum: false, // won't be written
+              isOverAge13: false,
+              isOverAge16: false,
+              isOverAge18: false,
             },
           ],
         },
@@ -321,10 +331,18 @@ describe('user preferences', () => {
         {},
         { headers: sc.getHeaders(sc.dids.alice) },
       )
-      expect(res.data.preferences).toContainEqual({
-        $type: 'app.bsky.actor.defs#declaredAgePref',
-        isDeclaredOverAgeMinimum: true,
-      })
+      expect(res.data.preferences).toEqual([
+        {
+          $type: 'app.bsky.actor.defs#personalDetailsPref',
+          birthDate,
+        },
+        {
+          $type: 'app.bsky.actor.defs#declaredAgePref',
+          isOverAge13: true,
+          isOverAge16: true,
+          isOverAge18: true,
+        },
+      ])
     })
   })
 })

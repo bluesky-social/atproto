@@ -3,4 +3,4 @@
 '@atproto/pds': patch
 ---
 
-Add new read-only `#declaredAgePref` to provide `isDeclaredOverAgeMinimum: bool` value for preferences responses.
+Add new read-only `#declaredAgePref` with computed age flags e.g. `isOverAge18`.

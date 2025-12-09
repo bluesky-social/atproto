@@ -29,10 +29,12 @@ export class PreferenceReader {
 
     if (personalDetailsPref) {
       if (typeof personalDetailsPref.birthDate === 'string') {
+        const age = getAgeFromDatestring(personalDetailsPref.birthDate)
         const declaredAgePref: AccountPreference = {
           $type: DECLARED_AGE_PREF,
-          isDeclaredOverAgeMinimum:
-            getAgeFromDatestring(personalDetailsPref.birthDate) >= 13,
+          isOverAge13: age >= 13,
+          isOverAge16: age >= 16,
+          isOverAge18: age >= 18,
         }
         prefs.push(declaredAgePref)
       }
