@@ -1,6 +1,7 @@
 import { gzipSync } from 'node:zlib'
-import { ServiceImpl } from '@connectrpc/connect'
+import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
+import { GetSitemapPageRequest } from '../../../proto/bsky_pb'
 
 const MOCK_SITEMAP_INDEX = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -22,7 +23,19 @@ export default (): Partial<ServiceImpl<typeof Service>> => ({
       sitemap: gzipSync(Buffer.from(MOCK_SITEMAP_INDEX)),
     }
   },
-  async getSitemapPage() {
+  async getSitemapPage(req: GetSitemapPageRequest) {
+    const date = req.date?.toDate()
+    const isExpectedDate =
+      date &&
+      date.getFullYear() === 2025 &&
+      date.getMonth() === 0 &&
+      date.getDate() === 1
+    const isExpectedBucket = req.bucket === 1
+
+    if (!isExpectedDate || !isExpectedBucket) {
+      throw new ConnectError('Sitemap page not found', Code.NotFound)
+    }
+
     return {
       sitemap: gzipSync(Buffer.from(MOCK_SITEMAP_PAGE)),
     }

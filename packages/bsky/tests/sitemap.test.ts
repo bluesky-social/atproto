@@ -14,7 +14,9 @@ describe('sitemap', () => {
   })
 
   it('returns sitemap index', async () => {
-    const response = await fetch(`${network.bsky.url}/external/sitemap/users.xml.gz`)
+    const response = await fetch(
+      `${network.bsky.url}/external/sitemap/users.xml.gz`,
+    )
     expect(response.status).toEqual(200)
     expect(response.headers.get('content-type')).toEqual('application/gzip')
     expect(response.headers.get('content-encoding')).toEqual('gzip')
@@ -62,5 +64,12 @@ describe('sitemap', () => {
       `${network.bsky.url}/external/sitemap/users/2025-01-01/abc.xml.gz`,
     )
     expect(response.status).toEqual(400)
+  })
+
+  it('returns 404 for non-existent sitemap page', async () => {
+    const response = await fetch(
+      `${network.bsky.url}/external/sitemap/users/2024-01-01/1.xml.gz`,
+    )
+    expect(response.status).toEqual(404)
   })
 })

@@ -1,6 +1,7 @@
-import { Timestamp } from '@bufbuild/protobuf'
-import express, { RequestHandler, Router } from 'express'
 import { Readable } from 'node:stream'
+import { Timestamp } from '@bufbuild/protobuf'
+import { Code, ConnectError } from '@connectrpc/connect'
+import express, { RequestHandler, Router } from 'express'
 import { AppContext } from '../context'
 import { httpLogger as log } from '../logger'
 import { SitemapPageType } from '../proto/bsky_pb'
@@ -8,7 +9,10 @@ import { SitemapPageType } from '../proto/bsky_pb'
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
   router.get('/external/sitemap/users.xml.gz', userIndexHandler(ctx))
-  router.get('/external/sitemap/users/:date/:bucket.xml.gz', userPageHandler(ctx))
+  router.get(
+    '/external/sitemap/users/:date/:bucket.xml.gz',
+    userPageHandler(ctx),
+  )
   return router
 }
 
@@ -63,6 +67,9 @@ const userPageHandler =
       res.set('Content-Encoding', 'gzip')
       Readable.from(Buffer.from(result.sitemap)).pipe(res)
     } catch (err) {
+      if (err instanceof ConnectError && err.code === Code.NotFound) {
+        return res.status(404).send('Sitemap page not found')
+      }
       log.error({ err }, 'failed to get sitemap page')
       return res.status(500).send('Internal Server Error')
     }
