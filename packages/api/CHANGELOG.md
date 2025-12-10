@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.18.8
+
+### Patch Changes
+
+- [`1a05fbb`](https://github.com/bluesky-social/atproto/commit/1a05fbb7a69a919a3dffe7219603c2267d76c709) Thanks [@iwsmith](https://github.com/iwsmith)! - Add recID field to getSuggestedUsers
+
 ## 0.18.7
 
 ### Patch Changes

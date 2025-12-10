@@ -1,5 +1,14 @@
 # @atproto/bsky
 
+## 0.0.202
+
+### Patch Changes
+
+- [`1a05fbb`](https://github.com/bluesky-social/atproto/commit/1a05fbb7a69a919a3dffe7219603c2267d76c709) Thanks [@iwsmith](https://github.com/iwsmith)! - Add recID field to getSuggestedUsers
+
+- Updated dependencies [[`1a05fbb`](https://github.com/bluesky-social/atproto/commit/1a05fbb7a69a919a3dffe7219603c2267d76c709)]:
+  - @atproto/api@0.18.8
+
 ## 0.0.201
 
 ### Patch Changes
