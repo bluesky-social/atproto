@@ -3,4 +3,4 @@
 '@atproto/bsky': patch
 ---
 
-Add recID field to getSuggestedUsers
+Add `recID` field to `getSuggestedUsers` and `getSuggestedUsersSkeleton`
