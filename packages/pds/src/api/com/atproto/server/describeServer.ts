@@ -8,6 +8,8 @@ export default function (server: Server, ctx: AppContext) {
     const privacyPolicy = ctx.cfg.service.privacyPolicyUrl
     const termsOfService = ctx.cfg.service.termsOfServiceUrl
     const contactEmailAddress = ctx.cfg.service.contactEmailAddress
+    const acceptingImports = ctx.cfg.service.acceptingImports
+    const maxImportSize = ctx.cfg.service.maxImportSize
 
     return {
       encoding: 'application/json',
@@ -18,6 +20,10 @@ export default function (server: Server, ctx: AppContext) {
         links: { privacyPolicy, termsOfService },
         contact: {
           email: contactEmailAddress,
+        },
+        imports: {
+          aceepted: acceptingImports,
+          maxSize: maxImportSize,
         },
       },
     }
