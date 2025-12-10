@@ -52,7 +52,7 @@
           "name": "INVALID_CONTACTS"
         },
         {
-          "name": "INVALID_CONTACTS_COUNT"
+          "name": "TOO_MANY_CONTACTS"
         },
         {
           "name": "INVALID_TOKEN"

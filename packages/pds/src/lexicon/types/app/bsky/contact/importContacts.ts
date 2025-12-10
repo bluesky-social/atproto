@@ -46,7 +46,7 @@ export interface HandlerError {
   error?:
     | 'INVALID_DID'
     | 'INVALID_CONTACTS'
-    | 'INVALID_CONTACTS_COUNT'
+    | 'TOO_MANY_CONTACTS'
     | 'INVALID_TOKEN'
     | 'INTERNAL_ERROR'
 }

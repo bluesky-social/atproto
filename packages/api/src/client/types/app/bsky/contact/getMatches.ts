@@ -50,13 +50,7 @@ export class INVALID_LIMITError extends XRPCError {
   }
 }
 
-export class INVALID_INCOMING_CURSORError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
-}
-
-export class INVALID_OUTGOING_CURSORError extends XRPCError {
+export class INVALID_CURSORError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -72,10 +66,7 @@ export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'INVALID_DID') return new INVALID_DIDError(e)
     if (e.error === 'INVALID_LIMIT') return new INVALID_LIMITError(e)
-    if (e.error === 'INVALID_INCOMING_CURSOR')
-      return new INVALID_INCOMING_CURSORError(e)
-    if (e.error === 'INVALID_OUTGOING_CURSOR')
-      return new INVALID_OUTGOING_CURSORError(e)
+    if (e.error === 'INVALID_CURSOR') return new INVALID_CURSORError(e)
     if (e.error === 'INTERNAL_ERROR') return new INTERNAL_ERRORError(e)
   }
 

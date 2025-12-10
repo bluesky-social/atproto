@@ -1908,10 +1908,7 @@ export const schemaDict = {
             name: 'INVALID_LIMIT',
           },
           {
-            name: 'INVALID_INCOMING_CURSOR',
-          },
-          {
-            name: 'INVALID_OUTGOING_CURSOR',
+            name: 'INVALID_CURSOR',
           },
           {
             name: 'INTERNAL_ERROR',
@@ -2015,7 +2012,7 @@ export const schemaDict = {
             name: 'INVALID_CONTACTS',
           },
           {
-            name: 'INVALID_CONTACTS_COUNT',
+            name: 'TOO_MANY_CONTACTS',
           },
           {
             name: 'INVALID_TOKEN',
