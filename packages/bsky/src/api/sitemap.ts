@@ -7,12 +7,12 @@ import { SitemapPageType } from '../proto/bsky_pb'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
-  router.get('/external/sitemap/users.xml.gz', indexHandler(ctx))
-  router.get('/external/sitemap/users/:date/:bucket.xml.gz', pageHandler(ctx))
+  router.get('/external/sitemap/users.xml.gz', userIndexHandler(ctx))
+  router.get('/external/sitemap/users/:date/:bucket.xml.gz', userPageHandler(ctx))
   return router
 }
 
-const indexHandler =
+const userIndexHandler =
   (ctx: AppContext): RequestHandler =>
   async (_req: express.Request, res: express.Response) => {
     try {
@@ -28,7 +28,7 @@ const indexHandler =
     }
   }
 
-const pageHandler =
+const userPageHandler =
   (ctx: AppContext): RequestHandler =>
   async (req: express.Request, res: express.Response) => {
     const { date, bucket } = req.params
