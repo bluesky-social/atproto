@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.202
+
+### Patch Changes
+
+- [#4441](https://github.com/bluesky-social/atproto/pull/4441) [`45928bf`](https://github.com/bluesky-social/atproto/commit/45928bfcd6d220216078d5106f134fc3a81f564b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Fix optimistic response from `ageassurance.begin()`, retain existing `status` and `access` values if they exist.
+
 ## 0.0.201
 
 ### Patch Changes
