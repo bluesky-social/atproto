@@ -10,7 +10,7 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import API, { blobResolver, external, health, wellKnown } from './api'
+import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
@@ -225,6 +225,11 @@ export class BskyAppView {
     app.use(wellKnown.createRouter(ctx))
     app.use(blobResolver.createMiddleware(ctx))
     app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
+
+    if (config.dataplaneUrls.length > 0 || config.dataplaneUrlsEtcdKeyPrefix) {
+      app.use(sitemap.createRouter(ctx))
+    }
+
     app.use(server.xrpc.router)
     app.use(error.handler)
     app.use('/external', external.createRouter(ctx))
