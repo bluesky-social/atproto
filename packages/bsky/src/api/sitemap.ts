@@ -1,5 +1,6 @@
 import { Timestamp } from '@bufbuild/protobuf'
 import express, { RequestHandler, Router } from 'express'
+import { Readable } from 'node:stream'
 import { AppContext } from '../context'
 import { httpLogger as log } from '../logger'
 import { SitemapPageType } from '../proto/bsky_pb'
@@ -20,7 +21,7 @@ const indexHandler =
       })
       res.set('Content-Type', 'application/gzip')
       res.set('Content-Encoding', 'gzip')
-      return res.send(Buffer.from(result.sitemap))
+      Readable.from(Buffer.from(result.sitemap)).pipe(res)
     } catch (err) {
       log.error({ err }, 'failed to get sitemap index')
       return res.status(500).send('Internal Server Error')
@@ -60,7 +61,7 @@ const pageHandler =
       })
       res.set('Content-Type', 'application/gzip')
       res.set('Content-Encoding', 'gzip')
-      return res.send(Buffer.from(result.sitemap))
+      Readable.from(Buffer.from(result.sitemap)).pipe(res)
     } catch (err) {
       log.error({ err }, 'failed to get sitemap page')
       return res.status(500).send('Internal Server Error')
