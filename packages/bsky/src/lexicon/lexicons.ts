@@ -8016,6 +8016,11 @@ export const schemaDict = {
                   format: 'did',
                 },
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
