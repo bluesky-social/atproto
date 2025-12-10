@@ -2,6 +2,7 @@ import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './events'
+import { formatAdminAuthHeader } from './util'
 
 export interface HandlerOpts {
   signal: AbortSignal
@@ -13,6 +14,7 @@ export interface TapHandler {
 }
 
 export type TapWebsocketOptions = ClientOptions & {
+  adminPassword?: string
   maxReconnectSeconds?: number
   heartbeatIntervalMs?: number
   onReconnectError?: (error: unknown, n: number, initialSetup: boolean) => void
@@ -40,13 +42,20 @@ export class TapChannel {
     this.abortController = new AbortController()
     this.destroyDefer = createDeferrable()
     this.handler = handler
+    const { adminPassword, ...rest } = wsOpts
+    let headers = rest.headers
+    if (adminPassword) {
+      headers ??= {}
+      headers['Authorization'] = formatAdminAuthHeader(adminPassword)
+    }
     this.ws = new WebSocketKeepAlive({
       getUrl: async () => url,
       onReconnect: () => {
         this.flushBufferedAcks()
       },
       signal: this.abortController.signal,
-      ...wsOpts,
+      ...rest,
+      headers,
     })
   }
 
