@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "com.germnetwork.declaration",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A delegate messaging id",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["version", "currentKey"],
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "currentKey": {
+            "type": "bytes"
+          },
+          "messageMe": { "type": "ref", "ref": "#messageMe" },
+          "keyPackage": {
+            "type": "bytes"
+          },
+          "continuityProofs": {
+            "type": "array",
+            "items": { "type": "bytes" }
+          }
+        }
+      }
+    },
+    "messageMe": {
+      "type": "object",
+      "required": ["showButtonTo", "messageMeUrl"],
+      "properties": {
+        "messageMeUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "showButtonTo": {
+          "type": "string",
+          "knownValues": ["usersIFollow", "everyone"]
+        }
+      }
+    }
+  }
+}
