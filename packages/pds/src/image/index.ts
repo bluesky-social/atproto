@@ -15,7 +15,11 @@ export async function maybeGetInfo(
     ])
     metadata = result
   } catch (err) {
-    if (errHasMsg(err, 'Input buffer contains unsupported image format')) {
+    // The buffer has a corrupted image or no image at all.
+    if (
+      errHasMsg(err, 'Input buffer contains unsupported image format') ||
+      errHasMsg(err, 'Input buffer has corrupt header')
+    ) {
       return null
     }
     throw err
