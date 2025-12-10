@@ -6,8 +6,8 @@ import { SitemapPageType } from '../proto/bsky_pb'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
-  router.get('/sitemap/users.xml.gz', indexHandler(ctx))
-  router.get('/sitemap/users/:date/:bucket.xml.gz', pageHandler(ctx))
+  router.get('/external/sitemap/users.xml.gz', indexHandler(ctx))
+  router.get('/external/sitemap/users/:date/:bucket.xml.gz', pageHandler(ctx))
   return router
 }
 
