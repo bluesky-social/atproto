@@ -459,9 +459,12 @@ describe('pds profile views', () => {
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: 'com.germnetwork.declaration',
-      version: "1",
-      currentKey: "TODO-key-bytes",
-      keyPackage: "TODO-key-bytes"
+      version: "0.1.0",
+      currentKey: new Uint8Array([01, 02, 03]),
+      messageMe: {
+        messageMeUrl: "https://chat.example.com/start-conversation",
+        showButtonTo: "everyone",
+      }
     }
 
     it(`omits germ record if doesn't exist`, async () => {
