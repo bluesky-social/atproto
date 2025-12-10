@@ -37,14 +37,14 @@ export default function (server: Server, ctx: AppContext) {
 
       const actorDid = auth.credentials.iss
       const actorInfo = await getAgeVerificationState(ctx, actorDid)
+      const existingStatus = actorInfo?.ageAssuranceStatus?.status
+      const existingAccess = actorInfo?.ageAssuranceStatus?.access
 
-      if (actorInfo?.ageAssuranceStatus) {
-        if (actorInfo.ageAssuranceStatus.status === 'blocked') {
-          throw new InvalidRequestError(
-            `Cannot initiate age assurance flow from current state: ${actorInfo.ageAssuranceStatus.status}`,
-            'InvalidInitiation',
-          )
-        }
+      if (existingStatus === 'blocked') {
+        throw new InvalidRequestError(
+          `Cannot initiate age assurance flow from current state: ${existingStatus}`,
+          'InvalidInitiation',
+        )
       }
 
       const attemptId = crypto.randomUUID()
@@ -107,14 +107,24 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
+      // If we have existing status/access for this region, retain it.
+      const nextStatus =
+        existingStatus && existingStatus !== 'unknown'
+          ? existingStatus
+          : 'pending'
+      const nextAccess =
+        existingAccess && existingAccess !== 'unknown'
+          ? existingAccess
+          : 'unknown'
+
       const event = await createEvent(ctx, actorDid, {
         attemptId,
         email,
         // Assumes `app.set('trust proxy', ...)` configured with `true` or specific values.
         initIp: req.ip,
         initUa: getClientUa(req),
-        status: 'pending',
-        access: 'unknown',
+        status: nextStatus,
+        access: nextAccess,
         countryCode,
         regionCode,
       })
@@ -123,8 +133,8 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           lastInitiatedAt: event.createdAt,
-          status: 'pending',
-          access: 'unknown',
+          status: nextStatus,
+          access: nextAccess,
         },
       }
     },
