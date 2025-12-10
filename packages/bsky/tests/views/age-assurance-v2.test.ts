@@ -519,6 +519,31 @@ describe('age assurance v2 views', () => {
   })
 
   describe('misc', () => {
+    /*
+     * This is a silly test, but it did help me uncover a local data-plane
+     * implementation bug. Let's leave it here for additional safety.
+     */
+    it('expects access to be safe', async () => {
+      await kws.redirectV2({
+        externalPayload: serializeKWSExternalPayloadV2({
+          version: KWSExternalPayloadVersion.V2,
+          actorDid: actor.did,
+          attemptId: crypto.randomUUID(),
+          countryCode: 'AA',
+        }),
+        status: serializeKWSAgeVerifiedStatus({
+          verified: true,
+          verifiedMinimumAge: 16,
+        }),
+      })
+      await network.processAll()
+      const { state } = await getState({
+        countryCode: 'AA',
+      })
+      expect(state.status).toEqual('assured')
+      expect(state.access).toEqual('safe')
+    })
+
     /**
      * We only block re-init if the user is in a `blocked` state, which is not
      * testable using the local dataplane at the moment. The test below
@@ -544,6 +569,32 @@ describe('age assurance v2 views', () => {
         countryCode: 'AA',
       })
       await expect(call).rejects.toHaveProperty('error', 'InvalidInitiation')
+    })
+
+    it('re-init from terminal state retains existing status', async () => {
+      await kws.redirectV2({
+        externalPayload: serializeKWSExternalPayloadV2({
+          version: KWSExternalPayloadVersion.V2,
+          actorDid: actor.did,
+          attemptId: crypto.randomUUID(),
+          countryCode: 'AA',
+        }),
+        status: serializeKWSAgeVerifiedStatus({
+          verified: true,
+          verifiedMinimumAge: 16,
+        }),
+      })
+      await network.processAll()
+      const { state } = await getState({
+        countryCode: 'AA',
+      })
+      expect(state.status).toEqual('assured')
+      expect(state.access).toEqual('safe')
+      const res = await beginAgeAssurance({
+        countryCode: 'AA',
+      })
+      expect(res.status).toEqual('assured')
+      expect(res.access).toEqual('safe')
     })
 
     /*
