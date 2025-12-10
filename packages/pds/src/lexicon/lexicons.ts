@@ -6803,6 +6803,7 @@ export const schemaDict = {
               'like-via-repost',
               'repost-via-repost',
               'subscribed-post',
+              'contact-match',
             ],
           },
           reasonSubject: {
