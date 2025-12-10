@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.18.7
+
+### Patch Changes
+
+- [#4436](https://github.com/bluesky-social/atproto/pull/4436) [`e266405`](https://github.com/bluesky-social/atproto/commit/e266405a89cd081ff96d36a784a31dd917c60a15) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add "contact-match" to listNotification reasons
+
 ## 0.18.6
 
 ### Patch Changes
