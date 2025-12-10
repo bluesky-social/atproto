@@ -11,7 +11,7 @@ export const recordEventDataSchema = z.object({
   live: z.boolean(),
 })
 
-export const userEventDataSchema = z.object({
+export const identityEventDataSchema = z.object({
   did: z.string(),
   handle: z.string(),
   is_active: z.boolean(),
@@ -30,13 +30,13 @@ export const recordEventSchema = z.object({
   record: recordEventDataSchema,
 })
 
-export const userEventSchema = z.object({
+export const identityEventSchema = z.object({
   id: z.number(),
-  type: z.literal('user'),
-  user: userEventDataSchema,
+  type: z.literal('identity'),
+  identity: identityEventDataSchema,
 })
 
-export const tapEventSchema = z.union([recordEventSchema, userEventSchema])
+export const tapEventSchema = z.union([recordEventSchema, identityEventSchema])
 
 export type RecordEvent = {
   id: number
@@ -51,27 +51,27 @@ export type RecordEvent = {
   live: boolean
 }
 
-export type UserEvent = {
+export type IdentityEvent = {
   id: number
-  type: 'user'
+  type: 'identity'
   did: string
   handle: string
   isActive: boolean
   status: 'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
 }
 
-export type TapEvent = UserEvent | RecordEvent
+export type TapEvent = IdentityEvent | RecordEvent
 
 export const parseTapEvent = (data: unknown): TapEvent => {
   const parsed = tapEventSchema.parse(data)
-  if (parsed.type === 'user') {
+  if (parsed.type === 'identity') {
     return {
       id: parsed.id,
       type: parsed.type,
-      did: parsed.user.did,
-      handle: parsed.user.handle,
-      isActive: parsed.user.is_active,
-      status: parsed.user.status,
+      did: parsed.identity.did,
+      handle: parsed.identity.handle,
+      isActive: parsed.identity.is_active,
+      status: parsed.identity.status,
     }
   } else {
     return {

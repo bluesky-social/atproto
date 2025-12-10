@@ -14,19 +14,17 @@ const tap = new Tap('http://localhost:8080')
 const indexer = new SimpleIndexer()
 
 // handle events pertaining to a repo's account or identity
-indexer.user(async (evt) => {
+indexer.identity(async (evt) => {
   console.log(
-    `${evt.user.did} updated identity. handle: ${evt.user.handle}. status: ${evt.user.status}`,
+    `${evt.did} updated identity. handle: ${evt.handle}. status: ${evt.status}`,
   )
 })
 
 // handle events pertaining to a the creation, update, or deletion of a record
 indexer.record(async (evt) => {
-  const uri = `at://${evt.record.did}/${evt.record.collection}/${evt.record.rkey}`
-  if (evt.record.action === 'create' || evt.record.action === 'update') {
-    console.log(
-      `record created/updated at ${uri}: ${JSON.stringify(evt.record.record)}`,
-    )
+  const uri = `at://${evt.did}/${evt.collection}/${evt.rkey}`
+  if (evt.action === 'create' || evt.action === 'update') {
+    console.log(`record created/updated at ${uri}: ${JSON.stringify(evt.record)}`)
   } else {
     console.log(`record deleted at ${uri}`)
   }

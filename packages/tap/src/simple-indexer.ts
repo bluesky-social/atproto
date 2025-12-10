@@ -1,7 +1,10 @@
 import { HandlerOpts, TapHandler } from './channel'
-import { TapEvent, RecordEvent, UserEvent } from './events'
+import { TapEvent, RecordEvent, IdentityEvent } from './events'
 
-type UserEventHandler = (evt: UserEvent, opts?: HandlerOpts) => Promise<void>
+type IdentityEventHandler = (
+  evt: IdentityEvent,
+  opts?: HandlerOpts,
+) => Promise<void>
 type RecordEventHandler = (
   evt: RecordEvent,
   opts?: HandlerOpts,
@@ -9,12 +12,12 @@ type RecordEventHandler = (
 type ErrorHandler = (err: Error) => void
 
 export class SimpleIndexer implements TapHandler {
-  private userHandler: UserEventHandler | undefined
+  private identityHandler: IdentityEventHandler | undefined
   private recordHandler: RecordEventHandler | undefined
   private errorHandler: ErrorHandler | undefined
 
-  user(fn: UserEventHandler) {
-    this.userHandler = fn
+  identity(fn: IdentityEventHandler) {
+    this.identityHandler = fn
   }
 
   record(fn: RecordEventHandler) {
@@ -29,7 +32,7 @@ export class SimpleIndexer implements TapHandler {
     if (evt.type === 'record') {
       return this.recordHandler?.(evt, opts)
     } else {
-      return this.userHandler?.(evt, opts)
+      return this.identityHandler?.(evt, opts)
     }
   }
 
