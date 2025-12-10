@@ -1,5 +1,5 @@
 import { HandlerOpts, TapHandler } from './channel'
-import { TapEvent, RecordEvent, IdentityEvent } from './events'
+import { IdentityEvent, RecordEvent, TapEvent } from './events'
 
 type IdentityEventHandler = (
   evt: IdentityEvent,

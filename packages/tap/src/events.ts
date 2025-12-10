@@ -57,8 +57,15 @@ export type IdentityEvent = {
   did: string
   handle: string
   isActive: boolean
-  status: 'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
+  status: RepoStatus
 }
+
+export type RepoStatus =
+  | 'active'
+  | 'takendown'
+  | 'suspended'
+  | 'deactivated'
+  | 'deleted'
 
 export type TapEvent = IdentityEvent | RecordEvent
 
