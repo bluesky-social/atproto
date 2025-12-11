@@ -36,16 +36,16 @@
       },
       "errors": [
         {
-          "name": "INVALID_DID"
+          "name": "InvalidDid"
         },
         {
-          "name": "INVALID_LIMIT"
+          "name": "InvalidLimit"
         },
         {
-          "name": "INVALID_CURSOR"
+          "name": "InvalidCursor"
         },
         {
-          "name": "INTERNAL_ERROR"
+          "name": "InternalError"
         }
       ]
     }
