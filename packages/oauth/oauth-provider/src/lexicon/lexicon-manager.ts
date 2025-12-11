@@ -1,8 +1,5 @@
-import { LexPermissionSet } from '@atproto/lexicon'
-import {
-  LexiconResolutionError,
-  LexiconResolver,
-} from '@atproto/lexicon-resolver'
+import { LexiconPermissionSet } from '@atproto/lex-document'
+import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
 import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
@@ -12,8 +9,8 @@ export * from './lexicon-store.js'
 export class LexiconManager {
   protected readonly lexiconGetter: LexiconGetter
 
-  constructor(store: LexiconStore, resolveLexicon?: LexiconResolver) {
-    this.lexiconGetter = new LexiconGetter(store, resolveLexicon)
+  constructor(store: LexiconStore, lexResolver: LexResolver) {
+    this.lexiconGetter = new LexiconGetter(store, lexResolver)
   }
 
   public async getPermissionSetsFromScope(scope?: string) {
@@ -50,28 +47,28 @@ export class LexiconManager {
   }
 
   protected async getPermissionSets(nsids: Set<Nsid>) {
-    return new Map<string, LexPermissionSet>(
+    return new Map<string, LexiconPermissionSet>(
       await Promise.all(Array.from(nsids, this.getPermissionSetEntry, this)),
     )
   }
 
   protected async getPermissionSetEntry(
     nsid: Nsid,
-  ): Promise<[nsid: Nsid, permissionSet: LexPermissionSet]> {
+  ): Promise<[nsid: Nsid, permissionSet: LexiconPermissionSet]> {
     const permissionSet = await this.getPermissionSet(nsid)
     return [nsid, permissionSet]
   }
 
-  protected async getPermissionSet(nsid: Nsid): Promise<LexPermissionSet> {
+  protected async getPermissionSet(nsid: Nsid): Promise<LexiconPermissionSet> {
     const { lexicon } = await this.lexiconGetter.get(nsid)
 
     if (!lexicon) {
-      throw LexiconResolutionError.from(nsid)
+      throw LexResolverError.from(nsid)
     }
 
     if (lexicon.defs.main?.type !== 'permission-set') {
       const description = 'Lexicon document is not a permission set'
-      throw LexiconResolutionError.from(nsid, description)
+      throw LexResolverError.from(nsid, description)
     }
 
     return lexicon.defs.main
@@ -108,9 +105,12 @@ function extractNsid(nsidScope: IncludeScope): Nsid {
 }
 
 export function nsidToPermissionScopes(
-  this: Map<string, LexPermissionSet>,
+  this: Map<string, LexiconPermissionSet>,
   includeScope: IncludeScope,
 ): string[] {
-  const permissionSet = this.get(includeScope.nsid)!
-  return includeScope.toPermissions(permissionSet).map(String)
+  const permissionSet = this.get(includeScope.nsid)
+  if (permissionSet) return includeScope.toScopes(permissionSet)
+
+  // Should never happen (mostly there for type safety & future proofing)
+  throw new Error(`Missing permission set for NSID: ${includeScope.nsid}`)
 }

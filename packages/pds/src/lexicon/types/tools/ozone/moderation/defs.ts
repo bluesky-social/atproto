@@ -13,6 +13,7 @@ import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs.js'
 import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+import type * as AppBskyAgeassuranceDefs from '../../../app/bsky/ageassurance/defs.js'
 import type * as ComAtprotoServerDefs from '../../../com/atproto/server/defs.js'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
@@ -281,10 +282,10 @@ export function validateAccountStrike<V>(v: V) {
 }
 
 export type SubjectReviewState =
-  | 'lex:tools.ozone.moderation.defs#reviewOpen'
-  | 'lex:tools.ozone.moderation.defs#reviewEscalated'
-  | 'lex:tools.ozone.moderation.defs#reviewClosed'
-  | 'lex:tools.ozone.moderation.defs#reviewNone'
+  | 'tools.ozone.moderation.defs#reviewOpen'
+  | 'tools.ozone.moderation.defs#reviewEscalated'
+  | 'tools.ozone.moderation.defs#reviewClosed'
+  | 'tools.ozone.moderation.defs#reviewNone'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
@@ -449,10 +450,15 @@ export interface AgeAssuranceEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceEvent'
   /** The date and time of this write operation. */
   createdAt: string
-  /** The status of the age assurance process. */
-  status: 'unknown' | 'pending' | 'assured' | (string & {})
   /** The unique identifier for this instance of the age assurance flow, in UUID format. */
   attemptId: string
+  /** The status of the Age Assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  access?: AppBskyAgeassuranceDefs.Access
+  /** The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow. */
+  countryCode?: string
+  /** The ISO 3166-2 region code provided when beginning the Age Assurance flow. */
+  regionCode?: string
   /** The IP address used when initiating the AA flow. */
   initIp?: string
   /** The user agent used when initiating the AA flow. */
@@ -478,6 +484,7 @@ export interface AgeAssuranceOverrideEvent {
   $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
   /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
   status: 'assured' | 'reset' | 'blocked' | (string & {})
+  access?: AppBskyAgeassuranceDefs.Access
   /** Comment describing the reason for the override. */
   comment: string
 }
@@ -636,6 +643,8 @@ export interface ModEventEmail {
   strikeCount?: number
   /** When the strike should expire. If not provided, the strike never expires. */
   strikeExpiresAt?: string
+  /** Indicates whether the email was successfully delivered to the user's inbox. */
+  isDelivered?: boolean
 }
 
 const hashModEventEmail = 'modEventEmail'

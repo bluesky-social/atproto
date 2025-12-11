@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { TID } from '@atproto/common'
 import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'

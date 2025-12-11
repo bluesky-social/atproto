@@ -52,7 +52,12 @@ export type QueryParams = {
   /** When set to true, only muted subjects and reporters will be returned. */
   onlyMuted?: boolean
   /** Specify when fetching subjects in a certain state */
-  reviewState?: string
+  reviewState?:
+    | 'tools.ozone.moderation.defs#reviewOpen'
+    | 'tools.ozone.moderation.defs#reviewClosed'
+    | 'tools.ozone.moderation.defs#reviewEscalated'
+    | 'tools.ozone.moderation.defs#reviewNone'
+    | (string & {})
   ignoreSubjects?: string[]
   /** Get all subject statuses that were reviewed by a specific moderator */
   lastReviewedBy?: string

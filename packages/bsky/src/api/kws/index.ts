@@ -9,7 +9,13 @@ export const createRouter = (ctx: AppContext): Router => {
 
   const router = Router()
   router.use(raw({ type: 'application/json' }))
-  router.post('/age-assurance-webhook', webhookAuth(ctx), webhookHandler(ctx))
+  router.post(
+    '/age-assurance-webhook',
+    webhookAuth({
+      secret: ctx.cfg.kws.webhookSecret,
+    }),
+    webhookHandler(ctx),
+  )
   router.get('/age-assurance-verification', verificationHandler(ctx))
   return router
 }

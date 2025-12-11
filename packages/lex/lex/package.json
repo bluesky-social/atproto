@@ -1,0 +1,54 @@
+{
+  "name": "@atproto/lex",
+  "version": "0.0.6",
+  "license": "MIT",
+  "description": "Lexicon tooling for AT",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "lex"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex/lex"
+  },
+  "files": [
+    "./index.cjs",
+    "./index.mjs",
+    "./index.d.ts",
+    "./bin",
+    "./CHANGELOG.md"
+  ],
+  "bin": {
+    "ts-lex": "./bin/lex",
+    "lex": "./bin/lex"
+  },
+  "sideEffects": false,
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./index.mjs",
+      "import": "./index.mjs",
+      "require": "./index.cjs",
+      "types": "./index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@atproto/lex-builder": "workspace:*",
+    "@atproto/lex-client": "workspace:*",
+    "@atproto/lex-installer": "workspace:*",
+    "@atproto/lex-schema": "workspace:*",
+    "yargs": "^17.0.0"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.33",
+    "jest": "^28.1.2"
+  },
+  "scripts": {
+    "build": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons -- ignore additional npm args",
+    "test": "jest"
+  }
+}

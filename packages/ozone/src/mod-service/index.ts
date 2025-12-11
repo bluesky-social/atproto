@@ -494,6 +494,7 @@ export class ModerationService {
 
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
+      meta.isDelivered = !!event.isDelivered
       if (event.content) {
         meta.content = event.content
       }
@@ -531,6 +532,9 @@ export class ModerationService {
       if (event.attemptId) {
         meta.attemptId = event.attemptId
       }
+      if (event.access) {
+        meta.access = event.access
+      }
       if (event.initIp) {
         meta.initIp = event.initIp
       }
@@ -547,6 +551,9 @@ export class ModerationService {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       meta.status = event.status
+      if (event.access) {
+        meta.access = event.access
+      }
     }
 
     if (isScheduleTakedownEvent(event)) {

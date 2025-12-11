@@ -1,9 +1,4 @@
-import {
-  AtprotoIdentityDidMethods,
-  Did,
-  DidDocument,
-  DidService,
-} from '@atproto/did'
+import { extractPdsUrl } from '@atproto/did'
 import {
   OAuthAuthorizationServerMetadata,
   oauthIssuerIdentifierSchema,
@@ -174,44 +169,5 @@ export class OAuthResolver {
         `Failed to resolve OAuth server metadata for resource: ${pdsUrl}`,
       )
     }
-  }
-}
-
-function isAtprotoPersonalDataServerService<M extends string>(
-  this: DidDocument<M>,
-  s: DidService,
-): s is {
-  id: '#atproto_pds' | `${Did<M>}#atproto_pds`
-  type: 'AtprotoPersonalDataServer'
-  serviceEndpoint: string
-} {
-  return (
-    typeof s.serviceEndpoint === 'string' &&
-    s.type === 'AtprotoPersonalDataServer' &&
-    (s.id.startsWith('#')
-      ? s.id === '#atproto_pds'
-      : s.id === `${this.id}#atproto_pds`)
-  )
-}
-
-function extractPdsUrl(document: DidDocument<AtprotoIdentityDidMethods>): URL {
-  const service = document.service?.find(
-    isAtprotoPersonalDataServerService<AtprotoIdentityDidMethods>,
-    document,
-  )
-
-  if (!service) {
-    throw new OAuthResolverError(
-      `Identity "${document.id}" does not have a PDS URL`,
-    )
-  }
-
-  try {
-    return new URL(service.serviceEndpoint)
-  } catch (cause) {
-    throw new OAuthResolverError(
-      `Invalid PDS URL in DID document: ${service.serviceEndpoint}`,
-      { cause },
-    )
   }
 }

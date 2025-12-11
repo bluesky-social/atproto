@@ -10,12 +10,9 @@ import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
 import {
-  LexiconResolver,
-  buildLexiconResolver,
-} from '@atproto/lexicon-resolver'
-import {
   AccessTokenMode,
   JoseKey,
+  LexResolver,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
@@ -328,48 +325,6 @@ export class AppContext {
       },
     })
 
-    const baseLexiconResolver = buildLexiconResolver({
-      idResolver,
-      rpc: { fetch: safeFetch },
-    })
-
-    const getLexiconAuthority = (_nsid: string): string | undefined => {
-      // At the moment, only a single override strategy is supported by
-      // specifying a did through which all the lexicons will be resolved. We
-      // might need more granular control in the future (e.g. per-nsid
-      // overrides)
-      return cfg.lexicon.didAuthority
-    }
-
-    const lexiconResolver: LexiconResolver = async (input) => {
-      const nsid: string = String(input)
-      try {
-        const result = await baseLexiconResolver(input, {
-          didAuthority: getLexiconAuthority(nsid),
-          // Right now, the lexicon resolver is only used by the oauth-provider,
-          // which caches the responses internally (through the LexiconStore).
-          // Since the `LexiconResolver` does not allow specifying a
-          // `forceRefresh` option, we hard code it here. Should PDSs need to
-          // resolve lexicons for other purposes (e.g. record validation), we'd
-          // probably want to either implement caching as built into the
-          // lexiconResolver here, or allow the caller (oauth-provider, etc.) to
-          // specify a `forceRefresh` option by altering the LexiconResolver
-          // interface.
-          forceRefresh: true,
-        })
-
-        const cid = result.cid.toString()
-        const uri = result.uri.toString()
-        lexiconResolverLogger.info({ nsid, uri, cid }, 'Resolved lexicon')
-
-        return result
-      } catch (err) {
-        lexiconResolverLogger.error({ nsid, err }, 'Lexicon resolution failed')
-
-        throw err
-      }
-    }
-
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -393,7 +348,44 @@ export class AppContext {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
-          lexiconResolver,
+          lexResolver: new LexResolver({
+            fetch: safeFetch,
+            plcDirectoryUrl: cfg.identity.plcUrl,
+            hooks: {
+              onResolveAuthority: ({ nsid }) => {
+                lexiconResolverLogger.debug(
+                  { nsid: nsid.toString() },
+                  'Resolving lexicon DID authority',
+                )
+                // Override the lexicon did resolution to point to a custom PDS
+                return cfg.lexicon.didAuthority
+              },
+              onResolveAuthorityResult({ nsid, did }) {
+                lexiconResolverLogger.info(
+                  { nsid: nsid.toString(), did },
+                  'Resolved lexicon DID',
+                )
+              },
+              onResolveAuthorityError({ nsid, err }) {
+                lexiconResolverLogger.error(
+                  { nsid: nsid.toString(), err },
+                  'Lexicon DID resolution error',
+                )
+              },
+              onFetchResult({ uri, cid }) {
+                lexiconResolverLogger.info(
+                  { uri: uri.toString(), cid: cid.toString() },
+                  'Fetched lexicon',
+                )
+              },
+              onFetchError({ err, uri }) {
+                lexiconResolverLogger.error(
+                  { uri: uri.toString(), err },
+                  'Lexicon fetch error',
+                )
+              },
+            },
+          }),
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },

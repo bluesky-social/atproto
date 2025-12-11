@@ -17,9 +17,20 @@ import * as AppBskyActorGetSuggestions from './types/app/bsky/actor/getSuggestio
 import * as AppBskyActorPutPreferences from './types/app/bsky/actor/putPreferences.js'
 import * as AppBskyActorSearchActors from './types/app/bsky/actor/searchActors.js'
 import * as AppBskyActorSearchActorsTypeahead from './types/app/bsky/actor/searchActorsTypeahead.js'
+import * as AppBskyAgeassuranceBegin from './types/app/bsky/ageassurance/begin.js'
+import * as AppBskyAgeassuranceGetConfig from './types/app/bsky/ageassurance/getConfig.js'
+import * as AppBskyAgeassuranceGetState from './types/app/bsky/ageassurance/getState.js'
 import * as AppBskyBookmarkCreateBookmark from './types/app/bsky/bookmark/createBookmark.js'
 import * as AppBskyBookmarkDeleteBookmark from './types/app/bsky/bookmark/deleteBookmark.js'
 import * as AppBskyBookmarkGetBookmarks from './types/app/bsky/bookmark/getBookmarks.js'
+import * as AppBskyContactDismissMatch from './types/app/bsky/contact/dismissMatch.js'
+import * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.js'
+import * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
+import * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
+import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+import * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
+import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
+import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
@@ -271,7 +282,9 @@ export class AppNS {
 export class AppBskyNS {
   _server: Server
   actor: AppBskyActorNS
+  ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
+  contact: AppBskyContactNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -284,7 +297,9 @@ export class AppBskyNS {
   constructor(server: Server) {
     this._server = server
     this.actor = new AppBskyActorNS(server)
+    this.ageassurance = new AppBskyAgeassuranceNS(server)
     this.bookmark = new AppBskyBookmarkNS(server)
+    this.contact = new AppBskyContactNS(server)
     this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
@@ -388,6 +403,50 @@ export class AppBskyActorNS {
   }
 }
 
+export class AppBskyAgeassuranceNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  begin<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyAgeassuranceBegin.QueryParams,
+      AppBskyAgeassuranceBegin.HandlerInput,
+      AppBskyAgeassuranceBegin.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.ageassurance.begin' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConfig<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyAgeassuranceGetConfig.QueryParams,
+      AppBskyAgeassuranceGetConfig.HandlerInput,
+      AppBskyAgeassuranceGetConfig.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.ageassurance.getConfig' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyAgeassuranceGetState.QueryParams,
+      AppBskyAgeassuranceGetState.HandlerInput,
+      AppBskyAgeassuranceGetState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.ageassurance.getState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
 export class AppBskyBookmarkNS {
   _server: Server
 
@@ -428,6 +487,110 @@ export class AppBskyBookmarkNS {
     >,
   ) {
     const nsid = 'app.bsky.bookmark.getBookmarks' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyContactNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  dismissMatch<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactDismissMatch.QueryParams,
+      AppBskyContactDismissMatch.HandlerInput,
+      AppBskyContactDismissMatch.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.dismissMatch' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMatches<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactGetMatches.QueryParams,
+      AppBskyContactGetMatches.HandlerInput,
+      AppBskyContactGetMatches.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.getMatches' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSyncStatus<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactGetSyncStatus.QueryParams,
+      AppBskyContactGetSyncStatus.HandlerInput,
+      AppBskyContactGetSyncStatus.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.getSyncStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  importContacts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactImportContacts.QueryParams,
+      AppBskyContactImportContacts.HandlerInput,
+      AppBskyContactImportContacts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.importContacts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeData<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactRemoveData.QueryParams,
+      AppBskyContactRemoveData.HandlerInput,
+      AppBskyContactRemoveData.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.removeData' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendNotification<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactSendNotification.QueryParams,
+      AppBskyContactSendNotification.HandlerInput,
+      AppBskyContactSendNotification.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.sendNotification' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  startPhoneVerification<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactStartPhoneVerification.QueryParams,
+      AppBskyContactStartPhoneVerification.HandlerInput,
+      AppBskyContactStartPhoneVerification.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.startPhoneVerification' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  verifyPhone<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactVerifyPhone.QueryParams,
+      AppBskyContactVerifyPhone.HandlerInput,
+      AppBskyContactVerifyPhone.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.verifyPhone' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

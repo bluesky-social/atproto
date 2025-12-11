@@ -619,6 +619,9 @@ export class Agent extends XrpcClient {
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
+      } else if (predicate.isValidDeclaredAgePref(pref)) {
+        const { $type: _, ...declaredAgePref } = pref
+        prefs.declaredAge = declaredAgePref
       } else if (predicate.isValidFeedViewPref(pref)) {
         // feed view preferences
         const { $type: _, feed, ...v } = pref

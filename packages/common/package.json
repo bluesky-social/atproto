@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common",
-  "version": "0.4.12",
+  "version": "0.5.3",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
-    "@ipld/dag-cbor": "^7.0.3",
-    "cbor-x": "^1.5.1",
+    "@atproto/lex-cbor": "workspace:*",
+    "@atproto/lex-data": "workspace:*",
     "iso-datestring-validator": "^2.2.2",
     "multiformats": "^9.9.0",
     "pino": "^8.21.0"

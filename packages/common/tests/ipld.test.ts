@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import * as ui8 from 'uint8arrays'
 import {
   cborDecode,

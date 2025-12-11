@@ -1,5 +1,41 @@
 # @atproto/common-web
 
+## 0.4.7
+
+### Patch Changes
+
+- [#4422](https://github.com/bluesky-social/atproto/pull/4422) [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Restore `utf8ToB64Url` and `b64UrlToUtf8` utilities
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/lex-data@0.0.3
+  - @atproto/lex-json@0.0.3
+
+## 0.4.6
+
+### Patch Changes
+
+- Updated dependencies [[`1d445af`](https://github.com/bluesky-social/atproto/commit/1d445af2a7fc27eca5a45869b29266e6a2a7f3ba), [`1d445af`](https://github.com/bluesky-social/atproto/commit/1d445af2a7fc27eca5a45869b29266e6a2a7f3ba), [`688f9d6`](https://github.com/bluesky-social/atproto/commit/688f9d67597ba96d6e9c4a4aec4d394d42f4cbf4)]:
+  - @atproto/lex-data@0.0.2
+  - @atproto/lex-json@0.0.2
+
+## 0.4.5
+
+### Patch Changes
+
+- Updated dependencies [[`46550d6`](https://github.com/bluesky-social/atproto/commit/46550d6c1ffb298f57d54eb1904067b2df5a40af)]:
+  - @atproto/lex-data@0.0.1
+  - @atproto/lex-json@0.0.1
+
+## 0.4.4
+
+### Patch Changes
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use native base64 encoding/decoding when available
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix computation of grapheme length
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate "ipld" functions (use `@atproto/lex-data`, `@atproto/lex-json` and `@atproto/lex-cbor` instead)
+
 ## 0.4.3
 
 ### Patch Changes

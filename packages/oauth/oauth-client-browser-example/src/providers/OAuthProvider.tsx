@@ -12,12 +12,18 @@ import type {
   OAuthSession,
 } from '@atproto/oauth-client-browser'
 
-const OAuthContext = createContext<null | {
+export type SignInFunction = (
+  input: string,
+  options?: { display?: 'popup' },
+) => Promise<void>
+export type SignOutFunction = () => Promise<void>
+
+export const OAuthContext = createContext<null | {
   session: null | OAuthSession
   isLoading: boolean
   isSignedIn: boolean
-  signIn: (input: string) => Promise<void>
-  signOut: () => Promise<void>
+  signIn: SignInFunction
+  signOut: SignOutFunction
 }>(null)
 
 export function OAuthProvider({
@@ -27,7 +33,7 @@ export function OAuthProvider({
   client: BrowserOAuthClient
 }>) {
   const [initialized, setInitialized] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [session, setSession] = useState<null | OAuthSession>(null)
 
   const clientInitRef = useRef<typeof client>(null)
@@ -45,8 +51,10 @@ export function OAuthProvider({
       .init(false)
       .then(async (result) => {
         if (clientInitRef.current !== client) return
-        if (!result) return
 
+        setInitialized(true)
+
+        if (!result) return
         const { session } = result
 
         setSession(session)
@@ -56,14 +64,12 @@ export function OAuthProvider({
         // handler if the refresh token was revoked
         if (result.state === undefined) void session.getTokenInfo(true)
       })
-      .catch((_err) => {
-        if (clientInitRef.current !== client) return
-      })
-      .finally(() => {
+      .catch((err) => {
         if (clientInitRef.current !== client) return
 
+        console.warn('Error during OAuth client initialization:', err)
+
         setInitialized(true)
-        setLoading(false)
       })
   }, [client])
 
@@ -103,14 +109,14 @@ export function OAuthProvider({
     return () => clearInterval(interval)
   }, [session])
 
-  const signIn = useCallback(
-    async (input: string) => {
+  const signIn = useCallback<SignInFunction>(
+    async (input, options) => {
       setLoading(true)
 
       try {
         const session = await client
           .restore(input, true)
-          .catch(async (_err) => client.signIn(input))
+          .catch(async (_err) => client.signIn(input, options))
 
         setSession(session)
       } finally {
@@ -120,7 +126,7 @@ export function OAuthProvider({
     [client],
   )
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback<SignOutFunction>(async () => {
     if (session) {
       setSession(null)
       setLoading(true)

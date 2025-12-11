@@ -11,6 +11,8 @@ nsid      = authority delim name
 
 */
 
+export type NsidString = `${string}.${string}.${string}`
+
 export class NSID {
   readonly segments: readonly string[]
 
@@ -58,7 +60,7 @@ export class NSID {
   }
 }
 
-export function ensureValidNsid(nsid: string): void {
+export function ensureValidNsid(nsid: string): asserts nsid is NsidString {
   const result = validateNsid(nsid)
   if (!result.success) throw new InvalidNsidError(result.message)
 }
@@ -69,7 +71,7 @@ export function parseNsid(nsid: string): string[] {
   return result.value
 }
 
-export function isValidNsid(nsid: string): boolean {
+export function isValidNsid(nsid: string): nsid is NsidString {
   // Since the regex version is more performant for valid NSIDs, we use it when
   // we don't care about error details.
   return validateNsidRegex(nsid).success
@@ -142,7 +144,7 @@ export function validateNsid(input: string): ValidateResult<string[]> {
   }
 }
 
-function hasDisallowedCharacters(v) {
+function hasDisallowedCharacters(v: string) {
   return !/^[a-zA-Z0-9.-]*$/.test(v)
 }
 
@@ -173,7 +175,7 @@ function isValidIdentifier(v: string) {
  * {@link parseNsid}/{@link NSID.parse} if you need the parsed segments, or
  * {@link isValidNsid} if you just want a boolean.
  */
-export function ensureValidNsidRegex(nsid: string): void {
+export function ensureValidNsidRegex(nsid: string): asserts nsid is NsidString {
   const result = validateNsidRegex(nsid)
   if (!result.success) throw new InvalidNsidError(result.message)
 }
@@ -182,7 +184,7 @@ export function ensureValidNsidRegex(nsid: string): void {
  * Regexp based validation that behaves identically to the previous code but
  * provides less detailed error messages (while being 20% to 50% faster).
  */
-export function validateNsidRegex(value: string): ValidateResult<string> {
+export function validateNsidRegex(value: string): ValidateResult<NsidString> {
   if (value.length > 253 + 1 + 63) {
     return {
       success: false,
@@ -203,7 +205,7 @@ export function validateNsidRegex(value: string): ValidateResult<string> {
 
   return {
     success: true,
-    value,
+    value: value as NsidString,
   }
 }
 

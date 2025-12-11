@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.example.stringLength",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 4
+          }
+        }
+      }
+    }
+  }
+}

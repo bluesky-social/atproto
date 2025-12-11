@@ -1,4 +1,4 @@
-FROM node:20.11-alpine as build
+FROM node:20.11-alpine AS build
 
 RUN corepack enable
 
@@ -9,36 +9,55 @@ RUN corepack prepare --activate
 
 # Move files into the image and install
 COPY ./*.* ./
-# NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
 COPY ./tsconfig ./tsconfig
-COPY ./packages/bsky ./packages/bsky
+COPY ./lexicons ./lexicons
+COPY ./packages/internal ./packages/internal
+COPY ./packages/lex ./packages/lex
+
+# NOTE bsky's transitive dependencies go here: if that changes, this needs to be updated.
+# pnpm list --filter '@atproto/bsky...' --depth 0 --json | jq '.[].path' | grep -v "/lex/" | grep -v "/internal/" | sort -u
 COPY ./packages/api ./packages/api
+COPY ./packages/aws ./packages/aws
+COPY ./packages/bsky ./packages/bsky
 COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
 COPY ./packages/crypto ./packages/crypto
 COPY ./packages/did ./packages/did
 COPY ./packages/identity ./packages/identity
+COPY ./packages/lex-cli ./packages/lex-cli
+COPY ./packages/lexicon ./packages/lexicon
+COPY ./packages/lexicon-resolver ./packages/lexicon-resolver
+COPY ./packages/oauth/jwk ./packages/oauth/jwk
+COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
+COPY ./packages/oauth/jwk-webcrypto ./packages/oauth/jwk-webcrypto
+COPY ./packages/oauth/oauth-client ./packages/oauth/oauth-client
+COPY ./packages/oauth/oauth-client-browser ./packages/oauth/oauth-client-browser
+COPY ./packages/oauth/oauth-client-browser-example ./packages/oauth/oauth-client-browser-example
+COPY ./packages/oauth/oauth-provider ./packages/oauth/oauth-provider
+COPY ./packages/oauth/oauth-provider-api ./packages/oauth/oauth-provider-api
+COPY ./packages/oauth/oauth-provider-frontend ./packages/oauth/oauth-provider-frontend
+COPY ./packages/oauth/oauth-provider-ui ./packages/oauth/oauth-provider-ui
+COPY ./packages/oauth/oauth-scopes ./packages/oauth/oauth-scopes
+COPY ./packages/oauth/oauth-types ./packages/oauth/oauth-types
+COPY ./packages/pds ./packages/pds
+COPY ./packages/repo ./packages/repo
 COPY ./packages/sync ./packages/sync
 COPY ./packages/syntax ./packages/syntax
-COPY ./packages/lexicon ./packages/lexicon
-COPY ./packages/repo ./packages/repo
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
-COPY ./packages/internal/fetch-node ./packages/internal/fetch-node
-COPY ./packages/internal/fetch ./packages/internal/fetch
-COPY ./packages/internal/pipe ./packages/internal/pipe
-COPY ./packages/internal/xrpc-utils ./packages/internal/xrpc-utils
+
 COPY ./services/bsky ./services/bsky
 
 # install all deps
-RUN pnpm install --frozen-lockfile > /dev/null
+RUN pnpm install --frozen-lockfile
 # build all packages with external node_modules
-RUN pnpm build > /dev/null
+RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
+RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
 # clean up
 RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > /dev/null
+RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline
 
 WORKDIR services/bsky
 

@@ -13,8 +13,22 @@ export interface KwsConfig {
   clientId: string
   redirectUrl: string
   userAgent: string
+  /**
+   * V1 secret used to validate `adult-verifieid` redirects
+   */
   verificationSecret: string
+  /**
+   * V1 secret used to validate `adult-verified` webhooks
+   */
   webhookSecret: string
+  /**
+   * V2 secret used to validate `age-verified` webhooks
+   */
+  ageVerifiedWebhookSecret: string
+  /**
+   * V2 secret used to validate `age-verified` redirects
+   */
+  ageVerifiedRedirectSecret: string
 }
 
 export interface ServerConfigValues {
@@ -41,6 +55,10 @@ export interface ServerConfigValues {
   courierApiKey?: string
   courierHttpVersion?: '1.1' | '2'
   courierIgnoreBadTls?: boolean
+  rolodexUrl?: string
+  rolodexApiKey?: string
+  rolodexHttpVersion?: '1.1' | '2'
+  rolodexIgnoreBadTls?: boolean
   searchUrl?: string
   searchTagsHide: Set<string>
   suggestionsUrl?: string
@@ -172,6 +190,12 @@ export class ServerConfig {
     const courierIgnoreBadTls =
       process.env.BSKY_COURIER_IGNORE_BAD_TLS === 'true'
     assert(courierHttpVersion === '1.1' || courierHttpVersion === '2')
+    const rolodexUrl = process.env.BSKY_ROLODEX_URL || undefined
+    const rolodexApiKey = process.env.BSKY_ROLODEX_API_KEY || undefined
+    const rolodexHttpVersion = process.env.BSKY_ROLODEX_HTTP_VERSION || '2'
+    const rolodexIgnoreBadTls =
+      process.env.BSKY_ROLODEX_IGNORE_BAD_TLS === 'true'
+    assert(rolodexHttpVersion === '1.1' || rolodexHttpVersion === '2')
     const blobRateLimitBypassKey =
       process.env.BSKY_BLOB_RATE_LIMIT_BYPASS_KEY || undefined
     // single domain would be e.g. "mypds.com", subdomains are supported with a leading dot e.g. ".mypds.com"
@@ -251,6 +275,10 @@ export class ServerConfig {
     const kwsUserAgent = process.env.BSKY_KWS_USER_AGENT
     const kwsVerificationSecret = process.env.BSKY_KWS_VERIFICATION_SECRET
     const kwsWebhookSecret = process.env.BSKY_KWS_WEBHOOK_SECRET
+    const kwsAgeVerifiedWebhookSecret =
+      process.env.BSKY_KWS_AGE_VERIFIED_WEBHOOK_SECRET
+    const kwsAgeVerifiedRedirectSecret =
+      process.env.BSKY_KWS_AGE_VERIFIED_REDIRECT_SECRET
     if (
       kwsApiKey ||
       kwsApiOrigin ||
@@ -259,7 +287,9 @@ export class ServerConfig {
       kwsRedirectUrl ||
       kwsUserAgent ||
       kwsVerificationSecret ||
-      kwsWebhookSecret
+      kwsWebhookSecret ||
+      kwsAgeVerifiedWebhookSecret ||
+      kwsAgeVerifiedRedirectSecret
     ) {
       assert(
         kwsApiOrigin &&
@@ -269,7 +299,9 @@ export class ServerConfig {
           kwsUserAgent &&
           kwsVerificationSecret &&
           kwsWebhookSecret &&
-          kwsApiKey,
+          kwsApiKey &&
+          kwsAgeVerifiedWebhookSecret &&
+          kwsAgeVerifiedRedirectSecret,
         'all KWS environment variables must be set if any are set',
       )
       kws = {
@@ -281,6 +313,8 @@ export class ServerConfig {
         userAgent: kwsUserAgent,
         verificationSecret: kwsVerificationSecret,
         webhookSecret: kwsWebhookSecret,
+        ageVerifiedWebhookSecret: kwsAgeVerifiedWebhookSecret,
+        ageVerifiedRedirectSecret: kwsAgeVerifiedRedirectSecret,
       }
     }
 
@@ -323,6 +357,10 @@ export class ServerConfig {
       courierApiKey,
       courierHttpVersion,
       courierIgnoreBadTls,
+      rolodexUrl,
+      rolodexApiKey,
+      rolodexHttpVersion,
+      rolodexIgnoreBadTls,
       blobRateLimitBypassKey,
       blobRateLimitBypassHostname,
       adminPasswords,
@@ -444,6 +482,19 @@ export class ServerConfig {
 
   get courierIgnoreBadTls() {
     return this.cfg.courierIgnoreBadTls
+  }
+
+  get rolodexUrl() {
+    return this.cfg.rolodexUrl
+  }
+  get rolodexApiKey() {
+    return this.cfg.rolodexApiKey
+  }
+  get rolodexHttpVersion() {
+    return this.cfg.rolodexHttpVersion
+  }
+  get rolodexIgnoreBadTls() {
+    return this.cfg.rolodexIgnoreBadTls
   }
 
   get searchUrl() {

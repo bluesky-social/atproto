@@ -1,0 +1,25 @@
+{
+  "lexicon": 1,
+  "id": "com.example.query",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "A query",
+      "parameters": {
+        "type": "params",
+        "required": ["boolean", "integer"],
+        "properties": {
+          "boolean": { "type": "boolean" },
+          "integer": { "type": "integer" },
+          "string": { "type": "string" },
+          "array": { "type": "array", "items": { "type": "string" } },
+          "def": { "type": "integer", "default": 0 }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": { "type": "ref", "ref": "com.example.kitchenSink#object" }
+      }
+    }
+  }
+}

@@ -144,6 +144,12 @@ export interface BskyPreferences {
   threadViewPrefs: BskyThreadViewPreference
   moderationPrefs: ModerationPrefs
   birthDate: Date | undefined
+  /**
+   * Read-only preference containing value(s) inferred from the user's declared
+   * birthdate. Absence of this preference object in the response indicates
+   * that the user has not made a declaration.
+   */
+  declaredAge?: AppBskyActorDefs.DeclaredAgePref
   interests: BskyInterestsPreference
   bskyAppState: {
     queuedNudges: string[]

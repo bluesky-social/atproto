@@ -179,7 +179,7 @@ export class ActorHydrator {
         return acc.set(did, null)
       }
 
-      const profile = actor.profile
+      const profile = actor.profile?.record
         ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
@@ -273,7 +273,7 @@ export class ActorHydrator {
     includeTakedowns = false,
   ): Promise<NotificationDeclarations> {
     if (!uris.length) return new HydrationMap<NotificationDeclaration>()
-    const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
+    const res = await this.dataplane.getNotificationDeclarationRecords({ uris })
     return uris.reduce((acc, uri, i) => {
       const record = parseRecord<NotificationDeclarationRecord>(
         res.records[i],

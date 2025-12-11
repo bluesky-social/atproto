@@ -134,11 +134,24 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           return undefined
         }
 
+        const status = row?.ageAssuranceStatus ?? 'unknown'
+        let access = row?.ageAssuranceAccess
+        if (!access || access === 'unknown') {
+          if (status === 'assured') {
+            access = 'full'
+          } else if (status === 'blocked') {
+            access = 'none'
+          } else {
+            access = 'unknown'
+          }
+        }
+
         return {
-          status: row?.ageAssuranceStatus ?? 'unknown',
           lastInitiatedAt: row?.ageAssuranceLastInitiatedAt
             ? Timestamp.fromDate(new Date(row?.ageAssuranceLastInitiatedAt))
             : undefined,
+          status,
+          access,
         }
       }
 

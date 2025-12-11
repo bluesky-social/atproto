@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import net from 'node:net'
 import { sql } from 'kysely'
 import AtpAgent from '@atproto/api'
