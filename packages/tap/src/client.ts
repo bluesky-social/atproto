@@ -1,4 +1,4 @@
-import { DidDocument, didDocumentValidator } from '@atproto/did'
+import { DidDocument, didDocument } from '@atproto/common'
 import { TapChannel, TapHandler, TapWebsocketOptions } from './channel'
 import { RepoInfo, repoInfoSchema } from './types'
 import { formatAdminAuthHeader } from './util'
@@ -81,8 +81,7 @@ export class Tap {
       await response.arrayBuffer()
       throw new Error(`Failed to resolve DID: ${response.statusText}`)
     }
-
-    return didDocumentValidator.parse(await response.json())
+    return didDocument.parse(await response.json())
   }
 
   async getRepoInfo(did: string): Promise<RepoInfo> {
