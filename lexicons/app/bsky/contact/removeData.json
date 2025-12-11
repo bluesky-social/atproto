@@ -21,10 +21,10 @@
       },
       "errors": [
         {
-          "name": "INVALID_DID"
+          "name": "InvalidDid"
         },
         {
-          "name": "INTERNAL_ERROR"
+          "name": "InternalError"
         }
       ]
     }

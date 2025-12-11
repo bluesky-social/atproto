@@ -46,19 +46,19 @@
       },
       "errors": [
         {
-          "name": "INVALID_DID"
+          "name": "InvalidDid"
         },
         {
-          "name": "INVALID_CONTACTS"
+          "name": "InvalidContacts"
         },
         {
-          "name": "TOO_MANY_CONTACTS"
+          "name": "TooManyContacts"
         },
         {
-          "name": "INVALID_TOKEN"
+          "name": "InvalidToken"
         },
         {
-          "name": "INTERNAL_ERROR"
+          "name": "InternalError"
         }
       ]
     }
