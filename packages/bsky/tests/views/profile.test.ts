@@ -458,7 +458,7 @@ describe('pds profile views', () => {
 
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
-      $type: 'com.germnetwork.declaration',
+      $type: ids.ComGermnetworkDeclaration,
       version: "0.1.0",
       currentKey: new Uint8Array([0o01, 0o02, 0o03]),
       messageMe: {
@@ -504,8 +504,8 @@ describe('pds profile views', () => {
           ),
         },
       )
-      expect(data.germ.showButtonTo).toEqual("everyone")
-      expect(forSnapshot(data.germ)).toMatchSnapshot()
+      expect(data.associated.germ.showButtonTo).toEqual("everyone")
+      expect(forSnapshot(data.associated.germ)).toMatchSnapshot()
     })
   })
 
