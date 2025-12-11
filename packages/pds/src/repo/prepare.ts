@@ -86,16 +86,16 @@ const validateRecord = (
   const rkeyResult = schema.keySchema.safeParse(rkey, { allowTransform: false })
   if (!rkeyResult.success) {
     throw new InvalidRecordError(
-      `Invalid record key for ${record.$type}: ${rkeyResult.error.message}`,
-      { cause: rkeyResult.error },
+      `Invalid record key for ${record.$type}: ${rkeyResult.reason.message}`,
+      { cause: rkeyResult.reason },
     )
   }
 
   const recordResult = schema.safeParse(record, { allowTransform: false })
   if (!recordResult.success) {
     throw new InvalidRecordError(
-      `Invalid ${record.$type} record: ${recordResult.error.message}`,
-      { cause: recordResult.error },
+      `Invalid ${record.$type} record: ${recordResult.reason.message}`,
+      { cause: recordResult.reason },
     )
   }
 

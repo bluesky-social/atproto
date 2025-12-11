@@ -65,8 +65,9 @@ export const createAccountInviteCodes = async (
   }
 
   return rows.map(
-    ({ disabled, ...row }): com.atproto.server.defs.InviteCode => ({
+    ({ disabled, createdAt, ...row }): com.atproto.server.defs.InviteCode => ({
       ...row,
+      createdAt: createdAt as DatetimeString,
       available: 1,
       disabled: disabled === 1,
       uses: [],
@@ -214,8 +215,9 @@ export const getInvitedByForAccounts = async (
     codeDetailsRes.map((row) => row.code),
   )
   const codeDetails = codeDetailsRes.map(
-    ({ uses: _, disabled, ...row }): CodeDetail => ({
+    ({ uses: _, disabled, createdAt, ...row }): CodeDetail => ({
       ...row,
+      createdAt: createdAt as DatetimeString,
       uses: uses[row.code] ?? [],
       disabled: disabled === 1,
     }),

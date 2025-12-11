@@ -1,16 +1,16 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { baseNormalizeAndValidate } from '../../../../handle'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.resolveHandle(async ({ params }) => {
+  server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
     const handle = baseNormalizeAndValidate(params.handle)
 
     const user = await ctx.accountManager.getAccount(handle)
     if (user) {
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: { did: user.did },
       }
     }
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
     }
 
     return {
-      encoding: 'application/json',
+      encoding: 'application/json' as const,
       body: { did },
     }
   })

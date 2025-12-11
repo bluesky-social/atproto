@@ -1,8 +1,8 @@
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.getRecommendedDidCredentials({
+  server.add(com.atproto.identity.getRecommendedDidCredentials, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // always allow
@@ -36,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           alsoKnownAs,
           verificationMethods,

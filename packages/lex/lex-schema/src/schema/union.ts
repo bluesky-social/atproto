@@ -33,9 +33,6 @@ export class UnionSchema<V extends UnionSchemaValidators = any> extends Schema<
       }
     }
 
-    return {
-      success: false,
-      error: ValidationError.fromFailures(failures),
-    }
+    return ctx.failure(ValidationError.fromFailures(failures))
   }
 }

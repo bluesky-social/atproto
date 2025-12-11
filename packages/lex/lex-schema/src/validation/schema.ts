@@ -15,7 +15,7 @@ export abstract class Schema<Output = any> implements Validator<Output> {
 
   assert(input: unknown): asserts input is Output {
     const result = this.safeParse(input, { allowTransform: false })
-    if (!result.success) throw result.error
+    if (!result.success) throw result.reason
   }
 
   matches(input: unknown): input is Output {
@@ -34,7 +34,7 @@ export abstract class Schema<Output = any> implements Validator<Output> {
   parse(input: unknown, options?: ValidationOptions): Output
   parse(input: unknown, options?: ValidationOptions): Output {
     const result = this.safeParse(input, options)
-    if (!result.success) throw result.error
+    if (!result.success) throw result.reason
     return result.value
   }
 

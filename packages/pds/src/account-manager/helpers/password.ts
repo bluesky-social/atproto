@@ -1,4 +1,5 @@
 import { randomStr } from '@atproto/crypto'
+import { DatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountDb } from '../db'
 import * as scrypt from './scrypt'
@@ -99,7 +100,9 @@ export const createAppPassword = async (
 export const listAppPasswords = async (
   db: AccountDb,
   did: string,
-): Promise<{ name: string; createdAt: string; privileged: boolean }[]> => {
+): Promise<
+  { name: string; createdAt: DatetimeString; privileged: boolean }[]
+> => {
   const res = await db.db
     .selectFrom('app_password')
     .select(['name', 'createdAt', 'privileged'])
@@ -108,7 +111,7 @@ export const listAppPasswords = async (
     .execute()
   return res.map((row) => ({
     name: row.name,
-    createdAt: row.createdAt,
+    createdAt: row.createdAt as DatetimeString,
     privileged: row.privileged === 1 ? true : false,
   }))
 }

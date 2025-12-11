@@ -60,6 +60,7 @@ export function formatAccountInfo(
     invitesDisabled: managesOwnInvites
       ? account.invitesDisabled === 1
       : undefined,
-    deactivatedAt: account.deactivatedAt ?? undefined,
+    deactivatedAt:
+      (account.deactivatedAt as l.DatetimeString | undefined) ?? undefined,
   }
 }

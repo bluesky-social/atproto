@@ -9,6 +9,8 @@ export class Procedure<
   TOutputPayload extends Payload = Payload,
   TErrors extends undefined | readonly string[] = undefined | readonly string[],
 > {
+  readonly type = 'procedure' as const
+
   constructor(
     readonly nsid: TNsid,
     readonly parameters: TParameters,

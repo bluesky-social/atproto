@@ -4,18 +4,21 @@ import { isDisposableEmail } from 'disposable-email-domains-js'
 import { DidDocument, MINUTE, check } from '@atproto/common'
 import { ExportableKeypair, Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AccountStatus } from '../../../../account-manager/account-manager'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
 import { baseNormalizeAndValidate } from '../../../../handle'
-import { Server } from '../../../../lexicon'
 import { InputSchema as CreateAccountInput } from '../../../../lexicon/types/com/atproto/server/createAccount'
 import { syncEvtDataFromCommit } from '../../../../sequencer'
 import { safeResolveDidDoc } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createAccount({
+  server.add(com.atproto.server.createAccount, {
     rateLimit: {
       durationMs: 5 * MINUTE,
       points: 100,
@@ -35,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         signingKey,
         plcOp,
         deactivated,
-      } = ctx.entrywayAgent
+      } = ctx.entrywayClient
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
@@ -91,7 +94,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           handle,
           did: did,

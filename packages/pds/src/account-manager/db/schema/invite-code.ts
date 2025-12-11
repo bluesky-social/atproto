@@ -1,18 +1,16 @@
-import { DatetimeString, DidString } from '@atproto/syntax'
-
 export interface InviteCode {
   code: string
   availableUses: number
   disabled: 0 | 1
   forAccount: string
-  createdBy: DidString | 'admin'
-  createdAt: DatetimeString
+  createdBy: string
+  createdAt: string
 }
 
 export interface InviteCodeUse {
   code: string
-  usedBy: DidString
-  usedAt: DatetimeString
+  usedBy: string
+  usedAt: string
 }
 
 export const tableName = 'invite_code'

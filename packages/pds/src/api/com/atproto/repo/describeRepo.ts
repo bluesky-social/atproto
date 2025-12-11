@@ -2,11 +2,11 @@ import * as id from '@atproto/identity'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 import { assertRepoAvailability } from '../sync/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.describeRepo(async ({ params }) => {
+  server.add(com.atproto.repo.describeRepo, async ({ params }) => {
     const { repo } = params
 
     const account = await assertRepoAvailability(ctx, repo, false)
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     )
 
     return {
-      encoding: 'application/json',
+      encoding: 'application/json' as const,
       body: {
         handle: account.handle ?? INVALID_HANDLE,
         did: account.did,

@@ -24,15 +24,12 @@ export default function (server: Server, ctx: AppContext) {
             com.atproto.identity.signPlcOperation.$lxm,
           )
 
-          return entrywayClient.xrpcSafe(
-            com.atproto.identity.signPlcOperation,
-            {
-              headers,
-              body: input.body,
-              validateRequest: false, // already validated by the server
-              validateResponse: false, // ignore invalid upstream responses
-            },
-          )
+          return entrywayClient.xrpc(com.atproto.identity.signPlcOperation, {
+            headers,
+            body: input.body,
+            validateRequest: false, // already validated by the server
+            validateResponse: false, // ignore invalid upstream responses
+          })
         }
       : async ({ auth, input }) => {
           const did = auth.credentials.did

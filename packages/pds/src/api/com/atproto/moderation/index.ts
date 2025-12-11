@@ -1,5 +1,5 @@
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 import createReport from './createReport'
 
 export default function (server: Server, ctx: AppContext) {

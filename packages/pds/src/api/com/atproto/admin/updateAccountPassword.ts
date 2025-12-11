@@ -1,14 +1,13 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateAccountPassword({
+  server.add(com.atproto.admin.updateAccountPassword, {
     auth: ctx.authVerifier.adminToken,
     handler: async ({ input, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.admin.updateAccountPassword(
+      if (ctx.entrywayClient) {
+        await ctx.entrywayClient.com.atproto.admin.updateAccountPassword(
           input.body,
           ctx.entrywayPassthruHeaders(req),
         )

@@ -1,12 +1,12 @@
 import { Client } from '@atproto/lex'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough'
 import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.moderation.createReport({
+  server.add(com.atproto.moderation.createReport, {
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: await client.call(
           com.atproto.moderation.createReport,
           input.body,

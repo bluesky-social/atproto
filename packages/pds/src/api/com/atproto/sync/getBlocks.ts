@@ -1,14 +1,14 @@
 import { byteIterableToStream } from '@atproto/common'
 import { parseCid } from '@atproto/lex-data'
 import { blocksToCarStream } from '@atproto/repo'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getBlocks({
+  server.add(com.atproto.sync.getBlocks, {
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       authorize: () => {
         // always allow
@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       const car = blocksToCarStream(null, got.blocks)
 
       return {
-        encoding: 'application/vnd.ipld.car',
+        encoding: 'application/vnd.ipld.car' as const,
         body: byteIterableToStream(car),
       }
     },

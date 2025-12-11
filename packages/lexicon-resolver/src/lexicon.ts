@@ -83,7 +83,7 @@ export function buildLexiconResolver(
     })
     if (!validationResult.success) {
       throw new LexiconResolutionError(nsid, 'Invalid Lexicon document', {
-        cause: validationResult.error,
+        cause: validationResult.reason,
       })
     }
 

@@ -1,12 +1,10 @@
-import { ForbiddenError } from '@atproto/xrpc-server'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { resultPassthru } from '../../../proxy'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createAppPassword({
+  server.add(com.atproto.server.createAppPassword, {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,
@@ -17,17 +15,17 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ auth, input, req }) => {
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.createAppPassword(
-            input.body,
-            await ctx.entrywayAuthHeaders(
-              req,
-              auth.credentials.did,
-              ids.ComAtprotoServerCreateAppPassword,
-            ),
-          ),
+      if (ctx.entrywayClient) {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.createAppPassword.$lxm,
         )
+
+        return ctx.entrywayClient.xrpc(com.atproto.server.createAppPassword, {
+          headers,
+          body: input.body,
+        })
       }
 
       const { name } = input.body
@@ -38,7 +36,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: appPassword,
       }
     },

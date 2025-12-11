@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         )
 
         return {
-          encoding: 'application/json',
+          encoding: 'application/json' as const,
           body: output(auth, data),
         }
       }
@@ -55,8 +55,8 @@ export default function (server: Server, ctx: AppContext) {
           handle: (user.handle ?? INVALID_HANDLE) as l.HandleString,
           did: user.did as l.DidString,
           email: user.email ?? undefined,
-          // @TODO remove type cast once https://github.com/bluesky-social/atproto/pull/4406 is merged
-          didDoc: didDoc as l.LexMap,
+          // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
+          didDoc,
           emailConfirmed: !!user.emailConfirmedAt,
           active,
           status,

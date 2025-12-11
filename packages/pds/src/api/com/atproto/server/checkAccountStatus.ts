@@ -1,9 +1,9 @@
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 import { isValidDidDocForService } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.checkAccountStatus({
+  server.add(com.atproto.server.checkAccountStatus, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         // always allow
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       ])
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           activated,
           validDid,

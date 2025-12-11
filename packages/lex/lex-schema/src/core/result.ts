@@ -1,5 +1,5 @@
 export type ResultSuccess<V = any> = { success: true; value: V }
-export type ResultFailure<E = Error> = { success: false; error: E }
+export type ResultFailure<E = Error> = { success: false; reason: E }
 
 export type Result<V = any, E = Error> = ResultSuccess<V> | ResultFailure<E>
 
@@ -9,13 +9,13 @@ export function success<V>(value: V): ResultSuccess<V> {
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function failure<E>(error: E): ResultFailure<E> {
-  return { success: false, error }
+export function failure<E>(reason: E): ResultFailure<E> {
+  return { success: false, reason }
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function failureError<T>(result: ResultFailure<T>): T {
-  return result.error
+export function failureReason<T>(result: ResultFailure<T>): T {
+  return result.reason
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -31,9 +31,9 @@ export function successValue<T>(result: ResultSuccess<T>): T {
  * @example
  *
  * ```ts
- * declare function someFunction(): Promise<ResultSuccess<string>>
+ * declare function someFunction(): Promise<string>
  *
- * const result = await someFunction().catch(catchall)
+ * const result = await someFunction().then(success, catchall)
  * if (result.success) {
  *   console.log(result.value) // string
  * } else {
@@ -58,9 +58,10 @@ export function catchall(err: unknown): ResultFailure<Error> {
  * class FooError extends Error {}
  * class BarError extends Error {}
  *
- * declare function someFunction(): Promise<ResultSuccess<string>>
+ * declare function someFunction(): Promise<string>
  *
  * const result = await someFunction()
+ *   .then(success)
  *   .catch(createCatcher(FooError))
  *   .catch(createCatcher(BarError))
  *

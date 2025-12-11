@@ -1,7 +1,7 @@
 import { parseCid } from '@atproto/lex-data'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { Server } from '@atproto/xrpc-server'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -10,7 +10,7 @@ import {
 } from '../../../../repo'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.deleteRecord({
+  server.add(com.atproto.repo.deleteRecord, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -103,7 +103,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           commit: commit
             ? {

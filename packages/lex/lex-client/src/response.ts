@@ -156,8 +156,8 @@ export class XrpcResponse<const M extends Procedure | Query>
             response.status,
             response.headers,
             payload,
-            `Response validation failed: ${result.error.message}`,
-            { cause: result.error },
+            `Response validation failed: ${result.reason.message}`,
+            { cause: result.reason },
           )
         }
       }
