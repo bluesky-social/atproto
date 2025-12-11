@@ -5,7 +5,7 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as NotificationDeclarationRecord } from '../lexicon/types/app/bsky/notification/declaration'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { Record as GermDeclarationRecord } from '../lexicon/types/com/germnetwork/declaration'
+import { Record as GermDeclarationRecord, MessageMe as GermDeclarationMessageMe } from '../lexicon/types/com/germnetwork/declaration'
 import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
@@ -32,13 +32,13 @@ export type Actor = {
   takedownRef?: string
   isLabeler: boolean
   allowIncomingChatsFrom?: string
-  germ?: RecordInfo<GermDeclarationRecord>
   upstreamStatus?: string
   createdAt?: Date
   priorityNotifications: boolean
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
+  germ?: RecordInfo<GermDeclarationRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
   /**
    * Debug information for internal development
@@ -191,6 +191,10 @@ export class ActorHydrator {
         ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedowns)
         : undefined
 
+      const germ = actor.germRecord
+        ? parseRecord<GermDeclarationRecord>(actor.germRecord, includeTakedowns)
+        : undefined
+
       const verifications = mapDefined(
         Object.entries(actor.verifiedBy),
         ([actorDid, verificationMeta]) => {
@@ -249,6 +253,7 @@ export class ActorHydrator {
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
+        germ: germ,
         allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
           actor.allowActivitySubscriptionsFrom,
         ),

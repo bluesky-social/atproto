@@ -101,9 +101,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         chatDeclarations.records[i].record,
       )
 
-      const germDeclaration = parseRecordBytes<ComGermnetworkDeclaration.Record>(
-        germDeclarations.records[i].record,
-      )
+      const germDeclaration = germDeclarations.records[i]
 
       const verifications = verificationsBySubjectDid.get(did) ?? []
       const verifiedBy: VerifiedBy = verifications.reduce((acc, cur) => {
@@ -175,13 +173,13 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
-        germ: germDeclaration?.messageMe ?? undefined,
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
         priorityNotifications: row?.priorityNotifs ?? false,
         trustedVerifier: row?.trustedVerifier ?? false,
         verifiedBy,
         statusRecord: status,
+        germRecord: germDeclaration,
         tags: [],
         profileTags: [],
         allowActivitySubscriptionsFrom: activitySubscription(),

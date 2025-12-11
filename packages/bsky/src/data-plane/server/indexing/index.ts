@@ -19,6 +19,7 @@ import { Database } from '../db'
 import { Actor } from '../db/tables/actor'
 import * as Block from './plugins/block'
 import * as ChatDeclaration from './plugins/chat-declaration'
+import * as GermDeclaration from './plugins/germ-declaration'
 import * as FeedGenerator from './plugins/feed-generator'
 import * as Follow from './plugins/follow'
 import * as Labeler from './plugins/labeler'
@@ -55,6 +56,7 @@ export class IndexingService {
     labeler: Labeler.PluginType
     notifDeclaration: NotifDeclaration.PluginType
     chatDeclaration: ChatDeclaration.PluginType
+    germDeclaration: GermDeclaration.PluginType
     verification: Verification.PluginType
     status: Status.PluginType
   }
@@ -81,6 +83,7 @@ export class IndexingService {
       labeler: Labeler.makePlugin(this.db, this.background),
       notifDeclaration: NotifDeclaration.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
+      germDeclaration: GermDeclaration.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
       status: Status.makePlugin(this.db, this.background),
     }

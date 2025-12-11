@@ -460,7 +460,7 @@ describe('pds profile views', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: 'com.germnetwork.declaration',
       version: "0.1.0",
-      currentKey: new Uint8Array([01, 02, 03]),
+      currentKey: new Uint8Array([0o01, 0o02, 0o03]),
       messageMe: {
         messageMeUrl: "https://chat.example.com/start-conversation",
         showButtonTo: "everyone",
@@ -483,20 +483,20 @@ describe('pds profile views', () => {
     it('returns germ record if it does exist', async () => {
       await sc.agent.com.atproto.repo.createRecord(
         {
-          repo: alice,
+          repo: bob,
           collection: ids.ComGermnetworkDeclaration,
           rkey: 'self',
           record: germDeclaration,
         },
         {
-          headers: sc.getHeaders(alice),
+          headers: sc.getHeaders(bob),
           encoding: 'application/json',
         },
       )
       await network.processAll()
 
       const { data } = await agent.api.app.bsky.actor.getProfile(
-        { actor: alice },
+        { actor: bob },
         {
           headers: await network.serviceHeaders(
             alice,
@@ -504,6 +504,7 @@ describe('pds profile views', () => {
           ),
         },
       )
+      expect(data.germ.showButtonTo).toEqual("everyone")
       expect(forSnapshot(data.germ)).toMatchSnapshot()
     })
   })
