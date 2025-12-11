@@ -1,59 +1,166 @@
 # @atproto/tap
 
-Library for connecting with [Tap](#), a utility for syncing subsets of the AT network.
+TypeScript client library for [Tap](https://github.com/bluesky-social/indigo/tree/main/cmd/tap/README.md), a sync utility for the AT Protocol network.
 
-## Usage
+Tap handles firehose connections, cryptographic verification, backfill, and filtering. This client library lets you connect to a Tap instance and receive simple JSON events for the repos you care about.
 
-Before you get started you'll need to get an instance of Tap running for your app. See more in the [Tap project](#).
+[![NPM](https://img.shields.io/npm/v/@atproto/tap)](https://www.npmjs.com/package/@atproto/tap)
+[![Github CI Status](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml/badge.svg)](https://github.com/bluesky-social/atproto/actions/workflows/repo.yaml)
+
+## Quick Start
+
+```bash
+npm install @atproto/tap
+```
 
 ```ts
 import { Tap, SimpleIndexer } from '@atproto/tap'
 
-const tap = new Tap('http://localhost:8080')
+const tap = new Tap('http://localhost:2480', { adminPassword: 'secret' })
 
 const indexer = new SimpleIndexer()
 
-// handle events pertaining to a repo's account or identity
 indexer.identity(async (evt) => {
-  console.log(
-    `${evt.did} updated identity. handle: ${evt.handle}. status: ${evt.status}`,
-  )
+  console.log(`${evt.did} updated identity: ${evt.handle} (${evt.status})`)
 })
 
-// handle events pertaining to a the creation, update, or deletion of a record
 indexer.record(async (evt) => {
   const uri = `at://${evt.did}/${evt.collection}/${evt.rkey}`
   if (evt.action === 'create' || evt.action === 'update') {
-    console.log(`record created/updated at ${uri}: ${JSON.stringify(evt.record)}`)
+    console.log(`${evt.action}: ${uri}`)
   } else {
-    console.log(`record deleted at ${uri}`)
+    console.log(`deleted: ${uri}`)
   }
 })
 
-// without a handler, errors will end up as unhandled exceptions
 indexer.error((err) => console.error(err))
 
-// Open websocket connection, the library will handle reconnects and keeping the websocket alive
 const channel = tap.channel(indexer)
-channel.start() // note: this returns a promise that only resolves once the connection errors or is destroyed
+channel.start()
 
-// dyanmically add/remove repos from the channel
-// as you add repos, they will be backfilled and all existing records will be sent over the channel
-await tap.addRepos(['did:example:alice'])
-await tap.removeRepos(['did:example:bob'])
-
-// ...
-
-// on shutdown
-await channel.destroy()
+await tap.addRepos(['did:plc:ewvi7nxzyoun6zhxrhs64oiz'])
 ```
 
-## Usage with webhooks
-If you don't want to maintain a persistent websocket connection, you can register a webhook with Tap. The same events will be sent to the webhook URL you provide.
+## Running Tap
+
+See the [Tap README](https://github.com/bluesky-social/indigo/tree/main/cmd/tap/README.md) for details getting Tap up and running. Your app can communicate with it either locally or over the internet.
+
+This library is intended to be used with Tap running in the default mode of "WebScoket with acks". In this mode, Tap provides:
+
+- **At-least-once delivery**: Events may be redelivered if the connection drops before an ack is received
+- **Per-repo ordering**: Events for the same repo are delivered in order
+- **Backfill**: When you add a repo, historical events are delivered before live events
+
+
+## API
+
+### `Tap`
+
+The main client for interacting with a Tap server.
+
+```ts
+const tap = new Tap(url: string, config?: TapConfig)
+```
+
+**Config options:**
+- `adminPassword?: string` - Password for Basic auth (required if Tap server has auth enabled)
+
+**Methods:**
+
+- `channel(handler: TapHandler, opts?: TapWebsocketOptions): TapChannel` - Create a WebSocket channel to receive events
+- `addRepos(dids: string[]): Promise<void>` - Add repos to track (triggers backfill)
+- `removeRepos(dids: string[]): Promise<void>` - Stop tracking repos
+- `resolveDid(did: string): Promise<DidDocument | null>` - Resolve a DID to its DID document
+- `getRepoInfo(did: string): Promise<RepoInfo>` - Get info about a tracked repo
+
+### `TapChannel`
+
+WebSocket connection for receiving events. Created via `tap.channel()`.
+
+```ts
+const channel = tap.channel(handler, opts?)
+```
+
+**Methods:**
+
+- `start(): Promise<void>` - Start receiving events. Returns a promise that resolves when the connection is destroyed or errors.
+- `destroy(): Promise<void>` - Close the connection
+
+The channel automatically handles reconnection and keepalive. Events are automatically acknowledged after your handler completes successfully.
+
+### `SimpleIndexer`
+
+A convenience class for handling events by type. Passed into `tap.channel()` when opening a channel with Tap.
+
+```ts
+const indexer = new SimpleIndexer()
+
+indexer.identity(async (evt: IdentityEvent) => { ... })
+indexer.record(async (evt: RecordEvent) => { ... })
+indexer.error((err: Error) => { ... })
+```
+
+If no error handler is registered, errors will throw as unhandled exceptions.
+
+### `TapHandler`
+
+You can create your own custom handler by creating a class that implements the `TapHandler` interface:
+
+```ts
+interface TapHandler {
+  onEvent: (evt: TapEvent, opts: HandlerOpts) => void | Promise<void>
+  onError: (err: Error) => void
+}
+
+ interface HandlerOpts {
+  signal: AbortSignal
+  ack: () => Promise<void>
+}
+```
+
+When implementing a custom handler, be sure to call `ack()` when you're done processing the event.
+
+## Event Types
+
+### `RecordEvent`
+
+```ts
+type RecordEvent = {
+  id: number
+  type: 'record'
+  action: 'create' | 'update' | 'delete'
+  did: string
+  rev: string
+  collection: string
+  rkey: string
+  record?: Record<string, unknown>  // present for create/update
+  cid?: string                      // present for create/update
+  live: boolean                     // true if from firehose, false if from backfill
+}
+```
+
+### `IdentityEvent`
+
+```ts
+type IdentityEvent = {
+  id: number
+  type: 'identity'
+  did: string
+  handle: string
+  isActive: boolean
+  status: 'active' | 'takendown' | 'suspended' | 'deactivated' | 'deleted'
+}
+```
+
+## Webhook Mode
+
+If your Tap server is configured for webhook delivery, you can use `parseTapEvent` to validate incoming webhook payloads:
 
 ```ts
 import express from 'express'
-import { Tap, parseTapEvent } from '@atproto/tap'
+import { parseTapEvent, assureAdminAuth } from '@atproto/tap'
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
 
 const app = express()
 app.use(express.json())
@@ -61,21 +168,47 @@ app.use(express.json())
 app.post('/webhook', async (req, res) => {
   try {
     assureAdminAuth(ADMIN_PASSWORD, req.headers.authorization)
-  } catch{
-    res.status(401).json({ error: 'Invalid admin auth' })
-    return
+  } catch {
+    return res.status(401).json({ error: 'Unauthorized' })
   }
+
   try {
     const evt = parseTapEvent(req.body)
-    // ...
+    // handle event...
     res.sendStatus(200)
   } catch (err) {
-    console.error('Error processing webhook:', err)
+    console.error('Failed to process event:', err)
     res.status(500).json({ error: 'Failed to process event' })
   }
 })
-
-app.listen(3000, () => {
-  console.log('Webhook server listening on port 3000')
-})
 ```
+
+## Utilities
+
+### Auth helpers
+
+```ts
+import { formatAdminAuthHeader, parseAdminAuthHeader, assureAdminAuth } from '@atproto/tap'
+
+// Format a password into a Basic auth header value
+const header = formatAdminAuthHeader('secret')
+// => 'Basic YWRtaW46c2VjcmV0'
+
+// Parse an auth header to extract the password (throws if invalid)
+const password = parseAdminAuthHeader(header)
+
+// Verify auth header matches expected password (timing-safe, throws if invalid)
+assureAdminAuth('secret', req.headers.authorization)
+```
+
+### Event parsing
+
+```ts
+import { parseTapEvent } from '@atproto/tap'
+
+const evt = parseTapEvent(jsonData)  // validates and returns typed TapEvent
+```
+
+## License
+
+MIT
