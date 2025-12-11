@@ -2064,7 +2064,7 @@ importers:
         version: 8.5.4
       jest:
         specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
@@ -6546,7 +6546,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.22.10
-      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.2)
+      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3)
       '@lingui/message-utils': 5.2.0
       babel-plugin-macros: 3.1.0
       unraw: 3.0.0
