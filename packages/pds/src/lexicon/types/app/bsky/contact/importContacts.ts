@@ -44,11 +44,11 @@ export interface HandlerError {
   status: number
   message?: string
   error?:
-    | 'INVALID_DID'
-    | 'INVALID_CONTACTS'
-    | 'TOO_MANY_CONTACTS'
-    | 'INVALID_TOKEN'
-    | 'INTERNAL_ERROR'
+    | 'InvalidDid'
+    | 'InvalidContacts'
+    | 'TooManyContacts'
+    | 'InvalidToken'
+    | 'InternalError'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

@@ -37,11 +37,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?:
-    | 'RATE_LIMIT_EXCEEDED'
-    | 'INVALID_DID'
-    | 'INVALID_PHONE'
-    | 'INTERNAL_ERROR'
+  error?: 'RateLimitExceeded' | 'InvalidDid' | 'InvalidPhone' | 'InternalError'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

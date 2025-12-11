@@ -43,11 +43,11 @@ export interface HandlerError {
   status: number
   message?: string
   error?:
-    | 'RATE_LIMIT_EXCEEDED'
-    | 'INVALID_DID'
-    | 'INVALID_PHONE'
-    | 'INVALID_CODE'
-    | 'INTERNAL_ERROR'
+    | 'RateLimitExceeded'
+    | 'InvalidDid'
+    | 'InvalidPhone'
+    | 'InvalidCode'
+    | 'InternalError'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

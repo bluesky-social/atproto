@@ -34,7 +34,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'INVALID_DID' | 'INTERNAL_ERROR'
+  error?: 'InvalidDid' | 'InternalError'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
