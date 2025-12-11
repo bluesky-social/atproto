@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.authManageProfile",
+  "id": "app.bsky.authCreatePosts",
   "defs": {
     "main": {
       "type": "permission-set",
