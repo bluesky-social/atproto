@@ -1,8 +1,11 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import {
   CreateResult,
   DeleteResult,
@@ -21,6 +24,7 @@ import {
   prepareDelete,
   prepareUpdate,
 } from '../../../../repo'
+import { com } from '#lexicons'
 
 const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
   let points = 0
@@ -37,7 +41,7 @@ const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.applyWrites({
+  server.add(com.atproto.repo.applyWrites, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -138,7 +142,7 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const commit = await actorTxn.repo
@@ -165,7 +169,7 @@ export default function (server: Server, ctx: AppContext) {
         })
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           commit: {
             cid: commit.cid.toString(),

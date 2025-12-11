@@ -1,8 +1,8 @@
 import { randomStr } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
 import { AccountDb } from '../db'
 import * as scrypt from './scrypt'
+import { com } from '#lexicons'
 
 export type AppPassDescript = {
   name: string
@@ -61,7 +61,7 @@ export const createAppPassword = async (
   did: string,
   name: string,
   privileged: boolean,
-): Promise<AppPassword> => {
+): Promise<com.atproto.server.createAppPassword.AppPassword> => {
   // create an app password with format:
   // 1234-abcd-5678-efgh
   const str = randomStr(16, 'base32').slice(0, 16)
@@ -91,7 +91,7 @@ export const createAppPassword = async (
   return {
     name,
     password,
-    createdAt: got.createdAt,
+    createdAt: new Date(got.createdAt).toISOString(),
     privileged,
   }
 }

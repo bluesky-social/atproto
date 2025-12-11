@@ -25,7 +25,7 @@ describe('file uploads', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await sc.createAccount('alice', users.alice)
     await sc.createAccount('bob', users.bob)

@@ -1,6 +1,5 @@
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { Headers } from '@atproto/xrpc'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { LocalViewer } from './viewer'
@@ -13,13 +12,13 @@ export type LocalRecords = {
 
 export type RecordDescript<T> = {
   uri: AtUri
-  cid: CID
+  cid: Cid
   indexedAt: string
   record: T
 }
 
 export type ApiRes<T> = {
-  headers: Headers
+  headers: Record<string, string | undefined>
   data: T
 }
 

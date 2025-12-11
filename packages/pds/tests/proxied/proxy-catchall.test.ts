@@ -83,7 +83,7 @@ describe('proxy header', () => {
       serviceId,
     )
 
-    alice = network.pds.getClient().withProxy(serviceId, proxyServer.did)
+    alice = network.pds.getAgent().withProxy(serviceId, proxyServer.did)
 
     for (const lex of lexicons) alice.lex.add(lex)
 

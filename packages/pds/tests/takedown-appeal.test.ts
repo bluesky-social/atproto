@@ -22,7 +22,7 @@ describe('appeal account takedown', () => {
     moderator = modAccount.did
     await network.ozone.addModeratorDid(moderator)
 
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {

@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 import { InvalidRecordKeyError } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -61,7 +61,7 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 
       let write: PreparedCreate
       try {

@@ -12,7 +12,7 @@ describe('user preferences', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'preferences',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     const appPass = await network.pds.ctx.accountManager.createAppPassword(

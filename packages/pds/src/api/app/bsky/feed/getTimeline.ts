@@ -1,21 +1,20 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
   LocalRecords,
   LocalViewer,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
+import { app } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return
 
-  server.app.bsky.feed.getTimeline({
+  server.add(app.bsky.feed.getTimeline, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {
-        const lxm = ids.AppBskyFeedGetTimeline
+        const lxm = app.bsky.feed.getTimeline.$lxm
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
@@ -28,9 +27,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const getTimelineMunge = async (
   localViewer: LocalViewer,
-  original: OutputSchema,
+  original: app.bsky.feed.getTimeline.OutputBody,
   local: LocalRecords,
-): Promise<OutputSchema> => {
+): Promise<app.bsky.feed.getTimeline.OutputBody> => {
   const feed = await localViewer.formatAndInsertPostsInFeed(
     [...original.feed],
     local.posts,

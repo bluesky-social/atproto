@@ -24,7 +24,7 @@ describe('proxy read after write', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_read_after_write',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()

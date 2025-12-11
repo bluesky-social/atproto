@@ -31,7 +31,7 @@ import {
   ParamsSchema,
   ParamsSchemaShape,
   Payload,
-  PayloadBody,
+  PayloadSchema,
   Permission,
   PermissionOptions,
   PermissionSet,
@@ -57,9 +57,10 @@ import {
   UnknownSchema,
   refine,
 } from './schema.js'
-import { Infer, PropertyKey, Validator } from './validation.js'
+import { Infer, PropertyKey, Schema, Validator } from './validation.js'
 
 export * from './core.js'
+export * from './helpers.js'
 export * from './schema.js'
 export * from './validation.js'
 
@@ -262,7 +263,7 @@ export function typedUnion<
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<{ [_ in string]?: unknown }>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(nsid: N, hash: H, schema: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
@@ -281,7 +282,7 @@ export function typedObject<V extends { $type?: $Type }>(
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<{ [_ in string]?: unknown }>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(nsid: N, hash: H, schema: S) {
   return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), schema)
 }
@@ -305,7 +306,7 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [_ in string]?: unknown }>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(key: K, type: AsNsid<T>, schema: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
@@ -319,7 +320,7 @@ export function record<
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [_ in string]?: unknown }>,
+  const S extends Validator<{ [k: string]: unknown }>,
 >(key: K, type: T, schema: S) {
   return new RecordSchema<K, T, S>(key, type, schema)
 }
@@ -334,7 +335,7 @@ export function params<
 /*@__NO_SIDE_EFFECTS__*/
 export function payload<
   const E extends string | undefined = undefined,
-  const S extends PayloadBody<E> = undefined,
+  const S extends PayloadSchema<E> = undefined,
 >(encoding: E = undefined as E, schema: S = undefined as S) {
   return new Payload<E, S>(encoding, schema)
 }
@@ -364,7 +365,7 @@ export function procedure<
 export function subscription<
   const N extends NsidString,
   const P extends ParamsSchema,
-  const M extends undefined | RefSchema | TypedUnionSchema | ObjectSchema,
+  const M extends Schema,
   const E extends undefined | readonly string[] = undefined,
 >(nsid: N, parameters: P, message: M, errors: E = undefined as E) {
   return new Subscription<N, P, M, E>(nsid, parameters, message, errors)

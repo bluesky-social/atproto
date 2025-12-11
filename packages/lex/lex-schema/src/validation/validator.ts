@@ -25,7 +25,7 @@ export type ValidationOptions = {
   allowTransform?: boolean
 }
 
-export type Infer<T extends Validator> = T['_lex']['output']
+export type Infer<T extends Validator> = T['__lex']['output']
 
 export interface Validator<Output = any> {
   /**
@@ -34,7 +34,7 @@ export interface Validator<Output = any> {
    *
    * @deprecated **INTERNAL API, DO NOT USE**.
    */
-  readonly ['_lex']: { output: Output }
+  readonly ['__lex']: { output: Output }
 
   /**
    * @internal **INTERNAL API**: use {@link ValidatorContext.validate} instead

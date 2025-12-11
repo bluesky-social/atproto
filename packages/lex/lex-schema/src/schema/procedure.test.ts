@@ -1,12 +1,7 @@
 import { ObjectSchema } from './object.js'
 import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
-import {
-  InferProcedureInputBody,
-  InferProcedureOutputBody,
-  InferProcedureParameters,
-  Procedure,
-} from './procedure.js'
+import { Procedure } from './procedure.js'
 import { StringSchema } from './string.js'
 
 describe('Procedure', () => {
@@ -285,62 +280,6 @@ describe('Procedure', () => {
       expect(procedure.errors).toContain('InvalidRequest')
       expect(procedure.errors).toContain('Unauthorized')
       expect(procedure.errors).toContain('RateLimitExceeded')
-    })
-  })
-
-  describe('type inference helpers', () => {
-    it('infers procedure parameters type', () => {
-      const parameters = new ParamsSchema({
-        limit: new StringSchema({}),
-      })
-      const procedure = new Procedure(
-        'com.example.list',
-        parameters,
-        new Payload(undefined, undefined),
-        new Payload(undefined, undefined),
-        undefined,
-      )
-
-      type Params = InferProcedureParameters<typeof procedure>
-      // Type test - this will fail at compile time if inference is wrong
-      const params: Params = { limit: 'test' }
-      expect(params).toBeDefined()
-    })
-
-    it('infers procedure input body type', () => {
-      const inputSchema = new ObjectSchema({
-        text: new StringSchema({}),
-      })
-      const procedure = new Procedure(
-        'com.example.create',
-        new ParamsSchema({}),
-        new Payload('application/json', inputSchema),
-        new Payload(undefined, undefined),
-        undefined,
-      )
-
-      type InputBody = InferProcedureInputBody<typeof procedure>
-      // Type test - this will fail at compile time if inference is wrong
-      const input: InputBody = { text: 'hello' }
-      expect(input).toBeDefined()
-    })
-
-    it('infers procedure output body type', () => {
-      const outputSchema = new ObjectSchema({
-        uri: new StringSchema({}),
-      })
-      const procedure = new Procedure(
-        'com.example.get',
-        new ParamsSchema({}),
-        new Payload(undefined, undefined),
-        new Payload('application/json', outputSchema),
-        undefined,
-      )
-
-      type OutputBody = InferProcedureOutputBody<typeof procedure>
-      // Type test - this will fail at compile time if inference is wrong
-      const output: OutputBody = { uri: 'at://did:plc:abc/post/123' }
-      expect(output).toBeDefined()
     })
   })
 

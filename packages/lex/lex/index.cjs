@@ -3,9 +3,5 @@
 /* eslint-env commonjs */
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-const { Client, buildAgent } = require('@atproto/lex-client')
-const { l } = require('@atproto/lex-schema')
-
-module.exports.Client = Client
-module.exports.buildAgent = buildAgent
-module.exports.l = l
+Object.assign(module.exports, require('@atproto/lex-client'))
+Object.assign(module.exports, require('@atproto/lex-schema'))

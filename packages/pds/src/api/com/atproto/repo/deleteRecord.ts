@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
@@ -59,8 +59,8 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
-      const swapRecordCid = swapRecord ? CID.parse(swapRecord) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
+      const swapRecordCid = swapRecord ? parseCid(swapRecord) : undefined
 
       const write = prepareDelete({
         did,

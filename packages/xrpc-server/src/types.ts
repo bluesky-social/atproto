@@ -111,7 +111,16 @@ export type HandlerContext<
   I extends Input = Input,
 > = MethodAuthContext<P> & {
   auth: A
-  input: I
+  // input: I
+  input: I extends HandlerInput
+    ? // @TODO can InferMethodInput return an async iterable body ?
+      {
+        encoding: I['encoding']
+        body: [I['body']] extends [Uint8Array]
+          ? AsyncIterable<Uint8Array>
+          : I['body']
+      }
+    : I
   resetRouteRateLimits: () => Promise<void>
 }
 
@@ -120,7 +129,7 @@ export type MethodHandler<
   P extends Params = Params,
   I extends Input = Input,
   O extends Output = Output,
-> = (ctx: HandlerContext<A, P, I>) => Awaitable<O | HandlerPipeThrough>
+> = (ctx: HandlerContext<A, P, I>) => Promise<O | HandlerPipeThrough>
 
 export type RateLimiterCreator<T extends HandlerContext = HandlerContext> = <
   C extends T = T,
@@ -173,6 +182,19 @@ export type RouteOptions = {
   textLimit?: number
 }
 
+export type MethodAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+> = MethodAuthVerifier<Extract<A, AuthResult>, P>
+
+export type MethodRateLimit<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+> =
+  | RateLimitOpts<HandlerContext<A, P, I>>
+  | RateLimitOpts<HandlerContext<A, P, I>>[]
+
 export type MethodConfig<
   A extends Auth = Auth,
   P extends Params = Params,
@@ -180,11 +202,21 @@ export type MethodConfig<
   O extends Output = Output,
 > = {
   handler: MethodHandler<A, P, I, O>
-  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P>
+  auth?: MethodAuth<A, P>
   opts?: RouteOptions
-  rateLimit?:
-    | RateLimitOpts<HandlerContext<A, P, I>>
-    | RateLimitOpts<HandlerContext<A, P, I>>[]
+  rateLimit?: MethodRateLimit<A, P, I>
+}
+
+export type MethodConfigWithAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = {
+  handler: MethodHandler<A, P, I, O>
+  auth: MethodAuth<A, P>
+  opts?: RouteOptions
+  rateLimit?: MethodRateLimit<A, P, I>
 }
 
 export type MethodConfigOrHandler<

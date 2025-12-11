@@ -1,21 +1,20 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
   LocalRecords,
   LocalViewer,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
+import { app } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return
 
-  server.app.bsky.feed.getActorLikes({
+  server.add(app.bsky.feed.getActorLikes, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {
-        const lxm = ids.AppBskyFeedGetActorLikes
+        const lxm = app.bsky.feed.getActorLikes.$lxm
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
@@ -28,10 +27,10 @@ export default function (server: Server, ctx: AppContext) {
 
 const getAuthorMunge = async (
   localViewer: LocalViewer,
-  original: OutputSchema,
+  original: app.bsky.feed.getActorLikes.OutputBody,
   local: LocalRecords,
   requester: string,
-): Promise<OutputSchema> => {
+): Promise<app.bsky.feed.getActorLikes.OutputBody> => {
   const localProf = local.profile
   let feed = original.feed
   // first update any out of date profile pictures in feed

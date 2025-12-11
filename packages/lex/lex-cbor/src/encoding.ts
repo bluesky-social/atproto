@@ -8,7 +8,6 @@ import {
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
-import type { ByteView } from 'multiformats/block'
 import { Cid, LexValue, asCid, decodeCid } from '@atproto/lex-data'
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
@@ -82,16 +81,16 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export function encode<T extends LexValue>(data: T): ByteView<T> {
+export function encode<T extends LexValue = LexValue>(data: T): Uint8Array {
   return cborgEncode(data, encodeOptions)
 }
 
-export function decode<T extends LexValue>(bytes: ByteView<T>): T {
+export function decode<T extends LexValue = LexValue>(bytes: Uint8Array): T {
   return cborgDecode(bytes, decodeOptions)
 }
 
-export function* decodeAll<T = LexValue>(
-  data: ByteView<T>,
+export function* decodeAll<T extends LexValue = LexValue>(
+  data: Uint8Array,
 ): Generator<T, void, unknown> {
   do {
     const [result, remainingBytes] = cborgDecodeFirst(data, decodeOptions)

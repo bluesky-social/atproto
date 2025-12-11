@@ -61,7 +61,7 @@ describe('moderator auth', () => {
     await plcClient.sendOperation(modServiceInfo.did, modServiceInfo.op)
     await plcClient.sendOperation(altModInfo.did, altModInfo.op)
 
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()

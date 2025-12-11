@@ -22,7 +22,7 @@ describe('notif service proxy', () => {
     })
     network.pds.server.app.get
     const plc = network.plc.getClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()

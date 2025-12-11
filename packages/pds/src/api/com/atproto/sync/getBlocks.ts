@@ -1,5 +1,5 @@
-import { CID } from 'multiformats/cid'
 import { byteIterableToStream } from '@atproto/common'
+import { parseCid } from '@atproto/lex-data'
 import { blocksToCarStream } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { isUserOrAdmin } from '../../../../auth-verifier'
@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
       const { did } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
-      const cids = params.cids.map((c) => CID.parse(c))
+      const cids = params.cids.map(parseCid)
       const got = await ctx.actorStore.read(did, (store) =>
         store.repo.storage.getBlocks(cids),
       )
