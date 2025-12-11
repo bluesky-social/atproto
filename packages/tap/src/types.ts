@@ -95,3 +95,15 @@ export const parseTapEvent = (data: unknown): TapEvent => {
     }
   }
 }
+
+export const repoInfoSchema = z.object({
+  did: z.string(),
+  handle: z.string(),
+  state: z.string(),
+  rev: z.string(),
+  error: z.string().nullable(),
+  retries: z.number(),
+  records: z.number(),
+})
+
+export type RepoInfo = z.infer<typeof repoInfoSchema>

@@ -1,4 +1,6 @@
+import { DidDocument, didDocumentValidator } from '@atproto/did'
 import { TapChannel, TapHandler, TapWebsocketOptions } from './channel'
+import { RepoInfo, repoInfoSchema } from './types'
 import { formatAdminAuthHeader } from './util'
 
 export interface TapConfig {
@@ -67,5 +69,33 @@ export class Tap {
       await response.arrayBuffer()
       throw new Error(`Failed to remove repos: ${response.statusText}`)
     }
+  }
+
+  async resolveDid(did: string): Promise<DidDocument> {
+    const response = await fetch(`${this.url}/resolve/${did}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    })
+
+    if (!response.ok) {
+      await response.arrayBuffer()
+      throw new Error(`Failed to resolve DID: ${response.statusText}`)
+    }
+
+    return didDocumentValidator.parse(await response.json())
+  }
+
+  async getRepoInfo(did: string): Promise<RepoInfo> {
+    const response = await fetch(`${this.url}/info/${did}`, {
+      method: 'GET',
+      headers: this.getHeaders(),
+    })
+
+    if (!response.ok) {
+      await response.arrayBuffer()
+      throw new Error(`Failed to get repo info: ${response.statusText}`)
+    }
+
+    return repoInfoSchema.parse(await response.json())
   }
 }

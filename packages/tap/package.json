@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
+    "@atproto/did": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/ws-client": "workspace:^",
     "typed-emitter": "^2.1.0",

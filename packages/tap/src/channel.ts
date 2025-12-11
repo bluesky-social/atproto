@@ -1,7 +1,7 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
-import { TapEvent, parseTapEvent } from './events'
+import { TapEvent, parseTapEvent } from './types'
 import { formatAdminAuthHeader } from './util'
 
 export interface HandlerOpts {
