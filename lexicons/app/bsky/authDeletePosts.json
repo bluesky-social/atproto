@@ -1,0 +1,25 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.authDeletePosts",
+  "defs": {
+    "main": {
+      "type": "permission-set",
+      "title": "Delete Existing Bluesky Posts",
+      "title:lang": {},
+      "detail": "Can not create or update posts.",
+      "detail:lang": {},
+      "permissions": [
+        {
+          "type": "permission",
+          "resource": "repo",
+          "action": ["delete"],
+          "collection": [
+            "app.bsky.feed.post",
+            "app.bsky.feed.postgate",
+            "app.bsky.feed.threadgate"
+          ]
+        }
+      ]
+    }
+  }
+}
