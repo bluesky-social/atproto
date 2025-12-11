@@ -58,7 +58,7 @@ export function isFragment(
   return true
 }
 
-export function isHexDigit(code: number): boolean {
+function isHexDigit(code: number): boolean {
   return (
     (code >= 48 && code <= 57) || // 0-9
     (code >= 65 && code <= 70) || // A-F
@@ -68,7 +68,7 @@ export function isHexDigit(code: number): boolean {
 
 export const canParse =
   URL.canParse?.bind(URL) ??
-  ((url, base) => {
+  ((url: string | URL, base: string | URL) => {
     try {
       new URL(url, base)
       return true
@@ -76,3 +76,16 @@ export const canParse =
       return false
     }
   })
+
+/**
+ * Finds the index of the first "#", "?", or "/" character in a string
+ */
+export function findDidUrlSeparator(input: string): number {
+  let code
+  for (let i = 0; i < input.length; i++) {
+    code = input.charCodeAt(i)
+    // '#', '?', '/'
+    if (code === 35 || code === 63 || code === 47) return i
+  }
+  return -1
+}

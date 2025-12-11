@@ -43,6 +43,7 @@ const getResultFromDoc = (doc: DidDocument) => {
   doc.service?.forEach((service) => {
     const id = service.id.split('#').at(1)
     if (!id) return
+    if (typeof service.type !== 'string') return
     if (typeof service.serviceEndpoint !== 'string') return
     services[id] = {
       Type: service.type,

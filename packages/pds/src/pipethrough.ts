@@ -274,7 +274,7 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did')
   }
 
-  const serviceId = proxyTo.slice(hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
   const url = getServiceEndpoint(didDoc, { id: serviceId })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
