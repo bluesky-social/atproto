@@ -46,8 +46,19 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "INVALID_DID"
+        },
+        {
+          "name": "INVALID_CONTACTS"
+        },
+        {
+          "name": "TOO_MANY_CONTACTS"
+        },
+        {
+          "name": "INVALID_TOKEN"
+        },
+        {
+          "name": "INTERNAL_ERROR"
         }
       ]
     }

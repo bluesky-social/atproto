@@ -27,8 +27,16 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "RATE_LIMIT_EXCEEDED"
+        },
+        {
+          "name": "INVALID_DID"
+        },
+        {
+          "name": "INVALID_PHONE"
+        },
+        {
+          "name": "INTERNAL_ERROR"
         }
       ]
     }

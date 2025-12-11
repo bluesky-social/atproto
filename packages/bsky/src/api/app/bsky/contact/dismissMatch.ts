@@ -1,6 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { assertRolodexOrThrowUnimplemented } from './util'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.contact.dismissMatch({
@@ -9,11 +9,12 @@ export default function (server: Server, ctx: AppContext) {
       assertRolodexOrThrowUnimplemented(ctx)
 
       const actor = auth.credentials.iss
-      // TODO: Error handling.
-      await ctx.rolodexClient.dismissMatch({
-        actor,
-        subject: input.body.subject,
-      })
+      await callRolodexClient(
+        ctx.rolodexClient.dismissMatch({
+          actor,
+          subject: input.body.subject,
+        }),
+      )
 
       return {
         encoding: 'application/json',

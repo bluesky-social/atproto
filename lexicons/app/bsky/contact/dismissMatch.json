@@ -28,8 +28,10 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "INVALID_DID"
+        },
+        {
+          "name": "INTERNAL_ERROR"
         }
       ]
     }

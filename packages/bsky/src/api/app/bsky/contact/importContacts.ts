@@ -17,7 +17,7 @@ import {
 import { ImportContactsMatch } from '../../../../proto/rolodex_pb'
 import { RolodexClient } from '../../../../rolodex'
 import { Views } from '../../../../views'
-import { assertRolodexOrThrowUnimplemented } from './util'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   const importContacts = createPipeline(
@@ -56,12 +56,13 @@ const skeleton = async (
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actor = params.hydrateCtx.viewer
-  // TODO: Error handling.
-  const { matches } = await ctx.rolodexClient.importContacts({
-    actor: params.hydrateCtx.viewer,
-    contacts: params.contacts,
-    token: params.token,
-  })
+  const { matches } = await callRolodexClient(
+    ctx.rolodexClient.importContacts({
+      actor: params.hydrateCtx.viewer,
+      contacts: params.contacts,
+      token: params.token,
+    }),
+  )
   return {
     actor,
     matches,

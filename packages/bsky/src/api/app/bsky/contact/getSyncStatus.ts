@@ -1,7 +1,7 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { SyncStatus } from '../../../../lexicon/types/app/bsky/contact/defs'
-import { assertRolodexOrThrowUnimplemented } from './util'
+import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.contact.getSyncStatus({
@@ -10,10 +10,11 @@ export default function (server: Server, ctx: AppContext) {
       assertRolodexOrThrowUnimplemented(ctx)
 
       const actor = auth.credentials.iss
-      // TODO: Error handling.
-      const res = await ctx.rolodexClient.getSyncStatus({
-        actor,
-      })
+      const res = await callRolodexClient(
+        ctx.rolodexClient.getSyncStatus({
+          actor,
+        }),
+      )
 
       let syncStatus: SyncStatus | undefined
       if (res.status && res.status.syncedAt) {

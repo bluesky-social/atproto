@@ -1,6 +1,7 @@
 import { TID } from '@atproto/common'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
+import { Notification } from '../../../../lexicon/types/app/bsky/contact/defs'
 import { Namespaces } from '../../../../stash'
 import { assertRolodexOrThrowUnimplemented } from './util'
 
@@ -19,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         payload: {
           from,
           to,
-        },
+        } satisfies Notification,
         key: TID.nextStr(),
       })
 

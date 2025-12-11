@@ -36,8 +36,16 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "INVALID_DID"
+        },
+        {
+          "name": "INVALID_LIMIT"
+        },
+        {
+          "name": "INVALID_CURSOR"
+        },
+        {
+          "name": "INTERNAL_ERROR"
         }
       ]
     }
