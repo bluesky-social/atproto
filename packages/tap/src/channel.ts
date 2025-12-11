@@ -29,8 +29,8 @@ export class TapChannel {
   private ws: WebSocketKeepAlive
   private handler: TapHandler
 
-  private abortController: AbortController
-  private destroyDefer: Deferrable
+  private readonly abortController: AbortController = new AbortController()
+  private readonly destroyDefer: Deferrable = createDeferrable()
 
   private bufferedAcks: BufferedAck[] = []
 
@@ -39,8 +39,6 @@ export class TapChannel {
     handler: TapHandler,
     wsOpts: TapWebsocketOptions = {},
   ) {
-    this.abortController = new AbortController()
-    this.destroyDefer = createDeferrable()
     this.handler = handler
     const { adminPassword, ...rest } = wsOpts
     let headers = rest.headers

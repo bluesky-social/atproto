@@ -49,10 +49,9 @@ export class Tap {
       headers: this.getHeaders(),
       body: JSON.stringify({ dids }),
     })
-    await response.arrayBuffer()
+    await response.body?.cancel() // expect empty body
 
     if (!response.ok) {
-      await response.arrayBuffer()
       throw new Error(`Failed to add repos: ${response.statusText}`)
     }
   }
@@ -63,22 +62,23 @@ export class Tap {
       headers: this.getHeaders(),
       body: JSON.stringify({ dids }),
     })
-    await response.arrayBuffer()
+    await response.body?.cancel() // expect empty body
 
     if (!response.ok) {
-      await response.arrayBuffer()
       throw new Error(`Failed to remove repos: ${response.statusText}`)
     }
   }
 
-  async resolveDid(did: string): Promise<DidDocument> {
+  async resolveDid(did: string): Promise<DidDocument | null> {
     const response = await fetch(`${this.url}/resolve/${did}`, {
       method: 'GET',
       headers: this.getHeaders(),
     })
 
-    if (!response.ok) {
-      await response.arrayBuffer()
+    if (response.status === 404) {
+      return null
+    } else if (!response.ok) {
+      await response.body?.cancel()
       throw new Error(`Failed to resolve DID: ${response.statusText}`)
     }
     return didDocument.parse(await response.json())
@@ -91,7 +91,7 @@ export class Tap {
     })
 
     if (!response.ok) {
-      await response.arrayBuffer()
+      await response.body?.cancel()
       throw new Error(`Failed to get repo info: ${response.statusText}`)
     }
 

@@ -33,22 +33,19 @@ indexer.record(async (evt) => {
 // without a handler, errors will end up as unhandled exceptions
 indexer.error((err) => console.error(err))
 
+// Open websocket connection, the library will handle reconnects and keeping the websocket alive
 const channel = tap.channel(indexer)
-channel.start()
-
-// Open websocket connection. Note that only one connection can be open at a time.
-// The library will handle reconnects and keeping the websocket alive
-const channel = tap.connect()
-
-channel.start()
+channel.start() // note: this returns a promise that only resolves once the connection errors or is destroyed
 
 // dyanmically add/remove repos from the channel
 // as you add repos, they will be backfilled and all existing records will be sent over the channel
 await tap.addRepos(['did:example:alice'])
 await tap.removeRepos(['did:example:bob'])
 
+// ...
+
 // on shutdown
-await channel.destory()
+await channel.destroy()
 ```
 
 ## Usage with webhooks
@@ -62,6 +59,12 @@ const app = express()
 app.use(express.json())
 
 app.post('/webhook', async (req, res) => {
+  try {
+    assureAdminAuth(ADMIN_PASSWORD, req.headers.authorization)
+  } catch{
+    res.status(401).json({ error: 'Invalid admin auth' })
+    return
+  }
   try {
     const evt = parseTapEvent(req.body)
     // ...

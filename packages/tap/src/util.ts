@@ -12,3 +12,22 @@ export const parseAdminAuthHeader = (header: string) => {
   }
   return password
 }
+
+export const assureAdminAuth = (expectedPassword: string, header: string) => {
+  const headerPassword = parseAdminAuthHeader(header)
+  const passEqual = timingSafeEqual(headerPassword, expectedPassword)
+  if (!passEqual) {
+    throw new Error('Invalid admin password')
+  }
+}
+
+const timingSafeEqual = (a: string, b: string): boolean => {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) {
+    // Compare against self to maintain constant time even with length mismatch
+    Buffer.from(a).compare(Buffer.from(a))
+    return false
+  }
+  return bufA.compare(bufB) === 0
+}
