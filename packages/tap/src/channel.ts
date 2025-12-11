@@ -6,10 +6,11 @@ import { formatAdminAuthHeader } from './util'
 
 export interface HandlerOpts {
   signal: AbortSignal
+  ack: () => Promise<void>
 }
 
 export interface TapHandler {
-  onEvent: (evt: TapEvent, opts?: HandlerOpts) => void | Promise<void>
+  onEvent: (evt: TapEvent, opts: HandlerOpts) => void | Promise<void>
   onError: (err: Error) => void
 }
 
@@ -130,8 +131,12 @@ export class TapChannel {
     }
 
     try {
-      await this.handler.onEvent(evt, { signal: this.abortController.signal })
-      await this.ackEvent(evt.id)
+      await this.handler.onEvent(evt, {
+        signal: this.abortController.signal,
+        ack: async () => {
+          await this.ackEvent(evt.id)
+        },
+      })
     } catch (err) {
       // Don't ack on error - let Tap retry
       this.handler.onError(

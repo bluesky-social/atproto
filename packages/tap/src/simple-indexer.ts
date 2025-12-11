@@ -28,12 +28,13 @@ export class SimpleIndexer implements TapHandler {
     this.errorHandler = fn
   }
 
-  async onEvent(evt: TapEvent, opts?: HandlerOpts): Promise<void> {
+  async onEvent(evt: TapEvent, opts: HandlerOpts): Promise<void> {
     if (evt.type === 'record') {
-      return this.recordHandler?.(evt, opts)
+      await this.recordHandler?.(evt, opts)
     } else {
-      return this.identityHandler?.(evt, opts)
+      await this.identityHandler?.(evt, opts)
     }
+    await opts.ack()
   }
 
   onError(err: Error) {

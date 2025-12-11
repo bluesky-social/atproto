@@ -101,9 +101,9 @@ export const repoInfoSchema = z.object({
   handle: z.string(),
   state: z.string(),
   rev: z.string(),
-  error: z.string().nullable(),
-  retries: z.number(),
   records: z.number(),
+  error: z.string().optional(),
+  retries: z.number().optional(),
 })
 
 export type RepoInfo = z.infer<typeof repoInfoSchema>
