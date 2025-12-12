@@ -1,5 +1,11 @@
 # @atproto/ws-client
 
+## 0.0.4
+
+### Patch Changes
+
+- [#4290](https://github.com/bluesky-social/atproto/pull/4290) [`b4a76ba`](https://github.com/bluesky-social/atproto/commit/b4a76bae7bef1189302488d43ce49a03fd61f957) Thanks [@dholms](https://github.com/dholms)! - Support sending data on websocket as well as an onReconnect callback
+
 ## 0.0.3
 
 ### Patch Changes
