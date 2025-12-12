@@ -1,5 +1,13 @@
 # @atproto/api
 
+## 0.18.8
+
+### Patch Changes
+
+- [#4452](https://github.com/bluesky-social/atproto/pull/4452) [`2e5a24c`](https://github.com/bluesky-social/atproto/commit/2e5a24cb875650120365e3f5c23a041e61a5f9c4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove WARNING from contact lexicons
+
+- [#4445](https://github.com/bluesky-social/atproto/pull/4445) [`5622bcf`](https://github.com/bluesky-social/atproto/commit/5622bcf02315f9f24940a32aa3a6d9341c646c59) Thanks [@mozzius](https://github.com/mozzius)! - Add XRPC errors for `contact` APIs
+
 ## 0.18.7
 
 ### Patch Changes

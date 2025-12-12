@@ -1,5 +1,12 @@
 # @atproto/xrpc-server
 
+## 0.10.4
+
+### Patch Changes
+
+- Updated dependencies [[`b4a76ba`](https://github.com/bluesky-social/atproto/commit/b4a76bae7bef1189302488d43ce49a03fd61f957)]:
+  - @atproto/ws-client@0.0.4
+
 ## 0.10.3
 
 ### Patch Changes
