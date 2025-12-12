@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.authManageNotifs",
+  "id": "app.bsky.authManageNotifications",
   "defs": {
     "main": {
       "type": "permission-set",
