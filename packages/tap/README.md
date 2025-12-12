@@ -51,7 +51,6 @@ This library is intended to be used with Tap running in the default mode of "Web
 - **Per-repo ordering**: Events for the same repo are delivered in order
 - **Backfill**: When you add a repo, historical events are delivered before live events
 
-
 ## API
 
 ### `Tap`
@@ -63,6 +62,7 @@ const tap = new Tap(url: string, config?: TapConfig)
 ```
 
 **Config options:**
+
 - `adminPassword?: string` - Password for Basic auth (required if Tap server has auth enabled)
 
 **Methods:**
@@ -112,7 +112,7 @@ interface TapHandler {
   onError: (err: Error) => void
 }
 
- interface HandlerOpts {
+interface HandlerOpts {
   signal: AbortSignal
   ack: () => Promise<void>
 }
@@ -133,9 +133,9 @@ type RecordEvent = {
   rev: string
   collection: string
   rkey: string
-  record?: Record<string, unknown>  // present for create/update
-  cid?: string                      // present for create/update
-  live: boolean                     // true if from firehose, false if from backfill
+  record?: Record<string, unknown> // present for create/update
+  cid?: string // present for create/update
+  live: boolean // true if from firehose, false if from backfill
 }
 ```
 
@@ -188,7 +188,11 @@ app.post('/webhook', async (req, res) => {
 ### Auth helpers
 
 ```ts
-import { formatAdminAuthHeader, parseAdminAuthHeader, assureAdminAuth } from '@atproto/tap'
+import {
+  formatAdminAuthHeader,
+  parseAdminAuthHeader,
+  assureAdminAuth,
+} from '@atproto/tap'
 
 // Format a password into a Basic auth header value
 const header = formatAdminAuthHeader('secret')
@@ -206,7 +210,7 @@ assureAdminAuth('secret', req.headers.authorization)
 ```ts
 import { parseTapEvent } from '@atproto/tap'
 
-const evt = parseTapEvent(jsonData)  // validates and returns typed TapEvent
+const evt = parseTapEvent(jsonData) // validates and returns typed TapEvent
 ```
 
 ## License
