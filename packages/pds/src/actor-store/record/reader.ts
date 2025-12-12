@@ -1,10 +1,11 @@
 /* eslint-disable import/no-deprecated */
 
-import { Cid, LexMap, TypedLexMap, parseCid } from '@atproto/lex-data'
+import { Cid, LexMap, parseCid } from '@atproto/lex-data'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
 import {
   AtUri,
   AtUriString,
+  DatetimeString,
   NsidString,
   ensureValidAtUri,
   ensureValidDid,
@@ -215,10 +216,7 @@ export class RecordReader {
   // @NOTE this logic is a placeholder until we allow users to specify these constraints themselves.
   // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
-  async getBacklinkConflicts(
-    uri: AtUri,
-    record: TypedLexMap,
-  ): Promise<AtUri[]> {
+  async getBacklinkConflicts(uri: AtUri, record: LexMap): Promise<AtUri[]> {
     const conflicts: AtUri[] = []
 
     for (const backlink of getBacklinks(uri, record)) {
@@ -311,14 +309,14 @@ export class RecordReader {
         result.profile = {
           uri,
           cid: parseCid(cur.cid),
-          indexedAt: cur.indexedAt,
+          indexedAt: cur.indexedAt as DatetimeString,
           record: cborToLexRecord(cur.content) as app.bsky.actor.profile.Main,
         }
       } else if (uri.collection === app.bsky.feed.post.$type) {
         result.posts.push({
           uri,
           cid: parseCid(cur.cid),
-          indexedAt: cur.indexedAt,
+          indexedAt: cur.indexedAt as DatetimeString,
           record: cborToLexRecord(cur.content) as app.bsky.feed.post.Main,
         })
       }

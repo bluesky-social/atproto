@@ -34,6 +34,15 @@ export abstract class Schema<Output = any> implements Validator<Output> {
     this.assert(input)
   }
 
+  /**
+   * Casts the input (by validating it) to the output type if it matches the
+   * schema, otherwise throws. This is the same as calling {@link parse}() with
+   * `allowTransform: false`.
+   */
+  cast<I>(input: I): I & Output {
+    return this.parse(input, { allowTransform: false })
+  }
+
   matches(input: unknown): input is Output {
     const result = this.safeParse(input, { allowTransform: false })
     return result.success

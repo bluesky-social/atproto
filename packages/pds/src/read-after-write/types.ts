@@ -1,5 +1,5 @@
 import { Cid } from '@atproto/lex-data'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DatetimeString } from '@atproto/syntax'
 import { LocalViewer } from './viewer'
 import { app } from '#lexicons'
 
@@ -12,7 +12,7 @@ export type LocalRecords = {
 export type RecordDescript<T> = {
   uri: AtUri
   cid: Cid
-  indexedAt: string
+  indexedAt: DatetimeString
   record: T
 }
 
