@@ -73,17 +73,17 @@ export async function callRolodexClient<T>(caller: T) {
       const reason = details?.debug?.reason // e.g. INVALID_DID
       // Handle known error reasons
       if (reason) {
+        const errorName = convertErrorName(reason)
+        // NOTE: Don't leak e.message to the response.
+
         if (reason === 'INTERNAL_ERROR') {
-          throw new InternalServerError('Upstream error', reason, {
+          throw new InternalServerError('Upstream error', errorName, {
             cause: e,
           })
         } else {
-          const errorName = convertErrorName(reason)
-          throw new InvalidRequestError(
-            e.message ?? 'An error occurred',
-            errorName,
-            { cause: e },
-          )
+          throw new InvalidRequestError('An error occurred', errorName, {
+            cause: e,
+          })
         }
       }
     }
