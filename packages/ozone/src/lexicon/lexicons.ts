@@ -1850,10 +1850,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },
@@ -1902,16 +1902,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INVALID_LIMIT',
+            name: 'InvalidLimit',
           },
           {
-            name: 'INVALID_CURSOR',
+            name: 'InvalidCursor',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },
@@ -1945,10 +1945,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },
@@ -2006,19 +2006,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INVALID_CONTACTS',
+            name: 'InvalidContacts',
           },
           {
-            name: 'TOO_MANY_CONTACTS',
+            name: 'TooManyContacts',
           },
           {
-            name: 'INVALID_TOKEN',
+            name: 'InvalidToken',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },
@@ -2048,10 +2048,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },
@@ -2124,16 +2124,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'RATE_LIMIT_EXCEEDED',
+            name: 'RateLimitExceeded',
           },
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INVALID_PHONE',
+            name: 'InvalidPhone',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },
@@ -2182,19 +2182,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'RATE_LIMIT_EXCEEDED',
+            name: 'RateLimitExceeded',
           },
           {
-            name: 'INVALID_DID',
+            name: 'InvalidDid',
           },
           {
-            name: 'INVALID_PHONE',
+            name: 'InvalidPhone',
           },
           {
-            name: 'INVALID_CODE',
+            name: 'InvalidCode',
           },
           {
-            name: 'INTERNAL_ERROR',
+            name: 'InternalError',
           },
         ],
       },

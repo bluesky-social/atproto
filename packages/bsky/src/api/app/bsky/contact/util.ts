@@ -18,6 +18,36 @@ export function assertRolodexOrThrowUnimplemented(
 }
 
 /**
+ * Converts UPPERCASE_ERROR from Rolodex to PascalCase for XRPC.
+ */
+function convertErrorName(reason: string): string {
+  switch (reason) {
+    case 'INVALID_DID':
+      return 'InvalidDid'
+    case 'INVALID_LIMIT':
+      return 'InvalidLimit'
+    case 'INVALID_CURSOR':
+      return 'InvalidCursor'
+    case 'INVALID_CONTACTS':
+      return 'InvalidContacts'
+    case 'TOO_MANY_CONTACTS':
+      return 'TooManyContacts'
+    case 'INVALID_TOKEN':
+      return 'InvalidToken'
+    case 'RATE_LIMIT_EXCEEDED':
+      return 'RateLimitExceeded'
+    case 'INVALID_PHONE':
+      return 'InvalidPhone'
+    case 'INVALID_CODE':
+      return 'InvalidCode'
+    case 'INTERNAL_ERROR':
+      return 'InternalError'
+    default:
+      return reason
+  }
+}
+
+/**
  * Helper to call Rolodex client methods and translate RPC errors to XRPC
  * errors.
  *
@@ -44,16 +74,15 @@ export async function callRolodexClient<T>(caller: T) {
       // Handle known error reasons
       if (reason) {
         if (reason === 'INTERNAL_ERROR') {
-          throw new InternalServerError('Upstream error', 'INTERNAL_ERROR', {
+          throw new InternalServerError('Upstream error', reason, {
             cause: e,
           })
         } else {
+          const errorName = convertErrorName(reason)
           throw new InvalidRequestError(
             e.message ?? 'An error occurred',
-            reason, // should match Rolodex error codes
-            {
-              cause: e,
-            },
+            errorName,
+            { cause: e },
           )
         }
       }
