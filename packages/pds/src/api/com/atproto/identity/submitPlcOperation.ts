@@ -1,9 +1,9 @@
 import * as plc from '@did-plc/lib'
 import { check } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '@atproto/xrpc-server'
 import { httpLogger as log } from '../../../../logger'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.identity.submitPlcOperation, {

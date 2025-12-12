@@ -2,8 +2,7 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
-  LocalViewer,
+  MungeFn,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 import { app } from '#lexicons'
@@ -20,17 +19,22 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async (reqCtx) => {
-      return pipethroughReadAfterWrite(ctx, reqCtx, getAuthorMunge)
+      return pipethroughReadAfterWrite(
+        ctx,
+        reqCtx,
+        app.bsky.feed.getAuthorFeed,
+        getAuthorMunge,
+      )
     },
   })
 }
 
-const getAuthorMunge = async (
-  localViewer: LocalViewer,
-  original: app.bsky.feed.getAuthorFeed.OutputBody,
-  local: LocalRecords,
-  requester: string,
-): Promise<app.bsky.feed.getAuthorFeed.OutputBody> => {
+const getAuthorMunge: MungeFn<app.bsky.feed.getAuthorFeed.OutputBody> = async (
+  localViewer,
+  original,
+  local,
+  requester,
+) => {
   const localProf = local.profile
   // only munge on own feed
   if (!isUsersFeed(original, requester)) {

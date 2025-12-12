@@ -2,7 +2,7 @@ import { KeyObject } from 'node:crypto'
 import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { Cid } from '@atproto/lex-data'
-import { isValidTld } from '@atproto/syntax'
+import { HandleString, isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
@@ -110,7 +110,7 @@ export class AccountManager {
       did?: string
       allowAnyValid?: boolean
     } = {},
-  ): Promise<string> {
+  ): Promise<HandleString> {
     const normalized = baseNormalizeAndValidate(handle)
 
     // tld validation

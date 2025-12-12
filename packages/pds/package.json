@@ -44,6 +44,7 @@
     "@atproto/lex": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/repo": "workspace:^",

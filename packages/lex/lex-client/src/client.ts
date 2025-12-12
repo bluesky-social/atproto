@@ -25,7 +25,6 @@ import {
   asXrpcRequestFailureFor,
 } from './error.js'
 import * as com from './lexicons/com.js'
-import { XrpcResponse, XrpcResponseBody } from './response.js'
 import {
   BinaryBodyInit,
   CallOptions,
@@ -34,7 +33,7 @@ import {
   getMain,
 } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
-import { XrpcOptions, xrpc } from './xrpc.js'
+import { XrpcOptions, XrpcResponse, XrpcResponseBody, xrpc } from './xrpc.js'
 
 export type ClientOptions = {
   labelers?: Iterable<DidString>

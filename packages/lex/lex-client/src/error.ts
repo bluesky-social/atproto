@@ -132,10 +132,10 @@ export class XrpcResponseError<
   constructor(
     public readonly status: number,
     public readonly headers: Headers,
-    public readonly payload: Payload<B>,
+    public readonly body: B,
     options?: ErrorOptions,
   ) {
-    super(payload.body.error, payload.body.message, options)
+    super(body.error, body.message, options)
   }
 }
 

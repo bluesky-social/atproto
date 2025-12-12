@@ -1,7 +1,7 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '@atproto/xrpc-server'
 import { httpLogger } from '../../../../logger'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.updateAccountHandle, {

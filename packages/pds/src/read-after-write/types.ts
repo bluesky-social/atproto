@@ -1,13 +1,12 @@
 import { Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { LocalViewer } from './viewer'
+import { app } from '#lexicons'
 
 export type LocalRecords = {
   count: number
-  profile: RecordDescript<ProfileRecord> | null
-  posts: RecordDescript<PostRecord>[]
+  profile: RecordDescript<app.bsky.actor.profile.Main> | null
+  posts: RecordDescript<app.bsky.feed.post.Main>[]
 }
 
 export type RecordDescript<T> = {

@@ -51,4 +51,38 @@ export class Payload<
       throw new TypeError('schema cannot be defined when encoding is undefined')
     }
   }
+
+  /**
+   * Checks whether the given content-type matches the expected payload schema's
+   * encoding.
+   */
+  matchesEncoding(contentType: string | undefined): boolean {
+    const mime = contentType?.split(';', 1)[0].trim()
+
+    const { encoding } = this
+
+    // Handle undefined cases
+    if (encoding === undefined) {
+      // Expecting no body
+      return mime === undefined
+    } else if (mime === undefined) {
+      // Expecting a body, but got no content-type
+      return false
+    }
+
+    if (encoding === '*/*') {
+      return true
+    }
+
+    if (encoding.endsWith('/*')) {
+      return mime.startsWith(encoding.slice(0, -1))
+    }
+
+    // Invalid: Lexicon can only specify "*/*" or "type/*" wildcards
+    if (encoding.includes('*')) {
+      return false
+    }
+
+    return encoding === mime
+  }
 }

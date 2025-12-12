@@ -1,17 +1,15 @@
 import assert from 'node:assert'
 import { l } from '@atproto/lex'
 import { AtUri, AtUriString } from '@atproto/syntax'
-import { XRPCError } from '@atproto/xrpc'
-import { Server } from '@atproto/xrpc-server'
+import { Server, XRPCError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
   LocalViewer,
+  MungeFn,
   RecordDescript,
   formatMungedResponse,
   getLocalLag,
-  getRepoRev,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 import { app } from '#lexicons'
@@ -29,13 +27,18 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async (reqCtx) => {
       try {
-        return await pipethroughReadAfterWrite(ctx, reqCtx, getPostThreadMunge)
+        return await pipethroughReadAfterWrite(
+          ctx,
+          reqCtx,
+          app.bsky.feed.getPostThread,
+          getPostThreadMunge,
+        )
       } catch (err) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
           const { auth, params } = reqCtx
           const requester = auth.credentials.did
 
-          const rev = err.headers && getRepoRev(err.headers)
+          const rev = err.headers?.get('atproto-repo-rev')
           if (!rev) throw err
 
           const uri = new AtUri(params.uri)
@@ -74,11 +77,9 @@ export default function (server: Server, ctx: AppContext) {
 // READ AFTER WRITE
 // ----------------
 
-const getPostThreadMunge = async (
-  localViewer: LocalViewer,
-  original: app.bsky.feed.getPostThread.OutputBody,
-  local: LocalRecords,
-): Promise<app.bsky.feed.getPostThread.OutputBody> => {
+const getPostThreadMunge: MungeFn<
+  app.bsky.feed.getPostThread.OutputBody
+> = async (localViewer, original, local) => {
   // @TODO if is NotFoundPost, handle similarly to error
   // @NOTE not necessary right now as we never return those for the requested uri
   if (!app.bsky.feed.defs.threadViewPost.$matches(original.thread)) {

@@ -7,6 +7,7 @@ import {
 import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { assertValidDidDocumentForService } from './util'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.activateAccount, {
@@ -21,10 +22,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ req, auth }) => {
       // in the case of entryway, the full flow is activateAccount (PDS) -> activateAccount (Entryway) -> updateSubjectStatus(PDS)
       if (ctx.entrywayClient) {
-        await ctx.entrywayClient.com.atproto.server.activateAccount(
-          undefined,
-          ctx.entrywayPassthruHeaders(req),
-        )
+        const { headers } = ctx.entrywayPassthruHeaders(req)
+        await ctx.entrywayClient.xrpc(com.atproto.server.activateAccount, {
+          headers,
+        })
         return
       }
 

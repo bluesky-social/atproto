@@ -2,8 +2,7 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
-  LocalViewer,
+  MungeFn,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 import { app } from '#lexicons'
@@ -20,16 +19,21 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async (reqCtx) => {
-      return pipethroughReadAfterWrite(ctx, reqCtx, getTimelineMunge)
+      return pipethroughReadAfterWrite(
+        ctx,
+        reqCtx,
+        app.bsky.feed.getTimeline,
+        getTimelineMunge,
+      )
     },
   })
 }
 
-const getTimelineMunge = async (
-  localViewer: LocalViewer,
-  original: app.bsky.feed.getTimeline.OutputBody,
-  local: LocalRecords,
-): Promise<app.bsky.feed.getTimeline.OutputBody> => {
+const getTimelineMunge: MungeFn<app.bsky.feed.getTimeline.OutputBody> = async (
+  localViewer,
+  original,
+  local,
+) => {
   const feed = await localViewer.formatAndInsertPostsInFeed(
     [...original.feed],
     local.posts,

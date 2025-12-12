@@ -1,5 +1,5 @@
-import { AppContext } from '../../../../context'
 import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import applyWrites from './applyWrites'
 import createRecord from './createRecord'
 import deleteRecord from './deleteRecord'

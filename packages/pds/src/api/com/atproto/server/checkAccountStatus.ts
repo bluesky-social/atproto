@@ -1,6 +1,7 @@
-import { AppContext } from '../../../../context'
 import { Server } from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
 import { isValidDidDocForService } from './util'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.checkAccountStatus, {

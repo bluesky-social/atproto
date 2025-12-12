@@ -13,9 +13,25 @@ export abstract class Schema<Output = any> implements Validator<Output> {
     ctx: ValidatorContext,
   ): ValidationResult<Output>
 
+  /**
+   * @note use {@link check}() instead of {@link assert}() if you encounter a
+   * `ts(2775)` error and you are not able to fully type the validator. This
+   * will typically arise in generic contexts, where the narrowed type is not
+   * needed.
+   */
   assert(input: unknown): asserts input is Output {
     const result = this.safeParse(input, { allowTransform: false })
     if (!result.success) throw result.reason
+  }
+
+  /**
+   * Alias for {@link assert}(). Most useful in generic contexts where the
+   * validator is not exactly typed, allowing to avoid "_Assertions require
+   * every name in the call target to be declared with an explicit type
+   * annotation. ts(2775)_" errors.
+   */
+  check(input: unknown): void {
+    this.assert(input)
   }
 
   matches(input: unknown): input is Output {

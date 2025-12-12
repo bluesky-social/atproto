@@ -8,12 +8,11 @@ import {
 } from '@atproto/lex-schema'
 import {
   KnownError,
-  XrpcErrorBody,
   XrpcResponseError,
   XrpcServiceError,
   xrpcErrorBodySchema,
 } from './error.js'
-import { Payload, encodingMatches } from './util.js'
+import { Payload } from './util.js'
 
 export type XrpcResponseBody<M extends Procedure | Query> =
   InferMethodOutputBody<M, Uint8Array>
@@ -101,7 +100,7 @@ export class XrpcResponse<const M extends Procedure | Query>
         throw new XrpcResponseError(
           response.status,
           response.headers,
-          payload as Payload<XrpcErrorBody>,
+          payload.body,
         )
       }
 
@@ -129,10 +128,7 @@ export class XrpcResponse<const M extends Procedure | Query>
       }
     } else {
       // Schema expects a payload
-      if (
-        !payload ||
-        !encodingMatches(schema.output.encoding, payload.encoding)
-      ) {
+      if (!payload || !schema.output.matchesEncoding(payload.encoding)) {
         throw new XrpcServiceError(
           KnownError.InvalidResponse,
           response.status,

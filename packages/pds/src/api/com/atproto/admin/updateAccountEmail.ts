@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
 
       if (ctx.entrywayClient) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
-        await ctx.entrywayClient.call(com.atproto.admin.updateAccountEmail, {
+        await ctx.entrywayClient.xrpc(com.atproto.admin.updateAccountEmail, {
           headers,
           body: input.body,
         })

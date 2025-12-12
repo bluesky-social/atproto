@@ -55,35 +55,6 @@ export function buildAtprotoHeaders(options: {
   return headers
 }
 
-export function encodingMatches(
-  accept: string | undefined,
-  actual: string | undefined,
-): boolean {
-  // Handle undefined cases
-  if (accept === undefined) {
-    // Expecting no body
-    return actual === undefined
-  } else if (!actual) {
-    // Expecting a body, but got no content-type
-    return false
-  }
-
-  if (accept === '*/*') {
-    return true
-  }
-
-  if (accept.endsWith('/*')) {
-    return actual.startsWith(accept.slice(0, -1))
-  }
-
-  // Invalid: Lexicon can only specify "*/*" or "type/*" wildcards
-  if (accept.includes('*')) {
-    return false
-  }
-
-  return accept === actual
-}
-
 export function toReadableStream(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {

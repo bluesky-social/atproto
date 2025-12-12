@@ -2,8 +2,7 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
-  LocalViewer,
+  MungeFn,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 import { app } from '#lexicons'
@@ -20,17 +19,22 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async (reqCtx) => {
-      return pipethroughReadAfterWrite(ctx, reqCtx, getAuthorMunge)
+      return pipethroughReadAfterWrite(
+        ctx,
+        reqCtx,
+        app.bsky.feed.getActorLikes,
+        getAuthorMunge,
+      )
     },
   })
 }
 
-const getAuthorMunge = async (
-  localViewer: LocalViewer,
-  original: app.bsky.feed.getActorLikes.OutputBody,
-  local: LocalRecords,
-  requester: string,
-): Promise<app.bsky.feed.getActorLikes.OutputBody> => {
+const getAuthorMunge: MungeFn<app.bsky.feed.getActorLikes.OutputBody> = async (
+  localViewer,
+  original,
+  local,
+  requester,
+) => {
   const localProf = local.profile
   let feed = original.feed
   // first update any out of date profile pictures in feed

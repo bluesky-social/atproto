@@ -1,6 +1,6 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { ids } from '../../../../lexicon/lexicons'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.server.confirmEmail, {
@@ -10,8 +10,8 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertAccount({ attr: 'email', action: 'manage' })
       },
     }),
-    handler: async ({ auth, input, req }) => {
-      const did = auth.credentials.did
+    handler: async ({ auth, input: { body }, req }) => {
+      const { did } = auth.credentials
 
       const user = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -21,18 +21,19 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       if (ctx.entrywayClient) {
-        await ctx.entrywayClient.com.atproto.server.confirmEmail(
-          input.body,
-          await ctx.entrywayAuthHeaders(
-            req,
-            auth.credentials.did,
-            ids.ComAtprotoServerConfirmEmail,
-          ),
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.confirmEmail.$lxm,
         )
+        await ctx.entrywayClient.xrpc(com.atproto.server.confirmEmail, {
+          headers,
+          body,
+        })
         return
       }
 
-      const { token, email } = input.body
+      const { token, email } = body
 
       if (user.email !== email.toLowerCase()) {
         throw new InvalidRequestError('invalid email', 'InvalidEmail')

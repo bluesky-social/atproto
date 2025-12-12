@@ -2,8 +2,7 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
-  LocalViewer,
+  MungeFn,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 import { app } from '#lexicons'
@@ -20,17 +19,22 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async (reqCtx) => {
-      return pipethroughReadAfterWrite(ctx, reqCtx, getProfilesMunge)
+      return pipethroughReadAfterWrite(
+        ctx,
+        reqCtx,
+        app.bsky.actor.getProfiles,
+        getProfilesMunge,
+      )
     },
   })
 }
 
-const getProfilesMunge = async (
-  localViewer: LocalViewer,
-  original: app.bsky.actor.getProfiles.OutputBody,
-  local: LocalRecords,
-  requester: string,
-): Promise<app.bsky.actor.getProfiles.OutputBody> => {
+const getProfilesMunge: MungeFn<app.bsky.actor.getProfiles.OutputBody> = async (
+  localViewer,
+  original,
+  local,
+  requester,
+) => {
   const localProf = local.profile
   if (!localProf) return original
 

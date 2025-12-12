@@ -1,7 +1,7 @@
 import { Client } from '@atproto/lex'
+import { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '@atproto/xrpc-server'
 import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough'
 import { com } from '#lexicons'
 

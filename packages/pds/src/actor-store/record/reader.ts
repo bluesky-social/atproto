@@ -2,8 +2,13 @@
 
 import { Cid, LexMap, TypedLexMap, parseCid } from '@atproto/lex-data'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
-import * as syntax from '@atproto/syntax'
-import { AtUri, ensureValidAtUri } from '@atproto/syntax'
+import {
+  AtUri,
+  AtUriString,
+  NsidString,
+  ensureValidAtUri,
+  ensureValidDid,
+} from '@atproto/syntax'
 import { countAll, notSoftDeletedClause } from '../../db/util'
 import { LocalRecords } from '../../read-after-write/types'
 import { ActorDb, Backlink } from '../db'
@@ -50,14 +55,14 @@ export class RecordReader {
     return records
   }
 
-  async listCollections(): Promise<string[]> {
+  async listCollections(): Promise<NsidString[]> {
     const collections = await this.db.db
       .selectFrom('record')
       .select('collection')
       .groupBy('collection')
       .execute()
 
-    return collections.map((row) => row.collection)
+    return collections.map((row) => row.collection as NsidString)
   }
 
   async listRecordsForCollection(opts: {
@@ -68,7 +73,7 @@ export class RecordReader {
     rkeyStart?: string
     rkeyEnd?: string
     includeSoftDeleted?: boolean
-  }): Promise<{ uri: string; cid: string; value: Record<string, unknown> }[]> {
+  }): Promise<{ uri: AtUriString; cid: string; value: LexMap }[]> {
     const {
       collection,
       limit,
@@ -107,13 +112,11 @@ export class RecordReader {
       }
     }
     const res = await builder.execute()
-    return res.map((row) => {
-      return {
-        uri: row.uri,
-        cid: row.cid,
-        value: cborToLexRecord(row.content),
-      }
-    })
+    return res.map((row) => ({
+      uri: row.uri as AtUriString,
+      cid: row.cid,
+      value: cborToLexRecord(row.content),
+    }))
   }
 
   async getRecord(
@@ -123,7 +126,7 @@ export class RecordReader {
   ): Promise<{
     uri: string
     cid: string
-    value: Record<string, unknown>
+    value: LexMap
     indexedAt: string
     takedownRef: string | null
   } | null> {
@@ -338,7 +341,7 @@ export const getBacklinks = (uri: AtUri, record: LexMap): Backlink[] => {
       return []
     }
     try {
-      syntax.ensureValidDid(subject)
+      ensureValidDid(subject)
     } catch {
       return []
     }

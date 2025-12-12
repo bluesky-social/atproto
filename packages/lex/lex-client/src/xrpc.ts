@@ -13,16 +13,17 @@ import {
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
 import { KnownError, XrpcError } from './error.js'
-import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions, Namespace, getMain } from './types.js'
 import {
   Payload,
   buildAtprotoHeaders,
-  encodingMatches,
   isAsyncIterable,
   isBlobLike,
   toReadableStream,
 } from './util.js'
+import { XrpcResponse } from './xrpc-response.js'
+
+export * from './xrpc-response.js'
 
 // If all params are optional, allow omitting the params object
 type XrpcParamsOptions<P extends Params> =
@@ -98,6 +99,7 @@ function xrpcRequestInit<T extends Procedure | Query>(
 ): RequestInit & { duplex?: 'half' } {
   const headers = buildAtprotoHeaders(options)
 
+  // Tell the server what type of response we're expecting
   if (schema.output.encoding) {
     headers.set('accept', schema.output.encoding)
   }
@@ -140,24 +142,70 @@ function xrpcRequestInit<T extends Procedure | Query>(
 }
 
 function xrpcProcedureInput(
-  schema: { input: LexPayload },
+  method: Procedure,
   options: CallOptions & { body?: LexValue | BinaryBodyInit },
   contentType?: string,
 ): null | Payload<BodyInit> {
-  const data = options.body
-  const { encoding } = schema.input
+  const { input } = method
+  const { body } = options
 
-  if (encoding === undefined) {
-    if (data !== undefined) {
+  if (options.validateRequest) {
+    input.schema?.check(body)
+  }
+
+  // Special handling for endpoints expecting application/json input
+  if (input.encoding === 'application/json') {
+    // @NOTE **NOT** using isLexValue here to avoid deep checks in order to
+    // distinguish between LexValue and BinaryBodyInit.
+    if (!isLexScalar(body) && !isPlainObject(body) && !Array.isArray(body)) {
+      throw new TypeError(`Expected LexValue body, got ${typeof body}`)
+    }
+
+    return buildPayload(input, lexStringify(body), contentType)
+  }
+
+  // Other encodings will be sent unaltered (ie. as binary data)
+  switch (typeof body) {
+    case 'undefined':
+    case 'string':
+      return buildPayload(input, body, contentType)
+    case 'object': {
+      if (body === null) break
+      if (
+        ArrayBuffer.isView(body) ||
+        body instanceof ArrayBuffer ||
+        body instanceof ReadableStream
+      ) {
+        return buildPayload(input, body, contentType)
+      } else if (isAsyncIterable(body)) {
+        return buildPayload(input, toReadableStream(body), contentType)
+      } else if (isBlobLike(body)) {
+        return buildPayload(input, body, contentType || body.type)
+      }
+    }
+  }
+
+  throw new TypeError(
+    `Invalid ${typeof body} body for ${input.encoding} encoding`,
+  )
+}
+
+function buildPayload(
+  schema: LexPayload,
+  body: undefined | BodyInit,
+  contentType?: string,
+): null | Payload<BodyInit> {
+  if (schema.encoding === undefined) {
+    if (body !== undefined) {
       throw new TypeError(
-        `Cannot send a ${typeof data} body with undefined encoding`,
+        `Cannot send a ${typeof body} body with undefined encoding`,
       )
     }
 
     return null
   }
 
-  if (data === undefined) {
+  if (body === undefined) {
     // This error would be returned by the server, but we can catch it earlier
     // to avoid un-necessary requests. Note that a content-length of 0 does not
     // necessary mean that the body is "empty" (e.g. an empty txt file).
@@ -167,84 +215,42 @@ function xrpcProcedureInput(
     )
   }
 
-  if (encoding === 'application/json') {
-    if (contentType != null && contentType !== 'application/json') {
-      throw new TypeError(
-        `Cannot send a body with content-type "${contentType}" for "application/json" encoding`,
-      )
-    }
-
-    // @NOTE Not using isLexValue because we don't need to deep-check here (pref)
-    // @NOTE Not using !isBodyInit because strings and Uint8Arrays are allowed
-    if (isLexScalar(data) || isPlainObject(data) || Array.isArray(data)) {
-      return {
-        encoding: 'application/json; charset=utf-8',
-        body: lexStringify(
-          options.validateRequest && schema.input.schema
-            ? schema.input.schema.parse(data)
-            : data,
-        ),
-      }
-    }
-  } else {
-    switch (typeof data) {
-      case 'string':
-        return {
-          body: data,
-          encoding: buildEncoding(encoding, contentType),
-        }
-      case 'object': {
-        if (
-          ArrayBuffer.isView(data) ||
-          data instanceof ArrayBuffer ||
-          data instanceof ReadableStream
-        ) {
-          return {
-            body: data,
-            encoding: buildEncoding(encoding, contentType),
-          }
-        } else if (isAsyncIterable(data)) {
-          return {
-            body: toReadableStream(data),
-            encoding: buildEncoding(encoding, contentType),
-          }
-        } else if (isBlobLike(data)) {
-          return {
-            body: data,
-            encoding: buildEncoding(encoding, contentType || data.type),
-          }
-        }
-      }
-    }
-  }
-
-  throw new TypeError(`Invalid ${typeof data} body for ${encoding} encoding`)
+  const encoding = buildEncoding(schema, contentType)
+  return { encoding, body }
 }
 
-function buildEncoding(encoding: string, contentType?: string) {
+function buildEncoding(schema: LexPayload, contentType?: string): string {
+  // Should never happen (required for type safety)
+  if (!schema.encoding) {
+    throw new TypeError('Unexpected payload')
+  }
+
   if (contentType?.length) {
-    const mime = contentType.split(';')[0].trim()
-    if (encodingMatches(encoding, mime)) return contentType
-    throw new TypeError(
-      `Invalid content-type "${contentType}" for ${encoding} encoding`,
-    )
+    if (!schema.matchesEncoding(contentType)) {
+      throw new TypeError(
+        `Cannot send a body with content-type "${contentType}" for "${schema.encoding}" encoding`,
+      )
+    }
+    return contentType
   }
 
   // Fallback
 
-  if (encoding === '*/*') {
+  if (schema.encoding === '*/*') {
     return 'application/octet-stream'
   }
 
-  if (encoding.startsWith('text/')) {
-    return encoding.includes('*')
+  if (schema.encoding.startsWith('text/')) {
+    return schema.encoding.includes('*')
       ? 'text/plain; charset=utf-8'
-      : `${encoding}; charset=utf-8`
+      : `${schema.encoding}; charset=utf-8`
   }
 
-  if (encoding.includes('*')) {
-    throw new TypeError(`Cannot determine content-type for body`)
+  if (!schema.encoding.includes('*')) {
+    return schema.encoding
   }
 
-  return encoding
+  throw new TypeError(
+    `Unable to determine payload encoding. Please provide a 'content-type' header matching ${schema.encoding}.`,
+  )
 }

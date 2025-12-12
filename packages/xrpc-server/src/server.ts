@@ -606,6 +606,10 @@ function createErrorMiddleware({
       return next(err)
     }
 
+    if (xrpcError.headers) {
+      res.setHeaders(xrpcError.headers)
+    }
+
     return res.status(xrpcError.statusCode).json(xrpcError.payload)
   }
 }

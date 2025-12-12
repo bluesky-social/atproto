@@ -1,8 +1,11 @@
 import { parseCid } from '@atproto/lex-data'
 import { InvalidRecordKeyError } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '@atproto/xrpc-server'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -11,6 +14,7 @@ import {
   prepareCreate,
   prepareDelete,
 } from '../../../../repo'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.repo.createRecord, {

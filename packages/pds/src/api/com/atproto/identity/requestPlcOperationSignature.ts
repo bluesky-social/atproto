@@ -1,9 +1,11 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL, AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { ids } from '../../../../lexicon/lexicons'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
+  const { entrywayClient } = ctx
+
   server.add(com.atproto.identity.requestPlcOperationSignature, {
     auth: ctx.authVerifier.authorization({
       // @NOTE Reflect any change in signPlcOperation
@@ -13,34 +15,36 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertIdentity({ attr: '*' })
       },
     }),
-    handler: async ({ auth, req }) => {
-      if (ctx.entrywayClient) {
-        await ctx.entrywayClient.com.atproto.identity.requestPlcOperationSignature(
-          undefined,
-          await ctx.entrywayAuthHeaders(
+    handler: entrywayClient
+      ? async ({ auth, req }) => {
+          const { headers } = await ctx.entrywayAuthHeaders(
             req,
             auth.credentials.did,
-            ids.ComAtprotoIdentityRequestPlcOperationSignature,
-          ),
-        )
-        return
-      }
-
-      const did = auth.credentials.did
-      const account = await ctx.accountManager.getAccount(did, {
-        includeDeactivated: true,
-        includeTakenDown: true,
-      })
-      if (!account) {
-        throw new InvalidRequestError('account not found')
-      } else if (!account.email) {
-        throw new InvalidRequestError('account does not have an email address')
-      }
-      const token = await ctx.accountManager.createEmailToken(
-        did,
-        'plc_operation',
-      )
-      await ctx.mailer.sendPlcOperation({ token }, { to: account.email })
-    },
+            com.atproto.identity.requestPlcOperationSignature.$lxm,
+          )
+          await entrywayClient.xrpc(
+            com.atproto.identity.requestPlcOperationSignature,
+            { headers },
+          )
+        }
+      : async ({ auth }) => {
+          const did = auth.credentials.did
+          const account = await ctx.accountManager.getAccount(did, {
+            includeDeactivated: true,
+            includeTakenDown: true,
+          })
+          if (!account) {
+            throw new InvalidRequestError('account not found')
+          } else if (!account.email) {
+            throw new InvalidRequestError(
+              'account does not have an email address',
+            )
+          }
+          const token = await ctx.accountManager.createEmailToken(
+            did,
+            'plc_operation',
+          )
+          await ctx.mailer.sendPlcOperation({ token }, { to: account.email })
+        },
   })
 }
