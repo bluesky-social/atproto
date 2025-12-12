@@ -20,13 +20,25 @@ import { Cid, LexValue, asCid, decodeCid } from '@atproto/lex-data'
 
 const CID_CBOR_TAG = 42
 
-function cidEncoder(obj: object): Token[] | null {
-  const cid = asCid(obj)
-  if (!cid) return null
-
+function cidEncoder(cid: Cid): Token[] {
   const bytes = new Uint8Array(cid.bytes.byteLength + 1)
   bytes.set(cid.bytes, 1) // prefix is 0x00, for historical reasons
   return [new Token(Type.tag, CID_CBOR_TAG), new Token(Type.bytes, bytes)]
+}
+
+function objectEncoder(
+  obj: object,
+  _typ: string,
+  _options: EncodeOptions,
+): Token[] | null {
+  const cid = asCid(obj)
+  if (cid) return cidEncoder(cid)
+
+  // @TODO strip undefined values somehow
+  // https://github.com/rvagg/cborg/issues/154
+
+  // Fallback to default object encoder
+  return null
 }
 
 function undefinedEncoder(): null {
@@ -54,7 +66,7 @@ function mapEncoder(map: Map<unknown, unknown>): null {
 const encodeOptions: EncodeOptions = {
   typeEncoders: {
     Map: mapEncoder,
-    Object: cidEncoder,
+    Object: objectEncoder,
     undefined: undefinedEncoder,
     number: numberEncoder,
   },

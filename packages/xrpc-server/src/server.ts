@@ -118,6 +118,22 @@ export class Server {
   // handlers
   // =
 
+  add<const M extends l.Subscription>(
+    _schema: M | { main: M },
+    _configOrFn: StreamConfigOrHandler<
+      void,
+      l.InferMethodParams<M>,
+      l.InferMethodMessage<M>
+    >,
+  ): void
+  add<const M extends l.Subscription, A extends AuthResult>(
+    _schema: M | { main: M },
+    _configOrFn: StreamConfigOrHandler<
+      A,
+      l.InferMethodParams<M>,
+      l.InferMethodMessage<M>
+    >,
+  ): void
   add<const M extends l.Procedure | l.Query>(
     _schema: M | { main: M },
     _configOrFn: MethodConfigOrHandler<
@@ -154,19 +170,27 @@ export class Server {
   ): void
   add<const M extends l.Procedure | l.Query, A extends Auth = void>(
     _schema: M | { main: M },
-    _configOrFn: MethodConfigOrHandler<
-      A,
-      l.InferMethodParams<M>,
-      l.InferMethodInput<M, Readable>,
-      | l.InferMethodOutput<M, Readable>
-      | (M extends { errors: readonly (infer E extends string)[] }
-          ? {
-              status: number
-              error: E
-              message?: string
-            }
-          : never)
-    >,
+    _configOrFn: M extends l.Procedure | l.Query
+      ? MethodConfigOrHandler<
+          A,
+          l.InferMethodParams<M>,
+          l.InferMethodInput<M, Readable>,
+          | l.InferMethodOutput<M, Readable>
+          | (M extends { errors: readonly (infer E extends string)[] }
+              ? {
+                  status: number
+                  error: E
+                  message?: string
+                }
+              : never)
+        >
+      : M extends l.Subscription
+        ? StreamConfigOrHandler<
+            A,
+            l.InferMethodParams<M>,
+            l.InferMethodMessage<M>
+          >
+        : never,
   ): void {}
 
   method<A extends Auth = Auth>(
