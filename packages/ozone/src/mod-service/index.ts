@@ -799,6 +799,18 @@ export class ModerationService {
         takedownRef,
       }))
 
+    // The label is consumed by appview if we opt for appview only takedown, this is needed
+    // if we opt for pds level takedown, adding the label doesn't hurt
+    const takedownLabel = isSuspend ? SUSPEND_LABEL : TAKEDOWN_LABEL
+    await this.formatAndCreateLabels(subject.did, null, {
+      create: [takedownLabel],
+    })
+
+    // If we dont have to push any events, return early
+    if (!values.length) {
+      return
+    }
+
     const repoEvts = await this.db.db
       .insertInto('repo_push_event')
       .values(values)
@@ -812,11 +824,6 @@ export class ModerationService {
       )
       .returning('id')
       .execute()
-
-    const takedownLabel = isSuspend ? SUSPEND_LABEL : TAKEDOWN_LABEL
-    await this.formatAndCreateLabels(subject.did, null, {
-      create: [takedownLabel],
-    })
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
