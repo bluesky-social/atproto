@@ -134,7 +134,7 @@ describe('oauth', () => {
     await browser?.close()
   })
 
-  it('Allows to sign-up trough OAuth', async () => {
+  it('Allows to sign-up through OAuth', async () => {
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
@@ -243,7 +243,7 @@ describe('oauth', () => {
     sendTemplateMock.mockRestore()
   })
 
-  it('Allows to sign-in trough OAuth', async () => {
+  it('Allows to sign-in through OAuth', async () => {
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
