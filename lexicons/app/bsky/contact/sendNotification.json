@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. System endpoint to send notifications related to contact imports. Requires role authentication.",
+      "description": "System endpoint to send notifications related to contact imports. Requires role authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
