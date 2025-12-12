@@ -61,8 +61,7 @@ export class TapChannel {
   async ackEvent(id: number): Promise<void> {
     if (this.ws.isConnected()) {
       try {
-        this.sendAck(id)
-        await this.ws.send(JSON.stringify({ type: 'ack', id }))
+        await this.sendAck(id)
       } catch {
         await this.bufferAndSendAck(id)
       }
