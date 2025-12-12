@@ -39,6 +39,9 @@ const channel = tap.channel(indexer)
 channel.start()
 
 await tap.addRepos(['did:plc:ewvi7nxzyoun6zhxrhs64oiz'])
+
+// On shutdown
+await channel.destroy()
 ```
 
 ## Running Tap
