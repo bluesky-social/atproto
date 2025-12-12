@@ -302,13 +302,13 @@ describe('repo sync', () => {
 const makePost = async (sc: SeedClient, did: string) => {
   const res = await sc.post(did, randomStr(32, 'base32'))
   const uri = res.ref.uri
-  const record = await sc.client.call(com.atproto.repo.getRecord, {
-    repo: did,
-    collection: uri.collection,
+  const data = await sc.client.call(com.atproto.repo.getRecord, {
+    repo: did as DidString,
+    collection: uri.collection as NsidString,
     rkey: uri.rkey,
   })
   return {
     uri,
-    obj: record.data.value,
+    obj: data.value,
   }
 }

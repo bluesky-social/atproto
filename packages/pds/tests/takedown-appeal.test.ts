@@ -1,6 +1,5 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
 import { forSubjectStatusSnapshot } from './_util'
 
 describe('appeal account takedown', () => {
@@ -143,7 +142,7 @@ describe('appeal account takedown', () => {
       agent.com.atproto.repo.createRecord(
         {
           repo: auth.did,
-          collection: ids.AppBskyFeedPost,
+          collection: 'app.bsky.feed.post',
           // rkey: 'self',
           record: {
             text: 'test',

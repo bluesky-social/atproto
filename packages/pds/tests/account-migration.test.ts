@@ -29,7 +29,7 @@ describe('account migration', () => {
 
     sc = network.getSeedClient()
     oldAgent = network.pds.getAgent()
-    newAgent = newPds.getClient()
+    newAgent = newPds.getAgent()
 
     await sc.createAccount('alice', {
       email: 'alice@test.com',
