@@ -7,7 +7,7 @@ import express from 'express'
 import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { LexiconDoc } from '@atproto/lexicon'
+import { LexiconDocument } from '@atproto/lex-document'
 
 const lexicons = [
   {
@@ -62,7 +62,7 @@ const lexicons = [
       },
     },
   },
-] as const satisfies LexiconDoc[]
+] as const satisfies LexiconDocument[]
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
