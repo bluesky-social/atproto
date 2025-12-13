@@ -22,21 +22,20 @@ declare module 'multiformats/cid' {
    * `multiformats/cid` in dependent packages, and instead have them rely on the
    * {@link Cid} interface from `@atproto/lex-data`. The {@link CID} class from
    * `multiformats` version <10 has compatibility issues with certain TypeScript
-   * module resolution strategies, which can lead to type errors in dependent
-   * packages.
+   * configuration, which can lead to type errors in dependent packages.
    *
    * We are stuck with version 9 because `@atproto` packages did not drop
    * CommonJS support yet, and multiformats version 10 only supports ES modules.
    *
    * In order to avoid compatibility issues, while preparing for future breaking
    * changes (CID in multiformats v10+ has a slightly different interface), as
-   * we update or swap out `multiformats`, we provide our own stable `Cid`
+   * we update or swap out `multiformats`, we provide our own stable {@link Cid}
    * interface.
    */
   interface CID {}
 }
 
-// CID form "multiformats" is not very portable because:
+// multiformats' CID class is not very portable because:
 //
 // - In dependent packages that use "moduleResolution" set to "node16",
 //   "nodenext" or "bundler", TypeScript fails to properly resolve the
@@ -46,14 +45,15 @@ declare module 'multiformats/cid' {
 //   uses "exports" field in package.json, which do not contain "types"
 //   entrypoints.
 //   https://www.npmjs.com/package/multiformats/v/9.9.0?activeTab=code
-// - By defining our own Cid interface and related functions, we can have more
-//   control over the API we expose to dependent packages.
+// - By defining our own interface and helper functions, we can have more
+//   control over the public API exposed by this package.
 // - It allow us to have a stable interface in case we need to swap out, or
 //   eventually update multiformats (should we choose to drop CommonJS support)
 //   in the future.
 
 // @NOTE Even though it is not portable, we still re-export CID here so that
-// dependent packages where it can be used, have access to it.
+// dependent packages where it can be used, have access to it (instead of
+// importing directly from "multiformats" or"multiformats/cid").
 export { CID }
 
 /**

@@ -17,17 +17,13 @@ import {
   ensureValidRecordKey,
   ensureValidTid,
 } from '@atproto/syntax'
-
-type AssertFn<T> = <I extends string>(input: I) => asserts input is I & T
-type CastFn<T> = <I extends string>(input: I) => I & T
-
-/*@__NO_SIDE_EFFECTS__*/
-function createCastFunction<T>(assertFn: AssertFn<T>): CastFn<T> {
-  return <I extends string>(input: I) => {
-    assertFn(input)
-    return input as I & T
-  }
-}
+import {
+  AssertFn,
+  CastFn,
+  CheckFn,
+  createCastFunction,
+  createCheckFunction,
+} from '../util/assertion-util.js'
 
 // Re-export utility typed as assertion functions so that TypeScript can
 // infer the narrowed type after calling them.
@@ -41,8 +37,22 @@ export type {
   NsidString,
   RecordKeyString,
   TidString,
+} from '@atproto/syntax'
+
+// Export utilities for formats missing from @atproto/syntax
+
+export type CidString = string
+export type UriString = `${string}:${string}`
+export type LanguageString = string
+
+/*@__NO_SIDE_EFFECTS__*/
+function assertUri(input: string): asserts input is UriString {
+  if (!/^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)) {
+    throw new Error('Invalid URI')
+  }
 }
 
+export { assertUri }
 export const assertDid: AssertFn<DidString> = ensureValidDid
 export const assertAtUri: AssertFn<AtUriString> = ensureValidAtUri
 export const assertAtIdentifier: AssertFn<AtIdentifierString> =
@@ -54,26 +64,14 @@ export const assertDatetime: AssertFn<DatetimeString> = ensureValidDatetime
 export const assertCidString: AssertFn<string> = ensureValidCidString
 export const assertHandle: AssertFn<HandleString> = ensureValidHandle
 
-// Export utilities for formats missing from @atproto/syntax
-
-export type CidString = string
-export type UriString = `${string}:${string}`
-export type LanguageString = string
-
 /*@__NO_SIDE_EFFECTS__*/
-export function assertUri(input: string): asserts input is UriString {
-  if (!/^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)) {
-    throw new Error('Invalid URI')
-  }
-}
-
-/*@__NO_SIDE_EFFECTS__*/
-export function assertLanguage(input: string): asserts input is LanguageString {
+function assertLanguage(input: string): asserts input is LanguageString {
   if (!isLanguage(input)) {
     throw new Error('Invalid BCP 47 string')
   }
 }
 
+export { assertLanguage }
 export const asDid: CastFn<DidString> =
   /*#__PURE__*/ createCastFunction(ensureValidDid)
 export const asAtUri: CastFn<AtUriString> =
@@ -86,7 +84,7 @@ export const asRecordKey: CastFn<RecordKeyString> =
   /*#__PURE__*/ createCastFunction(ensureValidRecordKey)
 export const asDatetime: CastFn<DatetimeString> =
   /*#__PURE__*/ createCastFunction(ensureValidDatetime)
-export const asCidString: CastFn<string> =
+export const asCidString: CastFn<CidString> =
   /*#__PURE__*/ createCastFunction(ensureValidCidString)
 export const asHandle: CastFn<HandleString> =
   /*#__PURE__*/ createCastFunction(ensureValidHandle)
@@ -96,6 +94,28 @@ export const asLanguage: CastFn<LanguageString> =
   /*#__PURE__*/ createCastFunction(assertLanguage)
 export const asAtIdentifier: CastFn<AtIdentifierString> =
   /*#__PURE__*/ createCastFunction(assertAtIdentifier)
+
+export { isLanguage }
+export const isDid: CheckFn<DidString> =
+  /*#__PURE__*/ createCheckFunction(assertDid)
+export const isAtUri: CheckFn<AtUriString> =
+  /*#__PURE__*/ createCheckFunction(assertAtIdentifier)
+export const isNsid: CheckFn<NsidString> =
+  /*#__PURE__*/ createCheckFunction(assertNsid)
+export const isTid: CheckFn<TidString> =
+  /*#__PURE__*/ createCheckFunction(assertTid)
+export const isRecordKey: CheckFn<RecordKeyString> =
+  /*#__PURE__*/ createCheckFunction(assertRecordKey)
+export const isDatetime: CheckFn<DatetimeString> =
+  /*#__PURE__*/ createCheckFunction(assertDatetime)
+export const isCidString: CheckFn<CidString> =
+  /*#__PURE__*/ createCheckFunction(assertCidString)
+export const isHandle: CheckFn<HandleString> =
+  /*#__PURE__*/ createCheckFunction(assertHandle)
+export const isUri: CheckFn<UriString> =
+  /*#__PURE__*/ createCheckFunction(assertUri)
+export const isAtIdentifier: CheckFn<AtIdentifierString> =
+  /*#__PURE__*/ createCheckFunction(assertAtIdentifier)
 
 // String formatting types and utilities
 

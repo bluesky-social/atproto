@@ -1,33 +1,20 @@
 import { NsidString } from '../core.js'
-import { Infer } from '../validation.js'
-import { ObjectSchema } from './object.js'
+import { Infer, Schema } from '../validation.js'
 import { ParamsSchema } from './params.js'
-import { RefSchema } from './ref.js'
-import { TypedUnionSchema } from './typed-union.js'
 
-export type InferSubscriptionParameters<S extends Subscription> =
-  S extends Subscription<any, infer P extends ParamsSchema, any>
-    ? Infer<P>
-    : never
+export type InferSubscriptionParameters<S extends Subscription> = Infer<
+  S['parameters']
+>
 
-export type InferSubscriptionMessage<S extends Subscription> =
-  S extends Subscription<
-    any,
-    any,
-    infer M extends RefSchema | TypedUnionSchema | ObjectSchema
-  >
-    ? Infer<M>
-    : unknown
+export type InferSubscriptionMessage<S extends Subscription> = Infer<
+  S['message']
+>
 
 export class Subscription<
-  TNsid extends NsidString = any,
-  TParameters extends ParamsSchema = any,
-  TMessage extends
-    | undefined
-    | RefSchema
-    | TypedUnionSchema
-    | ObjectSchema = any,
-  TErrors extends undefined | readonly string[] = any,
+  TNsid extends NsidString = NsidString,
+  TParameters extends ParamsSchema = ParamsSchema,
+  TMessage extends Schema = Schema,
+  TErrors extends undefined | readonly string[] = undefined | readonly string[],
 > {
   readonly type = 'subscription' as const
 

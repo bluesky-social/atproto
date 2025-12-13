@@ -18,13 +18,6 @@ export type ParamsSchemaOutput<Shape extends ParamsSchemaShape> =
     [K in keyof Shape]: Infer<Shape[K]>
   }>
 
-export type InferParamsSchema<T> =
-  T extends ParamsSchema<infer P>
-    ? NonNullable<unknown> extends ParamsSchemaOutput<P>
-      ? ParamsSchemaOutput<P> | undefined // Allow undefined if all params are optional
-      : ParamsSchemaOutput<P>
-    : never
-
 export class ParamsSchema<
   const Shape extends ParamsSchemaShape = ParamsSchemaShape,
 > extends Schema<ParamsSchemaOutput<Shape>> {

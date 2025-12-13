@@ -1,14 +1,17 @@
 import { isEmailValid } from '@hapi/address'
 import { isDisposableEmail } from 'disposable-email-domains-js'
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { UserAlreadyExistsError } from '../../../../account-manager/helpers/account'
 import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.updateEmail({
+  server.add(com.atproto.server.updateEmail, {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,
@@ -33,15 +36,18 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('account not found')
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.updateEmail(
-          input.body,
-          await ctx.entrywayAuthHeaders(
-            req,
-            auth.credentials.did,
-            ids.ComAtprotoServerUpdateEmail,
-          ),
+      if (ctx.entrywayClient) {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.updateEmail.$lxm,
         )
+
+        await ctx.entrywayClient.xrpc(com.atproto.server.updateEmail, {
+          headers,
+          XrpcPayloadOptions: input.body,
+        })
+
         return
       }
 

@@ -4,7 +4,7 @@ import { ObjectSchema } from './object.js'
 import { OptionalSchema } from './optional.js'
 import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
-import { InferQueryOutputBody, InferQueryParameters, Query } from './query.js'
+import { Query } from './query.js'
 import { StringSchema } from './string.js'
 
 describe('Query', () => {
@@ -234,53 +234,6 @@ describe('Query', () => {
       const query = new Query(nsid, parameters, output, errors)
 
       expect(query.errors).toEqual([])
-    })
-  })
-
-  describe('type inference', () => {
-    it('InferQueryParameters correctly infers parameter types', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
-      const parameters = new ParamsSchema({
-        feed: new StringSchema({ format: 'at-uri' }),
-        limit: new OptionalSchema(new IntegerSchema({})),
-      })
-      const output = new Payload('application/json', undefined)
-
-      const query = new Query(nsid, parameters, output, undefined)
-
-      type Params = InferQueryParameters<typeof query>
-
-      // Type-level test - this should compile without errors
-      const params: Params = {
-        feed: 'at://did:plc:abc123/app.bsky.feed.post/xyz',
-        limit: 50,
-      }
-
-      expect(params.feed).toBeDefined()
-    })
-
-    it('InferQueryOutputBody correctly infers output body type', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
-      const parameters = new ParamsSchema({})
-      const output = new Payload(
-        'application/json',
-        new ObjectSchema({
-          cursor: new OptionalSchema(new StringSchema({})),
-          feed: new StringSchema({ format: 'at-uri' }),
-        }),
-      )
-
-      const query = new Query(nsid, parameters, output, undefined)
-
-      type OutputBody = InferQueryOutputBody<typeof query>
-
-      // Type-level test - this should compile without errors
-      const outputBody: OutputBody = {
-        cursor: 'abc123',
-        feed: 'at://did:plc:abc123/app.bsky.feed.post/xyz',
-      }
-
-      expect(outputBody.feed).toBeDefined()
     })
   })
 

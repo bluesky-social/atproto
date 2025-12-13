@@ -26,3 +26,7 @@ export type WithOptionalProperties<P> = Simplify<
     -readonly [K in keyof P as undefined extends P[K] ? K : never]?: P[K]
   }
 >
+
+export type OmitKey<T, K extends keyof T> = {
+  [K2 in keyof T as K2 extends K ? never : K2]: T[K2]
+}

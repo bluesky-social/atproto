@@ -1,9 +1,10 @@
+import { Server } from '@atproto/xrpc-server'
 import { AccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.deleteAccount({
+  server.add(com.atproto.admin.deleteAccount, {
     auth: ctx.authVerifier.adminToken,
     handler: async ({ input }) => {
       const { did } = input.body

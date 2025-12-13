@@ -1,12 +1,12 @@
 import { LexMap, LexValue } from '@atproto/lex-data'
 import {
   AtIdentifierString,
+  CidString,
   DidString,
   Infer,
-  InferProcedureInputBody,
-  InferProcedureOutputBody,
-  InferQueryOutputBody,
-  InferQueryParameters,
+  InferMethodInputBody,
+  InferMethodOutputBody,
+  InferMethodParams,
   InferRecordKey,
   LexiconRecordKey,
   NsidString,
@@ -24,10 +24,16 @@ import {
   XrpcRequestFailure,
   asXrpcRequestFailureFor,
 } from './error.js'
-import * as com from './lexicons/com.js'
-import { XrpcResponse, XrpcResponseBody } from './response.js'
-import { CallOptions, Namespace, Service, getMain } from './types.js'
-import { XrpcOptions, xrpc, xrpcRequestHeaders } from './xrpc.js'
+import {
+  BinaryBodyInit,
+  CallOptions,
+  Namespace,
+  Service,
+  getMain,
+} from './types.js'
+import { buildAtprotoHeaders } from './util.js'
+import { XrpcOptions, XrpcResponse, XrpcResponseBody, xrpc } from './xrpc.js'
+import { com } from '#lexicons'
 
 export type ClientOptions = {
   labelers?: Iterable<DidString>
@@ -84,29 +90,35 @@ export type RecordKeyOptions<
 
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
   RecordKeyOptions<T, 'tid'>
-export type CreateOutput = XrpcResponseBody<
-  typeof com.atproto.repo.createRecord.main
+export type CreateOutput = InferMethodOutputBody<
+  typeof com.atproto.repo.createRecord.main,
+  Uint8Array
 >
 
 export type DeleteOptions<T extends RecordSchema> = DeleteRecordOptions &
   RecordKeyOptions<T>
-export type DeleteOutput = XrpcResponseBody<
-  typeof com.atproto.repo.deleteRecord.main
+export type DeleteOutput = InferMethodOutputBody<
+  typeof com.atproto.repo.deleteRecord.main,
+  Uint8Array
 >
 export type GetOptions<T extends RecordSchema> = GetRecordOptions &
   RecordKeyOptions<T>
 export type GetOutput<T extends RecordSchema> = Omit<
-  XrpcResponseBody<typeof com.atproto.repo.getRecord.main>,
+  InferMethodOutputBody<typeof com.atproto.repo.getRecord.main, Uint8Array>,
   'value'
 > & { value: Infer<T> }
 
 export type PutOptions<T extends RecordSchema> = PutRecordOptions &
   RecordKeyOptions<T>
-export type PutOutput = XrpcResponseBody<typeof com.atproto.repo.putRecord.main>
+export type PutOutput = InferMethodOutputBody<
+  typeof com.atproto.repo.putRecord.main,
+  Uint8Array
+>
 
 export type ListOptions = ListRecordsOptions
-export type ListOutput<T extends RecordSchema> = XrpcResponseBody<
-  typeof com.atproto.repo.listRecords.main
+export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
+  typeof com.atproto.repo.listRecords.main,
+  Uint8Array
 > & {
   records: ListRecord<T>[]
   // @NOTE Because the schema uses "type": "unknown" instead of an open union,
@@ -170,7 +182,7 @@ export class Client implements Agent {
   }
 
   public fetchHandler(path: string, init: RequestInit): Promise<Response> {
-    const headers = xrpcRequestHeaders({
+    const headers = buildAtprotoHeaders({
       headers: init.headers,
       service: this.service,
       labelers: [
@@ -186,6 +198,7 @@ export class Client implements Agent {
       if (!headers.has(key)) headers.set(key, value)
     }
 
+    // @NOTE The agent here could be another Client instance.
     return this.agent.fetchHandler(path, { ...init, headers })
   }
 
@@ -232,6 +245,7 @@ export class Client implements Agent {
   ) {
     return this.xrpc(com.atproto.repo.createRecord.main, {
       ...options,
+      encoding: 'application/json',
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,
@@ -331,6 +345,23 @@ export class Client implements Agent {
     })
   }
 
+  async uploadBlob(
+    body: BinaryBodyInit,
+    options?: CallOptions & { encoding?: string },
+  ) {
+    return this.xrpc(com.atproto.repo.uploadBlob.main, {
+      ...options,
+      body,
+    })
+  }
+
+  async getBlob(did: DidString, cid: CidString, options?: CallOptions) {
+    return this.xrpc(com.atproto.sync.getBlob.main, {
+      ...options,
+      params: { did, cid },
+    })
+  }
+
   public async call<const T extends Action>(
     ns: Namespace<T>,
     input: InferActionInput<T>,
@@ -338,21 +369,21 @@ export class Client implements Agent {
   ): Promise<InferActionOutput<T>>
   public async call<const T extends Procedure>(
     ns: Namespace<T>,
-    body: InferProcedureInputBody<T>,
+    body: InferMethodInputBody<T, Uint8Array>,
     options?: CallOptions,
-  ): Promise<InferProcedureOutputBody<T>>
+  ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Query>(
-    ns: NonNullable<unknown> extends InferQueryParameters<T>
+    ns: NonNullable<unknown> extends InferMethodParams<T>
       ? Namespace<T>
       : Restricted<'This query type requires a "params" argument'>,
-  ): Promise<InferQueryOutputBody<T>>
+  ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Query>(
     ns: Namespace<T>,
-    params: NonNullable<unknown> extends InferQueryParameters<T>
-      ? InferQueryParameters<T> | undefined
-      : InferQueryParameters<T>,
+    params: NonNullable<unknown> extends InferMethodParams<T>
+      ? InferMethodParams<T> | undefined
+      : InferMethodParams<T>,
     options?: CallOptions,
-  ): Promise<InferQueryOutputBody<T>>
+  ): Promise<XrpcResponseBody<T>>
   public async call(
     ns: Namespace<Action> | Namespace<Procedure> | Namespace<Query>,
     arg?: LexValue | Params,
@@ -365,12 +396,10 @@ export class Client implements Agent {
     }
 
     if (method instanceof Procedure) {
-      const body = arg as LexValue | undefined
-      const result = await this.xrpc(method, { ...options, body })
+      const result = await this.xrpc(method, { ...options, body: arg as any })
       return result.body
     } else if (method instanceof Query) {
-      const params = arg as Params | undefined
-      const result = await this.xrpc(method, { ...options, params })
+      const result = await this.xrpc(method, { ...options, params: arg as any })
       return result.body
     } else {
       throw new TypeError('Invalid lexicon')
@@ -394,9 +423,8 @@ export class Client implements Agent {
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
     const schema: T = getMain(ns)
-    const record = options.validate
-      ? schema.parse(schema.build(input))
-      : schema.build(input)
+    const record = schema.build(input)
+    if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
@@ -462,8 +490,9 @@ export class Client implements Agent {
     input: Omit<Infer<T>, '$type'>,
     options: PutOptions<T> = {} as PutOptions<T>,
   ): Promise<PutOutput> {
-    const schema = getMain(ns)
+    const schema: T = getMain(ns)
     const record = schema.build(input)
+    if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
     return response.body

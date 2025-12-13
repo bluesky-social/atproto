@@ -1,9 +1,9 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '#lexicons'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateAccountEmail({
+  server.add(com.atproto.admin.updateAccountEmail, {
     auth: ctx.authVerifier.adminToken,
     handler: async ({ input, req }) => {
       const account = await ctx.accountManager.getAccount(input.body.account, {
@@ -16,11 +16,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.admin.updateAccountEmail(
-          input.body,
-          ctx.entrywayPassthruHeaders(req),
-        )
+      if (ctx.entrywayClient) {
+        const { headers } = ctx.entrywayPassthruHeaders(req)
+        await ctx.entrywayClient.xrpc(com.atproto.admin.updateAccountEmail, {
+          headers,
+          XrpcPayloadOptions: input.body,
+        })
         return
       }
 

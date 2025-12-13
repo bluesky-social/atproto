@@ -1,5 +1,10 @@
 import assert from 'node:assert'
-import { SourceFile, VariableDeclarationKind } from 'ts-morph'
+import {
+  JSDocStructure,
+  OptionalKind,
+  SourceFile,
+  VariableDeclarationKind,
+} from 'ts-morph'
 import {
   LexiconArray,
   LexiconArrayItems,
@@ -171,35 +176,13 @@ export class LexDefBuilder {
       `),
     })
 
+    this.addMethodTypeUtils(ref, def)
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: this.pure(`${ref.varName}.parameters`),
       $input: this.pure(`${ref.varName}.input`),
       $output: this.pure(`${ref.varName}.output`),
     })
-
-    const parametersTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Params',
-      type: `l.InferProcedureParameters<typeof ${ref.varName}>`,
-    })
-
-    addJsDoc(parametersTypeStmt, def.parameters)
-
-    const inputTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Input',
-      type: `l.InferProcedureInputBody<typeof ${ref.varName}>`,
-    })
-
-    addJsDoc(inputTypeStmt, def.input)
-
-    const outputTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Output',
-      type: `l.InferProcedureOutputBody<typeof ${ref.varName}>`,
-    })
-
-    addJsDoc(outputTypeStmt, def.output)
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
@@ -220,21 +203,11 @@ export class LexDefBuilder {
       `),
     })
 
+    this.addMethodTypeUtils(ref, def)
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: `${ref.varName}.parameters`,
       $output: `${ref.varName}.output`,
-    })
-
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Params',
-      type: `l.InferQueryParameters<typeof ${ref.varName}>`,
-    })
-
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Output',
-      type: `l.InferQueryOutputBody<typeof ${ref.varName}>`,
     })
   }
 
@@ -256,22 +229,65 @@ export class LexDefBuilder {
       `),
     })
 
+    this.addMethodTypeUtils(ref, def)
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: `${ref.varName}.parameters`,
       $message: `${ref.varName}.message`,
     })
+  }
 
+  addMethodTypeUtils(
+    ref: ResolvedRef,
+    def: LexiconProcedure | LexiconQuery | LexiconSubscription,
+  ) {
     this.file.addTypeAlias({
       isExported: true,
       name: 'Params',
-      type: `l.InferSubscriptionParameters<typeof ${ref.varName}>`,
+      type: `l.InferMethodParams<typeof ${ref.varName}>`,
+      docs: compileDocs(def.parameters?.description),
     })
 
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Message',
-      type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
-    })
+    if (def.type === 'procedure') {
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Input',
+        type: `l.InferMethodInput<typeof ${ref.varName}>`,
+        docs: compileDocs(def.input?.description),
+      })
+
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'InputBody',
+        type: `l.InferMethodInputBody<typeof ${ref.varName}>`,
+        docs: compileDocs(def.input?.description),
+      })
+    }
+
+    if (def.type === 'procedure' || def.type === 'query') {
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Output',
+        type: `l.InferMethodOutput<typeof ${ref.varName}>`,
+        docs: compileDocs(def.output?.description),
+      })
+
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'OutputBody',
+        type: `l.InferMethodOutputBody<typeof ${ref.varName}>`,
+        docs: compileDocs(def.output?.description),
+      })
+    }
+
+    if (def.type === 'subscription') {
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Message',
+        type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
+        docs: compileDocs(def.message?.description),
+      })
+    }
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
@@ -368,12 +384,11 @@ export class LexDefBuilder {
     assert(isSafeIdentifier(pub.typeName), 'Expected safe type identifier')
 
     if (type) {
-      const typeStmt = this.file.addTypeAlias({
+      this.file.addTypeAlias({
         name: ref.typeName,
         type: typeof type === 'function' ? type(ref) : type,
+        docs: compileDocs(def.description),
       })
-
-      addJsDoc(typeStmt, def)
 
       this.file.addExportDeclaration({
         isTypeOnly: true,
@@ -387,7 +402,7 @@ export class LexDefBuilder {
     }
 
     if (schema) {
-      const constStmt = this.file.addVariableStatement({
+      this.file.addVariableStatement({
         declarationKind: VariableDeclarationKind.Const,
         declarations: [
           {
@@ -395,9 +410,8 @@ export class LexDefBuilder {
             initializer: typeof schema === 'function' ? schema(ref) : schema,
           },
         ],
+        docs: compileDocs(def.description),
       })
-
-      addJsDoc(constStmt, def)
 
       this.file.addExportDeclaration({
         namedExports: [
@@ -862,9 +876,9 @@ export class LexDefBuilder {
   }
 }
 
-type ParsedDescription = {
-  description: string
-  deprecated: boolean | string
+type ParsedDescription = OptionalKind<JSDocStructure> & {
+  description?: string
+  tags?: { tagName: string; text?: string }[]
 }
 
 function parseDescription(description: string): ParsedDescription {
@@ -873,49 +887,38 @@ function parseDescription(description: string): ParsedDescription {
       /(\s*deprecated\s*(?:--?|:)?\s*([^-]*)(?:-+)?)/i,
     )
     if (deprecationMatch) {
-      const [, match, deprecationNotice] = deprecationMatch
+      const { 1: match, 2: deprecationNotice } = deprecationMatch
       return {
-        description: description.replace(match, '').trim(),
-        deprecated: deprecationNotice?.trim() || true,
+        description: description.replace(match, '').trim() || undefined,
+        tags: [{ tagName: 'deprecated', text: deprecationNotice?.trim() }],
       }
     } else {
       return {
-        description: description.trim(),
-        deprecated: true,
+        description: description.trim() || undefined,
+        tags: [{ tagName: 'deprecated' }],
       }
     }
   }
 
   return {
-    description: description.trim(),
-    deprecated: false,
+    description: description.trim() || undefined,
   }
 }
 
 function compileLeadingTrivia(description?: string) {
   if (!description) return undefined
-  return `\n\n/**${compileJsDoc(description).replaceAll('\n', '\n * ')}\n */\n`
-}
-
-function addJsDoc(
-  declaration: { addJsDoc: (text: string) => void },
-  def?: { description?: string },
-) {
-  if (def?.description) {
-    declaration.addJsDoc(compileJsDoc(def.description))
-  }
-}
-
-function compileJsDoc(description: string) {
   const parsed = parseDescription(description)
-  return `\n${parsed.description}${
-    !parsed.deprecated
-      ? ''
-      : (parsed.description ? '\n\n' : '') +
-        (parsed.deprecated === true
-          ? '@deprecated'
-          : `@deprecated ${parsed.deprecated}`)
-  }`
+  if (!parsed.description && !parsed.tags?.length) return undefined
+  const tags = parsed.tags
+    ?.map(({ tagName, text }) => (text ? `@${tagName} ${text}` : `@${tagName}`))
+    ?.join('\n')
+  const text = `\n${[parsed.description, tags].filter(Boolean).join('\n\n')}`
+  return `\n\n/**${text.replaceAll('\n', '\n * ')}\n */\n`
+}
+
+function compileDocs(description?: string) {
+  if (!description) return undefined
+  return [parseDescription(description)]
 }
 
 function stringifyOptions<O extends Record<string, unknown>>(
