@@ -2,7 +2,7 @@
 
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyFeedPost, AppBskyFeedPostRecord, AtpAgent } from '@atproto/api'
+import { AppBskyFeedPostRecord, AtpAgent } from '@atproto/api'
 import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'

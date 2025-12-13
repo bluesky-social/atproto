@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { SkeletonHandler } from '@atproto/pds'
 import { TestFeedGen } from './feed-gen'
 import { TestPds } from './pds'

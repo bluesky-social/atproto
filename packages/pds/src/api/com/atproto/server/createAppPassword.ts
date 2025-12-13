@@ -24,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
 
         return ctx.entrywayClient.xrpc(com.atproto.server.createAppPassword, {
           headers,
-          body: input.body,
+          XrpcPayloadOptions: input.body,
         })
       }
 

@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
 
           return entrywayClient.xrpc(com.atproto.identity.signPlcOperation, {
             headers,
-            body: input.body,
+            XrpcPayloadOptions: input.body,
             validateRequest: false, // already validated by the server
             validateResponse: false, // ignore invalid upstream responses
           })

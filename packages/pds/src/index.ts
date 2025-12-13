@@ -31,6 +31,7 @@ import compression from './util/compression'
 import * as wellKnown from './well-known'
 import { app } from '#lexicons'
 
+export * as lexicons from '#lexicons'
 export { createSecretKeyObject } from './auth-verifier'
 export * from './config'
 export { AppContext } from './context'

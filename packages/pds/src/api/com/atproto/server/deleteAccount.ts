@@ -31,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       if (entrywayClient) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         await entrywayClient.xrpc(com.atproto.server.deleteAccount, {
-          body,
+          XrpcPayloadOptions: body,
           headers,
         })
         return

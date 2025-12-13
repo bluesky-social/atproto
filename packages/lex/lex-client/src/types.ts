@@ -39,6 +39,7 @@ export type BinaryBodyInit =
   | Blob
   | ReadableStream<Uint8Array>
   | AsyncIterable<Uint8Array>
+  | string
 
 export type Namespace<T> = T | { main: T }
 

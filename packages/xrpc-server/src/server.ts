@@ -115,6 +115,10 @@ export class Server {
     }
   }
 
+  listen(port: number, callback?: () => void) {
+    return this.router.listen(port, callback)
+  }
+
   // handlers
   // =
 

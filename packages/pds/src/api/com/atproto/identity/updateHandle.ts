@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
         await ctx.entrywayClient.xrpc(com.atproto.identity.updateHandle, {
           headers,
-          body: {
+          XrpcPayloadOptions: {
             handle: input.body.handle,
             // @ts-expect-error "did" is not in the schema
             did: requester,

@@ -1,7 +1,7 @@
 import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
 import {
-  InferMethodInputBody,
+  InferMethodInput,
   InferMethodParams,
   Params,
   ParamsSchema,
@@ -29,20 +29,19 @@ export * from './xrpc-response.js'
 type XrpcParamsOptions<P extends Params> =
   NonNullable<unknown> extends P ? { params?: P } : { params: P }
 
-type XrpcRequestBody<M extends Procedure | Query> = InferMethodInputBody<
+type XrpcRequestPayload<M extends Procedure | Query> = InferMethodInput<
   M,
   BinaryBodyInit
 >
 
-type XrpcBodyOptions<B> = never extends B
-  ? { body?: B }
-  : undefined extends B
-    ? { body?: B }
-    : { body: B }
+type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
+  ? // encoding will be inferred from the schema at runtime if not provided
+    { body: B; encoding?: E }
+  : { body?: undefined; encoding?: undefined }
 
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   CallOptions &
-    XrpcBodyOptions<XrpcRequestBody<M>> &
+    XrpcInputOptions<XrpcRequestPayload<M>> &
     XrpcParamsOptions<InferMethodParams<M>>
 
 export async function xrpc<const M extends Query | Procedure>(
@@ -95,7 +94,10 @@ function xrpcRequestParams(
 
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
-  options: CallOptions & { body?: LexValue | BinaryBodyInit },
+  options: CallOptions & {
+    body?: LexValue | BinaryBodyInit
+    encoding?: string
+  },
 ): RequestInit & { duplex?: 'half' } {
   const headers = buildAtprotoHeaders(options)
 
@@ -104,17 +106,21 @@ function xrpcRequestInit<T extends Procedure | Query>(
     headers.set('accept', schema.output.encoding)
   }
 
+  // Caller should not set content-type header
+  if (headers.has('content-type')) {
+    const contentType = headers.get('content-type')
+    throw new TypeError(`Unexpected content-type header (${contentType})`)
+  }
+
   // Requests with body
   if ('input' in schema) {
-    const contentType = headers.get('content-type') ?? undefined
-    const input = xrpcProcedureInput(schema, options, contentType)
+    const encodingHint = options.encoding
+    const input = xrpcProcedureInput(schema, options, encodingHint)
 
     if (input) {
       headers.set('content-type', input.encoding)
-    } else if (contentType != null) {
-      throw new TypeError(
-        `Unexpected 'content-type' header (${contentType}) for empty body`,
-      )
+    } else if (encodingHint != null) {
+      throw new TypeError(`Unexpected encoding hint (${encodingHint})`)
     }
 
     return {
@@ -144,7 +150,7 @@ function xrpcRequestInit<T extends Procedure | Query>(
 function xrpcProcedureInput(
   method: Procedure,
   options: CallOptions & { body?: LexValue | BinaryBodyInit },
-  contentType?: string,
+  encodingHint?: string,
 ): null | Payload<BodyInit> {
   const { input } = method
   const { body } = options
@@ -161,14 +167,14 @@ function xrpcProcedureInput(
       throw new TypeError(`Expected LexValue body, got ${typeof body}`)
     }
 
-    return buildPayload(input, lexStringify(body), contentType)
+    return buildPayload(input, lexStringify(body), encodingHint)
   }
 
   // Other encodings will be sent unaltered (ie. as binary data)
   switch (typeof body) {
     case 'undefined':
     case 'string':
-      return buildPayload(input, body, contentType)
+      return buildPayload(input, body, encodingHint)
     case 'object': {
       if (body === null) break
       if (
@@ -176,11 +182,11 @@ function xrpcProcedureInput(
         body instanceof ArrayBuffer ||
         body instanceof ReadableStream
       ) {
-        return buildPayload(input, body, contentType)
+        return buildPayload(input, body, encodingHint)
       } else if (isAsyncIterable(body)) {
-        return buildPayload(input, toReadableStream(body), contentType)
+        return buildPayload(input, toReadableStream(body), encodingHint)
       } else if (isBlobLike(body)) {
-        return buildPayload(input, body, contentType || body.type)
+        return buildPayload(input, body, encodingHint || body.type)
       }
     }
   }
@@ -193,7 +199,7 @@ function xrpcProcedureInput(
 function buildPayload(
   schema: LexPayload,
   body: undefined | BodyInit,
-  contentType?: string,
+  encodingHint?: string,
 ): null | Payload<BodyInit> {
   if (schema.encoding === undefined) {
     if (body !== undefined) {
@@ -215,23 +221,23 @@ function buildPayload(
     )
   }
 
-  const encoding = buildEncoding(schema, contentType)
+  const encoding = buildEncoding(schema, encodingHint)
   return { encoding, body }
 }
 
-function buildEncoding(schema: LexPayload, contentType?: string): string {
+function buildEncoding(schema: LexPayload, encodingHint?: string): string {
   // Should never happen (required for type safety)
   if (!schema.encoding) {
     throw new TypeError('Unexpected payload')
   }
 
-  if (contentType?.length) {
-    if (!schema.matchesEncoding(contentType)) {
+  if (encodingHint?.length) {
+    if (!schema.matchesEncoding(encodingHint)) {
       throw new TypeError(
-        `Cannot send a body with content-type "${contentType}" for "${schema.encoding}" encoding`,
+        `Cannot send a body with content-type "${encodingHint}" for "${schema.encoding}" encoding`,
       )
     }
-    return contentType
+    return encodingHint
   }
 
   // Fallback

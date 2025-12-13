@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
 
           await entrywayClient.xrpc(com.atproto.server.revokeAppPassword, {
             headers,
-            body,
+            XrpcPayloadOptions: body,
           })
         }
       : async ({ auth, input: { body } }) => {

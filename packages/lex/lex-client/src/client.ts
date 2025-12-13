@@ -24,7 +24,6 @@ import {
   XrpcRequestFailure,
   asXrpcRequestFailureFor,
 } from './error.js'
-import * as com from './lexicons/com.js'
 import {
   BinaryBodyInit,
   CallOptions,
@@ -34,6 +33,7 @@ import {
 } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
 import { XrpcOptions, XrpcResponse, XrpcResponseBody, xrpc } from './xrpc.js'
+import { com } from '#lexicons'
 
 export type ClientOptions = {
   labelers?: Iterable<DidString>
@@ -245,6 +245,7 @@ export class Client implements Agent {
   ) {
     return this.xrpc(com.atproto.repo.createRecord.main, {
       ...options,
+      encoding: 'application/json',
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,
@@ -344,7 +345,10 @@ export class Client implements Agent {
     })
   }
 
-  async uploadBlob(body: BinaryBodyInit, options?: CallOptions) {
+  async uploadBlob(
+    body: BinaryBodyInit,
+    options?: CallOptions & { encoding?: string },
+  ) {
     return this.xrpc(com.atproto.repo.uploadBlob.main, {
       ...options,
       body,
@@ -392,12 +396,10 @@ export class Client implements Agent {
     }
 
     if (method instanceof Procedure) {
-      const body = arg as BinaryBodyInit | undefined
-      const result = await this.xrpc(method, { ...options, body })
+      const result = await this.xrpc(method, { ...options, body: arg as any })
       return result.body
     } else if (method instanceof Query) {
-      const params = arg as Params | undefined
-      const result = await this.xrpc(method, { ...options, params })
+      const result = await this.xrpc(method, { ...options, params: arg as any })
       return result.body
     } else {
       throw new TypeError('Invalid lexicon')

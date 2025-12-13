@@ -28,7 +28,7 @@ export type InferMethodParams<
 export type InferMethodInput<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { input: Payload } ? InferPayload<M['input'], B> : never
+> = M extends { input: Payload } ? InferPayload<M['input'], B> : undefined
 
 export type InferMethodInputBody<
   M extends Procedure | Query | Subscription,
@@ -42,7 +42,7 @@ export type InferMethodInputEncoding<
 export type InferMethodOutput<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { output: Payload } ? InferPayload<M['output'], B> : never
+> = M extends { output: Payload } ? InferPayload<M['output'], B> : undefined
 
 export type InferMethodOutputBody<
   M extends Procedure | Query | Subscription,

@@ -45,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
 
         await ctx.entrywayClient.xrpc(com.atproto.server.updateEmail, {
           headers,
-          body: input.body,
+          XrpcPayloadOptions: input.body,
         })
 
         return

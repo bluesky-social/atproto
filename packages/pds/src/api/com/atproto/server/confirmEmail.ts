@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         await ctx.entrywayClient.xrpc(com.atproto.server.confirmEmail, {
           headers,
-          body,
+          XrpcPayloadOptions: body,
         })
         return
       }

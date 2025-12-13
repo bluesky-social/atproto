@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
           const { headers } = ctx.entrywayPassthruHeaders(req)
           return entrywayClient.xrpc(com.atproto.server.createSession, {
             headers,
-            body,
+            XrpcPayloadOptions: body,
           })
         }
       : async ({

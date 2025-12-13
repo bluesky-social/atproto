@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
           const { headers } = ctx.entrywayPassthruHeaders(req)
           await entrywayClient.xrpc(com.atproto.server.resetPassword, {
             headers,
-            body,
+            XrpcPayloadOptions: body,
           })
         }
       : async ({ input: { body } }) => {

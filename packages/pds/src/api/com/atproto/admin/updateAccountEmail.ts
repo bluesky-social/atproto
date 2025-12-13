@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         await ctx.entrywayClient.xrpc(com.atproto.admin.updateAccountEmail, {
           headers,
-          body: input.body,
+          XrpcPayloadOptions: input.body,
         })
         return
       }
