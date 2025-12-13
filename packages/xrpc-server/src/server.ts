@@ -118,22 +118,6 @@ export class Server {
   // handlers
   // =
 
-  add<const M extends l.Subscription>(
-    _schema: M | { main: M },
-    _configOrFn: StreamConfigOrHandler<
-      void,
-      l.InferMethodParams<M>,
-      l.InferMethodMessage<M>
-    >,
-  ): void
-  add<const M extends l.Subscription, A extends AuthResult>(
-    _schema: M | { main: M },
-    _configOrFn: StreamConfigOrHandler<
-      A,
-      l.InferMethodParams<M>,
-      l.InferMethodMessage<M>
-    >,
-  ): void
   add<const M extends l.Procedure | l.Query>(
     _schema: M | { main: M },
     _configOrFn: MethodConfigOrHandler<
@@ -167,6 +151,22 @@ export class Server {
     > & {
       auth: NonNullable<unknown>
     },
+  ): void
+  add<const M extends l.Subscription>(
+    _schema: M | { main: M },
+    _configOrFn: StreamConfigOrHandler<
+      void,
+      l.InferMethodParams<M>,
+      l.InferMethodMessage<M>
+    >,
+  ): void
+  add<const M extends l.Subscription, A extends AuthResult>(
+    _schema: M | { main: M },
+    _configOrFn: StreamConfigOrHandler<
+      A,
+      l.InferMethodParams<M>,
+      l.InferMethodMessage<M>
+    >,
   ): void
   add<const M extends l.Procedure | l.Query, A extends Auth = void>(
     _schema: M | { main: M },

@@ -2,7 +2,7 @@
 
 import assert from 'node:assert'
 import { z } from 'zod'
-import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
+import { noUndefinedVals, schema } from '@atproto/common'
 import {
   DatetimeString,
   DidString,
@@ -10,13 +10,14 @@ import {
   isDid,
   isHandle,
 } from '@atproto/lex'
+import { encode as cborEncode } from '@atproto/lex-cbor'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager'
 import { CommitDataWithOps, SyncEvtData } from '../repo'
 import { RepoSeqInsert } from './db'
 
 export const formatSeqCommit = async (
-  did: DidString,
+  did: string,
   commitData: CommitDataWithOps,
 ): Promise<RepoSeqInsert> => {
   const blocksToSend = new BlockMap()
@@ -46,12 +47,12 @@ export const formatSeqCommit = async (
 }
 
 export const formatSeqSyncEvt = async (
-  did: DidString,
+  did: string,
   data: SyncEvtData,
 ): Promise<RepoSeqInsert> => {
   const blocks = await blocksToCarFile(data.cid, data.blocks)
   const evt: SyncEvt = {
-    did,
+    did: did as DidString,
     rev: data.rev,
     blocks,
   }
@@ -81,14 +82,14 @@ export const syncEvtDataFromCommit = (
 }
 
 export const formatSeqIdentityEvt = async (
-  did: DidString,
-  handle?: HandleString,
+  did: string,
+  handle?: string,
 ): Promise<RepoSeqInsert> => {
   const evt: IdentityEvt = {
-    did,
+    did: did as DidString,
   }
   if (handle) {
-    evt.handle = handle
+    evt.handle = handle as HandleString
   }
   return {
     did,
@@ -99,11 +100,11 @@ export const formatSeqIdentityEvt = async (
 }
 
 export const formatSeqAccountEvt = async (
-  did: DidString,
+  did: string,
   status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
   const evt: AccountEvt = {
-    did,
+    did: did as DidString,
     active: status === 'active',
   }
   if (status !== AccountStatus.Active) {
