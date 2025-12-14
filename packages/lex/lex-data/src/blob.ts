@@ -7,6 +7,9 @@ import {
 } from './cid.js'
 import { isPlainObject } from './object.js'
 
+/**
+ * @note {@link BlobRef} is just a {@link LexMap} with a specific shape.
+ */
 export type BlobRef = {
   $type: 'blob'
   mimeType: string
@@ -71,6 +74,9 @@ export function isBlobRef(
   return true
 }
 
+/**
+ * @note {@link LegacyBlobRef} is just a {@link LexMap} with a specific shape.
+ */
 export type LegacyBlobRef = {
   cid: string
   mimeType: string

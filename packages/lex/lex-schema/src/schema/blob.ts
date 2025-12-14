@@ -43,38 +43,46 @@ export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
     input: unknown,
     ctx: ValidatorContext,
   ): ValidationResult<BlobSchemaOutput<O>> {
-    if (!isBlob(input, this.options)) {
+    const blob: null | BlobRef | LegacyBlobRef =
+      (input as any)?.$type !== undefined
+        ? isBlobRef(input, this.options)
+          ? input
+          : null
+        : this.options.allowLegacy === true && isLegacyBlobRef(input)
+          ? input
+          : null
+
+    if (!blob) {
       return ctx.issueInvalidType(input, 'blob')
     }
 
-    // @NOTE Historically, we did not enforce constraints on blob references
-    // https://github.com/bluesky-social/atproto/blob/4c15fb47cec26060bff2e710e95869a90c9d7fdd/packages/lexicon/src/validators/blob.ts#L5-L19
+    const { accept } = this.options
+    if (accept && !matchesMime(blob.mimeType, accept)) {
+      return ctx.issueInvalidPropertyValue(blob, 'mimeType', accept)
+    }
 
-    // const { accept } = this.options
-    // if (accept && !accept.includes(input.mimeType)) {
-    //   return ctx.issueInvalidValue(input, accept)
-    // }
+    const { maxSize } = this.options
+    if (maxSize != null && 'size' in blob && blob.size > maxSize) {
+      return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
+    }
 
-    // const { maxSize } = this.options
-    // if (maxSize != null && input.size != -1 && input.size > maxSize) {
-    //   return ctx.issueTooBig(input, 'blob', maxSize, input.size)
-    // }
+    return ctx.success(blob as BlobSchemaOutput<O>)
+  }
 
-    return ctx.success(input)
+  matchesMime(mime: string): boolean {
+    const { accept } = this.options
+    if (!accept) return true
+    return matchesMime(mime, accept)
   }
 }
 
-function isBlob<O extends BlobSchemaOptions>(
-  input: unknown,
-  options: O,
-): input is BlobSchemaOutput<O> {
-  if ((input as any)?.$type !== undefined) {
-    return isBlobRef(input, options)
+function matchesMime(mime: string, accepted: string[]): boolean {
+  if (accepted.includes('*/*')) return true
+  if (accepted.includes(mime)) return true
+  for (const value of accepted) {
+    if (value.endsWith('/*') && mime.startsWith(value.slice(0, -1))) {
+      return true
+    }
   }
-
-  if (options.allowLegacy === true) {
-    return isLegacyBlobRef(input)
-  }
-
   return false
 }

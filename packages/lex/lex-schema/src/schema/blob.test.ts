@@ -353,8 +353,7 @@ describe('BlobSchema', () => {
         mimeType: 'image/gif',
         size: 10000,
       })
-      // Accept constraints are not enforced (see comment in source)
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('accepts blob with maxSize option (not enforced)', () => {
@@ -365,8 +364,7 @@ describe('BlobSchema', () => {
         mimeType: 'image/jpeg',
         size: 10000,
       })
-      // MaxSize constraints are not enforced (see comment in source)
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('accepts blob matching accept constraint', () => {

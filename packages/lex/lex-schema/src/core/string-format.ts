@@ -17,17 +17,13 @@ import {
   ensureValidRecordKey,
   ensureValidTid,
 } from '@atproto/syntax'
-
-type AssertFn<T> = <I extends string>(input: I) => asserts input is I & T
-type CastFn<T> = <I extends string>(input: I) => I & T
-
-/*@__NO_SIDE_EFFECTS__*/
-function createCastFunction<T>(assertFn: AssertFn<T>): CastFn<T> {
-  return <I extends string>(input: I) => {
-    assertFn(input)
-    return input as I & T
-  }
-}
+import {
+  AssertFn,
+  CastFn,
+  CheckFn,
+  createCastFunction,
+  createCheckFunction,
+} from '../util/assertion-util.js'
 
 // Re-export utility typed as assertion functions so that TypeScript can
 // infer the narrowed type after calling them.
@@ -41,25 +37,11 @@ export type {
   NsidString,
   RecordKeyString,
   TidString,
-}
-
-export const assertDid: AssertFn<DidString> = ensureValidDid
-export const assertAtUri: AssertFn<AtUriString> = ensureValidAtUri
-export const assertAtIdentifier: AssertFn<AtIdentifierString> =
-  ensureValidAtIdentifier
-export const assertNsid: AssertFn<NsidString> = ensureValidNsid
-export const assertTid: AssertFn<TidString> = ensureValidTid
-export const assertRecordKey: AssertFn<RecordKeyString> = ensureValidRecordKey
-export const assertDatetime: AssertFn<DatetimeString> = ensureValidDatetime
-export const assertCidString: AssertFn<string> = ensureValidCidString
-export const assertHandle: AssertFn<HandleString> = ensureValidHandle
+} from '@atproto/syntax'
 
 // Export utilities for formats missing from @atproto/syntax
 
-export type CidString = string
 export type UriString = `${string}:${string}`
-export type LanguageString = string
-
 /*@__NO_SIDE_EFFECTS__*/
 export function assertUri(input: string): asserts input is UriString {
   if (!/^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)) {
@@ -67,6 +49,7 @@ export function assertUri(input: string): asserts input is UriString {
   }
 }
 
+export type LanguageString = string
 /*@__NO_SIDE_EFFECTS__*/
 export function assertLanguage(input: string): asserts input is LanguageString {
   if (!isLanguage(input)) {
@@ -74,28 +57,63 @@ export function assertLanguage(input: string): asserts input is LanguageString {
   }
 }
 
-export const asDid: CastFn<DidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidDid)
-export const asAtUri: CastFn<AtUriString> =
-  /*#__PURE__*/ createCastFunction(ensureValidAtUri)
-export const asNsid: CastFn<NsidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidNsid)
-export const asTid: CastFn<TidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidTid)
-export const asRecordKey: CastFn<RecordKeyString> =
-  /*#__PURE__*/ createCastFunction(ensureValidRecordKey)
-export const asDatetime: CastFn<DatetimeString> =
-  /*#__PURE__*/ createCastFunction(ensureValidDatetime)
-export const asCidString: CastFn<string> =
-  /*#__PURE__*/ createCastFunction(ensureValidCidString)
-export const asHandle: CastFn<HandleString> =
-  /*#__PURE__*/ createCastFunction(ensureValidHandle)
-export const asUri: CastFn<UriString> =
-  /*#__PURE__*/ createCastFunction(assertUri)
-export const asLanguage: CastFn<LanguageString> =
-  /*#__PURE__*/ createCastFunction(assertLanguage)
+export type CidString = string
+
+export const assertAtIdentifier: AssertFn<AtIdentifierString> =
+  ensureValidAtIdentifier
+export const assertAtUri: AssertFn<AtUriString> = ensureValidAtUri
+export const assertCidString: AssertFn<CidString> = ensureValidCidString
+export const assertDatetime: AssertFn<DatetimeString> = ensureValidDatetime
+export const assertDid: AssertFn<DidString> = ensureValidDid
+export const assertHandle: AssertFn<HandleString> = ensureValidHandle
+export const assertNsid: AssertFn<NsidString> = ensureValidNsid
+export const assertRecordKey: AssertFn<RecordKeyString> = ensureValidRecordKey
+export const assertTid: AssertFn<TidString> = ensureValidTid
+
 export const asAtIdentifier: CastFn<AtIdentifierString> =
   /*#__PURE__*/ createCastFunction(assertAtIdentifier)
+export const asAtUri: CastFn<AtUriString> =
+  /*#__PURE__*/ createCastFunction(ensureValidAtUri)
+export const asCidString: CastFn<CidString> =
+  /*#__PURE__*/ createCastFunction(ensureValidCidString)
+export const asDatetime: CastFn<DatetimeString> =
+  /*#__PURE__*/ createCastFunction(ensureValidDatetime)
+export const asDid: CastFn<DidString> =
+  /*#__PURE__*/ createCastFunction(ensureValidDid)
+export const asHandle: CastFn<HandleString> =
+  /*#__PURE__*/ createCastFunction(ensureValidHandle)
+export const asLanguage: CastFn<LanguageString> =
+  /*#__PURE__*/ createCastFunction(assertLanguage)
+export const asNsid: CastFn<NsidString> =
+  /*#__PURE__*/ createCastFunction(ensureValidNsid)
+export const asRecordKey: CastFn<RecordKeyString> =
+  /*#__PURE__*/ createCastFunction(ensureValidRecordKey)
+export const asTid: CastFn<TidString> =
+  /*#__PURE__*/ createCastFunction(ensureValidTid)
+export const asUri: CastFn<UriString> =
+  /*#__PURE__*/ createCastFunction(assertUri)
+
+export { isLanguage }
+export const isAtIdentifier: CheckFn<AtIdentifierString> =
+  /*#__PURE__*/ createCheckFunction(assertAtIdentifier)
+export const isAtUri: CheckFn<AtUriString> =
+  /*#__PURE__*/ createCheckFunction(assertAtIdentifier)
+export const isCidString: CheckFn<CidString> =
+  /*#__PURE__*/ createCheckFunction(assertCidString)
+export const isDatetime: CheckFn<DatetimeString> =
+  /*#__PURE__*/ createCheckFunction(assertDatetime)
+export const isDid: CheckFn<DidString> =
+  /*#__PURE__*/ createCheckFunction(assertDid)
+export const isHandle: CheckFn<HandleString> =
+  /*#__PURE__*/ createCheckFunction(assertHandle)
+export const isNsid: CheckFn<NsidString> =
+  /*#__PURE__*/ createCheckFunction(assertNsid)
+export const isRecordKey: CheckFn<RecordKeyString> =
+  /*#__PURE__*/ createCheckFunction(assertRecordKey)
+export const isTid: CheckFn<TidString> =
+  /*#__PURE__*/ createCheckFunction(assertTid)
+export const isUri: CheckFn<UriString> =
+  /*#__PURE__*/ createCheckFunction(assertUri)
 
 // String formatting types and utilities
 

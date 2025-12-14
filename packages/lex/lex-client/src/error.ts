@@ -1,5 +1,5 @@
-import { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
+import { Payload } from './util.js'
 
 export enum KnownError {
   Unknown = 'Unknown',
@@ -19,8 +19,12 @@ export enum KnownError {
   XRPCNotSupported = 'XRPCNotSupported',
 }
 
+/**
+ * This is basically an {@link l.ResultFailure} with an `error` string property
+ * to identify the type of XRPC error encountered.
+ */
 export type XrpcFailure<N extends string, E> = l.ResultFailure<E> & {
-  name: N
+  error: N
 }
 
 export type XrpcErrorName = l.UnknownString | KnownError
@@ -44,16 +48,18 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
   extends Error
   implements XrpcFailure<N, XrpcError<N>>
 {
+  name = 'XrpcError'
+
   constructor(
-    public readonly name: N,
-    message: string = name === KnownError.InvalidResponse
+    public readonly error: N,
+    message: string = error === KnownError.InvalidResponse
       ? `XRPC service returned an invalid response`
-      : name === KnownError.InternalServerError
+      : error === KnownError.InternalServerError
         ? `XRPC service encountered an internal error`
-        : name === KnownError.UpstreamFailure ||
-            name === KnownError.UpstreamTimeout
+        : error === KnownError.UpstreamFailure ||
+            error === KnownError.UpstreamTimeout
           ? `XRPC service upstream error`
-          : `XRPC ${name} error`,
+          : `XRPC ${error} error`,
     options?: ErrorOptions,
   ) {
     super(message, options)
@@ -62,9 +68,31 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
   /** @see {@link l.ResultFailure.success} */
   readonly success = false as const
 
-  /** @see {@link l.ResultFailure.error} */
-  get error(): this {
+  /** @see {@link l.ResultFailure.reason} */
+  get reason(): this {
     return this
+  }
+
+  isKnownErrorFor<T extends l.Procedure | l.Query>(
+    ns: T | { main: T },
+  ): this is T extends { errors: readonly (infer E extends string)[] }
+    ? XrpcError<E>
+    : never {
+    const schema = 'main' in ns ? ns.main : ns
+    if (!schema.errors?.length) return false
+    return schema.errors.includes(this.error)
+  }
+
+  static isKnownErrorFor<T extends l.Procedure | l.Query>(
+    error: unknown,
+    ns: T | { main: T },
+  ): error is T extends { errors: readonly (infer E extends string)[] }
+    ? XrpcError<E>
+    : never {
+    const schema = 'main' in ns ? ns.main : ns
+    if (!schema.errors?.length) return false
+    if (!(error instanceof XrpcError)) return false
+    return schema.errors.includes(error.error)
   }
 
   static from(cause: unknown, message?: string): XrpcError {
@@ -82,11 +110,13 @@ export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
 export class XrpcServiceError<
   N extends XrpcErrorName = XrpcErrorName,
 > extends XrpcError<N> {
+  name = 'XrpcServiceError'
+
   constructor(
     name: N,
     public readonly status: number,
     public readonly headers: Headers,
-    public readonly body: undefined | LexValue,
+    public readonly payload: null | Payload,
     message?: string,
     options?: ErrorOptions,
   ) {
@@ -98,10 +128,10 @@ export class XrpcResponseError<
   N extends XrpcErrorName = XrpcErrorName,
   B extends XrpcErrorBody<N> = XrpcErrorBody<N>,
 > extends XrpcError<N> {
+  name = 'XrpcResponseError'
   constructor(
     public readonly status: number,
     public readonly headers: Headers,
-    public readonly encoding: undefined | string,
     public readonly body: B,
     options?: ErrorOptions,
   ) {
@@ -116,7 +146,7 @@ export type XrpcRequestFailure<M extends l.Procedure | l.Query> =
       : never)
   // The server responded with an error that is not declared in the method's
   // `errors` list.
-  | XrpcFailure<'Unknown', XrpcResponseError<string>>
+  | XrpcFailure<'Unknown', XrpcResponseError>
   // An unexpected error occurred (e.g., network error, invalid response, etc.)
   | XrpcFailure<'UnexpectedError', unknown>
 
@@ -131,15 +161,15 @@ export function asXrpcRequestFailureFor<M extends l.Procedure | l.Query>(
 
 function asXrpcRequestFailure<M extends l.Procedure | l.Query>(
   this: M,
-  error: unknown,
+  reason: unknown,
 ): XrpcRequestFailure<M> {
-  if (!(error instanceof XrpcResponseError)) {
-    return { success: false, error, name: 'UnexpectedError' }
+  if (!(reason instanceof XrpcResponseError)) {
+    return { success: false, reason, error: 'UnexpectedError' }
   }
 
-  if (!this.errors.includes(error.name)) {
-    return { success: false, error, name: 'Unknown' }
+  if (!this.errors?.includes(reason.error)) {
+    return { success: false, reason, error: 'Unknown' }
   }
 
-  return error
+  return reason
 }

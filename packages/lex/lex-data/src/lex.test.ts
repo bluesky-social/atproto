@@ -1,4 +1,98 @@
-import { isTypedLexMap } from './lex'
+import { isLexValue, isTypedLexMap } from './lex'
+
+describe('isLexValue', () => {
+  describe('valid values', () => {
+    for (const { note, value } of [
+      { note: 'string', value: 'hello' },
+      { note: 'boolean', value: true },
+      { note: 'null', value: null },
+      { note: 'Uint8Array', value: new Uint8Array([1, 2, 3]) },
+      {
+        note: 'Cid',
+        value: { code: 1, version: 1, multihash: new Uint8Array([18, 32]) },
+      },
+      {
+        note: 'record with Lex values',
+        value: {
+          a: 123,
+          b: 'blah',
+          c: true,
+          d: null,
+          e: new Uint8Array([1, 2, 3]),
+          f: {
+            nested: 'value',
+          },
+          g: [1, 2, 3],
+        },
+      },
+      {
+        note: 'list with Lex values',
+        value: [
+          123,
+          'blah',
+          true,
+          null,
+          new Uint8Array([1, 2, 3]),
+          {
+            nested: 'value',
+          },
+          [1, 2, 3],
+        ],
+      },
+    ]) {
+      it(note, () => {
+        expect(isLexValue(value)).toBe(true)
+      })
+    }
+  })
+
+  describe('invalid values', () => {
+    for (const { note, value } of [
+      { note: 'float', value: 123.456 },
+      { note: 'undefined', value: undefined },
+      { note: 'function', value: () => {} },
+      {
+        note: 'record with non-Lex value',
+        value: {
+          a: 123,
+          b: () => {},
+        },
+      },
+      {
+        note: 'list with non-Lex value',
+        value: [123, 'blah', () => {}],
+      },
+    ]) {
+      it(note, () => {
+        expect(isLexValue(value)).toBe(false)
+      })
+    }
+  })
+
+  it('handles cyclic structures', () => {
+    const record: any = {
+      a: 123,
+      b: 'blah',
+    }
+    record.c = record
+
+    expect(isLexValue(record)).toBe(false)
+
+    const list: any[] = [123, 'blah']
+    list.push(list)
+
+    expect(isLexValue(list)).toBe(false)
+  })
+
+  it('handles deeply nested structures', () => {
+    type Value = null | { nested: Value }
+    let value: Value = null
+    for (let i = 0; i < 1_000_000; i++) {
+      value = { nested: value }
+    }
+    expect(isLexValue(value)).toBe(true)
+  })
+})
 
 describe('isLexMap', () => {
   it('returns true for valid LexMap', () => {
