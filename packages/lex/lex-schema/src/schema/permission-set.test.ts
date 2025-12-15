@@ -1,11 +1,11 @@
-import { asNsid } from '../core.js'
+import { asNsidString } from '../core.js'
 import { PermissionSet } from './permission-set.js'
 import { Permission } from './permission.js'
 
 describe('PermissionSet', () => {
   describe('constructor', () => {
     it('creates a PermissionSet instance with all parameters', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.post:write', {}),
@@ -24,7 +24,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with minimal options', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -39,7 +39,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with empty permissions array', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [] as const
       const options = {}
 
@@ -50,7 +50,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with title only', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.like:read', {}),
       ] as const
@@ -65,7 +65,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with detail only', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.like:read', {}),
       ] as const
@@ -80,7 +80,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with localized titles', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -102,7 +102,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with localized details', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -124,7 +124,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet instance with all options including localization', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.post:write', {}),
@@ -165,7 +165,7 @@ describe('PermissionSet', () => {
 
   describe('property immutability', () => {
     it('options object itself is mutable', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -181,7 +181,7 @@ describe('PermissionSet', () => {
 
   describe('with multiple permissions', () => {
     it('creates a PermissionSet with multiple read permissions', () => {
-      const nsid = asNsid('app.bsky.oauth.read')
+      const nsid = asNsidString('app.bsky.oauth.read')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.like:read', {}),
@@ -211,7 +211,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet with mixed read/write permissions', () => {
-      const nsid = asNsid('app.bsky.oauth.full')
+      const nsid = asNsidString('app.bsky.oauth.full')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.post:write', {}),
@@ -229,7 +229,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a PermissionSet with a single permission', () => {
-      const nsid = asNsid('app.bsky.oauth.limited')
+      const nsid = asNsidString('app.bsky.oauth.limited')
       const permissions = [
         new Permission('app.bsky.actor.profile:read', {}),
       ] as const
@@ -249,7 +249,7 @@ describe('PermissionSet', () => {
 
   describe('edge cases', () => {
     it('handles very long NSID', () => {
-      const nsid = asNsid(
+      const nsid = asNsidString(
         'com.example.very.long.namespace.identifier.oauth.permissions',
       )
       const permissions = [new Permission('resource:action', {})] as const
@@ -261,7 +261,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles long title strings', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -277,7 +277,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles long detail strings', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -293,7 +293,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles multiple language codes in title:lang', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -319,7 +319,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles undefined values in title:lang', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -342,7 +342,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles undefined values in detail:lang', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -363,7 +363,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles special characters in title', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -379,7 +379,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles special characters in detail', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -396,7 +396,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles unicode characters in title', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -410,7 +410,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles empty strings in title', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -424,7 +424,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles empty strings in detail', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -438,7 +438,7 @@ describe('PermissionSet', () => {
     })
 
     it('handles large number of permissions', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = Array.from(
         { length: 100 },
         (_, i) => new Permission(`resource${i}:action`, {}),
@@ -453,7 +453,7 @@ describe('PermissionSet', () => {
 
   describe('real-world permission set examples', () => {
     it('creates a feed management permission set', () => {
-      const nsid = asNsid('app.bsky.oauth.feed')
+      const nsid = asNsidString('app.bsky.oauth.feed')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.post:write', {}),
@@ -483,7 +483,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a read-only permission set', () => {
-      const nsid = asNsid('app.bsky.oauth.readonly')
+      const nsid = asNsidString('app.bsky.oauth.readonly')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.like:read', {}),
@@ -504,7 +504,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a profile management permission set', () => {
-      const nsid = asNsid('app.bsky.oauth.profile')
+      const nsid = asNsidString('app.bsky.oauth.profile')
       const permissions = [
         new Permission('app.bsky.actor.profile:read', {}),
         new Permission('app.bsky.actor.profile:write', {}),
@@ -531,7 +531,7 @@ describe('PermissionSet', () => {
     })
 
     it('creates a minimal permission set', () => {
-      const nsid = asNsid('app.bsky.oauth.minimal')
+      const nsid = asNsidString('app.bsky.oauth.minimal')
       const permissions = [
         new Permission('app.bsky.actor.profile:read', {}),
       ] as const
@@ -549,7 +549,7 @@ describe('PermissionSet', () => {
 
   describe('permission validation', () => {
     it('validates that permissions are Permission instances', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permission1 = new Permission('app.bsky.feed.post:read', {})
       const permission2 = new Permission('app.bsky.feed.post:write', {})
       const permissions = [permission1, permission2] as const
@@ -562,7 +562,7 @@ describe('PermissionSet', () => {
     })
 
     it('preserves permission resource strings', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
         new Permission('app.bsky.feed.like:write', {}),
@@ -584,7 +584,7 @@ describe('PermissionSet', () => {
     })
 
     it('preserves permission options', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissionOptions = { custom: 'value' }
       const permissions = [
         new Permission('app.bsky.feed.post:read', permissionOptions),
@@ -599,7 +599,7 @@ describe('PermissionSet', () => {
 
   describe('option variations', () => {
     it('accepts title without detail', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -616,7 +616,7 @@ describe('PermissionSet', () => {
     })
 
     it('accepts detail without title', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -635,7 +635,7 @@ describe('PermissionSet', () => {
     })
 
     it('accepts title:lang without title', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const
@@ -656,7 +656,7 @@ describe('PermissionSet', () => {
     })
 
     it('accepts detail:lang without detail', () => {
-      const nsid = asNsid('app.bsky.oauth.permissions')
+      const nsid = asNsidString('app.bsky.oauth.permissions')
       const permissions = [
         new Permission('app.bsky.feed.post:read', {}),
       ] as const

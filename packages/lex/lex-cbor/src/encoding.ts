@@ -46,7 +46,7 @@ function undefinedEncoder(): null {
 }
 
 function numberEncoder(num: number): null {
-  if (Number.isInteger(num)) return null
+  if (Number.isInteger(num) && Number.isSafeInteger(num)) return null
 
   throw new Error('Non-integer numbers are not allowed by the AT Data Model')
 }
@@ -64,6 +64,7 @@ function mapEncoder(map: Map<unknown, unknown>): null {
 }
 
 const encodeOptions: EncodeOptions = {
+  float64: true,
   typeEncoders: {
     Map: mapEncoder,
     Object: objectEncoder,

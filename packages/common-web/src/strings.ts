@@ -2,8 +2,8 @@ import {
   LanguageTag,
   fromBase64,
   graphemeLen,
-  isLanguage,
-  parseLanguage,
+  isLanguageString,
+  parseLanguageString,
   toBase64,
   utf8Len,
 } from '@atproto/lex-data'
@@ -27,15 +27,15 @@ type LanguageTagLegacy = LanguageTag
 export type { LanguageTagLegacy as LanguageTag }
 
 /**
- * @deprecated Use {@link parseLanguage} from `@atproto/lex-data` instead.
+ * @deprecated Use {@link parseLanguageString} from `@atproto/lex-data` instead.
  */
-export const parseLanguageLegacy = parseLanguage
+export const parseLanguageLegacy = parseLanguageString
 export { parseLanguageLegacy as parseLanguage }
 
 /**
- * @deprecated Use {@link isLanguage} from `@atproto/lex-data` instead.
+ * @deprecated Use {@link isLanguageString} from `@atproto/lex-data` instead.
  */
-export const validateLanguage = isLanguage
+export const validateLanguage = isLanguageString
 
 /**
  * @deprecated Use {@link toBase64} from `@atproto/lex-data` instead.

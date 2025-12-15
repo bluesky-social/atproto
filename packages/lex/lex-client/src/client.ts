@@ -24,6 +24,7 @@ import {
   XrpcRequestFailure,
   asXrpcRequestFailureFor,
 } from './error.js'
+import { com } from './lexicons.js'
 import {
   BinaryBodyInit,
   CallOptions,
@@ -33,7 +34,6 @@ import {
 } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
 import { XrpcOptions, XrpcResponse, XrpcResponseBody, xrpc } from './xrpc.js'
-import { com } from '#lexicons'
 
 export type ClientOptions = {
   labelers?: Iterable<DidString>
@@ -245,7 +245,6 @@ export class Client implements Agent {
   ) {
     return this.xrpc(com.atproto.repo.createRecord.main, {
       ...options,
-      encoding: 'application/json',
       body: {
         repo: options?.repo ?? this.assertDid,
         collection: record.$type,

@@ -1,4 +1,4 @@
-import { asNsid } from '../core.js'
+import { asNsidString } from '../core.js'
 import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
 import { OptionalSchema } from './optional.js'
@@ -10,7 +10,7 @@ import { StringSchema } from './string.js'
 describe('Query', () => {
   describe('constructor', () => {
     it('creates a Query instance with all parameters', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({
         feed: new StringSchema({ format: 'at-uri' }),
         limit: new OptionalSchema(
@@ -35,7 +35,7 @@ describe('Query', () => {
     })
 
     it('creates a Query instance without errors', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({
         feed: new StringSchema({ format: 'at-uri' }),
       })
@@ -56,7 +56,7 @@ describe('Query', () => {
     })
 
     it('creates a Query instance with empty parameters', () => {
-      const nsid = asNsid('app.bsky.actor.getProfile')
+      const nsid = asNsidString('app.bsky.actor.getProfile')
       const parameters = new ParamsSchema({})
       const output = new Payload(
         'application/json',
@@ -74,7 +74,7 @@ describe('Query', () => {
 
   describe('properties', () => {
     it('has nsid property', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
 
@@ -85,7 +85,7 @@ describe('Query', () => {
     })
 
     it('has parameters property', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({
         feed: new StringSchema({ format: 'at-uri' }),
       })
@@ -98,7 +98,7 @@ describe('Query', () => {
     })
 
     it('has output property', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
 
@@ -109,7 +109,7 @@ describe('Query', () => {
     })
 
     it('has errors property', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
       const errors = ['NotFound', 'RateLimitExceeded'] as const
@@ -123,7 +123,7 @@ describe('Query', () => {
 
   describe('with complex parameters', () => {
     it('creates a Query with multiple parameter types', () => {
-      const nsid = asNsid('app.bsky.feed.searchPosts')
+      const nsid = asNsidString('app.bsky.feed.searchPosts')
       const parameters = new ParamsSchema({
         q: new StringSchema({ minLength: 1 }),
         limit: new OptionalSchema(
@@ -151,7 +151,7 @@ describe('Query', () => {
 
   describe('with various output payloads', () => {
     it('creates a Query with undefined output payload', () => {
-      const nsid = asNsid('app.bsky.actor.getProfile')
+      const nsid = asNsidString('app.bsky.actor.getProfile')
       const parameters = new ParamsSchema({
         actor: new StringSchema({ format: 'at-identifier' }),
       })
@@ -165,7 +165,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with JSON payload', () => {
-      const nsid = asNsid('app.bsky.actor.getProfile')
+      const nsid = asNsidString('app.bsky.actor.getProfile')
       const parameters = new ParamsSchema({
         actor: new StringSchema({ format: 'at-identifier' }),
       })
@@ -185,7 +185,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with text payload', () => {
-      const nsid = asNsid('app.bsky.feed.getPost')
+      const nsid = asNsidString('app.bsky.feed.getPost')
       const parameters = new ParamsSchema({
         uri: new StringSchema({ format: 'at-uri' }),
       })
@@ -200,7 +200,7 @@ describe('Query', () => {
 
   describe('with different error configurations', () => {
     it('creates a Query with a single error', () => {
-      const nsid = asNsid('app.bsky.feed.getPost')
+      const nsid = asNsidString('app.bsky.feed.getPost')
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
       const errors = ['NotFound'] as const
@@ -211,7 +211,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with multiple errors', () => {
-      const nsid = asNsid('app.bsky.feed.getPost')
+      const nsid = asNsidString('app.bsky.feed.getPost')
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
       const errors = ['NotFound', 'Unauthorized', 'RateLimitExceeded'] as const
@@ -226,7 +226,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with empty errors array', () => {
-      const nsid = asNsid('app.bsky.feed.getPost')
+      const nsid = asNsidString('app.bsky.feed.getPost')
       const parameters = new ParamsSchema({})
       const output = new Payload('application/json', undefined)
       const errors = [] as const
@@ -239,7 +239,7 @@ describe('Query', () => {
 
   describe('edge cases', () => {
     it('handles very long NSID', () => {
-      const nsid = asNsid(
+      const nsid = asNsidString(
         'com.example.very.long.namespace.identifier.method.name',
       )
       const parameters = new ParamsSchema({})
@@ -251,7 +251,7 @@ describe('Query', () => {
     })
 
     it('handles query with all optional parameters', () => {
-      const nsid = asNsid('app.bsky.feed.search')
+      const nsid = asNsidString('app.bsky.feed.search')
       const parameters = new ParamsSchema({
         q: new OptionalSchema(new StringSchema({})),
         limit: new OptionalSchema(new IntegerSchema({})),
@@ -265,7 +265,7 @@ describe('Query', () => {
     })
 
     it('handles query with complex nested output schema', () => {
-      const nsid = asNsid('app.bsky.feed.getTimeline')
+      const nsid = asNsidString('app.bsky.feed.getTimeline')
       const parameters = new ParamsSchema({})
       const output = new Payload(
         'application/json',
@@ -288,7 +288,7 @@ describe('Query', () => {
 
   describe('real-world query examples', () => {
     it('creates a getFeedSkeleton query', () => {
-      const nsid = asNsid('app.bsky.feed.getFeedSkeleton')
+      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = new ParamsSchema({
         feed: new StringSchema({ format: 'at-uri' }),
         limit: new OptionalSchema(
@@ -310,7 +310,7 @@ describe('Query', () => {
     })
 
     it('creates a searchPosts query', () => {
-      const nsid = asNsid('app.bsky.feed.searchPosts')
+      const nsid = asNsidString('app.bsky.feed.searchPosts')
       const parameters = new ParamsSchema({
         q: new StringSchema({ minLength: 1, maxLength: 300 }),
         limit: new OptionalSchema(
@@ -335,7 +335,7 @@ describe('Query', () => {
     })
 
     it('creates a getProfile query', () => {
-      const nsid = asNsid('app.bsky.actor.getProfile')
+      const nsid = asNsidString('app.bsky.actor.getProfile')
       const parameters = new ParamsSchema({
         actor: new StringSchema({ format: 'at-identifier' }),
       })

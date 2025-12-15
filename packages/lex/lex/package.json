@@ -26,7 +26,7 @@
     "lex": "./bin/lex"
   },
   "sideEffects": false,
-  "main": "./index.js",
+  "main": "./index.cjs",
   "types": "./index.d.ts",
   "exports": {
     ".": {

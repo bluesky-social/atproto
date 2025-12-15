@@ -7,10 +7,6 @@
     "importHelpers": true,
     "target": "ES2023",
     "rootDir": "./src",
-    "outDir": "./dist",
-    "paths": {
-      "#lexicons": ["./src/lexicons.js"],
-      "#lexicons/*": ["./src/lexicons/*"]
-    }
+    "outDir": "./dist"
   }
 }

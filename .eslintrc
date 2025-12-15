@@ -94,6 +94,7 @@
       "typescript": {
         "project": [
           "tsconfig.json",
+          "packages/lex/*/tsconfig.json",
           "packages/oauth/*/tsconfig.json",
           "packages/oauth/*/tsconfig.src.json",
           "packages/internal/*/tsconfig.json",

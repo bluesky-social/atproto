@@ -1,62 +1,62 @@
-import { isLanguage, parseLanguage } from './language'
+import { isLanguageString, parseLanguageString } from './language'
 
 describe('string', () => {
   describe('languages', () => {
     it('validates BCP 47', () => {
       // valid
-      expect(isLanguage('de')).toEqual(true)
-      expect(isLanguage('de-CH')).toEqual(true)
-      expect(isLanguage('de-DE-1901')).toEqual(true)
-      expect(isLanguage('es-419')).toEqual(true)
-      expect(isLanguage('sl-IT-nedis')).toEqual(true)
-      expect(isLanguage('mn-Cyrl-MN')).toEqual(true)
-      expect(isLanguage('x-fr-CH')).toEqual(true)
-      expect(isLanguage('en-GB-boont-r-extended-sequence-x-private')).toEqual(
-        true,
-      )
-      expect(isLanguage('sr-Cyrl')).toEqual(true)
-      expect(isLanguage('hy-Latn-IT-arevela')).toEqual(true)
-      expect(isLanguage('i-klingon')).toEqual(true)
+      expect(isLanguageString('de')).toEqual(true)
+      expect(isLanguageString('de-CH')).toEqual(true)
+      expect(isLanguageString('de-DE-1901')).toEqual(true)
+      expect(isLanguageString('es-419')).toEqual(true)
+      expect(isLanguageString('sl-IT-nedis')).toEqual(true)
+      expect(isLanguageString('mn-Cyrl-MN')).toEqual(true)
+      expect(isLanguageString('x-fr-CH')).toEqual(true)
+      expect(
+        isLanguageString('en-GB-boont-r-extended-sequence-x-private'),
+      ).toEqual(true)
+      expect(isLanguageString('sr-Cyrl')).toEqual(true)
+      expect(isLanguageString('hy-Latn-IT-arevela')).toEqual(true)
+      expect(isLanguageString('i-klingon')).toEqual(true)
       // invalid
-      expect(isLanguage('')).toEqual(false)
-      expect(isLanguage('x')).toEqual(false)
-      expect(isLanguage('de-CH-')).toEqual(false)
-      expect(isLanguage('i-bad-grandfathered')).toEqual(false)
+      expect(isLanguageString('')).toEqual(false)
+      expect(isLanguageString('x')).toEqual(false)
+      expect(isLanguageString('de-CH-')).toEqual(false)
+      expect(isLanguageString('i-bad-grandfathered')).toEqual(false)
     })
 
     it('parses BCP 47', () => {
       // valid
-      expect(parseLanguage('de')).toEqual({
+      expect(parseLanguageString('de')).toEqual({
         language: 'de',
       })
-      expect(parseLanguage('de-CH')).toEqual({
+      expect(parseLanguageString('de-CH')).toEqual({
         language: 'de',
         region: 'CH',
       })
-      expect(parseLanguage('de-DE-1901')).toEqual({
+      expect(parseLanguageString('de-DE-1901')).toEqual({
         language: 'de',
         region: 'DE',
         variant: '1901',
       })
-      expect(parseLanguage('es-419')).toEqual({
+      expect(parseLanguageString('es-419')).toEqual({
         language: 'es',
         region: '419',
       })
-      expect(parseLanguage('sl-IT-nedis')).toEqual({
+      expect(parseLanguageString('sl-IT-nedis')).toEqual({
         language: 'sl',
         region: 'IT',
         variant: 'nedis',
       })
-      expect(parseLanguage('mn-Cyrl-MN')).toEqual({
+      expect(parseLanguageString('mn-Cyrl-MN')).toEqual({
         language: 'mn',
         script: 'Cyrl',
         region: 'MN',
       })
-      expect(parseLanguage('x-fr-CH')).toEqual({
+      expect(parseLanguageString('x-fr-CH')).toEqual({
         privateUse: 'x-fr-CH',
       })
       expect(
-        parseLanguage('en-GB-boont-r-extended-sequence-x-private'),
+        parseLanguageString('en-GB-boont-r-extended-sequence-x-private'),
       ).toEqual({
         language: 'en',
         region: 'GB',
@@ -64,24 +64,24 @@ describe('string', () => {
         extension: 'r-extended-sequence',
         privateUse: 'x-private',
       })
-      expect(parseLanguage('sr-Cyrl')).toEqual({
+      expect(parseLanguageString('sr-Cyrl')).toEqual({
         language: 'sr',
         script: 'Cyrl',
       })
-      expect(parseLanguage('hy-Latn-IT-arevela')).toEqual({
+      expect(parseLanguageString('hy-Latn-IT-arevela')).toEqual({
         language: 'hy',
         script: 'Latn',
         region: 'IT',
         variant: 'arevela',
       })
-      expect(parseLanguage('i-klingon')).toEqual({
+      expect(parseLanguageString('i-klingon')).toEqual({
         grandfathered: 'i-klingon',
       })
       // invalid
-      expect(parseLanguage('')).toEqual(null)
-      expect(parseLanguage('x')).toEqual(null)
-      expect(parseLanguage('de-CH-')).toEqual(null)
-      expect(parseLanguage('i-bad-grandfathered')).toEqual(null)
+      expect(parseLanguageString('')).toEqual(null)
+      expect(parseLanguageString('x')).toEqual(null)
+      expect(parseLanguageString('de-CH-')).toEqual(null)
+      expect(parseLanguageString('i-bad-grandfathered')).toEqual(null)
     })
   })
 })
