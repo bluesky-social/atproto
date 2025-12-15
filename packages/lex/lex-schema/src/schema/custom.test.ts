@@ -392,7 +392,7 @@ describe('CustomSchema', () => {
 
       expect(schema.safeParse('test')).toMatchObject({
         success: false,
-        error: {
+        reason: {
           issues: [
             { message: 'This is a custom issue' },
             { message: 'Must be a string' },

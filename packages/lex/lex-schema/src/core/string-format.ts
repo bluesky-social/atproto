@@ -72,7 +72,7 @@ export const assertRecordKeyString: AssertFn<RecordKeyString> =
   ensureValidRecordKey
 export const assertTidString: AssertFn<TidString> = ensureValidTid
 export const assertUriString: AssertFn<UriString> =
-  createAssertFunction<UriString>(isUriString, 'Invalid URI string')
+  createAssertFunction<UriString>(isUriString, 'Invalid URI')
 
 export const asAtIdentifierString: CastFn<AtIdentifierString> =
   /*#__PURE__*/ createCastFunction(assertAtIdentifierString)
