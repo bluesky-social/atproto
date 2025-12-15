@@ -8,7 +8,6 @@ import {
 import { AddressInfo } from 'node:net'
 import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-// @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example' with { type: 'json' }
 import { PageHelper } from './_puppeteer.js'
 
