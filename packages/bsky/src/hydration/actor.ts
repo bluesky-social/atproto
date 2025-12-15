@@ -5,7 +5,7 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as NotificationDeclarationRecord } from '../lexicon/types/app/bsky/notification/declaration'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { Record as GermDeclarationRecord, MessageMe as GermDeclarationMessageMe } from '../lexicon/types/com/germnetwork/declaration'
+import { Record as GermDeclarationRecord } from '../lexicon/types/com/germnetwork/declaration'
 import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
