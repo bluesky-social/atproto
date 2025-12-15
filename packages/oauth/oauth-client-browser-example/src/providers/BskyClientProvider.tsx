@@ -2,8 +2,7 @@ import { createContext, useContext, useMemo } from 'react'
 import { Client } from '@atproto/lex'
 import { asDid } from '@atproto/oauth-client-browser'
 import { BSKY_API_DID, BSKY_API_URL } from '../constants.ts'
-import { AuthenticationContext } from './AuthenticationProvider.tsx'
-import { OAuthContext } from './OAuthProvider.tsx'
+import { useAuthenticationContext } from './AuthenticationProvider.tsx'
 
 const BSKY_APPVIEW_DID_SERVICE = `${asDid(BSKY_API_DID)}#bsky_appview` as const
 
@@ -18,13 +17,10 @@ export function BskyClientProvider({
   children?: React.ReactNode
 }) {
   // @NOTE We prefer using an AuthenticationContext "client" instead of the
-  // OAuthProvider "session" as "agent" to ensure that any configuration (e.g.
-  // labelers, etc.) on the client is preserved and applied to the BskyClient as
-  // well. We still fallback to OAuthProvider session for convenience in case
-  // there is no AuthenticationProvider wrapping this.
-  const agent =
-    useContext(AuthenticationContext)?.client ??
-    useContext(OAuthContext)?.session
+  // OAuthProvider "session" as agent to ensure that any configuration (e.g.
+  // labelers, etc.) on the client is preserved and applied to the BskyClient
+  // context value as well.
+  const agent = useAuthenticationContext().client
 
   const value = useMemo(() => {
     return agent

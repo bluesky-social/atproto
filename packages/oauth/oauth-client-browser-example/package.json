@@ -17,9 +17,17 @@
     "url": "https://github.com/bluesky-social/atproto",
     "directory": "packages/oauth/oauth-client-browser"
   },
+  "bin": "./server.js",
   "type": "commonjs",
-  "exports": "./dist/files.json",
+  "main": "./dist/files.json",
+  "exports": {
+    ".": "./dist/files.json",
+    "./server": {
+      "import": "./server.js"
+    }
+  },
   "files": [
+    "server.js",
     "dist"
   ],
   "devDependencies": {

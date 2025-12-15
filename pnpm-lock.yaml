@@ -809,6 +809,9 @@ importers:
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
       yargs:
         specifier: ^17.0.0
         version: 17.7.2
