@@ -369,7 +369,9 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
-        // NOTE: not hydrating germ on "basic"
+        germ: actor.germ?.record.messageMe
+          ? { showButtonTo: actor.germ.record.messageMe.showButtonTo, messageMeUrl: actor.germ.record.messageMe.messageMeUrl }
+          : undefined,
       },
       viewer: this.profileViewer(did, state),
       labels,
