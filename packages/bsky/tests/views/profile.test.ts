@@ -18,6 +18,7 @@ describe('pds profile views', () => {
   let dan: string
   let eve: string
   let frank: string
+  let noprofile: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -62,12 +63,19 @@ describe('pds profile views', () => {
       },
     )
 
+    await sc.createAccount('noprofile', {
+      handle: 'noprofile.test',
+      email: 'noprofile@test.com',
+      password: 'noprofile-pass',
+    })
+
     await network.processAll()
     alice = sc.dids.alice
     bob = sc.dids.bob
     dan = sc.dids.dan
     eve = sc.dids.eve
     frank = sc.dids.frank
+    noprofile = sc.dids.noprofile
   })
 
   afterAll(async () => {
@@ -88,6 +96,37 @@ describe('pds profile views', () => {
     )
 
     expect(forSnapshot(aliceForAlice.data)).toMatchSnapshot()
+  })
+
+  it('returns empty profile if actor exists but has no profile', async () => {
+    const res = await agent.app.bsky.actor.getProfile(
+      { actor: noprofile },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfile,
+        ),
+      },
+    )
+
+    expect(forSnapshot(res.data)).toMatchSnapshot()
+  })
+
+  it('returns empty profile for actor that exists but has no profile', async () => {
+    const res = await agent.app.bsky.actor.getProfiles(
+      { actors: [bob, noprofile] },
+      {
+        headers: await network.serviceHeaders(
+          alice,
+          ids.AppBskyActorGetProfiles,
+        ),
+      },
+    )
+
+    expect(res.data.profiles).toHaveLength(2)
+    expect(res.data.profiles[0].did).toBe(bob)
+    expect(res.data.profiles[1].did).toBe(noprofile)
+    expect(forSnapshot(res.data)).toMatchSnapshot()
   })
 
   it('reflects self-labels', async () => {

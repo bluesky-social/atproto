@@ -315,36 +315,44 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.emitEvent({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
-      const moderationEvent = await handleModerationEvent({
-        input,
-        auth,
-        ctx,
-      })
-
-      // On divert events, we need to automatically take down the blobs
-      if (isModEventDivert(input.body.event)) {
-        await handleModerationEvent({
+      try {
+        const moderationEvent = await handleModerationEvent({
+          input,
           auth,
           ctx,
-          input: {
-            ...input,
-            body: {
-              ...input.body,
-              event: {
-                ...input.body.event,
-                $type: 'tools.ozone.moderation.defs#modEventTakedown',
-                comment:
-                  '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
-              },
-              modTool: input.body.modTool,
-            },
-          },
         })
-      }
 
-      return {
-        encoding: 'application/json',
-        body: moderationEvent,
+        // On divert events, we need to automatically take down the blobs
+        if (isModEventDivert(input.body.event)) {
+          await handleModerationEvent({
+            auth,
+            ctx,
+            input: {
+              ...input,
+              body: {
+                ...input.body,
+                event: {
+                  ...input.body.event,
+                  $type: 'tools.ozone.moderation.defs#modEventTakedown',
+                  comment:
+                    '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
+                },
+                modTool: input.body.modTool,
+              },
+            },
+          })
+        }
+
+        return {
+          encoding: 'application/json',
+          body: moderationEvent,
+        }
+      } catch (err) {
+        httpLogger.error(
+          { err, body: input.body },
+          'failed to emit moderation event',
+        )
+        throw err
       }
     },
   })

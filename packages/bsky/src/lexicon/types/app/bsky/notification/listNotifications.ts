@@ -67,6 +67,7 @@ export interface Notification {
     | 'like-via-repost'
     | 'repost-via-repost'
     | 'subscribed-post'
+    | 'contact-match'
     | (string & {})
   reasonSubject?: string
   record: { [_ in string]: unknown }

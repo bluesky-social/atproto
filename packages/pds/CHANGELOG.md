@@ -1,5 +1,31 @@
 # @atproto/pds
 
+## 0.4.199
+
+### Patch Changes
+
+- [#4432](https://github.com/bluesky-social/atproto/pull/4432) [`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new read-only `#declaredAgePref` with computed age flags e.g. `isOverAge18`.
+
+- Updated dependencies [[`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41), [`f4cef84`](https://github.com/bluesky-social/atproto/commit/f4cef84494114ca927c66428920ca3dc24ad2b1e)]:
+  - @atproto/api@0.18.6
+
+## 0.4.198
+
+### Patch Changes
+
+- [#4423](https://github.com/bluesky-social/atproto/pull/4423) [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763) Thanks [@foysalit](https://github.com/foysalit)! - Add min length for required comment fields in ozone events
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f), [`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab), [`380aa3b`](https://github.com/bluesky-social/atproto/commit/380aa3bfe73b5c4e59961c27ae988786b69c129d), [`308f432`](https://github.com/bluesky-social/atproto/commit/308f432f7aef196b4df0a6dc7c5367ab5a8b8964), [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763), [`7e1d458`](https://github.com/bluesky-social/atproto/commit/7e1d45877bca0f615e7b1313cfcc66823b3de758)]:
+  - @atproto/lex-data@0.0.3
+  - @atproto/lexicon@0.6.0
+  - @atproto/api@0.18.5
+  - @atproto/lex-cbor@0.0.3
+  - @atproto/common@0.5.3
+  - @atproto/xrpc-server@0.10.3
+  - @atproto/repo@0.8.12
+  - @atproto/xrpc@0.7.7
+  - @atproto/oauth-provider@0.14.1
+
 ## 0.4.197
 
 ### Patch Changes

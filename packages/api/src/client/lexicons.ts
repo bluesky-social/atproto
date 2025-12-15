@@ -419,6 +419,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#declaredAgePref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
@@ -522,6 +523,28 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of account owner.',
+          },
+        },
+      },
+      declaredAgePref: {
+        type: 'object',
+        description:
+          "Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.",
+        properties: {
+          isOverAge13: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 13 years of age.',
+          },
+          isOverAge16: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 16 years of age.',
+          },
+          isOverAge18: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 18 years of age.',
           },
         },
       },
@@ -1751,6 +1774,447 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyContactDefs: {
+    lexicon: 1,
+    id: 'app.bsky.contact.defs',
+    defs: {
+      matchAndContactIndex: {
+        description:
+          'Associates a profile with the positional index of the contact import input in the call to `app.bsky.contact.importContacts`, so clients can know which phone caused a particular match.',
+        type: 'object',
+        required: ['match', 'contactIndex'],
+        properties: {
+          match: {
+            description: 'Profile of the matched user.',
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          contactIndex: {
+            description: 'The index of this match in the import contact input.',
+            type: 'integer',
+            minimum: 0,
+            maximum: 999,
+          },
+        },
+      },
+      syncStatus: {
+        type: 'object',
+        required: ['syncedAt', 'matchesCount'],
+        properties: {
+          syncedAt: {
+            description: 'Last date when contacts where imported.',
+            type: 'string',
+            format: 'datetime',
+          },
+          matchesCount: {
+            description:
+              'Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match.',
+            type: 'integer',
+            minimum: 0,
+          },
+        },
+      },
+      notification: {
+        description:
+          'A stash object to be sent via bsync representing a notification to be created.',
+        type: 'object',
+        required: ['from', 'to'],
+        properties: {
+          from: {
+            description: 'The DID of who this notification comes from.',
+            type: 'string',
+            format: 'did',
+          },
+          to: {
+            description: 'The DID of who this notification should go to.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactDismissMatch: {
+    lexicon: 1,
+    id: 'app.bsky.contact.dismissMatch',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                description: "The subject's DID to dismiss the match with.",
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetMatches: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getMatches',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              matches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidLimit',
+          },
+          {
+            name: 'InvalidCursor',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetSyncStatus: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getSyncStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets the user's current contact import status. Requires authentication.",
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              syncStatus: {
+                description:
+                  "If present, indicates the user has imported their contacts. If not present, indicates the user never used the feature or called `app.bsky.contact.removeData` and didn't import again since.",
+                type: 'ref',
+                ref: 'lex:app.bsky.contact.defs#syncStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactImportContacts: {
+    lexicon: 1,
+    id: 'app.bsky.contact.importContacts',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token', 'contacts'],
+            properties: {
+              token: {
+                description:
+                  'JWT to authenticate the call. Use the JWT received as a response to the call to `app.bsky.contact.verifyPhone`.',
+                type: 'string',
+              },
+              contacts: {
+                description:
+                  "List of phone numbers in global E.164 format (e.g., '+12125550123'). Phone numbers that cannot be normalized into a valid phone number will be discarded. Should not repeat the 'phone' input used in `app.bsky.contact.verifyPhone`.",
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minLength: 1,
+                maxLength: 1000,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matchesAndContactIndexes'],
+            properties: {
+              matchesAndContactIndexes: {
+                description:
+                  'The users that matched during import and their indexes on the input contacts, so the client can correlate with its local list.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.contact.defs#matchAndContactIndex',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidContacts',
+          },
+          {
+            name: 'TooManyContacts',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactRemoveData: {
+    lexicon: 1,
+    id: 'app.bsky.contact.removeData',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactSendNotification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.sendNotification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'System endpoint to send notifications related to contact imports. Requires role authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['from', 'to'],
+            properties: {
+              from: {
+                description: 'The DID of who this notification comes from.',
+                type: 'string',
+                format: 'did',
+              },
+              to: {
+                description: 'The DID of who this notification should go to.',
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactStartPhoneVerification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.startPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone'],
+            properties: {
+              phone: {
+                description: 'The phone number to receive the code via SMS.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'RateLimitExceeded',
+          },
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidPhone',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactVerifyPhone: {
+    lexicon: 1,
+    id: 'app.bsky.contact.verifyPhone',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone', 'code'],
+            properties: {
+              phone: {
+                description:
+                  'The phone number to verify. Should be the same as the one passed to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+              code: {
+                description:
+                  'The code received via SMS as a result of the call to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                description:
+                  'JWT to be used in a call to `app.bsky.contact.importContacts`. It is only valid for a single call.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RateLimitExceeded',
+          },
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidPhone',
+          },
+          {
+            name: 'InvalidCode',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
       },
     },
   },
@@ -4479,6 +4943,30 @@ export const schemaDict = {
             description:
               'if the actor is followed by this DID, contains the AT-URI of the follow record',
           },
+          blocking: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID, this is the AT-URI of the block record',
+          },
+          blockedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID, contains the AT-URI of the block record',
+          },
+          blockingByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID via a block list, this is the AT-URI of the listblock record',
+          },
+          blockedByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record',
+          },
         },
       },
     },
@@ -6377,6 +6865,7 @@ export const schemaDict = {
               'like-via-repost',
               'repost-via-repost',
               'subscribed-post',
+              'contact-match',
             ],
           },
           reasonSubject: {
@@ -15553,6 +16042,7 @@ export const schemaDict = {
           },
           comment: {
             type: 'string',
+            minLength: 1,
             description: 'Comment describing the reason for the override.',
           },
         },
@@ -15564,6 +16054,7 @@ export const schemaDict = {
         required: ['comment'],
         properties: {
           comment: {
+            minLength: 1,
             type: 'string',
             description: 'Comment describing the reason for the revocation.',
           },
@@ -19643,6 +20134,16 @@ export const ids = {
   AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
   AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',
   AppBskyBookmarkGetBookmarks: 'app.bsky.bookmark.getBookmarks',
+  AppBskyContactDefs: 'app.bsky.contact.defs',
+  AppBskyContactDismissMatch: 'app.bsky.contact.dismissMatch',
+  AppBskyContactGetMatches: 'app.bsky.contact.getMatches',
+  AppBskyContactGetSyncStatus: 'app.bsky.contact.getSyncStatus',
+  AppBskyContactImportContacts: 'app.bsky.contact.importContacts',
+  AppBskyContactRemoveData: 'app.bsky.contact.removeData',
+  AppBskyContactSendNotification: 'app.bsky.contact.sendNotification',
+  AppBskyContactStartPhoneVerification:
+    'app.bsky.contact.startPhoneVerification',
+  AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',

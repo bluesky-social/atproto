@@ -4,7 +4,7 @@ import {
   PreferenceReader,
   prefMatchNamespace,
 } from './reader'
-import { PrefAllowedOptions, prefAllowed } from './util'
+import { PrefAllowedOptions, isReadOnlyPref, prefAllowed } from './util'
 
 export class PreferenceTransactor extends PreferenceReader {
   async putPreferences(
@@ -29,12 +29,14 @@ export class PreferenceTransactor extends PreferenceReader {
       .selectFrom('account_pref')
       .select(['id', 'name'])
       .execute()
-    const putPrefs = values.map((value) => {
-      return {
-        name: value.$type,
-        valueJson: JSON.stringify(value),
-      }
-    })
+    const putPrefs = values
+      .filter((value) => !isReadOnlyPref(value.$type))
+      .map((value) => {
+        return {
+          name: value.$type,
+          valueJson: JSON.stringify(value),
+        }
+      })
     const allPrefIdsInNamespace = allPrefs
       .filter((pref) => prefMatchNamespace(namespace, pref.name))
       .filter((pref) => prefAllowed(pref.name, opts))

@@ -900,6 +900,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -955,6 +960,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1010,6 +1020,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1065,6 +1080,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1127,6 +1147,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1189,6 +1214,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1251,6 +1281,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1375,6 +1410,12 @@ describe('agent', () => {
             birthDate: '2021-09-11T18:05:42.556Z',
           },
           {
+            $type: 'app.bsky.actor.defs#declaredAgePref',
+            isOverAge13: false,
+            isOverAge16: false,
+            isOverAge18: false,
+          },
+          {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
@@ -1445,6 +1486,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1509,6 +1555,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1574,6 +1625,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1635,6 +1691,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1696,6 +1757,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1757,6 +1823,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1829,6 +1900,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1907,7 +1983,12 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#personalDetailsPref',
             birthDate: '2023-09-11T18:05:42.556Z',
           },
-
+          {
+            $type: 'app.bsky.actor.defs#declaredAgePref',
+            isOverAge13: false,
+            isOverAge16: false,
+            isOverAge18: false,
+          },
           {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',

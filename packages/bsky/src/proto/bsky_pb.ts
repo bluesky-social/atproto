@@ -97,6 +97,26 @@ proto3.util.setEnumType(FeedType, "bsky.FeedType", [
 ]);
 
 /**
+ * @generated from enum bsky.SitemapPageType
+ */
+export enum SitemapPageType {
+  /**
+   * @generated from enum value: SITEMAP_PAGE_TYPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: SITEMAP_PAGE_TYPE_USER = 1;
+   */
+  USER = 1,
+}
+// Retrieve enum metadata with: proto3.getEnumType(SitemapPageType)
+proto3.util.setEnumType(SitemapPageType, "bsky.SitemapPageType", [
+  { no: 0, name: "SITEMAP_PAGE_TYPE_UNSPECIFIED" },
+  { no: 1, name: "SITEMAP_PAGE_TYPE_USER" },
+]);
+
+/**
  * @generated from message bsky.Record
  */
 export class Record extends Message<Record> {
@@ -9468,6 +9488,174 @@ export class GetFollowsFollowingResponse extends Message<GetFollowsFollowingResp
 
   static equals(a: GetFollowsFollowingResponse | PlainMessage<GetFollowsFollowingResponse> | undefined, b: GetFollowsFollowingResponse | PlainMessage<GetFollowsFollowingResponse> | undefined): boolean {
     return proto3.util.equals(GetFollowsFollowingResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetSitemapIndexRequest
+ */
+export class GetSitemapIndexRequest extends Message<GetSitemapIndexRequest> {
+  /**
+   * @generated from field: bsky.SitemapPageType type = 1;
+   */
+  type = SitemapPageType.UNSPECIFIED;
+
+  constructor(data?: PartialMessage<GetSitemapIndexRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetSitemapIndexRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "type", kind: "enum", T: proto3.getEnumType(SitemapPageType) },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSitemapIndexRequest {
+    return new GetSitemapIndexRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetSitemapIndexRequest {
+    return new GetSitemapIndexRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetSitemapIndexRequest {
+    return new GetSitemapIndexRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetSitemapIndexRequest | PlainMessage<GetSitemapIndexRequest> | undefined, b: GetSitemapIndexRequest | PlainMessage<GetSitemapIndexRequest> | undefined): boolean {
+    return proto3.util.equals(GetSitemapIndexRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetSitemapIndexResponse
+ */
+export class GetSitemapIndexResponse extends Message<GetSitemapIndexResponse> {
+  /**
+   * GZIP compressed XML sitemap
+   *
+   * @generated from field: bytes sitemap = 1;
+   */
+  sitemap = new Uint8Array(0);
+
+  constructor(data?: PartialMessage<GetSitemapIndexResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetSitemapIndexResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "sitemap", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSitemapIndexResponse {
+    return new GetSitemapIndexResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetSitemapIndexResponse {
+    return new GetSitemapIndexResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetSitemapIndexResponse {
+    return new GetSitemapIndexResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetSitemapIndexResponse | PlainMessage<GetSitemapIndexResponse> | undefined, b: GetSitemapIndexResponse | PlainMessage<GetSitemapIndexResponse> | undefined): boolean {
+    return proto3.util.equals(GetSitemapIndexResponse, a, b);
+  }
+}
+
+/**
+ * Sitemap HTTP paths are typically of the form `/type/yyyy-mm-dd/N.xml.gz`, i.e. `/users/2025-01-01/1.xml.gz`
+ *
+ * @generated from message bsky.GetSitemapPageRequest
+ */
+export class GetSitemapPageRequest extends Message<GetSitemapPageRequest> {
+  /**
+   * @generated from field: bsky.SitemapPageType type = 1;
+   */
+  type = SitemapPageType.UNSPECIFIED;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp date = 2;
+   */
+  date?: Timestamp;
+
+  /**
+   * One-indexed
+   *
+   * @generated from field: int32 bucket = 3;
+   */
+  bucket = 0;
+
+  constructor(data?: PartialMessage<GetSitemapPageRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetSitemapPageRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "type", kind: "enum", T: proto3.getEnumType(SitemapPageType) },
+    { no: 2, name: "date", kind: "message", T: Timestamp },
+    { no: 3, name: "bucket", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSitemapPageRequest {
+    return new GetSitemapPageRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetSitemapPageRequest {
+    return new GetSitemapPageRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetSitemapPageRequest {
+    return new GetSitemapPageRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetSitemapPageRequest | PlainMessage<GetSitemapPageRequest> | undefined, b: GetSitemapPageRequest | PlainMessage<GetSitemapPageRequest> | undefined): boolean {
+    return proto3.util.equals(GetSitemapPageRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetSitemapPageResponse
+ */
+export class GetSitemapPageResponse extends Message<GetSitemapPageResponse> {
+  /**
+   * GZIP compressed XML sitemap
+   *
+   * @generated from field: bytes sitemap = 1;
+   */
+  sitemap = new Uint8Array(0);
+
+  constructor(data?: PartialMessage<GetSitemapPageResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetSitemapPageResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "sitemap", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetSitemapPageResponse {
+    return new GetSitemapPageResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetSitemapPageResponse {
+    return new GetSitemapPageResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetSitemapPageResponse {
+    return new GetSitemapPageResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetSitemapPageResponse | PlainMessage<GetSitemapPageResponse> | undefined, b: GetSitemapPageResponse | PlainMessage<GetSitemapPageResponse> | undefined): boolean {
+    return proto3.util.equals(GetSitemapPageResponse, a, b);
   }
 }
 

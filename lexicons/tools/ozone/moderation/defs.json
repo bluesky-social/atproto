@@ -582,6 +582,7 @@
         },
         "comment": {
           "type": "string",
+          "minLength": 1,
           "description": "Comment describing the reason for the override."
         }
       }
@@ -592,6 +593,7 @@
       "required": ["comment"],
       "properties": {
         "comment": {
+          "minLength": 1,
           "type": "string",
           "description": "Comment describing the reason for the revocation."
         }

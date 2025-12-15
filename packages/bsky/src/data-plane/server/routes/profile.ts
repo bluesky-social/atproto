@@ -144,12 +144,14 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
         const status = row?.ageAssuranceStatus ?? 'unknown'
         let access = row?.ageAssuranceAccess
-        if (status === 'assured') {
-          access = 'full'
-        } else if (status === 'blocked') {
-          access = 'none'
-        } else {
-          access = 'unknown'
+        if (!access || access === 'unknown') {
+          if (status === 'assured') {
+            access = 'full'
+          } else if (status === 'blocked') {
+            access = 'none'
+          } else {
+            access = 'unknown'
+          }
         }
 
         return {

@@ -1319,6 +1319,33 @@ message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
 
+message GetSitemapIndexRequest {
+  SitemapPageType type = 1;
+}
+
+message GetSitemapIndexResponse {
+  // GZIP compressed XML sitemap
+  bytes sitemap = 1;
+}
+
+// Sitemap HTTP paths are typically of the form `/type/yyyy-mm-dd/N.xml.gz`, i.e. `/users/2025-01-01/1.xml.gz`
+message GetSitemapPageRequest {
+  SitemapPageType type = 1;
+  google.protobuf.Timestamp date = 2;
+  // One-indexed
+  int32 bucket = 3;
+}
+
+enum SitemapPageType {
+  SITEMAP_PAGE_TYPE_UNSPECIFIED = 0;
+  SITEMAP_PAGE_TYPE_USER = 1;
+}
+
+message GetSitemapPageResponse {
+  // GZIP compressed XML sitemap
+  bytes sitemap = 1;
+}
+
 // Ping
 message PingRequest {}
 message PingResponse {}
@@ -1479,6 +1506,10 @@ service Service {
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
+
+  // Sitemaps
+  rpc GetSitemapIndex(GetSitemapIndexRequest) returns (GetSitemapIndexResponse);
+  rpc GetSitemapPage(GetSitemapPageRequest) returns (GetSitemapPageResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
