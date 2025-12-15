@@ -1,6 +1,10 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyEmbedExternal, ComGermnetworkDeclaration, AtpAgent } from '@atproto/api'
+import {
+  AppBskyEmbedExternal,
+  AtpAgent,
+  ComGermnetworkDeclaration,
+} from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
@@ -498,12 +502,12 @@ describe('pds profile views', () => {
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: ids.ComGermnetworkDeclaration,
-      version: "0.1.0",
+      version: '0.1.0',
       currentKey: new Uint8Array([0o01, 0o02, 0o03]),
       messageMe: {
-        messageMeUrl: "https://chat.example.com/start-conversation",
-        showButtonTo: "everyone",
-      }
+        messageMeUrl: 'https://chat.example.com/start-conversation',
+        showButtonTo: 'everyone',
+      },
     }
 
     it(`omits germ record if doesn't exist`, async () => {
@@ -543,7 +547,7 @@ describe('pds profile views', () => {
           ),
         },
       )
-      expect(data.associated?.germ?.showButtonTo).toEqual("everyone")
+      expect(data.associated?.germ?.showButtonTo).toEqual('everyone')
       expect(forSnapshot(data.associated?.germ)).toMatchSnapshot()
     })
   })

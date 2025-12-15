@@ -4,7 +4,6 @@ import { Selectable, sql } from 'kysely'
 import {
   AppBskyNotificationDeclaration,
   ChatBskyActorDeclaration,
-  ComGermnetworkDeclaration,
 } from '@atproto/api'
 import { keyBy } from '@atproto/common'
 import { parseRecordBytes } from '../../../hydration/util'

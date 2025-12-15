@@ -298,7 +298,10 @@ export class Views {
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
         germ: actor.germ?.record.messageMe
-          ? { showButtonTo: actor.germ.record.messageMe.showButtonTo, messageMeUrl: actor.germ.record.messageMe.messageMeUrl }
+          ? {
+              showButtonTo: actor.germ.record.messageMe.showButtonTo,
+              messageMeUrl: actor.germ.record.messageMe.messageMeUrl,
+            }
           : undefined,
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
@@ -370,7 +373,10 @@ export class Views {
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
         germ: actor.germ?.record.messageMe
-          ? { showButtonTo: actor.germ.record.messageMe.showButtonTo, messageMeUrl: actor.germ.record.messageMe.messageMeUrl }
+          ? {
+              showButtonTo: actor.germ.record.messageMe.showButtonTo,
+              messageMeUrl: actor.germ.record.messageMe.messageMeUrl,
+            }
           : undefined,
       },
       viewer: this.profileViewer(did, state),
