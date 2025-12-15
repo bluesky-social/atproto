@@ -49,7 +49,7 @@ describe('lexiconDocumentSchema', () => {
       }),
     ).toMatchObject({
       success: false,
-      error: { issues: [{ code: 'invalid_value', values: [1] }] },
+      reason: { issues: [{ code: 'invalid_value', values: [1] }] },
     })
   })
 
@@ -66,7 +66,7 @@ describe('lexiconDocumentSchema', () => {
       }),
     ).toMatchObject({
       success: false,
-      error: { issues: [{ code: 'invalid_format', format: 'nsid' }] },
+      reason: { issues: [{ code: 'invalid_format', format: 'nsid' }] },
     })
   })
 
@@ -83,7 +83,7 @@ describe('lexiconDocumentSchema', () => {
       }),
     ).toMatchObject({
       success: false,
-      error: { issues: [{ code: 'invalid_type', expected: ['string'] }] },
+      reason: { issues: [{ code: 'invalid_type', expected: ['string'] }] },
     })
   })
 
@@ -104,7 +104,7 @@ describe('lexiconDocumentSchema', () => {
       }),
     ).toMatchObject({
       success: false,
-      error: {
+      reason: {
         issues: [{ code: 'custom', path: ['defs', 'demo', 'required'] }],
       },
     })
