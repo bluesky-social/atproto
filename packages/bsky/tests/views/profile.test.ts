@@ -516,7 +516,7 @@ describe('pds profile views', () => {
           ),
         },
       )
-      expect(data.germ).toBeUndefined()
+      expect(data.associated?.germ).toBeUndefined()
     })
 
     it('returns germ record if it does exist', async () => {
@@ -543,8 +543,8 @@ describe('pds profile views', () => {
           ),
         },
       )
-      expect(data.associated.germ.showButtonTo).toEqual("everyone")
-      expect(forSnapshot(data.associated.germ)).toMatchSnapshot()
+      expect(data.associated?.germ?.showButtonTo).toEqual("everyone")
+      expect(forSnapshot(data.associated?.germ)).toMatchSnapshot()
     })
   })
 
