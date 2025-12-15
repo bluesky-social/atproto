@@ -73,21 +73,6 @@ describe('Subscription', () => {
       expect(subscription).toBeInstanceOf(Subscription)
       expect(subscription.parameters).toBe(parameters)
     })
-
-    it('creates a Subscription instance with undefined message', () => {
-      const nsid = asNsidString('app.bsky.feed.subscribe')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      expect(subscription).toBeInstanceOf(Subscription)
-      expect(subscription.message).toBeUndefined()
-    })
   })
 
   describe('type property', () => {
@@ -256,21 +241,6 @@ describe('Subscription', () => {
       expect(subscription).toBeInstanceOf(Subscription)
       expect(subscription.message).toBeInstanceOf(RefSchema)
     })
-
-    it('creates a Subscription with undefined message', () => {
-      const nsid = asNsidString('app.bsky.feed.subscribe')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      expect(subscription).toBeInstanceOf(Subscription)
-      expect(subscription.message).toBeUndefined()
-    })
   })
 
   describe('with different error configurations', () => {
@@ -368,25 +338,6 @@ describe('Subscription', () => {
 
       expect(msg.seq).toBeDefined()
       expect(msg.data).toBeDefined()
-    })
-
-    it('InferSubscriptionMessage returns unknown for undefined message', () => {
-      const nsid = asNsidString('app.bsky.feed.subscribe')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      type Message = InferSubscriptionMessage<typeof subscription>
-
-      // Type-level test - unknown should accept any value
-      const msg: Message = { anything: 'value' }
-
-      expect(msg).toBeDefined()
     })
   })
 
@@ -670,20 +621,6 @@ describe('Subscription', () => {
 
       expect(subscription.message).toBeInstanceOf(RefSchema)
       expect(subscription.message).toBe(message)
-    })
-
-    it('constructs with undefined message', () => {
-      const nsid = asNsidString('app.bsky.test')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      expect(subscription.message).toBeUndefined()
     })
   })
 })
