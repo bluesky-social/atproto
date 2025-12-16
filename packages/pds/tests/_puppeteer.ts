@@ -31,7 +31,7 @@ export class PageHelper implements AsyncDisposable {
   }
 
   async clickOnButton(text: string) {
-    return this.clickOn(`button::-p-text(${text})`)
+    return this.clickOn(`button::-p-text(${JSON.stringify(text)})`)
   }
 
   async typeIn(selector: string, text: string) {
@@ -46,7 +46,7 @@ export class PageHelper implements AsyncDisposable {
   }
 
   async ensureTextVisibility(text: string, tag = 'p') {
-    await this.page.waitForSelector(`${tag}::-p-text(${text})`)
+    await this.page.waitForSelector(`${tag}::-p-text(${JSON.stringify(text)})`)
   }
 
   protected async getVisibleElement(selector: string) {
@@ -64,8 +64,24 @@ export class PageHelper implements AsyncDisposable {
     return this.page.close()
   }
 
-  static async from(browser: Browser) {
+  static async from(
+    browser: Browser,
+    options?: { languages?: readonly string[] },
+  ) {
     const page = await browser.newPage()
+
+    if (options?.languages?.length) {
+      // Spoof navigator language settings
+      await page.evaluateOnNewDocument(`
+        Object.defineProperty(navigator, 'languages', {
+          get: () => ${JSON.stringify(options.languages)},
+        })
+        Object.defineProperty(navigator, 'language', {
+          get: () => ${JSON.stringify(options.languages[0])},
+        })
+      `)
+    }
+
     return new PageHelper(page)
   }
 }

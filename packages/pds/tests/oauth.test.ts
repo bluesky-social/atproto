@@ -18,17 +18,18 @@ describe('oauth', () => {
 
   let appUrl: string
 
+  // @NOTE We are using another language than "en" as default language to
+  // test the language negotiation.
+  const languages = ['fr-BE', 'fr', 'en-US', 'en']
+
   beforeAll(async () => {
     browser = await launch({
-      browser: 'chrome',
-      // @NOTE We are using another language than "en" as default language to
-      // test the language negotiation.
-      args: ['--accept-lang=fr-BE,en-GB,en'],
+      browser: 'chrome', // "firefox"
 
       // For debugging:
-      headless: false,
-      devtools: true,
-      slowMo: 250,
+      // headless: false,
+      // devtools: true,
+      // slowMo: 250,
     })
 
     network = await TestNetworkNoAppView.create({
@@ -65,7 +66,7 @@ describe('oauth', () => {
   })
 
   it('Allows to sign-up trough OAuth', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -123,7 +124,7 @@ describe('oauth', () => {
         // noop
       })
 
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -174,7 +175,7 @@ describe('oauth', () => {
   })
 
   it('Allows to sign-in trough OAuth', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -220,7 +221,7 @@ describe('oauth', () => {
   })
 
   it('remembers the session', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
