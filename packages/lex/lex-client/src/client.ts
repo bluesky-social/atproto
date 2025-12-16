@@ -18,12 +18,7 @@ import {
   Schema,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import {
-  KnownError,
-  XrpcError,
-  XrpcRequestFailure,
-  asXrpcRequestFailureFor,
-} from './error.js'
+import { XrpcError } from './error.js'
 import { com } from './lexicons.js'
 import {
   BinaryBodyInit,
@@ -33,7 +28,14 @@ import {
   getMain,
 } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
-import { XrpcOptions, XrpcResponse, XrpcResponseBody, xrpc } from './xrpc.js'
+import {
+  XrpcFailure,
+  XrpcOptions,
+  XrpcResponse,
+  XrpcResponseBody,
+  xrpc,
+  xrpcSafe,
+} from './xrpc.js'
 
 export type ClientOptions = {
   labelers?: Iterable<DidString>
@@ -165,7 +167,7 @@ export class Client implements Agent {
   }
 
   public assertAuthenticated(): asserts this is { did: DidString } {
-    if (!this.did) throw new XrpcError(KnownError.AuthenticationRequired)
+    if (!this.did) throw new XrpcError('AuthenticationRequired')
   }
 
   public setLabelers(labelers: Iterable<DidString> = []) {
@@ -202,6 +204,9 @@ export class Client implements Agent {
     return this.agent.fetchHandler(path, { ...init, headers })
   }
 
+  /**
+   * @throws {XrpcFailure<M>} when the request fails or the response is an error
+   */
   async xrpc<const M extends Query | Procedure>(
     ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Namespace<M>
@@ -222,17 +227,16 @@ export class Client implements Agent {
     ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Namespace<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M> | XrpcRequestFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Namespace<M>,
     options: XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcRequestFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Namespace<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
-  ): Promise<unknown> {
-    const schema = getMain(ns)
-    return this.xrpc(schema, options).catch(asXrpcRequestFailureFor(schema))
+  ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
+    return xrpcSafe(this, ns, options)
   }
 
   /**
@@ -256,12 +260,6 @@ export class Client implements Agent {
     })
   }
 
-  async createRecordsSafe(...args: Parameters<Client['createRecord']>) {
-    return this.createRecord(...args).catch(
-      asXrpcRequestFailureFor(com.atproto.repo.createRecord.main),
-    )
-  }
-
   async deleteRecord(
     collection: NsidString,
     rkey: string,
@@ -279,12 +277,6 @@ export class Client implements Agent {
     })
   }
 
-  async deleteRecordsSafe(...args: Parameters<Client['deleteRecord']>) {
-    return this.deleteRecord(...args).catch(
-      asXrpcRequestFailureFor(com.atproto.repo.deleteRecord.main),
-    )
-  }
-
   public async getRecord(
     collection: NsidString,
     rkey: string,
@@ -298,12 +290,6 @@ export class Client implements Agent {
         rkey,
       },
     })
-  }
-
-  async getRecordsSafe(...args: Parameters<Client['getRecord']>) {
-    return this.getRecord(...args).catch(
-      asXrpcRequestFailureFor(com.atproto.repo.getRecord.main),
-    )
   }
 
   async putRecord(
@@ -323,12 +309,6 @@ export class Client implements Agent {
         swapRecord: options?.swapRecord,
       },
     })
-  }
-
-  async putRecordsSafe(...args: Parameters<Client['putRecord']>) {
-    return this.putRecord(...args).catch(
-      asXrpcRequestFailureFor(com.atproto.repo.putRecord.main),
-    )
   }
 
   async listRecords(nsid: NsidString, options?: ListRecordsOptions) {

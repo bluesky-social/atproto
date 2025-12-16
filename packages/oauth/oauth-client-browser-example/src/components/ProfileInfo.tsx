@@ -1,9 +1,10 @@
-import { useGetActorProfileQuery } from '../queries/use-get-actor-profile-query.ts'
+import { app } from '../lexicons.ts'
+import { useAtprotoRecord } from '../queries/use-atproto-record.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function ProfileInfo() {
-  const result = useGetActorProfileQuery()
+  const result = useAtprotoRecord(app.bsky.actor.profile)
 
   return (
     <div>

@@ -1,175 +1,170 @@
 import { l } from '@atproto/lex-schema'
 import { Payload } from './util.js'
 
-export enum KnownError {
-  Unknown = 'Unknown',
-  AuthenticationRequired = 'AuthenticationRequired',
-  Forbidden = 'Forbidden',
-  InternalServerError = 'InternalServerError',
-  InvalidRequest = 'InvalidRequest',
-  InvalidResponse = 'InvalidResponse',
-  MethodNotImplemented = 'MethodNotImplemented',
-  NotAcceptable = 'NotAcceptable',
-  NotEnoughResources = 'NotEnoughResources',
-  PayloadTooLarge = 'PayloadTooLarge',
-  RateLimitExceeded = 'RateLimitExceeded',
-  UnsupportedMediaType = 'UnsupportedMediaType',
-  UpstreamFailure = 'UpstreamFailure',
-  UpstreamTimeout = 'UpstreamTimeout',
-  XRPCNotSupported = 'XRPCNotSupported',
-}
-
-/**
- * This is basically an {@link l.ResultFailure} with an `error` string property
- * to identify the type of XRPC error encountered.
- */
-export type XrpcFailure<N extends string, E> = l.ResultFailure<E> & {
-  error: N
-}
-
-export type XrpcErrorName = l.UnknownString | KnownError
-export const xrpcErrorNameSchema = l.string({
+export type XrpcErrorCode = string
+export const xrpcErrorCodeSchema: l.Schema<XrpcErrorCode> = l.string({
   minLength: 1,
 })
 
-export type XrpcErrorBody<N extends XrpcErrorName = XrpcErrorName> = {
-  error: N
-  message?: string
-}
-export const xrpcErrorBodySchema = l.object({
-  error: xrpcErrorNameSchema,
-  message: l.optional(l.string()),
-})
-
-/**
- * @implements {XrpcFailure<N, XrpcError<N>>} for convenience in result handling contexts.
- */
-export class XrpcError<N extends XrpcErrorName = XrpcErrorName>
-  extends Error
-  implements XrpcFailure<N, XrpcError<N>>
-{
+export class XrpcError<N extends XrpcErrorCode = XrpcErrorCode> extends Error {
   name = 'XrpcError'
 
   constructor(
-    public readonly error: N,
-    message: string = error === KnownError.InvalidResponse
-      ? `XRPC service returned an invalid response`
-      : error === KnownError.InternalServerError
-        ? `XRPC service encountered an internal error`
-        : error === KnownError.UpstreamFailure ||
-            error === KnownError.UpstreamTimeout
-          ? `XRPC service upstream error`
-          : `XRPC ${error} error`,
+    readonly error: N,
+    message: string = `An ${error} XRPC error occurred.`,
     options?: ErrorOptions,
   ) {
     super(message, options)
   }
+}
 
-  /** @see {@link l.ResultFailure.success} */
-  readonly success = false as const
+export type XrpcErrorBody<N extends XrpcErrorCode = XrpcErrorCode> = {
+  error: N
+  message?: string
+}
+export type XrpcErrorPayload<N extends XrpcErrorCode = XrpcErrorCode> = {
+  encoding: 'application/json'
+  body: XrpcErrorBody<N>
+}
 
-  /** @see {@link l.ResultFailure.reason} */
+const xrpcErrorBodySchema: l.Schema<XrpcErrorBody> = l.object({
+  error: xrpcErrorCodeSchema,
+  message: l.optional(l.string()),
+})
+
+/**
+ * All unsuccessful responses should follow a standard error response
+ * schema. The Content-Type should be application/json, and the payload
+ * should be a JSON object with the following fields:
+ *
+ * - `error` (string, required): type name of the error (generic ASCII
+ *   constant, no whitespace)
+ * - `message` (string, optional): description of the error, appropriate for
+ *   display to humans
+ *
+ * This function checks whether a given payload matches this schema.
+ */
+export function isXrpcErrorPayload(
+  payload: Payload | null,
+): payload is XrpcErrorPayload {
+  return (
+    payload !== null &&
+    payload.encoding === 'application/json' &&
+    xrpcErrorBodySchema.matches(payload.body)
+  )
+}
+
+/**
+ * Interface representing a failed XRPC request result.
+ */
+export type XrpcFailureResult<
+  N extends XrpcErrorCode,
+  E,
+> = l.ResultFailure<E> & {
+  readonly error: N
+  shouldRetry(): boolean
+}
+
+/**
+ * Class used to represent an HTTP request that resulted in an XRPC method error
+ * That is, a non-2xx response with a valid XRPC error payload.
+ */
+export class XrpcResponseError<N extends XrpcErrorCode = XrpcErrorCode>
+  extends XrpcError<N>
+  implements XrpcFailureResult<N, XrpcResponseError<N>>
+{
+  name = 'XrpcResponseError'
+
+  readonly success = false
   get reason(): this {
     return this
   }
 
-  isKnownErrorFor<T extends l.Procedure | l.Query>(
-    ns: T | { main: T },
-  ): this is T extends { errors: readonly (infer E extends string)[] }
-    ? XrpcError<E>
-    : never {
-    const schema = 'main' in ns ? ns.main : ns
-    if (!schema.errors?.length) return false
-    return schema.errors.includes(this.error)
+  constructor(
+    readonly status: number,
+    readonly headers: Headers,
+    readonly payload: XrpcErrorPayload<N>,
+    options?: ErrorOptions,
+  ) {
+    const { error, message } = payload.body
+    super(error, message, options)
   }
 
-  static isKnownErrorFor<T extends l.Procedure | l.Query>(
-    error: unknown,
-    ns: T | { main: T },
-  ): error is T extends { errors: readonly (infer E extends string)[] }
-    ? XrpcError<E>
-    : never {
-    const schema = 'main' in ns ? ns.main : ns
-    if (!schema.errors?.length) return false
-    if (!(error instanceof XrpcError)) return false
-    return schema.errors.includes(error.error)
+  get body(): XrpcErrorBody<N> {
+    return this.payload.body
   }
 
-  static from(cause: unknown, message?: string): XrpcError {
-    if (cause instanceof XrpcError) {
-      return cause
+  shouldRetry(): boolean {
+    // Do not retry client errors
+    return this.status >= 500
+  }
+}
+
+/**
+ * This class represents an invalid XRPC response from the server.
+ */
+export class XrpcInvalidResponseError extends XrpcError<'InvalidResponse'> {
+  name = 'XrpcInvalidResponseError'
+
+  // For debugging purposes, we keep the response details here
+  readonly response: {
+    status: number
+    headers: Headers
+    payload: Payload | null
+  }
+
+  constructor(
+    message: string,
+    response: { status: number; headers: Headers },
+    payload: Payload | null,
+    options?: ErrorOptions,
+  ) {
+    super('InvalidResponse', message, { cause: options?.cause })
+    this.response = {
+      status: response.status,
+      headers: response.headers,
+      payload,
     }
-    return new XrpcError(
-      'Unknown',
-      message ?? (cause instanceof Error ? cause.message : undefined),
-      { cause },
-    )
   }
 }
 
-export class XrpcServiceError<
-  N extends XrpcErrorName = XrpcErrorName,
-> extends XrpcError<N> {
-  name = 'XrpcServiceError'
+export class XrpcUnexpectedError
+  extends XrpcError<'Unexpected'>
+  implements XrpcFailureResult<'Unexpected', unknown>
+{
+  name = 'XrpcUnexpectedError'
 
-  constructor(
-    name: N,
-    public readonly status: number,
-    public readonly headers: Headers,
-    public readonly payload: null | Payload,
-    message?: string,
-    options?: ErrorOptions,
-  ) {
-    super(name, message, options)
-  }
-}
-
-export class XrpcResponseError<
-  N extends XrpcErrorName = XrpcErrorName,
-  B extends XrpcErrorBody<N> = XrpcErrorBody<N>,
-> extends XrpcError<N> {
-  name = 'XrpcResponseError'
-  constructor(
-    public readonly status: number,
-    public readonly headers: Headers,
-    public readonly body: B,
-    options?: ErrorOptions,
-  ) {
-    super(body.error, body.message, options)
-  }
-}
-
-export type XrpcRequestFailure<M extends l.Procedure | l.Query> =
-  // The server responded with a declared error.
-  | (M extends { errors: readonly (infer N extends string)[] }
-      ? XrpcResponseError<N> // implements XrpcRequestFailure<N, XrpcResponseError<N>>
-      : never)
-  // The server responded with an error that is not declared in the method's
-  // `errors` list.
-  | XrpcFailure<'Unknown', XrpcResponseError>
-  // An unexpected error occurred (e.g., network error, invalid response, etc.)
-  | XrpcFailure<'UnexpectedError', unknown>
-
-export function asXrpcRequestFailureFor<M extends l.Procedure | l.Query>(
-  schema: M,
-) {
-  // Performance: Using .bind instead of arrow function to avoid creating a closure
-  return asXrpcRequestFailure.bind(schema) as (
-    error: unknown,
-  ) => XrpcRequestFailure<M>
-}
-
-function asXrpcRequestFailure<M extends l.Procedure | l.Query>(
-  this: M,
-  reason: unknown,
-): XrpcRequestFailure<M> {
-  if (!(reason instanceof XrpcResponseError)) {
-    return { success: false, reason, error: 'UnexpectedError' }
+  readonly success = false
+  get reason() {
+    return this.cause
   }
 
-  if (!this.errors?.includes(reason.error)) {
-    return { success: false, reason, error: 'Unknown' }
+  protected constructor(message: string, options: Required<ErrorOptions>) {
+    super('Unexpected', message, options)
   }
 
-  return reason
+  shouldRetry(): boolean {
+    const { reason } = this
+
+    if (reason instanceof XrpcResponseError) {
+      return reason.shouldRetry()
+    }
+
+    // There is no reason why retying would fix the server returning an invalid response
+    if (reason instanceof XrpcInvalidResponseError) {
+      return false
+    }
+
+    return true
+  }
+
+  static from(
+    cause: unknown,
+    message: string = cause instanceof XrpcError
+      ? cause.message
+      : 'XRPC request failed',
+  ): XrpcUnexpectedError {
+    if (cause instanceof XrpcUnexpectedError) return cause
+    return new XrpcUnexpectedError(message, { cause })
+  }
 }

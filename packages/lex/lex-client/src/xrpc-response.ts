@@ -7,10 +7,9 @@ import {
   ResultSuccess,
 } from '@atproto/lex-schema'
 import {
-  KnownError,
+  XrpcInvalidResponseError,
   XrpcResponseError,
-  XrpcServiceError,
-  xrpcErrorBodySchema,
+  isXrpcErrorPayload,
 } from './error.js'
 import { Payload } from './util.js'
 
@@ -61,6 +60,10 @@ export class XrpcResponse<const M extends Procedure | Query>
     return this.payload?.body as XrpcResponseBody<M>
   }
 
+  /**
+   * @throws {XrpcInvalidResponseError} when the response is invalid according
+   * to the method schema.
+   */
   static async fromFetchResponse<const M extends Procedure | Query>(
     schema: M,
     response: Response,
@@ -73,43 +76,27 @@ export class XrpcResponse<const M extends Procedure | Query>
     const payload = await readPayload(response, {
       asBinaryData: schema.output.encoding === '*/*',
     }).catch((cause) => {
-      throw new XrpcServiceError(
-        KnownError.InvalidResponse,
-        response.status,
-        response.headers,
+      throw new XrpcInvalidResponseError(
+        'Failed to read response body',
+        response,
         null,
-        'Failed to read XRPC response',
         { cause },
       )
     })
 
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
-      // All unsuccessful responses should follow a standard error response
-      // schema. The Content-Type should be application/json, and the payload
-      // should be a JSON object with the following fields:
-      // - error (string, required): type name of the error (generic ASCII
-      //   constant, no whitespace)
-      // - message (string, optional): description of the error, appropriate for
-      //   display to humans
-      if (
-        payload !== null &&
-        payload.encoding === 'application/json' &&
-        xrpcErrorBodySchema.matches(payload.body)
-      ) {
-        throw new XrpcResponseError(
-          response.status,
-          response.headers,
-          payload.body,
-        )
+      if (response.status >= 400 && isXrpcErrorPayload(payload)) {
+        throw new XrpcResponseError(response.status, response.headers, payload)
       }
 
-      throw new XrpcServiceError(
+      throw new XrpcInvalidResponseError(
         response.status >= 500
-          ? KnownError.InternalServerError
-          : KnownError.InvalidResponse,
-        response.status,
-        response.headers,
+          ? `Upstream server encountered an error`
+          : response.status >= 400
+            ? `Upstream server returned an invalid response payload`
+            : `Upstream server returned an invalid status code`,
+        response,
         payload,
       )
     }
@@ -118,25 +105,21 @@ export class XrpcResponse<const M extends Procedure | Query>
     if (schema.output.encoding == null) {
       // Schema expects no payload
       if (payload) {
-        throw new XrpcServiceError(
-          KnownError.InvalidResponse,
-          response.status,
-          response.headers,
-          payload,
+        throw new XrpcInvalidResponseError(
           `Expected response with no body, got ${payload.encoding}`,
+          response,
+          payload,
         )
       }
     } else {
       // Schema expects a payload
       if (!payload || !schema.output.matchesEncoding(payload.encoding)) {
-        throw new XrpcServiceError(
-          KnownError.InvalidResponse,
-          response.status,
-          response.headers,
-          payload,
+        throw new XrpcInvalidResponseError(
           payload
             ? `Expected ${schema.output.encoding} response, got ${payload.encoding}`
             : `Expected non-empty response with content-type ${schema.output.encoding}`,
+          response,
+          payload,
         )
       }
 
@@ -147,12 +130,10 @@ export class XrpcResponse<const M extends Procedure | Query>
         })
 
         if (!result.success) {
-          throw new XrpcServiceError(
-            KnownError.InvalidResponse,
-            response.status,
-            response.headers,
-            payload,
+          throw new XrpcInvalidResponseError(
             `Response validation failed: ${result.reason.message}`,
+            response,
+            payload,
             { cause: result.reason },
           )
         }

@@ -617,23 +617,37 @@ const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
 })
 
 if (result.success) {
-  // Success - result is an XrpcResponse
+  // Handle success
   console.log(result.body)
 } else {
-  // Failure - result is a ResponseFailure, the type depends on the method's error definitions
-
-  result // ResponseFailure<"HandleNotFound">
-
-  // Handle error based on type
-  if (result.name === 'UnexpectedError') {
-    // Network error, invalid response, etc.
-    result.error // "unknown" type
-  } else if (result.name === 'Unknown') {
-    // Server returned a valid XRPC error response with an unknown error type
-    result.error // XrpcResponseError<string>
+  // Handle failure
+  if (result.error === 'Unknown') {
+    // Unable to perform the request
+    const { reason } = result
+    if (reason instanceof XrpcResponseError) {
+      // The server returned a syntactically valid XRPC error response, but
+      // used an error code that is not declared for this method
+      reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
+      reason.message // string
+      reason.status // number
+      reason.headers // Headers
+      reason.payload // { body: { error: string, message?: string }; encoding: string }
+    } else if (reason instanceof XrpcInvalidResponseError) {
+      // The response was incomplete (e.g. connection dropped), or
+      // invalid (e.g. malformed JSON, data does not match schema).
+      reason.error // "InvalidResponse"
+      reason.message // string
+      reason.response.status // number
+      reason.response.headers // Headers
+      reason.response.payload // null | { body: unknown; encoding: string }
+    } else {
+      reason // unknown (fetch failed, other?)
+    }
   } else {
-    // Declared error from the method's errors list
-    result.error // XrpcResponseError<"HandleNotFound">
+    // A declared error for that method
+    result // XrpcResponseError<"HandleNotFound">
+    result.error // "HandleNotFound"
+    result.message // string
   }
 }
 ```
@@ -660,10 +674,10 @@ The `ResponseFailure<M>` type is a union with three possible error types:
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   // XrpcResponseFailure<'Unknown', XrpcResponseError>
+   // XrpcResponseFailure<'Unexpected', XrpcResponseError>
    type UnknownXrpcResponseFailure = {
      success: false
-     name: 'Unknown'
+     name: 'Unexpected'
      error: XrpcResponseError<string>
    }
    ```
@@ -1202,7 +1216,7 @@ await client.call(unfollow, { followUri: uri })
 #### Updating Profile with Retry Logic
 
 ```typescript
-import { Action } from '@atproto/lex'
+import { Action, XrpcResponseError } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 
@@ -1244,7 +1258,7 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
     } catch (error) {
       // Retry on swap/concurrent modification errors
       if (
-        error instanceof XrpcRequestFailure &&
+        error instanceof XrpcResponseError &&
         error.name === 'SwapError' &&
         attempt < maxRetries - 1
       ) {

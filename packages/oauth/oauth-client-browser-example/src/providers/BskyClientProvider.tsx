@@ -39,6 +39,10 @@ export function useBskyClient() {
   return useContext(BskyClientContext)
 }
 
+export function useUnauthenticatedBskyClient() {
+  return unauthenticatedClient
+}
+
 /**
  * Can only be used from within an authenticated context
  * ({@link AuthenticationContext} or {@link OAuthContext}).
