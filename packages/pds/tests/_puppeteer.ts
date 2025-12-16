@@ -42,7 +42,7 @@ export class PageHelper implements AsyncDisposable {
   }
 
   async typeInInput(name: string, text: string) {
-    return this.typeIn(`input[name="${name}"]`, text)
+    return this.typeIn(`input[name=${JSON.stringify(name)}]`, text)
   }
 
   async ensureTextVisibility(text: string, tag = 'p') {
