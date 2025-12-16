@@ -33,12 +33,25 @@ describe('Client', () => {
             )
           } else if (url === '/xrpc/app.bsky.actor.putPreferences') {
             expect(typeof init?.body).toBe('string')
-            const { preferences } =
-              app.bsky.actor.putPreferences.$input.schema.parse(
+            const result =
+              app.bsky.actor.putPreferences.$input.schema.safeParse(
                 lexParse(init?.body as string),
               )
-            storedPreferences = preferences
-            return new Response(null, { status: 204 })
+            if (result.success) {
+              storedPreferences = result.value.preferences
+              return new Response(null, { status: 204 })
+            } else {
+              return new Response(
+                JSON.stringify({
+                  error: 'InvalidRequest',
+                  message: result.reason.message,
+                }),
+                {
+                  status: 400,
+                  headers: { 'Content-Type': 'application/json' },
+                },
+              )
+            }
           } else {
             return new Response('Not Found', { status: 404 })
           }
@@ -200,6 +213,126 @@ describe('Client', () => {
       expect(adultContentPref).toEqual({
         $type: 'app.bsky.actor.defs#adultContentPref',
         enabled: false,
+      })
+    })
+  })
+
+  describe('errors', () => {
+    it('handles invalid XRPC error payloads', async () => {
+      const fetchHandler = jest.fn(
+        async (url: string, init?: RequestInit): Promise<Response> => {
+          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+          expect(init?.method).toBe('GET')
+
+          const responseBody = {
+            invalidField: 'this is not a valid xrpc error payload',
+          }
+
+          return new Response(JSON.stringify(responseBody), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        },
+      )
+
+      const client = new Client({ fetchHandler })
+
+      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
+        'Upstream server returned an invalid response payload',
+      )
+    })
+
+    it('handles XRPC errors with invalid body data', async () => {
+      const fetchHandler = jest.fn(
+        async (url: string, init?: RequestInit): Promise<Response> => {
+          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+          expect(init?.method).toBe('GET')
+
+          return new Response('Not a JSON body', {
+            status: 400,
+            headers: { 'Content-Type': 'text/plain' },
+          })
+        },
+      )
+
+      const client = new Client({ fetchHandler })
+
+      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
+        'Upstream server returned an invalid response payload',
+      )
+    })
+
+    it('handles XRPC errors with invalid status code', async () => {
+      const fetchHandler = jest.fn(
+        async (url: string, init?: RequestInit): Promise<Response> => {
+          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+          expect(init?.method).toBe('GET')
+
+          return new Response(null, {
+            status: 302,
+          })
+        },
+      )
+
+      const client = new Client({ fetchHandler })
+
+      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
+        'Upstream server returned an invalid status code',
+      )
+    })
+
+    it('handles XRPC server errors', async () => {
+      const fetchHandler = jest.fn(
+        async (url: string, init?: RequestInit): Promise<Response> => {
+          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+          expect(init?.method).toBe('GET')
+
+          return new Response('<p>Server error</p>', {
+            status: 500,
+            headers: { 'Content-Type': 'text/html' },
+          })
+        },
+      )
+
+      const client = new Client({ fetchHandler })
+
+      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
+        'Upstream server encountered an error',
+      )
+    })
+
+    it('propatages server error messages', async () => {
+      const fetchHandler = jest.fn(
+        async (url: string, init?: RequestInit): Promise<Response> => {
+          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+          expect(init?.method).toBe('GET')
+
+          const responseBody = {
+            error: 'CustomError',
+            message: 'This is a custom error message from the server',
+          }
+
+          return new Response(JSON.stringify(responseBody), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          })
+        },
+      )
+
+      const client = new Client({ fetchHandler })
+
+      await expect(
+        client.call(app.bsky.actor.getPreferences),
+      ).rejects.toMatchObject({
+        name: 'XrpcResponseError',
+        message: 'This is a custom error message from the server',
+        payload: {
+          encoding: 'application/json',
+          body: {
+            error: 'CustomError',
+            message: 'This is a custom error message from the server',
+          },
+        },
       })
     })
   })
