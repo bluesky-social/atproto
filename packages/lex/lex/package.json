@@ -42,6 +42,7 @@
     "yargs": "^17.0.0"
   },
   "devDependencies": {
+    "@atproto/lex": "file:.",
     "@types/yargs": "^17.0.33",
     "jest": "^28.1.2"
   },
