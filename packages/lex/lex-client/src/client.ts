@@ -18,7 +18,6 @@ import {
   Schema,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcError } from './error.js'
 import { com } from './lexicons.js'
 import {
   BinaryBodyInit,
@@ -28,6 +27,7 @@ import {
   getMain,
 } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
+import { XrpcError } from './xrpc-error.js'
 import {
   XrpcFailure,
   XrpcOptions,

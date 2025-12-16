@@ -1,5 +1,5 @@
 export * from './agent.js'
 export * from './client.js'
-export * from './error.js'
+export * from './xrpc-error.js'
 export * from './types.js'
 export * from './xrpc.js'

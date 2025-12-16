@@ -12,7 +12,6 @@ import {
   Subscription,
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
-import { XrpcResponseError, XrpcUnexpectedError } from './error.js'
 import { BinaryBodyInit, CallOptions, Namespace, getMain } from './types.js'
 import {
   Payload,
@@ -21,6 +20,7 @@ import {
   isBlobLike,
   toReadableStream,
 } from './util.js'
+import { XrpcResponseError, XrpcUnexpectedError } from './xrpc-error.js'
 import { XrpcResponse } from './xrpc-response.js'
 
 export * from './xrpc-response.js'

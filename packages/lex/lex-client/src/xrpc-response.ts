@@ -6,12 +6,12 @@ import {
   Query,
   ResultSuccess,
 } from '@atproto/lex-schema'
+import { Payload } from './util.js'
 import {
   XrpcInvalidResponseError,
   XrpcResponseError,
   isXrpcErrorPayload,
-} from './error.js'
-import { Payload } from './util.js'
+} from './xrpc-error.js'
 
 export type XrpcResponseBody<M extends Procedure | Query> =
   InferMethodOutputBody<M, Uint8Array>
