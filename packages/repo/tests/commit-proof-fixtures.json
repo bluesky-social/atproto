@@ -92,5 +92,27 @@
       "bafyreie55b224oljhykpsxdjq4ajn2ysksud7qm347s6kn2ei6a775faum",
       "bafyreiftrcrbhrwmi37u4egedlg56gk3jeh3tvmqvwgowoifuklfysyx54"
     ]
+  },
+  {
+    "comment": "split with earlier leaves on same layer",
+    "leafValue": "bafyreie5cvv4h45feadgeuwhbcutmh6t2ceseocckahdoe6uat64zmz454",
+    "keys": [
+      "app.bsky.feed.post/3lo3kqqljmfe2",
+      "app.bsky.feed.post/3log4547dm6h2",
+      "app.bsky.feed.post/3log45inogon2",
+      "app.bsky.feed.post/3logaodrh74d2",
+      "app.bsky.feed.post/3logteazog2n2",
+      "app.bsky.feed.post/3lon5cqsbwrj2",
+      "app.bsky.feed.repost/3l6sjhvqonco2"
+    ],
+    "adds": ["app.bsky.feed.post/3lon5dzeaihj2"],
+    "dels": [],
+    "rootBeforeCommit": "bafyreigfcsro2up7qi7l3rxdpg7n6gjtteotkmgrrqztl5oy2tf4ncl4ji",
+    "rootAfterCommit": "bafyreig33hsjiplaixvmccy65n7rn3in5nsbtcittzx6k3w5wjfhk2sg3a",
+    "blocksInProof": [
+      "bafyreig33hsjiplaixvmccy65n7rn3in5nsbtcittzx6k3w5wjfhk2sg3a",
+      "bafyreih2rhjm3apcghihwfojv2em7noqkgt5qyjcnxux7do674m464oc3m",
+      "bafyreiajhswkduap4zvqvfhth3skdgckmk2eb5gow7vv3gvj45f4fqwmxm"
+    ]
   }
 ]
