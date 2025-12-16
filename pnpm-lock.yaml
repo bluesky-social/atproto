@@ -816,9 +816,6 @@ importers:
         specifier: ^17.0.0
         version: 17.7.2
     devDependencies:
-      '@atproto/lex':
-        specifier: file:.
-        version: file:packages/lex/lex
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.35
@@ -19398,16 +19395,3 @@ packages:
 
   /zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
-  file:packages/lex/lex:
-    resolution: {directory: packages/lex/lex, type: directory}
-    name: '@atproto/lex'
-    hasBin: true
-    dependencies:
-      '@atproto/lex-builder': link:packages/lex/lex-builder
-      '@atproto/lex-client': link:packages/lex/lex-client
-      '@atproto/lex-installer': link:packages/lex/lex-installer
-      '@atproto/lex-schema': link:packages/lex/lex-schema
-      tslib: 2.8.1
-      yargs: 17.7.2
-    dev: true

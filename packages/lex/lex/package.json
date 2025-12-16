@@ -42,12 +42,11 @@
     "yargs": "^17.0.0"
   },
   "devDependencies": {
-    "@atproto/lex": "file:.",
     "@types/yargs": "^17.0.33",
     "jest": "^28.1.2"
   },
   "scripts": {
-    "prebuild": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons -- ignore additional npm args",
+    "prebuild": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema -- ignore additional npm args",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   }
