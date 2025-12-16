@@ -1,19 +1,25 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
-import { XrpcFailure, XrpcResponse, l } from '@atproto/lex'
+import {
+  InferMethodParams,
+  Query,
+  Restricted,
+  XrpcFailure,
+  XrpcResponse,
+} from '@atproto/lex'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 
-export function useAtprotoQuery<S extends l.Query>(
-  ns: NonNullable<unknown> extends l.InferMethodParams<S>
+export function useLexQuery<S extends Query>(
+  ns: NonNullable<unknown> extends InferMethodParams<S>
     ? S | { main: S }
-    : l.Restricted<'This XRPC method requires a "params" argument'>,
+    : Restricted<'This XRPC method requires a "params" argument'>,
 ): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>>
-export function useAtprotoQuery<S extends l.Query>(
+export function useLexQuery<S extends Query>(
   ns: S | { main: S },
-  params: l.InferMethodParams<S>,
+  params: InferMethodParams<S>,
 ): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>>
-export function useAtprotoQuery<S extends l.Query>(
+export function useLexQuery<S extends Query>(
   ns: S | { main: S },
-  params: l.InferMethodParams<S> = {} as l.InferMethodParams<S>,
+  params: InferMethodParams<S> = {} as InferMethodParams<S>,
 ): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>> {
   const schema = 'main' in ns ? ns.main : ns
   const client = useBskyClient()

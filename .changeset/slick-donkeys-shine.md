@@ -2,4 +2,4 @@
 '@atproto/lex': patch
 ---
 
-Re-expect everything from `@atproto/lex-schema`
+Re-export everything from `@atproto/lex-schema`

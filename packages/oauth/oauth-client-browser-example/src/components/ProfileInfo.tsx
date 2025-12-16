@@ -1,10 +1,10 @@
 import { app } from '../lexicons.ts'
-import { useAtprotoRecord } from '../queries/use-atproto-record.ts'
+import { useLexRecord } from '../queries/use-lex-record.ts'
 import { Button } from './Button.tsx'
 import { JsonQueryResult } from './JsonQueryResult.tsx'
 
 export function ProfileInfo() {
-  const result = useAtprotoRecord(app.bsky.actor.profile)
+  const result = useLexRecord(app.bsky.actor.profile)
 
   return (
     <div>

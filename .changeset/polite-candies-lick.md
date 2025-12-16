@@ -2,4 +2,4 @@
 '@atproto/lex-cbor': patch
 ---
 
-Properly prevent encoding of floats
+Throw an error when attempting to encode a float

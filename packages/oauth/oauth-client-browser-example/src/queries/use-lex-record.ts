@@ -8,16 +8,16 @@ import {
 } from '@atproto/lex'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 
-export function useAtprotoRecord<S extends l.RecordSchema>(
+export function useLexRecord<S extends l.RecordSchema>(
   ns: NonNullable<unknown> extends GetOptions<S>
     ? S | { main: S }
     : l.Restricted<'This record schema requires a "rkey" argument'>,
 ): UseQueryResult<GetOutput<S>>
-export function useAtprotoRecord<S extends l.RecordSchema>(
+export function useLexRecord<S extends l.RecordSchema>(
   ns: S | { main: S },
   options: GetOptions<S>,
 ): UseQueryResult<GetOutput<S>>
-export function useAtprotoRecord<S extends l.RecordSchema>(
+export function useLexRecord<S extends l.RecordSchema>(
   ns: S | { main: S },
   options: GetOptions<S> = {} as GetOptions<S>,
 ): UseQueryResult<GetOutput<S>> {
