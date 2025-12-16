@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.203
+
+### Patch Changes
+
+- [#4460](https://github.com/bluesky-social/atproto/pull/4460) [`dd0fe8d`](https://github.com/bluesky-social/atproto/commit/dd0fe8d5e74e19b2cb37aa6a307b88f1f6bd1c9c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add Age Assurance config for Tennessee
+
 ## 0.0.202
 
 ### Patch Changes
