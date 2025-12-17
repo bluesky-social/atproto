@@ -78,7 +78,10 @@ export class LexiconAuthorityProfile extends ServiceProfile {
     },
   ) {
     const client = pds.getClient()
-    await client.createAccount(userDetails)
+    const authHeaders = pds.ctx.cfg.service.registrationEnabled
+      ? undefined
+      : pds.adminAuthHeaders()
+    await client.createAccount(userDetails, { headers: authHeaders })
 
     return new LexiconAuthorityProfile(pds, client, userDetails)
   }

@@ -33,6 +33,10 @@ export class ServiceProfile {
       lxm: 'com.atproto.server.createAccount',
     })
 
+    const createAccountAuthHeaders = !newPds.ctx.cfg.service.registrationEnabled
+      ? newPds.adminAuthHeaders()
+      : { authorization: `Bearer ${serviceAuth.data.token}` }
+
     const inviteCode = newPds.ctx.cfg.invites.required
       ? await newClient.com.atproto.server
           .createInviteCode(
@@ -53,7 +57,7 @@ export class ServiceProfile {
       },
       {
         encoding: 'application/json',
-        headers: { authorization: `Bearer ${serviceAuth.data.token}` },
+        headers: createAccountAuthHeaders,
       },
     )
 

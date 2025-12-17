@@ -343,6 +343,7 @@ export class AppContext {
           ),
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
+          registrationEnabled: cfg.service.registrationEnabled,
           inviteCodeRequired: cfg.invites.required,
           availableUserDomains: cfg.identity.serviceHandleDomains,
           hcaptcha: cfg.oauth.provider.hcaptcha,

@@ -49,6 +49,7 @@ export class TestNetwork extends TestNetworkNoAppView {
       didPlcUrl: plc.url,
       ...params.pds,
       inviteRequired: false,
+      registrationEnabled: true,
       port: await getPort(),
     })
 

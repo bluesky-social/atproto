@@ -32,6 +32,9 @@ export async function generateMockSetup(env: TestNetwork) {
   }
 
   const loggedOut = env.pds.getClient()
+  const authHeaders = env.pds.ctx.cfg.service.registrationEnabled
+    ? undefined
+    : env.pds.adminAuthHeaders()
 
   const users = [
     {
@@ -54,7 +57,7 @@ export async function generateMockSetup(env: TestNetwork) {
   const userAgents = await Promise.all(
     users.map(async (user, i) => {
       const client: AtpAgent = env.pds.getClient()
-      await client.createAccount(user)
+      await client.createAccount(user, { headers: authHeaders })
       client.assertAuthenticated()
       await client.app.bsky.actor.profile.create(
         { repo: client.did },
@@ -70,23 +73,32 @@ export async function generateMockSetup(env: TestNetwork) {
   const [alice, bob, carla] = userAgents
 
   // Create moderator accounts
-  const triageRes = await loggedOut.com.atproto.server.createAccount({
-    email: 'triage@test.com',
-    handle: 'triage.test',
-    password: 'triage-pass',
-  })
+  const triageRes = await loggedOut.com.atproto.server.createAccount(
+    {
+      email: 'triage@test.com',
+      handle: 'triage.test',
+      password: 'triage-pass',
+    },
+    { headers: authHeaders },
+  )
   await env.ozone.addTriageDid(triageRes.data.did)
-  const modRes = await loggedOut.com.atproto.server.createAccount({
-    email: 'mod@test.com',
-    handle: 'mod.test',
-    password: 'mod-pass',
-  })
+  const modRes = await loggedOut.com.atproto.server.createAccount(
+    {
+      email: 'mod@test.com',
+      handle: 'mod.test',
+      password: 'mod-pass',
+    },
+    { headers: authHeaders },
+  )
   await env.ozone.addModeratorDid(modRes.data.did)
-  const adminRes = await loggedOut.com.atproto.server.createAccount({
-    email: 'admin-mod@test.com',
-    handle: 'admin-mod.test',
-    password: 'admin-mod-pass',
-  })
+  const adminRes = await loggedOut.com.atproto.server.createAccount(
+    {
+      email: 'admin-mod@test.com',
+      handle: 'admin-mod.test',
+      password: 'admin-mod-pass',
+    },
+    { headers: authHeaders },
+  )
   await env.ozone.addAdminDid(adminRes.data.did)
 
   // Report one user
@@ -376,11 +388,14 @@ export async function generateMockSetup(env: TestNetwork) {
   // create a labeler account
   {
     const labeler = env.pds.getClient()
-    const res = await labeler.createAccount({
-      email: 'labeler@test.com',
-      handle: 'labeler.test',
-      password: 'hunter2',
-    })
+    const res = await labeler.createAccount(
+      {
+        email: 'labeler@test.com',
+        handle: 'labeler.test',
+        password: 'hunter2',
+      },
+      { headers: authHeaders },
+    )
     await labeler.app.bsky.actor.profile.create(
       { repo: res.data.did },
       {

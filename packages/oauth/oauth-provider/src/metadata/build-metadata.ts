@@ -5,6 +5,7 @@ import {
   oauthAuthorizationServerMetadataValidator,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
+import { Customization } from '../customization/customization.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
 
 export type CustomMetadata = {
@@ -15,10 +16,12 @@ export type CustomMetadata = {
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414#section-2}
  * @see {@link https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata}
+ * @see {@link https://openid.net/specs/openid-connect-prompt-create-1_0.html}
  */
 export function buildMetadata(
   issuer: OAuthIssuerIdentifier,
   keyset: Keyset,
+  customization: Customization,
   customMetadata?: CustomMetadata,
 ): OAuthAuthorizationServerMetadata {
   return oauthAuthorizationServerMetadataValidator.parse({
@@ -83,6 +86,12 @@ export function buildMetadata(
       'touch',
       // 'wap', LoL
     ],
+
+    // https://openid.net/specs/openid-connect-prompt-create-1_0.html
+    prompt_values_supported:
+      customization.registrationEnabled !== false
+        ? ['none', 'login', 'consent', 'select_account', 'create']
+        : ['none', 'login', 'consent', 'select_account'],
 
     // https://datatracker.ietf.org/doc/html/rfc9207
     authorization_response_iss_parameter_supported: true,

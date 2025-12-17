@@ -7,6 +7,11 @@ import { AtprotoData, ensureAtpDocument } from '@atproto/identity'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../../../../account-manager/account-manager'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
+import {
+  AdminTokenOutput,
+  UnauthenticatedOutput,
+  UserServiceAuthOutput,
+} from '../../../../auth-output'
 import { AppContext } from '../../../../context'
 import { baseNormalizeAndValidate } from '../../../../handle'
 import { Server } from '../../../../lexicon'
@@ -15,17 +20,26 @@ import { syncEvtDataFromCommit } from '../../../../sequencer'
 import { safeResolveDidDoc } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createAccount({
+  // FIXME: type inferrence isn't working correctly due to the conditional:
+  server.com.atproto.server.createAccount<
+    AdminTokenOutput | UserServiceAuthOutput | UnauthenticatedOutput
+  >({
     rateLimit: {
       durationMs: 5 * MINUTE,
       points: 100,
     },
-    auth: ctx.authVerifier.userServiceAuthOptional,
+    auth: ctx.cfg.service.registrationEnabled
+      ? ctx.authVerifier.userServiceAuthOptional
+      : ctx.authVerifier.adminToken,
     handler: async ({ input, auth, req }) => {
       // @NOTE Until this code and the OAuthStore's `createAccount` are
       // refactored together, any change made here must be reflected over there.
 
-      const requester = auth.credentials?.did ?? null
+      const requester =
+        auth.credentials?.type === 'user_service_auth'
+          ? auth.credentials?.did ?? null
+          : null
+
       const {
         did,
         handle,
@@ -224,7 +238,7 @@ const validateInputsForLocalPds = async (
   let plcOp: plc.Operation | null
   let deactivated = false
   if (input.did) {
-    if (input.did !== requester) {
+    if (ctx.cfg.service.registrationEnabled && input.did !== requester) {
       throw new AuthRequiredError(
         `Missing auth to create account with did: ${input.did}`,
       )

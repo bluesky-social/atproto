@@ -14,6 +14,7 @@ export function readEnv() {
     supportUrl: envStr('PDS_SUPPORT_URL'),
     termsOfServiceUrl: envStr('PDS_TERMS_OF_SERVICE_URL'),
     contactEmailAddress: envStr('PDS_CONTACT_EMAIL_ADDRESS'),
+    registrationEnabled: envBool('PDS_REGISTRATION_ENABLED'),
     acceptingImports: envBool('PDS_ACCEPTING_REPO_IMPORTS'),
     maxImportSize: envInt('PDS_MAX_REPO_IMPORT_SIZE'),
     blobUploadLimit: envInt('PDS_BLOB_UPLOAD_LIMIT'),

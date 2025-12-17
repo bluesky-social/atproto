@@ -305,8 +305,15 @@ export class OAuthProvider extends OAuthVerifier {
 
     this.accessTokenMode = accessTokenMode
     this.authenticationMaxAge = authenticationMaxAge
-    this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
+
     this.customization = customizationSchema.parse(rest)
+
+    this.metadata = buildMetadata(
+      this.issuer,
+      this.keyset,
+      this.customization,
+      metadata,
+    )
 
     this.deviceManager = new DeviceManager(deviceStore, deviceManagerOptions)
     this.accountManager = new AccountManager(
@@ -505,6 +512,15 @@ export class OAuthProvider extends OAuthVerifier {
         if (dpopProof && dpopProof.jkt !== parameters.dpop_jkt) {
           throw new InvalidDpopKeyBindingError()
         }
+      }
+
+      if (
+        parameters.prompt === 'create' &&
+        this.customization.registrationEnabled === false
+      ) {
+        throw new InvalidRequestError(
+          'User registration is not enabled for this server',
+        )
       }
 
       const { requestUri, expiresAt } =

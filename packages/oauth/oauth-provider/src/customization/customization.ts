@@ -4,6 +4,11 @@ import { brandingSchema } from './branding.js'
 
 export const customizationSchema = z.object({
   /**
+   * Is registration enabled on this server (defaults to true)
+   */
+  registrationEnabled: z.boolean().optional(),
+
+  /**
    * Available user domains that can be used to sign up. A non-empty array
    * is required to enable the sign-up feature.
    */

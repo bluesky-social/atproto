@@ -7,12 +7,17 @@ import {
   useRef,
   useState,
 } from 'react'
-import type {
-  BrowserOAuthClient,
-  OAuthSession,
+import {
+  type BrowserOAuthClient,
+  OAuthResponseError,
+  type OAuthSession,
 } from '@atproto/oauth-client-browser'
 
 export type SignInFunction = (
+  input: string,
+  options?: { display?: 'popup' },
+) => Promise<void>
+export type SignUpFunction = (
   input: string,
   options?: { display?: 'popup' },
 ) => Promise<void>
@@ -23,6 +28,7 @@ export const OAuthContext = createContext<null | {
   isLoading: boolean
   isSignedIn: boolean
   signIn: SignInFunction
+  signUp: SignUpFunction
   signOut: SignOutFunction
 }>(null)
 
@@ -138,6 +144,34 @@ export function OAuthProvider({
     }
   }, [session])
 
+  const signUp = useCallback<SignUpFunction>(
+    async (input, options) => {
+      setLoading(true)
+      try {
+        const session = await client
+          .signIn(input, {
+            ...options,
+            prompt: 'create',
+          })
+          .catch((err) => {
+            if (err instanceof OAuthResponseError) {
+              alert(err.errorDescription)
+              return
+            }
+
+            throw err
+          })
+
+        if (session) {
+          setSession(session)
+        }
+      } finally {
+        setLoading(false)
+      }
+    },
+    [client],
+  )
+
   return (
     <OAuthContext.Provider
       value={{
@@ -147,6 +181,7 @@ export function OAuthProvider({
         isSignedIn: !!session,
 
         signIn,
+        signUp,
         signOut,
       }}
     >
