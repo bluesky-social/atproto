@@ -3,6 +3,7 @@ import { signedJwtSchema } from '@atproto/jwk'
 import { oauthAuthorizationDetailsSchema } from './oauth-authorization-details.js'
 import { oauthClientIdSchema } from './oauth-client-id.js'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
+import { oauthPromptModeSchema } from './oauth-prompt-mode.js'
 import { oauthRedirectUriSchema } from './oauth-redirect-uri.js'
 import { oauthResponseModeSchema } from './oauth-response-mode.js'
 import { oauthResponseTypeSchema } from './oauth-response-type.js'
@@ -82,13 +83,8 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   // Type of UI the AS is displayed on
   display: z.enum(['page', 'popup', 'touch', 'wap']).optional(),
 
-  /**
-   * - "none" will only be allowed if the user already allowed the client on the same device
-   * - "login" will force the user to login again, unless he very recently logged in
-   * - "consent" will force the user to consent again
-   * - "select_account" will force the user to select an account
-   */
-  prompt: z.enum(['none', 'login', 'consent', 'select_account']).optional(),
+  // How the AS should prompt the user for authorization:
+  prompt: oauthPromptModeSchema.optional(),
 
   // https://datatracker.ietf.org/doc/html/rfc9396
   authorization_details: z
