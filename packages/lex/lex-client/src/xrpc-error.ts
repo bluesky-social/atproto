@@ -57,30 +57,27 @@ export function isXrpcErrorPayload(
 /**
  * Interface representing a failed XRPC request result.
  */
-export type XrpcFailureResult<
-  N extends XrpcErrorCode,
-  E,
-> = l.ResultFailure<E> & {
+type XrpcFailureResult<N extends XrpcErrorCode, E> = l.ResultFailure<E> & {
   readonly error: N
   shouldRetry(): boolean
+  matchesSchema(): boolean
 }
 
 /**
  * Class used to represent an HTTP request that resulted in an XRPC method error
  * That is, a non-2xx response with a valid XRPC error payload.
  */
-export class XrpcResponseError<N extends XrpcErrorCode = XrpcErrorCode>
+export class XrpcResponseError<
+    M extends l.Procedure | l.Query = l.Procedure | l.Query,
+    N extends XrpcErrorCode = XrpcErrorCode,
+  >
   extends XrpcError<N>
-  implements XrpcFailureResult<N, XrpcResponseError<N>>
+  implements XrpcFailureResult<N, XrpcResponseError<M, N>>
 {
-  name = 'XrpcResponseError'
-
-  readonly success = false
-  get reason(): this {
-    return this
-  }
+  name = 'XrpcResponseError' as const
 
   constructor(
+    readonly method: M,
     readonly status: number,
     readonly headers: Headers,
     readonly payload: XrpcErrorPayload<N>,
@@ -90,21 +87,40 @@ export class XrpcResponseError<N extends XrpcErrorCode = XrpcErrorCode>
     super(error, message, options)
   }
 
-  get body(): XrpcErrorBody<N> {
+  readonly success = false
+
+  get reason(): this {
+    return this as this
+  }
+
+  get body(): XrpcErrorBody {
     return this.payload.body
+  }
+
+  matchesSchema(): this is M extends {
+    errors: readonly (infer E extends string)[]
+  }
+    ? XrpcResponseError<M, E>
+    : never {
+    return this.method.errors?.includes(this.error) ?? false
   }
 
   shouldRetry(): boolean {
     // Do not retry client errors
-    return this.status >= 500
+    if (this.status < 500) return false
+
+    return true
   }
 }
 
 /**
  * This class represents an invalid XRPC response from the server.
  */
-export class XrpcInvalidResponseError extends XrpcError<'InvalidResponse'> {
-  name = 'XrpcInvalidResponseError'
+export class XrpcInvalidResponseError
+  extends XrpcError<'UpstreamFailure'>
+  implements XrpcFailureResult<'UpstreamFailure', XrpcInvalidResponseError>
+{
+  name = 'XrpcInvalidResponseError' as const
 
   // For debugging purposes, we keep the response details here
   readonly response: {
@@ -119,45 +135,51 @@ export class XrpcInvalidResponseError extends XrpcError<'InvalidResponse'> {
     payload: Payload | null,
     options?: ErrorOptions,
   ) {
-    super('InvalidResponse', message, { cause: options?.cause })
+    super('UpstreamFailure', message, { cause: options?.cause })
     this.response = {
       status: response.status,
       headers: response.headers,
       payload,
     }
   }
+
+  readonly success = false as const
+
+  get reason(): this {
+    return this
+  }
+
+  matchesSchema(): false {
+    return false
+  }
+
+  shouldRetry(): boolean {
+    // Do not retry client errors
+    return this.response.status >= 500
+  }
 }
 
 export class XrpcUnexpectedError
-  extends XrpcError<'Unexpected'>
-  implements XrpcFailureResult<'Unexpected', unknown>
+  extends XrpcError<'InternalServerError'>
+  implements XrpcFailureResult<'InternalServerError', unknown>
 {
-  name = 'XrpcUnexpectedError'
+  name = 'XrpcUnexpectedError' as const
+
+  protected constructor(message: string, options: Required<ErrorOptions>) {
+    super('InternalServerError', message, options)
+  }
 
   readonly success = false
+
   get reason() {
     return this.cause
   }
 
-  protected constructor(message: string, options: Required<ErrorOptions>) {
-    super('Unexpected', message, options)
+  matchesSchema(): false {
+    return false
   }
 
   shouldRetry(): boolean {
-    const { reason } = this
-
-    if (reason instanceof XrpcResponseError) {
-      return reason.shouldRetry()
-    }
-
-    if (reason instanceof XrpcInvalidResponseError) {
-      // There is no point in retrying invalid 4xx responses as they will likely
-      // return the same error again. HTTP servers could have transient 5xx
-      // errors that return non XRPC responses, typically when a proxy or
-      // gateway is involved.
-      return reason.response.status >= 500
-    }
-
     return true
   }
 

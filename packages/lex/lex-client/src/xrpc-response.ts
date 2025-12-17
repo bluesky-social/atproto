@@ -65,7 +65,7 @@ export class XrpcResponse<const M extends Procedure | Query>
    * to the method schema.
    */
   static async fromFetchResponse<const M extends Procedure | Query>(
-    schema: M,
+    method: M,
     response: Response,
     options?: { validateResponse?: boolean },
   ): Promise<XrpcResponse<M>> {
@@ -79,7 +79,12 @@ export class XrpcResponse<const M extends Procedure | Query>
       const payload = await readPayload(response, { parse: true })
 
       if (response.status >= 400 && isXrpcErrorPayload(payload)) {
-        throw new XrpcResponseError(response.status, response.headers, payload)
+        throw new XrpcResponseError(
+          method,
+          response.status,
+          response.headers,
+          payload,
+        )
       }
 
       throw new XrpcInvalidResponseError(
@@ -95,11 +100,11 @@ export class XrpcResponse<const M extends Procedure | Query>
 
     // Only parse json if the schema expects it
     const payload = await readPayload(response, {
-      parse: shouldParse(schema),
+      parse: shouldParse(method),
     })
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
-    if (schema.output.encoding == null) {
+    if (method.output.encoding == null) {
       // Schema expects no payload
       if (payload) {
         throw new XrpcInvalidResponseError(
@@ -110,19 +115,19 @@ export class XrpcResponse<const M extends Procedure | Query>
       }
     } else {
       // Schema expects a payload
-      if (!payload || !schema.output.matchesEncoding(payload.encoding)) {
+      if (!payload || !method.output.matchesEncoding(payload.encoding)) {
         throw new XrpcInvalidResponseError(
           payload
-            ? `Expected ${schema.output.encoding} response, got ${payload.encoding}`
-            : `Expected non-empty response with content-type ${schema.output.encoding}`,
+            ? `Expected ${method.output.encoding} response, got ${payload.encoding}`
+            : `Expected non-empty response with content-type ${method.output.encoding}`,
           response,
           payload,
         )
       }
 
       // Assert valid response body.
-      if (schema.output.schema && options?.validateResponse !== false) {
-        const result = schema.output.schema.safeParse(payload.body, {
+      if (method.output.schema && options?.validateResponse !== false) {
+        const result = method.output.schema.safeParse(payload.body, {
           allowTransform: false,
         })
 
@@ -138,7 +143,7 @@ export class XrpcResponse<const M extends Procedure | Query>
     }
 
     return new XrpcResponse<M>(
-      schema,
+      method,
       response.status,
       response.headers,
       payload as XrpcResponsePayload<M>,
@@ -146,8 +151,8 @@ export class XrpcResponse<const M extends Procedure | Query>
   }
 }
 
-function shouldParse(schema: Procedure | Query) {
-  return schema.output.encoding === 'application/json'
+function shouldParse(method: Procedure | Query) {
+  return method.output.encoding === 'application/json'
 }
 
 /**
@@ -157,51 +162,52 @@ async function readPayload(
   response: Response,
   options?: { parse?: boolean },
 ): Promise<Payload | null> {
-  try {
-    const encoding = response.headers
-      .get('content-type')
-      ?.split(';')[0]
-      .trim()
-      .toLowerCase()
+  // @TODO Should we limit the maximum response size here (this could also be
+  // done by the FetchHandler)?
 
-    // Response content-type is undefined
-    if (encoding == null) {
-      // If there is no body, return null (= no payload)
-      if (response.body == null) return null
+  const encoding = response.headers
+    .get('content-type')
+    ?.split(';')[0]
+    .trim()
+    .toLowerCase()
 
-      // If the body is empty, return null (= no payload)
-      const body = await response.arrayBuffer()
-      if (body.byteLength === 0) return null
+  // Response content-type is undefined
+  if (!encoding) {
+    // If the body is empty, return null (= no payload)
+    const body = await response.arrayBuffer()
+    if (body.byteLength === 0) return null
 
-      // If we got data despite no content-type, treat it as binary
-      return {
-        encoding: 'application/octet-stream',
-        body: new Uint8Array(body),
-      }
+    // If we got data despite no content-type, treat it as binary
+    return {
+      encoding: 'application/octet-stream',
+      body: new Uint8Array(body),
     }
+  }
 
-    if (options?.parse && encoding === 'application/json') {
+  if (options?.parse && encoding === 'application/json') {
+    // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
+    // perform the lex parsing using cborg/json, allowing to do
+    // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
+    // This would require adding encode/decode utilities to lex-json (similar
+    // to @ipld/dag-json)
+    const text = await response.text()
+
+    try {
       // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
       // using a reviver function during JSON.parse should be faster than
       // parsing to JSON then converting to Lex (?)
 
       // @TODO verify statement above
-
-      // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
-      // perform the lex parsing using cborg/json, allowing to do
-      // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
-      // This would require adding encode/decode utilities to lex-json (similar
-      // to @ipld/dag-json)
-      return { encoding, body: lexParse(await response.text()) }
+      return { encoding, body: lexParse(text) }
+    } catch (cause) {
+      throw new XrpcInvalidResponseError(
+        'Invalid JSON response body',
+        response,
+        null,
+        { cause },
+      )
     }
-
-    return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
-  } catch (cause) {
-    throw new XrpcInvalidResponseError(
-      'Failed to read response body',
-      response,
-      null,
-      { cause },
-    )
   }
+
+  return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
 }

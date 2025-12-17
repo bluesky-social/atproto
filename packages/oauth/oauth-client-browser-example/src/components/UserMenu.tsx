@@ -1,4 +1,3 @@
-import { XrpcInvalidResponseError, XrpcResponseError } from '@atproto/lex'
 import { app, com } from '../lexicons.ts'
 import {
   useOAuthContext,
@@ -15,37 +14,6 @@ export function UserMenu() {
 
   const profileQuery = useLexRecord(app.bsky.actor.profile)
   const sessionQuery = useLexQuery(com.atproto.server.getSession)
-
-  // Example of error handling
-  if (sessionQuery.error) {
-    if (sessionQuery.error.error === 'Unexpected') {
-      const { reason } = sessionQuery.error
-      // Unable to perform the request
-      if (reason instanceof XrpcResponseError) {
-        // The server returned a syntactically valid XRPC error response, but
-        // used an error code that is not declared for this method
-        reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
-        reason.message // string
-        reason.status // number
-        reason.headers // Headers
-        reason.payload // { body: { error: string, message?: string }; encoding: string }
-      } else if (reason instanceof XrpcInvalidResponseError) {
-        // The response was incomplete (e.g. connection dropped), or
-        // invalid (e.g. malformed JSON, data does not match schema).
-        reason.error // "InvalidResponse"
-        reason.message // string
-        reason.response.status // number
-        reason.response.headers // Headers
-        reason.response.payload // null | { body: unknown; encoding: string }
-      } else {
-        // Fetch failed or something
-        reason
-      }
-    } else {
-      // A declared error for that method
-      sessionQuery.error // XrpcResponseError<'KnownError1' | 'KnownError2' | ...>
-    }
-  }
 
   const displayName = profileQuery.data?.value?.displayName
   const handle = sessionQuery.data?.body.handle
