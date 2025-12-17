@@ -64,7 +64,11 @@ describe('Client', () => {
         (pref: Preference[]) => false | Preference[],
         Preference[]
       > = async function (client, updatePreferences, options) {
-        const data = await client.call(app.bsky.actor.getPreferences, options)
+        const data = await client.call(
+          app.bsky.actor.getPreferences,
+          {},
+          options,
+        )
 
         const preferences = updatePreferences(data.preferences)
         if (preferences === false) return data.preferences
@@ -153,9 +157,9 @@ describe('Client', () => {
       ])
 
       expect(async () => {
-        // @ts-expect-error invalid preference value
         await client.call(upsertPreference, {
           $type: 'app.bsky.actor.defs#adultContentPref',
+          // @ts-expect-error invalid preference value
           enabled: 'not-a-boolean',
         })
       }).rejects.toThrow('Expected boolean value')

@@ -341,28 +341,35 @@ export class Client implements Agent {
     })
   }
 
-  public async call<const T extends Action>(
-    ns: Namespace<T>,
-    input: InferActionInput<T>,
-    options?: CallOptions,
-  ): Promise<InferActionOutput<T>>
-  public async call<const T extends Procedure>(
-    ns: Namespace<T>,
-    body: InferMethodInputBody<T, Uint8Array>,
-    options?: CallOptions,
-  ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Query>(
     ns: NonNullable<unknown> extends InferMethodParams<T>
       ? Namespace<T>
       : Restricted<'This query type requires a "params" argument'>,
   ): Promise<XrpcResponseBody<T>>
-  public async call<const T extends Query>(
+  public async call<const T extends Action>(
+    ns: void extends InferActionInput<T>
+      ? Namespace<T>
+      : Restricted<'This action type requires an "input" argument'>,
+  ): Promise<InferActionOutput<T>>
+  public async call<const T extends Action | Procedure | Query>(
     ns: Namespace<T>,
-    params: NonNullable<unknown> extends InferMethodParams<T>
-      ? InferMethodParams<T> | undefined
-      : InferMethodParams<T>,
+    arg: T extends Action
+      ? InferActionInput<T>
+      : T extends Procedure
+        ? InferMethodInputBody<T, Uint8Array>
+        : T extends Query
+          ? InferMethodParams<T>
+          : never,
     options?: CallOptions,
-  ): Promise<XrpcResponseBody<T>>
+  ): Promise<
+    T extends Action
+      ? InferActionOutput<T>
+      : T extends Procedure
+        ? XrpcResponseBody<T>
+        : T extends Query
+          ? XrpcResponseBody<T>
+          : never
+  >
   public async call(
     ns: Namespace<Action> | Namespace<Procedure> | Namespace<Query>,
     arg?: LexValue | Params,
