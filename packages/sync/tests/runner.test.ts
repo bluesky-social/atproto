@@ -1,5 +1,5 @@
 import { wait } from '@atproto/common'
-import { ConsecutiveList, MemoryRunner } from '../src/runner'
+import { ConsecutiveList, MemoryRunner } from '..'
 
 describe('EventRunner utils', () => {
   describe('ConsecutiveList', () => {

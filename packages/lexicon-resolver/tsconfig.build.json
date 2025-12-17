@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "noUnusedLocals": false
+    "noUnusedLocals": false,
+    "paths": {
+      "#lexicons": ["./src/lexicons.js"],
+      "#lexicons/*": ["./src/lexicons/*"]
+    }
   },
   "include": ["src"]
 }

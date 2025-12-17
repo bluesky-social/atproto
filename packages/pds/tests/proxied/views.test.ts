@@ -17,7 +17,7 @@ describe('proxies view requests', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_views',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
     alice = sc.dids.alice

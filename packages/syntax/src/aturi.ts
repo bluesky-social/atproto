@@ -1,6 +1,6 @@
 import { AtIdentifierString, ensureValidAtIdentifier } from './at-identifier.js'
 import { AtUriString } from './aturi_validation.js'
-import { ensureValidNsid } from './nsid.js'
+import { NsidString, ensureValidNsid } from './nsid.js'
 
 export * from './aturi_validation.js'
 
@@ -64,8 +64,11 @@ export class AtUri {
     this.searchParams = new URLSearchParams(v)
   }
 
-  get collection() {
-    return this.pathname.split('/').filter(Boolean)[0] || ''
+  get collection(): NsidString {
+    const collection = this.pathname.split('/').filter(Boolean)[0]
+    if (!collection) throw new TypeError('No collection in AT URI')
+    ensureValidNsid(collection)
+    return collection
   }
 
   set collection(v: string) {
