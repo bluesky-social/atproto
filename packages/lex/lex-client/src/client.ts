@@ -148,10 +148,7 @@ export class Client implements Agent {
   public readonly labelers: Set<DidString>
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
-    this.agent =
-      typeof agent === 'object' && 'fetchHandler' in agent
-        ? agent
-        : buildAgent(agent)
+    this.agent = buildAgent(agent)
     this.service = options.service
     this.labelers = new Set(options.labelers)
     this.headers = new Headers(options.headers)

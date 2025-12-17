@@ -1,28 +1,45 @@
-import { Agent, Client } from '@atproto/lex-client'
+import {
+  Agent,
+  XrpcError,
+  XrpcFailure,
+  buildAgent,
+  xrpc,
+  xrpcSafe,
+} from '@atproto/lex-client'
 import { DatetimeString, LexMap, l } from '@atproto/lex-schema'
 import { com } from './lexicons.js'
 import { ifArray, ifString, peekJson } from './util.js'
 
-// @ts-expect-error poly fill
-Symbol.asyncDispose ??= Symbol.for('Symbol.asyncDispose')
-
-export type Session = com.atproto.server.createSession.OutputBody & {
+export type Session = {
+  data: com.atproto.server.createSession.OutputBody
   refreshedAt: DatetimeString
+  pdsUrl: string | null
   service: string
 }
 
 export type PasswordAuthAgentOptions = {
   fetch?: typeof globalThis.fetch
   hooks?: {
-    onRefreshed?: (session: Session) => void | Promise<void>
-    onRefreshFailure?: (session: Session, err: unknown) => void | Promise<void>
-    onDeleted?: (session: Session) => void | Promise<void>
-    onDeleteFailure?: (session: Session, err: unknown) => void | Promise<void>
+    onRefreshed?: (
+      this: PasswordAgent,
+      session: Session,
+    ) => void | Promise<void>
+    onRefreshFailure?: (
+      this: PasswordAgent,
+      session: Session,
+      err: XrpcFailure<typeof com.atproto.server.refreshSession.main>,
+    ) => void | Promise<void>
+    onDeleted?: (this: PasswordAgent, session: Session) => void | Promise<void>
+    onDeleteFailure?: (
+      this: PasswordAgent,
+      session: Session,
+      err: XrpcFailure<typeof com.atproto.server.deleteSession.main>,
+    ) => void | Promise<void>
   }
 }
 
 export class PasswordAgent implements Agent {
-  #client: Client
+  #agent: Agent
   #session: null | Session
   #sessionPromise: Promise<Session>
 
@@ -30,23 +47,21 @@ export class PasswordAgent implements Agent {
     session: Session,
     protected readonly options: PasswordAuthAgentOptions = {},
   ) {
-    this.#client = new Client({
+    this.#agent = buildAgent({
       service: session.service,
       fetch: options.fetch,
     })
-    this.#session = session
-    this.#sessionPromise = Promise.resolve(session)
+    this.#session = structuredClone(session)
+    this.#sessionPromise = Promise.resolve(this.#session)
   }
 
   get did() {
-    return this.session.did
+    return this.session.data.did
   }
 
   get session(): Session {
-    if (!this.#session) {
-      throw new Error('No active session')
-    }
-    return this.#session
+    if (this.#session) return this.#session
+    throw new XrpcError('AuthenticationRequired', 'Logged out')
   }
 
   async fetchHandler(path: string, init: RequestInit): Promise<Response> {
@@ -60,17 +75,13 @@ export class PasswordAgent implements Agent {
 
     const fetch = this.options.fetch ?? globalThis.fetch
 
-    headers.set('authorization', `Bearer ${session.accessJwt}`)
-    const initialRes = await fetch(pdsUrl(session, path), { ...init, headers })
-
-    // If we don't have a refresh token, there is no point in even checking
-    // for a 401, as we can't refresh.
-    if (!session.refreshJwt) {
-      return initialRes
-    }
+    headers.set('authorization', `Bearer ${session.data.accessJwt}`)
+    const initialRes = await fetch(fetchUrl(session, path), {
+      ...init,
+      headers,
+    })
 
     const isExpiredToken = await isExpiredTokenResponse(initialRes)
-
     if (!isExpiredToken) {
       return initialRes
     }
@@ -87,8 +98,8 @@ export class PasswordAgent implements Agent {
       return initialRes
     }
 
-    // Token was not actually refreshed, avoid retrying the request.
-    if (newSession.accessJwt === session.accessJwt) {
+    // refresh silently failed, no point in retrying.
+    if (newSession.data.accessJwt === session.data.accessJwt) {
       return initialRes
     }
 
@@ -108,31 +119,31 @@ export class PasswordAgent implements Agent {
     // (NodeJS 👀): https://undici.nodejs.org/#/?id=garbage-collection
     await initialRes.body?.cancel()
 
-    headers.set('authorization', `Bearer ${newSession.accessJwt}`)
-    return fetch(pdsUrl(newSession, path), { ...init, headers })
+    headers.set('authorization', `Bearer ${newSession.data.accessJwt}`)
+    return fetch(fetchUrl(newSession, path), { ...init, headers })
   }
 
   async refresh(): Promise<Session> {
     this.#sessionPromise = this.#sessionPromise.then(async (session) => {
-      const response = await this.#client.xrpcSafe(
+      const response = await xrpcSafe(
+        this.#agent,
         com.atproto.server.refreshSession,
-        {
-          headers: { Authorization: `Bearer ${session.refreshJwt}` },
-        },
+        { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
 
       if (!response.success) {
         if (
+          response.error === 'AccountTakedown' ||
           response.error === 'InvalidToken' ||
           response.error === 'ExpiredToken'
         ) {
-          await this.options.hooks?.onDeleted?.call(null, session)
+          await this.options.hooks?.onDeleted?.call(this, session)
           throw response
         }
 
         // We failed to refresh the token, but the session might still be valid.
         await this.options.hooks?.onRefreshFailure?.call(
-          null,
+          this,
           session,
           response,
         )
@@ -141,12 +152,13 @@ export class PasswordAgent implements Agent {
       }
 
       const newSession: Session = {
-        ...response.body,
+        data: response.body,
         service: session.service,
+        pdsUrl: extractPdsUrl(response.body.didDoc),
         refreshedAt: new Date().toISOString(),
       }
 
-      await this.options.hooks?.onRefreshed?.call(null, newSession)
+      await this.options.hooks?.onRefreshed?.call(this, newSession)
 
       this.#session = newSession
 
@@ -158,11 +170,10 @@ export class PasswordAgent implements Agent {
 
   async logout(): Promise<void> {
     this.#sessionPromise = this.#sessionPromise.then(async (session) => {
-      const result = await this.#client.xrpcSafe(
+      const result = await xrpcSafe(
+        this.#agent,
         com.atproto.server.deleteSession,
-        {
-          headers: { Authorization: `Bearer ${session.refreshJwt}` },
-        },
+        { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
 
       if (!result.success) {
@@ -172,21 +183,21 @@ export class PasswordAgent implements Agent {
         ) {
           // Already deleted, all good
         } else {
-          await this.options.hooks?.onDeleteFailure?.call(null, session, result)
+          await this.options.hooks?.onDeleteFailure?.call(this, session, result)
           // The server might be down or network error occurred, we are not
           // actually logged out.
           return session
         }
       }
 
-      await this.options.hooks?.onDeleted?.call(null, session)
+      await this.options.hooks?.onDeleted?.call(this, session)
 
-      throw new Error('Logged out')
+      throw new XrpcError('AuthenticationRequired', 'Logged out')
     })
 
     return this.#sessionPromise.then(
       (_session) => {
-        throw new Error('Logout failed')
+        throw new XrpcError('AuthenticationRequired', 'Logout failed')
       },
       (_err) => {
         // Successful logout, mark this as "destroyed"
@@ -207,9 +218,12 @@ export class PasswordAgent implements Agent {
     password: string
     authFactorToken?: string
   }): Promise<PasswordAgent> {
-    const client = new Client({ fetch: options.fetch, service })
+    const agent = buildAgent({
+      service,
+      fetch: options.fetch,
+    })
 
-    const response = await client.xrpc(com.atproto.server.createSession, {
+    const response = await xrpc(agent, com.atproto.server.createSession, {
       body: {
         identifier,
         password,
@@ -218,12 +232,11 @@ export class PasswordAgent implements Agent {
     })
 
     const session: Session = {
-      ...response.body,
+      data: response.body,
+      pdsUrl: extractPdsUrl(response.body.didDoc),
       service: String(service),
       refreshedAt: new Date().toISOString(),
     }
-
-    await options?.hooks?.onRefreshed?.call(null, session)
 
     return new PasswordAgent(session, options)
   }
@@ -235,25 +248,23 @@ export class PasswordAgent implements Agent {
     session: Session,
     options?: PasswordAuthAgentOptions,
   ): Promise<void> {
-    const client = new Client({
+    const agent = buildAgent({
       service: session.service,
       fetch: options?.fetch,
     })
 
-    const result = await client.xrpcSafe(com.atproto.server.deleteSession, {
-      headers: { Authorization: `Bearer ${session.refreshJwt}` },
+    const result = await xrpcSafe(agent, com.atproto.server.deleteSession, {
+      headers: { Authorization: `Bearer ${session.data.refreshJwt}` },
     })
 
     if (
       !result.success &&
+      result.error !== 'AccountTakedown' &&
       result.error !== 'InvalidToken' &&
       result.error !== 'ExpiredToken'
     ) {
-      await options?.hooks?.onDeleteFailure?.call(null, session, result)
       throw result
     }
-
-    await options?.hooks?.onDeleted?.call(null, session)
   }
 }
 
@@ -264,31 +275,15 @@ const expiredTokenBodySchema = l.object({
 async function isExpiredTokenResponse(response: Response): Promise<boolean> {
   if (response.status !== 400) return false
   try {
-    const json = await peekJson(response, 10 * 1024)
+    const json = await peekJson(response, 1024)
     return expiredTokenBodySchema.matches(json)
   } catch {
     return false
   }
 }
 
-function pdsUrl(session: Session, path: string): URL {
-  if (!session.didDoc) {
-    return new URL(path, session.service)
-  }
-
-  // If the authentication service returned as DID Document, we must use
-  // the PDS service endpoint from there. If that did document did not include
-  // a PDS service endpoint, we cannot proceed.
-
-  const pds = extractPdsUrl(session.didDoc)
-  if (pds) {
-    return new URL(path, pds)
-  }
-
-  // @TODO Make this error simpler to handle for the caller (e.g. a specific
-  // error class) so it can better surface the issue to the user (error with
-  // the user's identity on the network)
-  throw new TypeError('PDS service endpoint not found in DID Document')
+function fetchUrl(session: Session, path: string): URL {
+  return new URL(path, session.pdsUrl ?? session.service)
 }
 
 function extractPdsUrl(didDoc?: LexMap): string | null {
