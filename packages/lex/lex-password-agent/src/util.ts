@@ -1,18 +1,18 @@
-export const ifString = <T>(v: T) =>
-  (typeof v === 'string' ? v : undefined) as unknown extends T
-    ? undefined | string
-    : T extends string
-      ? string
-      : undefined
+import { LexMap, l } from '@atproto/lex-schema'
 
-export const ifArray = <T>(v: T) =>
-  (Array.isArray(v) ? v : undefined) as unknown extends T
-    ? undefined | unknown[]
-    : T extends unknown[]
-      ? Extract<T, unknown[]>
-      : undefined
+export async function isExpiredTokenResponse(
+  response: Response,
+): Promise<boolean> {
+  if (response.status !== 400) return false
+  try {
+    const json = await peekJson(response, 1024)
+    return expiredTokenBodySchema.matches(json)
+  } catch {
+    return false
+  }
+}
 
-export async function peekJson(
+async function peekJson(
   response: Response,
   maxSize = Infinity,
 ): Promise<unknown> {
@@ -34,3 +34,39 @@ function extractLength({ headers }: Response) {
 function extractType({ headers }: Response) {
   return headers.get('Content-Type')?.split(';')[0]?.trim().toLowerCase()
 }
+
+const expiredTokenBodySchema = l.object({
+  error: l.literal('ExpiredToken'),
+})
+
+export function isUnrecoverableError(err: unknown) {
+  return unrecoverableErrorSchema.matches(err)
+}
+
+const unrecoverableErrorSchema = l.enum([
+  'AccountTakedown',
+  'InvalidToken',
+  'ExpiredToken',
+])
+
+export function extractPdsUrl(didDoc?: LexMap): string | null {
+  const pdsService = ifArray(didDoc?.service)?.find((service) =>
+    ifString((service as any)?.id)?.endsWith('#atproto_pds'),
+  )
+  const pdsEndpoint = ifString((pdsService as any)?.serviceEndpoint)
+  return pdsEndpoint && URL.canParse(pdsEndpoint) ? pdsEndpoint : null
+}
+
+const ifString = <T>(v: T) =>
+  (typeof v === 'string' ? v : undefined) as unknown extends T
+    ? undefined | string
+    : T extends string
+      ? string
+      : undefined
+
+const ifArray = <T>(v: T) =>
+  (Array.isArray(v) ? v : undefined) as unknown extends T
+    ? undefined | unknown[]
+    : T extends unknown[]
+      ? Extract<T, unknown[]>
+      : undefined
