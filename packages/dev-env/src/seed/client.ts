@@ -151,8 +151,15 @@ export class SeedClient<
       inviteCode?: string
     },
   ) {
-    const { data: account } =
-      await this.agent.com.atproto.server.createAccount(params)
+    const authHeaders = this.network.pds.ctx.cfg.service.registrationEnabled
+      ? undefined
+      : this.network.pds.adminAuthHeaders()
+
+    const { data: account } = await this.agent.com.atproto.server.createAccount(
+      params,
+      { headers: authHeaders },
+    )
+
     this.dids[shortName] = account.did
     this.accounts[account.did] = {
       ...account,

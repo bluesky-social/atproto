@@ -111,6 +111,18 @@ export class RequestManager {
     // -----------------------
 
     if (
+      parameters.prompt === 'create' &&
+      !this.metadata.prompt_values_supported?.includes('create')
+    ) {
+      // per https://openid.net/specs/openid-connect-prompt-create-1_0.html#section-4.1-4
+      throw new AuthorizationError(
+        parameters,
+        `Unsupported prompt parameter "${parameters.prompt}"`,
+        'invalid_request',
+      )
+    }
+
+    if (
       !this.metadata.response_types_supported?.includes(
         parameters.response_type,
       )

@@ -25,6 +25,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     privacyPolicyUrl: env.privacyPolicyUrl,
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
+    registrationEnabled: env.registrationEnabled ?? true,
     acceptingImports: env.acceptingImports ?? true,
     maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
@@ -383,6 +384,7 @@ export type ServiceConfig = {
   version?: string
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
+  registrationEnabled: boolean
   acceptingImports: boolean
   maxImportSize?: number
   blobUploadLimit: number

@@ -18,7 +18,11 @@ export class OzoneServiceProfile extends ServiceProfile {
     },
   ) {
     const client = pds.getClient()
-    await client.createAccount(userDetails)
+    const authHeaders = pds.ctx.cfg.service.registrationEnabled
+      ? undefined
+      : pds.adminAuthHeaders()
+
+    await client.createAccount(userDetails, { headers: authHeaders })
 
     const key = await Secp256k1Keypair.create({ exportable: true })
 

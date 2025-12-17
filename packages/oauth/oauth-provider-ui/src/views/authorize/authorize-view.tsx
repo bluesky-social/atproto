@@ -67,7 +67,10 @@ export function AuthorizeView({
   const hasAvailableUserDomains = Boolean(
     customizationData?.availableUserDomains?.length,
   )
-  const canSignUp = !forceSignIn && hasAvailableUserDomains
+  const canSignUp =
+    !forceSignIn &&
+    hasAvailableUserDomains &&
+    customizationData?.registrationEnabled !== false
 
   const initialView = getInitialView(
     authorizeData.promptMode,

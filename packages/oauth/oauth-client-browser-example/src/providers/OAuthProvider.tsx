@@ -7,9 +7,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import type {
-  BrowserOAuthClient,
-  OAuthSession,
+import {
+  type BrowserOAuthClient,
+  OAuthResponseError,
+  type OAuthSession,
 } from '@atproto/oauth-client-browser'
 
 export type SignInFunction = (
@@ -147,12 +148,23 @@ export function OAuthProvider({
     async (input, options) => {
       setLoading(true)
       try {
-        const session = await client.signIn(input, {
-          ...options,
-          prompt: 'create',
-        })
+        const session = await client
+          .signIn(input, {
+            ...options,
+            prompt: 'create',
+          })
+          .catch((err) => {
+            if (err instanceof OAuthResponseError) {
+              alert(err.errorDescription)
+              return
+            }
 
-        setSession(session)
+            throw err
+          })
+
+        if (session) {
+          setSession(session)
+        }
       } finally {
         setLoading(false)
       }

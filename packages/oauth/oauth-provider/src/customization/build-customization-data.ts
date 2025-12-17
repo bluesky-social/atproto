@@ -4,6 +4,7 @@ import { Customization } from './customization.js'
 export function buildCustomizationData({
   branding,
   availableUserDomains,
+  registrationEnabled,
   inviteCodeRequired,
   hcaptcha,
 }: Customization): CustomizationData {
@@ -14,6 +15,7 @@ export function buildCustomizationData({
   return {
     availableUserDomains,
     inviteCodeRequired,
+    registrationEnabled: !!registrationEnabled,
     hcaptchaSiteKey: hcaptcha?.siteKey,
     name: branding?.name,
     logo: branding?.logo,
