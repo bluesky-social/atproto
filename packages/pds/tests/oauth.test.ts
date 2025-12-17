@@ -134,7 +134,8 @@ describe('oauth', () => {
     await browser?.close()
   })
 
-  it('Allows to sign-up trough OAuth', async () => {
+  // This uses prompt=create under the hood:
+  it('Allows to sign-up through OAuth', async () => {
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
@@ -142,14 +143,10 @@ describe('oauth', () => {
     await page.checkTitle('OAuth Client Example')
 
     await page.navigationAction(async () => {
-      await page.clickOnButton(
-        `Login or signup with ${new URL(network.pds.url).host}`,
-      )
+      await page.clickOnButton(`Sign up with ${new URL(network.pds.url).host}`)
     })
 
-    await page.checkTitle('Authentification')
-
-    await page.clickOnButton('Créer un nouveau compte')
+    await page.checkTitle('Créer un compte')
 
     await page.typeInInput('handle', 'bob')
 
@@ -179,6 +176,40 @@ describe('oauth', () => {
     await page.clickOn('button[aria-label="User menu"]')
 
     await page.clickOnButton('Sign out')
+
+    await page.waitForNetworkIdle()
+
+    // TODO: Find out why we can't use "using" here
+    await page[Symbol.asyncDispose]()
+  })
+
+  it('Allows login or signup through OAuth via a choice', async () => {
+    const page = await PageHelper.from(browser)
+
+    await page.goto(appUrl)
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.navigationAction(async () => {
+      await page.clickOnButton(
+        `Login or Signup with ${new URL(network.pds.url).host}`,
+      )
+    })
+
+    await page.checkTitle('Authentification')
+
+    await page.ensureTextVisibility('Annuler', 'button')
+    await page.ensureTextVisibility('Se connecter', 'button')
+    await page.ensureTextVisibility('Créer un nouveau compte', 'button')
+
+    // Cancel the OAuth flow:
+    await page.navigationAction(async () => {
+      await page.clickOnButton('Annuler')
+    })
+
+    await page.checkTitle('OAuth Client Example')
+
+    await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
 
     await page.waitForNetworkIdle()
 
@@ -243,7 +274,7 @@ describe('oauth', () => {
     sendTemplateMock.mockRestore()
   })
 
-  it('Allows to sign-in trough OAuth', async () => {
+  it('Allows to sign-in through OAuth', async () => {
     const page = await PageHelper.from(browser)
 
     await page.goto(appUrl)
