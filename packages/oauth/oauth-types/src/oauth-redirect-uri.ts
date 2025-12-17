@@ -55,7 +55,7 @@ export const oauthRedirectUriSchema = z
         const result = loopbackRedirectURISchema.safeParse(value)
         if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
         return result.success
-      } else if (/^[^.:]+(?:\.[^.:])+:/.test(value)) {
+      } else if (/^[^.:]+(?:\.[^.:]+)+:/.test(value)) {
         const result = privateUseUriSchema.safeParse(value)
         if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
         return result.success
