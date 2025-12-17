@@ -150,9 +150,12 @@ export class XrpcUnexpectedError
       return reason.shouldRetry()
     }
 
-    // There is no reason why retying would fix the server returning an invalid response
     if (reason instanceof XrpcInvalidResponseError) {
-      return false
+      // There is no point in retrying invalid 4xx responses as they will likely
+      // return the same error again. HTTP servers could have transient 5xx
+      // errors that return non XRPC responses, typically when a proxy or
+      // gateway is involved.
+      return reason.response.status >= 500
     }
 
     return true

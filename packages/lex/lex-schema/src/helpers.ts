@@ -33,11 +33,11 @@ export type InferMethodInput<
 export type InferMethodInputBody<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { input: Payload } ? InferPayloadBody<M['input'], B> : never
+> = M extends { input: Payload } ? InferPayloadBody<M['input'], B> : undefined
 
 export type InferMethodInputEncoding<
   M extends Procedure | Query | Subscription,
-> = M extends { input: Payload } ? InferPayloadEncoding<M['input']> : never
+> = M extends { input: Payload } ? InferPayloadEncoding<M['input']> : undefined
 
 export type InferMethodOutput<
   M extends Procedure | Query | Subscription,
@@ -47,13 +47,15 @@ export type InferMethodOutput<
 export type InferMethodOutputBody<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { output: Payload } ? InferPayloadBody<M['output'], B> : never
+> = M extends { output: Payload } ? InferPayloadBody<M['output'], B> : undefined
 
 export type InferMethodOutputEncoding<
   M extends Procedure | Query | Subscription,
-> = M extends { output: Payload } ? InferPayloadEncoding<M['output']> : never
+> = M extends { output: Payload }
+  ? InferPayloadEncoding<M['output']>
+  : undefined
 
 export type InferMethodMessage<
   //
   M extends Procedure | Query | Subscription,
-> = M extends { message: Schema } ? Infer<M['message']> : never
+> = M extends { message: Schema } ? Infer<M['message']> : undefined

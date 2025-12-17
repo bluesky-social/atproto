@@ -13,15 +13,13 @@ export function UserMenu() {
   const { signOut } = useOAuthContext()
   const session = useOAuthSession()
 
-  const getProfile = useLexRecord(app.bsky.actor.profile)
-  const getSession = useLexQuery(com.atproto.server.getSession)
+  const profileQuery = useLexRecord(app.bsky.actor.profile)
+  const sessionQuery = useLexQuery(com.atproto.server.getSession)
 
-  const displayName = getProfile.data?.value?.displayName
-  const handle = getSession.data?.body.handle
-
-  if (getSession.error) {
-    if (getSession.error.error === 'Unexpected') {
-      const { reason } = getSession.error
+  // Example of error handling
+  if (sessionQuery.error) {
+    if (sessionQuery.error.error === 'Unexpected') {
+      const { reason } = sessionQuery.error
       // Unable to perform the request
       if (reason instanceof XrpcResponseError) {
         // The server returned a syntactically valid XRPC error response, but
@@ -45,9 +43,12 @@ export function UserMenu() {
       }
     } else {
       // A declared error for that method
-      getSession.error // XrpcResponseError<'KnownError1' | 'KnownError2' | ...>
+      sessionQuery.error // XrpcResponseError<'KnownError1' | 'KnownError2' | ...>
     }
   }
+
+  const displayName = profileQuery.data?.value?.displayName
+  const handle = sessionQuery.data?.body.handle
 
   return (
     <ButtonDropdown
@@ -91,9 +92,9 @@ export function UserMenu() {
       ]}
     >
       {displayName ||
-        (getProfile.isLoading
+        (profileQuery.isLoading
           ? null
-          : handle || (getSession.isLoading ? null : handle || session.did))}
+          : handle || (sessionQuery.isLoading ? null : handle || session.did))}
     </ButtonDropdown>
   )
 }

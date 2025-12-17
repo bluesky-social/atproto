@@ -45,11 +45,11 @@ export class XrpcResponse<const M extends Procedure | Query>
   ) {}
 
   /**
-   * Whether the response payload data was parsed (as string or LexValue) or is
-   * raw binary data (Uint8Array).
+   * Whether the response payload was parsed as {@link LexValue} (`true`) or is
+   * in binary form {@link Uint8Array} (`false`).
    */
-  get isBinaryData() {
-    return this.method.output.encoding === '*/*'
+  get isParsed() {
+    return this.encoding === 'application/json' && shouldParse(this.method)
   }
 
   get encoding() {
@@ -73,19 +73,11 @@ export class XrpcResponse<const M extends Procedure | Query>
     // Since nothing should cause an exception before "readPayload" is
     // called, we can safely not use a try/finally here.
 
-    const payload = await readPayload(response, {
-      asBinaryData: schema.output.encoding === '*/*',
-    }).catch((cause) => {
-      throw new XrpcInvalidResponseError(
-        'Failed to read response body',
-        response,
-        null,
-        { cause },
-      )
-    })
-
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
+      // Always parse json for error responses
+      const payload = await readPayload(response, { parse: true })
+
       if (response.status >= 400 && isXrpcErrorPayload(payload)) {
         throw new XrpcResponseError(response.status, response.headers, payload)
       }
@@ -100,6 +92,11 @@ export class XrpcResponse<const M extends Procedure | Query>
         payload,
       )
     }
+
+    // Only parse json if the schema expects it
+    const payload = await readPayload(response, {
+      parse: shouldParse(schema),
+    })
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
     if (schema.output.encoding == null) {
@@ -149,42 +146,62 @@ export class XrpcResponse<const M extends Procedure | Query>
   }
 }
 
+function shouldParse(schema: Procedure | Query) {
+  return schema.output.encoding === 'application/json'
+}
+
 /**
  * @note this function always consumes the response body
  */
 async function readPayload(
   response: Response,
-  options: { asBinaryData: boolean },
+  options?: { parse?: boolean },
 ): Promise<Payload | null> {
-  const encoding = response.headers.get('content-type')?.split(';')[0].trim()
+  try {
+    const encoding = response.headers
+      .get('content-type')
+      ?.split(';')[0]
+      .trim()
+      .toLowerCase()
 
-  // Response content-type is undefined
-  if (encoding == null) {
-    // If there is no body, return null (= no payload)
-    if (response.body == null) return null
+    // Response content-type is undefined
+    if (encoding == null) {
+      // If there is no body, return null (= no payload)
+      if (response.body == null) return null
 
-    // If the body is empty, return null (= no payload)
-    const body = await response.arrayBuffer()
-    if (body.byteLength === 0) return null
+      // If the body is empty, return null (= no payload)
+      const body = await response.arrayBuffer()
+      if (body.byteLength === 0) return null
 
-    // If we got data despite no content-type, treat it as binary
-    return { encoding: 'application/octet-stream', body: new Uint8Array(body) }
-  }
+      // If we got data despite no content-type, treat it as binary
+      return {
+        encoding: 'application/octet-stream',
+        body: new Uint8Array(body),
+      }
+    }
 
-  if (!options.asBinaryData) {
-    if (encoding === 'application/json') {
-      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as using
-      // a reviver function during JSON.parse should be faster than parsing to
-      // JSON then converting to Lex (?)
+    if (options?.parse && encoding === 'application/json') {
+      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
+      // using a reviver function during JSON.parse should be faster than
+      // parsing to JSON then converting to Lex (?)
 
       // @TODO verify statement above
+
+      // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
+      // perform the lex parsing using cborg/json, allowing to do
+      // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
+      // This would require adding encode/decode utilities to lex-json (similar
+      // to @ipld/dag-json)
       return { encoding, body: lexParse(await response.text()) }
     }
 
-    if (encoding.startsWith('text/')) {
-      return { encoding, body: await response.text() }
-    }
+    return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
+  } catch (cause) {
+    throw new XrpcInvalidResponseError(
+      'Failed to read response body',
+      response,
+      null,
+      { cause },
+    )
   }
-
-  return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
 }

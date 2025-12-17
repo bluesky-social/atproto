@@ -13,22 +13,29 @@ export function useLexQuery<S extends Query>(
     ? S | { main: S }
     : Restricted<'This XRPC method requires a "params" argument'>,
 ): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>>
+export function useLexQuery<
+  S extends Query,
+  P extends false | InferMethodParams<S>,
+>(
+  ns: S | { main: S },
+  params: P,
+): UseQueryResult<P extends false ? null : XrpcResponse<S>, XrpcFailure<S>>
 export function useLexQuery<S extends Query>(
   ns: S | { main: S },
-  params: InferMethodParams<S>,
-): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>>
-export function useLexQuery<S extends Query>(
-  ns: S | { main: S },
-  params: InferMethodParams<S> = {} as InferMethodParams<S>,
-): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>> {
+  params: false | InferMethodParams<S> = {} as InferMethodParams<S>,
+): UseQueryResult<null | XrpcResponse<S>, XrpcFailure<S>> {
   const schema = 'main' in ns ? ns.main : ns
   const client = useBskyClient()
 
-  const queryString = schema.parameters.toURLSearchParams(params).toString()
+  const queryString =
+    params === false
+      ? params
+      : schema.parameters.toURLSearchParams(params).toString()
 
   return useQuery({
     queryKey: [client.did, schema.nsid, queryString],
     queryFn: async ({ signal }) => {
+      if (params === false) return null
       const result = await client.xrpcSafe(schema, { signal, params } as any)
       if (result.success) return result
       throw result

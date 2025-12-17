@@ -23,6 +23,7 @@ import {
 import { XrpcResponseError, XrpcUnexpectedError } from './xrpc-error.js'
 import { XrpcResponse } from './xrpc-response.js'
 
+export * from './xrpc-error.js'
 export * from './xrpc-response.js'
 
 // If all params are optional, allow omitting the params object

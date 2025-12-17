@@ -326,7 +326,7 @@ export class Client implements Agent {
 
   async uploadBlob(
     body: BinaryBodyInit,
-    options?: CallOptions & { encoding?: string },
+    options?: CallOptions & { encoding?: `${string}/${string}` },
   ) {
     return this.xrpc(com.atproto.repo.uploadBlob.main, {
       ...options,
