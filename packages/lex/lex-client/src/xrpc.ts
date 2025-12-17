@@ -67,7 +67,7 @@ export type XrpcResult<M extends Procedure | Query> =
  * inside a catch block right after calling {@link xrpc}, and use the same
  * method type parameter as used in the {@link xrpc} call.
  */
-function asXrpcFailure<M extends Procedure | Query>(
+export function asXrpcFailure<M extends Procedure | Query>(
   err: unknown,
 ): XrpcFailure<M> {
   if (err instanceof XrpcResponseError) return err
