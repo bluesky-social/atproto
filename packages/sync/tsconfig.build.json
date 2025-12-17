@@ -2,7 +2,11 @@
   "extends": "../../tsconfig/node.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "paths": {
+      "#lexicons": ["./src/lexicons.js"],
+      "#lexicons/*": ["./src/lexicons/*"]
+    }
   },
   "include": ["./src"]
 }

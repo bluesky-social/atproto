@@ -53,7 +53,7 @@ describe('notification views', () => {
     })
     db = network.bsky.db
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.bsky.db.db

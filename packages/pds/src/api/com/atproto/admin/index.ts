@@ -1,5 +1,5 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import deleteAccount from './deleteAccount'
 import disableAccountInvites from './disableAccountInvites'
 import disableInviteCodes from './disableInviteCodes'
