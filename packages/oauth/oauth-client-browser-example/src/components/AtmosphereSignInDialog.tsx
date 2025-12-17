@@ -54,15 +54,16 @@ export function AtmosphereSignInDialog({
             Sign up with {new URL(signUpUrl).host}
           </Button>
           <Button
-            key="signup-or-login"
+            key="login"
             type="button"
             loading={loading}
             disabled={disabled}
+            transparent
             size="large"
             action={() => signIn(signUpUrl)}
-            name="signup-or-login-button"
+            name="login-button"
           >
-            Login or Signup with {new URL(signUpUrl).host}
+            Login with {new URL(signUpUrl).host}
           </Button>
         </>
       )}
