@@ -82,6 +82,15 @@ describe('isLexValue', () => {
     list.push(list)
 
     expect(isLexValue(list)).toBe(false)
+
+    const complex: any = {
+      a: {
+        b: [1, 2, 3],
+      },
+    }
+    complex.a.b.push(complex)
+
+    expect(isLexValue(complex)).toBe(false)
   })
 
   it('handles deeply nested structures', () => {

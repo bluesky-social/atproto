@@ -71,8 +71,8 @@ export function isLexValue(value: unknown): value is LexValue {
     }
   } while (stack.length > 0)
 
-  // Optimization: ease GC's work (not worth it on small structures)
-  if (visited.size > 1000) visited.clear()
+  // Optimization: ease GC's work
+  visited.clear()
 
   return true
 }

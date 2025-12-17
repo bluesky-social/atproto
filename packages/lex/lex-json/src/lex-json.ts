@@ -37,7 +37,7 @@ export function lexParse(
         if (Array.isArray(value)) return value
         return parseSpecialJsonObject(value, options) ?? value
       case 'number':
-        if (Number.isInteger(value)) return value
+        if (Number.isInteger(value) && Number.isSafeInteger(value)) return value
         if (options.strict) {
           throw new TypeError(`Invalid non-integer number: ${value}`)
         }
@@ -62,7 +62,7 @@ export function jsonToLex(
       )
     }
     case 'number':
-      if (Number.isInteger(value)) return value
+      if (Number.isInteger(value) && Number.isSafeInteger(value)) return value
       if (options.strict) {
         throw new TypeError(`Invalid non-integer number: ${value}`)
       }
