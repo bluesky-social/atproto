@@ -13,7 +13,7 @@ describe('suggested follows', () => {
       dbPostgresSchema: 'bsky_views_suggested_follows',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await likesSeed(sc)
     await network.processAll()

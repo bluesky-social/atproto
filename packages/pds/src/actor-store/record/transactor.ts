@@ -1,13 +1,12 @@
 /* eslint-disable import/no-deprecated */
 
-import { CID } from 'multiformats/cid'
-import { RepoRecord } from '@atproto/lexicon'
+import { Cid, LexMap } from '@atproto/lex-data'
 import { BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { dbLogger as log } from '../../logger'
 import { ActorDb, Backlink } from '../db'
 import { RecordReader, getBacklinks } from './reader'
+import { com } from '#lexicons'
 
 export class RecordTransactor extends RecordReader {
   constructor(
@@ -19,8 +18,8 @@ export class RecordTransactor extends RecordReader {
 
   async indexRecord(
     uri: AtUri,
-    cid: CID,
-    record: RepoRecord | null,
+    cid: Cid,
+    record: LexMap | null,
     action: WriteOpAction.Create | WriteOpAction.Update = WriteOpAction.Create,
     repoRev: string,
     timestamp?: string,
@@ -98,7 +97,10 @@ export class RecordTransactor extends RecordReader {
       .execute()
   }
 
-  async updateRecordTakedownStatus(uri: AtUri, takedown: StatusAttr) {
+  async updateRecordTakedownStatus(
+    uri: AtUri,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
     const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null

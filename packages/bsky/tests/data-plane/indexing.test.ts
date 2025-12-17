@@ -31,7 +31,7 @@ describe('indexing', () => {
       dbPostgresSchema: 'bsky_indexing',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     db = network.bsky.db
     await usersSeed(sc)
@@ -657,7 +657,7 @@ describe('indexing', () => {
 
     it('reindexes handle for existing did when forced', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = network.pds.getClient()
+      const sessionAgent = network.pds.getAgent()
       const {
         data: { did },
       } = await sessionAgent.createAccount({
@@ -678,7 +678,7 @@ describe('indexing', () => {
 
     it('handles profile aggregations out of order', async () => {
       const now = new Date().toISOString()
-      const agent = network.pds.getClient()
+      const agent = network.pds.getAgent()
       await agent.createAccount({
         email: 'did3@test.com',
         handle: 'did3.test',

@@ -1,4 +1,5 @@
 import { AtpAgent } from '@atproto/api'
+import { lexicons } from '@atproto/pds'
 import { TestPds } from './pds'
 
 export type ServiceUserDetails = {
@@ -27,22 +28,24 @@ export class ServiceProfile {
   async migrateTo(newPds: TestPds, options: ServiceMigrationOptions = {}) {
     const newClient = newPds.getClient()
 
-    const newPdsDesc = await newClient.com.atproto.server.describeServer()
+    const newPdsDesc = await newClient.call(
+      lexicons.com.atproto.server.describeServer,
+    )
     const serviceAuth = await this.client.com.atproto.server.getServiceAuth({
-      aud: newPdsDesc.data.did,
+      aud: newPdsDesc.did,
       lxm: 'com.atproto.server.createAccount',
     })
 
     const inviteCode = newPds.ctx.cfg.invites.required
-      ? await newClient.com.atproto.server
-          .createInviteCode(
+      ? await newClient
+          .call(
+            lexicons.com.atproto.server.createInviteCode,
             { useCount: 1 },
             {
-              encoding: 'application/json',
               headers: newPds.adminAuthHeaders(),
             },
           )
-          .then((res) => res.data.code)
+          .then((res) => res.code)
       : undefined
 
     await newClient.createAccount(
