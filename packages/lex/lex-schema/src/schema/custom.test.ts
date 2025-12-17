@@ -32,7 +32,7 @@ describe('CustomSchema', () => {
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.message).toContain('Custom error message')
+        expect(result.reason.message).toContain('Custom error message')
       }
     })
   })
@@ -143,7 +143,7 @@ describe('CustomSchema', () => {
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.message).toContain('customField')
+        expect(result.reason.message).toContain('customField')
       }
     })
 
@@ -157,8 +157,8 @@ describe('CustomSchema', () => {
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.message).toContain('nested')
-        expect(result.error.message).toContain('field')
+        expect(result.reason.message).toContain('nested')
+        expect(result.reason.message).toContain('field')
       }
     })
   })
@@ -392,7 +392,7 @@ describe('CustomSchema', () => {
 
       expect(schema.safeParse('test')).toMatchObject({
         success: false,
-        error: {
+        reason: {
           issues: [
             { message: 'This is a custom issue' },
             { message: 'Must be a string' },

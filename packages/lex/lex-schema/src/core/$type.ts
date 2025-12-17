@@ -1,4 +1,5 @@
 import { NsidString } from './string-format.js'
+import { OmitKey } from './types.js'
 
 export type $Type<
   N extends NsidString = NsidString,
@@ -20,3 +21,6 @@ export function $type<N extends NsidString, H extends string>(
 ): $Type<N, H> {
   return (hash === 'main' ? nsid : `${nsid}#${hash}`) as $Type<N, H>
 }
+
+export type $Typed<V, T extends string = string> = V & { $type: T }
+export type Un$Typed<V extends { $type?: string }> = OmitKey<V, '$type'>

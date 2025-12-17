@@ -1,3 +1,6 @@
+/**
+ * Checks whether the input is an object (not null).
+ */
 export function isObject(input: unknown): input is object {
   return input != null && typeof input === 'object'
 }
@@ -5,10 +8,19 @@ export function isObject(input: unknown): input is object {
 const ObjectProto = Object.prototype
 const ObjectToString = Object.prototype.toString
 
-export function isPlainObject(
-  input: unknown,
-): input is object & Record<string, unknown> {
-  if (!input || typeof input !== 'object') return false
+/**
+ * Checks whether the input is an object (not null) whose prototype is either
+ * null or `Object.prototype`.
+ */
+export function isPlainObject(input: unknown) {
+  return isObject(input) && isPlainProto(input)
+}
+
+/**
+ * Checks whether the prototype of the input object is either null or
+ * `Object.prototype`.
+ */
+export function isPlainProto(input: object): input is Record<string, unknown> {
   const proto = Object.getPrototypeOf(input)
   if (proto === null) return true
   return (

@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { once } from 'node:events'
 import {
   IncomingMessage,
@@ -7,93 +6,25 @@ import {
   createServer,
 } from 'node:http'
 import { AddressInfo } from 'node:net'
-import { type Browser, type Page, launch } from 'puppeteer'
+import { type Browser, launch } from 'puppeteer'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-// @ts-expect-error (json file)
 import files from '@atproto/oauth-client-browser-example' with { type: 'json' }
-
-class PageHelper implements AsyncDisposable {
-  constructor(protected readonly page: Page) {}
-
-  async goto(url: string) {
-    await this.page.goto(url)
-  }
-
-  async waitForNetworkIdle() {
-    await this.page.waitForNetworkIdle()
-  }
-
-  async navigationAction(run: () => Promise<unknown>): Promise<void> {
-    const promise = this.page.waitForNavigation()
-    await run()
-    await promise
-    await this.waitForNetworkIdle()
-  }
-
-  async checkTitle(expected: string) {
-    await this.waitForNetworkIdle()
-    await expect(this.page.title()).resolves.toBe(expected)
-  }
-
-  async clickOn(selector: string) {
-    const elementHandle = await this.getVisibleElement(selector)
-    await elementHandle.click()
-    return elementHandle
-  }
-
-  async clickOnButton(text: string) {
-    return this.clickOn(`button::-p-text(${text})`)
-  }
-
-  async typeIn(selector: string, text: string) {
-    const elementHandle = await this.getVisibleElement(selector)
-    elementHandle.focus()
-    await elementHandle.type(text)
-    return elementHandle
-  }
-
-  async typeInInput(name: string, text: string) {
-    return this.typeIn(`input[name="${name}"]`, text)
-  }
-
-  async ensureTextVisibility(text: string, tag = 'p') {
-    await this.page.waitForSelector(`${tag}::-p-text(${text})`)
-  }
-
-  protected async getVisibleElement(selector: string) {
-    const elementHandle = await this.page.waitForSelector(selector)
-
-    expect(elementHandle).not.toBeNull()
-    assert(elementHandle)
-
-    await expect(elementHandle.isVisible()).resolves.toBe(true)
-
-    return elementHandle
-  }
-
-  async [Symbol.asyncDispose]() {
-    return this.page.close()
-  }
-
-  static async from(browser: Browser) {
-    const page = await browser.newPage()
-    return new PageHelper(page)
-  }
-}
+import { PageHelper } from './_puppeteer.js'
 
 describe('oauth', () => {
   let browser: Browser
   let network: TestNetworkNoAppView
-  let client: Server
+  let server: Server
 
   let appUrl: string
 
+  // @NOTE We are using another language than "en" as default language to
+  // test the language negotiation.
+  const languages = ['fr-BE', 'fr', 'en-US', 'en']
+
   beforeAll(async () => {
     browser = await launch({
-      browser: 'chrome',
-      // @NOTE We are using another language than "en" as default language to
-      // test the language negotiation.
-      args: ['--accept-lang=fr-BE,en-GB,en'],
+      browser: 'chrome', // "firefox"
 
       // For debugging:
       // headless: false,
@@ -113,11 +44,11 @@ describe('oauth', () => {
       password: 'alice-pass',
     })
 
-    client = createServer(clientHandler)
-    client.listen(0)
-    await once(client, 'listening')
+    server = createServer(clientHandler)
+    server.listen(0)
+    await once(server, 'listening')
 
-    const { port } = client.address() as AddressInfo
+    const { port } = server.address() as AddressInfo
 
     appUrl = `http://127.0.0.1:${port}?${new URLSearchParams({
       plc_directory_url: network.plc.url,
@@ -129,14 +60,14 @@ describe('oauth', () => {
   })
 
   afterAll(async () => {
-    await client?.close()
+    await server?.close()
     await network?.close()
     await browser?.close()
   })
 
   // This uses prompt=create under the hood:
   it('Allows to sign-up through OAuth', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -184,7 +115,7 @@ describe('oauth', () => {
   })
 
   it('Allows login or signup through OAuth via a choice', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -222,7 +153,7 @@ describe('oauth', () => {
         // noop
       })
 
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -273,7 +204,7 @@ describe('oauth', () => {
   })
 
   it('Allows to sign-in through OAuth', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
@@ -319,7 +250,7 @@ describe('oauth', () => {
   })
 
   it('remembers the session', async () => {
-    const page = await PageHelper.from(browser)
+    const page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 

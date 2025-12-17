@@ -7,15 +7,16 @@ import {
   Validator,
   ValidatorContext,
 } from '../validation.js'
+import { TypedObject } from './typed-union.js'
 
 export type TypedObjectSchemaOutput<
   T extends $Type,
-  S extends Validator<{ [_ in string]?: unknown }>,
+  S extends Validator<{ [k: string]: unknown }>,
 > = Simplify<Infer<S> & { $type?: T }>
 
 export class TypedObjectSchema<
   const T extends $Type = any,
-  const S extends Validator<{ [_ in string]?: unknown }> = any,
+  const S extends Validator<{ [k: string]: unknown }> = any,
 > extends Schema<TypedObjectSchemaOutput<T, S>> {
   constructor(
     readonly $type: T,
@@ -26,7 +27,10 @@ export class TypedObjectSchema<
 
   isTypeOf<X extends Record<string, unknown>>(
     value: X,
-  ): value is X extends { $type?: T } ? X : X & { $type?: T } {
+  ): value is Exclude<
+    X extends { $type?: T } ? X : X & { $type?: T },
+    TypedObject
+  > {
     return value.$type === undefined || value.$type === this.$type
   }
 

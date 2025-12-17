@@ -25,7 +25,7 @@ export type ValidationOptions = {
   allowTransform?: boolean
 }
 
-export type Infer<T extends Validator> = T['_lex']['output']
+export type Infer<T extends Validator> = T['__lex']['output']
 
 export interface Validator<Output = any> {
   /**
@@ -34,7 +34,7 @@ export interface Validator<Output = any> {
    *
    * @deprecated **INTERNAL API, DO NOT USE**.
    */
-  readonly ['_lex']: { output: Output }
+  readonly ['__lex']: { output: Output }
 
   /**
    * @internal **INTERNAL API**: use {@link ValidatorContext.validate} instead
@@ -162,24 +162,28 @@ export class ValidatorContext {
     return success(value)
   }
 
-  failure(issue: Issue): ValidationFailure {
-    return failure(new ValidationError([...this.issues, issue]))
+  failure(reason: ValidationError): ValidationFailure {
+    return failure(reason)
+  }
+
+  issue(issue: Issue) {
+    return this.failure(new ValidationError([...this.issues, issue]))
   }
 
   issueInvalidValue(input: unknown, values: readonly unknown[]) {
-    return this.failure(new IssueInvalidValue(this.path, input, values))
+    return this.issue(new IssueInvalidValue(this.path, input, values))
   }
 
   issueInvalidType(input: unknown, expected: string) {
-    return this.failure(new IssueInvalidType(this.path, input, [expected]))
+    return this.issue(new IssueInvalidType(this.path, input, [expected]))
   }
 
   issueRequiredKey(input: object, key: PropertyKey) {
-    return this.failure(new IssueRequiredKey(this.path, input, key))
+    return this.issue(new IssueRequiredKey(this.path, input, key))
   }
 
   issueInvalidFormat(input: unknown, format: string, msg?: string) {
-    return this.failure(new IssueInvalidFormat(this.path, input, format, msg))
+    return this.issue(new IssueInvalidFormat(this.path, input, format, msg))
   }
 
   issueTooBig(
@@ -188,7 +192,7 @@ export class ValidatorContext {
     max: number,
     actual: number,
   ) {
-    return this.failure(new IssueTooBig(this.path, input, max, type, actual))
+    return this.issue(new IssueTooBig(this.path, input, max, type, actual))
   }
 
   issueTooSmall(
@@ -197,7 +201,7 @@ export class ValidatorContext {
     min: number,
     actual: number,
   ) {
-    return this.failure(new IssueTooSmall(this.path, input, min, type, actual))
+    return this.issue(new IssueTooSmall(this.path, input, min, type, actual))
   }
 
   issueInvalidPropertyValue<I>(
@@ -207,7 +211,7 @@ export class ValidatorContext {
   ) {
     const value = input[property]
     const path = this.concatPath(property)
-    return this.failure(new IssueInvalidValue(path, value, values))
+    return this.issue(new IssueInvalidValue(path, value, values))
   }
 
   issueInvalidPropertyType<I>(
@@ -217,6 +221,6 @@ export class ValidatorContext {
   ) {
     const value = input[property]
     const path = this.concatPath(property)
-    return this.failure(new IssueInvalidType(path, value, [expected]))
+    return this.issue(new IssueInvalidType(path, value, [expected]))
   }
 }

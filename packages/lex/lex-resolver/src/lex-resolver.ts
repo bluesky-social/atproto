@@ -38,10 +38,21 @@ export type LexResolverFetchResult = {
 type Awaitable<T> = T | Promise<T>
 
 export type LexResolverHooks = {
+  /**
+   * Hook called before resolving a lexicon authority DID. If a DID is returned,
+   * it will be used instead of performing the default resolution. In that case,
+   * the `onResolveAuthorityResult` and `onResolveAuthorityError` hooks will
+   * not be called.
+   */
   onResolveAuthority?(data: { nsid: NSID }): Awaitable<void | Did>
   onResolveAuthorityResult?(data: { nsid: NSID; did: Did }): Awaitable<void>
   onResolveAuthorityError?(data: { nsid: NSID; err: unknown }): Awaitable<void>
 
+  /**
+   * Hook called before fetching a lexicon URI. If a result is returned, it will
+   * be used instead of performing the default fetch. In that case, the
+   * `onFetchResult` and `onFetchError` hooks will not be called.
+   */
   onFetch?(data: { uri: AtUri }): Awaitable<void | LexResolverFetchResult>
   onFetchResult?(data: {
     uri: AtUri
@@ -167,8 +178,8 @@ export class LexResolver {
       headers: options?.noCache ? { 'Cache-Control': 'no-cache' } : undefined,
       params: { did, collection, rkey },
     }).then(
-      ({ body: carBytes }) => {
-        return verifyRecordProof(carBytes, did, key, collection, rkey).catch(
+      ({ body }) => {
+        return verifyRecordProof(body, did, key, collection, rkey).catch(
           (cause) => {
             throw new LexResolverError(
               nsid,
@@ -188,7 +199,7 @@ export class LexResolver {
     const validationResult = lexiconDocumentSchema.safeParse(record)
     if (!validationResult.success) {
       throw new LexResolverError(nsid, `Invalid Lexicon document at ${uri}`, {
-        cause: validationResult.error,
+        cause: validationResult.reason,
       })
     }
 

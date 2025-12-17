@@ -8,7 +8,6 @@ import {
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
-import type { ByteView } from 'multiformats/block'
 import { Cid, LexValue, asCid, decodeCid } from '@atproto/lex-data'
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
@@ -21,13 +20,25 @@ import { Cid, LexValue, asCid, decodeCid } from '@atproto/lex-data'
 
 const CID_CBOR_TAG = 42
 
-function cidEncoder(obj: object): Token[] | null {
-  const cid = asCid(obj)
-  if (!cid) return null
-
+function cidEncoder(cid: Cid): Token[] {
   const bytes = new Uint8Array(cid.bytes.byteLength + 1)
   bytes.set(cid.bytes, 1) // prefix is 0x00, for historical reasons
   return [new Token(Type.tag, CID_CBOR_TAG), new Token(Type.bytes, bytes)]
+}
+
+function objectEncoder(
+  obj: object,
+  _typ: string,
+  _options: EncodeOptions,
+): Token[] | null {
+  const cid = asCid(obj)
+  if (cid) return cidEncoder(cid)
+
+  // @TODO strip undefined values somehow
+  // https://github.com/rvagg/cborg/issues/154
+
+  // Fallback to default object encoder
+  return null
 }
 
 function undefinedEncoder(): null {
@@ -35,7 +46,7 @@ function undefinedEncoder(): null {
 }
 
 function numberEncoder(num: number): null {
-  if (Number.isInteger(num)) return null
+  if (Number.isInteger(num) && Number.isSafeInteger(num)) return null
 
   throw new Error('Non-integer numbers are not allowed by the AT Data Model')
 }
@@ -53,9 +64,10 @@ function mapEncoder(map: Map<unknown, unknown>): null {
 }
 
 const encodeOptions: EncodeOptions = {
+  float64: true,
   typeEncoders: {
     Map: mapEncoder,
-    Object: cidEncoder,
+    Object: objectEncoder,
     undefined: undefinedEncoder,
     number: numberEncoder,
   },
@@ -82,16 +94,16 @@ const decodeOptions: DecodeOptions = {
   tags: tagDecoders,
 }
 
-export function encode<T extends LexValue>(data: T): ByteView<T> {
+export function encode<T extends LexValue = LexValue>(data: T): Uint8Array {
   return cborgEncode(data, encodeOptions)
 }
 
-export function decode<T extends LexValue>(bytes: ByteView<T>): T {
+export function decode<T extends LexValue = LexValue>(bytes: Uint8Array): T {
   return cborgDecode(bytes, decodeOptions)
 }
 
-export function* decodeAll<T = LexValue>(
-  data: ByteView<T>,
+export function* decodeAll<T extends LexValue = LexValue>(
+  data: Uint8Array,
 ): Generator<T, void, unknown> {
   do {
     const [result, remainingBytes] = cborgDecodeFirst(data, decodeOptions)

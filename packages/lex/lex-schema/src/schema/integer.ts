@@ -35,5 +35,5 @@ export class IntegerSchema extends Schema<number> {
  * Simple wrapper around {@link Number.isInteger} that acts as a type guard.
  */
 function isInteger(input: unknown): input is number {
-  return Number.isInteger(input)
+  return Number.isInteger(input) && Number.isSafeInteger(input)
 }
