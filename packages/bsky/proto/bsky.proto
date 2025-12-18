@@ -466,6 +466,7 @@ message GetActorsRequest {
 }
 
 message ActorInfo {
+  reserved 20; // DO NOT REMOVE — see dataplane repo
   bool exists = 1;
   string handle = 2;
   Record profile = 3;
