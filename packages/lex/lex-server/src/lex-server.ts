@@ -12,10 +12,12 @@ import {
   InferMethodOutputEncoding,
   InferMethodParams,
   Main,
+  NsidString,
   Procedure,
   Query,
   ValidationError,
   getMain,
+  isNsidString,
 } from '@atproto/lex-schema'
 
 export type LexRouterHandlerContext<
@@ -25,7 +27,6 @@ export type LexRouterHandlerContext<
   credentials: Credentials
   input: InferMethodInput<M, Body>
   params: InferMethodParams<M>
-  headers: Headers
   request: Request
 }
 
@@ -60,7 +61,6 @@ export type LexRouterAuthContext<
   M extends Query | Procedure = Query | Procedure,
 > = {
   params: InferMethodParams<M>
-  headers: Headers
   request: Request
 }
 
@@ -75,11 +75,12 @@ export type LexRouterOptions = {
     request: Request,
     method: Query | Procedure,
   ) => void | null | Response | Promise<void | null | Response>
+  catchAll?: (request?: Request) => Response | Promise<Response>
 }
 
 export class LexRouter {
   private routes: Map<
-    string,
+    NsidString,
     {
       method: Query | Procedure
       handler: LexRouterHandler
@@ -87,37 +88,50 @@ export class LexRouter {
     }
   > = new Map()
 
-  readonly fetchHandler = (
+  constructor(readonly options: LexRouterOptions = {}) {}
+
+  add<M extends Query | Procedure>(
+    ns: Main<M>,
+    handler: LexRouterHandler<M, void>,
+  ): this
+  add<M extends Query | Procedure, Credentials>(
+    ns: Main<M>,
+    config: XrpcHandlerConfig<M, Credentials>,
+  ): this
+  add(
+    ns: Query | Procedure,
+    config: LexRouterHandler<any, any> | XrpcHandlerConfig<any, any>,
+  ) {
+    const method = getMain(ns)
+    if (this.routes.has(method.nsid)) {
+      throw new TypeError(`Method ${method.nsid} already registered`)
+    }
+    const { handler, auth = undefined } =
+      typeof config === 'function' ? { handler: config } : config
+    this.routes.set(method.nsid, { method, auth, handler })
+    return this
+  }
+
+  async fetch(
     input: string | URL | Request,
     init?: RequestInit,
-  ): Promise<Response> => {
+  ): Promise<Response> {
     const request =
       input instanceof Request && init == null
         ? input
         : new Request(input, init)
-    return this.handleRequest(request)
-  }
-
-  constructor(readonly options?: LexRouterOptions) {}
-
-  async handleRequest(request: Request): Promise<Response> {
     const url = new URL(request.url)
 
     const nsid = extractXrpcMethodNsid(url)
-    const route = nsid ? this.routes.get(nsid) : undefined
-    if (!route) {
-      return Response.json({ error: 'MethodNotImplemented' }, { status: 404 })
-    }
+    const route = nsid ? this.routes.get(nsid) : null
+    if (!route) return this.fallback(request)
 
     const { method, auth, handler } = route
 
     try {
-      const { headers } = request
       const params = method.parameters.fromURLSearchParams(url.searchParams)
 
-      const credentials = auth
-        ? await auth({ params, headers, request })
-        : undefined
+      const credentials = auth ? await auth({ params, request }) : undefined
 
       const body =
         method.type === 'procedure'
@@ -163,7 +177,6 @@ export class LexRouter {
       const output = await handler({
         credentials,
         params,
-        headers,
         input: input as any,
         request,
       })
@@ -190,7 +203,7 @@ export class LexRouter {
         headers: responseHeaders,
       })
     } catch (err) {
-      const onErrorResult = await this.options?.onError?.call(
+      const onErrorResult = await this.options.onError?.call(
         null,
         err,
         request,
@@ -202,13 +215,6 @@ export class LexRouter {
 
       if (onErrorResult instanceof Response) {
         return onErrorResult
-      }
-
-      if (err instanceof ValidationError) {
-        return Response.json(
-          { error: 'InvalidRequest', message: err.message },
-          { status: 400 },
-        )
       }
 
       if (err instanceof XrpcResponseError) {
@@ -239,6 +245,13 @@ export class LexRouter {
         )
       }
 
+      if (err instanceof ValidationError) {
+        return Response.json(
+          { error: 'InvalidRequest', message: err.message, issues: err.issues },
+          { status: 400 },
+        )
+      }
+
       return Response.json(
         { error: 'InternalError', message: 'An internal error occurred' },
         { status: 500 },
@@ -246,31 +259,18 @@ export class LexRouter {
     }
   }
 
-  add<M extends Query | Procedure>(
-    ns: Main<M>,
-    handler: LexRouterHandler<M, void>,
-  ): this
-  add<M extends Query | Procedure, Credentials>(
-    ns: Main<M>,
-    config: XrpcHandlerConfig<M, Credentials>,
-  ): this
-  add(
-    ns: Query | Procedure,
-    config: LexRouterHandler<any, any> | XrpcHandlerConfig<any, any>,
-  ) {
-    const method = getMain(ns)
-    if (this.routes.has(method.nsid)) {
-      throw new TypeError(`Method ${method.nsid} already registered`)
-    }
-    const { handler, auth = undefined } =
-      typeof config === 'function' ? { handler: config } : config
-    this.routes.set(method.nsid, { method, auth, handler })
-    return this
+  async fallback(request: Request): Promise<Response> {
+    const catchAll = this.options.catchAll
+    if (catchAll) return catchAll(request)
+
+    return Response.json({ error: 'MethodNotImplemented' }, { status: 404 })
   }
 }
 
-function extractXrpcMethodNsid({ pathname }: URL): string | null {
+function extractXrpcMethodNsid({ pathname }: URL): NsidString | null {
   if (!pathname.startsWith('/xrpc/')) return null
   if (pathname.includes('/', 6)) return null
-  return pathname.slice(6)
+  const nsid = pathname.slice(6)
+  if (!isNsidString(nsid)) return null
+  return nsid
 }

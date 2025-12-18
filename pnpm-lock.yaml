@@ -1001,9 +1001,9 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:*
         version: link:../lex-builder
-      '@atproto/lex-router':
+      '@atproto/lex-server':
         specifier: workspace:*
-        version: link:../lex-router
+        version: link:../lex-server
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
@@ -1042,7 +1042,23 @@ importers:
         specifier: workspace:*
         version: link:../lex-builder
 
-  packages/lex/lex-router:
+  packages/lex/lex-schema:
+    dependencies:
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
+      '@atproto/syntax':
+        specifier: workspace:*
+        version: link:../../syntax
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+    devDependencies:
+      jest:
+        specifier: ^28.1.2
+        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+
+  packages/lex/lex-server:
     dependencies:
       '@atproto/lex-client':
         specifier: workspace:*
@@ -1053,22 +1069,9 @@ importers:
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
-      tslib:
-        specifier: ^2.8.1
-        version: 2.8.1
-    devDependencies:
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
-
-  packages/lex/lex-schema:
-    dependencies:
-      '@atproto/lex-data':
-        specifier: workspace:*
-        version: link:../lex-data
-      '@atproto/syntax':
-        specifier: workspace:*
-        version: link:../../syntax
+      http-terminator:
+        specifier: ^3.2.0
+        version: 3.2.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1

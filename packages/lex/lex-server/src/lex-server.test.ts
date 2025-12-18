@@ -1,6 +1,6 @@
 import { buildAgent, xrpc } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
-import { LexRouter } from './lex-router.js'
+import { LexRouter } from './lex-server.js'
 
 const echoProcedure = l.procedure(
   'com.example.echo',
@@ -10,7 +10,7 @@ const echoProcedure = l.procedure(
 )
 
 describe('LexRouter', () => {
-  const { fetchHandler } = new LexRouter().add(
+  const router = new LexRouter().add(
     echoProcedure,
     async ({ input: { encoding, body }, request }) => {
       const url = new URL(request.url)
@@ -20,12 +20,12 @@ describe('LexRouter', () => {
   )
 
   const agent = buildAgent({
-    fetch: fetchHandler,
+    fetch: async (input, init) => router.fetch(input, init),
     service: 'https://example.com',
   })
 
   it('returns 404 for unknown route', async () => {
-    const response = await fetchHandler(
+    const response = await router.fetch(
       'https://example.com/xrpc/com.example.unknown',
     )
     expect(response.status).toBe(404)
@@ -44,7 +44,7 @@ describe('LexRouter', () => {
   })
 
   it('streams payloads', async () => {
-    const response = await fetchHandler(
+    const response = await router.fetch(
       'https://example.com/xrpc/com.example.echo',
       {
         method: 'POST',

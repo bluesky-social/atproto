@@ -1,8 +1,8 @@
 import assert from 'node:assert'
 import { Client, XrpcError } from '@atproto/lex-client'
-import { LexRouter } from '@atproto/lex-router'
-import { HttpServer, start } from '@atproto/lex-router/nodejs'
 import { l } from '@atproto/lex-schema'
+import { LexRouter } from '@atproto/lex-server'
+import { Server, startServer } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons.js'
 import { PasswordAgent } from './password-agent.js'
 
@@ -20,10 +20,10 @@ const customMethod = l.procedure(
 )
 
 describe('PasswordAgent', () => {
-  let entrywayServer: HttpServer
+  let entrywayServer: Server
   let entrywayOrigin: string
 
-  let pdsServer: HttpServer
+  let pdsServer: Server
   let pdsOrigin: string
 
   beforeAll(async () => {
@@ -69,7 +69,7 @@ describe('PasswordAgent', () => {
         return { body }
       })
       .add(com.atproto.server.refreshSession, {
-        auth: async ({ headers }) => {
+        auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer refresh-token:${refreshCount}`) {
             throw new XrpcError('AuthenticationRequired', 'Invalid token')
@@ -86,13 +86,26 @@ describe('PasswordAgent', () => {
           return { body }
         },
       })
+      .add(com.atproto.server.deleteSession, {
+        auth: async ({ request: { headers } }) => {
+          const auth = headers.get('authorization')
+          if (auth !== `Bearer access-token:${sessionCount}`) {
+            throw new XrpcError('AuthenticationRequired', 'Invalid token')
+          }
+          return { did: 'did:example:alice' as l.DidString }
+        },
+        handler: async () => {
+          sessionCount++
+          return {}
+        },
+      })
 
-    entrywayServer = await start(entrywayRouter.fetchHandler)
+    entrywayServer = await startServer(entrywayRouter)
     const { port } = entrywayServer.address() as { port: number }
     entrywayOrigin = `http://localhost:${port}`
 
     const pdsRouter = new LexRouter().add(customMethod, {
-      auth: async ({ headers }) => {
+      auth: async ({ request: { headers } }) => {
         const auth = headers.get('authorization')
         if (auth !== `Bearer access-token:${sessionCount}`) {
           throw new XrpcError('AuthenticationRequired', 'Invalid token')
@@ -104,7 +117,7 @@ describe('PasswordAgent', () => {
       },
     })
 
-    pdsServer = await start(pdsRouter.fetchHandler)
+    pdsServer = await startServer(pdsRouter)
     const { port: pdsPort } = pdsServer.address() as { port: number }
     pdsOrigin = `http://localhost:${pdsPort}`
     const pdsUrl = pdsOrigin
@@ -133,15 +146,27 @@ describe('PasswordAgent', () => {
       identifier: 'alice',
       password: 'password123',
       authFactorToken: '2fa-token',
+      hooks: {
+        onDeleteFailure: async (session, cause) => {
+          throw new Error('Should not fail to delete session', { cause })
+        },
+      },
     })
 
     assert(result.success)
-    const client = new Client(result.value)
+    const agent = result.value
+    const client = new Client(agent)
 
     const res = await client.call(customMethod, { message: 'hello' })
 
     expect(res.reply).toBe('hello')
     expect(res.credentials.user).toBe('alice')
+
+    await agent.logout()
+
+    expect(client.call(customMethod, { message: 'hello' })).rejects.toThrow(
+      'Logout failed',
+    )
   })
 })
 

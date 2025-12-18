@@ -1,12 +1,12 @@
 import { AddressInfo } from 'node:net'
-import { HttpServer, start } from './nodejs.js'
+import { HttpServer, startServer } from './nodejs.js'
 
 describe('Node.js RequestListener', () => {
   let server: HttpServer
   let address: string
 
   beforeAll(async () => {
-    server = await start(async (request) => {
+    server = await startServer(async (request) => {
       const { pathname } = new URL(request.url)
       if (pathname === '/hello') {
         return new Response('Hello, world!', {

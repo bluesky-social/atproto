@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-router": "workspace:*",
+    "@atproto/lex-server": "workspace:*",
     "jest": "^28.1.2"
   },
   "scripts": {
