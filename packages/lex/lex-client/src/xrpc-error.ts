@@ -116,9 +116,13 @@ export class XrpcResponseError<
 /**
  * This class represents an invalid XRPC response from the server.
  */
-export class XrpcInvalidResponseError
-  extends XrpcError<'UpstreamFailure'>
-  implements XrpcFailureResult<'UpstreamFailure', XrpcInvalidResponseError>
+export class XrpcInvalidResponseError<
+    N extends 'InvalidResponse' | 'UpstreamFailure' =
+      | 'InvalidResponse'
+      | 'UpstreamFailure',
+  >
+  extends XrpcError<N>
+  implements XrpcFailureResult<N, XrpcInvalidResponseError<N>>
 {
   name = 'XrpcInvalidResponseError' as const
 
@@ -130,12 +134,13 @@ export class XrpcInvalidResponseError
   }
 
   constructor(
+    error: N,
     message: string,
     response: { status: number; headers: Headers },
     payload: Payload | null,
     options?: ErrorOptions,
   ) {
-    super('UpstreamFailure', message, { cause: options?.cause })
+    super(error, message, { cause: options?.cause })
     this.response = {
       status: response.status,
       headers: response.headers,

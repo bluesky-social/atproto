@@ -87,12 +87,20 @@ export class XrpcResponse<const M extends Procedure | Query>
         )
       }
 
+      if (response.status >= 500) {
+        throw new XrpcInvalidResponseError(
+          'UpstreamFailure',
+          `Upstream server encountered an error`,
+          response,
+          payload,
+        )
+      }
+
       throw new XrpcInvalidResponseError(
-        response.status >= 500
-          ? `Upstream server encountered an error`
-          : response.status >= 400
-            ? `Upstream server returned an invalid response payload`
-            : `Upstream server returned an invalid status code`,
+        'InvalidResponse',
+        response.status >= 400
+          ? `Upstream server returned an invalid response payload`
+          : `Upstream server returned an invalid status code`,
         response,
         payload,
       )
@@ -108,6 +116,7 @@ export class XrpcResponse<const M extends Procedure | Query>
       // Schema expects no payload
       if (payload) {
         throw new XrpcInvalidResponseError(
+          'InvalidResponse',
           `Expected response with no body, got ${payload.encoding}`,
           response,
           payload,
@@ -117,6 +126,7 @@ export class XrpcResponse<const M extends Procedure | Query>
       // Schema expects a payload
       if (!payload || !method.output.matchesEncoding(payload.encoding)) {
         throw new XrpcInvalidResponseError(
+          'InvalidResponse',
           payload
             ? `Expected ${method.output.encoding} response, got ${payload.encoding}`
             : `Expected non-empty response with content-type ${method.output.encoding}`,
@@ -133,6 +143,7 @@ export class XrpcResponse<const M extends Procedure | Query>
 
         if (!result.success) {
           throw new XrpcInvalidResponseError(
+            'InvalidResponse',
             `Response validation failed: ${result.reason.message}`,
             response,
             payload,
@@ -201,6 +212,7 @@ async function readPayload(
       return { encoding, body: lexParse(text) }
     } catch (cause) {
       throw new XrpcInvalidResponseError(
+        'InvalidResponse',
         'Invalid JSON response body',
         response,
         null,

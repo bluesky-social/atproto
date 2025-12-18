@@ -1,18 +1,19 @@
 {
-  "name": "@atproto/lex-password-agent",
+  "name": "@atproto/lex-router",
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Password based client authentication for AT Lexicons",
+  "description": "Request router for Atproto Lexicon protocols and schemas",
   "keywords": [
     "atproto",
     "lexicon",
-    "utilities"
+    "router",
+    "typescript"
   ],
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/bluesky-social/atproto",
-    "directory": "packages/lex/lex-password-agent"
+    "directory": "packages/lex/lex-router"
   },
   "files": [
     "./src",
@@ -20,6 +21,7 @@
     "./tsconfig.tests.json",
     "./tsconfig.json",
     "./dist",
+    "./nodejs.js",
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
@@ -32,20 +34,23 @@
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./nodejs": {
+      "import": "./dist/nodejs.js",
+      "require": "./dist/nodejs.js",
+      "types": "./dist/nodejs.d.ts"
     }
   },
   "dependencies": {
-    "@atproto/lex-client": "workspace:*",
     "@atproto/lex-schema": "workspace:*",
+    "@atproto/lex-client": "workspace:*",
+    "@atproto/lex-json": "workspace:*",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-router": "workspace:*",
     "jest": "^28.1.2"
   },
   "scripts": {
-    "prebuild": "node ./scripts/lex-build.mjs",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   }

@@ -10,6 +10,12 @@ import {
 } from './schema.js'
 import { Infer, Schema } from './validation.js'
 
+export type Main<T> = T | { main: T }
+
+export function getMain<T extends object>(ns: Main<T>): T {
+  return 'main' in ns ? ns.main : ns
+}
+
 /**
  * Every XRPC implementation should translate `application/json` and `text/*`
  * payloads into their native equivalent ({@link LexValue} or string). Binary
