@@ -43,14 +43,17 @@ describe('PasswordAgent', () => {
           input.body.identifier !== 'alice' ||
           input.body.password !== 'password123'
         ) {
-          throw new XrpcError('AuthenticationRequired', 'Invalid identifier')
+          throw new XrpcError('ExpiredToken', 'Invalid identifier')
         }
 
         const did = `did:example:alice`
 
+        sessionCount++
+        refreshCount++
+
         const body: com.atproto.server.createSession.OutputBody = {
-          accessJwt: `access-token:${++sessionCount}`,
-          refreshJwt: `refresh-token:${++refreshCount}`,
+          accessJwt: `access-token:${sessionCount}`,
+          refreshJwt: `refresh-token:${refreshCount}`,
           handle: `alice.example`,
           did,
           didDoc: {
@@ -72,14 +75,16 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer refresh-token:${refreshCount}`) {
-            throw new XrpcError('AuthenticationRequired', 'Invalid token')
+            throw new XrpcError('ExpiredToken', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
         handler: async ({ credentials }) => {
+          sessionCount++
+          refreshCount++
           const body: com.atproto.server.refreshSession.OutputBody = {
-            accessJwt: `access-token:${++sessionCount}`,
-            refreshJwt: `refresh-token:${++refreshCount}`,
+            accessJwt: `access-token:${sessionCount}`,
+            refreshJwt: `refresh-token:${refreshCount}`,
             handle: `alice.example`,
             did: credentials.did,
           }
@@ -89,13 +94,14 @@ describe('PasswordAgent', () => {
       .add(com.atproto.server.deleteSession, {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
-          if (auth !== `Bearer access-token:${sessionCount}`) {
-            throw new XrpcError('AuthenticationRequired', 'Invalid token')
+          if (auth !== `Bearer refresh-token:${refreshCount}`) {
+            throw new XrpcError('ExpiredToken', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
         handler: async () => {
           sessionCount++
+          refreshCount++
           return {}
         },
       })
@@ -157,15 +163,24 @@ describe('PasswordAgent', () => {
     const agent = result.value
     const client = new Client(agent)
 
-    const res = await client.call(customMethod, { message: 'hello' })
+    expect(await client.call(customMethod, { message: 'hello' })).toMatchObject(
+      {
+        reply: 'hello',
+        credentials: { user: 'alice' },
+      },
+    )
 
-    expect(res.reply).toBe('hello')
-    expect(res.credentials.user).toBe('alice')
+    expect(await client.call(customMethod, { message: 'world' })).toMatchObject(
+      {
+        reply: 'world',
+        credentials: { user: 'alice' },
+      },
+    )
 
     await agent.logout()
 
     expect(client.call(customMethod, { message: 'hello' })).rejects.toThrow(
-      'Logout failed',
+      'Logged out',
     )
   })
 })
