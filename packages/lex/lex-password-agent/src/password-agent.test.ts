@@ -1,7 +1,7 @@
 import assert from 'node:assert'
-import { Client, XrpcError } from '@atproto/lex-client'
+import { Client } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
-import { LexRouter } from '@atproto/lex-server'
+import { LexError, LexRouter } from '@atproto/lex-server'
 import { Server, startServer } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons.js'
 import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
@@ -52,17 +52,14 @@ describe('PasswordAgent', () => {
     const entrywayRouter = new LexRouter()
       .add(com.atproto.server.createSession, async ({ input }) => {
         if (input.body.authFactorToken !== '2fa-token') {
-          throw new XrpcError(
-            'AuthFactorTokenRequired',
-            '2FA token is required',
-          )
+          throw new LexError('AuthFactorTokenRequired', '2FA token is required')
         }
 
         if (
           input.body.identifier !== 'alice' ||
           input.body.password !== 'password123'
         ) {
-          throw new XrpcError('ExpiredToken', 'Invalid identifier')
+          throw new LexError('ExpiredToken', 'Invalid identifier')
         }
 
         const did = `did:example:alice`
@@ -94,7 +91,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer access-token:${sessionCount}`) {
-            throw new XrpcError('AuthenticationRequired', 'Invalid token')
+            throw new LexError('AuthenticationRequired', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
@@ -126,7 +123,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer refresh-token:${refreshCount}`) {
-            throw new XrpcError('ExpiredToken', 'Invalid token')
+            throw new LexError('ExpiredToken', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
@@ -151,7 +148,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer refresh-token:${refreshCount}`) {
-            throw new XrpcError('ExpiredToken', 'Invalid token')
+            throw new LexError('ExpiredToken', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
@@ -171,7 +168,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer access-token:${sessionCount}`) {
-            throw new XrpcError('AuthenticationRequired', 'Invalid token')
+            throw new LexError('AuthenticationRequired', 'Invalid token')
           }
           return { user: 'alice' }
         },
@@ -180,7 +177,7 @@ describe('PasswordAgent', () => {
         },
       })
       .add(app.example.expiredToken, async () => {
-        throw new XrpcError('ExpiredToken', 'Token expired')
+        throw new LexError('ExpiredToken', 'Token expired')
       })
 
     pdsServer = await startServer(pdsRouter)
@@ -203,7 +200,7 @@ describe('PasswordAgent', () => {
     })
 
     assert(!result.success)
-    expect(result).toBeInstanceOf(XrpcError)
+    expect(result).toBeInstanceOf(LexError)
     expect(result.error).toBe('AuthFactorTokenRequired')
   })
 

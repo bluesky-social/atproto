@@ -1,3 +1,4 @@
+import { LexErrorData } from '@atproto/lex-data'
 import { Restricted } from './core.js'
 import {
   InferPayload,
@@ -69,12 +70,7 @@ export type InferMethodMessage<
   M extends Procedure | Query | Subscription,
 > = M extends { message: Schema } ? Infer<M['message']> : undefined
 
-export type MethodErrorBody = {
-  error: string
-  message?: string
-}
-
-export const methodErrorBodySchema: Schema<MethodErrorBody> = new ObjectSchema({
+export const lexErrorData: Schema<LexErrorData> = new ObjectSchema({
   error: new StringSchema({ minLength: 1 }),
   message: new OptionalSchema(new StringSchema({})),
 })

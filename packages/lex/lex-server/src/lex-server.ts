@@ -1,10 +1,4 @@
-import {
-  LexValue,
-  XrpcError,
-  XrpcInvalidResponseError,
-  XrpcResponseError,
-  XrpcUnexpectedError,
-} from '@atproto/lex-client'
+import { LexError, LexValue } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   InferMethodInput,
@@ -13,13 +7,13 @@ import {
   InferMethodOutputEncoding,
   InferMethodParams,
   Main,
-  NsidString,
   Procedure,
   Query,
-  ValidationError,
   getMain,
-  isNsidString,
 } from '@atproto/lex-schema'
+
+type Fetch = (request: Request) => Promise<Response>
+type Route = { method: Query | Procedure; fetch: Fetch }
 
 export type LexRouterHandlerContext<
   M extends Query | Procedure,
@@ -75,17 +69,25 @@ export type LexRouterAuth<
 > = (ctx: LexRouterAuthContext<M>) => Promise<Credentials>
 
 export type LexRouterOptions = {
-  onError?: (
-    err: unknown,
-    request: Request,
-    method: Query | Procedure,
-  ) => void | null | Response | Promise<void | null | Response>
-  catchAll?: (request?: Request) => Response | Promise<Response>
+  onHandlerError?: (data: {
+    error: unknown
+    request: Request
+    method: Query | Procedure
+  }) => void | null | Response | Promise<void | null | Response>
+
+  onMethodNotFound?: (data: {
+    request?: Request
+  }) => void | null | Response | Promise<void | null | Response>
+
+  onResponse?: (data: {
+    response: Response
+    request: Request
+    method?: Query | Procedure
+  }) => void | null | Response | Promise<void | null | Response>
 }
 
 export class LexRouter {
-  private routes: Map<NsidString, (request: Request) => Promise<Response>> =
-    new Map()
+  private routes: Map<string, Route> = new Map()
 
   constructor(readonly options: LexRouterOptions = {}) {}
 
@@ -108,20 +110,31 @@ export class LexRouter {
     if (this.routes.has(method.nsid)) {
       throw new TypeError(`Method ${method.nsid} already registered`)
     }
-    const { handler, auth } =
-      typeof config === 'function'
-        ? { handler: config, auth: async () => undefined }
-        : config
+    const { handler, auth = undefined } =
+      typeof config === 'function' ? { handler: config } : config
 
-    this.routes.set(method.nsid, this.buildRoute(method, handler, auth))
+    const fetch = this.buildFetch(method, handler, auth)
+
+    this.routes.set(method.nsid, { method, fetch })
+
     return this
   }
 
-  private buildRoute<M extends Query | Procedure, Credentials>(
+  private buildFetch<M extends Query | Procedure>(
+    method: M,
+    handler: LexRouterHandler<M, void>,
+    auth?: LexRouterAuth<M, void>,
+  ): Fetch
+  private buildFetch<M extends Query | Procedure, Credentials>(
     method: M,
     handler: LexRouterHandler<M, Credentials>,
     auth: LexRouterAuth<M, Credentials>,
-  ): (request: Request) => Promise<Response> {
+  ): Fetch
+  private buildFetch<M extends Query | Procedure, Credentials>(
+    method: M,
+    handler: LexRouterHandler<M, Credentials>,
+    auth?: LexRouterAuth<M, Credentials>,
+  ): Fetch {
     const getInput = (
       method.type === 'procedure'
         ? getProcedureInput.bind(method)
@@ -146,7 +159,9 @@ export class LexRouter {
         const url = new URL(request.url)
         const params = method.parameters.fromURLSearchParams(url.searchParams)
 
-        const credentials = await auth({ params, request })
+        const credentials = auth
+          ? await auth({ params, request })
+          : (undefined as Credentials)
 
         const input = await getInput(request)
 
@@ -176,58 +191,22 @@ export class LexRouter {
           status: 200,
           headers: responseHeaders,
         })
-      } catch (err) {
-        const onErrorResult = await this.options.onError?.call(
-          null,
-          err,
+      } catch (error) {
+        const response = await this.options.onHandlerError?.call(null, {
           request,
           method,
-        )
+          error,
+        })
+
+        if (response != null) {
+          return response
+        }
 
         // Ensure request body is closed to free resources
         if (!request.bodyUsed) await request.body?.cancel()
 
-        if (onErrorResult instanceof Response) {
-          return onErrorResult
-        }
-
-        if (err instanceof XrpcResponseError) {
-          return Response.json(
-            { error: err.error, message: err.message },
-            { status: err.status, headers: err.headers },
-          )
-        }
-
-        if (err instanceof XrpcUnexpectedError) {
-          return Response.json(
-            { error: err.error, message: err.message },
-            { status: 500 },
-          )
-        }
-
-        if (err instanceof XrpcInvalidResponseError) {
-          return Response.json(
-            { error: err.error, message: err.message },
-            { status: 502 },
-          )
-        }
-
-        if (err instanceof XrpcError) {
-          return Response.json(
-            { error: err.error, message: err.message },
-            { status: 400 },
-          )
-        }
-
-        if (err instanceof ValidationError) {
-          return Response.json(
-            {
-              error: 'InvalidRequest',
-              message: err.message,
-              issues: err.issues,
-            },
-            { status: 400 },
-          )
+        if (error instanceof LexError) {
+          return error.toResponse()
         }
 
         return Response.json(
@@ -250,25 +229,38 @@ export class LexRouter {
 
     const nsid = extractXrpcMethodNsid(url)
     const route = nsid ? this.routes.get(nsid) : null
-    if (!route) return this.fallback(request)
 
-    return route(request)
+    const response = route
+      ? await route.fetch(request)
+      : await this.fallback(request)
+
+    const modifiedResponse = await this.options.onResponse?.call(null, {
+      request,
+      response,
+      method: route?.method,
+    })
+    if (modifiedResponse) return modifiedResponse
+
+    return response
   }
 
   async fallback(request: Request): Promise<Response> {
-    const catchAll = this.options.catchAll
-    if (catchAll) return catchAll(request)
+    const fallbackResponse = await this.options.onMethodNotFound?.call(null, {
+      request,
+    })
+    if (fallbackResponse) return fallbackResponse
 
     return Response.json({ error: 'MethodNotImplemented' }, { status: 404 })
   }
 }
 
-function extractXrpcMethodNsid({ pathname }: URL): NsidString | null {
+function extractXrpcMethodNsid({ pathname }: URL): string | null {
   if (!pathname.startsWith('/xrpc/')) return null
   if (pathname.includes('/', 6)) return null
-  const nsid = pathname.slice(6)
-  if (!isNsidString(nsid)) return null
-  return nsid
+  if (pathname.length <= 11) return null // "/xrpc/a.b.c" is minimum
+  // We don't really need to validate the NSID here, the existence of the route
+  // (which is looked up based on an NSID) is sufficient.
+  return pathname.slice(6)
 }
 
 async function getProcedureInput<M extends Procedure>(
@@ -291,7 +283,7 @@ async function getProcedureInput<M extends Procedure>(
 
   if (!this.input.matchesEncoding(encoding)) {
     await request.body?.cancel()
-    throw new XrpcError('InvalidRequest', `Invalid content-type: ${encoding}`)
+    throw new LexError('InvalidRequest', `Invalid content-type: ${encoding}`)
   }
 
   if (this.input.encoding === 'application/json') {
@@ -319,7 +311,7 @@ async function getQueryInput<M extends Query>(
     request.headers.has('content-length')
   ) {
     await request.body?.cancel()
-    throw new XrpcError('InvalidRequest', 'GET requests must not have a body')
+    throw new LexError('InvalidRequest', 'GET requests must not have a body')
   }
 
   return undefined as InferMethodInput<M, Body>

@@ -6,7 +6,7 @@ export async function extractXrpcErrorCode(
 ): Promise<string | null> {
   const json = await peekJson(response, 10 * 1024) // Avoid reading large bodies
   if (json === undefined) return null
-  if (!l.methodErrorBodySchema.matches(json)) return null
+  if (!l.lexErrorData.matches(json)) return null
   return json.error
 }
 

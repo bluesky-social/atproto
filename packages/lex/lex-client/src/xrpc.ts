@@ -3,6 +3,7 @@ import { lexStringify } from '@atproto/lex-json'
 import {
   InferMethodInput,
   InferMethodParams,
+  Main,
   Params,
   ParamsSchema,
   Payload as LexPayload,
@@ -10,9 +11,10 @@ import {
   Query,
   Restricted,
   Subscription,
+  getMain,
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
-import { BinaryBodyInit, CallOptions, Namespace, getMain } from './types.js'
+import { BinaryBodyInit, CallOptions } from './types.js'
 import {
   Payload,
   buildAtprotoHeaders,
@@ -81,17 +83,17 @@ export function asXrpcFailure<M extends Procedure | Query>(
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: NonNullable<unknown> extends XrpcOptions<M>
-    ? Namespace<M>
+    ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M>,
 ): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResponse<M>> {
   try {
@@ -104,17 +106,17 @@ export async function xrpc<const M extends Query | Procedure>(
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
   ns: NonNullable<unknown> extends XrpcOptions<M>
-    ? Namespace<M>
+    ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M>,
 ): Promise<XrpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
   return xrpcRequest<M>(agent, ns, options).catch(asXrpcFailure<M>)
@@ -122,7 +124,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
 
 async function xrpcRequest<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResponse<M>> {
   const method = getMain(ns)

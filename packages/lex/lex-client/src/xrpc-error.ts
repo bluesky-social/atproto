@@ -1,36 +1,27 @@
+import { LexError, LexErrorCode } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import { Payload } from './util.js'
 
-export type XrpcErrorCode = string
-export const xrpcErrorCodeSchema: l.Schema<XrpcErrorCode> = l.string({
-  minLength: 1,
-})
-
-export class XrpcError<N extends XrpcErrorCode = XrpcErrorCode> extends Error {
-  name = 'XrpcError'
-
-  constructor(
-    readonly error: N,
-    message: string = `${error} XRPC error`,
-    options?: ErrorOptions,
-  ) {
-    super(message, options)
-  }
-}
-
-export type XrpcErrorBody<N extends XrpcErrorCode = XrpcErrorCode> = {
+export type XrpcErrorBody<N extends LexErrorCode = LexErrorCode> = {
   error: N
   message?: string
 }
-export type XrpcErrorPayload<N extends XrpcErrorCode = XrpcErrorCode> = {
+export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> = {
   encoding: 'application/json'
   body: XrpcErrorBody<N>
 }
 
-const xrpcErrorBodySchema: l.Schema<XrpcErrorBody> = l.object({
-  error: xrpcErrorCodeSchema,
-  message: l.optional(l.string()),
-})
+export class XrpcError<N extends LexErrorCode = LexErrorCode> extends LexError {
+  name = 'XrpcError'
+
+  constructor(
+    error: N,
+    message: string = `${error} XRPC error`,
+    options?: ErrorOptions,
+  ) {
+    super(error, message, options)
+  }
+}
 
 /**
  * All unsuccessful responses should follow a standard error response
@@ -50,14 +41,14 @@ export function isXrpcErrorPayload(
   return (
     payload !== null &&
     payload.encoding === 'application/json' &&
-    xrpcErrorBodySchema.matches(payload.body)
+    l.lexErrorData.matches(payload.body)
   )
 }
 
 /**
  * Interface representing a failed XRPC request result.
  */
-type XrpcFailureResult<N extends XrpcErrorCode, E> = l.ResultFailure<E> & {
+type XrpcFailureResult<N extends LexErrorCode, E> = l.ResultFailure<E> & {
   readonly error: N
   shouldRetry(): boolean
   matchesSchema(): boolean
@@ -69,9 +60,9 @@ type XrpcFailureResult<N extends XrpcErrorCode, E> = l.ResultFailure<E> & {
  */
 export class XrpcResponseError<
     M extends l.Procedure | l.Query = l.Procedure | l.Query,
-    N extends XrpcErrorCode = XrpcErrorCode,
+    N extends LexErrorCode = LexErrorCode,
   >
-  extends XrpcError<N>
+  extends LexError<N>
   implements XrpcFailureResult<N, XrpcResponseError<M, N>>
 {
   name = 'XrpcResponseError' as const
@@ -111,6 +102,15 @@ export class XrpcResponseError<
 
     return true
   }
+
+  toJSON() {
+    return this.payload.body
+  }
+
+  toResponse(): Response {
+    const { status, headers } = this
+    return Response.json(this.toJSON(), { status, headers })
+  }
 }
 
 /**
@@ -121,7 +121,7 @@ export class XrpcInvalidResponseError<
       | 'InvalidResponse'
       | 'UpstreamFailure',
   >
-  extends XrpcError<N>
+  extends LexError<N>
   implements XrpcFailureResult<N, XrpcInvalidResponseError<N>>
 {
   name = 'XrpcInvalidResponseError' as const
@@ -162,10 +162,14 @@ export class XrpcInvalidResponseError<
     // Do not retry client errors
     return this.response.status >= 500
   }
+
+  toResponse(): Response {
+    return Response.json(this.toJSON(), { status: 502 })
+  }
 }
 
 export class XrpcUnexpectedError
-  extends XrpcError<'InternalServerError'>
+  extends LexError<'InternalServerError'>
   implements XrpcFailureResult<'InternalServerError', unknown>
 {
   name = 'XrpcUnexpectedError' as const
@@ -188,9 +192,13 @@ export class XrpcUnexpectedError
     return true
   }
 
+  toResponse(): Response {
+    return Response.json(this.toJSON(), { status: 500 })
+  }
+
   static from(
     cause: unknown,
-    message: string = cause instanceof XrpcError
+    message: string = cause instanceof LexError
       ? cause.message
       : 'XRPC request failed',
   ): XrpcUnexpectedError {
