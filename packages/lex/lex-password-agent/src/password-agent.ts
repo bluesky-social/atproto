@@ -2,16 +2,13 @@ import {
   Agent,
   XrpcError,
   XrpcFailure,
+  XrpcResponseError,
   buildAgent,
   xrpcSafe,
 } from '@atproto/lex-client'
 import { DatetimeString, ResultSuccess, success } from '@atproto/lex-schema'
 import { com } from './lexicons.js'
-import {
-  extractPdsUrl,
-  isExpiredTokenResponse,
-  isUnrecoverableError,
-} from './util.js'
+import { extractPdsUrl, extractXrpcErrorCode } from './util.js'
 
 export type Session = {
   data: com.atproto.server.createSession.OutputBody
@@ -20,25 +17,25 @@ export type Session = {
   service: string
 }
 
+export type PasswordAuthAgentHooks = {
+  onRefreshed?: (this: PasswordAgent, session: Session) => void | Promise<void>
+  onRefreshFailure?: (
+    this: PasswordAgent,
+    session: Session,
+    err: XrpcFailure<typeof com.atproto.server.refreshSession.main>,
+  ) => void | Promise<void>
+
+  onDeleted?: (this: PasswordAgent, session: Session) => void | Promise<void>
+  onDeleteFailure?: (
+    this: PasswordAgent,
+    session: Session,
+    err: XrpcFailure<typeof com.atproto.server.deleteSession.main>,
+  ) => void | Promise<void>
+}
+
 export type PasswordAuthAgentOptions = {
   fetch?: typeof globalThis.fetch
-  hooks?: {
-    onRefreshed?: (
-      this: PasswordAgent,
-      session: Session,
-    ) => void | Promise<void>
-    onRefreshFailure?: (
-      this: PasswordAgent,
-      session: Session,
-      err: XrpcFailure<typeof com.atproto.server.refreshSession.main>,
-    ) => void | Promise<void>
-    onDeleted?: (this: PasswordAgent, session: Session) => void | Promise<void>
-    onDeleteFailure?: (
-      this: PasswordAgent,
-      session: Session,
-      err: XrpcFailure<typeof com.atproto.server.deleteSession.main>,
-    ) => void | Promise<void>
-  }
+  hooks?: PasswordAuthAgentHooks
 }
 
 export class PasswordAgent implements Agent {
@@ -67,6 +64,10 @@ export class PasswordAgent implements Agent {
     throw new XrpcError('AuthenticationRequired', 'Logged out')
   }
 
+  get destroyed(): boolean {
+    return this.#session === null
+  }
+
   async fetchHandler(path: string, init: RequestInit): Promise<Response> {
     const headers = new Headers(init.headers)
     if (headers.has('authorization')) {
@@ -84,8 +85,12 @@ export class PasswordAgent implements Agent {
       headers,
     })
 
-    const isExpiredToken = await isExpiredTokenResponse(initialRes)
-    if (!isExpiredToken) {
+    const refreshNeeded =
+      initialRes.status === 401 ||
+      (initialRes.status === 400 &&
+        (await extractXrpcErrorCode(initialRes)) === 'ExpiredToken')
+
+    if (!refreshNeeded) {
       return initialRes
     }
 
@@ -135,12 +140,14 @@ export class PasswordAgent implements Agent {
       )
 
       if (!response.success) {
-        if (isUnrecoverableError(response.error)) {
+        if (response.matchesSchema()) {
+          // Expected errors that indicate the session is no longer valid
           await this.options.hooks?.onDeleted?.call(this, session)
           throw response
         }
 
-        // We failed to refresh the token, but the session might still be valid.
+        // We failed to refresh the token, assume the session might still be
+        // valid.
         await this.options.hooks?.onRefreshFailure?.call(
           this,
           session,
@@ -150,10 +157,33 @@ export class PasswordAgent implements Agent {
         return session
       }
 
+      const newData: com.atproto.server.createSession.OutputBody = {
+        // createSession contains more fields than refreshSession
+        ...session.data,
+        ...response.body,
+      }
+
+      // The "email", "emailConfirmed, and "emailAuthFactor" fields were
+      // recently added to the refreshSession response. Until all
+      // implementations are updated to return these fields, we need to fetch
+      // them via getSession. Similarly, some servers might not return the
+      // didDoc in refreshSession. We fetch it via getSession if missing,
+      // allowing to ensure that we are always talking with the right PDS.
+      if (!newData.email || !newData.didDoc) {
+        const extraData = await xrpcSafe(
+          this.#agent,
+          com.atproto.server.getSession,
+          { headers: { Authorization: `Bearer ${newData.accessJwt}` } },
+        )
+        if (extraData.success && extraData.body.did === newData.did) {
+          Object.assign(newData, extraData.body)
+        }
+      }
+
       const newSession: Session = {
-        data: response.body,
+        data: newData,
         service: session.service,
-        pdsUrl: extractPdsUrl(response.body.didDoc),
+        pdsUrl: extractPdsUrl(newData.didDoc),
         refreshedAt: new Date().toISOString(),
       }
 
@@ -175,15 +205,10 @@ export class PasswordAgent implements Agent {
         { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
 
-      if (!result.success) {
-        if (isUnrecoverableError(result.error)) {
-          // Already deleted, all good
-        } else {
-          await this.options.hooks?.onDeleteFailure?.call(this, session, result)
-          // The server might be down or network error occurred, we are not
-          // actually logged out.
-          return session
-        }
+      if (!result.success && !result.matchesSchema()) {
+        // An unknown/unexpected error occurred (network, server down, etc)
+        await this.options.hooks?.onDeleteFailure?.call(this, session, result)
+        return session
       }
 
       await this.options.hooks?.onDeleted?.call(this, session)
@@ -215,7 +240,7 @@ export class PasswordAgent implements Agent {
     authFactorToken?: string
   }): Promise<
     | ResultSuccess<PasswordAgent>
-    | XrpcFailure<typeof com.atproto.server.createSession.main>
+    | XrpcResponseError<typeof com.atproto.server.createSession.main>
   > {
     const agent = buildAgent({
       service,
@@ -231,7 +256,8 @@ export class PasswordAgent implements Agent {
     })
 
     if (!response.success) {
-      return response
+      if (response.matchesSchema()) return response
+      throw response
     }
 
     const session: Session = {
@@ -242,6 +268,15 @@ export class PasswordAgent implements Agent {
     }
 
     return success(new PasswordAgent(session, options))
+  }
+
+  static async resume(
+    session: Session,
+    options?: PasswordAuthAgentOptions,
+  ): Promise<PasswordAgent> {
+    const agent = new PasswordAgent(session, options)
+    await agent.refresh()
+    return agent
   }
 
   /**

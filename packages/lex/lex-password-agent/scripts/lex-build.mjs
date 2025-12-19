@@ -11,7 +11,7 @@ build({
   out: join(__dirname, '..', 'src', 'lexicons'),
   clear: true,
   include: [
-    'com.atproto.server.refreshSession',
+    'com.atproto.server.getSession',
     'com.atproto.server.createAccount',
     'com.atproto.server.createSession',
     'com.atproto.server.deleteSession',

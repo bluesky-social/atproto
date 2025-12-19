@@ -3,9 +3,12 @@ import {
   InferPayload,
   InferPayloadBody,
   InferPayloadEncoding,
+  ObjectSchema,
+  OptionalSchema,
   Payload,
   Procedure,
   Query,
+  StringSchema,
   Subscription,
 } from './schema.js'
 import { Infer, Schema } from './validation.js'
@@ -65,3 +68,13 @@ export type InferMethodMessage<
   //
   M extends Procedure | Query | Subscription,
 > = M extends { message: Schema } ? Infer<M['message']> : undefined
+
+export type MethodErrorBody = {
+  error: string
+  message?: string
+}
+
+export const methodErrorBodySchema: Schema<MethodErrorBody> = new ObjectSchema({
+  error: new StringSchema({ minLength: 1 }),
+  message: new OptionalSchema(new StringSchema({})),
+})

@@ -37,6 +37,26 @@ import {
   xrpcSafe,
 } from './xrpc.js'
 
+export type {
+  AtIdentifierString,
+  CidString,
+  DidString,
+  InferMethodInputBody,
+  InferMethodOutputBody,
+  InferMethodParams,
+  InferRecordKey,
+  LexMap,
+  LexValue,
+  LexiconRecordKey,
+  NsidString,
+  Params,
+  Procedure,
+  Query,
+  RecordSchema,
+  Restricted,
+  Schema,
+}
+
 export type ClientOptions = {
   labelers?: Iterable<DidString>
   headers?: HeadersInit

@@ -11,7 +11,7 @@ export class XrpcError<N extends XrpcErrorCode = XrpcErrorCode> extends Error {
 
   constructor(
     readonly error: N,
-    message: string = `An ${error} XRPC error occurred.`,
+    message: string = `${error} XRPC error`,
     options?: ErrorOptions,
   ) {
     super(message, options)

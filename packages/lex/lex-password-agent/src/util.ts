@@ -1,28 +1,29 @@
-import { LexMap, l } from '@atproto/lex-schema'
+import { LexMap, LexValue } from '@atproto/lex-client'
+import { l } from '@atproto/lex-schema'
 
-export async function isExpiredTokenResponse(
+export async function extractXrpcErrorCode(
   response: Response,
-): Promise<boolean> {
-  if (response.status !== 400) return false
-  try {
-    const json = await peekJson(response, 1024)
-    return expiredTokenBodySchema.matches(json)
-  } catch {
-    return false
-  }
+): Promise<string | null> {
+  const json = await peekJson(response, 10 * 1024) // Avoid reading large bodies
+  if (json === undefined) return null
+  if (!l.methodErrorBodySchema.matches(json)) return null
+  return json.error
 }
 
 async function peekJson(
   response: Response,
   maxSize = Infinity,
-): Promise<unknown> {
+): Promise<undefined | LexValue> {
   const type = extractType(response)
-  if (type !== 'application/json') throw new Error('Not JSON')
-
+  if (type !== 'application/json') return undefined
   const length = extractLength(response)
-  if (length == null || length > maxSize) throw new Error('Response too large')
+  if (length != null && length > maxSize) return undefined
 
-  return response.clone().json()
+  try {
+    return (await response.clone().json()) as Promise<LexValue>
+  } catch {
+    return undefined
+  }
 }
 
 function extractLength({ headers }: Response) {
@@ -34,20 +35,6 @@ function extractLength({ headers }: Response) {
 function extractType({ headers }: Response) {
   return headers.get('Content-Type')?.split(';')[0]?.trim().toLowerCase()
 }
-
-const expiredTokenBodySchema = l.object({
-  error: l.literal('ExpiredToken'),
-})
-
-export function isUnrecoverableError(err: unknown) {
-  return unrecoverableErrorSchema.matches(err)
-}
-
-const unrecoverableErrorSchema = l.enum([
-  'AccountTakedown',
-  'InvalidToken',
-  'ExpiredToken',
-])
 
 export function extractPdsUrl(didDoc?: LexMap): string | null {
   const pdsService = ifArray(didDoc?.service)?.find((service) =>
