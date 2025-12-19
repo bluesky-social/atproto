@@ -472,12 +472,10 @@ export class CredentialSession implements SessionManager {
             headers: { authorization: `Bearer ${data.accessJwt}` },
           })
 
-          if (res.data.did !== data.did) {
-            // Fool proofing (should never happen)
-            throw new Error('DID mismatch when fetching missing session data')
+          // Fool proofing (should always match)
+          if (res.data.did === data.did) {
+            Object.assign(data, res.data)
           }
-
-          Object.assign(data, res.data)
         } catch {
           // Noop, we'll keep the current values we have
         }
@@ -485,7 +483,7 @@ export class CredentialSession implements SessionManager {
 
       // protect against concurrent session updates
       if (this.session !== session) {
-        throw new Error('Concurrent session update detected')
+        return Promise.reject(new Error('Concurrent session update detected'))
       }
 
       // succeeded, update the session
@@ -510,7 +508,9 @@ export class CredentialSession implements SessionManager {
       if (this.session === session) {
         if (
           err instanceof XRPCError &&
-          (err.status === 401 || AUTH_ERRORS.includes(err.error))
+          (err.status === 401 ||
+            err.error === 'InvalidDID' ||
+            AUTH_ERRORS.includes(err.error))
         ) {
           // failed due to a bad refresh token
           this.session = undefined
