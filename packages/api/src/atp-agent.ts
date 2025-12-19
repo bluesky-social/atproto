@@ -507,21 +507,19 @@ export class CredentialSession implements SessionManager {
       return res
     } catch (err) {
       // protect against concurrent session updates
-      if (this.session !== session) {
-        throw new Error('Concurrent session update detected', { cause: err })
-      }
-
-      if (
-        err instanceof XRPCError &&
-        (err.status === 401 || AUTH_ERRORS.includes(err.error))
-      ) {
-        // failed due to a bad refresh token
-        this.session = undefined
-        this.persistSession?.('expired', undefined)
-      } else {
-        // Assume the problem is transient and the session can be reused later.
-        this.session = session
-        this.persistSession?.('network-error', session)
+      if (this.session === session) {
+        if (
+          err instanceof XRPCError &&
+          (err.status === 401 || AUTH_ERRORS.includes(err.error))
+        ) {
+          // failed due to a bad refresh token
+          this.session = undefined
+          this.persistSession?.('expired', undefined)
+        } else {
+          // Assume the problem is transient and the session can be reused later.
+          this.session = session
+          this.persistSession?.('network-error', session)
+        }
       }
 
       throw err
