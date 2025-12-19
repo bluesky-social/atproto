@@ -143,14 +143,14 @@ export async function pipethrough(
   }
 > {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
-    // pipethrough() is used from within xrpcServer handlers, which means that
-    // the request body either has been parsed or is a readable stream that has
-    // been piped for decoding & size limiting. Because of this, forwarding the
-    // request body requires re-encoding it. Since we currently do not use
-    // pipethrough() with procedures, proxying of request body is not
+    // pipethrough() is used from within some app.bsky xrpcServer handlers,
+    // which means that the request body either has been parsed or is a readable
+    // stream that has been piped for decoding & size limiting. Because of this,
+    // forwarding the request body requires re-encoding it. Since we currently
+    // do not use pipethrough() with procedures, proxying of request body is not
     // implemented.
     throw new InternalServerError(
-      `Proxying of ${req.method} requests is not supported`,
+      `[BUG, #4193] Proxying of ${req.method} requests is currently not supported for ${req.path}`,
     )
   }
 
