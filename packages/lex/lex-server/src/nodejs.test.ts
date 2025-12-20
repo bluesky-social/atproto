@@ -1,8 +1,8 @@
 import { AddressInfo } from 'node:net'
-import { HttpServer, startServer } from './nodejs.js'
+import { Server, startServer } from './nodejs.js'
 
 describe('Node.js RequestListener', () => {
-  let server: HttpServer
+  let server: Server
   let address: string
 
   beforeAll(async () => {

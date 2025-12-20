@@ -1,23 +1,27 @@
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { parseCid } from '@atproto/lex-data'
+import { LexError, parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import { LexRouter, LexRouterHandler } from './lex-server.js'
+import { LexRouter, LexRouterAuth, LexRouterHandler } from './lex-server.js'
 
-const com = {
+// ============================================================================
+// Schema Definitions
+// ============================================================================
+
+const io = {
   example: {
     echo: l.procedure(
-      'com.example.echo',
+      'io.example.echo',
       l.params(),
       l.payload('*/*'),
       l.payload('*/*'),
     ),
     status: l.query(
-      'com.example.status',
+      'io.example.status',
       l.params(),
       l.payload('application/json', l.object({ status: l.string() })),
     ),
     ipld: l.procedure(
-      'com.example.ipld',
+      'io.example.ipld',
       l.params(),
       l.payload(
         'application/json',
@@ -35,7 +39,7 @@ const com = {
       ),
     ),
     paramsToBody: l.query(
-      'com.example.paramsToBody',
+      'io.example.paramsToBody',
       l.params({
         name: l.string(),
         pronouns: l.array(l.string()),
@@ -54,7 +58,7 @@ const com = {
 }
 
 const handlers: {
-  [K in keyof typeof com.example]: LexRouterHandler<(typeof com.example)[K]>
+  [K in keyof typeof io.example]: LexRouterHandler<(typeof io.example)[K]>
 } = {
   echo: async ({ input }) => ({
     encoding: input.encoding,
@@ -65,6 +69,10 @@ const handlers: {
   paramsToBody: async ({ params }) => ({ body: { params } }),
 }
 
+// ============================================================================
+// Basic LexRouter Tests
+// ============================================================================
+
 describe('LexRouter', () => {
   it('returns 404 when the route is not found', async () => {
     const router = new LexRouter()
@@ -74,9 +82,9 @@ describe('LexRouter', () => {
   })
 
   it('streams payloads', async () => {
-    const router = new LexRouter().add(com.example.echo, handlers.echo)
+    const router = new LexRouter().add(io.example.echo, handlers.echo)
     const response = await router.fetch(
-      'https://example.com/xrpc/com.example.echo',
+      'https://example.com/xrpc/io.example.echo',
       {
         method: 'POST',
         headers: { 'content-type': 'text/plain' },
@@ -115,12 +123,12 @@ describe('LexRouter', () => {
 
   it('maps params to body', async () => {
     const router = new LexRouter().add(
-      com.example.paramsToBody,
+      io.example.paramsToBody,
       handlers.paramsToBody,
     )
 
     const response = await router.fetch(
-      'https://example.com/xrpc/com.example.paramsToBody?name=Alice&pronouns=she%2Fher&pronouns=they%2Fthem',
+      'https://example.com/xrpc/io.example.paramsToBody?name=Alice&pronouns=she%2Fher&pronouns=they%2Fthem',
     )
 
     expect(response.status).toBe(200)
@@ -135,8 +143,8 @@ describe('LexRouter', () => {
 
 describe('lex-client integration', () => {
   const router = new LexRouter()
-    .add(com.example.echo, handlers.echo)
-    .add(com.example.status, handlers.status)
+    .add(io.example.echo, handlers.echo)
+    .add(io.example.status, handlers.status)
 
   it('echoes text', async () => {
     const agent = buildAgent({
@@ -144,7 +152,7 @@ describe('lex-client integration', () => {
       service: 'https://example.com',
     })
     const message = 'Hello, LexRouter!'
-    const response = await xrpc(agent, com.example.echo, {
+    const response = await xrpc(agent, io.example.echo, {
       body: message,
       encoding: 'text/plain',
     })
@@ -159,7 +167,7 @@ describe('lex-client integration', () => {
       service: 'https://example.com',
     })
     const message = 'Hello, LexRouter Stream!'
-    const response = await xrpc(agent, com.example.echo, {
+    const response = await xrpc(agent, io.example.echo, {
       body: new ReadableStream({
         start(controller) {
           controller.enqueue(new TextEncoder().encode(message))
@@ -178,7 +186,7 @@ describe('lex-client integration', () => {
       fetch: async (input, init) => router.fetch(input, init),
       service: 'https://example.com',
     })
-    const response = await xrpc(agent, com.example.status)
+    const response = await xrpc(agent, io.example.status)
     expect(response.success).toBe(true)
     expect(response.status).toBe(200)
     expect(response.encoding).toBe('application/json')
@@ -188,13 +196,13 @@ describe('lex-client integration', () => {
 
 describe('IPLD values', () => {
   it('can send and receive ipld vals', async () => {
-    const ipldHandler: LexRouterHandler<typeof com.example.ipld> = jest.fn(
+    const ipldHandler: LexRouterHandler<typeof io.example.ipld> = jest.fn(
       async ({ input }) => {
         return { body: input.body! }
       },
     )
 
-    const router = new LexRouter().add(com.example.ipld, ipldHandler)
+    const router = new LexRouter().add(io.example.ipld, ipldHandler)
 
     const agent = buildAgent({
       fetch: async (input, init) => router.fetch(input, init),
@@ -207,7 +215,7 @@ describe('IPLD values', () => {
 
     const bytes = new Uint8Array([0, 1, 2, 3])
 
-    const response = await xrpc(agent, com.example.ipld, {
+    const response = await xrpc(agent, io.example.ipld, {
       body: { cid, bytes },
     })
 
@@ -216,5 +224,1235 @@ describe('IPLD values', () => {
     expect(response.encoding).toBe('application/json')
     expect(response.body.cid.equals(cid)).toBe(true)
     expect(response.body.bytes).toEqual(bytes)
+  })
+})
+
+// ============================================================================
+// Authentication Tests (ported from xrpc-server/tests/auth.test.ts)
+// ============================================================================
+
+describe('Authentication', () => {
+  // Basic auth schema
+  const io = {
+    example: {
+      authTest: l.procedure(
+        'io.example.authTest',
+        l.params(),
+        l.payload(
+          'application/json',
+          l.object({
+            present: l.literal(true),
+          }),
+        ),
+        l.payload(
+          'application/json',
+          l.object({
+            username: l.string(),
+            original: l.string(),
+          }),
+        ),
+      ),
+    },
+  }
+
+  type BasicAuthCredentials = {
+    username: string
+    original: string
+  }
+
+  function createBasicAuth(allowed: {
+    username: string
+    password: string
+  }): LexRouterAuth<typeof io.example.authTest, BasicAuthCredentials> {
+    return async ({ request }) => {
+      const header = request.headers.get('authorization') ?? ''
+      if (!header.startsWith('Basic ')) {
+        throw new LexError('AuthenticationRequired', 'Authentication required')
+      }
+      const original = header.slice(6)
+      const [username, password] = Buffer.from(original, 'base64')
+        .toString()
+        .split(':')
+      if (username !== allowed.username || password !== allowed.password) {
+        throw new LexError('AuthenticationRequired', 'Invalid credentials')
+      }
+      return { username, original }
+    }
+  }
+
+  function basicAuth(creds: { username: string; password: string }) {
+    return `Basic ${Buffer.from(`${creds.username}:${creds.password}`).toString('base64')}`
+  }
+
+  const authTestHandler: LexRouterHandler<
+    typeof io.example.authTest,
+    BasicAuthCredentials
+  > = async ({ credentials }) => ({
+    body: {
+      username: credentials.username,
+      original: credentials.original,
+    },
+  })
+
+  it('fails on bad auth before invalid request payload', async () => {
+    const router = new LexRouter().add(io.example.authTest, {
+      auth: createBasicAuth({ username: 'admin', password: 'password' }),
+      handler: authTestHandler,
+    })
+
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.authTest',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: basicAuth({ username: 'admin', password: 'wrong' }),
+        },
+        body: JSON.stringify({ present: false }),
+      },
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.error).toBe('AuthenticationRequired')
+  })
+
+  it('fails on invalid request payload after good auth', async () => {
+    const router = new LexRouter().add(io.example.authTest, {
+      auth: createBasicAuth({ username: 'admin', password: 'password' }),
+      handler: authTestHandler,
+    })
+
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.authTest',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: basicAuth({ username: 'admin', password: 'password' }),
+        },
+        body: JSON.stringify({ present: false }),
+      },
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.error).toBe('InvalidRequest')
+  })
+
+  it('succeeds on good auth and payload', async () => {
+    const router = new LexRouter().add(io.example.authTest, {
+      auth: createBasicAuth({ username: 'admin', password: 'password' }),
+      handler: authTestHandler,
+    })
+
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.authTest',
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: basicAuth({ username: 'admin', password: 'password' }),
+        },
+        body: JSON.stringify({ present: true }),
+      },
+    )
+
+    expect(response.status).toBe(200)
+    const data = await response.json()
+    expect(data.username).toBe('admin')
+    expect(data.original).toBe('YWRtaW46cGFzc3dvcmQ=')
+  })
+
+  it('handles missing auth header', async () => {
+    const router = new LexRouter().add(io.example.authTest, {
+      auth: createBasicAuth({ username: 'admin', password: 'password' }),
+      handler: authTestHandler,
+    })
+
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.authTest',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ present: true }),
+      },
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.error).toBe('AuthenticationRequired')
+  })
+})
+
+// ============================================================================
+// Error Handling Tests (ported from xrpc-server/tests/errors.test.ts)
+// ============================================================================
+
+describe('Error Handling', () => {
+  const io = {
+    example: {
+      error: l.query(
+        'io.example.error',
+        l.params({
+          which: l.optional(l.string()),
+        }),
+        l.payload(),
+      ),
+      throwFalsyValue: l.query(
+        'io.example.throwFalsyValue',
+        l.params(),
+        l.payload(),
+      ),
+      invalidResponse: l.query(
+        'io.example.invalidResponse',
+        l.params(),
+        l.payload(
+          'application/json',
+          l.object({
+            expectedValue: l.string(),
+          }),
+        ),
+      ),
+    },
+  }
+
+  describe('Custom Errors', () => {
+    it('throws custom error using LexError', async () => {
+      const handler: LexRouterHandler<typeof io.example.error> = async ({
+        params,
+      }) => {
+        if (params.which === 'foo') {
+          throw new LexError('Foo', 'It was this one!')
+        }
+        return {}
+      }
+
+      const router = new LexRouter().add(io.example.error, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.error?which=foo',
+      )
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('Foo')
+      expect(data.message).toBe('It was this one!')
+    })
+
+    it('returns custom error via Response object', async () => {
+      const handler: LexRouterHandler<typeof io.example.error> = async ({
+        params,
+      }) => {
+        if (params.which === 'bar') {
+          return Response.json(
+            { error: 'Bar', message: 'It was that one!' },
+            { status: 400 },
+          )
+        }
+        return {}
+      }
+
+      const router = new LexRouter().add(io.example.error, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.error?which=bar',
+      )
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('Bar')
+      expect(data.message).toBe('It was that one!')
+    })
+
+    it('handles falsy values thrown as InternalError', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.throwFalsyValue
+      > = async () => {
+        throw ''
+      }
+
+      const router = new LexRouter().add(io.example.throwFalsyValue, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.throwFalsyValue',
+      )
+
+      expect(response.status).toBe(500)
+      const data = await response.json()
+      expect(data.error).toBe('InternalError')
+    })
+  })
+
+  describe('HTTP Method Mismatches', () => {
+    it('rejects POST for query endpoints', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.error
+      > = async () => ({})
+
+      const router = new LexRouter().add(io.example.error, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.error',
+        { method: 'POST' },
+      )
+
+      expect(response.status).toBe(405)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toBe('Method not allowed')
+    })
+
+    it('rejects GET for procedure endpoints', async () => {
+      const procedure = l.procedure(
+        'io.example.procedure',
+        l.params(),
+        l.payload('application/json', l.object({ data: l.string() })),
+        l.payload(),
+      )
+
+      const handler: LexRouterHandler<typeof procedure> = async () => ({})
+
+      const router = new LexRouter().add(procedure, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.procedure',
+        { method: 'GET' },
+      )
+
+      expect(response.status).toBe(405)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toBe('Method not allowed')
+    })
+  })
+
+  describe('Method Not Found', () => {
+    it('returns 404 for non-existent methods', async () => {
+      const router = new LexRouter()
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.doesNotExist',
+      )
+
+      expect(response.status).toBe(404)
+      const data = await response.json()
+      expect(data.error).toBe('MethodNotImplemented')
+    })
+  })
+
+  describe('Custom Error Handlers', () => {
+    it('allows custom onHandlerError handler', async () => {
+      const errorHandler = jest.fn()
+      const customRouter = new LexRouter({
+        onHandlerError: ({ error }) => {
+          errorHandler(error)
+          return Response.json(
+            { error: 'CustomError', message: 'Custom error handler' },
+            { status: 418 },
+          )
+        },
+      })
+
+      const handler: LexRouterHandler<typeof io.example.error> = async () => {
+        throw new Error('Test error')
+      }
+
+      customRouter.add(io.example.error, handler)
+
+      const response = await customRouter.fetch(
+        'https://example.com/xrpc/io.example.error',
+      )
+
+      expect(errorHandler).toHaveBeenCalled()
+      expect(response.status).toBe(418)
+      const data = await response.json()
+      expect(data.error).toBe('CustomError')
+    })
+
+    it('allows custom onMethodNotFound handler', async () => {
+      const notFoundHandler = jest.fn()
+      const customRouter = new LexRouter({
+        onMethodNotFound: () => {
+          notFoundHandler()
+          return Response.json(
+            { error: 'Gone', message: 'Method removed' },
+            { status: 410 },
+          )
+        },
+      })
+
+      const response = await customRouter.fetch(
+        'https://example.com/xrpc/io.example.doesNotExist',
+      )
+
+      expect(notFoundHandler).toHaveBeenCalled()
+      expect(response.status).toBe(410)
+      const data = await response.json()
+      expect(data.error).toBe('Gone')
+    })
+
+    it('allows custom onResponse handler', async () => {
+      const responseHandler = jest.fn()
+      const customRouter = new LexRouter({
+        onResponse: ({ response }) => {
+          responseHandler()
+          const headers = new Headers(response.headers)
+          headers.set('x-custom-header', 'modified')
+          return new Response(response.body, {
+            status: response.status,
+            headers,
+          })
+        },
+      })
+
+      const handler: LexRouterHandler<
+        typeof io.example.error
+      > = async () => ({})
+
+      customRouter.add(io.example.error, handler)
+
+      const response = await customRouter.fetch(
+        'https://example.com/xrpc/io.example.error',
+      )
+
+      expect(responseHandler).toHaveBeenCalled()
+      expect(response.headers.get('x-custom-header')).toBe('modified')
+    })
+  })
+})
+
+// ============================================================================
+// Parameter Tests (ported from xrpc-server/tests/parameters.test.ts)
+// ============================================================================
+
+describe('Parameters', () => {
+  const io = {
+    example: {
+      paramTest: l.query(
+        'io.example.paramTest',
+        l.params({
+          str: l.string({ minLength: 2, maxLength: 10 }),
+          int: l.integer({ minimum: 2, maximum: 10 }),
+          bool: l.boolean(),
+          arr: l.array(l.integer(), { maxLength: 2 }),
+          def: l.optional(l.integer({ default: 0 })),
+        }),
+        l.payload(
+          'application/json',
+          l.object({
+            str: l.string(),
+            int: l.integer(),
+            bool: l.boolean(),
+            arr: l.array(l.integer()),
+            def: l.optional(l.integer()),
+          }),
+        ),
+      ),
+    },
+  }
+
+  const handler: LexRouterHandler<typeof io.example.paramTest> = async ({
+    params,
+  }) => ({
+    body: {
+      str: params.str,
+      int: params.int,
+      bool: params.bool,
+      arr: params.arr,
+      def: params.def,
+    },
+  })
+
+  const router = new LexRouter().add(io.example.paramTest, handler)
+
+  it('validates query params - valid input', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=1&arr=2&def=5',
+    )
+
+    expect(response.status).toBe(200)
+    const data = await response.json()
+    expect(data.str).toBe('valid')
+    expect(data.int).toBe(5)
+    expect(data.bool).toBe(true)
+    expect(data.arr).toEqual([1, 2])
+    expect(data.def).toBe(5)
+  })
+
+  it('applies default values', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=3&arr=4',
+    )
+
+    expect(response.status).toBe(200)
+    const data = await response.json()
+    // def should be undefined or 0 (default) when not provided
+    expect(data.def).toBe(0)
+  })
+
+  it('coerces types from query strings', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=10&int=5&bool=true&arr=3&arr=4',
+    )
+
+    expect(response.status).toBe(200)
+    const data = await response.json()
+    expect(data.str).toBe('10')
+    expect(data.int).toBe(5)
+    expect(data.bool).toBe(true)
+    expect(data.arr).toEqual([3, 4])
+  })
+
+  it('rejects string too short', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=n&int=5&bool=true&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('str')
+  })
+
+  it('rejects string too long', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=loooooooooooooong&int=5&bool=true&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('str')
+  })
+
+  it('rejects missing required parameter str', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?int=5&bool=true&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('str')
+  })
+
+  it('rejects missing required parameter int', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&bool=true&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('int')
+  })
+
+  it('rejects missing required parameter bool', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('bool')
+  })
+
+  it('rejects integer too small', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=-1&bool=true&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('int')
+  })
+
+  it('rejects integer too large', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=11&bool=true&arr=1',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('int')
+  })
+
+  it('rejects missing required array parameter', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('arr')
+  })
+
+  it('rejects array too large', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=1&arr=2&arr=3',
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.message).toContain('arr')
+  })
+})
+
+// ============================================================================
+// Procedure Tests (ported from xrpc-server/tests/procedures.test.ts)
+// ============================================================================
+
+describe('Procedures', () => {
+  const io = {
+    example: {
+      pingOne: l.procedure(
+        'io.example.pingOne',
+        l.params({
+          message: l.string(),
+        }),
+        l.payload(),
+        l.payload('text/plain'),
+      ),
+      pingTwo: l.procedure(
+        'io.example.pingTwo',
+        l.params(),
+        l.payload('text/plain'),
+        l.payload('text/plain'),
+      ),
+      pingThree: l.procedure(
+        'io.example.pingThree',
+        l.params(),
+        l.payload('application/octet-stream'),
+        l.payload('application/octet-stream'),
+      ),
+      pingFour: l.procedure(
+        'io.example.pingFour',
+        l.params(),
+        l.payload(
+          'application/json',
+          l.object({
+            message: l.string(),
+          }),
+        ),
+        l.payload(
+          'application/json',
+          l.object({
+            message: l.string(),
+          }),
+        ),
+      ),
+    },
+  }
+
+  const handlers = {
+    pingOne: (async ({ params }) => ({
+      encoding: 'text/plain',
+      body: params.message,
+    })) as LexRouterHandler<typeof io.example.pingOne>,
+    pingTwo: (async ({ input }) => ({
+      encoding: 'text/plain',
+      body: input.body.body!,
+    })) as LexRouterHandler<typeof io.example.pingTwo>,
+    pingThree: (async ({ input }) => ({
+      encoding: 'application/octet-stream',
+      body: input.body.body!,
+    })) as LexRouterHandler<typeof io.example.pingThree>,
+    pingFour: (async ({ input }) => ({
+      body: { message: input.body.message },
+    })) as LexRouterHandler<typeof io.example.pingFour>,
+  }
+
+  const router = new LexRouter()
+    .add(io.example.pingOne, handlers.pingOne)
+    .add(io.example.pingTwo, handlers.pingTwo)
+    .add(io.example.pingThree, handlers.pingThree)
+    .add(io.example.pingFour, handlers.pingFour)
+
+  it('serves procedure with params returning text', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingOne?message=hello%20world',
+      { method: 'POST' },
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('text/plain')
+    expect(await response.text()).toBe('hello world')
+  })
+
+  it('serves procedure with text input/output', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingTwo',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'text/plain' },
+        body: 'hello world',
+      },
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('text/plain')
+    expect(await response.text()).toBe('hello world')
+  })
+
+  it('serves procedure with binary input/output', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingThree',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/octet-stream' },
+        body: new TextEncoder().encode('hello world'),
+      },
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe(
+      'application/octet-stream',
+    )
+    const responseBytes = new Uint8Array(await response.arrayBuffer())
+    expect(new TextDecoder().decode(responseBytes)).toBe('hello world')
+  })
+
+  it('serves procedure with JSON input/output', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingFour',
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ message: 'hello world' }),
+      },
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('application/json')
+    const data = await response.json()
+    expect(data.message).toBe('hello world')
+  })
+})
+
+// ============================================================================
+// Query Tests (ported from xrpc-server/tests/queries.test.ts)
+// ============================================================================
+
+describe('Queries', () => {
+  const io = {
+    example: {
+      pingOne: l.query(
+        'io.example.pingOne',
+        l.params({
+          message: l.string(),
+        }),
+        l.payload('text/plain'),
+      ),
+      pingTwo: l.query(
+        'io.example.pingTwo',
+        l.params({
+          message: l.string(),
+        }),
+        l.payload('application/octet-stream'),
+      ),
+      pingThree: l.query(
+        'io.example.pingThree',
+        l.params({
+          message: l.string(),
+        }),
+        l.payload('application/json', l.object({ message: l.string() })),
+      ),
+    },
+  }
+
+  const handlers = {
+    pingOne: (async ({ params }) => ({
+      encoding: 'text/plain',
+      body: params.message,
+    })) satisfies LexRouterHandler<typeof io.example.pingOne>,
+    pingTwo: (async ({ params }) => ({
+      encoding: 'application/octet-stream',
+      body: new TextEncoder().encode(params.message),
+    })) satisfies LexRouterHandler<typeof io.example.pingTwo>,
+    pingThree: (async ({ params }) => ({
+      body: { message: params.message },
+      headers: { 'x-test-header-name': 'test-value' },
+    })) satisfies LexRouterHandler<typeof io.example.pingThree>,
+  }
+
+  const router = new LexRouter()
+    .add(io.example.pingOne, handlers.pingOne)
+    .add(io.example.pingTwo, handlers.pingTwo)
+    .add(io.example.pingThree, handlers.pingThree)
+
+  it('serves query with text response', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingOne?message=hello%20world',
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('text/plain')
+    expect(await response.text()).toBe('hello world')
+  })
+
+  it('serves query with binary response', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingTwo?message=hello%20world',
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe(
+      'application/octet-stream',
+    )
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    expect(new TextDecoder().decode(bytes)).toBe('hello world')
+  })
+
+  it('serves query with JSON response and custom headers', async () => {
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingThree?message=hello%20world',
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('application/json')
+    expect(response.headers.get('x-test-header-name')).toBe('test-value')
+    const data = await response.json()
+    expect(data.message).toBe('hello world')
+  })
+
+  it('rejects query with content-type header', async () => {
+    // GET requests can't have a body, but they can have content-type headers
+    // The server should reject queries that have content-type/content-length headers
+    const response = await router.fetch(
+      'https://example.com/xrpc/io.example.pingOne?message=hello',
+      {
+        method: 'GET',
+        headers: { 'content-type': 'application/json' },
+      },
+    )
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.error).toBe('InvalidRequest')
+  })
+})
+
+// ============================================================================
+// Response Handling Tests (ported from xrpc-server/tests/responses.test.ts)
+// ============================================================================
+
+describe('Responses', () => {
+  describe('Streaming Responses', () => {
+    const io = {
+      example: {
+        readableStream: l.query(
+          'io.example.readableStream',
+          l.params({
+            shouldErr: l.optional(l.boolean()),
+          }),
+          l.payload('application/vnd.ipld.car'),
+        ),
+      },
+    }
+
+    it('returns readable streams of bytes', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.readableStream
+      > = async () => {
+        const stream = new ReadableStream({
+          start(controller) {
+            for (let i = 0; i < 5; i++) {
+              controller.enqueue(new Uint8Array([i]))
+            }
+            controller.close()
+          },
+        })
+
+        return {
+          encoding: 'application/vnd.ipld.car',
+          body: stream,
+        }
+      }
+
+      const router = new LexRouter().add(io.example.readableStream, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.readableStream',
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toBe(
+        'application/vnd.ipld.car',
+      )
+
+      const reader = response.body!.getReader()
+      const chunks: number[] = []
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        chunks.push(...value)
+      }
+      expect(chunks).toEqual([0, 1, 2, 3, 4])
+    })
+
+    it('handles errors on readable streams of bytes', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.readableStream
+      > = async ({ params }) => {
+        const stream = new ReadableStream({
+          start(controller) {
+            for (let i = 0; i < 5; i++) {
+              controller.enqueue(new Uint8Array([i]))
+            }
+            if (params.shouldErr) {
+              controller.error(new Error('Stream error'))
+            } else {
+              controller.close()
+            }
+          },
+        })
+
+        return {
+          encoding: 'application/vnd.ipld.car',
+          body: stream,
+        }
+      }
+
+      const router = new LexRouter().add(io.example.readableStream, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.readableStream?shouldErr=true',
+      )
+
+      expect(response.status).toBe(200)
+
+      const reader = response.body!.getReader()
+      await expect(async () => {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { done } = await reader.read()
+          if (done) break
+        }
+      }).rejects.toThrow('Stream error')
+    })
+  })
+
+  describe('Empty Responses', () => {
+    const io = {
+      example: {
+        emptyResponse: l.query(
+          'io.example.emptyResponse',
+          l.params(),
+          l.payload(),
+        ),
+      },
+    }
+
+    it('handles responses with no body', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.emptyResponse
+      > = async () => ({})
+
+      const router = new LexRouter().add(io.example.emptyResponse, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.emptyResponse',
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.body).toBeNull()
+    })
+
+    it('handles responses with headers but no body', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.emptyResponse
+      > = async () => ({
+        headers: { 'x-custom-header': 'value' },
+      })
+
+      const router = new LexRouter().add(io.example.emptyResponse, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.emptyResponse',
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('x-custom-header')).toBe('value')
+      expect(response.body).toBeNull()
+    })
+  })
+
+  describe('Custom Response Objects', () => {
+    const io = {
+      example: {
+        customResponse: l.query(
+          'io.example.customResponse',
+          l.params({
+            status: l.integer(),
+          }),
+          l.payload(),
+        ),
+      },
+    }
+
+    it('allows returning custom Response objects', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.customResponse
+      > = async ({ params }) => {
+        return new Response(JSON.stringify({ code: params.status }), {
+          status: params.status,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+
+      const router = new LexRouter().add(io.example.customResponse, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.customResponse?status=201',
+      )
+
+      expect(response.status).toBe(201)
+      const data = await response.json()
+      expect(data.code).toBe(201)
+    })
+  })
+})
+
+// ============================================================================
+// Body Handling Tests (ported from xrpc-server/tests/bodies.test.ts)
+// ============================================================================
+
+describe('Body Handling', () => {
+  describe('Input Validation', () => {
+    const io = {
+      example: {
+        validationTest: l.procedure(
+          'io.example.validationTest',
+          l.params(),
+          l.payload(
+            'application/json',
+            l.object({
+              foo: l.string(),
+              bar: l.optional(l.integer()),
+            }),
+          ),
+          l.payload(
+            'application/json',
+            l.object({
+              foo: l.string(),
+              bar: l.optional(l.integer()),
+            }),
+          ),
+        ),
+      },
+    }
+
+    const handler: LexRouterHandler<typeof io.example.validationTest> = async ({
+      input,
+    }) => ({
+      body: input.body!,
+    })
+
+    const router = new LexRouter().add(io.example.validationTest, handler)
+
+    it('validates input and output bodies', async () => {
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.validationTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ foo: 'hello', bar: 123 }),
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(data.foo).toBe('hello')
+      expect(data.bar).toBe(123)
+    })
+
+    it('rejects missing required fields', async () => {
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.validationTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({}),
+        },
+      )
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.message).toContain('foo')
+    })
+
+    it('rejects wrong types', async () => {
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.validationTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ foo: 123 }),
+        },
+      )
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.message).toContain('foo')
+    })
+
+    it('rejects wrong content-type', async () => {
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.validationTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'image/jpeg' },
+          body: new Uint8Array([1, 2, 3]),
+        },
+      )
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+    })
+  })
+
+  describe('Binary Data Support', () => {
+    const io = {
+      example: {
+        blobTest: l.procedure(
+          'io.example.blobTest',
+          l.params(),
+          l.payload('*/*'),
+          l.payload('application/octet-stream'),
+        ),
+      },
+    }
+
+    const handler: LexRouterHandler<typeof io.example.blobTest> = async ({
+      input,
+    }) => {
+      const body = input.body
+      const chunks: Uint8Array[] = []
+      const reader = body.body!.getReader()
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        chunks.push(value)
+      }
+      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+      const result = new Uint8Array(totalLength)
+      let offset = 0
+      for (const chunk of chunks) {
+        result.set(chunk, offset)
+        offset += chunk.length
+      }
+      return {
+        encoding: 'application/octet-stream',
+        body: result,
+      }
+    }
+
+    const router = new LexRouter().add(io.example.blobTest, handler)
+
+    it('supports ArrayBuffers', async () => {
+      const bytes = new Uint8Array([1, 2, 3, 4, 5])
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.blobTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/octet-stream' },
+          body: bytes,
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const responseBytes = new Uint8Array(await response.arrayBuffer())
+      expect(responseBytes).toEqual(bytes)
+    })
+
+    it('supports empty payload', async () => {
+      const bytes = new Uint8Array(0)
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.blobTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/octet-stream' },
+          body: bytes,
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const responseBytes = new Uint8Array(await response.arrayBuffer())
+      expect(responseBytes).toEqual(bytes)
+    })
+
+    it('supports ReadableStream', async () => {
+      const message = 'hello world'
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(message))
+          controller.close()
+        },
+      })
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.blobTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/octet-stream' },
+          // @ts-expect-error
+          duplex: 'half',
+          body: stream,
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const responseBytes = new Uint8Array(await response.arrayBuffer())
+      expect(new TextDecoder().decode(responseBytes)).toBe(message)
+    })
+
+    it('requires any parsable Content-Type for blob uploads', async () => {
+      const bytes = new Uint8Array([1, 2, 3])
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.blobTest',
+        {
+          method: 'POST',
+          headers: { 'content-type': 'some/thing' },
+          body: bytes,
+        },
+      )
+
+      expect(response.status).toBe(200)
+    })
+  })
+
+  describe('Edge Cases', () => {
+    const io = {
+      example: {
+        emptyContentType: l.procedure(
+          'io.example.emptyContentType',
+          l.params(),
+          l.payload('application/json', l.object({ data: l.string() })),
+          l.payload('application/json', l.object({ data: l.string() })),
+        ),
+      },
+    }
+
+    it('errors on missing Content-Type for JSON payload', async () => {
+      const handler: LexRouterHandler<
+        typeof io.example.emptyContentType
+      > = async ({ input }) => ({
+        body: { data: input.body!.data },
+      })
+
+      const router = new LexRouter().add(io.example.emptyContentType, handler)
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.emptyContentType',
+        {
+          method: 'POST',
+          body: JSON.stringify({ data: 'test' }),
+        },
+      )
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+    })
   })
 })
