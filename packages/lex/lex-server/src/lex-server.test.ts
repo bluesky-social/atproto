@@ -1325,25 +1325,9 @@ describe('Body Handling', () => {
     const handler: LexRouterHandler<typeof io.example.blobTest> = async ({
       input,
     }) => {
-      const body = input.body
-      const chunks: Uint8Array[] = []
-      const reader = body.body!.getReader()
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-      }
-      const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
-      const result = new Uint8Array(totalLength)
-      let offset = 0
-      for (const chunk of chunks) {
-        result.set(chunk, offset)
-        offset += chunk.length
-      }
       return {
         encoding: 'application/octet-stream',
-        body: result,
+        body: new Uint8Array(await input.body.arrayBuffer()),
       }
     }
 
@@ -1355,7 +1339,7 @@ describe('Body Handling', () => {
         'https://example.com/xrpc/io.example.blobTest',
         {
           method: 'POST',
-          headers: { 'content-type': 'application/octet-stream' },
+          // @NOTE content-type will default to application/octet-stream
           body: bytes,
         },
       )
@@ -1363,6 +1347,9 @@ describe('Body Handling', () => {
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
       expect(responseBytes).toEqual(bytes)
+      expect(response.headers.get('content-type')).toBe(
+        'application/octet-stream',
+      )
     })
 
     it('supports empty payload', async () => {
@@ -1422,18 +1409,18 @@ describe('Body Handling', () => {
   })
 
   describe('Edge Cases', () => {
-    const io = {
-      example: {
-        emptyContentType: l.procedure(
-          'io.example.emptyContentType',
-          l.params(),
-          l.payload('application/json', l.object({ data: l.string() })),
-          l.payload('application/json', l.object({ data: l.string() })),
-        ),
-      },
-    }
-
     it('errors on missing Content-Type for JSON payload', async () => {
+      const io = {
+        example: {
+          emptyContentType: l.procedure(
+            'io.example.emptyContentType',
+            l.params(),
+            l.payload('application/json', l.object({ data: l.string() })),
+            l.payload('application/json', l.object({ data: l.string() })),
+          ),
+        },
+      }
+
       const handler: LexRouterHandler<
         typeof io.example.emptyContentType
       > = async ({ input }) => ({
@@ -1453,6 +1440,43 @@ describe('Body Handling', () => {
       expect(response.status).toBe(400)
       const data = await response.json()
       expect(data.error).toBe('InvalidRequest')
+    })
+
+    it('defaults to application/octet-stream for empty Content-Type', async () => {
+      const io = {
+        example: {
+          emptyContentTypeBlob: l.procedure(
+            'io.example.emptyContentTypeBlob',
+            l.params(),
+            l.payload('*/*'),
+            l.payload('application/json', l.object({ encoding: l.string() })),
+          ),
+        },
+      }
+
+      const handler: LexRouterHandler<
+        typeof io.example.emptyContentTypeBlob
+      > = async ({ input }) => ({
+        body: { encoding: input.encoding },
+      })
+
+      const router = new LexRouter().add(
+        io.example.emptyContentTypeBlob,
+        handler,
+      )
+
+      const response = await router.fetch(
+        'https://example.com/xrpc/io.example.emptyContentTypeBlob',
+        {
+          method: 'POST',
+          body: new Uint8Array([1, 2, 3]),
+        },
+      )
+
+      expect(response.status).toBe(200)
+      const data = await response.json()
+      expect(response.headers.get('content-type')).toBe('application/json')
+      expect(data.encoding).toBe('application/octet-stream')
     })
   })
 })
