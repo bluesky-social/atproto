@@ -13,7 +13,7 @@ export class Tap {
   private authHeader?: string
 
   private addReposUrl: URL
-  private removeReposUrl: Url
+  private removeReposUrl: URL
 
   constructor(url: string, config: TapConfig = {}) {
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
