@@ -10,7 +10,7 @@ export interface TapConfig {
 export class Tap {
   url: string
   private adminPassword?: string
-  private authHeader?: string\
+  private authHeader?: string
 
   private addReposUrl: URL
   private removeReposUrl: Url
