@@ -11,6 +11,7 @@ import {
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
+import { WebSocket, WebSocketServer } from 'ws'
 
 const kIncomingMessage = Symbol.for('incomingMessage')
 
@@ -24,10 +25,92 @@ export function getIncomingMessage<T extends IncomingMessage>(req: Request): T {
   return res.req as T
 }
 
+const kRequestSocket = Symbol.for('ws:request')
+
+function getRequestSocket(req: IncomingMessage): WebSocket {
+  if (kRequestSocket in req) return (req as any)[kRequestSocket] as WebSocket
+  throw new TypeError('No WebSocket associated with IncomingMessage')
+}
+
+export function upgradeWebSocket(request: Request) {
+  const req = getIncomingMessage(request)
+
+  // @ts-expect-error
+  const socket = new WebSocket(null, undefined, { autoPong: true })
+
+  Object.defineProperty(req, kRequestSocket, {
+    value: socket,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  })
+
+  // Placeholder response for WebSocket upgrade. The actual handling will happen
+  // through the handleWebSocketUpgrade function. Headers set on the response
+  // will be applied during the upgrade.
+  const response = new Response(null, { status: 200 })
+
+  // The Response constructor does not allow setting status 101, so we
+  // define it directly. The purpose of this response is just to signal
+  // that an upgrade is needed, and to carry any headers.
+  Object.defineProperty(response, 'status', {
+    value: 101,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  })
+
+  return { response, socket }
+}
+
+function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
+  const { req } = res
+
+  const socket = getRequestSocket(req)
+
+  const wss = new WebSocketServer({
+    autoPong: true,
+    noServer: true,
+    // @ts-expect-error
+    WebSocket: function () {
+      // Return the websocket that was created earlier instead of a new one
+      return socket
+    },
+  })
+
+  // Apply headers that might have been set on the response object during
+  // handling
+  wss.on('headers', (headers) => {
+    for (const [name, value] of response.headers) {
+      headers.push(`${name}: ${value}`)
+    }
+  })
+
+  let ws: WebSocket | undefined
+  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (upgradedWs) => {
+    ws = upgradedWs
+  })
+
+  if (!ws || ws !== socket) {
+    ws?.close()
+    throw new Error('WebSocket upgrade failed')
+  }
+
+  // The request handling now happens through the socket directly
+  return
+}
+
 export async function sendResponse(
   res: ServerResponse,
   response: Response,
 ): Promise<void> {
+  // Request was handled by something else
+  if (res.headersSent) return
+
+  if (response.status === 101) {
+    return handleWebSocketUpgrade(res, response)
+  }
+
   res.statusCode = response.status
   res.statusMessage = response.statusText
 
@@ -47,7 +130,23 @@ export function toRequest(req: IncomingMessage): Request {
   const protocol = (req.socket as any).encrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
 
+  const abortController = new AbortController()
+  const abort = () => abortController.abort()
+
+  req.socket.on('error', abort)
+  req.socket.on('close', abort)
+
+  abortController.signal.addEventListener(
+    'abort',
+    () => {
+      req.socket.off('error', abort)
+      req.socket.off('close', abort)
+    },
+    { once: true },
+  )
+
   return new Request(url, {
+    signal: abortController.signal,
     method: req.method,
     headers: toHeaders(req.headers),
     body:
@@ -90,12 +189,18 @@ async function handle(req: IncomingMessage, res: ServerResponse, fetch: Fetch) {
   await sendResponse(res, response)
 }
 
+export type ToRequestListenerOptions = {
+  onError?: (err: unknown) => void
+}
+
 export function toRequestListener<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
->(fetch: Fetch | FetchObject, onError?: (err: unknown) => void) {
+>(fetch: Fetch | FetchObject, options?: ToRequestListenerOptions) {
+  const { onError } = options ?? {}
+  console.error('fetch', fetch)
   if (typeof fetch === 'object') fetch = fetch.fetch.bind(fetch)
   return ((
     req: InstanceType<Request>,
@@ -123,9 +228,10 @@ export type CreateServerOptions<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
-> = ServerOptions<Request, Response> & {
-  gracefulTerminationTimeout?: number
-}
+> = ServerOptions<Request, Response> &
+  ToRequestListenerOptions & {
+    gracefulTerminationTimeout?: number
+  }
 
 export interface Server<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
@@ -145,7 +251,7 @@ export function createServer<
   fetch: Fetch | FetchObject,
   options: CreateServerOptions<Request, Response> = {},
 ): Server<Request, Response> {
-  const server = createHttpServer(options, toRequestListener(fetch))
+  const server = createHttpServer(options, toRequestListener(fetch, options))
   const terminator = createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,

@@ -42,14 +42,17 @@
     }
   },
   "dependencies": {
+    "@atproto/lex-cbor": "workspace:*",
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-schema": "workspace:*",
     "@atproto/lex-json": "workspace:*",
     "http-terminator": "^3.2.0",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@atproto/lex-client": "workspace:*",
+    "@types/ws": "^8.18.1",
     "jest": "^28.1.2"
   },
   "scripts": {

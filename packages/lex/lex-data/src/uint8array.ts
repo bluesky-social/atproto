@@ -1,4 +1,5 @@
 import { Base64Alphabet } from './uint8array-base64.js'
+import { ui8ConcatNode, ui8ConcatPonyfill } from './uint8array-concat.js'
 import {
   fromBase64Native,
   fromBase64Node,
@@ -84,3 +85,5 @@ export function ui8Equals(a: Uint8Array, b: Uint8Array): boolean {
 
   return true
 }
+
+export const ui8Concat = ui8ConcatNode ?? ui8ConcatPonyfill

@@ -1,7 +1,11 @@
 import { buildAgent, xrpc } from '@atproto/lex-client'
 import { LexError, parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import { LexRouter, LexRouterAuth, LexRouterHandler } from './lex-server.js'
+import {
+  LexRouter,
+  LexRouterAuth,
+  LexRouterMethodHandler,
+} from './lex-server.js'
 
 // ============================================================================
 // Schema Definitions
@@ -58,7 +62,7 @@ const io = {
 }
 
 const handlers: {
-  [K in keyof typeof io.example]: LexRouterHandler<(typeof io.example)[K]>
+  [K in keyof typeof io.example]: LexRouterMethodHandler<(typeof io.example)[K]>
 } = {
   echo: async ({ input }) => ({
     encoding: input.encoding,
@@ -196,7 +200,7 @@ describe('lex-client integration', () => {
 
 describe('IPLD values', () => {
   it('can send and receive ipld vals', async () => {
-    const ipldHandler: LexRouterHandler<typeof io.example.ipld> = jest.fn(
+    const ipldHandler: LexRouterMethodHandler<typeof io.example.ipld> = jest.fn(
       async ({ input }) => {
         return { body: input.body! }
       },
@@ -284,7 +288,7 @@ describe('Authentication', () => {
     return `Basic ${Buffer.from(`${creds.username}:${creds.password}`).toString('base64')}`
   }
 
-  const authTestHandler: LexRouterHandler<
+  const authTestHandler: LexRouterMethodHandler<
     typeof io.example.authTest,
     BasicAuthCredentials
   > = async ({ credentials }) => ({
@@ -419,7 +423,7 @@ describe('Error Handling', () => {
 
   describe('Custom Errors', () => {
     it('throws custom error using LexError', async () => {
-      const handler: LexRouterHandler<typeof io.example.error> = async ({
+      const handler: LexRouterMethodHandler<typeof io.example.error> = async ({
         params,
       }) => {
         if (params.which === 'foo') {
@@ -441,7 +445,7 @@ describe('Error Handling', () => {
     })
 
     it('returns custom error via Response object', async () => {
-      const handler: LexRouterHandler<typeof io.example.error> = async ({
+      const handler: LexRouterMethodHandler<typeof io.example.error> = async ({
         params,
       }) => {
         if (params.which === 'bar') {
@@ -466,7 +470,7 @@ describe('Error Handling', () => {
     })
 
     it('handles falsy values thrown as InternalError', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.throwFalsyValue
       > = async () => {
         throw ''
@@ -486,7 +490,7 @@ describe('Error Handling', () => {
 
   describe('HTTP Method Mismatches', () => {
     it('rejects POST for query endpoints', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.error
       > = async () => ({})
 
@@ -511,7 +515,7 @@ describe('Error Handling', () => {
         l.payload(),
       )
 
-      const handler: LexRouterHandler<typeof procedure> = async () => ({})
+      const handler: LexRouterMethodHandler<typeof procedure> = async () => ({})
 
       const router = new LexRouter().add(procedure, handler)
 
@@ -554,7 +558,9 @@ describe('Error Handling', () => {
         },
       })
 
-      const handler: LexRouterHandler<typeof io.example.error> = async () => {
+      const handler: LexRouterMethodHandler<
+        typeof io.example.error
+      > = async () => {
         throw new Error('Test error')
       }
 
@@ -606,7 +612,7 @@ describe('Error Handling', () => {
         },
       })
 
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.error
       > = async () => ({})
 
@@ -652,7 +658,7 @@ describe('Parameters', () => {
     },
   }
 
-  const handler: LexRouterHandler<typeof io.example.paramTest> = async ({
+  const handler: LexRouterMethodHandler<typeof io.example.paramTest> = async ({
     params,
   }) => ({
     body: {
@@ -845,18 +851,18 @@ describe('Procedures', () => {
     pingOne: (async ({ params }) => ({
       encoding: 'text/plain',
       body: params.message,
-    })) as LexRouterHandler<typeof io.example.pingOne>,
+    })) as LexRouterMethodHandler<typeof io.example.pingOne>,
     pingTwo: (async ({ input }) => ({
       encoding: 'text/plain',
       body: input.body.body!,
-    })) as LexRouterHandler<typeof io.example.pingTwo>,
+    })) as LexRouterMethodHandler<typeof io.example.pingTwo>,
     pingThree: (async ({ input }) => ({
       encoding: 'application/octet-stream',
       body: input.body.body!,
-    })) as LexRouterHandler<typeof io.example.pingThree>,
+    })) as LexRouterMethodHandler<typeof io.example.pingThree>,
     pingFour: (async ({ input }) => ({
       body: { message: input.body.message },
-    })) as LexRouterHandler<typeof io.example.pingFour>,
+    })) as LexRouterMethodHandler<typeof io.example.pingFour>,
   }
 
   const router = new LexRouter()
@@ -961,15 +967,15 @@ describe('Queries', () => {
     pingOne: (async ({ params }) => ({
       encoding: 'text/plain',
       body: params.message,
-    })) satisfies LexRouterHandler<typeof io.example.pingOne>,
+    })) satisfies LexRouterMethodHandler<typeof io.example.pingOne>,
     pingTwo: (async ({ params }) => ({
       encoding: 'application/octet-stream',
       body: new TextEncoder().encode(params.message),
-    })) satisfies LexRouterHandler<typeof io.example.pingTwo>,
+    })) satisfies LexRouterMethodHandler<typeof io.example.pingTwo>,
     pingThree: (async ({ params }) => ({
       body: { message: params.message },
       headers: { 'x-test-header-name': 'test-value' },
-    })) satisfies LexRouterHandler<typeof io.example.pingThree>,
+    })) satisfies LexRouterMethodHandler<typeof io.example.pingThree>,
   }
 
   const router = new LexRouter()
@@ -1048,7 +1054,7 @@ describe('Responses', () => {
     }
 
     it('returns readable streams of bytes', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.readableStream
       > = async () => {
         const stream = new ReadableStream({
@@ -1089,7 +1095,7 @@ describe('Responses', () => {
     })
 
     it('handles errors on readable streams of bytes', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.readableStream
       > = async ({ params }) => {
         const stream = new ReadableStream({
@@ -1142,7 +1148,7 @@ describe('Responses', () => {
     }
 
     it('handles responses with no body', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.emptyResponse
       > = async () => ({})
 
@@ -1157,7 +1163,7 @@ describe('Responses', () => {
     })
 
     it('handles responses with headers but no body', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.emptyResponse
       > = async () => ({
         headers: { 'x-custom-header': 'value' },
@@ -1189,7 +1195,7 @@ describe('Responses', () => {
     }
 
     it('allows returning custom Response objects', async () => {
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.customResponse
       > = async ({ params }) => {
         return new Response(JSON.stringify({ code: params.status }), {
@@ -1240,9 +1246,9 @@ describe('Body Handling', () => {
       },
     }
 
-    const handler: LexRouterHandler<typeof io.example.validationTest> = async ({
-      input,
-    }) => ({
+    const handler: LexRouterMethodHandler<
+      typeof io.example.validationTest
+    > = async ({ input }) => ({
       body: input.body!,
     })
 
@@ -1322,7 +1328,7 @@ describe('Body Handling', () => {
       },
     }
 
-    const handler: LexRouterHandler<typeof io.example.blobTest> = async ({
+    const handler: LexRouterMethodHandler<typeof io.example.blobTest> = async ({
       input,
     }) => {
       return {
@@ -1421,7 +1427,7 @@ describe('Body Handling', () => {
         },
       }
 
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.emptyContentType
       > = async ({ input }) => ({
         body: { data: input.body!.data },
@@ -1454,7 +1460,7 @@ describe('Body Handling', () => {
         },
       }
 
-      const handler: LexRouterHandler<
+      const handler: LexRouterMethodHandler<
         typeof io.example.emptyContentTypeBlob
       > = async ({ input }) => ({
         body: { encoding: input.encoding },
