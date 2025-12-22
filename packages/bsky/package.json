@@ -15,7 +15,10 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "packageManager": "pnpm@8.15.9",
   "scripts": {
+    "denv": "nodemon --watch 'src/' -e ts --exec 'pnpm build && pnpm start-denv'",
+    "start-denv": "node --enable-source-maps denv.js",
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/*",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
