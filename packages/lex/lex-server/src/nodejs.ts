@@ -14,16 +14,21 @@ import { pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 
-const kIncomingMessage = Symbol.for('incomingMessage')
+const kServerResponse = Symbol.for('serverResponse')
 
-export function getServerResponse<T extends ServerResponse>(req: Request): T {
-  if (kIncomingMessage in req) return (req as any)[kIncomingMessage] as T
+export function getServerResponse<T extends ServerResponse>(
+  request: Request,
+): T {
+  if (kServerResponse in request) {
+    return (request as any)[kServerResponse] as T
+  }
   throw new TypeError('No native ServerResponse associated with Response')
 }
 
-export function getIncomingMessage<T extends IncomingMessage>(req: Request): T {
-  const res = getServerResponse(req)
-  return res.req as T
+export function getIncomingMessage<T extends IncomingMessage>(
+  request: Request,
+): T {
+  return getServerResponse(request).req as T
 }
 
 const kRequestSocket = Symbol.for('ws:request')
@@ -48,13 +53,12 @@ export function upgradeWebSocket(request: Request): {
     throw new TypeError('WebSocket upgrade request must use GET method')
   }
 
-  const req = getIncomingMessage(request)
-
   // @ts-expect-error
   const socket: WebSocket = new WebSocketPonyfill(null, undefined, {
     autoPong: true,
   })
 
+  const req = getIncomingMessage(request)
   Object.defineProperty(req, kRequestSocket, {
     value: socket,
     enumerable: false,
@@ -116,7 +120,8 @@ function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
   // The request handling now happens through the socket exclusively
 }
 
-export async function sendResponse(
+async function sendResponse(
+  req: IncomingMessage,
   res: ServerResponse,
   response: Response,
 ): Promise<void> {
@@ -134,27 +139,40 @@ export async function sendResponse(
     res.appendHeader(key, value)
   }
 
-  if (response.body) {
-    await pipeline(Readable.fromWeb(response.body as any), res)
+  if (req.method === 'HEAD') {
+    res.end()
+    await response.body?.cancel()
+  } else if (response.body) {
+    const stream = Readable.fromWeb(response.body as any)
+    await pipeline(stream, res)
   } else {
     res.end()
   }
 }
 
-export function toRequest(req: IncomingMessage): Request {
+export function toRequest(req: IncomingMessage, res: ServerResponse): Request {
   const host = req.headers.host ?? 'localhost'
   const protocol = (req.socket as any).encrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
+  const headers = toHeaders(req.headers)
+  const body =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? null
+      : (Readable.toWeb(req) as ReadableStream<Uint8Array>)
 
   const abortController = new AbortController()
   const abort = () => abortController.abort()
 
+  res.on('close', abort)
+  res.on('error', abort)
   req.socket.on('error', abort)
   req.socket.on('close', abort)
 
   abortController.signal.addEventListener(
     'abort',
     () => {
+      res.off('close', abort)
+      res.off('error', abort)
       req.socket.off('error', abort)
       req.socket.off('close', abort)
     },
@@ -164,11 +182,10 @@ export function toRequest(req: IncomingMessage): Request {
   return new Request(url, {
     signal: abortController.signal,
     method: req.method,
-    headers: toHeaders(req.headers),
-    body:
-      req.method === 'GET' || req.method === 'HEAD'
-        ? null
-        : (Readable.toWeb(req) as ReadableStream<Uint8Array>),
+    headers,
+    body,
+    referrer: headers.get('referrer') ?? headers.get('referer') ?? undefined,
+    redirect: 'manual',
     // @ts-expect-error
     duplex: 'half',
   })
@@ -187,22 +204,26 @@ export function toHeaders(headers: IncomingHttpHeaders): Headers {
   return result
 }
 
-export type Fetch = (req: Request) => Promise<Response>
-export type FetchObject = { fetch: Fetch }
+export type Handler = (req: Request) => Promise<Response>
+export type HandlerObject = { handle: Handler }
 
-async function handle(req: IncomingMessage, res: ServerResponse, fetch: Fetch) {
-  const request = toRequest(req)
+async function handle(
+  req: IncomingMessage,
+  res: ServerResponse,
+  handler: Handler,
+) {
+  const request = toRequest(req, res)
 
   // Attach the original NativeRequest for access to Node.js-specific properties
-  Object.defineProperty(request, kIncomingMessage, {
+  Object.defineProperty(request, kServerResponse, {
     value: res,
     enumerable: false,
     configurable: false,
     writable: false,
   })
 
-  const response = await fetch(request)
-  await sendResponse(res, response)
+  const response = await handler(request)
+  await sendResponse(req, res, response)
 }
 
 export function toRequestListener<
@@ -210,14 +231,14 @@ export function toRequestListener<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
->(fetch: Fetch | FetchObject) {
-  if (typeof fetch === 'object') fetch = fetch.fetch.bind(fetch)
+>(handler: Handler | HandlerObject) {
+  if (typeof handler === 'object') handler = handler.handle.bind(handler)
   return ((
     req: InstanceType<Request>,
     res: InstanceType<Response> & { req: InstanceType<Request> },
     next?: (err?: unknown) => void,
   ): void => {
-    handle(req, res, fetch).catch((err) => {
+    handle(req, res, handler).catch((err) => {
       if (next) next(err)
       else {
         if (!res.headersSent) {
@@ -255,10 +276,10 @@ export function createServer<
     InstanceType<Request>
   > = typeof ServerResponse,
 >(
-  fetch: Fetch | FetchObject,
+  handler: Handler | HandlerObject,
   options: CreateServerOptions<Request, Response> = {},
 ): Server<Request, Response> {
-  const server = createHttpServer(options, toRequestListener(fetch))
+  const server = createHttpServer(options, toRequestListener(handler))
   const terminator = createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
@@ -288,10 +309,10 @@ export async function serve<
     InstanceType<Request>
   > = typeof ServerResponse,
 >(
-  fetch: Fetch | FetchObject,
+  handler: Handler | HandlerObject,
   options?: StartServerOptions<Request, Response>,
 ): Promise<Server<Request, Response>> {
-  const server = createServer(fetch, options)
+  const server = createServer(handler, options)
   server.listen(options)
   await once(server, 'listening')
   return server

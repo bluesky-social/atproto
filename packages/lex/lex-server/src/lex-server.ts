@@ -19,7 +19,7 @@ import {
 
 type LexMethod = Query | Procedure | Subscription
 
-type Fetch = (request: Request) => Promise<Response>
+type Handler = (request: Request) => Promise<Response>
 
 export type LexRouterHandlerContext<M extends LexMethod, Credentials = void> = {
   credentials: Credentials
@@ -100,7 +100,7 @@ export type LexRouterOptions = {
 }
 
 export class LexRouter {
-  private routes: Map<NsidString, Fetch> = new Map()
+  private handlers: Map<NsidString, Handler> = new Map()
 
   constructor(readonly options: LexRouterOptions = {}) {}
 
@@ -129,45 +129,45 @@ export class LexRouter {
       | LexRouterMethodConfig<any, any>,
   ) {
     const method = getMain(ns)
-    if (this.routes.has(method.nsid)) {
+    if (this.handlers.has(method.nsid)) {
       throw new TypeError(`Method ${method.nsid} already registered`)
     }
     const { handler, auth = undefined } =
       typeof config === 'function' ? { handler: config } : config
 
-    const fetch =
+    const builtHandler =
       method.type === 'subscription'
-        ? this.buildSubscription(
+        ? this.buildSubscriptionHandler(
             method,
             handler as LexRouterSubHandler<any, any>,
             auth,
           )
-        : this.buildMethod(
+        : this.buildMethodHandler(
             method,
             handler as LexRouterMethodHandler<any, any>,
             auth,
           )
 
-    this.routes.set(method.nsid, fetch)
+    this.handlers.set(method.nsid, builtHandler)
 
     return this
   }
 
-  private buildMethod<M extends Query | Procedure>(
+  private buildMethodHandler<M extends Query | Procedure>(
     method: M,
     handler: LexRouterMethodHandler<M, void>,
     auth?: LexRouterAuth<M, void>,
-  ): Fetch
-  private buildMethod<M extends Query | Procedure, Credentials>(
+  ): Handler
+  private buildMethodHandler<M extends Query | Procedure, Credentials>(
     method: M,
     handler: LexRouterMethodHandler<M, Credentials>,
     auth: LexRouterAuth<M, Credentials>,
-  ): Fetch
-  private buildMethod<M extends Query | Procedure, Credentials>(
+  ): Handler
+  private buildMethodHandler<M extends Query | Procedure, Credentials>(
     method: M,
     handler: LexRouterMethodHandler<M, Credentials>,
     auth?: LexRouterAuth<M, Credentials>,
-  ): Fetch {
+  ): Handler {
     const getInput = (
       method.type === 'procedure'
         ? getProcedureInput.bind(method)
@@ -227,11 +227,11 @@ export class LexRouter {
     }
   }
 
-  private buildSubscription<M extends Subscription, Credentials>(
+  private buildSubscriptionHandler<M extends Subscription, Credentials>(
     method: M,
     handler: LexRouterSubHandler<M, Credentials>,
     auth?: LexRouterAuth<M, Credentials>,
-  ): Fetch {
+  ): Handler {
     const { upgradeWebSocket } = this.options
     if (!upgradeWebSocket) {
       throw new TypeError(
@@ -387,11 +387,11 @@ export class LexRouter {
     )
   }
 
-  async fetch(request: Request): Promise<Response> {
+  handle: Handler = async (request) => {
     const nsid = extractXrpcMethodNsid(request)
 
-    const fetch = (this.routes as Map<string | null, Fetch>).get(nsid)
-    if (fetch) return fetch(request)
+    const handler = (this.handlers as Map<string | null, Handler>).get(nsid)
+    if (handler) return handler(request)
 
     await request.body?.cancel()
 
