@@ -111,28 +111,28 @@ A typed indexer that uses `@atproto/lex` schemas for type-safe event handling. R
 
 ```ts
 import { LexIndexer } from '@atproto/tap'
-import * as app from './lexicons/app'
+import * as com from './lexicons/com'
 
 const indexer = new LexIndexer()
 
 // Handle creates for a specific record type
-indexer.create(app.bsky.feed.post, async (evt) => {
-  // evt.record is fully typed as app.bsky.feed.post.Main
+indexer.create(com.example.post, async (evt) => {
+  // evt.record is fully typed as com.example.post.Main
   console.log(`New post: ${evt.record.text}`)
 })
 
 // Handle updates
-indexer.update(app.bsky.feed.post, async (evt) => {
+indexer.update(com.example.post, async (evt) => {
   console.log(`Updated post: ${evt.record.text}`)
 })
 
 // Handle deletes (no record on delete events)
-indexer.delete(app.bsky.feed.post, async (evt) => {
+indexer.delete(com.example.post, async (evt) => {
   console.log(`Deleted: at://${evt.did}/${evt.collection}/${evt.rkey}`)
 })
 
 // Handle both creates and updates with put()
-indexer.put(app.bsky.feed.like, async (evt) => {
+indexer.put(com.example.like, async (evt) => {
   console.log(`Like ${evt.action}: ${evt.record.subject.uri}`)
 })
 
