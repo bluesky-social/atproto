@@ -2049,9 +2049,6 @@ importers:
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex/lex
-      '@atproto/lex-schema':
-        specifier: workspace:^
-        version: link:../lex/lex-schema
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax

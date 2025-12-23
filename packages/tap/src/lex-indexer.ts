@@ -1,12 +1,6 @@
-import { Infer, RecordSchema } from '@atproto/lex-schema'
+import { Infer, Namespace, RecordSchema, getMain } from '@atproto/lex'
 import { HandlerOpts, TapHandler } from './channel'
 import { IdentityEvent, RecordEvent, TapEvent } from './types'
-
-export type Namespace<T> = T | { main: T }
-
-export function getMain<T extends object>(ns: Namespace<T>): T {
-  return 'main' in ns ? ns.main : ns
-}
 
 type BaseRecordEvent = Omit<RecordEvent, 'record' | 'action' | 'cid'>
 
@@ -52,17 +46,17 @@ export type DeleteHandler = (
   opts: HandlerOpts,
 ) => Promise<void>
 
+export type OtherHandler = (
+  evt: RecordEvent,
+  opts: HandlerOpts,
+) => Promise<void>
+
 export type IdentityHandler = (
   evt: IdentityEvent,
   opts: HandlerOpts,
 ) => Promise<void>
 
 export type ErrorHandler = (err: Error) => void
-
-export interface LexIndexerOptions {
-  validate?: boolean
-  skipUnhandled?: boolean
-}
 
 interface RegisteredHandler {
   schema: RecordSchema
@@ -71,55 +65,47 @@ interface RegisteredHandler {
 
 export class LexIndexer implements TapHandler {
   private handlers = new Map<string, RegisteredHandler>()
+  private otherHandler: OtherHandler | undefined
   private identityHandler: IdentityHandler | undefined
   private errorHandler: ErrorHandler | undefined
-  private options: Required<LexIndexerOptions>
 
-  constructor(options: LexIndexerOptions = {}) {
-    this.options = {
-      validate: options.validate ?? false,
-      skipUnhandled: options.skipUnhandled ?? true,
-    }
+  private handlerKey(collection: string, action: string): string {
+    return `${collection}:${action}`
   }
 
-  private register(
-    nsid: string,
+  private register<const T extends RecordSchema>(
     action: string,
-    schema: RecordSchema,
+    ns: Namespace<T>,
     handler: (evt: unknown, opts: HandlerOpts) => Promise<void>,
-  ): void {
-    const key = `${nsid}:${action}`
+  ): this {
+    const schema = getMain(ns)
+    const key = this.handlerKey(schema.$type, action)
     if (this.handlers.has(key)) {
       throw new Error(`Handler already registered for ${key}`)
     }
     this.handlers.set(key, { schema, handler })
+    return this
   }
 
   create<const T extends RecordSchema>(
     ns: Namespace<T>,
     handler: CreateHandler<Infer<T>>,
   ): this {
-    const schema = getMain(ns)
-    this.register(schema.$type, 'create', schema, handler as any)
-    return this
+    return this.register('create', ns, handler as any)
   }
 
   update<const T extends RecordSchema>(
     ns: Namespace<T>,
     handler: UpdateHandler<Infer<T>>,
   ): this {
-    const schema = getMain(ns)
-    this.register(schema.$type, 'update', schema, handler as any)
-    return this
+    return this.register('update', ns, handler as any)
   }
 
   delete<const T extends RecordSchema>(
     ns: Namespace<T>,
     handler: DeleteHandler,
   ): this {
-    const schema = getMain(ns)
-    this.register(schema.$type, 'delete', schema, handler as any)
-    return this
+    return this.register('delete', ns, handler as any)
   }
 
   // handles both create and update
@@ -127,8 +113,12 @@ export class LexIndexer implements TapHandler {
     ns: Namespace<T>,
     handler: PutHandler<Infer<T>>,
   ): this {
-    const schema = getMain(ns)
-    this.register(schema.$type, 'put', schema, handler as any)
+    this.register('create', ns, handler as any)
+    return this.register('update', ns, handler as any)
+  }
+
+  other(fn: OtherHandler): this {
+    this.otherHandler = fn
     return this
   }
 
@@ -156,20 +146,15 @@ export class LexIndexer implements TapHandler {
     opts: HandlerOpts,
   ): Promise<void> {
     const { collection, action } = evt
-
-    let registered = this.handlers.get(`${collection}:${action}`)
-    if (!registered && (action === 'create' || action === 'update')) {
-      registered = this.handlers.get(`${collection}:put`)
-    }
+    const key = this.handlerKey(collection, action)
+    const registered = this.handlers.get(key)
 
     if (!registered) {
-      if (!this.options.skipUnhandled) {
-        throw new Error(`No handler registered for ${collection}:${action}`)
-      }
+      await this.otherHandler?.(evt, opts)
       return
     }
 
-    if (this.options.validate && action !== 'delete' && evt.record) {
+    if (action === 'create' || action === 'update') {
       const result = registered.schema.safeParse(evt.record)
       if (!result.success) {
         throw new Error(
