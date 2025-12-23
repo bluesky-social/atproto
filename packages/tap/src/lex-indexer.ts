@@ -46,7 +46,7 @@ export type DeleteHandler = (
   opts: HandlerOpts,
 ) => Promise<void>
 
-export type OtherHandler = (
+export type UntypedHandler = (
   evt: RecordEvent,
   opts: HandlerOpts,
 ) => Promise<void>
@@ -58,14 +58,21 @@ export type IdentityHandler = (
 
 export type ErrorHandler = (err: Error) => void
 
-interface RegisteredHandler {
+export type RecordHandler<R> =
+  | CreateHandler<R>
+  | UpdateHandler<R>
+  | PutHandler<R>
+  | DeleteHandler
+
+interface RegisteredHandler<R> {
   schema: RecordSchema
-  handler: (evt: unknown, opts: HandlerOpts) => Promise<void>
+  handler: RecordHandler<R>
 }
 
 export class LexIndexer implements TapHandler {
-  private handlers = new Map<string, RegisteredHandler>()
-  private otherHandler: OtherHandler | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private handlers = new Map<string, RegisteredHandler<any>>()
+  private otherHandler: UntypedHandler | undefined
   private identityHandler: IdentityHandler | undefined
   private errorHandler: ErrorHandler | undefined
 
@@ -76,7 +83,7 @@ export class LexIndexer implements TapHandler {
   private register<const T extends RecordSchema>(
     action: string,
     ns: Namespace<T>,
-    handler: (evt: unknown, opts: HandlerOpts) => Promise<void>,
+    handler: RecordHandler<Infer<T>>,
   ): this {
     const schema = getMain(ns)
     const key = this.handlerKey(schema.$type, action)
@@ -91,33 +98,32 @@ export class LexIndexer implements TapHandler {
     ns: Namespace<T>,
     handler: CreateHandler<Infer<T>>,
   ): this {
-    return this.register('create', ns, handler as any)
+    return this.register('create', ns, handler)
   }
 
   update<const T extends RecordSchema>(
     ns: Namespace<T>,
     handler: UpdateHandler<Infer<T>>,
   ): this {
-    return this.register('update', ns, handler as any)
+    return this.register('update', ns, handler)
   }
 
   delete<const T extends RecordSchema>(
     ns: Namespace<T>,
     handler: DeleteHandler,
   ): this {
-    return this.register('delete', ns, handler as any)
+    return this.register('delete', ns, handler)
   }
 
-  // handles both create and update
   put<const T extends RecordSchema>(
     ns: Namespace<T>,
     handler: PutHandler<Infer<T>>,
   ): this {
-    this.register('create', ns, handler as any)
-    return this.register('update', ns, handler as any)
+    this.register('create', ns, handler)
+    return this.register('update', ns, handler)
   }
 
-  other(fn: OtherHandler): this {
+  other(fn: UntypedHandler): this {
     this.otherHandler = fn
     return this
   }
@@ -163,7 +169,7 @@ export class LexIndexer implements TapHandler {
       }
     }
 
-    await registered.handler(evt, opts)
+    await (registered.handler as UntypedHandler)(evt, opts)
   }
 
   onError(err: Error): void {
