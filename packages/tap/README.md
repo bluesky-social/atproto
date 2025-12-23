@@ -136,9 +136,9 @@ indexer.put(com.example.like, async (evt) => {
   console.log(`Like ${evt.action}: ${evt.record.subject.uri}`)
 })
 
-// Fallback for unhandled record types
+// Fallback for unhandled record types/actions
 indexer.other(async (evt) => {
-  console.log(`Unhandled: ${evt.collection}`)
+  console.log(`Unhandled: ${evt.action}, ${evt.collection}`)
 })
 
 // Identity and error handlers
