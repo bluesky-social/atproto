@@ -67,16 +67,16 @@ function indexHtml() {
       <script type="module">
         import { decodeMultiple } from 'https://cdn.jsdelivr.net/npm/cbor-x@1.6.0/+esm'
 
+        const host = 'localhost:8080'
         const nsid = 'com.example.echo'
         const params = new URLSearchParams(window.location.search)
-
         if (!params.has('message')) {
           params.set('message', 'Hello, world!')
         }
 
-        window.ws = new WebSocket(
-          'ws://localhost:8080/xrpc/' + nsid + '?' + params.toString(),
-        )
+        const url = 'ws://' + host + '/xrpc/' + nsid + '?' + params.toString()
+
+        window.ws = new WebSocket(url)
         ws.binaryType = 'arraybuffer'
 
         ws.addEventListener('message', async (event) => {
