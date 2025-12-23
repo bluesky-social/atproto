@@ -2,6 +2,7 @@
   "include": [],
   "references": [
     { "path": "./tsconfig.build.json" },
+    { "path": "./tsconfig.examples.json" },
     { "path": "./tsconfig.tests.json" }
   ]
 }

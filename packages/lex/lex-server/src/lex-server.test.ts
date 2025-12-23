@@ -547,15 +547,9 @@ describe('Error Handling', () => {
 
   describe('Custom Error Handlers', () => {
     it('allows custom onHandlerError handler', async () => {
-      const errorHandler = jest.fn()
+      const onHandlerError = jest.fn()
       const customRouter = new LexRouter({
-        onHandlerError: ({ error }) => {
-          errorHandler(error)
-          return Response.json(
-            { error: 'CustomError', message: 'Custom error handler' },
-            { status: 418 },
-          )
-        },
+        onHandlerError,
       })
 
       const handler: LexRouterMethodHandler<
@@ -570,60 +564,8 @@ describe('Error Handling', () => {
         'https://example.com/xrpc/io.example.error',
       )
 
-      expect(errorHandler).toHaveBeenCalled()
-      expect(response.status).toBe(418)
-      const data = await response.json()
-      expect(data.error).toBe('CustomError')
-    })
-
-    it('allows custom onMethodNotFound handler', async () => {
-      const notFoundHandler = jest.fn()
-      const customRouter = new LexRouter({
-        onMethodNotFound: () => {
-          notFoundHandler()
-          return Response.json(
-            { error: 'Gone', message: 'Method removed' },
-            { status: 410 },
-          )
-        },
-      })
-
-      const response = await customRouter.fetch(
-        'https://example.com/xrpc/io.example.doesNotExist',
-      )
-
-      expect(notFoundHandler).toHaveBeenCalled()
-      expect(response.status).toBe(410)
-      const data = await response.json()
-      expect(data.error).toBe('Gone')
-    })
-
-    it('allows custom onResponse handler', async () => {
-      const responseHandler = jest.fn()
-      const customRouter = new LexRouter({
-        onResponse: ({ response }) => {
-          responseHandler()
-          const headers = new Headers(response.headers)
-          headers.set('x-custom-header', 'modified')
-          return new Response(response.body, {
-            status: response.status,
-            headers,
-          })
-        },
-      })
-
-      const handler: LexRouterMethodHandler<
-        typeof io.example.error
-      > = async () => ({})
-
-      customRouter.add(io.example.error, handler)
-
-      const response = await customRouter.fetch(
-        'https://example.com/xrpc/io.example.error',
-      )
-
-      expect(responseHandler).toHaveBeenCalled()
-      expect(response.headers.get('x-custom-header')).toBe('modified')
+      expect(onHandlerError).toHaveBeenCalled()
+      expect(response.status).toBe(500)
     })
   })
 })

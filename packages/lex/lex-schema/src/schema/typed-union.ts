@@ -1,5 +1,5 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { Restricted, UnknownString } from '../core.js'
+import { Restricted } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
@@ -11,7 +11,7 @@ import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
 
 export type TypedRef<T extends { $type?: string }> = TypedRefSchemaOutput<T>
 
-export type TypedObject = { $type: UnknownString } & {
+export type TypedObject = { $type: string } & {
   // In order to prevent places that expect an open union from accepting an
   // invalid version of the known typed objects, we need to prevent any other
   // properties from being present.

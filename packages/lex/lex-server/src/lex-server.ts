@@ -9,16 +9,17 @@ import {
   InferMethodOutputEncoding,
   InferMethodParams,
   Main,
+  NsidString,
   Procedure,
   Query,
   Subscription,
   getMain,
+  isNsidString,
 } from '@atproto/lex-schema'
 
 type LexMethod = Query | Procedure | Subscription
 
 type Fetch = (request: Request) => Promise<Response>
-type Route = { method: LexMethod; fetch: Fetch }
 
 export type LexRouterHandlerContext<M extends LexMethod, Credentials = void> = {
   credentials: Credentials
@@ -83,31 +84,23 @@ export type LexRouterAuth<
   Credentials = unknown,
 > = (ctx: LexRouterAuthContext<M>) => Promise<Credentials>
 
+export type LexErrorHandlerContext = {
+  error: unknown
+  request: Request
+  method: LexMethod
+}
+
 export type LexRouterOptions = {
   upgradeWebSocket?: (request: Request) => {
     socket: WebSocket
     response: Response
   }
 
-  onHandlerError?: (data: {
-    error: unknown
-    request: Request
-    method: LexMethod
-  }) => void | null | Response | Promise<void | null | Response>
-
-  onMethodNotFound?: (data: {
-    request?: Request
-  }) => void | null | Response | Promise<void | null | Response>
-
-  onResponse?: (data: {
-    response: Response
-    request: Request
-    method?: LexMethod
-  }) => void | null | Response | Promise<void | null | Response>
+  onHandlerError?: (ctx: LexErrorHandlerContext) => void | Promise<void>
 }
 
 export class LexRouter {
-  private routes: Map<string, Route> = new Map()
+  private routes: Map<NsidString, Fetch> = new Map()
 
   constructor(readonly options: LexRouterOptions = {}) {}
 
@@ -144,33 +137,33 @@ export class LexRouter {
 
     const fetch =
       method.type === 'subscription'
-        ? this.buildSubscriptionFetch(
+        ? this.buildSubscription(
             method,
             handler as LexRouterSubHandler<any, any>,
             auth,
           )
-        : this.buildFetch(
+        : this.buildMethod(
             method,
             handler as LexRouterMethodHandler<any, any>,
             auth,
           )
 
-    this.routes.set(method.nsid, { method, fetch })
+    this.routes.set(method.nsid, fetch)
 
     return this
   }
 
-  private buildFetch<M extends Query | Procedure>(
+  private buildMethod<M extends Query | Procedure>(
     method: M,
     handler: LexRouterMethodHandler<M, void>,
     auth?: LexRouterAuth<M, void>,
   ): Fetch
-  private buildFetch<M extends Query | Procedure, Credentials>(
+  private buildMethod<M extends Query | Procedure, Credentials>(
     method: M,
     handler: LexRouterMethodHandler<M, Credentials>,
     auth: LexRouterAuth<M, Credentials>,
   ): Fetch
-  private buildFetch<M extends Query | Procedure, Credentials>(
+  private buildMethod<M extends Query | Procedure, Credentials>(
     method: M,
     handler: LexRouterMethodHandler<M, Credentials>,
     auth?: LexRouterAuth<M, Credentials>,
@@ -221,47 +214,31 @@ export class LexRouter {
         if (method.output?.encoding === 'application/json') {
           return Response.json(lexToJson(output.body as LexValue), {
             status: 200,
-            headers: output?.headers,
+            headers: output.headers,
           })
         }
 
-        const responseHeaders = new Headers(output?.headers)
-        responseHeaders.set('content-type', output.encoding!)
-        return new Response(output.body, {
-          status: 200,
-          headers: responseHeaders,
-        })
+        const headers = new Headers(output.headers)
+        headers.set('content-type', output.encoding!)
+        return new Response(output.body, { status: 200, headers })
       } catch (error) {
-        const response = await this.options.onHandlerError?.call(null, {
-          request,
-          method,
-          error,
-        })
-
-        if (response != null) {
-          return response
-        }
-
-        // Ensure request body is closed to free resources
-        if (!request.bodyUsed) await request.body?.cancel()
-
-        if (error instanceof LexError) {
-          return error.toResponse()
-        }
-
-        return Response.json(
-          { error: 'InternalError', message: 'An internal error occurred' },
-          { status: 500 },
-        )
+        return this.handleError(request, method, error)
       }
     }
   }
 
-  private buildSubscriptionFetch<M extends Subscription, Credentials>(
+  private buildSubscription<M extends Subscription, Credentials>(
     method: M,
     handler: LexRouterSubHandler<M, Credentials>,
     auth?: LexRouterAuth<M, Credentials>,
   ): Fetch {
+    const { upgradeWebSocket } = this.options
+    if (!upgradeWebSocket) {
+      throw new TypeError(
+        'WebSocket upgrade not supported in this environment. Please provide an upgradeWebSocket function in the options.',
+      )
+    }
+
     return async (request: Request): Promise<Response> => {
       if (request.method !== 'GET') {
         await request.body?.cancel()
@@ -272,6 +249,7 @@ export class LexRouter {
       }
 
       if (request.headers.get('upgrade') !== 'websocket') {
+        await request.body?.cancel()
         return Response.json(
           {
             error: 'InvalidRequest',
@@ -281,158 +259,166 @@ export class LexRouter {
         )
       }
 
-      const upgradeWebSocket: (request: Request) => {
-        socket: WebSocket
-        response: Response
-      } =
-        this.options.upgradeWebSocket ??
-        // @ts-expect-error
-        (typeof Deno !== 'undefined' ? Deno.upgradeWebSocket : undefined) ??
-        (await import('./nodejs.js')).upgradeWebSocket
+      try {
+        const { response, socket } = upgradeWebSocket(request)
 
-      const { response, socket } = upgradeWebSocket(request)
+        socket.addEventListener('message', () => {
+          const error = new LexError(
+            'InvalidRequest',
+            'XRPC subscriptions do not accept messages',
+          )
+          socket.send(encodeError(error))
+          socket.close(1008, error.error)
+        })
 
-      socket.addEventListener('message', () => {
-        socket.close(1008, 'InvalidRequest') // No messages expected
-      })
+        socket.addEventListener('open', async () => {
+          try {
+            const url = new URL(request.url)
+            const params = method.parameters.fromURLSearchParams(
+              url.searchParams,
+            )
 
-      socket.addEventListener('open', async () => {
-        try {
-          const url = new URL(request.url)
-          const params = method.parameters.fromURLSearchParams(url.searchParams)
+            const credentials: Credentials = auth
+              ? await auth({ params, request })
+              : (undefined as Credentials)
 
-          const credentials: Credentials = auth
-            ? await auth({ params, request })
-            : (undefined as Credentials)
-
-          request.signal.throwIfAborted()
-
-          const iterable = handler({
-            credentials,
-            params,
-            input: undefined as InferMethodInput<M, Body>,
-            request,
-          })
-
-          const iterator = iterable[Symbol.asyncIterator]()
-
-          if (iterator.return) {
-            const abort = async () => {
-              socket.removeEventListener('error', abort)
-              socket.removeEventListener('close', abort)
-              try {
-                await iterator.return!()
-              } catch {
-                // Ignore
-              }
-            }
-            socket.addEventListener('error', abort)
-            socket.addEventListener('close', abort)
-          }
-
-          // eslint-disable-next-line no-constant-condition
-          while (socket.readyState === 1) {
-            const result = await iterator.next()
-            if (result.done) break
-
-            // Should not be needed (socket would emit "close" event)
             request.signal.throwIfAborted()
 
-            const data = encodeMessage(method, result.value)
+            const iterable = handler({
+              credentials,
+              params,
+              input: undefined as InferMethodInput<M, Body>,
+              request,
+            })
 
-            if (socket.send.length === 3) {
-              // Node.js WebSocket implementation supports a callback for send,
-              // allowing to await backpressure
-              await new Promise<void>((resolve, reject) => {
-                // @ts-expect-error
-                socket.send(data, undefined, (err) => {
-                  if (err) reject(err)
-                  else resolve()
+            const iterator = iterable[Symbol.asyncIterator]()
+
+            if (iterator.return) {
+              const abort = async () => {
+                socket.removeEventListener('error', abort)
+                socket.removeEventListener('close', abort)
+                try {
+                  await iterator.return!()
+                } catch {
+                  // Ignore
+                }
+              }
+              socket.addEventListener('error', abort)
+              socket.addEventListener('close', abort)
+            }
+
+            while (socket.readyState === 1) {
+              const result = await iterator.next()
+              if (result.done) break
+
+              // Should not be needed (socket would emit "close" event)
+              request.signal.throwIfAborted()
+
+              const data = encodeMessage(method, result.value)
+
+              if (socket.send.length === 3) {
+                // Node.js WebSocket implementation supports a callback for
+                // send(), allowing to await backpressure
+                await new Promise<void>((resolve, reject) => {
+                  // @ts-expect-error
+                  socket.send(data, undefined, (err) => {
+                    if (err) reject(err)
+                    else resolve()
+                  })
                 })
+              } else {
+                await socket.send(data)
+              }
+            }
+
+            socket.close(1000)
+          } catch (error) {
+            if (socket.readyState !== 1) return
+
+            const lexError =
+              error instanceof LexError ? error : new LexError('InternalError')
+
+            socket.send(encodeError(lexError))
+
+            // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+            socket.close(1008, lexError.error)
+
+            // Only report unexpected processing errors
+            if (error !== request.signal.reason) {
+              this.options?.onHandlerError?.call(null, {
+                error,
+                request,
+                method,
               })
-            } else {
-              await socket.send(data)
             }
           }
+        })
 
-          socket.close(1000)
-        } catch (error) {
-          if (socket.readyState !== 1) return
-
-          const lexError =
-            error instanceof LexError
-              ? error
-              : new LexError(
-                  'InternalError',
-                  'An internal error occurred while processing the subscription',
-                )
-
-          const data = ui8Concat([
-            encode({ op: -1 }),
-            encode(lexError.toJSON()),
-          ])
-
-          socket.send(data)
-
-          // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-          socket.close(1008, lexError.error)
-
-          // Only report unexpected processing errors
-          if (error !== request.signal.reason) {
-            this.options?.onHandlerError?.call(null, {
-              error,
-              request,
-              method,
-            })
-          }
-        }
-      })
-
-      return response
+        return response
+      } catch (error) {
+        return this.handleError(request, method, error)
+      }
     }
   }
 
-  async fetch(
-    input: string | URL | Request,
-    init?: RequestInit,
-  ): Promise<Response> {
-    const request =
-      input instanceof Request && init == null
-        ? input
-        : new Request(input, init)
-    const url = new URL(request.url)
+  private async handleError(
+    request: Request,
+    method: LexMethod,
+    error: unknown,
+  ) {
+    try {
+      if (error !== request.signal.reason) {
+        const { onHandlerError } = this.options
+        if (onHandlerError) {
+          await onHandlerError({ request, method, error })
+        }
+      }
+    } finally {
+      if (!request.bodyUsed) await request.body?.cancel()
+    }
 
-    const nsid = extractXrpcMethodNsid(url)
-    const route = nsid ? this.routes.get(nsid) : null
+    if (error instanceof LexError) {
+      return error.toResponse()
+    }
 
-    const response = route
-      ? await route.fetch(request)
-      : await this.fallback(request)
-
-    const modifiedResponse = await this.options.onResponse?.call(null, {
-      request,
-      response,
-      method: route?.method,
-    })
-    if (modifiedResponse) return modifiedResponse
-
-    return response
+    return Response.json(
+      { error: 'InternalError', message: 'An internal error occurred' },
+      { status: 500 },
+    )
   }
 
-  async fallback(request: Request): Promise<Response> {
-    const fallbackResponse = await this.options.onMethodNotFound?.call(null, {
-      request,
-    })
-    if (fallbackResponse) return fallbackResponse
+  async fetch(request: Request): Promise<Response> {
+    const nsid = extractXrpcMethodNsid(request)
 
-    return Response.json({ error: 'MethodNotImplemented' }, { status: 404 })
+    const fetch = (this.routes as Map<string | null, Fetch>).get(nsid)
+    if (fetch) return fetch(request)
+
+    await request.body?.cancel()
+
+    if (!nsid || !isNsidString(nsid)) {
+      return Response.json(
+        {
+          error: 'InvalidRequest',
+          message: 'Invalid XRPC method path',
+        },
+        { status: 404 },
+      )
+    }
+
+    return Response.json(
+      {
+        error: 'MethodNotImplemented',
+        message: `XRPC method "${nsid}" not implemented on this server`,
+      },
+      { status: 501 },
+    )
   }
 }
 
-function extractXrpcMethodNsid({ pathname }: URL): string | null {
+function extractXrpcMethodNsid(request: Request): string | null {
+  const { pathname } = new URL(request.url)
   if (!pathname.startsWith('/xrpc/')) return null
   if (pathname.includes('/', 6)) return null
-  if (pathname.length <= 11) return null // "/xrpc/a.b.c" is minimum
   // We don't really need to validate the NSID here, the existence of the route
   // (which is looked up based on an NSID) is sufficient.
   return pathname.slice(6)
@@ -490,6 +476,10 @@ async function getQueryInput<M extends Query>(
   }
 
   return undefined as InferMethodInput<M, Body>
+}
+
+function encodeError(error: LexError): Uint8Array {
+  return ui8Concat([encode({ op: -1 }), encode(error.toJSON())])
 }
 
 function encodeMessage(method: Subscription, value: LexValue): Uint8Array {

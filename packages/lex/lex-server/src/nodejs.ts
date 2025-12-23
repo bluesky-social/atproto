@@ -8,10 +8,11 @@ import {
   ServerResponse,
   createServer as createHttpServer,
 } from 'node:http'
+import { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
-import { WebSocket, WebSocketServer } from 'ws'
+import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 
 const kIncomingMessage = Symbol.for('incomingMessage')
 
@@ -27,16 +28,32 @@ export function getIncomingMessage<T extends IncomingMessage>(req: Request): T {
 
 const kRequestSocket = Symbol.for('ws:request')
 
-function getRequestSocket(req: IncomingMessage): WebSocket {
-  if (kRequestSocket in req) return (req as any)[kRequestSocket] as WebSocket
-  throw new TypeError('No WebSocket associated with IncomingMessage')
+function getRequestSocket(req: IncomingMessage): WebSocketPonyfill {
+  if (kRequestSocket in req) {
+    return (req as any)[kRequestSocket] as WebSocketPonyfill
+  }
+  throw new TypeError(
+    'Returning a 101 Response is requires using upgradeWebSocket()',
+  )
 }
 
-export function upgradeWebSocket(request: Request) {
+export function upgradeWebSocket(request: Request): {
+  response: Response
+  socket: WebSocket
+} {
+  if (
+    request.method !== 'GET' ||
+    request.headers.get('upgrade') !== 'websocket'
+  ) {
+    throw new TypeError('WebSocket upgrade request must use GET method')
+  }
+
   const req = getIncomingMessage(request)
 
   // @ts-expect-error
-  const socket = new WebSocket(null, undefined, { autoPong: true })
+  const socket: WebSocket = new WebSocketPonyfill(null, undefined, {
+    autoPong: true,
+  })
 
   Object.defineProperty(req, kRequestSocket, {
     value: socket,
@@ -73,20 +90,20 @@ function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
     noServer: true,
     // @ts-expect-error
     WebSocket: function () {
-      // Return the websocket that was created earlier instead of a new one
+      // Return the websocket that was created earlier instead of a new instance
       return socket
     },
   })
 
   // Apply headers that might have been set on the response object during
-  // handling
+  // handling. This will be called during wss.handleUpgrade().
   wss.on('headers', (headers) => {
     for (const [name, value] of response.headers) {
       headers.push(`${name}: ${value}`)
     }
   })
 
-  let ws: WebSocket | undefined
+  let ws: WebSocketPonyfill | undefined
   wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (upgradedWs) => {
     ws = upgradedWs
   })
@@ -96,8 +113,7 @@ function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
     throw new Error('WebSocket upgrade failed')
   }
 
-  // The request handling now happens through the socket directly
-  return
+  // The request handling now happens through the socket exclusively
 }
 
 export async function sendResponse(
@@ -189,18 +205,12 @@ async function handle(req: IncomingMessage, res: ServerResponse, fetch: Fetch) {
   await sendResponse(res, response)
 }
 
-export type ToRequestListenerOptions = {
-  onError?: (err: unknown) => void
-}
-
 export function toRequestListener<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
->(fetch: Fetch | FetchObject, options?: ToRequestListenerOptions) {
-  const { onError } = options ?? {}
-  console.error('fetch', fetch)
+>(fetch: Fetch | FetchObject) {
   if (typeof fetch === 'object') fetch = fetch.fetch.bind(fetch)
   return ((
     req: InstanceType<Request>,
@@ -210,10 +220,8 @@ export function toRequestListener<
     handle(req, res, fetch).catch((err) => {
       if (next) next(err)
       else {
-        onError?.(err)
         if (!res.headersSent) {
           res.statusCode = 500
-          res.statusMessage = 'Internal Server Error'
           res.end('Internal Server Error')
         } else if (!res.writableEnded) {
           res.end()
@@ -228,10 +236,9 @@ export type CreateServerOptions<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
-> = ServerOptions<Request, Response> &
-  ToRequestListenerOptions & {
-    gracefulTerminationTimeout?: number
-  }
+> = ServerOptions<Request, Response> & {
+  gracefulTerminationTimeout?: number
+}
 
 export interface Server<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
@@ -251,7 +258,7 @@ export function createServer<
   fetch: Fetch | FetchObject,
   options: CreateServerOptions<Request, Response> = {},
 ): Server<Request, Response> {
-  const server = createHttpServer(options, toRequestListener(fetch, options))
+  const server = createHttpServer(options, toRequestListener(fetch))
   const terminator = createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
@@ -273,11 +280,9 @@ export type StartServerOptions<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
-> = CreateServerOptions<Request, Response> & {
-  port?: number
-}
+> = ListenOptions & CreateServerOptions<Request, Response>
 
-export async function startServer<
+export async function serve<
   Request extends typeof IncomingMessage = typeof IncomingMessage,
   Response extends typeof ServerResponse<
     InstanceType<Request>
@@ -287,7 +292,7 @@ export async function startServer<
   options?: StartServerOptions<Request, Response>,
 ): Promise<Server<Request, Response>> {
   const server = createServer(fetch, options)
-  server.listen(options?.port ?? 0)
+  server.listen(options)
   await once(server, 'listening')
   return server
 }
