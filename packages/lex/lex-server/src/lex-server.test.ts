@@ -80,35 +80,34 @@ const handlers: {
 describe('LexRouter', () => {
   it('returns 404 when the route is not found', async () => {
     const router = new LexRouter()
-    const response = await router.fetch(`https://example.com/xrpc/foo.bar.baz`)
+    const request = new Request(`https://example.com/xrpc/foo.bar.baz`)
+    const response = await router.fetch(request)
     expect(response.status).toBe(404)
     expect(await response.json()).toEqual({ error: 'MethodNotImplemented' })
   })
 
   it('streams payloads', async () => {
     const router = new LexRouter().add(io.example.echo, handlers.echo)
-    const response = await router.fetch(
-      'https://example.com/xrpc/io.example.echo',
-      {
-        method: 'POST',
-        headers: { 'content-type': 'text/plain' },
-        // @ts-expect-error
-        duplex: 'half',
-        body: new ReadableStream({
-          start(controller) {
+    const request = new Request('https://example.com/xrpc/io.example.echo', {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      // @ts-expect-error
+      duplex: 'half',
+      body: new ReadableStream({
+        start(controller) {
+          setTimeout(() => {
+            controller.enqueue(new TextEncoder().encode('aaa'))
             setTimeout(() => {
-              controller.enqueue(new TextEncoder().encode('aaa'))
+              controller.enqueue(new TextEncoder().encode('bbb'))
               setTimeout(() => {
-                controller.enqueue(new TextEncoder().encode('bbb'))
-                setTimeout(() => {
-                  controller.error(new Error('Stream closed'))
-                }, 50)
+                controller.error(new Error('Stream closed'))
               }, 50)
             }, 50)
-          },
-        }),
-      },
-    )
+          }, 50)
+        },
+      }),
+    })
+    const response = await router.fetch(request)
 
     const reader = response.body!.getReader()
     const chunks: string[] = []
@@ -131,9 +130,10 @@ describe('LexRouter', () => {
       handlers.paramsToBody,
     )
 
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramsToBody?name=Alice&pronouns=she%2Fher&pronouns=they%2Fthem',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({
@@ -152,7 +152,10 @@ describe('lex-client integration', () => {
 
   it('echoes text', async () => {
     const agent = buildAgent({
-      fetch: async (input, init) => router.fetch(input, init),
+      fetch: async (input, init) => {
+        const request = new Request(input, init)
+        return router.fetch(request)
+      },
       service: 'https://example.com',
     })
     const message = 'Hello, LexRouter!'
@@ -167,7 +170,10 @@ describe('lex-client integration', () => {
 
   it('streams text', async () => {
     const agent = buildAgent({
-      fetch: async (input, init) => router.fetch(input, init),
+      fetch: async (input, init) => {
+        const request = new Request(input, init)
+        return router.fetch(request)
+      },
       service: 'https://example.com',
     })
     const message = 'Hello, LexRouter Stream!'
@@ -187,7 +193,10 @@ describe('lex-client integration', () => {
 
   it('performs simple query', async () => {
     const agent = buildAgent({
-      fetch: async (input, init) => router.fetch(input, init),
+      fetch: async (input, init) => {
+        const request = new Request(input, init)
+        return router.fetch(request)
+      },
       service: 'https://example.com',
     })
     const response = await xrpc(agent, io.example.status)
@@ -209,7 +218,10 @@ describe('IPLD values', () => {
     const router = new LexRouter().add(io.example.ipld, ipldHandler)
 
     const agent = buildAgent({
-      fetch: async (input, init) => router.fetch(input, init),
+      fetch: async (input, init) => {
+        const request = new Request(input, init)
+        return router.fetch(request)
+      },
       service: 'https://example.com',
     })
 
@@ -304,7 +316,7 @@ describe('Authentication', () => {
       handler: authTestHandler,
     })
 
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.authTest',
       {
         method: 'POST',
@@ -315,6 +327,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: false }),
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -327,7 +340,7 @@ describe('Authentication', () => {
       handler: authTestHandler,
     })
 
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.authTest',
       {
         method: 'POST',
@@ -338,6 +351,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: false }),
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -350,7 +364,7 @@ describe('Authentication', () => {
       handler: authTestHandler,
     })
 
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.authTest',
       {
         method: 'POST',
@@ -361,6 +375,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: true }),
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -374,7 +389,7 @@ describe('Authentication', () => {
       handler: authTestHandler,
     })
 
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.authTest',
       {
         method: 'POST',
@@ -382,6 +397,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: true }),
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -434,9 +450,10 @@ describe('Error Handling', () => {
 
       const router = new LexRouter().add(io.example.error, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.error?which=foo',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -459,9 +476,10 @@ describe('Error Handling', () => {
 
       const router = new LexRouter().add(io.example.error, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.error?which=bar',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -478,9 +496,10 @@ describe('Error Handling', () => {
 
       const router = new LexRouter().add(io.example.throwFalsyValue, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.throwFalsyValue',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -496,10 +515,10 @@ describe('Error Handling', () => {
 
       const router = new LexRouter().add(io.example.error, handler)
 
-      const response = await router.fetch(
-        'https://example.com/xrpc/io.example.error',
-        { method: 'POST' },
-      )
+      const request = new Request('https://example.com/xrpc/io.example.error', {
+        method: 'POST',
+      })
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(405)
       const data = await response.json()
@@ -519,10 +538,11 @@ describe('Error Handling', () => {
 
       const router = new LexRouter().add(procedure, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.procedure',
         { method: 'GET' },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(405)
       const data = await response.json()
@@ -535,9 +555,10 @@ describe('Error Handling', () => {
     it('returns 404 for non-existent methods', async () => {
       const router = new LexRouter()
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.doesNotExist',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(404)
       const data = await response.json()
@@ -560,9 +581,8 @@ describe('Error Handling', () => {
 
       customRouter.add(io.example.error, handler)
 
-      const response = await customRouter.fetch(
-        'https://example.com/xrpc/io.example.error',
-      )
+      const request = new Request('https://example.com/xrpc/io.example.error')
+      const response = await customRouter.fetch(request)
 
       expect(onHandlerError).toHaveBeenCalled()
       expect(response.status).toBe(500)
@@ -615,9 +635,10 @@ describe('Parameters', () => {
   const router = new LexRouter().add(io.example.paramTest, handler)
 
   it('validates query params - valid input', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=1&arr=2&def=5',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -629,9 +650,10 @@ describe('Parameters', () => {
   })
 
   it('applies default values', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=3&arr=4',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -640,9 +662,10 @@ describe('Parameters', () => {
   })
 
   it('coerces types from query strings', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=10&int=5&bool=true&arr=3&arr=4',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -653,9 +676,10 @@ describe('Parameters', () => {
   })
 
   it('rejects string too short', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=n&int=5&bool=true&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -663,9 +687,10 @@ describe('Parameters', () => {
   })
 
   it('rejects string too long', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=loooooooooooooong&int=5&bool=true&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -673,9 +698,10 @@ describe('Parameters', () => {
   })
 
   it('rejects missing required parameter str', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?int=5&bool=true&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -683,9 +709,10 @@ describe('Parameters', () => {
   })
 
   it('rejects missing required parameter int', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&bool=true&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -693,9 +720,10 @@ describe('Parameters', () => {
   })
 
   it('rejects missing required parameter bool', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -703,9 +731,10 @@ describe('Parameters', () => {
   })
 
   it('rejects integer too small', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=-1&bool=true&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -713,9 +742,10 @@ describe('Parameters', () => {
   })
 
   it('rejects integer too large', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=11&bool=true&arr=1',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -723,9 +753,10 @@ describe('Parameters', () => {
   })
 
   it('rejects missing required array parameter', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -733,9 +764,10 @@ describe('Parameters', () => {
   })
 
   it('rejects array too large', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=1&arr=2&arr=3',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -814,10 +846,11 @@ describe('Procedures', () => {
     .add(io.example.pingFour, handlers.pingFour)
 
   it('serves procedure with params returning text', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingOne?message=hello%20world',
       { method: 'POST' },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('text/plain')
@@ -825,14 +858,12 @@ describe('Procedures', () => {
   })
 
   it('serves procedure with text input/output', async () => {
-    const response = await router.fetch(
-      'https://example.com/xrpc/io.example.pingTwo',
-      {
-        method: 'POST',
-        headers: { 'content-type': 'text/plain' },
-        body: 'hello world',
-      },
-    )
+    const request = new Request('https://example.com/xrpc/io.example.pingTwo', {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      body: 'hello world',
+    })
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('text/plain')
@@ -840,7 +871,7 @@ describe('Procedures', () => {
   })
 
   it('serves procedure with binary input/output', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingThree',
       {
         method: 'POST',
@@ -848,6 +879,7 @@ describe('Procedures', () => {
         body: new TextEncoder().encode('hello world'),
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe(
@@ -858,7 +890,7 @@ describe('Procedures', () => {
   })
 
   it('serves procedure with JSON input/output', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingFour',
       {
         method: 'POST',
@@ -866,6 +898,7 @@ describe('Procedures', () => {
         body: JSON.stringify({ message: 'hello world' }),
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('application/json')
@@ -926,9 +959,10 @@ describe('Queries', () => {
     .add(io.example.pingThree, handlers.pingThree)
 
   it('serves query with text response', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingOne?message=hello%20world',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('text/plain')
@@ -936,9 +970,10 @@ describe('Queries', () => {
   })
 
   it('serves query with binary response', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingTwo?message=hello%20world',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe(
@@ -949,9 +984,10 @@ describe('Queries', () => {
   })
 
   it('serves query with JSON response and custom headers', async () => {
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingThree?message=hello%20world',
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('application/json')
@@ -963,13 +999,14 @@ describe('Queries', () => {
   it('rejects query with content-type header', async () => {
     // GET requests can't have a body, but they can have content-type headers
     // The server should reject queries that have content-type/content-length headers
-    const response = await router.fetch(
+    const request = new Request(
       'https://example.com/xrpc/io.example.pingOne?message=hello',
       {
         method: 'GET',
         headers: { 'content-type': 'application/json' },
       },
     )
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -1016,9 +1053,10 @@ describe('Responses', () => {
 
       const router = new LexRouter().add(io.example.readableStream, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.readableStream',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('content-type')).toBe(
@@ -1061,9 +1099,10 @@ describe('Responses', () => {
 
       const router = new LexRouter().add(io.example.readableStream, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.readableStream?shouldErr=true',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
 
@@ -1096,9 +1135,10 @@ describe('Responses', () => {
 
       const router = new LexRouter().add(io.example.emptyResponse, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.emptyResponse',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       expect(response.body).toBeNull()
@@ -1113,9 +1153,10 @@ describe('Responses', () => {
 
       const router = new LexRouter().add(io.example.emptyResponse, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.emptyResponse',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('x-custom-header')).toBe('value')
@@ -1148,9 +1189,10 @@ describe('Responses', () => {
 
       const router = new LexRouter().add(io.example.customResponse, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.customResponse?status=201',
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(201)
       const data = await response.json()
@@ -1197,7 +1239,7 @@ describe('Body Handling', () => {
     const router = new LexRouter().add(io.example.validationTest, handler)
 
     it('validates input and output bodies', async () => {
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.validationTest',
         {
           method: 'POST',
@@ -1205,6 +1247,7 @@ describe('Body Handling', () => {
           body: JSON.stringify({ foo: 'hello', bar: 123 }),
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -1213,7 +1256,7 @@ describe('Body Handling', () => {
     })
 
     it('rejects missing required fields', async () => {
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.validationTest',
         {
           method: 'POST',
@@ -1221,6 +1264,7 @@ describe('Body Handling', () => {
           body: JSON.stringify({}),
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1228,7 +1272,7 @@ describe('Body Handling', () => {
     })
 
     it('rejects wrong types', async () => {
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.validationTest',
         {
           method: 'POST',
@@ -1236,6 +1280,7 @@ describe('Body Handling', () => {
           body: JSON.stringify({ foo: 123 }),
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1243,7 +1288,7 @@ describe('Body Handling', () => {
     })
 
     it('rejects wrong content-type', async () => {
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.validationTest',
         {
           method: 'POST',
@@ -1251,6 +1296,7 @@ describe('Body Handling', () => {
           body: new Uint8Array([1, 2, 3]),
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1283,7 +1329,7 @@ describe('Body Handling', () => {
 
     it('supports ArrayBuffers', async () => {
       const bytes = new Uint8Array([1, 2, 3, 4, 5])
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.blobTest',
         {
           method: 'POST',
@@ -1291,6 +1337,7 @@ describe('Body Handling', () => {
           body: bytes,
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
@@ -1302,7 +1349,7 @@ describe('Body Handling', () => {
 
     it('supports empty payload', async () => {
       const bytes = new Uint8Array(0)
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.blobTest',
         {
           method: 'POST',
@@ -1310,6 +1357,7 @@ describe('Body Handling', () => {
           body: bytes,
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
@@ -1325,7 +1373,7 @@ describe('Body Handling', () => {
         },
       })
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.blobTest',
         {
           method: 'POST',
@@ -1335,6 +1383,7 @@ describe('Body Handling', () => {
           body: stream,
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
@@ -1343,7 +1392,7 @@ describe('Body Handling', () => {
 
     it('requires any parsable Content-Type for blob uploads', async () => {
       const bytes = new Uint8Array([1, 2, 3])
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.blobTest',
         {
           method: 'POST',
@@ -1351,6 +1400,7 @@ describe('Body Handling', () => {
           body: bytes,
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
     })
@@ -1377,13 +1427,15 @@ describe('Body Handling', () => {
 
       const router = new LexRouter().add(io.example.emptyContentType, handler)
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.emptyContentType',
         {
           method: 'POST',
           body: JSON.stringify({ data: 'test' }),
         },
       )
+
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1413,13 +1465,14 @@ describe('Body Handling', () => {
         handler,
       )
 
-      const response = await router.fetch(
+      const request = new Request(
         'https://example.com/xrpc/io.example.emptyContentTypeBlob',
         {
           method: 'POST',
           body: new Uint8Array([1, 2, 3]),
         },
       )
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const data = await response.json()
