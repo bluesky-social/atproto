@@ -5,10 +5,12 @@ type IdentityEventHandler = (
   evt: IdentityEvent,
   opts?: HandlerOpts,
 ) => Promise<void>
+
 type RecordEventHandler = (
   evt: RecordEvent,
   opts?: HandlerOpts,
 ) => Promise<void>
+
 type ErrorHandler = (err: Error) => void
 
 export class SimpleIndexer implements TapHandler {
