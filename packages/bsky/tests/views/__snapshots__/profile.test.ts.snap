@@ -529,6 +529,13 @@ Object {
 }
 `;
 
+exports[`pds profile views germ returns germ record if it does exist 1`] = `
+Object {
+  "messageMeUrl": "https://chat.example.com/start-conversation",
+  "showButtonTo": "everyone",
+}
+`;
+
 exports[`pds profile views presents avatars & banners 1`] = `
 Object {
   "associated": Object {

@@ -27,6 +27,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
     db,
     ids.AppBskyNotificationDeclaration,
   ),
+  getGermDeclarationRecords: getRecords(db, ids.ComGermnetworkDeclaration),
   getStarterPackRecords: getRecords(db, ids.AppBskyGraphStarterpack),
   getVerificationRecords: getRecords(db, ids.AppBskyGraphVerification),
   getStatusRecords: getRecords(db, ids.AppBskyActorStatus),
