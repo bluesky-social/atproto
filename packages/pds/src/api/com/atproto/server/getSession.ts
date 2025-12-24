@@ -51,10 +51,10 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: output(auth, {
-          handle: user.handle ?? INVALID_HANDLE,
           did: user.did,
-          email: user.email ?? undefined,
           didDoc,
+          handle: user.handle ?? INVALID_HANDLE,
+          email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
           active,
           status,

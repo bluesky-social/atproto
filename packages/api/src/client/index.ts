@@ -4528,12 +4528,11 @@ export class ComAtprotoServerNS {
     data?: ComAtprotoServerDeleteSession.InputSchema,
     opts?: ComAtprotoServerDeleteSession.CallOptions,
   ): Promise<ComAtprotoServerDeleteSession.Response> {
-    return this._client.call(
-      'com.atproto.server.deleteSession',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.server.deleteSession', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerDeleteSession.toKnownErr(e)
+      })
   }
 
   describeServer(

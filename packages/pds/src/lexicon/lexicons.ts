@@ -13019,7 +13019,13 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Delete the current session. Requires auth.',
+        description:
+          "Delete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
+        errors: [
+          {
+            name: 'InvalidToken',
+          },
+        ],
       },
     },
   },
@@ -13218,6 +13224,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              didDoc: {
+                type: 'unknown',
+              },
               email: {
                 type: 'string',
               },
@@ -13226,9 +13235,6 @@ export const schemaDict = {
               },
               emailAuthFactor: {
                 type: 'boolean',
-              },
-              didDoc: {
-                type: 'unknown',
               },
               active: {
                 type: 'boolean',
@@ -13323,6 +13329,15 @@ export const schemaDict = {
               didDoc: {
                 type: 'unknown',
               },
+              email: {
+                type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
               active: {
                 type: 'boolean',
               },
@@ -13338,6 +13353,12 @@ export const schemaDict = {
         errors: [
           {
             name: 'AccountTakedown',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'ExpiredToken',
           },
         ],
       },

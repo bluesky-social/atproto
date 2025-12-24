@@ -21,6 +21,7 @@ export type HandlerInput = void
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidToken'
 }
 
 export type HandlerOutput = HandlerError | void
