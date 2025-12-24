@@ -150,7 +150,7 @@ async function sendResponse(
   }
 }
 
-export function toRequest(req: IncomingMessage, res: ServerResponse): Request {
+export function toRequest(req: IncomingMessage, _res: ServerResponse): Request {
   const host = req.headers.host ?? 'localhost'
   const isEncrypted = (req.socket as any).encrypted === true
   const protocol = isEncrypted ? 'https' : 'http'
@@ -164,14 +164,16 @@ export function toRequest(req: IncomingMessage, res: ServerResponse): Request {
   const abortController = new AbortController()
   const abort = () => abortController.abort()
 
-  res.on('close', abort)
-  res.on('error', abort)
+  req.on('close', abort)
+  req.on('error', abort)
+  req.on('end', abort)
 
   abortController.signal.addEventListener(
     'abort',
     () => {
-      res.off('close', abort)
-      res.off('error', abort)
+      req.off('close', abort)
+      req.off('error', abort)
+      req.off('end', abort)
     },
     { once: true },
   )
