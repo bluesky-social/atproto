@@ -1,0 +1,22 @@
+FROM node:18-alpine
+
+RUN corepack enable
+
+RUN apk add --update dumb-init
+
+WORKDIR /app
+
+# NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
+# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path'
+COPY ./packages/bsync ./packages/bsync
+COPY ./packages/common ./packages/common
+COPY ./packages/common-web ./packages/common-web
+COPY ./packages/lex/lex-cbor ./packages/lex/lex-cbor
+COPY ./packages/lex/lex-data ./packages/lex/lex-data
+COPY ./packages/lex/lex-json ./packages/lex/lex-json
+COPY ./packages/syntax ./packages/syntax
+
+COPY ./services/bsync ./services/bsync
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["packages/bsync/bin/denv.sh"]
