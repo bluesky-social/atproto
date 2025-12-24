@@ -19,70 +19,93 @@ import {
 
 type LexMethod = Query | Procedure | Subscription
 
-type Handler = (request: Request) => Promise<Response>
+export type NetAddr = {
+  hostname: string
+  port: number
+  transport: 'tcp' | 'udp'
+}
 
-export type LexRouterHandlerContext<M extends LexMethod, Credentials = void> = {
+export type UnixAddr = {
+  path: string
+  transport: 'unix' | 'unixpacket'
+}
+
+export type Addr = NetAddr | UnixAddr
+
+export type ConnectionInfo = {
+  localAddr?: Addr
+  remoteAddr?: Addr
+}
+
+type Handler = (
+  request: Request,
+  connection?: ConnectionInfo,
+) => Promise<Response>
+
+export type LexRouterHandlerContext<Method extends LexMethod, Credentials> = {
   credentials: Credentials
-  input: InferMethodInput<M, Body>
-  params: InferMethodParams<M>
+  input: InferMethodInput<Method, Body>
+  params: InferMethodParams<Method>
   request: Request
+  connection?: ConnectionInfo
 }
 
 type AsOptionalPayloadOptions<T> = T extends undefined | void
   ? { encoding?: undefined; body?: undefined }
   : T
 
-export type LexRouterHandlerOutput<M extends Query | Procedure> =
+export type LexRouterHandlerOutput<Method extends Query | Procedure> =
   | Response
   | ({
       headers?: HeadersInit
-    } & (InferMethodOutputEncoding<M> extends 'application/json'
+    } & (InferMethodOutputEncoding<Method> extends 'application/json'
       ? {
           // Allow omitting body when output is JSON
           encoding?: 'application/json'
-          body: InferMethodOutputBody<M>
+          body: InferMethodOutputBody<Method>
         }
-      : AsOptionalPayloadOptions<InferMethodOutput<M, BodyInit>>))
+      : AsOptionalPayloadOptions<InferMethodOutput<Method, BodyInit>>))
 
 export type LexRouterMethodHandler<
-  M extends Query | Procedure = Query | Procedure,
+  Method extends Query | Procedure = Query | Procedure,
   Credentials = unknown,
 > = (
-  ctx: LexRouterHandlerContext<M, Credentials>,
-) => Promise<LexRouterHandlerOutput<M>>
+  ctx: LexRouterHandlerContext<Method, Credentials>,
+) => Promise<LexRouterHandlerOutput<Method>>
 
 export type LexRouterMethodConfig<
-  M extends Query | Procedure = Query | Procedure,
+  Method extends Query | Procedure = Query | Procedure,
   Credentials = unknown,
 > = {
-  handler: LexRouterMethodHandler<M, Credentials>
-  auth: LexRouterAuth<M, Credentials>
+  handler: LexRouterMethodHandler<Method, Credentials>
+  auth: LexRouterAuth<Method, Credentials>
 }
 
 export type LexRouterSubHandler<
-  M extends Subscription = Subscription,
+  Method extends Subscription = Subscription,
   Credentials = unknown,
 > = (
-  ctx: LexRouterHandlerContext<M, Credentials>,
-) => AsyncIterable<InferMethodMessage<M>>
+  ctx: LexRouterHandlerContext<Method, Credentials>,
+) => AsyncIterable<InferMethodMessage<Method>>
 
 export type LexRouterSubConfig<
-  M extends Subscription = Subscription,
+  Method extends Subscription = Subscription,
   Credentials = unknown,
 > = {
-  handler: LexRouterSubHandler<M, Credentials>
-  auth: LexRouterAuth<M, Credentials>
+  handler: LexRouterSubHandler<Method, Credentials>
+  auth: LexRouterAuth<Method, Credentials>
 }
 
-export type LexRouterAuthContext<M extends LexMethod = LexMethod> = {
-  params: InferMethodParams<M>
+export type LexRouterAuthContext<Method extends LexMethod = LexMethod> = {
+  params: InferMethodParams<Method>
   request: Request
+  connection?: ConnectionInfo
 }
 
 export type LexRouterAuth<
-  M extends LexMethod = LexMethod,
+  Method extends LexMethod = LexMethod,
   Credentials = unknown,
-> = (ctx: LexRouterAuthContext<M>) => Promise<Credentials>
+> = (ctx: LexRouterAuthContext<Method>) => Promise<Credentials>
 
 export type LexErrorHandlerContext = {
   error: unknown
@@ -132,49 +155,54 @@ export class LexRouter {
     if (this.handlers.has(method.nsid)) {
       throw new TypeError(`Method ${method.nsid} already registered`)
     }
-    const { handler, auth = undefined } =
-      typeof config === 'function' ? { handler: config } : config
+    const methodConfig =
+      typeof config === 'function'
+        ? { handler: config, auth: undefined }
+        : config
 
-    const builtHandler =
+    const handler: Handler =
       method.type === 'subscription'
         ? this.buildSubscriptionHandler(
             method,
-            handler as LexRouterSubHandler<any, any>,
-            auth,
+            methodConfig.handler as LexRouterSubHandler<any, any>,
+            methodConfig.auth,
           )
         : this.buildMethodHandler(
             method,
-            handler as LexRouterMethodHandler<any, any>,
-            auth,
+            methodConfig.handler as LexRouterMethodHandler<any, any>,
+            methodConfig.auth,
           )
 
-    this.handlers.set(method.nsid, builtHandler)
+    this.handlers.set(method.nsid, handler)
 
     return this
   }
 
-  private buildMethodHandler<M extends Query | Procedure>(
-    method: M,
-    handler: LexRouterMethodHandler<M, void>,
-    auth?: LexRouterAuth<M, void>,
+  private buildMethodHandler<Method extends Query | Procedure>(
+    method: Method,
+    methodHandler: LexRouterMethodHandler<Method, void>,
+    auth?: LexRouterAuth<Method, void>,
   ): Handler
-  private buildMethodHandler<M extends Query | Procedure, Credentials>(
-    method: M,
-    handler: LexRouterMethodHandler<M, Credentials>,
-    auth: LexRouterAuth<M, Credentials>,
+  private buildMethodHandler<Method extends Query | Procedure, Credentials>(
+    method: Method,
+    methodHandler: LexRouterMethodHandler<Method, Credentials>,
+    auth: LexRouterAuth<Method, Credentials>,
   ): Handler
-  private buildMethodHandler<M extends Query | Procedure, Credentials>(
-    method: M,
-    handler: LexRouterMethodHandler<M, Credentials>,
-    auth?: LexRouterAuth<M, Credentials>,
+  private buildMethodHandler<Method extends Query | Procedure, Credentials>(
+    method: Method,
+    methodHandler: LexRouterMethodHandler<Method, Credentials>,
+    auth?: LexRouterAuth<Method, Credentials>,
   ): Handler {
     const getInput = (
       method.type === 'procedure'
         ? getProcedureInput.bind(method)
         : getQueryInput.bind(method)
-    ) as (request: Request) => Promise<InferMethodInput<M, Body>>
+    ) as (request: Request) => Promise<InferMethodInput<Method, Body>>
 
-    return async (request: Request): Promise<Response> => {
+    return async (
+      request: Request,
+      connection?: ConnectionInfo,
+    ): Promise<Response> => {
       if (
         (method.type === 'procedure' && request.method !== 'POST') ||
         (method.type === 'query' &&
@@ -193,12 +221,18 @@ export class LexRouter {
         const params = method.parameters.fromURLSearchParams(url.searchParams)
 
         const credentials = auth
-          ? await auth({ params, request })
+          ? await auth({ params, request, connection })
           : (undefined as Credentials)
 
         const input = await getInput(request)
 
-        const output = await handler({ credentials, params, input, request })
+        const output = await methodHandler({
+          credentials,
+          params,
+          input,
+          request,
+          connection,
+        })
 
         if (output instanceof Response) {
           return output
@@ -227,10 +261,10 @@ export class LexRouter {
     }
   }
 
-  private buildSubscriptionHandler<M extends Subscription, Credentials>(
-    method: M,
-    handler: LexRouterSubHandler<M, Credentials>,
-    auth?: LexRouterAuth<M, Credentials>,
+  private buildSubscriptionHandler<Method extends Subscription, Credentials>(
+    method: Method,
+    methodHandler: LexRouterSubHandler<Method, Credentials>,
+    auth?: LexRouterAuth<Method, Credentials>,
   ): Handler {
     const { upgradeWebSocket } = this.options
     if (!upgradeWebSocket) {
@@ -239,7 +273,10 @@ export class LexRouter {
       )
     }
 
-    return async (request: Request): Promise<Response> => {
+    return async (
+      request: Request,
+      connection?: ConnectionInfo,
+    ): Promise<Response> => {
       if (request.method !== 'GET') {
         await request.body?.cancel()
         return Response.json(
@@ -279,16 +316,17 @@ export class LexRouter {
             )
 
             const credentials: Credentials = auth
-              ? await auth({ params, request })
+              ? await auth({ params, request, connection })
               : (undefined as Credentials)
 
             request.signal.throwIfAborted()
 
-            const iterable = handler({
+            const iterable = methodHandler({
               credentials,
               params,
-              input: undefined as InferMethodInput<M, Body>,
+              input: undefined as InferMethodInput<Method, Body>,
               request,
+              connection,
             })
 
             const iterator = iterable[Symbol.asyncIterator]()
@@ -387,11 +425,14 @@ export class LexRouter {
     )
   }
 
-  handle: Handler = async (request) => {
+  handle: Handler = async (
+    request: Request,
+    connection?: ConnectionInfo,
+  ): Promise<Response> => {
     const nsid = extractXrpcMethodNsid(request)
 
     const handler = (this.handlers as Map<string | null, Handler>).get(nsid)
-    if (handler) return handler(request)
+    if (handler) return handler(request, connection)
 
     await request.body?.cancel()
 

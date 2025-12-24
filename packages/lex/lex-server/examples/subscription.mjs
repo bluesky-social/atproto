@@ -45,9 +45,9 @@ const router = new LexRouter({ upgradeWebSocket })
   })
 
 serve(
-  async (request) => {
+  async (request, info) => {
     if (request.url.includes('/xrpc/')) {
-      const response = await router.handle(request)
+      const response = await router.handle(request, info)
       response.headers.set('Access-Control-Allow-Origin', '*')
       response.headers.set('Access-Control-Allow-Methods', 'GET, POST')
       response.headers.set('Access-Control-Allow-Headers', 'Content-Type')

@@ -113,7 +113,7 @@ function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
   })
 
   if (!ws || ws !== socket) {
-    ws?.close()
+    req.socket.destroy() // should trigger websocket 'close' event
     throw new Error('WebSocket upgrade failed')
   }
 
@@ -152,7 +152,8 @@ async function sendResponse(
 
 export function toRequest(req: IncomingMessage, res: ServerResponse): Request {
   const host = req.headers.host ?? 'localhost'
-  const protocol = (req.socket as any).encrypted ? 'https' : 'http'
+  const isEncrypted = (req.socket as any).encrypted === true
+  const protocol = isEncrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
   const headers = toHeaders(req.headers)
   const body =
@@ -165,16 +166,12 @@ export function toRequest(req: IncomingMessage, res: ServerResponse): Request {
 
   res.on('close', abort)
   res.on('error', abort)
-  req.socket.on('error', abort)
-  req.socket.on('close', abort)
 
   abortController.signal.addEventListener(
     'abort',
     () => {
       res.off('close', abort)
       res.off('error', abort)
-      req.socket.off('error', abort)
-      req.socket.off('close', abort)
     },
     { once: true },
   )
@@ -204,7 +201,21 @@ export function toHeaders(headers: IncomingHttpHeaders): Headers {
   return result
 }
 
-export type Handler = (req: Request) => Promise<Response>
+export type NetAddr = {
+  hostname: string
+  port: number
+  transport: 'tcp'
+}
+
+export type NodeConnectionInfo = {
+  localAddr?: NetAddr
+  remoteAddr?: NetAddr
+}
+
+export type Handler = (
+  req: Request,
+  info: NodeConnectionInfo,
+) => Promise<Response>
 export type HandlerObject = { handle: Handler }
 
 async function handle(
@@ -222,7 +233,28 @@ async function handle(
     writable: false,
   })
 
-  const response = await handler(request)
+  const { socket } = req
+
+  const info: NodeConnectionInfo = {
+    localAddr:
+      socket.localAddress != null
+        ? {
+            hostname: socket.localAddress,
+            port: socket.localPort!,
+            transport: 'tcp',
+          }
+        : undefined,
+    remoteAddr:
+      socket.remoteAddress != null
+        ? {
+            hostname: socket.remoteAddress,
+            port: socket.remotePort!,
+            transport: 'tcp',
+          }
+        : undefined,
+  }
+
+  const response = await handler(request, info)
   await sendResponse(req, res, response)
 }
 
