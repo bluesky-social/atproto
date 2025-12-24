@@ -1,4 +1,5 @@
 export * from './block-map'
+export * from './cid-map'
 export * from './cid-set'
 export * from './repo'
 export * from './mst'
