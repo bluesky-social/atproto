@@ -1,7 +1,6 @@
 import { LexMap, isLexMap } from '@atproto/lex-data'
 import { Schema, ValidationResult, ValidatorContext } from '../validation'
 
-export type { LexMap }
 export type UnknownObjectOutput = LexMap
 
 export class UnknownObjectSchema extends Schema<UnknownObjectOutput> {

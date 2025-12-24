@@ -9,6 +9,14 @@ export abstract class Issue {
   ) {}
 
   abstract toString(): string
+
+  toJSON() {
+    return {
+      code: this.code,
+      path: this.path,
+      message: this.toString(),
+    }
+  }
 }
 
 export class IssueCustom extends Issue {
@@ -37,6 +45,13 @@ export class IssueInvalidFormat extends Issue {
 
   toString() {
     return `Invalid ${this.formatDescription} format${this.message ? ` (${this.message})` : ''}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      format: this.format,
+    }
   }
 
   get formatDescription(): string {
@@ -71,6 +86,13 @@ export class IssueInvalidType extends Issue {
   toString() {
     return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type${stringifyPath(this.path)} (got ${stringifyType(this.input)})`
   }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      expected: this.expected,
+    }
+  }
 }
 
 export class IssueInvalidValue extends Issue {
@@ -85,6 +107,13 @@ export class IssueInvalidValue extends Issue {
   toString() {
     return `Expected ${oneOf(this.values.map(stringifyValue))}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
   }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      values: this.values,
+    }
+  }
 }
 
 export class IssueRequiredKey extends Issue {
@@ -98,6 +127,13 @@ export class IssueRequiredKey extends Issue {
 
   toString() {
     return `Missing required key "${String(this.key)}"${stringifyPath(this.path)}`
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      key: this.key,
+    }
   }
 }
 
@@ -123,6 +159,14 @@ export class IssueTooBig extends Issue {
   toString() {
     return `${this.type} too big (maximum ${this.maximum})${stringifyPath(this.path)} (got ${this.actual})`
   }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      type: this.type,
+      maximum: this.maximum,
+    }
+  }
 }
 
 export class IssueTooSmall extends Issue {
@@ -138,6 +182,14 @@ export class IssueTooSmall extends Issue {
 
   toString() {
     return `${this.type} too small (minimum ${this.minimum})${stringifyPath(this.path)} (got ${this.actual})`
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      type: this.type,
+      minimum: this.minimum,
+    }
   }
 }
 

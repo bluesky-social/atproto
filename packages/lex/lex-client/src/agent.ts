@@ -39,8 +39,12 @@ export type AgentConfig = {
 
 export type AgentOptions = AgentConfig | string | URL
 
-export function buildAgent(options: AgentOptions): Agent {
-  const config: AgentConfig =
+export function buildAgent(options: Agent | AgentOptions): Agent {
+  if (typeof options === 'object' && 'fetchHandler' in options) {
+    return options
+  }
+
+  const config: Agent | AgentConfig =
     typeof options === 'string' || options instanceof URL
       ? { did: undefined, service: options }
       : options

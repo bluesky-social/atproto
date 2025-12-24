@@ -13218,6 +13218,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              didDoc: {
+                type: 'unknown',
+              },
               email: {
                 type: 'string',
               },
@@ -13226,9 +13229,6 @@ export const schemaDict = {
               },
               emailAuthFactor: {
                 type: 'boolean',
-              },
-              didDoc: {
-                type: 'unknown',
               },
               active: {
                 type: 'boolean',
@@ -13322,6 +13322,15 @@ export const schemaDict = {
               },
               didDoc: {
                 type: 'unknown',
+              },
+              email: {
+                type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
               },
               active: {
                 type: 'boolean',

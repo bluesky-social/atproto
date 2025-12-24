@@ -40,9 +40,3 @@ export type BinaryBodyInit =
   | ReadableStream<Uint8Array>
   | AsyncIterable<Uint8Array>
   | string
-
-export type Namespace<T> = T | { main: T }
-
-export function getMain<T extends object>(ns: Namespace<T>): T {
-  return 'main' in ns ? ns.main : ns
-}

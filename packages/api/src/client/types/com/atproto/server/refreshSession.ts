@@ -24,6 +24,9 @@ export interface OutputSchema {
   handle: string
   did: string
   didDoc?: { [_ in string]: unknown }
+  email?: string
+  emailConfirmed?: boolean
+  emailAuthFactor?: boolean
   active?: boolean
   /** Hosting status of the account. If not specified, then assume 'active'. */
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})

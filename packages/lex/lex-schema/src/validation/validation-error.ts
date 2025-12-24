@@ -1,3 +1,4 @@
+import { LexError } from '@atproto/lex-data'
 import { ResultFailure, failureReason } from '../core.js'
 import { arrayAgg } from '../util/array-agg.js'
 import {
@@ -6,15 +7,22 @@ import {
   IssueInvalidValue,
 } from './validation-issue.js'
 
-export class ValidationError extends Error {
+export class ValidationError extends LexError {
   name = 'ValidationError'
 
   readonly issues: Issue[]
 
   constructor(issues: Issue[], options?: ErrorOptions) {
     const issuesAgg = aggregateIssues(issues)
-    super(issuesAgg.join(', '), options)
+    super('InvalidRequest', issuesAgg.join(', '), options)
     this.issues = issuesAgg
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      issues: this.issues.map((issue) => issue.toJSON()),
+    }
   }
 
   static fromFailures(

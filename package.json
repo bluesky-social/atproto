@@ -61,6 +61,12 @@
       "cookie": "^0.7.2"
     }
   },
+  "workspace": [
+    "packages/*",
+    "packages/lex/*",
+    "packages/oauth/*",
+    "packages/internal/*"
+  ],
   "workspaces": {
     "packages": [
       "packages/*",
