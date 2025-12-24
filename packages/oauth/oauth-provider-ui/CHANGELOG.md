@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.4.0
+
+### Minor Changes
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Support selecting view based on prompt parameter
+
 ## 0.3.6
 
 ### Patch Changes
