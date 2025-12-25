@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sso.getRedirect",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["idpId", "redirectUri"],
+        "properties": {
+          "idpId": { "type": "string" },
+          "redirectUri": { "type": "string", "format": "uri" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["state"],
+          "properties": {
+            "state": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.sso.getCallback",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["state"],
+        "properties": {
+          "code": { "type": "string" },
+          "error": { "type": "string" },
+          "error_description": { "type": "string" },
+          "state": { "type": "string" }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [],
+          "properties": {}
+        }
+      }
+    }
+  }
+}
