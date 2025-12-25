@@ -7,11 +7,12 @@ import { UserMenu } from './components/UserMenu.tsx'
 export function Home() {
   return (
     <Layout nav={<UserMenu />}>
-      <div className="rounded-md bg-white p-4 shadow-md">
-        <TokenInfo />
-        <ProfileInfo />
-        <SessionInfo />
-      </div>
+      <ProfileInfo className="rounded-md bg-white shadow-md">
+        <div className="p-4">
+          <TokenInfo />
+          <SessionInfo />
+        </div>
+      </ProfileInfo>
     </Layout>
   )
 }

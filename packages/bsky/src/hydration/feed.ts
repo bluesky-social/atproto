@@ -102,6 +102,10 @@ export type FeedItem = {
   authorPinned?: boolean
 }
 
+export type GetPostsHydrationOptions = {
+  processDynamicTagsForView?: 'thread' | 'search'
+}
+
 export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
@@ -109,6 +113,8 @@ export class FeedHydrator {
     uris: string[],
     includeTakedowns = false,
     given = new HydrationMap<Post>(),
+    viewer?: string | null,
+    options: GetPostsHydrationOptions = {},
   ): Promise<Posts> {
     const [have, need] = split(uris, (uri) => given.has(uri))
     const base = have.reduce(
@@ -116,7 +122,17 @@ export class FeedHydrator {
       new HydrationMap<Post>(),
     )
     if (!need.length) return base
-    const res = await this.dataplane.getPostRecords({ uris: need })
+    const res = await this.dataplane.getPostRecords(
+      options.processDynamicTagsForView
+        ? {
+            uris: need,
+            viewerDid: viewer ?? undefined,
+            processDynamicTagsForView: options.processDynamicTagsForView,
+          }
+        : {
+            uris: need,
+          },
+    )
     return need.reduce((acc, uri, i) => {
       const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
       const violatesThreadGate = res.meta[i].violatesThreadGate

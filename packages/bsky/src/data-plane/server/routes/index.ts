@@ -22,6 +22,7 @@ import records from './records'
 import relationships from './relationships'
 import reposts from './reposts'
 import search from './search'
+import sitemap from './sitemap'
 import starterPacks from './starter-packs'
 import suggestions from './suggestions'
 import sync from './sync'
@@ -50,6 +51,7 @@ export default (db: Database, idResolver: IdResolver) =>
       ...relationships(db),
       ...reposts(db),
       ...search(db),
+      ...sitemap(),
       ...suggestions(db),
       ...sync(db),
       ...threads(db),

@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { MINUTE } from '@atproto/common'
 import { BackgroundQueue, PeriodicBackgroundTask } from '../background'
+import { dbLogger } from '../logger'
 
 export class MaterializedViewRefresher extends PeriodicBackgroundTask {
   constructor(backgroundQueue: BackgroundQueue, interval = 30 * MINUTE) {
@@ -10,7 +11,6 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
         'record_events_stats',
         'account_record_events_stats',
         'account_record_status_stats',
-        'reporter_stats',
       ]) {
         if (signal.aborted) break
 
@@ -19,9 +19,14 @@ export class MaterializedViewRefresher extends PeriodicBackgroundTask {
         // wait for the current refresh to finish before exiting. This is not
         // ideal, but it is the best we can do until Kysely provides a way to
         // cancel a query.
-        await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY ${sql.id(view)}`.execute(
-          db,
-        )
+        try {
+          await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY ${sql.id(view)}`.execute(
+            db,
+          )
+          dbLogger.info(`refreshed materialized view ${view}`)
+        } catch (err) {
+          dbLogger.error({ err, view }, 'failed to refresh materialized view')
+        }
       }
     })
   }

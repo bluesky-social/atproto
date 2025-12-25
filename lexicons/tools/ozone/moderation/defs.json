@@ -352,10 +352,10 @@
     "subjectReviewState": {
       "type": "string",
       "knownValues": [
-        "#reviewOpen",
-        "#reviewEscalated",
-        "#reviewClosed",
-        "#reviewNone"
+        "tools.ozone.moderation.defs#reviewOpen",
+        "tools.ozone.moderation.defs#reviewEscalated",
+        "tools.ozone.moderation.defs#reviewClosed",
+        "tools.ozone.moderation.defs#reviewNone"
       ]
     },
     "reviewOpen": {
@@ -398,6 +398,11 @@
         "severityLevel": {
           "type": "string",
           "description": "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.)."
+        },
+        "targetServices": {
+          "type": "array",
+          "items": { "type": "string", "knownValues": ["appview", "pds"] },
+          "description": "List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services."
         },
         "strikeCount": {
           "type": "integer",
@@ -522,14 +527,26 @@
           "format": "datetime",
           "description": "The date and time of this write operation."
         },
-        "status": {
-          "type": "string",
-          "description": "The status of the age assurance process.",
-          "knownValues": ["unknown", "pending", "assured"]
-        },
         "attemptId": {
           "type": "string",
           "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the Age Assurance process.",
+          "knownValues": ["unknown", "pending", "assured"]
+        },
+        "access": {
+          "type": "ref",
+          "ref": "app.bsky.ageassurance.defs#access"
+        },
+        "countryCode": {
+          "type": "string",
+          "description": "The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow."
+        },
+        "regionCode": {
+          "type": "string",
+          "description": "The ISO 3166-2 region code provided when beginning the Age Assurance flow."
         },
         "initIp": {
           "type": "string",
@@ -559,8 +576,13 @@
           "description": "The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.",
           "knownValues": ["assured", "reset", "blocked"]
         },
+        "access": {
+          "type": "ref",
+          "ref": "app.bsky.ageassurance.defs#access"
+        },
         "comment": {
           "type": "string",
+          "minLength": 1,
           "description": "Comment describing the reason for the override."
         }
       }
@@ -571,6 +593,7 @@
       "required": ["comment"],
       "properties": {
         "comment": {
+          "minLength": 1,
           "type": "string",
           "description": "Comment describing the reason for the revocation."
         }
@@ -670,6 +693,10 @@
           "type": "string",
           "format": "datetime",
           "description": "When the strike should expire. If not provided, the strike never expires."
+        },
+        "isDelivered": {
+          "type": "boolean",
+          "description": "Indicates whether the email was successfully delivered to the user's inbox."
         }
       }
     },

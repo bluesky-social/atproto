@@ -1,5 +1,23 @@
 # @atproto/lexicon
 
+## 0.6.0
+
+### Minor Changes
+
+- [#4416](https://github.com/bluesky-social/atproto/pull/4416) [`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Align lexicon document validation with the spec
+
+### Patch Changes
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/common-web@0.4.7
+
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/common-web@0.4.4
+
 ## 0.5.1
 
 ### Patch Changes

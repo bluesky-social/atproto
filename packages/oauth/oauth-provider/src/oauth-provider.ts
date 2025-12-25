@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
-import { LexiconResolver } from '@atproto/lexicon-resolver'
+import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
@@ -106,7 +106,7 @@ import {
 } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
 
-export { AccessTokenMode, Keyset }
+export { AccessTokenMode, Keyset, LexResolver }
 export type {
   AccessTokenPayload,
   AuthorizationRedirectParameters,
@@ -119,7 +119,6 @@ export type {
   CustomizationInput,
   ErrorHandler,
   HcaptchaConfig,
-  LexiconResolver,
   MultiLangString,
   OAuthAuthorizationServerMetadata,
   VerifyTokenPayloadOptions,
@@ -159,6 +158,11 @@ type OAuthProviderConfig = {
   metadata?: CustomMetadata
 
   /**
+   * A Lexicon resolver instance to use for fetching lexicon schemas.
+   */
+  lexResolver?: LexResolver
+
+  /**
    * A custom fetch function that can be used to fetch the client metadata from
    * the internet. By default, the fetch function is a safeFetchWrap() function
    * that protects against SSRF attacks, large responses & known bad domains. If
@@ -166,11 +170,6 @@ type OAuthProviderConfig = {
    * fetch function.
    */
   safeFetch?: typeof globalThis.fetch
-
-  /**
-   * A custom ATProto lexicon resolver
-   */
-  lexiconResolver?: LexiconResolver
 
   /**
    * A redis instance to use for replay protection. If not provided, replay
@@ -260,9 +259,9 @@ export class OAuthProvider extends OAuthVerifier {
 
     metadata,
 
-    lexiconResolver,
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
+    lexResolver = new LexResolver({ fetch: safeFetch }),
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -326,7 +325,7 @@ export class OAuthProvider extends OAuthVerifier {
       clientJwksCache,
       clientMetadataCache,
     )
-    this.lexiconManager = new LexiconManager(lexiconStore, lexiconResolver)
+    this.lexiconManager = new LexiconManager(lexiconStore, lexResolver)
     this.requestManager = new RequestManager(
       requestStore,
       this.lexiconManager,

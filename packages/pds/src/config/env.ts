@@ -1,6 +1,6 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
 
-export const readEnv = (): ServerEnvironment => {
+export function readEnv() {
   return {
     // service
     port: envInt('PDS_PORT'),
@@ -74,7 +74,7 @@ export const readEnv = (): ServerEnvironment => {
     didCacheMaxTTL: envInt('PDS_DID_CACHE_MAX_TTL'),
     resolverTimeout: envInt('PDS_ID_RESOLVER_TIMEOUT'),
     recoveryDidKey: envStr('PDS_RECOVERY_DID_KEY'),
-    serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'),
+    serviceHandleDomains: envList('PDS_SERVICE_HANDLE_DOMAINS'), // public hostname by default
     handleBackupNameservers: envList('PDS_HANDLE_BACKUP_NAMESERVERS'),
     enableDidDocWithSession: envBool('PDS_ENABLE_DID_DOC_WITH_SESSION'),
 
@@ -152,156 +152,10 @@ export const readEnv = (): ServerEnvironment => {
     proxyMaxResponseSize: envInt('PDS_PROXY_MAX_RESPONSE_SIZE'),
     proxyMaxRetries: envInt('PDS_PROXY_MAX_RETRIES'),
     proxyPreferCompressed: envBool('PDS_PROXY_PREFER_COMPRESSED'),
+
+    // lexicon resolution
+    lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),
   }
 }
 
-export type ServerEnvironment = {
-  // service
-  port?: number
-  hostname?: string
-  serviceDid?: string
-  serviceName?: string
-  version?: string
-  homeUrl?: string
-  logoUrl?: string
-  privacyPolicyUrl?: string
-  supportUrl?: string
-  termsOfServiceUrl?: string
-  contactEmailAddress?: string
-  acceptingImports?: boolean
-  maxImportSize?: number
-  blobUploadLimit?: number
-  devMode?: boolean
-  cookieSecret?: string
-
-  // OAuth
-  hcaptchaSiteKey?: string
-  hcaptchaSecretKey?: string
-  hcaptchaTokenSalt?: string
-  trustedOAuthClients?: string[]
-
-  // branding
-  lightColor?: string
-  darkColor?: string
-  primaryColor?: string
-  primaryColorContrast?: string
-  primaryColorHue?: number
-  errorColor?: string
-  errorColorContrast?: string
-  errorColorHue?: number
-  warningColor?: string
-  warningColorContrast?: string
-  warningColorHue?: number
-  successColor?: string
-  successColorContrast?: string
-  successColorHue?: number
-
-  // database
-  dataDirectory?: string
-  disableWalAutoCheckpoint?: boolean
-  accountDbLocation?: string
-  sequencerDbLocation?: string
-  didCacheDbLocation?: string
-  ssoDbLocation?: string
-
-  // actor store
-  actorStoreDirectory?: string
-  actorStoreCacheSize?: number
-
-  // blobstore: one required
-  blobstoreS3Bucket?: string
-  blobstoreDiskLocation?: string
-  blobstoreDiskTmpLocation?: string
-
-  // -- optional s3 parameters
-  blobstoreS3Region?: string
-  blobstoreS3Endpoint?: string
-  blobstoreS3ForcePathStyle?: boolean
-  blobstoreS3AccessKeyId?: string
-  blobstoreS3SecretAccessKey?: string
-  blobstoreS3UploadTimeoutMs?: number
-
-  // identity
-  didPlcUrl?: string
-  didCacheStaleTTL?: number
-  didCacheMaxTTL?: number
-  resolverTimeout?: number
-  recoveryDidKey?: string
-  serviceHandleDomains?: string[] // public hostname by default
-  handleBackupNameservers?: string[]
-  enableDidDocWithSession?: boolean
-
-  // entryway
-  entrywayUrl?: string
-  entrywayDid?: string
-  entrywayJwtVerifyKeyK256PublicKeyHex?: string
-  entrywayPlcRotationKey?: string
-
-  // invites
-  inviteRequired?: boolean
-  inviteInterval?: number
-  inviteEpoch?: number
-
-  // email
-  emailSmtpUrl?: string
-  emailFromAddress?: string
-  moderationEmailSmtpUrl?: string
-  moderationEmailAddress?: string
-
-  // subscription
-  maxSubscriptionBuffer?: number
-  repoBackfillLimitMs?: number
-
-  // appview
-  bskyAppViewUrl?: string
-  bskyAppViewDid?: string
-  bskyAppViewCdnUrlPattern?: string
-
-  // mod service
-  modServiceUrl?: string
-  modServiceDid?: string
-
-  // report service
-  reportServiceUrl?: string
-  reportServiceDid?: string
-
-  // rate limits
-  rateLimitsEnabled?: boolean
-  rateLimitBypassKey?: string
-  rateLimitBypassIps?: string[]
-
-  // redis
-  redisScratchAddress?: string
-  redisScratchPassword?: string
-
-  // crawler
-  crawlers?: string[]
-
-  // secrets
-  dpopSecret?: string
-  jwtSecret?: string
-  adminPassword?: string
-  entrywayAdminToken?: string
-
-  // keys
-  plcRotationKeyKmsKeyId?: string
-  plcRotationKeyK256PrivateKeyHex?: string
-
-  // user provided url http requests
-  disableSsrfProtection?: boolean
-
-  // fetch
-  fetchForceLogging?: boolean
-  fetchMaxResponseSize?: number
-
-  // lexicon resolver
-  lexiconDidAuthority?: string
-
-  // proxy
-  proxyAllowHTTP2?: boolean
-  proxyHeadersTimeout?: number
-  proxyBodyTimeout?: number
-  proxyMaxResponseSize?: number
-  proxyMaxRetries?: number
-  proxyPreferCompressed?: boolean
-}
+export type ServerEnvironment = Partial<ReturnType<typeof readEnv>>

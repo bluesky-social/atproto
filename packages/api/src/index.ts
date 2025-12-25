@@ -24,6 +24,7 @@ export * from './rich-text/util'
 export * from './moderation'
 export * from './moderation/types'
 export * from './mocker'
+export * from './age-assurance'
 export { DEFAULT_LABEL_SETTINGS, LABELS } from './moderation/const/labels'
 export { Agent } from './agent'
 

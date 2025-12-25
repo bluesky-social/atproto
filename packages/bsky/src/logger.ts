@@ -17,6 +17,8 @@ export const featureGatesLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:featuregates')
 export const dataplaneLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:dp')
+export const ageAssuranceLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:aa')
 export const httpLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky')
 

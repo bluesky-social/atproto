@@ -9,7 +9,7 @@ import {
 import { useClickOutside } from '../lib/use-click-outside.ts'
 import { useEscapeKey } from '../lib/use-escape-key.ts'
 import { useRandomString } from '../lib/use-random-string.ts'
-import { Button, ButtonProps } from './_button.tsx'
+import { Button, ButtonProps } from './Button.tsx'
 
 export type Item = {
   label?: ReactNode
@@ -56,7 +56,7 @@ export function ButtonDropdown({
         <div
           key="menu"
           id={dropdownId}
-          className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          className="absolute right-0 z-50 mt-2 min-w-36 origin-top-right overflow-hidden rounded-md bg-white py-1 shadow-lg ring-1 ring-gray-300 focus:outline-none"
           onClick={(event) => {
             if (!event.defaultPrevented) setOpen(false)
           }}
@@ -91,6 +91,7 @@ function Item({ item: { label, onClick, items }, ...props }: ItemProps) {
           type="button"
           role="menuitem"
           className={[
+            'flex items-center gap-2',
             'block w-full px-4 py-2 text-left text-sm text-gray-700 focus:outline-none',
             onClick ? 'hover:bg-gray-100 focus:bg-gray-100' : 'cursor-default',
           ].join(' ')}

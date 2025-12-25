@@ -1,5 +1,5 @@
 import { isAtprotoDid } from '@atproto/did'
-import { LexiconResolutionError } from '@atproto/lexicon-resolver'
+import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
@@ -270,8 +270,11 @@ export class RequestManager {
         )
       }
 
-      // force "consent" for unauthenticated, third party clients
-      parameters = { ...parameters, prompt: 'consent' }
+      // force "consent" for unauthenticated third party clients, unless they
+      // are trying to create accounts:
+      if (parameters.prompt !== 'create') {
+        parameters = { ...parameters, prompt: 'consent' }
+      }
     }
 
     // atproto extension: ensure that the login_hint is a valid handle or DID
@@ -296,7 +299,7 @@ export class RequestManager {
         await this.lexiconManager.getPermissionSetsFromScope(parameters.scope)
       } catch (err) {
         // Parse expected errors
-        if (err instanceof LexiconResolutionError) {
+        if (err instanceof LexResolverError) {
           throw new AuthorizationError(
             parameters,
             err.message,

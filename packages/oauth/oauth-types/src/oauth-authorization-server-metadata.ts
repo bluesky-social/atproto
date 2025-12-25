@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { oauthCodeChallengeMethodSchema } from './oauth-code-challenge-method.js'
 import { oauthIssuerIdentifierSchema } from './oauth-issuer-identifier.js'
+import { oauthPromptModeSchema } from './oauth-prompt-mode.js'
 import { webUriSchema } from './uri.js'
 
 /**
@@ -72,6 +73,9 @@ export const oauthAuthorizationServerMetadataSchema = z.object({
 
   // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
   client_id_metadata_document_supported: z.boolean().optional(),
+
+  // https://openid.net/specs/openid-connect-prompt-create-1_0.html#section-4.2
+  prompt_values_supported: z.array(oauthPromptModeSchema).optional(),
 })
 
 export type OAuthAuthorizationServerMetadata = z.infer<

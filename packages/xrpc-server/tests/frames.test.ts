@@ -1,5 +1,5 @@
-import * as cborx from 'cbor-x'
-import * as uint8arrays from 'uint8arrays'
+import { encode } from '@atproto/lex-cbor'
+import { ui8Equals } from '@atproto/lex-data'
 import { ErrorFrame, Frame, FrameType, MessageFrame } from '../src'
 
 describe('Frames', () => {
@@ -19,7 +19,7 @@ describe('Frames', () => {
 
     const bytes = messageFrame.toBytes()
     expect(
-      uint8arrays.equals(
+      ui8Equals(
         bytes,
         new Uint8Array([
           /*header*/ 162, 97, 116, 98, 35, 100, 98, 111, 112, 1, /*body*/ 162,
@@ -56,7 +56,7 @@ describe('Frames', () => {
 
     const bytes = errorFrame.toBytes()
     expect(
-      uint8arrays.equals(
+      ui8Equals(
         bytes,
         new Uint8Array([
           /*header*/ 161, 98, 111, 112, 32, /*body*/ 162, 101, 101, 114, 114,
@@ -81,17 +81,15 @@ describe('Frames', () => {
 
   it('parsing fails when frame is not CBOR.', async () => {
     const bytes = Buffer.from('some utf8 bytes')
-    const emptyBytes = Buffer.from('')
-    expect(() => Frame.fromBytes(bytes)).toThrow('Unexpected end of CBOR data')
-    expect(() => Frame.fromBytes(emptyBytes)).toThrow(
-      'Unexpected end of CBOR data',
-    )
+    const emptyBytes = Buffer.alloc(0)
+    expect(() => Frame.fromBytes(bytes)).toThrow()
+    expect(() => Frame.fromBytes(emptyBytes)).toThrow()
   })
 
   it('parsing fails when frame header is malformed.', async () => {
-    const bytes = uint8arrays.concat([
-      cborx.encode({ op: -2 }), // Unknown op
-      cborx.encode({ a: 'b', c: [1, 2, 3] }),
+    const bytes = Buffer.concat([
+      encode({ op: -2 }), // Unknown op
+      encode({ a: 'b', c: [1, 2, 3] }),
     ])
 
     expect(() => Frame.fromBytes(bytes)).toThrow('Invalid frame header:')
@@ -103,7 +101,7 @@ describe('Frames', () => {
       { type: '#d' },
     )
 
-    const headerBytes = cborx.encode(messageFrame.header)
+    const headerBytes = encode(messageFrame.header)
 
     expect(() => Frame.fromBytes(headerBytes)).toThrow('Missing frame body')
   })
@@ -114,9 +112,9 @@ describe('Frames', () => {
       { type: '#d' },
     )
 
-    const bytes = uint8arrays.concat([
+    const bytes = Buffer.concat([
       messageFrame.toBytes(),
-      cborx.encode({ d: 'e', f: [4, 5, 6] }),
+      encode({ d: 'e', f: [4, 5, 6] }),
     ])
 
     expect(() => Frame.fromBytes(bytes)).toThrow(
@@ -127,9 +125,9 @@ describe('Frames', () => {
   it('parsing fails when error frame has invalid body.', async () => {
     const errorFrame = new ErrorFrame({ error: 'BadOops' })
 
-    const bytes = uint8arrays.concat([
-      cborx.encode(errorFrame.header),
-      cborx.encode({ blah: 1 }),
+    const bytes = Buffer.concat([
+      encode(errorFrame.header),
+      encode({ blah: 1 }),
     ])
 
     expect(() => Frame.fromBytes(bytes)).toThrow('Invalid error frame body:')

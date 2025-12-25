@@ -1,7 +1,11 @@
+/* eslint-disable import/no-deprecated */
+
 import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
+import { Event as AgeAssuranceEventV2 } from './lexicon/types/app/bsky/ageassurance/defs'
 import { Bookmark } from './lexicon/types/app/bsky/bookmark/defs'
+import { Notification } from './lexicon/types/app/bsky/contact/defs'
 import {
   Preferences,
   SubjectActivitySubscription,
@@ -12,8 +16,12 @@ import { Method } from './proto/bsync_pb'
 type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
 
 export const Namespaces = {
+  AppBskyAgeassuranceDefsEvent:
+    'app.bsky.ageassurance.defs#event' satisfies PickNSID<AgeAssuranceEventV2>,
   AppBskyBookmarkDefsBookmark:
     'app.bsky.bookmark.defs#bookmark' satisfies PickNSID<Bookmark>,
+  AppBskyContactDefsNotification:
+    'app.bsky.contact.defs#notification' satisfies PickNSID<Notification>,
   AppBskyNotificationDefsPreferences:
     'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
   AppBskyNotificationDefsSubjectActivitySubscription:

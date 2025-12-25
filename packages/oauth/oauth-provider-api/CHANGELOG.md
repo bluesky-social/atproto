@@ -1,5 +1,19 @@
 # @atproto/oauth-provider-api
 
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-types@0.5.2
+
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-types@0.5.1
+
 ## 0.3.2
 
 ### Patch Changes

@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import fs from 'node:fs'
 import { p256 as nobleP256 } from '@noble/curves/p256'
 import { secp256k1 as nobleK256 } from '@noble/curves/secp256k1'

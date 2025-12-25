@@ -8,6 +8,7 @@ import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
+  REVIEWNONE,
   REVIEWOPEN,
   RepoView,
   RepoViewDetail,
@@ -127,7 +128,12 @@ export const getReviewState = (reviewState?: string) => {
   throw new InvalidRequestError('Invalid review state')
 }
 
-const reviewStates = new Set([REVIEWCLOSED, REVIEWESCALATED, REVIEWOPEN])
+const reviewStates = new Set([
+  REVIEWCLOSED,
+  REVIEWESCALATED,
+  REVIEWOPEN,
+  REVIEWNONE,
+])
 
 const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventTakedown',

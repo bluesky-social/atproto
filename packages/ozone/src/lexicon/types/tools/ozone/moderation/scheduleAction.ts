@@ -56,6 +56,16 @@ export interface Takedown {
   acknowledgeAccountSubjects?: boolean
   /** Names/Keywords of the policies that drove the decision. */
   policies?: string[]
+  /** Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.). */
+  severityLevel?: string
+  /** Number of strikes to assign to the user when takedown is applied. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
+  /** Email content to be sent to the user upon takedown. */
+  emailContent?: string
+  /** Subject of the email to be sent to the user upon takedown. */
+  emailSubject?: string
 }
 
 const hashTakedown = 'takedown'

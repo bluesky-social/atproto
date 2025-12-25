@@ -71,7 +71,7 @@
       "env": { "jest": true }
     },
     {
-      "files": "*.js",
+      "files": ["*.js", "*.cjs"],
       "rules": {
         "@typescript-eslint/no-var-requires": "off"
       }
@@ -94,6 +94,7 @@
       "typescript": {
         "project": [
           "tsconfig.json",
+          "packages/lex/*/tsconfig.json",
           "packages/oauth/*/tsconfig.json",
           "packages/oauth/*/tsconfig.src.json",
           "packages/internal/*/tsconfig.json",

@@ -1,5 +1,6 @@
-import * as uint8arrays from 'uint8arrays'
-import { cborDecodeMulti, cborEncode } from '@atproto/common'
+/* eslint-disable import/no-deprecated */
+
+import { LexValue, decodeAll, encode } from '@atproto/lex-cbor'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -10,37 +11,33 @@ import {
   frameHeader,
 } from './types'
 
-export abstract class Frame {
+export abstract class Frame<T extends LexValue = LexValue> {
   abstract header: FrameHeader
-  body: unknown
+  abstract body: T
+
   get op(): FrameType {
     return this.header.op
   }
   toBytes(): Uint8Array {
-    return uint8arrays.concat([cborEncode(this.header), cborEncode(this.body)])
+    return Buffer.concat([encode(this.header), encode(this.body)])
   }
-  isMessage(): this is MessageFrame<unknown> {
+  isMessage(): this is MessageFrame {
     return this.op === FrameType.Message
   }
   isError(): this is ErrorFrame {
     return this.op === FrameType.Error
   }
   static fromBytes(bytes: Uint8Array) {
-    const decoded = cborDecodeMulti(bytes)
-    if (decoded.length > 2) {
+    const [header, body, ...rest] = decodeAll(bytes)
+    if (rest.length) {
       throw new Error('Too many CBOR data items in frame')
+    } else if (body === undefined) {
+      throw new Error('Missing frame body')
     }
-    const header = decoded[0]
-    let body: unknown = kUnset
-    if (decoded.length > 1) {
-      body = decoded[1]
-    }
+
     const parsedHeader = frameHeader.safeParse(header)
     if (!parsedHeader.success) {
       throw new Error(`Invalid frame header: ${parsedHeader.error.message}`)
-    }
-    if (body === kUnset) {
-      throw new Error('Missing frame body')
     }
     const frameOp = parsedHeader.data.op
     if (frameOp === FrameType.Message) {
@@ -60,9 +57,10 @@ export abstract class Frame {
   }
 }
 
-export class MessageFrame<T = Record<string, unknown>> extends Frame {
+export class MessageFrame<T extends LexValue = LexValue> extends Frame<T> {
   header: MessageFrameHeader
   body: T
+
   constructor(body: T, opts?: { type?: string }) {
     super()
     this.header =
@@ -76,9 +74,12 @@ export class MessageFrame<T = Record<string, unknown>> extends Frame {
   }
 }
 
-export class ErrorFrame<T extends string = string> extends Frame {
+export class ErrorFrame<T extends string = string> extends Frame<
+  ErrorFrameBody<T>
+> {
   header: ErrorFrameHeader
   body: ErrorFrameBody<T>
+
   constructor(body: ErrorFrameBody<T>) {
     super()
     this.header = { op: FrameType.Error }
@@ -91,5 +92,3 @@ export class ErrorFrame<T extends string = string> extends Frame {
     return this.body.message
   }
 }
-
-const kUnset = Symbol('unset')

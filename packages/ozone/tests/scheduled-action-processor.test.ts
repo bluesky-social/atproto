@@ -19,13 +19,20 @@ describe('scheduled action processor', () => {
     }
   }
 
-  const scheduleTestAction = async (subject: string, scheduling: any) => {
+  const scheduleTestAction = async (
+    subject: string,
+    scheduling: any,
+    emailData?: { emailSubject?: string; emailContent?: string },
+  ) => {
     return await adminAgent.tools.ozone.moderation.scheduleAction(
       {
         action: {
           $type: 'tools.ozone.moderation.scheduleAction#takedown',
           comment: 'Test scheduled takedown',
           policies: ['spam'],
+          severityLevel: 'sev-1',
+          strikeCount: 1,
+          ...emailData,
         },
         subjects: [subject],
         createdBy: 'did:plc:moderator',
@@ -74,7 +81,14 @@ describe('scheduled action processor', () => {
       const testSubject = sc.dids.alice
 
       const pastTime = new Date(Date.now() - 1000).toISOString()
-      await scheduleTestAction(testSubject, { executeAt: pastTime })
+      await scheduleTestAction(
+        testSubject,
+        { executeAt: pastTime },
+        {
+          emailSubject: 'Test Email Subject',
+          emailContent: 'Test Email Content',
+        },
+      )
 
       const pendingActions = await getScheduledActions(
         ['pending'],
@@ -94,12 +108,20 @@ describe('scheduled action processor', () => {
 
       const modEvents = await getModerationEvents(testSubject, [
         'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventEmail',
       ])
-      expect(modEvents.length).toBe(1)
-
-      expect(modEvents[0].event['comment']).toContain(
-        '[SCHEDULED_ACTION] Test scheduled takedown',
+      expect(modEvents.length).toBe(2)
+      const takedownEvent = modEvents.find(
+        (e) => e.event.$type === 'tools.ozone.moderation.defs#modEventTakedown',
       )
+      const emailEvent = modEvents.find(
+        (e) => e.event.$type === 'tools.ozone.moderation.defs#modEventEmail',
+      )
+
+      expect(takedownEvent?.event['comment']).toBeDefined()
+
+      expect(emailEvent?.event['subjectLine']).toBe('Test Email Subject')
+      expect(emailEvent?.event['content']).toBe('Test Email Content')
     })
 
     it('skips actions scheduled for future execution', async () => {
@@ -202,7 +224,9 @@ describe('scheduled action processor', () => {
       // Verify the moderation event has all properties
       const modEvents = await getModerationEvents(testSubject, [
         'tools.ozone.moderation.defs#modEventTakedown',
+        'tools.ozone.moderation.defs#modEventEmail',
       ])
+      // No email was sent
       expect(modEvents.length).toBe(1)
 
       const takedownEvent = modEvents[0].event as ModEventTakedown

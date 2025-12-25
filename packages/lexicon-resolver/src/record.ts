@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { IdResolver } from '@atproto/identity'
 import { RepoRecord } from '@atproto/lexicon'

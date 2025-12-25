@@ -494,6 +494,7 @@ export class ModerationService {
 
     if (isModEventEmail(event)) {
       meta.subjectLine = event.subjectLine
+      meta.isDelivered = !!event.isDelivered
       if (event.content) {
         meta.content = event.content
       }
@@ -531,6 +532,9 @@ export class ModerationService {
       if (event.attemptId) {
         meta.attemptId = event.attemptId
       }
+      if (event.access) {
+        meta.access = event.access
+      }
       if (event.initIp) {
         meta.initIp = event.initIp
       }
@@ -547,6 +551,9 @@ export class ModerationService {
 
     if (isAgeAssuranceOverrideEvent(event)) {
       meta.status = event.status
+      if (event.access) {
+        meta.access = event.access
+      }
     }
 
     if (isScheduleTakedownEvent(event)) {
@@ -570,6 +577,10 @@ export class ModerationService {
 
     if (isModEventTakedown(event) && event.policies?.length) {
       meta.policies = event.policies.join(',')
+    }
+
+    if (isModEventTakedown(event) && event.targetServices?.length) {
+      meta.targetServices = event.targetServices.join(',')
     }
 
     // Keep trace of reports that came in while the reporter was in muted stated
@@ -773,17 +784,32 @@ export class ModerationService {
   async takedownRepo(
     subject: RepoSubject,
     takedownId: number,
+    targetServices: Set<string>,
     isSuspend = false,
   ) {
     const takedownRef = `BSKY-${
       isSuspend ? 'SUSPEND' : 'TAKEDOWN'
     }-${takedownId}`
 
-    const values = this.eventPusher.takedowns.map((eventType) => ({
-      eventType,
-      subjectDid: subject.did,
-      takedownRef,
-    }))
+    const values = this.eventPusher
+      .getTakedownServices(targetServices)
+      .map((eventType) => ({
+        eventType,
+        subjectDid: subject.did,
+        takedownRef,
+      }))
+
+    // The label is consumed by appview if we opt for appview only takedown, this is needed
+    // if we opt for pds level takedown, adding the label doesn't hurt
+    const takedownLabel = isSuspend ? SUSPEND_LABEL : TAKEDOWN_LABEL
+    await this.formatAndCreateLabels(subject.did, null, {
+      create: [takedownLabel],
+    })
+
+    // If we dont have to push any events, return early
+    if (!values.length) {
+      return
+    }
 
     const repoEvts = await this.db.db
       .insertInto('repo_push_event')
@@ -798,11 +824,6 @@ export class ModerationService {
       )
       .returning('id')
       .execute()
-
-    const takedownLabel = isSuspend ? SUSPEND_LABEL : TAKEDOWN_LABEL
-    await this.formatAndCreateLabels(subject.did, null, {
-      create: [takedownLabel],
-    })
 
     this.db.onCommit(() => {
       this.backgroundQueue.add(async () => {
@@ -849,7 +870,11 @@ export class ModerationService {
     })
   }
 
-  async takedownRecord(subject: RecordSubject, takedownId: number) {
+  async takedownRecord(
+    subject: RecordSubject,
+    takedownId: number,
+    targetServices: Set<string>,
+  ) {
     this.db.assertTransaction()
     await this.formatAndCreateLabels(subject.uri, subject.cid, {
       create: [TAKEDOWN_LABEL],
@@ -859,7 +884,9 @@ export class ModerationService {
     const blobCids = subject.blobCids
     if (blobCids && blobCids.length > 0) {
       const blobValues: Insertable<BlobPushEvent>[] = []
-      for (const eventType of this.eventPusher.takedowns) {
+      for (const eventType of this.eventPusher.getTakedownServices(
+        targetServices,
+      )) {
         for (const cid of blobCids) {
           blobValues.push({
             eventType,

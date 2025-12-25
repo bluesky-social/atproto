@@ -1,8 +1,8 @@
 import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
-import type { LexPermissionSet } from '@atproto/oauth-scopes'
-import type { OAuthClientMetadata } from '@atproto/oauth-types'
+import type { LexiconPermissionSet } from '@atproto/oauth-scopes'
+import type { OAuthClientMetadata, OAuthPromptMode } from '@atproto/oauth-types'
 
-export type PermissionSet = LexPermissionSet
+export type PermissionSet = LexiconPermissionSet
 export type PermissionSets = Record<string, undefined | PermissionSet>
 
 export type AuthorizeData = {
@@ -16,6 +16,7 @@ export type AuthorizeData = {
   scope?: string
   loginHint?: string
   uiLocales?: string
+  promptMode?: OAuthPromptMode
   permissionSets: PermissionSets
 }
 
