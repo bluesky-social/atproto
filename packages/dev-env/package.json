@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "start": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps dist/bin.js",
-    "dev": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps --watch dist/bin.js"
+    "dev": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps --watch dist/bin.js",
+    "bin:assert": "./scripts/assert-shebang.mjs"
   },
   "engines": {
     "node": ">=18.7.0"
