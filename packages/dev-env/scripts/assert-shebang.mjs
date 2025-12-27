@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+/* eslint-env node */
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { URL, fileURLToPath } from 'node:url'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
-const distPath = resolve(__dirname, '../../dist/bin.js')
+const distPath = resolve(__dirname, '../dist/bin.js')
 
 try {
   const content = readFileSync(distPath, 'utf-8')
