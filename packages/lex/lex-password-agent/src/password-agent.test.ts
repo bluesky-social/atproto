@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { Client } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import { LexError, LexRouter } from '@atproto/lex-server'
-import { Server, startServer } from '@atproto/lex-server/nodejs'
+import { Server, serve } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons.js'
 import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
 
@@ -159,7 +159,7 @@ describe('PasswordAgent', () => {
         },
       })
 
-    entrywayServer = await startServer(entrywayRouter)
+    entrywayServer = await serve(entrywayRouter)
     const { port } = entrywayServer.address() as { port: number }
     entrywayOrigin = `http://localhost:${port}`
 
@@ -180,7 +180,7 @@ describe('PasswordAgent', () => {
         throw new LexError('ExpiredToken', 'Token expired')
       })
 
-    pdsServer = await startServer(pdsRouter)
+    pdsServer = await serve(pdsRouter)
     const { port: pdsPort } = pdsServer.address() as { port: number }
     pdsOrigin = `http://localhost:${pdsPort}`
     const pdsUrl = pdsOrigin
