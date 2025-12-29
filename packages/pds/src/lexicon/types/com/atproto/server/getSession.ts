@@ -20,10 +20,10 @@ export type InputSchema = undefined
 export interface OutputSchema {
   handle: string
   did: string
+  didDoc?: { [_ in string]: unknown }
   email?: string
   emailConfirmed?: boolean
   emailAuthFactor?: boolean
-  didDoc?: { [_ in string]: unknown }
   active?: boolean
   /** If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted. */
   status?: 'takendown' | 'suspended' | 'deactivated' | (string & {})

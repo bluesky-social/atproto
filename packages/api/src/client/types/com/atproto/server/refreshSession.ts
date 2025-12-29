@@ -50,9 +50,23 @@ export class AccountTakedownError extends XRPCError {
   }
 }
 
+export class InvalidTokenError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class ExpiredTokenError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'AccountTakedown') return new AccountTakedownError(e)
+    if (e.error === 'InvalidToken') return new InvalidTokenError(e)
+    if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
   }
 
   return e

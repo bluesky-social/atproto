@@ -13019,7 +13019,13 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Delete the current session. Requires auth.',
+        description:
+          "Delete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
+        errors: [
+          {
+            name: 'InvalidToken',
+          },
+        ],
       },
     },
   },
@@ -13347,6 +13353,12 @@ export const schemaDict = {
         errors: [
           {
             name: 'AccountTakedown',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'ExpiredToken',
           },
         ],
       },
