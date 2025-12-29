@@ -12,6 +12,9 @@ export class Tap {
   private adminPassword?: string
   private authHeader?: string
 
+  private addReposUrl: URL
+  private removeReposUrl: URL
+
   constructor(url: string, config: TapConfig = {}) {
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       throw new Error('Invalid URL, expected http:// or https://')
@@ -21,6 +24,9 @@ export class Tap {
     if (this.adminPassword) {
       this.authHeader = formatAdminAuthHeader(this.adminPassword)
     }
+
+    this.addReposUrl = new URL('/repos/add', this.url)
+    this.removeReposUrl = new URL('/repos/remove', this.url)
   }
 
   private getHeaders(): Record<string, string> {
@@ -44,7 +50,7 @@ export class Tap {
   }
 
   async addRepos(dids: string[]): Promise<void> {
-    const response = await fetch(`${this.url}/repos/add`, {
+    const response = await fetch(this.addReposUrl, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({ dids }),
@@ -57,7 +63,7 @@ export class Tap {
   }
 
   async removeRepos(dids: string[]): Promise<void> {
-    const response = await fetch(`${this.url}/repos/remove`, {
+    const response = await fetch(this.removeReposUrl, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify({ dids }),
@@ -70,7 +76,7 @@ export class Tap {
   }
 
   async resolveDid(did: string): Promise<DidDocument | null> {
-    const response = await fetch(`${this.url}/resolve/${did}`, {
+    const response = await fetch(new URL(`/resolve/${did}`, this.url), {
       method: 'GET',
       headers: this.getHeaders(),
     })
@@ -85,7 +91,7 @@ export class Tap {
   }
 
   async getRepoInfo(did: string): Promise<RepoInfo> {
-    const response = await fetch(`${this.url}/info/${did}`, {
+    const response = await fetch(new URL(`/info/${did}`, this.url), {
       method: 'GET',
       headers: this.getHeaders(),
     })
