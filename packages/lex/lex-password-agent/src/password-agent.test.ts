@@ -24,21 +24,19 @@ namespace app {
     export namespace customMethod {
       export const main = l.procedure(
         'app.example.customMethod',
-        l.params({}),
-        l.jsonPayload(l.object({ message: l.string() })),
-        l.jsonPayload(
-          l.object({
-            message: l.string(),
-            did: l.string({ format: 'did' }),
-          }),
-        ),
+        l.params(),
+        l.jsonPayload({ message: l.string() }),
+        l.jsonPayload({
+          message: l.string(),
+          did: l.string({ format: 'did' }),
+        }),
       )
     }
 
     export namespace expiredToken {
       export const main = l.query(
         'app.example.expiredToken',
-        l.params({}),
+        l.params(),
         l.payload(),
       )
     }
