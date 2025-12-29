@@ -18,14 +18,57 @@ export type Session = {
 }
 
 export type PasswordAuthAgentHooks = {
+  /**
+   * Called whenever the session is successfully refreshed, and new credentials
+   * have been obtained. This function should be used to persist the updated
+   * session information. It should run quickly as any requests made while this
+   * callback is running will be blocked until it completes.
+   *
+   * If this callback returns a promise, this function will never be called
+   * again until the promise resolves.
+   *
+   * @note the provided callback should never throw
+   */
   onRefreshed?: (this: PasswordAgent, session: Session) => void | Promise<void>
+
+  /**
+   * Called whenever a session refresh fails due to an expected error, such as a
+   * network issue or server unavailability. This function can be used to log
+   * the error or notify the user, but should not assume that the session is
+   * invalid.
+   *
+   * @note the provided callback should never throw
+   */
   onRefreshFailure?: (
     this: PasswordAgent,
     session: Session,
     err: XrpcFailure<typeof com.atproto.server.refreshSession.main>,
   ) => void | Promise<void>
 
+  /**
+   * Called whenever the session is deleted, either due to an explicit logout
+   * or because the refresh operation indicated that the session is no longer
+   * valid. This function should be used to clean up any persisted session
+   * information and update the application state accordingly.
+   *
+   * @note the provided callback should never throw
+   */
   onDeleted?: (this: PasswordAgent, session: Session) => void | Promise<void>
+
+  /**
+   * Called whenever a session deletion fails due to an unexpected error, such
+   * as a network issue or server unavailability. This function can be used to
+   * log the error or notify the user. When this function is called, the session
+   * might still be valid on the server. It is up to the implementation to
+   * decide whether to retry the deletion or keep the session active. Ignoring
+   * these errors is not recommended as it can lead to orphaned sessions on the
+   * server, or security issues if the user believes they have logged out when a
+   * bad actor is still using the session. The implementation should consider
+   * keeping track of failed deletions and retrying them later, until they
+   * succeed.
+   *
+   * @note the provided callback should never throw
+   */
   onDeleteFailure?: (
     this: PasswordAgent,
     session: Session,
@@ -128,6 +171,7 @@ export class PasswordAgent implements Agent {
     // (NodeJS 👀): https://undici.nodejs.org/#/?id=garbage-collection
     await initialRes.body?.cancel()
 
+    // Finally, retry the request with the new access token
     headers.set('authorization', `Bearer ${newSession.data.accessJwt}`)
     return fetch(fetchUrl(newSession, path), { ...init, headers })
   }
@@ -136,19 +180,20 @@ export class PasswordAgent implements Agent {
     this.#sessionPromise = this.#sessionPromise.then(async (session) => {
       const response = await xrpcSafe(
         this.#sessionAgent,
-        com.atproto.server.refreshSession,
+        com.atproto.server.refreshSession.main,
         { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
 
-      if (!response.success) {
-        if (response.matchesSchema()) {
-          // Expected errors that indicate the session is no longer valid
-          await this.options.hooks?.onDeleted?.call(this, session)
-          throw response
-        }
+      if (!response.success && response.matchesSchema()) {
+        // Expected errors that indicate the session is no longer valid
+        await this.options.hooks?.onDeleted?.call(this, session)
 
+        throw response
+      }
+
+      if (!response.success) {
         // We failed to refresh the token, assume the session might still be
-        // valid.
+        // valid by returning the existing session.
         await this.options.hooks?.onRefreshFailure?.call(
           this,
           session,
@@ -158,76 +203,84 @@ export class PasswordAgent implements Agent {
         return session
       }
 
-      const newData: com.atproto.server.createSession.OutputBody = {
-        // createSession contains more fields than refreshSession
-        ...session.data,
-        ...response.body,
-      }
+      const data = response.body
 
-      // The "email", "emailConfirmed, and "emailAuthFactor" fields were
-      // recently added to the refreshSession response. Until all
-      // implementations are updated to return these fields, we need to fetch
-      // them via getSession. Similarly, some servers might not return the
-      // didDoc in refreshSession. We fetch it via getSession if missing,
-      // allowing to ensure that we are always talking with the right PDS.
-      if (!newData.email || !newData.didDoc) {
+      // Historically, refreshSession did not return all the fields from
+      // getSession. In particular, emailConfirmed and didDoc were missing.
+      // Similarly, some servers might not return the didDoc in refreshSession.
+      // We fetch them via getSession if missing, allowing to ensure that we are
+      // always talking with the right PDS.
+      if (data.emailConfirmed == null || data.didDoc == null) {
         const extraData = await xrpcSafe(
           this.#sessionAgent,
-          com.atproto.server.getSession,
-          { headers: { Authorization: `Bearer ${newData.accessJwt}` } },
+          com.atproto.server.getSession.main,
+          { headers: { Authorization: `Bearer ${data.accessJwt}` } },
         )
-        if (extraData.success && extraData.body.did === newData.did) {
-          Object.assign(newData, extraData.body)
+        if (extraData.success && extraData.body.did === data.did) {
+          Object.assign(data, extraData.body)
         }
       }
 
       const newSession: Session = {
-        data: newData,
+        data: { ...session.data, ...data },
         service: session.service,
-        pdsUrl: extractPdsUrl(newData.didDoc),
+        pdsUrl: extractPdsUrl(data.didDoc),
         refreshedAt: new Date().toISOString(),
       }
 
       await this.options.hooks?.onRefreshed?.call(this, newSession)
 
-      this.#session = newSession
-
-      return newSession
+      return (this.#session = newSession)
     })
 
     return this.#sessionPromise
   }
 
   async logout(): Promise<void> {
+    let reason: XrpcFailure<
+      typeof com.atproto.server.deleteSession.main
+    > | null = null
+
     this.#sessionPromise = this.#sessionPromise.then(async (session) => {
       const result = await xrpcSafe(
         this.#sessionAgent,
-        com.atproto.server.deleteSession,
+        com.atproto.server.deleteSession.main,
         { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
 
-      if (!result.success && !result.matchesSchema()) {
+      if (result.success || result.matchesSchema()) {
+        await this.options.hooks?.onDeleted?.call(this, session)
+
+        // Update the session promise to a rejected state
+        this.#session = null
+        throw new XrpcError('AuthenticationRequired', 'Logged out')
+      } else {
+        // Capture the reason for the failure to re-throw in the outer promise
+        reason = result
+
         // An unknown/unexpected error occurred (network, server down, etc)
         await this.options.hooks?.onDeleteFailure?.call(this, session, result)
+
+        // Keep the session in an active state
         return session
       }
-
-      await this.options.hooks?.onDeleted?.call(this, session)
-
-      throw new XrpcError('AuthenticationRequired', 'Logged out')
     })
 
     return this.#sessionPromise.then(
       (_session) => {
-        throw new XrpcError('AuthenticationRequired', 'Logout failed')
+        // If the promise above resolved, then logout failed. Re-throw the
+        // reason captured earlier.
+        throw reason!
       },
       (_err) => {
-        // Successful logout, mark this as "destroyed"
-        this.#session = null
+        // Successful logout
       },
     )
   }
 
+  /**
+   * @throws In case of unexpected error
+   */
   static async login({
     service,
     identifier,
@@ -248,13 +301,11 @@ export class PasswordAgent implements Agent {
       fetch: options.fetch,
     })
 
-    const response = await xrpcSafe(agent, com.atproto.server.createSession, {
-      body: {
-        identifier,
-        password,
-        authFactorToken,
-      },
-    })
+    const response = await xrpcSafe(
+      agent,
+      com.atproto.server.createSession.main,
+      { body: { identifier, password, authFactorToken } },
+    )
 
     if (!response.success) {
       if (response.matchesSchema()) return response
@@ -282,6 +333,8 @@ export class PasswordAgent implements Agent {
 
   /**
    * Delete a session without having to {@link resume}() first.
+   *
+   * @throws In case of unexpected error
    */
   static async delete(
     session: Session,
@@ -292,15 +345,19 @@ export class PasswordAgent implements Agent {
       fetch: options?.fetch,
     })
 
-    const result = await xrpcSafe(agent, com.atproto.server.deleteSession, {
-      headers: { Authorization: `Bearer ${session.data.refreshJwt}` },
-    })
+    const result = await xrpcSafe(
+      agent,
+      com.atproto.server.deleteSession.main,
+      {
+        headers: { Authorization: `Bearer ${session.data.refreshJwt}` },
+      },
+    )
 
     if (
       !result.success &&
       result.error !== 'AccountTakedown' &&
       result.error !== 'InvalidToken' &&
-      result.error !== 'ExpiredToken'
+      result.error !== 'ExpiredToken' // Legacy implementations support
     ) {
       throw result
     }
