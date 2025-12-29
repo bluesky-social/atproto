@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug bsky",
+      "type": "node",
+      "request": "attach",
+      "port": 12584,
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    },
+    {
+      "name": "debug bsync",
+      "type": "node",
+      "request": "attach",
+      "port": 12585,
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    },
+    {
+      "name": "debug ozone",
+      "type": "node",
+      "request": "attach",
+      "port": 12587,
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    },
+    {
+      "name": "debug pds",
+      "type": "node",
+      "request": "attach",
+      "port": 12583,
+      "sourceMaps": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/app"
+    },
+  ]
+}
