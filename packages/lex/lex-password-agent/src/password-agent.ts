@@ -296,13 +296,13 @@ export class PasswordAgent implements Agent {
     | ResultSuccess<PasswordAgent>
     | XrpcResponseError<typeof com.atproto.server.createSession.main>
   > {
-    const agent = buildAgent({
+    const xrpcAgent = buildAgent({
       service,
       fetch: options.fetch,
     })
 
     const response = await xrpcSafe(
-      agent,
+      xrpcAgent,
       com.atproto.server.createSession.main,
       { body: { identifier, password, authFactorToken } },
     )
@@ -319,7 +319,8 @@ export class PasswordAgent implements Agent {
       refreshedAt: new Date().toISOString(),
     }
 
-    return success(new PasswordAgent(session, options))
+    const agent = new PasswordAgent(session, options)
+    return success(agent)
   }
 
   static async resume(

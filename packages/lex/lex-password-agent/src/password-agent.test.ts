@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-namespace */
+
 import assert from 'node:assert'
-import { Client } from '@atproto/lex-client'
+import { Client, XrpcResponseError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
-import { LexError, LexRouter } from '@atproto/lex-server'
+import { LexAuthError, LexRouter } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons.js'
 import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
@@ -16,9 +18,9 @@ const hooks: PasswordAuthAgentHooks = {
 }
 
 // Example app lexicon
-const app = {
-  example: {
-    customMethod: l.procedure(
+namespace app {
+  export namespace example {
+    export const customMethod = l.procedure(
       'app.example.customMethod',
       l.params({}),
       l.payload('application/json', l.object({ message: l.string() })),
@@ -29,13 +31,13 @@ const app = {
           credentials: l.object({ user: l.string() }),
         }),
       ),
-    ),
-    expiredToken: l.query(
+    )
+    export const expiredToken = l.query(
       'app.example.expiredToken',
       l.params({}),
       l.payload(),
-    ),
-  },
+    )
+  }
 }
 
 describe('PasswordAgent', () => {
@@ -51,15 +53,18 @@ describe('PasswordAgent', () => {
 
     const entrywayRouter = new LexRouter()
       .add(com.atproto.server.createSession, async ({ input }) => {
-        if (input.body.authFactorToken !== '2fa-token') {
-          throw new LexError('AuthFactorTokenRequired', '2FA token is required')
-        }
-
         if (
           input.body.identifier !== 'alice' ||
           input.body.password !== 'password123'
         ) {
-          throw new LexError('ExpiredToken', 'Invalid identifier')
+          throw new LexAuthError('AuthenticationRequired', 'Invalid identifier')
+        }
+
+        if (input.body.authFactorToken !== '2fa-token') {
+          throw new LexAuthError(
+            'AuthFactorTokenRequired',
+            '2FA token is required',
+          )
         }
 
         const did = `did:example:alice`
@@ -91,7 +96,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer access-token:${sessionCount}`) {
-            throw new LexError('AuthenticationRequired', 'Invalid token')
+            throw new LexAuthError('AuthenticationRequired', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
@@ -123,7 +128,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer refresh-token:${refreshCount}`) {
-            throw new LexError('ExpiredToken', 'Invalid token')
+            throw new LexAuthError('ExpiredToken', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
@@ -148,7 +153,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer refresh-token:${refreshCount}`) {
-            throw new LexError('ExpiredToken', 'Invalid token')
+            throw new LexAuthError('ExpiredToken', 'Invalid token')
           }
           return { did: 'did:example:alice' as l.DidString }
         },
@@ -168,7 +173,7 @@ describe('PasswordAgent', () => {
         auth: async ({ request: { headers } }) => {
           const auth = headers.get('authorization')
           if (auth !== `Bearer access-token:${sessionCount}`) {
-            throw new LexError('AuthenticationRequired', 'Invalid token')
+            throw new LexAuthError('AuthenticationRequired', 'Invalid token')
           }
           return { user: 'alice' }
         },
@@ -177,7 +182,7 @@ describe('PasswordAgent', () => {
         },
       })
       .add(app.example.expiredToken, async () => {
-        throw new LexError('ExpiredToken', 'Token expired')
+        throw new LexAuthError('ExpiredToken', 'Token expired')
       })
 
     pdsServer = await serve(pdsRouter)
@@ -191,6 +196,21 @@ describe('PasswordAgent', () => {
     pdsServer.close()
   })
 
+  it('fails with invalid credentials', async () => {
+    await expect(
+      PasswordAgent.login({
+        service: entrywayOrigin,
+        identifier: 'alice',
+        password: 'wrong-password',
+        hooks,
+      }),
+    ).rejects.toMatchObject({
+      success: false,
+      status: 401,
+      error: 'AuthenticationRequired',
+    })
+  })
+
   it('requires 2fa', async () => {
     const result = await PasswordAgent.login({
       service: entrywayOrigin,
@@ -200,46 +220,48 @@ describe('PasswordAgent', () => {
     })
 
     assert(!result.success)
-    expect(result).toBeInstanceOf(LexError)
+    assert(result instanceof XrpcResponseError)
+    expect(result.status).toBe(401)
     expect(result.error).toBe('AuthFactorTokenRequired')
   })
 
   it('logs in', async () => {
-    const onDelete = jest.fn()
+    const onDeleted = jest.fn()
+    const onRefreshed = jest.fn()
+
     const result = await PasswordAgent.login({
       service: entrywayOrigin,
       identifier: 'alice',
       password: 'password123',
       authFactorToken: '2fa-token',
-      hooks: {
-        onDeleted: onDelete,
-        ...hooks,
-      },
+      hooks: { ...hooks, onDeleted, onRefreshed },
     })
+
+    expect(onRefreshed).not.toHaveBeenCalled()
 
     assert(result.success)
     const agent = result.value
     const client = new Client(agent)
 
-    expect(
-      await client.call(app.example.customMethod, { message: 'hello' }),
-    ).toMatchObject({
+    await expect(
+      client.call(app.example.customMethod, { message: 'hello' }),
+    ).resolves.toMatchObject({
       reply: 'hello',
       credentials: { user: 'alice' },
     })
 
-    expect(
-      await client.call(app.example.customMethod, { message: 'world' }),
-    ).toMatchObject({
+    await expect(
+      client.call(app.example.customMethod, { message: 'world' }),
+    ).resolves.toMatchObject({
       reply: 'world',
       credentials: { user: 'alice' },
     })
 
-    expect(onDelete).not.toHaveBeenCalled()
+    expect(onDeleted).not.toHaveBeenCalled()
 
     await agent.logout()
 
-    expect(onDelete).toHaveBeenCalled()
+    expect(onDeleted).toHaveBeenCalled()
 
     expect(
       client.call(app.example.customMethod, { message: 'hello' }),
@@ -253,10 +275,7 @@ describe('PasswordAgent', () => {
       identifier: 'alice',
       password: 'password123',
       authFactorToken: '2fa-token',
-      hooks: {
-        ...hooks,
-        onRefreshed,
-      },
+      hooks: { ...hooks, onRefreshed },
     })
 
     assert(result.success)
@@ -264,9 +283,9 @@ describe('PasswordAgent', () => {
     const agent = result.value
     const client = new Client(agent)
 
-    expect(
-      await client.call(app.example.customMethod, { message: 'before' }),
-    ).toMatchObject({
+    await expect(
+      client.call(app.example.customMethod, { message: 'before' }),
+    ).resolves.toMatchObject({
       reply: 'before',
       credentials: { user: 'alice' },
     })
@@ -295,10 +314,47 @@ describe('PasswordAgent', () => {
       }),
     )
 
-    expect(
-      await client.call(app.example.customMethod, { message: 'after' }),
-    ).toMatchObject({
+    await expect(
+      client.call(app.example.customMethod, { message: 'after' }),
+    ).resolves.toMatchObject({
       reply: 'after',
+      credentials: { user: 'alice' },
+    })
+  })
+
+  it('restores session from storage', async () => {
+    const loginResult = await PasswordAgent.login({
+      service: entrywayOrigin,
+      identifier: 'alice',
+      password: 'password123',
+      authFactorToken: '2fa-token',
+      hooks,
+    })
+
+    assert(loginResult.success)
+    const loginAgent = loginResult.value
+    const session = structuredClone(loginResult.value.session)
+
+    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = jest.fn()
+    const agent = await PasswordAgent.resume(session, {
+      hooks: { ...hooks, onRefreshed },
+    })
+
+    expect(agent.did).toEqual(loginAgent.did)
+    expect(onRefreshed).toHaveBeenCalled()
+
+    // The initial session was refreshed and is now expired
+    await expect(loginAgent.refresh()).rejects.toMatchObject({
+      success: false,
+      error: 'ExpiredToken',
+      status: 401,
+    })
+
+    const client = new Client(agent)
+    await expect(
+      client.call(app.example.customMethod, { message: 'resume' }),
+    ).resolves.toMatchObject({
+      reply: 'resume',
       credentials: { user: 'alice' },
     })
   })
