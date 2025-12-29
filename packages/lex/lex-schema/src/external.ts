@@ -57,6 +57,7 @@ import {
   UnknownSchema,
   refine,
 } from './schema.js'
+import { memoizedOptions, memoizedTransformer } from './util/memoize.js'
 import { Infer, PropertyKey, Schema, Validator } from './validation.js'
 
 export * from './core.js'
@@ -64,21 +65,17 @@ export * from './helpers.js'
 export * from './schema.js'
 export * from './validation.js'
 
-/*@__NO_SIDE_EFFECTS__*/
-export function never() {
+export const never = /*#__PURE__*/ memoizedOptions(function () {
   return new NeverSchema()
-}
+})
 
-/*@__NO_SIDE_EFFECTS__*/
-export function unknown() {
+export const unknown = /*#__PURE__*/ memoizedOptions(function () {
   return new UnknownSchema()
-}
+})
 
-/*@__NO_SIDE_EFFECTS__*/
-export function _null() {
+const _null = /*#__PURE__*/ memoizedOptions(function () {
   return new NullSchema()
-}
-
+})
 export { _null as null }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -100,63 +97,51 @@ export function _enum<const V extends null | string | number | boolean>(
 // @NOTE "enum" is a reserved keyword in JS/TS
 export { _enum as enum }
 
-const booleanSchemaSingleton = /*#__PURE__*/ new BooleanSchema()
+export const boolean = /*#__PURE__*/ memoizedOptions(
+  function boolean(options?: BooleanSchemaOptions) {
+    return new BooleanSchema(options)
+  },
+  (options) => {
+    const keys = Object.keys(options)
+    if (keys.length === 1 && keys[0] === 'default') return options.default!
+  },
+)
 
-/*@__NO_SIDE_EFFECTS__*/
-export function boolean(options?: BooleanSchemaOptions) {
-  if (!options) return booleanSchemaSingleton
-  return new BooleanSchema(options)
-}
-
-const integerSchemaSingleton = /*#__PURE__*/ new IntegerSchema()
-
-/*@__NO_SIDE_EFFECTS__*/
-export function integer(options?: IntegerSchemaOptions) {
-  if (!options) return integerSchemaSingleton
-  return new IntegerSchema(options)
-}
-
-const cidLinkSchemaSingleton = /*#__PURE__*/ new CidSchema()
-
-/*@__NO_SIDE_EFFECTS__*/
-export function cidLink(options?: CidSchemaOptions) {
-  if (!options) return cidLinkSchemaSingleton
-  return new CidSchema(options)
-}
-
-const bytesSchemaSingleton = /*#__PURE__*/ new BytesSchema()
-
-/*@__NO_SIDE_EFFECTS__*/
-export function bytes(options?: BytesSchemaOptions) {
-  if (!options) return bytesSchemaSingleton
-  return new BytesSchema(options)
-}
-
-/*@__NO_SIDE_EFFECTS__*/
-export function blob<O extends BlobSchemaOptions = NonNullable<unknown>>(
-  options: O = {} as O,
+export const integer = /*#__PURE__*/ memoizedOptions(function (
+  options?: IntegerSchemaOptions,
 ) {
+  return new IntegerSchema(options)
+})
+
+export const cidLink = /*#__PURE__*/ memoizedOptions(function (
+  options?: CidSchemaOptions,
+) {
+  return new CidSchema(options)
+})
+
+export const bytes = /*#__PURE__*/ memoizedOptions(function (
+  options?: BytesSchemaOptions,
+) {
+  return new BytesSchema(options)
+})
+
+export const blob = /*#__PURE__*/ memoizedOptions(function <
+  O extends BlobSchemaOptions = NonNullable<unknown>,
+>(options: O = {} as O) {
   return new BlobSchema(options)
-}
+})
 
-const stringSchemaSingleton = /*#__PURE__*/ new StringSchema({})
-const stringFormatSchemaSingletons: Record<string, StringSchema> = {
-  // @ts-expect-error
-  __proto__: null,
-}
-
-/*@__NO_SIDE_EFFECTS__*/
-export function string<
-  const O extends StringSchemaOptions = NonNullable<unknown>,
->(options: StringSchemaOptions & O = {} as O) {
-  const keys = Object.keys(options)
-  if (!keys.length) return stringSchemaSingleton
-  if (keys.length === 1 && keys[0] === 'format') {
-    return (stringFormatSchemaSingletons[options.format!] ??=
-      new StringSchema<O>(options))
-  }
-  return new StringSchema<O>(options)
-}
+export const string = /*#__PURE__*/ memoizedOptions(
+  function <const O extends StringSchemaOptions = NonNullable<unknown>>(
+    options: StringSchemaOptions & O = {} as O,
+  ) {
+    return new StringSchema<O>(options)
+  },
+  (options) => {
+    const keys = Object.keys(options)
+    if (keys.length === 1 && keys[0] === 'default') return options.default!
+  },
+)
 
 /*@__NO_SIDE_EFFECTS__*/
 export function regexp<T extends string = string>(pattern: RegExp) {
@@ -195,10 +180,9 @@ export function dict<
 // Utility
 export type { UnknownObjectOutput as UnknownObject }
 
-/*@__NO_SIDE_EFFECTS__*/
-export function unknownObject() {
+export const unknownObject = /*#__PURE__*/ memoizedOptions(function () {
   return new UnknownObjectSchema()
-}
+})
 
 /*@__NO_SIDE_EFFECTS__*/
 export function ref<T>(get: RefSchemaGetter<T>) {
@@ -214,15 +198,17 @@ export function custom<T>(
   return new CustomSchema<T>(assertion, message, path)
 }
 
-/*@__NO_SIDE_EFFECTS__*/
-export function nullable<const S extends Validator>(schema: S) {
+export const nullable = /*#__PURE__*/ memoizedTransformer(function <
+  const S extends Validator,
+>(schema: S) {
   return new NullableSchema<Infer<S>>(schema)
-}
+})
 
-/*@__NO_SIDE_EFFECTS__*/
-export function optional<const S extends Validator>(schema: S) {
+export const optional = /*#__PURE__*/ memoizedTransformer(function <
+  const S extends Validator,
+>(schema: S) {
   return new OptionalSchema<Infer<S>>(schema)
-}
+})
 
 /*@__NO_SIDE_EFFECTS__*/
 export function union<const V extends UnionSchemaValidators>(validators: V) {
@@ -349,12 +335,11 @@ export function record<
   return new RecordSchema<K, T, S>(key, type, schema)
 }
 
-/*@__NO_SIDE_EFFECTS__*/
-export function params<
+export const params = /*#__PURE__*/ memoizedOptions(function <
   const P extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: P = {} as P) {
   return new ParamsSchema<P>(properties)
-}
+})
 
 /*@__NO_SIDE_EFFECTS__*/
 export function payload<
