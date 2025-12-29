@@ -10,7 +10,7 @@ import { AuthVerifier } from './password-agent-utils.test.js'
 import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
 
 const hooks: PasswordAuthAgentHooks = {
-  onRefreshFailure(session, cause) {
+  onRefreshFailure: async (session, cause) => {
     throw new Error('Should not fail to refresh session', { cause })
   },
   onDeleteFailure: async (session, cause) => {
@@ -21,23 +21,25 @@ const hooks: PasswordAuthAgentHooks = {
 // Example app lexicon
 namespace app {
   export namespace example {
-    export const customMethod = l.procedure(
-      'app.example.customMethod',
-      l.params({}),
-      l.payload('application/json', l.object({ message: l.string() })),
-      l.payload(
-        'application/json',
-        l.object({
+    export namespace customMethod {
+      export const main = l.procedure(
+        'app.example.customMethod',
+        l.params({}),
+        l.jsonPayload({ message: l.string() }),
+        l.jsonPayload({
           message: l.string(),
           did: l.string({ format: 'did' }),
         }),
-      ),
-    )
-    export const expiredToken = l.query(
-      'app.example.expiredToken',
-      l.params({}),
-      l.payload(),
-    )
+      )
+    }
+
+    export namespace expiredToken {
+      export const main = l.query(
+        'app.example.expiredToken',
+        l.params({}),
+        l.payload(),
+      )
+    }
   }
 }
 
@@ -106,7 +108,7 @@ describe('PasswordAgent', () => {
       .add(com.atproto.server.refreshSession, {
         auth: authVerifier.refreshStrategy,
         handler: async ({ credentials: { session } }) => {
-          session.rotate()
+          await session.rotate()
 
           // Note, we omit email and didDoc here to test that they are properly
           // fetched via getSession in the agent
@@ -128,7 +130,7 @@ describe('PasswordAgent', () => {
       .add(com.atproto.server.deleteSession, {
         auth: authVerifier.refreshStrategy,
         handler: async ({ credentials: { session } }) => {
-          session?.destroy()
+          await session.destroy()
           return {}
         },
       })
@@ -321,5 +323,26 @@ describe('PasswordAgent', () => {
       message: 'resume',
       did: 'did:example:carla',
     })
+  })
+
+  it('silently ignores expected logout errors', async () => {
+    const result = await PasswordAgent.login({
+      service: entrywayOrigin,
+      identifier: 'dave',
+      password: 'password123',
+      authFactorToken: '2fa-token',
+      hooks,
+    })
+
+    assert(result.success)
+    const agent = result.value
+
+    const session = structuredClone(agent.session)
+
+    await agent.logout()
+    await agent.logout()
+
+    await PasswordAgent.delete(session)
+    await PasswordAgent.delete(session)
   })
 })

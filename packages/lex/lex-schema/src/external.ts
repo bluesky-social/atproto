@@ -341,6 +341,13 @@ export function payload<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
+export function jsonPayload<const P extends ObjectSchemaShape>(
+  properties: P,
+): Payload<'application/json', ObjectSchema<P>> {
+  return payload('application/json', object(properties))
+}
+
+/*@__NO_SIDE_EFFECTS__*/
 export function query<
   const N extends NsidString,
   const P extends ParamsSchema,
