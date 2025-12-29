@@ -1082,6 +1082,9 @@ importers:
         specifier: ^8.18.3
         version: 8.18.3
     devDependencies:
+      '@atproto/lex':
+        specifier: workspace:*
+        version: link:../lex
       '@atproto/lex-client':
         specifier: workspace:*
         version: link:../lex-client

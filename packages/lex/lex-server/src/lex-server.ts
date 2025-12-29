@@ -374,7 +374,7 @@ export class LexRouter {
             }
 
             // Only report unexpected processing errors
-            if (onHandlerError && !isSignalAbortReason(request.signal, error)) {
+            if (onHandlerError && !isAbortReason(request.signal, error)) {
               await onHandlerError({ error, request, method })
             }
           }
@@ -395,7 +395,7 @@ export class LexRouter {
     try {
       // Only report unexpected processing errors
       const { onHandlerError } = this.options
-      if (onHandlerError && !isSignalAbortReason(request.signal, error)) {
+      if (onHandlerError && !isAbortReason(request.signal, error)) {
         await onHandlerError({ error, request, method })
       }
     } finally {
@@ -537,7 +537,8 @@ function encodeMessageFrame(method: Subscription, value: LexValue): Uint8Array {
   return ui8Concat([UNKNOWN_MESSAGE_FRAME_HEADER, encode(value)])
 }
 
-function isSignalAbortReason(signal: AbortSignal, error: unknown): boolean {
+function isAbortReason(signal: AbortSignal, error: unknown): boolean {
+  if (!signal.aborted || signal.reason == null) return false
   return (
     error === signal.reason ||
     (error instanceof Error && error.cause === signal.reason)

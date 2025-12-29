@@ -333,6 +333,7 @@ describe('PasswordAgent', () => {
 
     assert(loginResult.success)
     const loginAgent = loginResult.value
+    expect(loginAgent.did).toEqual('did:example:alice')
     const session = structuredClone(loginResult.value.session)
 
     const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = jest.fn()
@@ -340,7 +341,7 @@ describe('PasswordAgent', () => {
       hooks: { ...hooks, onRefreshed },
     })
 
-    expect(agent.did).toEqual(loginAgent.did)
+    expect(agent.did).toEqual('did:example:alice')
     expect(onRefreshed).toHaveBeenCalled()
 
     // The initial session was refreshed and is now expired

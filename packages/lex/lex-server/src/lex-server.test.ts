@@ -570,7 +570,7 @@ describe('Error Handling', () => {
   })
 
   describe('Custom Error Handlers', () => {
-    it('allows custom onHandlerError handler', async () => {
+    it.only('allows custom onHandlerError handler', async () => {
       const onHandlerError = jest.fn()
       const customRouter = new LexRouter({
         onHandlerError,

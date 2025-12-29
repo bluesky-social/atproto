@@ -1,8 +1,8 @@
 #! /usr/bin/env node
 
+/* eslint-env node */
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable n/no-extraneous-import */
-/* eslint-env node */
 
 import { scheduler } from 'node:timers/promises'
 import { l } from '@atproto/lex'
