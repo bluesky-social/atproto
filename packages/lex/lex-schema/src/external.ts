@@ -98,7 +98,7 @@ export function _enum<const V extends null | string | number | boolean>(
 export { _enum as enum }
 
 export const boolean = /*#__PURE__*/ memoizedOptions(
-  function boolean(options?: BooleanSchemaOptions) {
+  function (options?: BooleanSchemaOptions) {
     return new BooleanSchema(options)
   },
   (options) => {
@@ -131,17 +131,11 @@ export const blob = /*#__PURE__*/ memoizedOptions(function <
   return new BlobSchema(options)
 })
 
-export const string = /*#__PURE__*/ memoizedOptions(
-  function <const O extends StringSchemaOptions = NonNullable<unknown>>(
-    options: StringSchemaOptions & O = {} as O,
-  ) {
-    return new StringSchema<O>(options)
-  },
-  (options) => {
-    const keys = Object.keys(options)
-    if (keys.length === 1 && keys[0] === 'default') return options.default!
-  },
-)
+export const string = /*#__PURE__*/ memoizedOptions(function <
+  const O extends StringSchemaOptions = NonNullable<unknown>,
+>(options: StringSchemaOptions & O = {} as O) {
+  return new StringSchema<O>(options)
+})
 
 /*@__NO_SIDE_EFFECTS__*/
 export function regexp<T extends string = string>(pattern: RegExp) {
