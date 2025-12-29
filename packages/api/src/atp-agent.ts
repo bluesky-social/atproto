@@ -23,8 +23,6 @@ import {
   AtpSessionData,
 } from './types'
 
-const AUTH_ERRORS = ['ExpiredToken', 'InvalidToken']
-
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
@@ -227,7 +225,7 @@ export class CredentialSession implements SessionManager {
     }
     const isExpiredToken =
       initialRes.status === 401 ||
-      (await isErrorResponse(initialRes, [400], AUTH_ERRORS))
+      (await isErrorResponse(initialRes, [400], ['ExpiredToken']))
 
     if (!isExpiredToken) {
       return initialRes
@@ -510,7 +508,7 @@ export class CredentialSession implements SessionManager {
           err instanceof XRPCError &&
           (err.status === 401 ||
             err.error === 'InvalidDID' ||
-            AUTH_ERRORS.includes(err.error))
+            ['ExpiredToken', 'InvalidToken'].includes(err.error))
         ) {
           // failed due to a bad refresh token
           this.session = undefined
