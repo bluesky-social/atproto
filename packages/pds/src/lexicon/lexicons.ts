@@ -13025,6 +13025,9 @@ export const schemaDict = {
           {
             name: 'InvalidToken',
           },
+          {
+            name: 'ExpiredToken',
+          },
         ],
       },
     },
