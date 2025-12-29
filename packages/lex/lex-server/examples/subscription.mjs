@@ -4,6 +4,7 @@
 /* eslint-disable n/no-extraneous-import */
 /* eslint-env node */
 
+import { scheduler } from 'node:timers/promises'
 import { l } from '@atproto/lex'
 import { LexError, LexRouter } from '@atproto/lex-server'
 import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
@@ -23,36 +24,46 @@ const main = l.subscription(
   l.params({
     message: l.string({ minLength: 1 }),
     cursor: l.optional(l.integer({ minimum: 0, default: 0 })),
+    limit: l.optional(l.integer({ minimum: 1, maximum: 100, default: 10 })),
   }),
   l.typedUnion([l.typedRef(() => message)], false),
-  ['Completed'],
+  ['LimitReached'],
 )
 const com = { example: { echo: { main, message } } }
 
-const router = new LexRouter({ upgradeWebSocket })
+const router = new LexRouter({
+  upgradeWebSocket,
+  onHandlerError: ({ error }) => {
+    console.error('Handler error:', error)
+  },
+})
   //
-  .add(com.example.echo, async function* ({ params: { cursor = 0, message } }) {
-    for (let i = 0; ; i++) {
-      yield com.example.echo.message.$build({ message, cursor: cursor + i })
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      if (i >= 10) {
-        throw new LexError(
-          'Completed',
-          'Subscription stopped after 10 messages. Reconnect to continue receiving messages.',
-        )
-      }
+  .add(com.example.echo, async function* ({ request, params }) {
+    const { message, cursor = 0, limit = 10 } = params
+    const { signal } = request
+
+    for (let i = 0; i < limit; i++) {
+      yield com.example.echo.message.$build({
+        message: message,
+        cursor: cursor + i,
+      })
+
+      // Wait 1 second between messages (stop waiting if the request is aborted)
+      await scheduler.wait(1_000, { signal })
     }
+
+    throw new LexError(
+      'LimitReached',
+      `Subscription stopped after ${limit} messages. Reconnect to continue receiving messages.`,
+    )
   })
 
 serve(
   async (request, info) => {
-    if (request.url.includes('/xrpc/')) {
-      const response = await router.handle(request, info)
-      response.headers.set('Access-Control-Allow-Origin', '*')
-      response.headers.set('Access-Control-Allow-Methods', 'GET, POST')
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
-      response.headers.set('Access-Control-Max-Age', '86400')
-      return response
+    const url = new URL(request.url)
+
+    if (url.pathname.startsWith('/xrpc/')) {
+      return router.handle(request, info)
     }
 
     return indexHtml()
@@ -63,7 +74,7 @@ serve(
 function indexHtml() {
   return new Response(
     html`
-      <h1>Not Found</h1>
+      <h1>Open dev tools and look at the console</h1>
       <script type="module">
         import { decodeMultiple } from 'https://cdn.jsdelivr.net/npm/cbor-x@1.6.0/+esm'
 
@@ -76,7 +87,7 @@ function indexHtml() {
 
         const url = 'ws://' + host + '/xrpc/' + nsid + '?' + params.toString()
 
-        window.ws = new WebSocket(url)
+        const ws = new WebSocket(url)
         ws.binaryType = 'arraybuffer'
 
         ws.addEventListener('message', async (event) => {
@@ -94,9 +105,9 @@ function indexHtml() {
               data.$type = header.t.startsWith('#') ? nsid + header.t : header.t
             }
 
-            console.log('Data', data)
+            console.log('Message frame', data)
           } else if (header.op === -1) {
-            console.warn('Error', data)
+            console.warn('Error frame', data)
           } else {
             console.warn('Unknown message', header, data)
           }
@@ -113,10 +124,13 @@ function indexHtml() {
         setTimeout(() => {
           ws.close()
         }, 20_000)
+
+        // Expose for debugging
+        window.ws = ws
       </script>
     `,
     {
-      status: 404,
+      status: 200,
       headers: { 'content-type': 'text/html' },
     },
   )

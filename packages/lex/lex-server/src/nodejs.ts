@@ -227,7 +227,8 @@ async function handle(
 ) {
   const request = toRequest(req, res)
 
-  // Attach the original NativeRequest for access to Node.js-specific properties
+  // Attach the original ServerResponse for access to Node.js-specific
+  // properties
   Object.defineProperty(request, kServerResponse, {
     value: res,
     enumerable: false,

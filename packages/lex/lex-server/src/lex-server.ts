@@ -1,5 +1,5 @@
 import { encode } from '@atproto/lex-cbor'
-import { LexError, LexValue, isLexMap, ui8Concat } from '@atproto/lex-data'
+import { LexError, LexValue, isPlainObject, ui8Concat } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   InferMethodInput,
@@ -81,18 +81,18 @@ export type LexRouterMethodConfig<
   auth: LexRouterAuth<Method, Credentials>
 }
 
-export type LexRouterSubHandler<
+export type LexRouterSubscriptionHandler<
   Method extends Subscription = Subscription,
   Credentials = unknown,
 > = (
   ctx: LexRouterHandlerContext<Method, Credentials>,
 ) => AsyncIterable<InferMethodMessage<Method>>
 
-export type LexRouterSubConfig<
+export type LexRouterSubscriptionConfig<
   Method extends Subscription = Subscription,
   Credentials = unknown,
 > = {
-  handler: LexRouterSubHandler<Method, Credentials>
+  handler: LexRouterSubscriptionHandler<Method, Credentials>
   auth: LexRouterAuth<Method, Credentials>
 }
 
@@ -113,12 +113,13 @@ export type LexErrorHandlerContext = {
   method: LexMethod
 }
 
-export type LexRouterOptions = {
-  upgradeWebSocket?: (request: Request) => {
-    socket: WebSocket
-    response: Response
-  }
+export type UpgradeWebSocket = (request: Request) => {
+  socket: WebSocket
+  response: Response
+}
 
+export type LexRouterOptions = {
+  upgradeWebSocket?: UpgradeWebSocket
   onHandlerError?: (ctx: LexErrorHandlerContext) => void | Promise<void>
 }
 
@@ -129,11 +130,11 @@ export class LexRouter {
 
   add<M extends Subscription>(
     ns: Main<M>,
-    handler: LexRouterSubHandler<M, void>,
+    handler: LexRouterSubscriptionHandler<M, void>,
   ): this
   add<M extends Subscription, Credentials>(
     ns: Main<M>,
-    config: LexRouterSubConfig<M, Credentials>,
+    config: LexRouterSubscriptionConfig<M, Credentials>,
   ): this
   add<M extends Query | Procedure>(
     ns: Main<M>,
@@ -146,8 +147,8 @@ export class LexRouter {
   add<M extends LexMethod>(
     ns: Main<M>,
     config:
-      | LexRouterSubHandler<any, any>
-      | LexRouterSubConfig<any, any>
+      | LexRouterSubscriptionHandler<any, any>
+      | LexRouterSubscriptionConfig<any, any>
       | LexRouterMethodHandler<any, any>
       | LexRouterMethodConfig<any, any>,
   ) {
@@ -164,7 +165,7 @@ export class LexRouter {
       method.type === 'subscription'
         ? this.buildSubscriptionHandler(
             method,
-            methodConfig.handler as LexRouterSubHandler<any, any>,
+            methodConfig.handler as LexRouterSubscriptionHandler<any, any>,
             methodConfig.auth,
           )
         : this.buildMethodHandler(
@@ -178,16 +179,6 @@ export class LexRouter {
     return this
   }
 
-  private buildMethodHandler<Method extends Query | Procedure>(
-    method: Method,
-    methodHandler: LexRouterMethodHandler<Method, void>,
-    auth?: LexRouterAuth<Method, void>,
-  ): Handler
-  private buildMethodHandler<Method extends Query | Procedure, Credentials>(
-    method: Method,
-    methodHandler: LexRouterMethodHandler<Method, Credentials>,
-    auth: LexRouterAuth<Method, Credentials>,
-  ): Handler
   private buildMethodHandler<Method extends Query | Procedure, Credentials>(
     method: Method,
     methodHandler: LexRouterMethodHandler<Method, Credentials>,
@@ -238,8 +229,7 @@ export class LexRouter {
           return output
         }
 
-        // @NOTE we don't validate the output here, as it should be the
-        // responsibility of the handler to ensure it returns valid output.
+        // @TODO add validation of output based on method.output.schema?
 
         if (output.body === undefined && output.encoding === undefined) {
           return new Response(null, { status: 200, headers: output.headers })
@@ -263,13 +253,18 @@ export class LexRouter {
 
   private buildSubscriptionHandler<Method extends Subscription, Credentials>(
     method: Method,
-    methodHandler: LexRouterSubHandler<Method, Credentials>,
+    methodHandler: LexRouterSubscriptionHandler<Method, Credentials>,
     auth?: LexRouterAuth<Method, Credentials>,
   ): Handler {
-    const { upgradeWebSocket } = this.options
+    const {
+      onHandlerError,
+      upgradeWebSocket = (globalThis as any).Deno?.upgradeWebSocket as
+        | UpgradeWebSocket
+        | undefined,
+    } = this.options
     if (!upgradeWebSocket) {
       throw new TypeError(
-        'WebSocket upgrade not supported in this environment. Please provide an upgradeWebSocket function in the options.',
+        'WebSocket upgrade not supported in this environment. Please provide an upgradeWebSocket option when creating the LexRouter.',
       )
     }
 
@@ -304,7 +299,7 @@ export class LexRouter {
             'InvalidRequest',
             'XRPC subscriptions do not accept messages',
           )
-          socket.send(encodeError(error))
+          socket.send(encodeErrorFrame(error))
           socket.close(1008, error.error)
         })
 
@@ -352,42 +347,35 @@ export class LexRouter {
               // Should not be needed (socket would emit "close" event)
               request.signal.throwIfAborted()
 
-              const data = encodeMessage(method, result.value)
+              // @TODO add validation of output based on method.output.schema?
 
-              if (socket.send.length === 3) {
-                // Node.js WebSocket implementation supports a callback for
-                // send(), allowing to await backpressure
-                await new Promise<void>((resolve, reject) => {
-                  // @ts-expect-error
-                  socket.send(data, undefined, (err) => {
-                    if (err) reject(err)
-                    else resolve()
-                  })
-                })
-              } else {
-                await socket.send(data)
-              }
+              const data = encodeMessageFrame(method, result.value)
+
+              socket.send(data)
+
+              // Apply backpressure based on WebSocket bufferedAmount (uses
+              // polling).
+              await flowControl(socket, request.signal)
             }
 
             socket.close(1000)
           } catch (error) {
-            if (socket.readyState !== 1) return
+            // If the socket is still open, send an error frame before closing
+            if (socket.readyState === 1) {
+              const lexError =
+                error instanceof LexError
+                  ? error
+                  : new LexError('InternalError', 'An internal error occurred')
 
-            const lexError =
-              error instanceof LexError ? error : new LexError('InternalError')
+              socket.send(encodeErrorFrame(lexError))
 
-            socket.send(encodeError(lexError))
-
-            // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-            socket.close(1008, lexError.error)
+              // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+              socket.close(1008, lexError.error)
+            }
 
             // Only report unexpected processing errors
-            if (error !== request.signal.reason) {
-              this.options?.onHandlerError?.call(null, {
-                error,
-                request,
-                method,
-              })
+            if (onHandlerError && !isSignalAbortReason(request.signal, error)) {
+              await onHandlerError({ error, request, method })
             }
           }
         })
@@ -405,11 +393,10 @@ export class LexRouter {
     error: unknown,
   ) {
     try {
-      if (error !== request.signal.reason) {
-        const { onHandlerError } = this.options
-        if (onHandlerError) {
-          await onHandlerError({ request, method, error })
-        }
+      // Only report unexpected processing errors
+      const { onHandlerError } = this.options
+      if (onHandlerError && !isSignalAbortReason(request.signal, error)) {
+        await onHandlerError({ error, request, method })
       }
     } finally {
       if (!request.bodyUsed) await request.body?.cancel()
@@ -519,17 +506,24 @@ async function getQueryInput<M extends Query>(
   return undefined as InferMethodInput<M, Body>
 }
 
-function encodeError(error: LexError): Uint8Array {
-  return ui8Concat([encode({ op: -1 }), encode(error.toJSON())])
+// Pre-encoded frame header for error frames
+const ERROR_FRAME_HEADER = /*#__PURE__*/ encode({ op: -1 })
+
+function encodeErrorFrame(error: LexError): Uint8Array {
+  return ui8Concat([ERROR_FRAME_HEADER, encode(error.toJSON())])
 }
 
-function encodeMessage(method: Subscription, value: LexValue): Uint8Array {
-  if (isLexMap(value) && typeof value.$type === 'string') {
+// Pre-encoded frame header for message frames with unknown type
+const UNKNOWN_MESSAGE_FRAME_HEADER = /*#__PURE__*/ encode({ op: 1 })
+
+function encodeMessageFrame(method: Subscription, value: LexValue): Uint8Array {
+  if (isPlainObject(value) && typeof value.$type === 'string') {
     const { $type, ...rest } = value
     return ui8Concat([
       encode({
         op: 1,
         t:
+          // If $type starts with `nsid#`, strip the NSID prefix
           $type.charCodeAt(0) !== 0x23 && // '#'
           $type.charCodeAt(method.nsid.length) === 0x23 && // '#'
           $type.startsWith(method.nsid)
@@ -540,5 +534,44 @@ function encodeMessage(method: Subscription, value: LexValue): Uint8Array {
     ])
   }
 
-  return ui8Concat([encode({ op: 1 }), encode(value)])
+  return ui8Concat([UNKNOWN_MESSAGE_FRAME_HEADER, encode(value)])
+}
+
+function isSignalAbortReason(signal: AbortSignal, error: unknown): boolean {
+  return (
+    error === signal.reason ||
+    (error instanceof Error && error.cause === signal.reason)
+  )
+}
+
+const HIGH_WATER_MARK = 250_000 // 250 KB
+const LOW_WATER_MARK = 50_000 // 50 KB
+
+async function flowControl(
+  socket: WebSocket,
+  signal: AbortSignal,
+): Promise<void> {
+  if (socket.bufferedAmount > HIGH_WATER_MARK) {
+    while (socket.readyState === 1 && socket.bufferedAmount > LOW_WATER_MARK) {
+      await sleep(10, signal)
+    }
+  }
+}
+
+async function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  signal.throwIfAborted()
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+
+    const onAbort = () => {
+      clearTimeout(timeout)
+      reject(signal.reason)
+    }
+
+    signal.addEventListener('abort', onAbort)
+  })
 }
