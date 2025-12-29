@@ -100,23 +100,35 @@ export function _enum<const V extends null | string | number | boolean>(
 // @NOTE "enum" is a reserved keyword in JS/TS
 export { _enum as enum }
 
+const booleanSchemaSingleton = /*#__PURE__*/ new BooleanSchema()
+
 /*@__NO_SIDE_EFFECTS__*/
 export function boolean(options?: BooleanSchemaOptions) {
+  if (!options) return booleanSchemaSingleton
   return new BooleanSchema(options)
 }
 
+const integerSchemaSingleton = /*#__PURE__*/ new IntegerSchema()
+
 /*@__NO_SIDE_EFFECTS__*/
 export function integer(options?: IntegerSchemaOptions) {
+  if (!options) return integerSchemaSingleton
   return new IntegerSchema(options)
 }
 
+const cidLinkSchemaSingleton = /*#__PURE__*/ new CidSchema()
+
 /*@__NO_SIDE_EFFECTS__*/
 export function cidLink(options?: CidSchemaOptions) {
+  if (!options) return cidLinkSchemaSingleton
   return new CidSchema(options)
 }
 
+const bytesSchemaSingleton = /*#__PURE__*/ new BytesSchema()
+
 /*@__NO_SIDE_EFFECTS__*/
 export function bytes(options?: BytesSchemaOptions) {
+  if (!options) return bytesSchemaSingleton
   return new BytesSchema(options)
 }
 
@@ -127,10 +139,22 @@ export function blob<O extends BlobSchemaOptions = NonNullable<unknown>>(
   return new BlobSchema(options)
 }
 
+const stringSchemaSingleton = /*#__PURE__*/ new StringSchema({})
+const stringFormatSchemaSingletons: Record<string, StringSchema> = {
+  // @ts-expect-error
+  __proto__: null,
+}
+
 /*@__NO_SIDE_EFFECTS__*/
 export function string<
   const O extends StringSchemaOptions = NonNullable<unknown>,
 >(options: StringSchemaOptions & O = {} as O) {
+  const keys = Object.keys(options)
+  if (!keys.length) return stringSchemaSingleton
+  if (keys.length === 1 && keys[0] === 'format') {
+    return (stringFormatSchemaSingletons[options.format!] ??=
+      new StringSchema<O>(options))
+  }
   return new StringSchema<O>(options)
 }
 
