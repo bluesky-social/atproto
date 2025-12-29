@@ -338,7 +338,7 @@ export class AppContext {
             sequencer,
             plcClient,
             plcRotationKey,
-            cfg.service.publicUrl,
+            cfg.service.publicUrl2,
             cfg.identity.recoveryDidKey,
           ),
           redis: redisScratch,

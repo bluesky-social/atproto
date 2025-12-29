@@ -11,15 +11,20 @@ import { ServerEnvironment } from './env'
 export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const port = env.port ?? 2583
   const hostname = env.hostname ?? 'localhost'
-  const publicUrl =
+
+  // TODO: need to untangle this mess somehow.
+  const publicUrl2 =
     hostname === 'localhost'
       ? `http://localhost:${port}`
       : `https://${hostname}`
+  const publicUrl = env.publicUrl!
+
   const did = env.serviceDid ?? `did:web:${hostname}`
   const serviceCfg: ServerConfig['service'] = {
     port,
     hostname,
     publicUrl,
+    publicUrl2,
     did,
     version: env.version, // default?
     privacyPolicyUrl: env.privacyPolicyUrl,
@@ -260,7 +265,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         provider: undefined,
       }
     : {
-        issuer: serviceCfg.publicUrl,
+        issuer: serviceCfg.publicUrl2,
         provider: {
           hcaptcha:
             env.hcaptchaSiteKey &&
@@ -379,6 +384,7 @@ export type ServiceConfig = {
   port: number
   hostname: string
   publicUrl: string
+  publicUrl2: string
   did: string
   version?: string
   privacyPolicyUrl?: string
