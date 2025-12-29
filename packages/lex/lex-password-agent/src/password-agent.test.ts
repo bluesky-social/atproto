@@ -25,11 +25,13 @@ namespace app {
       export const main = l.procedure(
         'app.example.customMethod',
         l.params({}),
-        l.jsonPayload({ message: l.string() }),
-        l.jsonPayload({
-          message: l.string(),
-          did: l.string({ format: 'did' }),
-        }),
+        l.jsonPayload(l.object({ message: l.string() })),
+        l.jsonPayload(
+          l.object({
+            message: l.string(),
+            did: l.string({ format: 'did' }),
+          }),
+        ),
       )
     }
 

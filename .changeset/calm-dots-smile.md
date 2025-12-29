@@ -2,4 +2,4 @@
 '@atproto/lex-schema': patch
 ---
 
-Add `jsonPayload` schema builder
+Add `jsonPayload` schema builder utilities

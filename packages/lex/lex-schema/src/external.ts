@@ -339,12 +339,11 @@ export function payload<
 >(encoding: E = undefined as E, schema: S = undefined as S) {
   return new Payload<E, S>(encoding, schema)
 }
-
 /*@__NO_SIDE_EFFECTS__*/
-export function jsonPayload<const P extends ObjectSchemaShape>(
-  properties: P,
-): Payload<'application/json', ObjectSchema<P>> {
-  return payload('application/json', object(properties))
+export function jsonPayload<const S extends Schema>(
+  schema: S,
+): Payload<'application/json', S> {
+  return payload('application/json', schema)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
