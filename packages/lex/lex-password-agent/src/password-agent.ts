@@ -39,7 +39,8 @@ export type PasswordAuthAgentOptions = {
 }
 
 export class PasswordAgent implements Agent {
-  #agent: Agent
+  /** Agent used for session management */
+  #sessionAgent: Agent
   #session: null | Session
   #sessionPromise: Promise<Session>
 
@@ -47,7 +48,7 @@ export class PasswordAgent implements Agent {
     session: Session,
     protected readonly options: PasswordAuthAgentOptions = {},
   ) {
-    this.#agent = buildAgent({
+    this.#sessionAgent = buildAgent({
       service: session.service,
       fetch: options.fetch,
     })
@@ -134,7 +135,7 @@ export class PasswordAgent implements Agent {
   async refresh(): Promise<Session> {
     this.#sessionPromise = this.#sessionPromise.then(async (session) => {
       const response = await xrpcSafe(
-        this.#agent,
+        this.#sessionAgent,
         com.atproto.server.refreshSession,
         { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
@@ -171,7 +172,7 @@ export class PasswordAgent implements Agent {
       // allowing to ensure that we are always talking with the right PDS.
       if (!newData.email || !newData.didDoc) {
         const extraData = await xrpcSafe(
-          this.#agent,
+          this.#sessionAgent,
           com.atproto.server.getSession,
           { headers: { Authorization: `Bearer ${newData.accessJwt}` } },
         )
@@ -200,7 +201,7 @@ export class PasswordAgent implements Agent {
   async logout(): Promise<void> {
     this.#sessionPromise = this.#sessionPromise.then(async (session) => {
       const result = await xrpcSafe(
-        this.#agent,
+        this.#sessionAgent,
         com.atproto.server.deleteSession,
         { headers: { Authorization: `Bearer ${session.data.refreshJwt}` } },
       )
