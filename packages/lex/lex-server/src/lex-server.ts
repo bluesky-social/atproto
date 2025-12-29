@@ -105,7 +105,7 @@ export type LexRouterAuthContext<Method extends LexMethod = LexMethod> = {
 export type LexRouterAuth<
   Method extends LexMethod = LexMethod,
   Credentials = unknown,
-> = (ctx: LexRouterAuthContext<Method>) => Promise<Credentials>
+> = (ctx: LexRouterAuthContext<Method>) => Credentials | Promise<Credentials>
 
 export type LexErrorHandlerContext = {
   error: unknown

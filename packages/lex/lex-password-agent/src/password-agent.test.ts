@@ -2,15 +2,12 @@
 
 import assert from 'node:assert'
 import { Client, XrpcResponseError } from '@atproto/lex-client'
-import { DidString, l } from '@atproto/lex-schema'
+import { l } from '@atproto/lex-schema'
 import { LexAuthError, LexRouter } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons.js'
+import { AuthVerifier } from './password-agent-utils.test.js'
 import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
-
-const randomString = () =>
-  Math.random().toString(36).substring(2, 10) +
-  Math.random().toString(36).substring(2, 10)
 
 const hooks: PasswordAuthAgentHooks = {
   onRefreshFailure(session, cause) {
@@ -31,7 +28,7 @@ namespace app {
       l.payload(
         'application/json',
         l.object({
-          reply: l.string(),
+          message: l.string(),
           did: l.string({ format: 'did' }),
         }),
       ),
@@ -52,38 +49,16 @@ describe('PasswordAgent', () => {
   let pdsOrigin: string
 
   beforeAll(async () => {
-    type SessionData = {
-      identifier: string
-      did: DidString
-      accessJwt: string
-      refreshJwt: string
-    }
-    const sessions: SessionData[] = []
+    const authVerifier = new AuthVerifier()
 
     const entrywayRouter = new LexRouter()
       .add(com.atproto.server.createSession, async ({ input }) => {
-        if (!input.body.identifier || input.body.password !== 'password123') {
-          throw new LexAuthError('AuthenticationRequired', 'Invalid identifier')
-        }
-
-        if (input.body.authFactorToken !== '2fa-token') {
-          throw new LexAuthError(
-            'AuthFactorTokenRequired',
-            '2FA token is required',
-          )
-        }
-
-        const session: SessionData = {
-          identifier: input.body.identifier,
-          did: `did:example:${input.body.identifier}`,
-          accessJwt: randomString(),
-          refreshJwt: randomString(),
-        }
-        sessions.push(session)
+        const session = await authVerifier.create(input.body)
 
         const body: com.atproto.server.createSession.OutputBody = {
           accessJwt: session.accessJwt,
           refreshJwt: session.refreshJwt,
+
           did: session.did,
           didDoc: {
             '@context': 'https://w3.org/ns/did/v1',
@@ -96,21 +71,13 @@ describe('PasswordAgent', () => {
               },
             ],
           },
-          handle: `${session.identifier}.example`,
+          handle: session.handle,
         }
 
         return { body }
       })
       .add(com.atproto.server.getSession, {
-        auth: async ({ request: { headers } }) => {
-          const auth = headers.get('authorization')
-          const token = auth?.startsWith('Bearer ') && auth.slice(7)
-          const session = sessions.find((s) => s.accessJwt === token)
-          if (!session) {
-            throw new LexAuthError('AuthenticationRequired', 'Invalid token')
-          }
-          return { session }
-        },
+        auth: authVerifier.accessStrategy,
         handler: async ({ credentials: { session } }) => {
           const body: com.atproto.server.getSession.OutputBody = {
             did: session.did,
@@ -125,53 +92,43 @@ describe('PasswordAgent', () => {
                 },
               ],
             },
-            handle: `${session.identifier}.example`,
-            email: `${session.identifier}@example.com`,
+            handle: session.handle,
+            email: session.email,
             emailConfirmed: true,
             emailAuthFactor: false,
             active: true,
             status: 'active',
           }
+
           return { body }
         },
       })
       .add(com.atproto.server.refreshSession, {
-        auth: async ({ request: { headers } }) => {
-          const auth = headers.get('authorization')
-          const token = auth?.startsWith('Bearer ') && auth.slice(7)
-          const session = sessions.find((s) => s.refreshJwt === token)
-          if (!session) {
-            throw new LexAuthError('ExpiredToken', 'Invalid token')
-          }
-
-          // Rotate tokens
-          session.accessJwt = randomString()
-          session.refreshJwt = randomString()
-
-          return { session }
-        },
+        auth: authVerifier.refreshStrategy,
         handler: async ({ credentials: { session } }) => {
+          session.rotate()
+
+          // Note, we omit email and didDoc here to test that they are properly
+          // fetched via getSession in the agent
           const body: com.atproto.server.refreshSession.OutputBody = {
             accessJwt: session.accessJwt,
             refreshJwt: session.refreshJwt,
-            handle: `${session.identifier}.example`,
-            did: session.did,
 
-            // Note, we omit email and didDoc here to test that they
-            // are properly fetched via getSession in the agent
+            did: session.did,
+            didDoc: undefined,
+            handle: session.handle,
+
+            email: undefined,
+            emailConfirmed: undefined,
           }
 
           return { body }
         },
       })
       .add(com.atproto.server.deleteSession, {
-        auth: async ({ request: { headers } }) => {
-          const auth = headers.get('authorization')
-          const token = auth?.startsWith('Bearer ') && auth.slice(7)
-          const sessIdx = sessions.findIndex((s) => s.refreshJwt === token)
-          if (sessIdx !== -1) sessions.splice(sessIdx, 1)
-        },
-        handler: async () => {
+        auth: authVerifier.refreshStrategy,
+        handler: async ({ credentials: { session } }) => {
+          session?.destroy()
           return {}
         },
       })
@@ -182,17 +139,9 @@ describe('PasswordAgent', () => {
 
     const pdsRouter = new LexRouter()
       .add(app.example.customMethod, {
-        auth: async ({ request: { headers } }) => {
-          const auth = headers.get('authorization')
-          const token = auth?.startsWith('Bearer ') && auth.slice(7)
-          const session = sessions.find((s) => s.accessJwt === token)
-          if (!session) {
-            throw new LexAuthError('AuthenticationRequired', 'Invalid token')
-          }
-          return { session }
-        },
+        auth: authVerifier.accessStrategy,
         handler: async ({ input, credentials: { session } }) => {
-          return { body: { reply: input.body.message, did: session.did } }
+          return { body: { message: input.body.message, did: session.did } }
         },
       })
       .add(app.example.expiredToken, async () => {
@@ -260,14 +209,14 @@ describe('PasswordAgent', () => {
     await expect(
       client.call(app.example.customMethod, { message: 'hello' }),
     ).resolves.toMatchObject({
-      reply: 'hello',
+      message: 'hello',
       did: 'did:example:alice',
     })
 
     await expect(
       client.call(app.example.customMethod, { message: 'world' }),
     ).resolves.toMatchObject({
-      reply: 'world',
+      message: 'world',
       did: 'did:example:alice',
     })
 
@@ -300,7 +249,7 @@ describe('PasswordAgent', () => {
     await expect(
       client.call(app.example.customMethod, { message: 'before' }),
     ).resolves.toMatchObject({
-      reply: 'before',
+      message: 'before',
       did: 'did:example:bob',
     })
 
@@ -331,7 +280,7 @@ describe('PasswordAgent', () => {
     await expect(
       client.call(app.example.customMethod, { message: 'after' }),
     ).resolves.toMatchObject({
-      reply: 'after',
+      message: 'after',
       did: 'did:example:bob',
     })
   })
@@ -369,10 +318,8 @@ describe('PasswordAgent', () => {
     await expect(
       client.call(app.example.customMethod, { message: 'resume' }),
     ).resolves.toMatchObject({
-      reply: 'resume',
+      message: 'resume',
       did: 'did:example:carla',
     })
   })
 })
-
-// @TODO move this into a separate package
