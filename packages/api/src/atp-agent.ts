@@ -318,6 +318,11 @@ export class CredentialSession implements SessionManager {
         authFactorToken: opts.authFactorToken,
         allowTakendown: opts.allowTakendown,
       })
+
+      if (this.session) {
+        throw new Error('Concurrent login detected')
+      }
+
       this.session = {
         accessJwt: res.data.accessJwt,
         refreshJwt: res.data.refreshJwt,
@@ -379,8 +384,10 @@ export class CredentialSession implements SessionManager {
       // Protect against refreshes in progress
       await this.refreshSessionPromise
 
-      if (session.did !== this.session.did) {
-        throw new Error('Session DID mismatch after resume')
+      // Another concurrent operation may have replaced the session while we
+      // were waiting for the refresh to complete.
+      if (session.did !== this.session?.did) {
+        throw new Error('DID mismatch on resumeSession')
       }
 
       return this.server.getSession(undefined, {
@@ -457,41 +464,41 @@ export class CredentialSession implements SessionManager {
       // were missing. Similarly, some servers might not return the didDoc in
       // refreshSession. We fetch them via getSession if missing, allowing to
       // ensure that we are always talking with the right PDS.
-      if (!data.email || !data.didDoc) {
+      if (data.emailConfirmed == null || data.didDoc == null) {
         try {
           const res = await this.server.getSession(undefined, {
             headers: { authorization: `Bearer ${data.accessJwt}` },
           })
 
-          if (res.data.did !== data.did) {
-            // Fool proofing (should never happen)
-            throw new Error('DID mismatch when fetching missing session data')
+          // Fool proofing (should always match)
+          if (res.data.did === data.did) {
+            Object.assign(data, res.data)
           }
-
-          Object.assign(data, res.data)
         } catch {
           // Noop, we'll keep the current values we have
         }
       }
 
       // protect against concurrent session updates
-      if (this.session === session) {
-        // succeeded, update the session
-        this.session = {
-          did: data.did,
-          accessJwt: data.accessJwt,
-          refreshJwt: data.refreshJwt,
-          handle: data.handle ?? session.handle,
-          email: data.email ?? session.email,
-          emailConfirmed: data.emailConfirmed ?? session.emailConfirmed,
-          emailAuthFactor: data.emailAuthFactor ?? session.emailAuthFactor,
-          active: data.active ?? session.active ?? true,
-          status: data.status ?? session.status,
-        }
-
-        this._updateApiEndpoint(res.data.didDoc)
-        this.persistSession?.('update', this.session)
+      if (this.session !== session) {
+        return Promise.reject(new Error('Concurrent session update detected'))
       }
+
+      // succeeded, update the session
+      this.session = {
+        did: data.did,
+        accessJwt: data.accessJwt,
+        refreshJwt: data.refreshJwt,
+        handle: data.handle ?? session.handle,
+        email: data.email ?? session.email,
+        emailConfirmed: data.emailConfirmed ?? session.emailConfirmed,
+        emailAuthFactor: data.emailAuthFactor ?? session.emailAuthFactor,
+        active: data.active ?? session.active ?? true,
+        status: data.status ?? session.status,
+      }
+
+      this._updateApiEndpoint(res.data.didDoc)
+      this.persistSession?.('update', this.session)
 
       return res
     } catch (err) {
@@ -500,6 +507,7 @@ export class CredentialSession implements SessionManager {
         if (
           err instanceof XRPCError &&
           (err.status === 401 ||
+            err.error === 'InvalidDID' ||
             ['ExpiredToken', 'InvalidToken'].includes(err.error))
         ) {
           // failed due to a bad refresh token
