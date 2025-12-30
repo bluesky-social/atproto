@@ -1,4 +1,4 @@
-import { asNsid } from '../core.js'
+import { asNsidString } from '../core.js'
 import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
 import { OptionalSchema } from './optional.js'
@@ -14,7 +14,7 @@ import {
 describe('Subscription', () => {
   describe('constructor', () => {
     it('creates a Subscription instance with all parameters', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({})),
       })
@@ -34,7 +34,7 @@ describe('Subscription', () => {
     })
 
     it('creates a Subscription instance without errors', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({})),
       })
@@ -57,7 +57,7 @@ describe('Subscription', () => {
     })
 
     it('creates a Subscription instance with empty parameters', () => {
-      const nsid = asNsid('app.bsky.notification.subscribe')
+      const nsid = asNsidString('app.bsky.notification.subscribe')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         type: new StringSchema({}),
@@ -73,26 +73,11 @@ describe('Subscription', () => {
       expect(subscription).toBeInstanceOf(Subscription)
       expect(subscription.parameters).toBe(parameters)
     })
-
-    it('creates a Subscription instance with undefined message', () => {
-      const nsid = asNsid('app.bsky.feed.subscribe')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      expect(subscription).toBeInstanceOf(Subscription)
-      expect(subscription.message).toBeUndefined()
-    })
   })
 
   describe('type property', () => {
     it('has type set to "subscription"', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -109,7 +94,7 @@ describe('Subscription', () => {
     })
 
     it('type is a constant value', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -130,7 +115,7 @@ describe('Subscription', () => {
 
   describe('properties', () => {
     it('has nsid property', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -148,7 +133,7 @@ describe('Subscription', () => {
     })
 
     it('has parameters property', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -166,7 +151,7 @@ describe('Subscription', () => {
     })
 
     it('has message property', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -184,7 +169,7 @@ describe('Subscription', () => {
     })
 
     it('has errors property', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -200,7 +185,7 @@ describe('Subscription', () => {
 
   describe('with complex parameters', () => {
     it('creates a Subscription with multiple parameter types', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
         includeDeletes: new OptionalSchema(
@@ -223,7 +208,7 @@ describe('Subscription', () => {
 
   describe('with various message types', () => {
     it('creates a Subscription with ObjectSchema message', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -242,7 +227,7 @@ describe('Subscription', () => {
     })
 
     it('creates a Subscription with RefSchema message', () => {
-      const nsid = asNsid('app.bsky.feed.subscribe')
+      const nsid = asNsidString('app.bsky.feed.subscribe')
       const parameters = new ParamsSchema({})
       const message = new RefSchema(() => new StringSchema({}))
 
@@ -256,26 +241,11 @@ describe('Subscription', () => {
       expect(subscription).toBeInstanceOf(Subscription)
       expect(subscription.message).toBeInstanceOf(RefSchema)
     })
-
-    it('creates a Subscription with undefined message', () => {
-      const nsid = asNsid('app.bsky.feed.subscribe')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      expect(subscription).toBeInstanceOf(Subscription)
-      expect(subscription.message).toBeUndefined()
-    })
   })
 
   describe('with different error configurations', () => {
     it('creates a Subscription with a single error', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({})
       const errors = ['ConsumerTooSlow'] as const
@@ -286,7 +256,7 @@ describe('Subscription', () => {
     })
 
     it('creates a Subscription with multiple errors', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({})
       const errors = [
@@ -305,7 +275,7 @@ describe('Subscription', () => {
     })
 
     it('creates a Subscription with empty errors array', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({})
       const errors = [] as const
@@ -318,7 +288,7 @@ describe('Subscription', () => {
 
   describe('type inference', () => {
     it('InferSubscriptionParameters correctly infers parameter types', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({})),
       })
@@ -344,7 +314,7 @@ describe('Subscription', () => {
     })
 
     it('InferSubscriptionMessage correctly infers message type', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -369,30 +339,11 @@ describe('Subscription', () => {
       expect(msg.seq).toBeDefined()
       expect(msg.data).toBeDefined()
     })
-
-    it('InferSubscriptionMessage returns unknown for undefined message', () => {
-      const nsid = asNsid('app.bsky.feed.subscribe')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      type Message = InferSubscriptionMessage<typeof subscription>
-
-      // Type-level test - unknown should accept any value
-      const msg: Message = { anything: 'value' }
-
-      expect(msg).toBeDefined()
-    })
   })
 
   describe('edge cases', () => {
     it('handles very long NSID', () => {
-      const nsid = asNsid(
+      const nsid = asNsidString(
         'com.example.very.long.namespace.identifier.subscription.name',
       )
       const parameters = new ParamsSchema({})
@@ -409,7 +360,7 @@ describe('Subscription', () => {
     })
 
     it('handles subscription with all optional parameters', () => {
-      const nsid = asNsid('app.bsky.feed.subscribe')
+      const nsid = asNsidString('app.bsky.feed.subscribe')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({})),
         includeDeletes: new OptionalSchema(new IntegerSchema({})),
@@ -428,7 +379,7 @@ describe('Subscription', () => {
     })
 
     it('handles subscription with complex nested message schema', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({}),
@@ -454,7 +405,7 @@ describe('Subscription', () => {
 
   describe('real-world subscription examples', () => {
     it('creates a subscribeLabels subscription', () => {
-      const nsid = asNsid('com.atproto.label.subscribeLabels')
+      const nsid = asNsidString('com.atproto.label.subscribeLabels')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
       })
@@ -492,7 +443,7 @@ describe('Subscription', () => {
     })
 
     it('creates a notification subscription', () => {
-      const nsid = asNsid('app.bsky.notification.subscribe')
+      const nsid = asNsidString('app.bsky.notification.subscribe')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new StringSchema({})),
       })
@@ -516,7 +467,7 @@ describe('Subscription', () => {
 
   describe('with mixed parameter and message types', () => {
     it('handles required and optional parameters with complex message', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
         cursor: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
         includeDeletes: new OptionalSchema(
@@ -552,7 +503,7 @@ describe('Subscription', () => {
 
   describe('validation through nested schemas', () => {
     it('parameters can validate input through ParamsSchema', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
         cursor: new IntegerSchema({ minimum: 0 }),
       })
@@ -574,7 +525,7 @@ describe('Subscription', () => {
     })
 
     it('message can validate input through ObjectSchema', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         seq: new IntegerSchema({ minimum: 0 }),
@@ -605,7 +556,7 @@ describe('Subscription', () => {
 
   describe('property access', () => {
     it('can access nsid after construction', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({})
 
@@ -621,7 +572,7 @@ describe('Subscription', () => {
     })
 
     it('can access type after construction', () => {
-      const nsid = asNsid('com.atproto.sync.subscribeRepos')
+      const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({})
 
@@ -639,7 +590,7 @@ describe('Subscription', () => {
 
   describe('different message schema types', () => {
     it('constructs with ObjectSchema message', () => {
-      const nsid = asNsid('app.bsky.test')
+      const nsid = asNsidString('app.bsky.test')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
         field: new StringSchema({}),
@@ -657,7 +608,7 @@ describe('Subscription', () => {
     })
 
     it('constructs with RefSchema message', () => {
-      const nsid = asNsid('app.bsky.test')
+      const nsid = asNsidString('app.bsky.test')
       const parameters = new ParamsSchema({})
       const message = new RefSchema(() => new ObjectSchema({}))
 
@@ -670,20 +621,6 @@ describe('Subscription', () => {
 
       expect(subscription.message).toBeInstanceOf(RefSchema)
       expect(subscription.message).toBe(message)
-    })
-
-    it('constructs with undefined message', () => {
-      const nsid = asNsid('app.bsky.test')
-      const parameters = new ParamsSchema({})
-
-      const subscription = new Subscription(
-        nsid,
-        parameters,
-        undefined,
-        undefined,
-      )
-
-      expect(subscription.message).toBeUndefined()
     })
   })
 })

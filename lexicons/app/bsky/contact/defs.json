@@ -35,6 +35,23 @@
           "minimum": 0
         }
       }
+    },
+    "notification": {
+      "description": "A stash object to be sent via bsync representing a notification to be created.",
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": {
+          "description": "The DID of who this notification comes from.",
+          "type": "string",
+          "format": "did"
+        },
+        "to": {
+          "description": "The DID of who this notification should go to.",
+          "type": "string",
+          "format": "did"
+        }
+      }
     }
   }
 }

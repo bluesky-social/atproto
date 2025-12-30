@@ -259,6 +259,7 @@ export type Preferences = (
   | $Typed<SavedFeedsPref>
   | $Typed<SavedFeedsPrefV2>
   | $Typed<PersonalDetailsPref>
+  | $Typed<DeclaredAgePref>
   | $Typed<FeedViewPref>
   | $Typed<ThreadViewPref>
   | $Typed<InterestsPref>
@@ -368,6 +369,27 @@ export function isPersonalDetailsPref<V>(v: V) {
 
 export function validatePersonalDetailsPref<V>(v: V) {
   return validate<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
+}
+
+/** Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration. */
+export interface DeclaredAgePref {
+  $type?: 'app.bsky.actor.defs#declaredAgePref'
+  /** Indicates if the user has declared that they are over 13 years of age. */
+  isOverAge13?: boolean
+  /** Indicates if the user has declared that they are over 16 years of age. */
+  isOverAge16?: boolean
+  /** Indicates if the user has declared that they are over 18 years of age. */
+  isOverAge18?: boolean
+}
+
+const hashDeclaredAgePref = 'declaredAgePref'
+
+export function isDeclaredAgePref<V>(v: V) {
+  return is$typed(v, id, hashDeclaredAgePref)
+}
+
+export function validateDeclaredAgePref<V>(v: V) {
+  return validate<DeclaredAgePref & V>(v, id, hashDeclaredAgePref)
 }
 
 export interface FeedViewPref {

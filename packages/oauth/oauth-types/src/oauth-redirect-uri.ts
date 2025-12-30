@@ -1,6 +1,8 @@
 import { TypeOf, ZodIssueCode, z } from 'zod'
 import {
+  HttpsUri,
   LoopbackUri,
+  PrivateUseUri,
   httpsUriSchema,
   loopbackUriSchema,
   privateUseUriSchema,
@@ -41,10 +43,31 @@ export type OAuthLoopbackRedirectURI = TypeOf<
   typeof oauthLoopbackClientRedirectUriSchema
 >
 
-export const oauthRedirectUriSchema = z.union(
-  [loopbackRedirectURISchema, httpsUriSchema, privateUseUriSchema],
-  {
-    message: `URL must use the "https:" or "http:" protocol, or a private-use URI scheme (RFC 8252)`,
-  },
-)
+export const oauthRedirectUriSchema = z
+  .string()
+  .superRefine(
+    (value, ctx): value is HttpsUri | LoopbackRedirectURI | PrivateUseUri => {
+      if (value.startsWith('https:')) {
+        const result = httpsUriSchema.safeParse(value)
+        if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
+        return result.success
+      } else if (value.startsWith('http:')) {
+        const result = loopbackRedirectURISchema.safeParse(value)
+        if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
+        return result.success
+      } else if (/^[^.:]+(?:\.[^.:]+)+:/.test(value)) {
+        const result = privateUseUriSchema.safeParse(value)
+        if (!result.success) result.error.issues.forEach(ctx.addIssue, ctx)
+        return result.success
+      } else {
+        ctx.addIssue({
+          code: ZodIssueCode.custom,
+          message:
+            'URL must use the "https:" or "http:" protocol, or a private-use URI scheme (RFC 8252)',
+        })
+        return false
+      }
+    },
+  )
+
 export type OAuthRedirectUri = TypeOf<typeof oauthRedirectUriSchema>

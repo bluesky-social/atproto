@@ -160,7 +160,7 @@ describe('LexiconSchemaBuilder', () => {
 
     expect(schema.safeParse(value)).toMatchObject({
       success: false,
-      error: {
+      reason: {
         issues: [
           {
             code: 'invalid_value',
@@ -231,7 +231,7 @@ describe('LexiconSchemaBuilder', () => {
 
     expect(schema.safeParse(value)).toMatchObject({
       success: false,
-      error: { issues: [{ code: 'required_key', key: 'array' }] },
+      reason: { issues: [{ code: 'required_key', key: 'array' }] },
     })
   })
 

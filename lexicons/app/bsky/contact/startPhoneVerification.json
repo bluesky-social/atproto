@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
+      "description": "Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -27,8 +27,16 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "RateLimitExceeded"
+        },
+        {
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InvalidPhone"
+        },
+        {
+          "name": "InternalError"
         }
       ]
     }

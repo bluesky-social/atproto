@@ -1,4 +1,4 @@
-import { ResultFailure, failureError } from '../core.js'
+import { ResultFailure, failureReason } from '../core.js'
 import { arrayAgg } from '../util/array-agg.js'
 import {
   Issue,
@@ -20,17 +20,17 @@ export class ValidationError extends Error {
   static fromFailures(
     failures: ResultFailure<ValidationError>[],
   ): ValidationError {
-    if (failures.length === 1) return failures[0].error
+    if (failures.length === 1) return failureReason(failures[0])
     const issues = failures.flatMap(extractFailureIssues)
     return new ValidationError(issues, {
       // Keep the original errors as the cause chain
-      cause: failures.map(failureError),
+      cause: failures.map(failureReason),
     })
   }
 }
 
 function extractFailureIssues(result: ResultFailure<ValidationError>) {
-  return result.error.issues
+  return result.reason.issues
 }
 
 function aggregateIssues(issues: Issue[]): Issue[] {

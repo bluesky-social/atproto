@@ -37,7 +37,13 @@ export interface Response {
   data: OutputSchema
 }
 
-export class TODOError extends XRPCError {
+export class InvalidDidError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class InternalError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -45,7 +51,8 @@ export class TODOError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'TODO') return new TODOError(e)
+    if (e.error === 'InvalidDid') return new InvalidDidError(e)
+    if (e.error === 'InternalError') return new InternalError(e)
   }
 
   return e

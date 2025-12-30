@@ -1,5 +1,42 @@
 # @atproto/api
 
+## 0.18.8
+
+### Patch Changes
+
+- [#4452](https://github.com/bluesky-social/atproto/pull/4452) [`2e5a24c`](https://github.com/bluesky-social/atproto/commit/2e5a24cb875650120365e3f5c23a041e61a5f9c4) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Remove WARNING from contact lexicons
+
+- [#4445](https://github.com/bluesky-social/atproto/pull/4445) [`5622bcf`](https://github.com/bluesky-social/atproto/commit/5622bcf02315f9f24940a32aa3a6d9341c646c59) Thanks [@mozzius](https://github.com/mozzius)! - Add XRPC errors for `contact` APIs
+
+## 0.18.7
+
+### Patch Changes
+
+- [#4436](https://github.com/bluesky-social/atproto/pull/4436) [`e266405`](https://github.com/bluesky-social/atproto/commit/e266405a89cd081ff96d36a784a31dd917c60a15) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add "contact-match" to listNotification reasons
+
+## 0.18.6
+
+### Patch Changes
+
+- [#4432](https://github.com/bluesky-social/atproto/pull/4432) [`39fa570`](https://github.com/bluesky-social/atproto/commit/39fa57080fa04aa547b093cfeaaced3e2e62fc41) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add new read-only `#declaredAgePref` with computed age flags e.g. `isOverAge18`.
+
+- [#4430](https://github.com/bluesky-social/atproto/pull/4430) [`f4cef84`](https://github.com/bluesky-social/atproto/commit/f4cef84494114ca927c66428920ca3dc24ad2b1e) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.contact.sendNotification endpoint
+
+## 0.18.5
+
+### Patch Changes
+
+- [#4393](https://github.com/bluesky-social/atproto/pull/4393) [`380aa3b`](https://github.com/bluesky-social/atproto/commit/380aa3bfe73b5c4e59961c27ae988786b69c129d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.contact.\* lexicons, still without error handling. This is unstable and should not be used at this state.
+
+- [#4418](https://github.com/bluesky-social/atproto/pull/4418) [`308f432`](https://github.com/bluesky-social/atproto/commit/308f432f7aef196b4df0a6dc7c5367ab5a8b8964) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Expand return type of relationships in app.bsky.graph.getRelationships
+
+- [#4423](https://github.com/bluesky-social/atproto/pull/4423) [`a6e16cd`](https://github.com/bluesky-social/atproto/commit/a6e16cd0cd3029caf63ce2312dc5207532654763) Thanks [@foysalit](https://github.com/foysalit)! - Add min length for required comment fields in ozone events
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab), [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/lexicon@0.6.0
+  - @atproto/common-web@0.4.7
+  - @atproto/xrpc@0.7.7
+
 ## 0.18.4
 
 ### Patch Changes

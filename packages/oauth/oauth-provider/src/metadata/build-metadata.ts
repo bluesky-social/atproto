@@ -15,6 +15,7 @@ export type CustomMetadata = {
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414#section-2}
  * @see {@link https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata}
+ * @see {@link https://openid.net/specs/openid-connect-prompt-create-1_0.html}
  */
 export function buildMetadata(
   issuer: OAuthIssuerIdentifier,
@@ -82,6 +83,15 @@ export function buildMetadata(
       'popup',
       'touch',
       // 'wap', LoL
+    ],
+
+    // https://openid.net/specs/openid-connect-prompt-create-1_0.html
+    prompt_values_supported: [
+      'none',
+      'login',
+      'consent',
+      'select_account',
+      'create',
     ],
 
     // https://datatracker.ietf.org/doc/html/rfc9207

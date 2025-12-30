@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
+      "description": "Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -21,8 +21,10 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InternalError"
         }
       ]
     }

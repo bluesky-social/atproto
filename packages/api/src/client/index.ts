@@ -33,6 +33,7 @@ import * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.j
 import * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
 import * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
 import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+import * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
@@ -339,6 +340,7 @@ export * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.j
 export * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
 export * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
 export * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+export * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 export * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 export * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
@@ -1200,6 +1202,18 @@ export class AppBskyContactNS {
       .catch((e) => {
         throw AppBskyContactRemoveData.toKnownErr(e)
       })
+  }
+
+  sendNotification(
+    data?: AppBskyContactSendNotification.InputSchema,
+    opts?: AppBskyContactSendNotification.CallOptions,
+  ): Promise<AppBskyContactSendNotification.Response> {
+    return this._client.call(
+      'app.bsky.contact.sendNotification',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   startPhoneVerification(
@@ -4514,12 +4528,11 @@ export class ComAtprotoServerNS {
     data?: ComAtprotoServerDeleteSession.InputSchema,
     opts?: ComAtprotoServerDeleteSession.CallOptions,
   ): Promise<ComAtprotoServerDeleteSession.Response> {
-    return this._client.call(
-      'com.atproto.server.deleteSession',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('com.atproto.server.deleteSession', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoServerDeleteSession.toKnownErr(e)
+      })
   }
 
   describeServer(

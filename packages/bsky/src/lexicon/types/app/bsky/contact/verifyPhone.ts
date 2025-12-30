@@ -42,7 +42,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'TODO'
+  error?:
+    | 'RateLimitExceeded'
+    | 'InvalidDid'
+    | 'InvalidPhone'
+    | 'InvalidCode'
+    | 'InternalError'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

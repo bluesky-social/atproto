@@ -28,6 +28,7 @@ import * as AppBskyContactGetMatches from './types/app/bsky/contact/getMatches.j
 import * as AppBskyContactGetSyncStatus from './types/app/bsky/contact/getSyncStatus.js'
 import * as AppBskyContactImportContacts from './types/app/bsky/contact/importContacts.js'
 import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.js'
+import * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
@@ -554,6 +555,18 @@ export class AppBskyContactNS {
     >,
   ) {
     const nsid = 'app.bsky.contact.removeData' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  sendNotification<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyContactSendNotification.QueryParams,
+      AppBskyContactSendNotification.HandlerInput,
+      AppBskyContactSendNotification.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.contact.sendNotification' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

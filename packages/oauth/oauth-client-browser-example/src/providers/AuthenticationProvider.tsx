@@ -40,7 +40,7 @@ function AuthenticationProviderInternal({
 }: {
   children?: ReactNode
 }) {
-  const { isLoading, session, signIn } = useOAuthContext()
+  const { isLoading, session, signIn, signUp } = useOAuthContext()
   const [initialized, setInitialized] = useState(false)
   const [configuredClient, setConfiguredClient] =
     useState<AuthenticatedClient | null>(null)
@@ -97,6 +97,7 @@ function AuthenticationProviderInternal({
             signUpUrl={SIGN_UP_URL}
             loading={isLoading || isConfiguring}
             signIn={signIn}
+            signUp={signUp}
           />
         ) : (
           <Spinner />

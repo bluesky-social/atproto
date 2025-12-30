@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
+      "description": "Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -46,8 +46,19 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InvalidContacts"
+        },
+        {
+          "name": "TooManyContacts"
+        },
+        {
+          "name": "InvalidToken"
+        },
+        {
+          "name": "InternalError"
         }
       ]
     }

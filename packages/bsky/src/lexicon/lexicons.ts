@@ -401,6 +401,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#declaredAgePref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
@@ -504,6 +505,28 @@ export const schemaDict = {
             type: 'string',
             format: 'datetime',
             description: 'The birth date of account owner.',
+          },
+        },
+      },
+      declaredAgePref: {
+        type: 'object',
+        description:
+          "Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.",
+        properties: {
+          isOverAge13: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 13 years of age.',
+          },
+          isOverAge16: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 16 years of age.',
+          },
+          isOverAge18: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 18 years of age.',
           },
         },
       },
@@ -1776,6 +1799,24 @@ export const schemaDict = {
           },
         },
       },
+      notification: {
+        description:
+          'A stash object to be sent via bsync representing a notification to be created.',
+        type: 'object',
+        required: ['from', 'to'],
+        properties: {
+          from: {
+            description: 'The DID of who this notification comes from.',
+            type: 'string',
+            format: 'did',
+          },
+          to: {
+            description: 'The DID of who this notification should go to.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
     },
   },
   AppBskyContactDismissMatch: {
@@ -1785,7 +1826,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+          "Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
         input: {
           encoding: 'application/json',
           schema: {
@@ -1809,8 +1850,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
           },
         ],
       },
@@ -1823,7 +1866,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
+          'Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.',
         parameters: {
           type: 'params',
           properties: {
@@ -1859,8 +1902,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidLimit',
+          },
+          {
+            name: 'InvalidCursor',
+          },
+          {
+            name: 'InternalError',
           },
         ],
       },
@@ -1873,7 +1924,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.",
+          "Gets the user's current contact import status. Requires authentication.",
         parameters: {
           type: 'params',
           properties: {},
@@ -1894,8 +1945,10 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
           },
         ],
       },
@@ -1908,7 +1961,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.",
+          'Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1953,8 +2006,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidContacts',
+          },
+          {
+            name: 'TooManyContacts',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'InternalError',
           },
         ],
       },
@@ -1967,7 +2031,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.",
+          'Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -1984,10 +2048,49 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
           },
         ],
+      },
+    },
+  },
+  AppBskyContactSendNotification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.sendNotification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'System endpoint to send notifications related to contact imports. Requires role authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['from', 'to'],
+            properties: {
+              from: {
+                description: 'The DID of who this notification comes from.',
+                type: 'string',
+                format: 'did',
+              },
+              to: {
+                description: 'The DID of who this notification should go to.',
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
       },
     },
   },
@@ -1998,7 +2101,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.",
+          'Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -2021,8 +2124,16 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'RateLimitExceeded',
+          },
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidPhone',
+          },
+          {
+            name: 'InternalError',
           },
         ],
       },
@@ -2035,7 +2146,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          "WARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
+          'Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -2071,8 +2182,19 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'TODO',
-            description: 'TODO',
+            name: 'RateLimitExceeded',
+          },
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidPhone',
+          },
+          {
+            name: 'InvalidCode',
+          },
+          {
+            name: 'InternalError',
           },
         ],
       },
@@ -6725,6 +6847,7 @@ export const schemaDict = {
               'like-via-repost',
               'repost-via-repost',
               'subscribed-post',
+              'contact-match',
             ],
           },
           reasonSubject: {
@@ -12896,7 +13019,16 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Delete the current session. Requires auth.',
+        description:
+          "Delete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
+        errors: [
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'ExpiredToken',
+          },
+        ],
       },
     },
   },
@@ -13095,6 +13227,9 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              didDoc: {
+                type: 'unknown',
+              },
               email: {
                 type: 'string',
               },
@@ -13103,9 +13238,6 @@ export const schemaDict = {
               },
               emailAuthFactor: {
                 type: 'boolean',
-              },
-              didDoc: {
-                type: 'unknown',
               },
               active: {
                 type: 'boolean',
@@ -13200,6 +13332,15 @@ export const schemaDict = {
               didDoc: {
                 type: 'unknown',
               },
+              email: {
+                type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
               active: {
                 type: 'boolean',
               },
@@ -13215,6 +13356,12 @@ export const schemaDict = {
         errors: [
           {
             name: 'AccountTakedown',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'ExpiredToken',
           },
         ],
       },
@@ -14793,6 +14940,7 @@ export const ids = {
   AppBskyContactGetSyncStatus: 'app.bsky.contact.getSyncStatus',
   AppBskyContactImportContacts: 'app.bsky.contact.importContacts',
   AppBskyContactRemoveData: 'app.bsky.contact.removeData',
+  AppBskyContactSendNotification: 'app.bsky.contact.sendNotification',
   AppBskyContactStartPhoneVerification:
     'app.bsky.contact.startPhoneVerification',
   AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',

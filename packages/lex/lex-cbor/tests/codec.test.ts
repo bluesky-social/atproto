@@ -1,4 +1,5 @@
-import { LexValue, parseCid } from '@atproto/lex-data'
+import assert from 'node:assert'
+import { LexValue, isLexMap, parseCid } from '@atproto/lex-data'
 import { decode, decodeAll, encode } from '..'
 
 describe('encode', () => {
@@ -110,7 +111,9 @@ describe('ipld decode multi', () => {
       test: Number.MAX_SAFE_INTEGER,
     }
     const encoded = encode(one)
-    const decoded = Array.from(decodeAll(encoded))
-    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
+    const { length, 0: first } = Array.from(decodeAll(encoded))
+    expect(length).toBe(1)
+    assert(isLexMap(first))
+    expect(Number.isInteger(first.test)).toBe(true)
   })
 })

@@ -184,8 +184,18 @@ function stringifyType(value: unknown): string {
       if (value instanceof Set) return 'set'
       return 'object'
     case 'number':
-      if (Number.isInteger(value)) return 'integer'
-      if (Number.isNaN(value)) return 'NaN'
+      if (Number.isInteger(value) && Number.isSafeInteger(value)) {
+        return 'integer'
+      }
+      if (Number.isNaN(value)) {
+        return 'NaN'
+      }
+      if (value === Infinity) {
+        return 'Infinity'
+      }
+      if (value === -Infinity) {
+        return '-Infinity'
+      }
       return 'float'
     default:
       return typeof value

@@ -16,6 +16,7 @@ import getMatches from './app/bsky/contact/getMatches'
 import getSyncStatus from './app/bsky/contact/getSyncStatus'
 import importContacts from './app/bsky/contact/importContacts'
 import removeData from './app/bsky/contact/removeData'
+import sendNotification from './app/bsky/contact/sendNotification'
 import startPhoneVerification from './app/bsky/contact/startPhoneVerification'
 import verifyPhone from './app/bsky/contact/verifyPhone'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
@@ -95,6 +96,8 @@ export * as blobResolver from './blob-resolver'
 
 export * as external from './external'
 
+export * as sitemap from './sitemap'
+
 export default function (server: Server, ctx: AppContext) {
   // app.bsky
   getTimeline(server, ctx)
@@ -106,6 +109,7 @@ export default function (server: Server, ctx: AppContext) {
   getSyncStatus(server, ctx)
   importContacts(server, ctx)
   removeData(server, ctx)
+  sendNotification(server, ctx)
   startPhoneVerification(server, ctx)
   verifyPhone(server, ctx)
   getActorFeeds(server, ctx)

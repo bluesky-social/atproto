@@ -1,4 +1,4 @@
-import { l } from '@atproto/lex'
+import { l } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.token', () => {

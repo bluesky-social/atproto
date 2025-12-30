@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
+      "description": "Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -36,8 +36,16 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InvalidLimit"
+        },
+        {
+          "name": "InvalidCursor"
+        },
+        {
+          "name": "InternalError"
         }
       ]
     }

@@ -50,3 +50,22 @@ export function isSyncStatus<V>(v: V) {
 export function validateSyncStatus<V>(v: V) {
   return validate<SyncStatus & V>(v, id, hashSyncStatus)
 }
+
+/** A stash object to be sent via bsync representing a notification to be created. */
+export interface Notification {
+  $type?: 'app.bsky.contact.defs#notification'
+  /** The DID of who this notification comes from. */
+  from: string
+  /** The DID of who this notification should go to. */
+  to: string
+}
+
+const hashNotification = 'notification'
+
+export function isNotification<V>(v: V) {
+  return is$typed(v, id, hashNotification)
+}
+
+export function validateNotification<V>(v: V) {
+  return validate<Notification & V>(v, id, hashNotification)
+}

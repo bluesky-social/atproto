@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
+      "description": "Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -37,8 +37,19 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "RateLimitExceeded"
+        },
+        {
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InvalidPhone"
+        },
+        {
+          "name": "InvalidCode"
+        },
+        {
+          "name": "InternalError"
         }
       ]
     }

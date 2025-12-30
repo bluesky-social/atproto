@@ -41,9 +41,9 @@ export function Button({
   const isLoading = loading || pendingActions > 0
   const sizeClass =
     size === 'small'
-      ? 'px-1 py-0'
+      ? 'px-2 py-[2px] text-sm'
       : size === 'large'
-        ? 'px-3 py-2'
+        ? 'px-3 py-2 text-lg'
         : 'px-2 py-1'
 
   return (

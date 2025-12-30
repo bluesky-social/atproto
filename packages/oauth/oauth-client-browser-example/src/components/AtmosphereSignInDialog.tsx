@@ -4,6 +4,7 @@ import { AtmosphereSignInForm } from './AtmosphereSignInForm.tsx'
 
 export type AtmosphereSignInDialogProps = JSX.IntrinsicElements['div'] & {
   signIn: (input: string) => Promise<void>
+  signUp: (input: string) => Promise<void>
   disabled?: boolean
   loading?: boolean
   signUpUrl?: string
@@ -11,6 +12,7 @@ export type AtmosphereSignInDialogProps = JSX.IntrinsicElements['div'] & {
 
 export function AtmosphereSignInDialog({
   signIn,
+  signUp,
   loading,
   disabled,
   signUpUrl,
@@ -39,17 +41,31 @@ export function AtmosphereSignInDialog({
       />
 
       {signUpUrl && (
-        <Button
-          key="signup"
-          type="button"
-          loading={loading}
-          disabled={disabled}
-          size="large"
-          action={() => signIn(signUpUrl)}
-          name="signup-button"
-        >
-          Login or signup with {new URL(signUpUrl).host}
-        </Button>
+        <>
+          <Button
+            key="signup"
+            type="button"
+            loading={loading}
+            disabled={disabled}
+            size="large"
+            action={() => signUp(signUpUrl)}
+            name="signup-button"
+          >
+            Sign up with {new URL(signUpUrl).host}
+          </Button>
+          <Button
+            key="login"
+            type="button"
+            loading={loading}
+            disabled={disabled}
+            transparent
+            size="large"
+            action={() => signIn(signUpUrl)}
+            name="login-button"
+          >
+            Login with {new URL(signUpUrl).host}
+          </Button>
+        </>
       )}
     </div>
   )

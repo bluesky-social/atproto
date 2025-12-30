@@ -33,6 +33,6 @@ export class CustomSchema<T = unknown> extends Schema<T> {
   ): ValidationResult<T> {
     if (this.assertion.call(null, input, ctx)) return ctx.success(input as T)
     const path = ctx.concatPath(this.path)
-    return ctx.failure(new IssueCustom(path, input, this.message))
+    return ctx.issue(new IssueCustom(path, input, this.message))
   }
 }

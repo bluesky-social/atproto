@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "WARNING: This is unstable and under active development, don't use it while this warning is here. Gets the user's current contact import status. Requires authentication.",
+      "description": "Gets the user's current contact import status. Requires authentication.",
       "parameters": {
         "type": "params",
         "properties": {}
@@ -24,8 +24,10 @@
       },
       "errors": [
         {
-          "name": "TODO",
-          "description": "TODO"
+          "name": "InvalidDid"
+        },
+        {
+          "name": "InternalError"
         }
       ]
     }

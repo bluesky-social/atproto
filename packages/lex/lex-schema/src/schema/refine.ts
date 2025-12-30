@@ -78,7 +78,7 @@ function validateInContextUnbound<S extends Validator>(
   const checkResult = this.refinement.check.call(null, result.value, ctx)
   if (!checkResult) {
     const path = ctx.concatPath(this.refinement.path)
-    return ctx.failure(new IssueCustom(path, input, this.refinement.message))
+    return ctx.issue(new IssueCustom(path, input, this.refinement.message))
   }
 
   return result
