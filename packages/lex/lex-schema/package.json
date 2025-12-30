@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-schema",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "description": "Lexicon schema system for AT Lexicons",
   "keywords": [
