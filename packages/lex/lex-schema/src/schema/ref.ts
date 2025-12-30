@@ -3,7 +3,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 export type RefSchemaGetter<V> = () => Validator<V>
 

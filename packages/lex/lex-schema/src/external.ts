@@ -1,4 +1,14 @@
-import { $Type, $TypeOf, $type, LexiconRecordKey, NsidString } from './core.js'
+import {
+  $Type,
+  $TypeOf,
+  $type,
+  Infer,
+  LexiconRecordKey,
+  NsidString,
+  PropertyKey,
+  Schema,
+  Validator,
+} from './core.js'
 import {
   ArraySchema,
   ArraySchemaOptions,
@@ -58,12 +68,12 @@ import {
   refine,
 } from './schema.js'
 import { memoizedOptions, memoizedTransformer } from './util/memoize.js'
-import { Infer, PropertyKey, Schema, Validator } from './validation.js'
 
 export * from './core.js'
 export * from './helpers.js'
 export * from './schema.js'
-export * from './validation.js'
+
+export { _null as null }
 
 /*@__NO_SIDE_EFFECTS__*/
 export const never = /*#__PURE__*/ memoizedOptions(function () {
@@ -79,7 +89,6 @@ export const unknown = /*#__PURE__*/ memoizedOptions(function () {
 const _null = /*#__PURE__*/ memoizedOptions(function () {
   return new NullSchema()
 })
-export { _null as null }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function literal<const V extends null | string | number | boolean>(

@@ -1,5 +1,5 @@
 import { LexErrorData } from '@atproto/lex-data'
-import { Restricted } from './core.js'
+import { Infer, Restricted, Schema } from './core.js'
 import {
   InferPayload,
   InferPayloadBody,
@@ -12,7 +12,6 @@ import {
   StringSchema,
   Subscription,
 } from './schema.js'
-import { Infer, Schema } from './validation.js'
 
 export type Main<T> = T | { main: T }
 

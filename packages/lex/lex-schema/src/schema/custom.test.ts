@@ -1,4 +1,4 @@
-import { IssueCustom } from '../validation.js'
+import { IssueCustom } from '../core.js'
 import { CustomSchema } from './custom.js'
 
 describe('CustomSchema', () => {

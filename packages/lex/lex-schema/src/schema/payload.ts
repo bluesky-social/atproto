@@ -1,5 +1,5 @@
 import { LexValue } from '@atproto/lex-data'
-import { Infer, Schema } from '../validation.js'
+import { Infer, Schema } from '../core.js'
 
 export type InferPayload<
   P extends Payload,

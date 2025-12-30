@@ -1,6 +1,6 @@
 import { LexError } from '@atproto/lex-data'
-import { ResultFailure, failureReason } from '../core.js'
 import { arrayAgg } from '../util/array-agg.js'
+import { ResultFailure, failureReason } from './result.js'
 import {
   Issue,
   IssueInvalidType,

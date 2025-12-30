@@ -1,5 +1,5 @@
-import { ResultFailure, ResultSuccess, failure, success } from '../core.js'
 import { PropertyKey } from './property-key.js'
+import { ResultFailure, ResultSuccess, failure, success } from './result.js'
 import { ValidationError } from './validation-error.js'
 import {
   Issue,

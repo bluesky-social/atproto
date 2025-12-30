@@ -1,4 +1,4 @@
-import { Schema, ValidationResult, ValidatorContext } from '../validation'
+import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export class UnknownSchema extends Schema<unknown> {
   validateInContext(

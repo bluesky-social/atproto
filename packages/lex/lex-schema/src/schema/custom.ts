@@ -5,7 +5,7 @@ import {
   Schema,
   ValidationResult,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 export type CustomAssertionContext = {
   path: PropertyKey[]

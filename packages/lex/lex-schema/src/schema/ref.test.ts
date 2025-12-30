@@ -1,4 +1,4 @@
-import { Schema } from '../validation.js'
+import { Schema } from '../core.js'
 import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
 import { OptionalSchema } from './optional.js'

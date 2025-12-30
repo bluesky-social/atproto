@@ -1,12 +1,12 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { Restricted } from '../core.js'
-import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
+  Restricted,
   Schema,
   ValidationResult,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
 
 export type TypedRef<T extends { $type?: string }> = TypedRefSchemaOutput<T>

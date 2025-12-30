@@ -5,7 +5,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 import { CustomAssertionContext } from './custom.js'
 
 export type RefinementCheck<T> = {
