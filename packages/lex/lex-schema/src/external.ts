@@ -65,14 +65,17 @@ export * from './helpers.js'
 export * from './schema.js'
 export * from './validation.js'
 
+/*@__NO_SIDE_EFFECTS__*/
 export const never = /*#__PURE__*/ memoizedOptions(function () {
   return new NeverSchema()
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 export const unknown = /*#__PURE__*/ memoizedOptions(function () {
   return new UnknownSchema()
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 const _null = /*#__PURE__*/ memoizedOptions(function () {
   return new NullSchema()
 })
@@ -97,6 +100,7 @@ export function _enum<const V extends null | string | number | boolean>(
 // @NOTE "enum" is a reserved keyword in JS/TS
 export { _enum as enum }
 
+/*@__NO_SIDE_EFFECTS__*/
 export const boolean = /*#__PURE__*/ memoizedOptions(
   function (options?: BooleanSchemaOptions) {
     return new BooleanSchema(options)
@@ -107,30 +111,35 @@ export const boolean = /*#__PURE__*/ memoizedOptions(
   },
 )
 
+/*@__NO_SIDE_EFFECTS__*/
 export const integer = /*#__PURE__*/ memoizedOptions(function (
   options?: IntegerSchemaOptions,
 ) {
   return new IntegerSchema(options)
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 export const cidLink = /*#__PURE__*/ memoizedOptions(function (
   options?: CidSchemaOptions,
 ) {
   return new CidSchema(options)
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 export const bytes = /*#__PURE__*/ memoizedOptions(function (
   options?: BytesSchemaOptions,
 ) {
   return new BytesSchema(options)
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 export const blob = /*#__PURE__*/ memoizedOptions(function <
   O extends BlobSchemaOptions = NonNullable<unknown>,
 >(options: O = {} as O) {
   return new BlobSchema(options)
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 export const string = /*#__PURE__*/ memoizedOptions(function <
   const O extends StringSchemaOptions = NonNullable<unknown>,
 >(options: StringSchemaOptions & O = {} as O) {
@@ -174,6 +183,7 @@ export function dict<
 // Utility
 export type { UnknownObjectOutput as UnknownObject }
 
+/*@__NO_SIDE_EFFECTS__*/
 export const unknownObject = /*#__PURE__*/ memoizedOptions(function () {
   return new UnknownObjectSchema()
 })
@@ -192,12 +202,14 @@ export function custom<T>(
   return new CustomSchema<T>(assertion, message, path)
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 export const nullable = /*#__PURE__*/ memoizedTransformer(function <
   const S extends Validator,
 >(schema: S) {
   return new NullableSchema<Infer<S>>(schema)
 })
 
+/*@__NO_SIDE_EFFECTS__*/
 export const optional = /*#__PURE__*/ memoizedTransformer(function <
   const S extends Validator,
 >(schema: S) {
@@ -329,6 +341,7 @@ export function record<
   return new RecordSchema<K, T, S>(key, type, schema)
 }
 
+/*@__NO_SIDE_EFFECTS__*/
 export const params = /*#__PURE__*/ memoizedOptions(function <
   const P extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: P = {} as P) {

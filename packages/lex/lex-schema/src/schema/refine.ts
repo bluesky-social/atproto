@@ -31,6 +31,23 @@ export type Refinement<T = any, Out extends T = T> =
   | RefinementCheck<T>
   | RefinementAssertion<T, Out>
 
+/**
+ * Create a refined schema based on an existing schema and a refinement check.
+ *
+ * @param schema - The base schema to refine.
+ * @param refinement - The refinement check to apply.
+ * @returns A new schema that includes the refinement.
+ * @example
+ *
+ * ```ts
+ * const PositiveInt = refine(l.integer(), {
+ *   check: (value) => value > 0,
+ *   message: 'Value must be a positive integer',
+ * })
+ * const result = PositiveInt.validate(-5)
+ * // result.success === false
+ * ```
+ */
 export function refine<S extends Validator, Out extends Infer<S>>(
   schema: S,
   refinement: RefinementAssertion<Infer<S>, Out>,
