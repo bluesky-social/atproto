@@ -5,10 +5,12 @@ type IdentityEventHandler = (
   evt: IdentityEvent,
   opts?: HandlerOpts,
 ) => Promise<void>
+
 type RecordEventHandler = (
   evt: RecordEvent,
   opts?: HandlerOpts,
 ) => Promise<void>
+
 type ErrorHandler = (err: Error) => void
 
 export class SimpleIndexer implements TapHandler {
@@ -16,16 +18,19 @@ export class SimpleIndexer implements TapHandler {
   private recordHandler: RecordEventHandler | undefined
   private errorHandler: ErrorHandler | undefined
 
-  identity(fn: IdentityEventHandler) {
+  identity(fn: IdentityEventHandler): this {
     this.identityHandler = fn
+    return this
   }
 
-  record(fn: RecordEventHandler) {
+  record(fn: RecordEventHandler): this {
     this.recordHandler = fn
+    return this
   }
 
-  error(fn: ErrorHandler) {
+  error(fn: ErrorHandler): this {
     this.errorHandler = fn
+    return this
   }
 
   async onEvent(evt: TapEvent, opts: HandlerOpts): Promise<void> {

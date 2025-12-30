@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/ws-client": "workspace:^",
     "ws": "^8.12.0",

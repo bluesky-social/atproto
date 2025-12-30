@@ -1,0 +1,182 @@
+import { Infer, Namespace, RecordSchema, getMain } from '@atproto/lex'
+import { HandlerOpts, TapHandler } from './channel'
+import { IdentityEvent, RecordEvent, TapEvent } from './types'
+
+type BaseRecordEvent = Omit<RecordEvent, 'record' | 'action' | 'cid'>
+
+export type CreateEvent<R> = BaseRecordEvent & {
+  action: 'create'
+  record: R
+  cid: string
+}
+
+export type UpdateEvent<R> = BaseRecordEvent & {
+  action: 'update'
+  record: R
+  cid: string
+}
+
+export type PutEvent<R> = BaseRecordEvent & {
+  action: 'create' | 'update'
+  record: R
+  cid: string
+}
+
+export type DeleteEvent = BaseRecordEvent & {
+  action: 'delete'
+}
+
+export type CreateHandler<R> = (
+  evt: CreateEvent<R>,
+  opts: HandlerOpts,
+) => Promise<void>
+
+export type UpdateHandler<R> = (
+  evt: UpdateEvent<R>,
+  opts: HandlerOpts,
+) => Promise<void>
+
+export type PutHandler<R> = (
+  evt: PutEvent<R>,
+  opts: HandlerOpts,
+) => Promise<void>
+
+export type DeleteHandler = (
+  evt: DeleteEvent,
+  opts: HandlerOpts,
+) => Promise<void>
+
+export type UntypedHandler = (
+  evt: RecordEvent,
+  opts: HandlerOpts,
+) => Promise<void>
+
+export type IdentityHandler = (
+  evt: IdentityEvent,
+  opts: HandlerOpts,
+) => Promise<void>
+
+export type ErrorHandler = (err: Error) => void
+
+export type RecordHandler<R> =
+  | CreateHandler<R>
+  | UpdateHandler<R>
+  | PutHandler<R>
+  | DeleteHandler
+
+interface RegisteredHandler<R> {
+  schema: RecordSchema
+  handler: RecordHandler<R>
+}
+
+export class LexIndexer implements TapHandler {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private handlers = new Map<string, RegisteredHandler<any>>()
+  private otherHandler: UntypedHandler | undefined
+  private identityHandler: IdentityHandler | undefined
+  private errorHandler: ErrorHandler | undefined
+
+  private handlerKey(collection: string, action: string): string {
+    return `${collection}:${action}`
+  }
+
+  private register<const T extends RecordSchema>(
+    action: string,
+    ns: Namespace<T>,
+    handler: RecordHandler<Infer<T>>,
+  ): this {
+    const schema = getMain(ns)
+    const key = this.handlerKey(schema.$type, action)
+    if (this.handlers.has(key)) {
+      throw new Error(`Handler already registered for ${key}`)
+    }
+    this.handlers.set(key, { schema, handler })
+    return this
+  }
+
+  create<const T extends RecordSchema>(
+    ns: Namespace<T>,
+    handler: CreateHandler<Infer<T>>,
+  ): this {
+    return this.register('create', ns, handler)
+  }
+
+  update<const T extends RecordSchema>(
+    ns: Namespace<T>,
+    handler: UpdateHandler<Infer<T>>,
+  ): this {
+    return this.register('update', ns, handler)
+  }
+
+  delete<const T extends RecordSchema>(
+    ns: Namespace<T>,
+    handler: DeleteHandler,
+  ): this {
+    return this.register('delete', ns, handler)
+  }
+
+  put<const T extends RecordSchema>(
+    ns: Namespace<T>,
+    handler: PutHandler<Infer<T>>,
+  ): this {
+    this.register('create', ns, handler)
+    return this.register('update', ns, handler)
+  }
+
+  other(fn: UntypedHandler): this {
+    this.otherHandler = fn
+    return this
+  }
+
+  identity(fn: IdentityHandler): this {
+    this.identityHandler = fn
+    return this
+  }
+
+  error(fn: ErrorHandler): this {
+    this.errorHandler = fn
+    return this
+  }
+
+  async onEvent(evt: TapEvent, opts: HandlerOpts): Promise<void> {
+    if (evt.type === 'identity') {
+      await this.identityHandler?.(evt, opts)
+    } else {
+      await this.handleRecordEvent(evt, opts)
+    }
+    await opts.ack()
+  }
+
+  private async handleRecordEvent(
+    evt: RecordEvent,
+    opts: HandlerOpts,
+  ): Promise<void> {
+    const { collection, action } = evt
+    const key = this.handlerKey(collection, action)
+    const registered = this.handlers.get(key)
+
+    if (!registered) {
+      await this.otherHandler?.(evt, opts)
+      return
+    }
+
+    if (action === 'create' || action === 'update') {
+      const result = registered.schema.safeParse(evt.record)
+      if (!result.success) {
+        throw new Error(
+          `Record validation failed for ${collection}: ${result.reason}`,
+        )
+      }
+    }
+
+    await (registered.handler as UntypedHandler)(evt, opts)
+  }
+
+  onError(err: Error): void {
+    if (this.errorHandler) {
+      this.errorHandler(err)
+    } else {
+      throw err
+    }
+  }
+}

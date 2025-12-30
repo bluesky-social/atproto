@@ -105,6 +105,53 @@ indexer.error((err: Error) => { ... })
 
 If no error handler is registered, errors will throw as unhandled exceptions.
 
+### `LexIndexer`
+
+A typed indexer that uses `@atproto/lex` schemas for type-safe event handling. Register handlers for specific record types and actions:
+
+```ts
+import { LexIndexer } from '@atproto/tap'
+import * as com from './lexicons/com'
+
+const indexer = new LexIndexer()
+
+// Handle creates for a specific record type
+indexer.create(com.example.post, async (evt) => {
+  // evt.record is fully typed as com.example.post.Main
+  console.log(`New post: ${evt.record.text}`)
+})
+
+// Handle updates
+indexer.update(com.example.post, async (evt) => {
+  console.log(`Updated post: ${evt.record.text}`)
+})
+
+// Handle deletes (no record on delete events)
+indexer.delete(com.example.post, async (evt) => {
+  console.log(`Deleted: at://${evt.did}/${evt.collection}/${evt.rkey}`)
+})
+
+// Handle both creates and updates with put()
+indexer.put(com.example.like, async (evt) => {
+  console.log(`Like ${evt.action}: ${evt.record.subject.uri}`)
+})
+
+// Fallback for unhandled record types/actions
+indexer.other(async (evt) => {
+  console.log(`Unhandled: ${evt.action}, ${evt.collection}`)
+})
+
+// Identity and error handlers
+indexer.identity(async (evt) => { ... })
+indexer.error((err) => { ... })
+
+const channel = tap.channel(indexer)
+```
+
+Records are validated against their schemas before handlers are called. If validation fails, an error is thrown which will be picked up through the `error` handler..
+
+Duplicate handler registration throws an error, including conflicts between `put()` and `create()`/`update()` for the same schema.
+
 ### `TapHandler`
 
 You can create your own custom handler by creating a class that implements the `TapHandler` interface:
