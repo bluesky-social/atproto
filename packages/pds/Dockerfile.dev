@@ -4,8 +4,11 @@ FROM node:20.11-alpine3.18
 
 RUN corepack enable
 
-# Need tools to compile sqlite.
+# Need tools to compile sqlite Node lib.
 RUN apk add --update dumb-init python3 make g++
+
+# Sqlite CLI for ad-hoc inspection.
+RUN apk add sqlite
 
 WORKDIR /app
 
