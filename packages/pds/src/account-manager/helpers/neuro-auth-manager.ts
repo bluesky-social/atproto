@@ -137,8 +137,10 @@ export class NeuroAuthManager {
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
+        // Use http:// for localhost, https:// for everything else
+        const protocol = this.config.domain.startsWith('localhost') ? 'http' : 'https'
         const fetchResponse = await fetch(
-          `https://${this.config.domain}/QuickLogin`,
+          `${protocol}://${this.config.domain}/QuickLogin`,
           {
             method: 'POST',
             headers: {

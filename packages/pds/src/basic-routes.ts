@@ -80,6 +80,14 @@ Most API routes are under /xrpc/
         }
 
         // Process callback
+        if (!ctx.neuroAuthManager) {
+          return res.status(503).json({
+            success: false,
+            code: 'NEURO_NOT_CONFIGURED',
+            message: 'Neuro authentication not configured',
+          })
+        }
+
         ctx.neuroAuthManager.handleCallback({
           sessionId,
           jid,

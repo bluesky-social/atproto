@@ -58,10 +58,26 @@ export class PDS {
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
   private sequencerStatsInterval?: NodeJS.Timeout
+  private neuroCleanupInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
+
+    // Setup Neuro cleanup interval if using database storage
+    if (opts.ctx.cfg.neuro?.enabled && opts.ctx.cfg.neuro.storageBackend === 'database') {
+      this.neuroCleanupInterval = setInterval(() => {
+        opts.ctx.neuroAuthManager
+          ?.cleanupExpiredSessions()
+          .catch((err) =>
+            console.error('Neuro session cleanup failed:', err),
+          )
+      }, 60 * 1000)
+
+      // Allow Node to exit even if this timer is still active
+      // This is important for test environments where destroy() is called
+      this.neuroCleanupInterval.unref()
+    }
   }
 
   static async create(
@@ -189,6 +205,7 @@ export class PDS {
     await this.ctx.proxyAgent.destroy()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
+    clearInterval(this.neuroCleanupInterval)
   }
 }
 

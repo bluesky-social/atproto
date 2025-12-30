@@ -345,26 +345,8 @@ export class AppContext {
         cfg.neuro.storageBackend === 'database'
           ? accountManager.db
           : redisScratch,
-        accountManager.log,
+        fetchLogger,
       )
-
-      // Setup cleanup interval for database storage
-      if (cfg.neuro.storageBackend === 'database') {
-        const cleanupInterval = setInterval(() => {
-          neuroAuthManager
-            ?.cleanupExpiredSessions()
-            .catch((err) =>
-              accountManager.log.error(
-                { err },
-                'Neuro session cleanup failed',
-              ),
-            )
-        }, 60 * 1000)
-
-        // Clean up on shutdown
-        process.on('SIGTERM', () => clearInterval(cleanupInterval))
-        process.on('SIGINT', () => clearInterval(cleanupInterval))
-      }
     }
 
     const oauthProvider = cfg.oauth.provider

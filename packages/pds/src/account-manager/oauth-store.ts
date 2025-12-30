@@ -125,7 +125,7 @@ export class OAuthStore
     email,
     password,
     emailOtp,
-  }: SignUpData): Promise<Account> {
+  }: SignUpData & { emailOtp?: string }): Promise<Account> {
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
     // @NOTE Password strength & length already enforced by the OAuthProvider
 
@@ -782,7 +782,7 @@ This will authenticate you with your Neuro identity.`
           did,
           handle: data.handle,
           email,
-          password: null, // Neuro accounts have no password
+          password: undefined, // Neuro accounts have no password
           inviteCode: data.inviteCode,
           repoCid: commit.cid,
           repoRev: commit.rev,

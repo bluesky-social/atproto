@@ -19,7 +19,9 @@ export const verifyAccountPassword = async (
     .selectAll()
     .where('did', '=', did)
     .executeTakeFirst()
-  return found ? await scrypt.verify(password, found.passwordScrypt) : false
+  // Neuro accounts have null password and cannot use password auth
+  if (!found || found.passwordScrypt === null) return false
+  return await scrypt.verify(password, found.passwordScrypt)
 }
 
 export const verifyAppPassword = async (
