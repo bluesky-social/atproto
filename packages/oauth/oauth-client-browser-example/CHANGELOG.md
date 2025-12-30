@@ -1,5 +1,19 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.9
+
+### Patch Changes
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose bskyClient instance and lexicons on window object
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add support for signup (prompt=create)
+
+- [#4467](https://github.com/bluesky-social/atproto/pull/4467) [`a78380c`](https://github.com/bluesky-social/atproto/commit/a78380c89cb47c348e77eadb0738e7cb1c867a69) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor ui tweak
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite `getSession` and `getRecord` using generic hooks
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add bin script, allowing to run through npx
+
 ## 0.0.8
 
 ### Patch Changes
