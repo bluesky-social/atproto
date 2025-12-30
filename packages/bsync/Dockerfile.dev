@@ -1,0 +1,10 @@
+FROM node:18-alpine
+
+RUN corepack enable
+
+RUN apk add --update dumb-init
+
+WORKDIR /app
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["packages/bsync/bin/denv.sh"]

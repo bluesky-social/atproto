@@ -15,8 +15,9 @@ export const createRouter = ({ oauthProvider, cfg }: AppContext): Router => {
 
   const oauthProtectedResourceMetadata =
     oauthProtectedResourceMetadataSchema.parse({
-      resource: cfg.service.publicUrl,
-      authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl],
+      // TODO: untangle this mess somehow.
+      resource: cfg.service.publicUrl2,
+      authorization_servers: [cfg.entryway?.url ?? cfg.service.publicUrl2],
       bearer_methods_supported: ['header'],
       scopes_supported: [],
       resource_documentation: 'https://atproto.com',

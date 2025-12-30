@@ -16,6 +16,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "denv": "nodemon --watch 'src/' -e ts --exec 'pnpm build && pnpm start-denv'",
+    "start-denv": "node --enable-source-maps --inspect=0.0.0.0:12585 denv.js",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-db.sh jest",

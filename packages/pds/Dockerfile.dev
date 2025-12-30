@@ -1,0 +1,20 @@
+# @NOTE just a temp fix: alpine3.19 breaks sharp install, see nodejs/docker-node#2009
+# see additional reference to this image further down.
+FROM node:20.11-alpine3.18
+
+RUN corepack enable
+
+# Need tools to compile sqlite Node lib.
+RUN apk add --update dumb-init python3 make g++
+
+# Sqlite CLI for ad-hoc inspection.
+RUN apk add sqlite
+
+WORKDIR /app
+
+RUN mkdir /var/lib/data
+
+ENV PDS_DATA_DIRECTORY=/var/lib/data
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["packages/pds/bin/denv.sh"]

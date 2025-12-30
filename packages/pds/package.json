@@ -19,6 +19,8 @@
     "node": ">=18.7.0"
   },
   "scripts": {
+    "denv": "nodemon --watch 'src/' -e ts --exec 'pnpm build && pnpm start-denv'",
+    "start-denv": "node --enable-source-maps --inspect=0.0.0.0:12583 denv.js",
     "prepare": "[ \"$npm_config_production\" = true ] || puppeteer browsers install chrome",
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",
