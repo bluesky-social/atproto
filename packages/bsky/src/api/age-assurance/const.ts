@@ -140,6 +140,26 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     },
     {
       countryCode: 'US',
+      regionCode: 'VA',
+      rules: [
+        {
+          $type: ids.IfAssuredOverAge,
+          age: 16,
+          access: 'full',
+        },
+        {
+          $type: ids.IfDeclaredOverAge,
+          age: 16,
+          access: 'full',
+        },
+        {
+          $type: ids.Default,
+          access: 'none',
+        },
+      ],
+    },
+    {
+      countryCode: 'US',
       regionCode: 'TN',
       rules: [
         {
