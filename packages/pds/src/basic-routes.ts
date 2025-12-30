@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import express from 'express'
 import { sql } from 'kysely'
 import { AppContext } from './context'
 
@@ -47,6 +48,77 @@ Most API routes are under /xrpc/
     }
     res.send({ version })
   })
+
+  // Add JSON body parser for Neuro routes
+  router.use('/neuro/*', express.json())
+
+  // Neuro Quick Login callback endpoint
+  if (ctx.neuroAuthManager) {
+    router.post('/neuro/callback', async function (req, res) {
+      try {
+        const { sessionId, jid, userName, email, eMail, ...otherFields } =
+          req.body
+
+        // Validate required fields
+        if (!sessionId || !jid) {
+          req.log.warn({ body: req.body }, 'Neuro callback missing fields')
+          return res.status(400).json({
+            error: 'Missing required fields',
+            code: 'NEURO_CALLBACK_MISSING_FIELDS',
+            details: 'sessionId and jid are required',
+          })
+        }
+
+        // Basic JID validation
+        if (!jid.includes('@')) {
+          req.log.warn({ jid }, 'Invalid JID format in Neuro callback')
+          return res.status(400).json({
+            error: 'Invalid JID format',
+            code: 'NEURO_CALLBACK_INVALID_JID',
+            details: 'JID must contain @',
+          })
+        }
+
+        // Process callback
+        ctx.neuroAuthManager.handleCallback({
+          sessionId,
+          jid,
+          userName,
+          email,
+          eMail,
+          ...otherFields,
+        })
+
+        req.log.info(
+          {
+            sessionId: sessionId.substring(0, 8) + '...',
+            hasEmail: !!(email || eMail),
+          },
+          'Neuro callback received',
+        )
+
+        res.status(200).json({ success: true })
+      } catch (err) {
+        req.log.error({ err }, 'Neuro callback error')
+        res.status(500).json({
+          error: err instanceof Error ? err.message : 'Internal server error',
+          code: 'NEURO_CALLBACK_ERROR',
+        })
+      }
+    })
+
+    // Session status endpoint for frontend polling (optional)
+    router.get('/neuro/session/:sessionId/status', async function (req, res) {
+      const { sessionId } = req.params
+      const isPending = ctx.neuroAuthManager?.isSessionPending(sessionId)
+      const isCompleted = ctx.neuroAuthManager?.isSessionCompleted(sessionId)
+
+      res.json({
+        pending: isPending,
+        completed: isCompleted,
+      })
+    })
+  }
 
   return router
 }

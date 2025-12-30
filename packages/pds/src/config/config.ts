@@ -349,6 +349,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     lexicon: lexiconCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
+    neuro: env.neuro || null,
   }
 }
 
@@ -373,6 +374,7 @@ export type ServerConfig = {
   proxy: ProxyConfig
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
+  neuro: NeuroConfig | null
 }
 
 export type ServiceConfig = {
@@ -523,4 +525,11 @@ export type ModServiceConfig = {
 export type ReportServiceConfig = {
   url: string
   did: string
+}
+
+export type NeuroConfig = {
+  enabled: boolean
+  domain: string
+  storageBackend: 'database' | 'redis'
+  customUiPath?: string
 }

@@ -1,4 +1,5 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
+import { NeuroConfig } from './config'
 
 export function readEnv() {
   return {
@@ -154,6 +155,18 @@ export function readEnv() {
 
     // lexicon resolution
     lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),
+
+    // neuro
+    neuro: envBool('PDS_NEURO_ENABLED')
+      ? ({
+          enabled: true,
+          domain: envStr('PDS_NEURO_DOMAIN') || 'mateo.lab.tagroot.io',
+          storageBackend:
+            (envStr('PDS_NEURO_STORAGE_BACKEND') as 'database' | 'redis') ||
+            'database',
+          customUiPath: envStr('PDS_NEURO_CUSTOM_UI_PATH'),
+        } as NeuroConfig)
+      : undefined,
   }
 }
 

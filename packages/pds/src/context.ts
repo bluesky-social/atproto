@@ -73,6 +73,7 @@ export type AppContextOptions = {
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
+  neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -101,6 +102,7 @@ export class AppContext {
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
+  public neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -127,6 +129,7 @@ export class AppContext {
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
+    this.neuroAuthManager = opts.neuroAuthManager
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -325,6 +328,45 @@ export class AppContext {
       },
     })
 
+    // Create Neuro Auth Manager if configured
+    let neuroAuthManager:
+      | import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+      | undefined
+    if (cfg.neuro?.enabled) {
+      const { NeuroAuthManager } = await import(
+        './account-manager/helpers/neuro-auth-manager'
+      )
+      neuroAuthManager = new NeuroAuthManager(
+        {
+          domain: cfg.neuro.domain,
+          callbackBaseUrl: cfg.service.publicUrl,
+          storageBackend: cfg.neuro.storageBackend,
+        },
+        cfg.neuro.storageBackend === 'database'
+          ? accountManager.db
+          : redisScratch,
+        accountManager.log,
+      )
+
+      // Setup cleanup interval for database storage
+      if (cfg.neuro.storageBackend === 'database') {
+        const cleanupInterval = setInterval(() => {
+          neuroAuthManager
+            ?.cleanupExpiredSessions()
+            .catch((err) =>
+              accountManager.log.error(
+                { err },
+                'Neuro session cleanup failed',
+              ),
+            )
+        }, 60 * 1000)
+
+        // Clean up on shutdown
+        process.on('SIGTERM', () => clearInterval(cleanupInterval))
+        process.on('SIGINT', () => clearInterval(cleanupInterval))
+      }
+    }
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -340,6 +382,7 @@ export class AppContext {
             plcRotationKey,
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
+            neuroAuthManager,
           ),
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
@@ -472,6 +515,7 @@ export class AppContext {
       safeFetch,
       authVerifier,
       oauthProvider,
+      neuroAuthManager,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
