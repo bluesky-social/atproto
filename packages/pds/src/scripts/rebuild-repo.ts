@@ -61,7 +61,7 @@ export const rebuildRepo = async (
       }
     }
     const mstCids = await mst.allCids()
-    const toDelete = new CidSet(existingCids.toList()).subtractSet(mstCids)
+    const toDelete = new CidSet(existingCids).subtractSet(mstCids)
     const newCommit = await signCommit(
       {
         did,
