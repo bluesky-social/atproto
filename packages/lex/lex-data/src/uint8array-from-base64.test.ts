@@ -111,6 +111,8 @@ for (const fromBase64 of [
         'YWFh' + '====',
         'YWFh' + '=====',
         'YWFh' + '======',
+        'TWEé',
+        'TWE👍',
         // More invalid padding
         // 'TWE=', // 'Ma'
         'TWE=' + '=',

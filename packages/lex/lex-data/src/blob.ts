@@ -35,12 +35,7 @@ export function isBlobRef(
     return false
   }
 
-  if (
-    typeof size !== 'number' ||
-    size < 0 ||
-    !Number.isInteger(size) ||
-    !Number.isSafeInteger(size)
-  ) {
+  if (typeof size !== 'number' || size < 0 || !Number.isSafeInteger(size)) {
     return false
   }
 
