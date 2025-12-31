@@ -228,7 +228,7 @@ describe('PasswordAgent', () => {
 
     expect(onDeleted).toHaveBeenCalled()
 
-    expect(
+    await expect(
       client.call(app.example.customMethod, { message: 'hello' }),
     ).rejects.toThrow('Logged out')
   })

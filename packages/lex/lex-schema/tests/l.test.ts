@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
-import { l } from '..'
+import { l } from '../src/index.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
 const blobCid = parseCid(

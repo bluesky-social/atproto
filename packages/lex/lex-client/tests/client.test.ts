@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { LexValue, cidForLex, cidForRawBytes } from '@atproto/lex-cbor'
 import { lexParse, lexStringify } from '@atproto/lex-json'
-import { Action, Client } from '..'
+import { Action, Client } from '../src/index.js'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 

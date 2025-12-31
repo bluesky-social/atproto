@@ -12,7 +12,11 @@ export async function drainWebsocket(
   } = {},
 ): Promise<void> {
   if (socket.bufferedAmount > highWaterMark) {
-    while (socket.readyState === 1 && socket.bufferedAmount > lowWaterMark) {
+    while (
+      socket.readyState === 1 &&
+      socket.bufferedAmount !== 0 &&
+      socket.bufferedAmount > lowWaterMark
+    ) {
       await abortableSleep(10, signal)
     }
   }
