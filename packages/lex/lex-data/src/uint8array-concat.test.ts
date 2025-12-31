@@ -4,10 +4,7 @@ import { ui8Equals } from './uint8array.js'
 
 for (const ui8Concat of [ui8ConcatNode, ui8ConcatPonyfill] as const) {
   // Tests should run in NodeJS where implementations are available.
-  assert(
-    ui8Concat !== undefined,
-    'ui8Concat implementation should not be undefined',
-  )
+  assert(ui8Concat, 'ui8Concat implementation should not be undefined')
 
   describe(ui8Concat.name, () => {
     describe('empty array', () => {
