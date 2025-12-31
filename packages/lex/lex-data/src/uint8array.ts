@@ -26,7 +26,10 @@ export type { Base64Alphabet }
 export const toBase64: (
   bytes: Uint8Array,
   alphabet?: Base64Alphabet,
-) => string = toBase64Native ?? toBase64Node ?? toBase64Ponyfill
+) => string =
+  /* v8 ignore next -- @preserve */ toBase64Native ??
+  /* v8 ignore next -- @preserve */ toBase64Node ??
+  /* v8 ignore next -- @preserve */ toBase64Ponyfill
 
 /**
  * Decodes a base64 string into a Uint8Array. This function supports both padded
@@ -38,8 +41,12 @@ export const toBase64: (
 export const fromBase64: (
   b64: string,
   alphabet?: Base64Alphabet,
-) => Uint8Array = fromBase64Native ?? fromBase64Node ?? fromBase64Ponyfill
+) => Uint8Array =
+  /* v8 ignore next -- @preserve */ fromBase64Native ??
+  /* v8 ignore next -- @preserve */ fromBase64Node ??
+  /* v8 ignore next -- @preserve */ fromBase64Ponyfill
 
+/* v8 ignore next -- @preserve */
 if (toBase64 === toBase64Ponyfill || fromBase64 === fromBase64Ponyfill) {
   /*#__PURE__*/
   console.warn(
@@ -86,4 +93,6 @@ export function ui8Equals(a: Uint8Array, b: Uint8Array): boolean {
   return true
 }
 
-export const ui8Concat = ui8ConcatNode ?? ui8ConcatPonyfill
+export const ui8Concat =
+  /* v8 ignore next -- @preserve */ ui8ConcatNode ??
+  /* v8 ignore next -- @preserve */ ui8ConcatPonyfill

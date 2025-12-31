@@ -1,5 +1,59 @@
 import { describe, expect, it } from 'vitest'
-import { isLexValue, isTypedLexMap } from './lex'
+import { parseCid } from './cid.js'
+import { isLexArray, isLexScalar, isLexValue, isTypedLexMap } from './lex.js'
+
+describe('isLexScalar', () => {
+  for (const { note, value, expected } of [
+    { note: 'string', value: 'hello', expected: true },
+    { note: 'boolean', value: true, expected: true },
+    { note: 'null', value: null, expected: true },
+    { note: 'Uint8Array', value: new Uint8Array([1, 2, 3]), expected: true },
+    {
+      note: 'Cid',
+      value: parseCid(
+        'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+      ),
+      expected: true,
+    },
+    { note: 'number (integer)', value: 42, expected: true },
+    { note: 'number (float)', value: 3.14, expected: false },
+    { note: 'object', value: { a: 1 }, expected: false },
+    { note: 'array', value: [1, 2, 3], expected: false },
+    { note: 'undefined', value: undefined, expected: false },
+    { note: 'function', value: () => {}, expected: false },
+  ]) {
+    it(note, () => {
+      const result = isLexScalar(value)
+      expect(result).toBe(expected)
+    })
+  }
+})
+
+describe('isLexArray', () => {
+  it('returns true for valid LexArray', () => {
+    const list = [123, 'blah', true, null, new Uint8Array([1, 2, 3]), { a: 1 }]
+    expect(isLexArray(list)).toBe(true)
+  })
+
+  it('returns false for non-arrays', () => {
+    const values = [
+      123,
+      'blah',
+      true,
+      null,
+      new Uint8Array([1, 2, 3]),
+      { a: 1 },
+    ]
+    for (const value of values) {
+      expect(isLexArray(value)).toBe(false)
+    }
+  })
+
+  it('returns false for arrays with non-Lex values', () => {
+    expect(isLexArray([123, 'blah', () => {}])).toBe(false)
+    expect(isLexArray([123, 'blah', undefined])).toBe(false)
+  })
+})
 
 describe('isLexValue', () => {
   describe('valid values', () => {
@@ -10,7 +64,9 @@ describe('isLexValue', () => {
       { note: 'Uint8Array', value: new Uint8Array([1, 2, 3]) },
       {
         note: 'Cid',
-        value: { code: 1, version: 1, multihash: new Uint8Array([18, 32]) },
+        value: parseCid(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
       },
       {
         note: 'record with Lex values',
@@ -52,17 +108,12 @@ describe('isLexValue', () => {
       { note: 'float', value: 123.456 },
       { note: 'undefined', value: undefined },
       { note: 'function', value: () => {} },
-      {
-        note: 'record with non-Lex value',
-        value: {
-          a: 123,
-          b: () => {},
-        },
-      },
-      {
-        note: 'list with non-Lex value',
-        value: [123, 'blah', () => {}],
-      },
+      { note: 'obj with fn', value: { a: 123, b: () => {} } },
+      { note: 'list with non-Lex value', value: [123, 'blah', () => {}] },
+      { note: 'Date object', value: new Date() },
+      { note: 'Map object', value: new Map() },
+      { note: 'Set object', value: new Set() },
+      { note: 'class instance', value: new (class A {})() },
     ]) {
       it(note, () => {
         expect(isLexValue(value)).toBe(false)

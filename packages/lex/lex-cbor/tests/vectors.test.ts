@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { lexEquals } from '@atproto/lex-data'
 import { jsonToLex, lexToJson } from '@atproto/lex-json'
 import { cidForLex, decode, encode } from '../src/index.js'
-import { vectors } from './vectors'
+import { vectors } from './vectors.js'
 
 describe('lex', () => {
   for (const vector of vectors) {

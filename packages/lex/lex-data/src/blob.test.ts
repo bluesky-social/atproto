@@ -52,6 +52,25 @@ describe('isBlobRef', () => {
         size: '10000',
       }),
     ).toBe(false)
+
+    expect(
+      isBlobRef({
+        // $type: 'blob',
+        ref: blobCid,
+        mimeType: 'image/jpeg',
+        size: 10000,
+      }),
+    ).toBe(false)
+
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        ref: blobCid,
+        mimeType: { toString: () => 'image/jpeg' },
+        size: 10000,
+      }),
+    ).toBe(false)
+
     expect(
       isBlobRef(
         {
@@ -82,6 +101,11 @@ describe('isBlobRef', () => {
         { strict: true },
       ),
     ).toBe(false)
+
+    expect(isBlobRef('not an object')).toBe(false)
+    expect(isBlobRef([])).toBe(false)
+    expect(isBlobRef(new Date())).toBe(false)
+    expect(isBlobRef(new Map())).toBe(false)
   })
 
   it('rejects invalid CID/multihash code', () => {
@@ -173,6 +197,32 @@ describe('isLegacyBlobRef', () => {
         mimeType: 'image/jpeg',
       }),
     ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: { toString: () => 'image/jpeg' },
+      }),
+    ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: 3,
+      }),
+    ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: '',
+      }),
+    ).toBe(false)
+
+    expect(isLegacyBlobRef([])).toBe(false)
+    expect(isLegacyBlobRef('not an object')).toBe(false)
+    expect(isLegacyBlobRef(new Date())).toBe(false)
+    expect(isLegacyBlobRef(new Map())).toBe(false)
   })
 
   it('rejects extra keys', () => {

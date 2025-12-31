@@ -97,7 +97,7 @@ export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
     return false
   }
 
-  if (typeof mimeType !== 'string') {
+  if (typeof mimeType !== 'string' || mimeType.length === 0) {
     return false
   }
 

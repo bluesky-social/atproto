@@ -25,4 +25,4 @@ export const NodeJSBuffer: NodeJSBufferConstructor | null =
   (globalThis as any)?.[BUFFER]?.prototype instanceof Uint8Array &&
   'byteLength' in (globalThis as any)[BUFFER]
     ? ((globalThis as any)[BUFFER] as NodeJSBufferConstructor)
-    : null
+    : /* v8 ignore next -- @preserve */ null

@@ -30,15 +30,15 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./nodejs": {
+      "types": "./dist/nodejs.d.ts",
       "import": "./dist/nodejs.js",
-      "require": "./dist/nodejs.js",
-      "types": "./dist/nodejs.d.ts"
+      "require": "./dist/nodejs.js"
     }
   },
   "dependencies": {

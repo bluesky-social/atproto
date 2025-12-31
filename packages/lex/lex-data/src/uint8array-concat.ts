@@ -6,7 +6,7 @@ export const ui8ConcatNode = Buffer
   ? function ui8ConcatNode(array: readonly Uint8Array[]): Uint8Array {
       return Buffer.concat(array)
     }
-  : undefined
+  : /* v8 ignore next -- @preserve */ null
 
 export function ui8ConcatPonyfill(array: readonly Uint8Array[]): Uint8Array {
   let totalLength = 0

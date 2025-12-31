@@ -39,6 +39,7 @@ describe('lexEquals', () => {
     expectLexEqual([1, 2, 3], [1, 2, 4], false)
     expectLexEqual([1, 2, 3], [1, 2], false)
     expectLexEqual([1, 2, 3], 'not an array', false)
+    expectLexEqual([1, 2, 3], { 0: 1, 1: 2, 2: 3 }, false)
   })
 
   it('compares Uint8Arrays', () => {
@@ -60,10 +61,23 @@ describe('lexEquals', () => {
     expectLexEqual(cid2, cid3, true)
 
     expectLexEqual(cid1, cid1.toString(), false)
+    expectLexEqual(cid1, { not: 'a cid' }, false)
+    expectLexEqual(cid1, [], false)
+    expectLexEqual(cid1, cid1.bytes, false)
   })
 
   it('compares objects', () => {
     expectLexEqual({ a: 1, b: 2 }, { a: 1, b: 2 }, true)
+    expectLexEqual(
+      { a: 1, b: 2, c: undefined },
+      { a: 1, b: 2, c: undefined },
+      true,
+    )
+    expectLexEqual(
+      { a: 1, b: 2, c: { e: 1, d: undefined } },
+      { a: 1, b: 2, c: { d: undefined, e: 1 } },
+      true,
+    )
     expectLexEqual(
       { a: 1, b: { unicode: 'a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧' } },
       { a: 1, b: { unicode: 'a~öñ©⽘☎𓋓😀👨‍👩‍👧‍👧' } },
@@ -74,6 +88,21 @@ describe('lexEquals', () => {
     expectLexEqual({ a: 1, b: 2 }, { a: 1 }, false)
     expectLexEqual({ a: 1, b: 2 }, 'not an object', false)
     expectLexEqual({ a: 1, b: 2 }, null, false)
+  })
+
+  it('accounts for undefined (but present) properties in objects', () => {
+    expectLexEqual({ a: 1, b: undefined }, { a: 1 }, false)
+    expectLexEqual(
+      { a: 1, b: { c: undefined, d: 2 } },
+      { a: 1, b: { d: 2 } },
+      false,
+    )
+
+    expectLexEqual(
+      { a: 1, b: { c: undefined, d: 2 } },
+      { a: 1, b: { c: 3, d: 2 } },
+      false,
+    )
   })
 
   it('compares nested structures', () => {
