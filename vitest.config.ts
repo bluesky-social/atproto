@@ -4,12 +4,11 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8', // or 'istanbul'
-      include: ['src/**/*.ts'],
       exclude: [
         '**/dist/**',
         '**/node_modules/**',
         '**/src/lexicons/**',
-        '**/tests/lexicons/**',
+        '**/tests/**',
       ],
     },
     projects: ['packages/lex/*'],
