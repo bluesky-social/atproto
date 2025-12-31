@@ -6,6 +6,7 @@ import {
   CarBlock,
   CidSet,
   ReadableBlockstore,
+  getFullRepo,
   writeCarStream,
 } from '@atproto/repo'
 import { countAll } from '../../db'
@@ -78,13 +79,14 @@ export class SqlRepoReader extends ReadableBlockstore {
 
   async getCarStream(since?: string) {
     const root = await this.getRoot()
-    if (!root) {
-      throw new RepoRootNotFoundError()
-    }
-    return writeCarStream(root, this.iterateCarBlocks(since))
+    // if no `since` is given, then we walk the MST for deteriministic CAR format
+    // if `since` is given, then we just do a SELECT out of the actor store based on indexed `since`
+    return since
+      ? writeCarStream(root, this.iterateCarBlocksSince(since))
+      : getFullRepo(this, root)
   }
 
-  async *iterateCarBlocks(since?: string): AsyncIterable<CarBlock> {
+  async *iterateCarBlocksSince(since: string): AsyncIterable<CarBlock> {
     let cursor: RevCursor | undefined = undefined
     // allow us to write to car while fetching the next page
     do {
