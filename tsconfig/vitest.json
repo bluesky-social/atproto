@@ -3,9 +3,7 @@
   "extends": "./node.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "target": "es2020",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "esnext",
     "skipLibCheck": true,
     "noEmit": true
   }
