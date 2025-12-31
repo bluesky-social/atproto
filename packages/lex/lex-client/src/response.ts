@@ -6,28 +6,28 @@ import {
   Query,
   ResultSuccess,
 } from '@atproto/lex-schema'
-import { Payload } from './util.js'
 import {
-  XrpcInvalidResponseError,
-  XrpcResponseError,
-  isXrpcErrorPayload,
-} from './xrpc-error.js'
+  LexRpcResponseError,
+  LexRpcUpstreamError,
+  isLexRpcErrorPayload,
+} from './errors.js'
+import { Payload } from './util.js'
 
-export type XrpcResponseBody<M extends Procedure | Query> =
+export type LexRpcResponseBody<M extends Procedure | Query> =
   InferMethodOutputBody<M, Uint8Array>
 
-export type XrpcResponsePayload<M extends Procedure | Query> =
+export type LexRpcResponsePayload<M extends Procedure | Query> =
   InferMethodOutputEncoding<M> extends infer E extends string
-    ? Payload<XrpcResponseBody<M>, E>
+    ? Payload<LexRpcResponseBody<M>, E>
     : null
 
 /**
  * Small container for XRPC response data.
  *
- * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
+ * @implements {ResultSuccess<LexRpcResponse<M>>} for convenience in result handling contexts.
  */
-export class XrpcResponse<const M extends Procedure | Query>
-  implements ResultSuccess<XrpcResponse<M>>
+export class LexRpcResponse<const M extends Procedure | Query>
+  implements ResultSuccess<LexRpcResponse<M>>
 {
   /** @see {@link ResultSuccess.success} */
   readonly success = true as const
@@ -41,7 +41,7 @@ export class XrpcResponse<const M extends Procedure | Query>
     readonly method: M,
     readonly status: number,
     readonly headers: Headers,
-    readonly payload: XrpcResponsePayload<M>,
+    readonly payload: LexRpcResponsePayload<M>,
   ) {}
 
   /**
@@ -57,18 +57,21 @@ export class XrpcResponse<const M extends Procedure | Query>
   }
 
   get body() {
-    return this.payload?.body as XrpcResponseBody<M>
+    return this.payload?.body as LexRpcResponseBody<M>
   }
 
   /**
-   * @throws {XrpcInvalidResponseError} when the response is invalid according
-   * to the method schema.
+   * @throws {LexRpcResponseError} in case of (valid) XRPC error responses. Use
+   * {@link LexRpcResponseError.matchesSchema} to narrow the error type based on
+   * the method's declared error schema.
+   * @throws {LexRpcUpstreamError} when the response is not a valid XRPC
+   * response, or if the response does not conform to the method's schema.
    */
   static async fromFetchResponse<const M extends Procedure | Query>(
     method: M,
     response: Response,
     options?: { validateResponse?: boolean },
-  ): Promise<XrpcResponse<M>> {
+  ): Promise<LexRpcResponse<M>> {
     // @NOTE The body MUST either be read or canceled to avoid resource leaks.
     // Since nothing should cause an exception before "readPayload" is
     // called, we can safely not use a try/finally here.
@@ -78,8 +81,8 @@ export class XrpcResponse<const M extends Procedure | Query>
       // Always parse json for error responses
       const payload = await readPayload(response, { parse: true })
 
-      if (response.status >= 400 && isXrpcErrorPayload(payload)) {
-        throw new XrpcResponseError(
+      if (response.status >= 400 && isLexRpcErrorPayload(payload)) {
+        throw new LexRpcResponseError(
           method,
           response.status,
           response.headers,
@@ -88,7 +91,7 @@ export class XrpcResponse<const M extends Procedure | Query>
       }
 
       if (response.status >= 500) {
-        throw new XrpcInvalidResponseError(
+        throw new LexRpcUpstreamError(
           'UpstreamFailure',
           `Upstream server encountered an error`,
           response,
@@ -96,7 +99,7 @@ export class XrpcResponse<const M extends Procedure | Query>
         )
       }
 
-      throw new XrpcInvalidResponseError(
+      throw new LexRpcUpstreamError(
         'InvalidResponse',
         response.status >= 400
           ? `Upstream server returned an invalid response payload`
@@ -115,7 +118,7 @@ export class XrpcResponse<const M extends Procedure | Query>
     if (method.output.encoding == null) {
       // Schema expects no payload
       if (payload) {
-        throw new XrpcInvalidResponseError(
+        throw new LexRpcUpstreamError(
           'InvalidResponse',
           `Expected response with no body, got ${payload.encoding}`,
           response,
@@ -125,7 +128,7 @@ export class XrpcResponse<const M extends Procedure | Query>
     } else {
       // Schema expects a payload
       if (!payload || !method.output.matchesEncoding(payload.encoding)) {
-        throw new XrpcInvalidResponseError(
+        throw new LexRpcUpstreamError(
           'InvalidResponse',
           payload
             ? `Expected ${method.output.encoding} response, got ${payload.encoding}`
@@ -142,7 +145,7 @@ export class XrpcResponse<const M extends Procedure | Query>
         })
 
         if (!result.success) {
-          throw new XrpcInvalidResponseError(
+          throw new LexRpcUpstreamError(
             'InvalidResponse',
             `Response validation failed: ${result.reason.message}`,
             response,
@@ -153,11 +156,11 @@ export class XrpcResponse<const M extends Procedure | Query>
       }
     }
 
-    return new XrpcResponse<M>(
+    return new LexRpcResponse<M>(
       method,
       response.status,
       response.headers,
-      payload as XrpcResponsePayload<M>,
+      payload as LexRpcResponsePayload<M>,
     )
   }
 }
@@ -211,7 +214,7 @@ async function readPayload(
       // @TODO verify statement above
       return { encoding, body: lexParse(text) }
     } catch (cause) {
-      throw new XrpcInvalidResponseError(
+      throw new LexRpcUpstreamError(
         'InvalidResponse',
         'Invalid JSON response body',
         response,

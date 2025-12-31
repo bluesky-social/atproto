@@ -52,10 +52,7 @@ const router = new LexRouter({
       await scheduler.wait(1_000, { signal })
     }
 
-    throw new LexError(
-      'LimitReached',
-      `Subscription stopped after ${limit} messages. Reconnect to continue receiving messages.`,
-    )
+    throw new LexError('LimitReached', `Limit of ${limit} messages reached`)
   })
 
 serve(

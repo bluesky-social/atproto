@@ -14,6 +14,12 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
+import {
+  LexRpcResponseError,
+  LexRpcUnexpectedError,
+  LexRpcUpstreamError,
+} from './errors.js'
+import { LexRpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
 import {
   Payload,
@@ -22,117 +28,108 @@ import {
   isBlobLike,
   toReadableStream,
 } from './util.js'
-import {
-  XrpcInvalidResponseError,
-  XrpcResponseError,
-  XrpcUnexpectedError,
-} from './xrpc-error.js'
-import { XrpcResponse } from './xrpc-response.js'
-
-export * from './xrpc-error.js'
-export * from './xrpc-response.js'
 
 // If all params are optional, allow omitting the params object
-type XrpcParamsOptions<P extends Params> =
+type LexRpcParamsOptions<P extends Params> =
   NonNullable<unknown> extends P ? { params?: P } : { params: P }
 
-type XrpcRequestPayload<M extends Procedure | Query> = InferMethodInput<
+type LexRpcRequestPayload<M extends Procedure | Query> = InferMethodInput<
   M,
   BinaryBodyInit
 >
 
-type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
+type LexRpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
   ? // encoding will be inferred from the schema at runtime if not provided
     { body: B; encoding?: E }
   : { body?: undefined; encoding?: undefined }
 
-export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
+export type LexRpcOptions<M extends Procedure | Query = Procedure | Query> =
   CallOptions &
-    XrpcInputOptions<XrpcRequestPayload<M>> &
-    XrpcParamsOptions<InferMethodParams<M>>
+    LexRpcInputOptions<LexRpcRequestPayload<M>> &
+    LexRpcParamsOptions<InferMethodParams<M>>
 
-export type XrpcFailure<M extends Procedure | Query> =
+export type LexRpcFailure<M extends Procedure | Query> =
   // The server returned a valid XRPC error response
-  | XrpcResponseError<M>
+  | LexRpcResponseError<M>
   // The response was not a valid XRPC response, or it does not match the schema
-  | XrpcInvalidResponseError
+  | LexRpcUpstreamError
   // Something went wrong (network error, etc.)
-  | XrpcUnexpectedError
+  | LexRpcUnexpectedError
 
-export type XrpcResult<M extends Procedure | Query> =
-  | XrpcResponse<M>
-  | XrpcFailure<M>
+export type LexRpcResult<M extends Procedure | Query> =
+  | LexRpcResponse<M>
+  | LexRpcFailure<M>
 
 /**
  * Utility method to type cast the error thrown by {@link xrpc} to an
- * {@link XrpcFailure} matching the provided method. Only use this function
+ * {@link LexRpcFailure} matching the provided method. Only use this function
  * inside a catch block right after calling {@link xrpc}, and use the same
  * method type parameter as used in the {@link xrpc} call.
  */
-export function asXrpcFailure<M extends Procedure | Query>(
-  err: unknown,
-): XrpcFailure<M> {
-  if (err instanceof XrpcResponseError) return err
-  if (err instanceof XrpcInvalidResponseError) return err
-  return XrpcUnexpectedError.from(err)
+export function asLexRpcFailure<
+  M extends Procedure | Query = Procedure | Query,
+>(err: unknown): LexRpcFailure<M> {
+  if (err instanceof LexRpcResponseError) return err
+  if (err instanceof LexRpcUpstreamError) return err
+  return LexRpcUnexpectedError.from(err)
 }
 
 /**
- * @throws XrpcFailure<M>
+ * @throws LexRpcFailure<M>
  */
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
-  ns: NonNullable<unknown> extends XrpcOptions<M>
+  ns: NonNullable<unknown> extends LexRpcOptions<M>
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
-): Promise<XrpcResponse<M>>
+): Promise<LexRpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: XrpcOptions<M>,
-): Promise<XrpcResponse<M>>
+  options: LexRpcOptions<M>,
+): Promise<LexRpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: XrpcOptions<M> = {} as XrpcOptions<M>,
-): Promise<XrpcResponse<M>> {
+  options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
+): Promise<LexRpcResponse<M>> {
   try {
-    return await xrpcRequest<M>(agent, ns, options)
+    return await lexRpcRequest<M>(agent, ns, options)
   } catch (err) {
-    throw asXrpcFailure<M>(err)
+    throw asLexRpcFailure<M>(err)
   }
 }
 
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
-  ns: NonNullable<unknown> extends XrpcOptions<M>
+  ns: NonNullable<unknown> extends LexRpcOptions<M>
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
-): Promise<XrpcResult<M>>
+): Promise<LexRpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: XrpcOptions<M>,
-): Promise<XrpcResult<M>>
+  options: LexRpcOptions<M>,
+): Promise<LexRpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: XrpcOptions<M> = {} as XrpcOptions<M>,
-): Promise<XrpcResult<M>> {
-  return xrpcRequest<M>(agent, ns, options).catch(asXrpcFailure<M>)
+  options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
+): Promise<LexRpcResult<M>> {
+  return lexRpcRequest<M>(agent, ns, options).catch(asLexRpcFailure<M>)
 }
 
-async function xrpcRequest<const M extends Query | Procedure>(
+async function lexRpcRequest<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: XrpcOptions<M> = {} as XrpcOptions<M>,
-): Promise<XrpcResponse<M>> {
+  options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
+): Promise<LexRpcResponse<M>> {
   const method = getMain(ns)
   options.signal?.throwIfAborted()
   const url = xrpcRequestUrl(method, options)
   const request = xrpcRequestInit(method, options)
   const response = await agent.fetchHandler(url, request)
-  return XrpcResponse.fromFetchResponse<M>(method, response, options)
+  return LexRpcResponse.fromFetchResponse<M>(method, response, options)
 }
 
 function xrpcRequestUrl<M extends Procedure | Query | Subscription>(

@@ -328,7 +328,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toMatchObject({
-        name: 'XrpcResponseError',
+        name: 'LexRpcResponseError',
         message: 'This is a custom error message from the server',
         payload: {
           encoding: 'application/json',

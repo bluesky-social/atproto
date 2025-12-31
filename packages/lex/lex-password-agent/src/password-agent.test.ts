@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
-import assert from 'node:assert'
-import { Client, XrpcResponseError } from '@atproto/lex-client'
+import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
+import { Client, LexRpcResponseError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
-import { LexAuthError, LexRouter } from '@atproto/lex-server'
+import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons.js'
 import { AuthVerifier } from './password-agent-utils.test.js'
@@ -147,7 +147,7 @@ describe('PasswordAgent', () => {
         },
       })
       .add(app.example.expiredToken, async () => {
-        throw new LexAuthError('ExpiredToken', 'Token expired')
+        throw new LexServerAuthError('ExpiredToken', 'Token expired')
       })
 
     pdsServer = await serve(pdsRouter)
@@ -185,14 +185,14 @@ describe('PasswordAgent', () => {
     })
 
     assert(!result.success)
-    assert(result instanceof XrpcResponseError)
+    assert(result instanceof LexRpcResponseError)
     expect(result.status).toBe(401)
     expect(result.error).toBe('AuthFactorTokenRequired')
   })
 
   it('logs in', async () => {
-    const onDeleted = jest.fn()
-    const onRefreshed = jest.fn()
+    const onDeleted = vi.fn()
+    const onRefreshed = vi.fn()
 
     const result = await PasswordAgent.login({
       service: entrywayOrigin,
@@ -233,8 +233,26 @@ describe('PasswordAgent', () => {
     ).rejects.toThrow('Logged out')
   })
 
+  it('fails to perform unauthenticated call', async () => {
+    const client = new Client(pdsOrigin)
+    const result = await client.xrpcSafe(app.example.customMethod, {
+      body: { message: 'hello' },
+    })
+
+    assert(result.success === false)
+    assert(result instanceof LexRpcResponseError)
+    expect(result).toMatchObject({
+      success: false,
+      status: 401,
+      error: 'AuthenticationRequired',
+    })
+    expect(result.headers.get('www-authenticate')).toBe(
+      'Bearer realm="access token"',
+    )
+  })
+
   it('refreshes expired token', async () => {
-    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = jest.fn()
+    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = vi.fn()
     const result = await PasswordAgent.login({
       service: entrywayOrigin,
       identifier: 'bob',
@@ -301,7 +319,7 @@ describe('PasswordAgent', () => {
     expect(loginAgent.did).toEqual('did:example:carla')
     const session = structuredClone(loginResult.value.session)
 
-    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = jest.fn()
+    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = vi.fn()
     const agent = await PasswordAgent.resume(session, {
       hooks: { ...hooks, onRefreshed },
     })

@@ -16,6 +16,7 @@ import {
   getMain,
   isNsidString,
 } from '@atproto/lex-schema'
+import { drainWebsocket } from './lib/drain-websocket.js'
 
 type LexMethod = Query | Procedure | Subscription
 
@@ -121,6 +122,8 @@ export type UpgradeWebSocket = (request: Request) => {
 export type LexRouterOptions = {
   upgradeWebSocket?: UpgradeWebSocket
   onHandlerError?: (ctx: LexErrorHandlerContext) => void | Promise<void>
+  highWaterMark?: number
+  lowWaterMark?: number
 }
 
 export class LexRouter {
@@ -194,13 +197,14 @@ export class LexRouter {
       request: Request,
       connection?: ConnectionInfo,
     ): Promise<Response> => {
+      // @NOTE CORS requests should be handled by a middleware before reaching
+      // this point.
       if (
         (method.type === 'procedure' && request.method !== 'POST') ||
         (method.type === 'query' &&
           request.method !== 'GET' &&
           request.method !== 'HEAD')
       ) {
-        await request.body?.cancel()
         return Response.json(
           { error: 'InvalidRequest', message: 'Method not allowed' },
           { status: 405 },
@@ -273,21 +277,28 @@ export class LexRouter {
       connection?: ConnectionInfo,
     ): Promise<Response> => {
       if (request.method !== 'GET') {
-        await request.body?.cancel()
         return Response.json(
           { error: 'InvalidRequest', message: 'Method not allowed' },
           { status: 405 },
         )
       }
 
-      if (request.headers.get('upgrade') !== 'websocket') {
-        await request.body?.cancel()
+      if (
+        request.headers.get('connection')?.toLowerCase() !== 'upgrade' ||
+        request.headers.get('upgrade')?.toLowerCase() !== 'websocket'
+      ) {
         return Response.json(
           {
             error: 'InvalidRequest',
-            message: 'Subscription method must use WebSocket upgrade',
+            message: 'XRPC subscriptions are only available over WebSocket',
           },
-          { status: 400 },
+          {
+            status: 426,
+            headers: {
+              Connection: 'Upgrade',
+              Upgrade: 'websocket',
+            },
+          },
         )
       }
 
@@ -353,9 +364,9 @@ export class LexRouter {
 
               socket.send(data)
 
-              // Apply backpressure based on WebSocket bufferedAmount (uses
-              // polling).
-              await flowControl(socket, request.signal)
+              // Apply backpressure by waiting for the buffered data to drain
+              // before generating the next message
+              await drainWebsocket(socket, request.signal, this.options)
             }
 
             socket.close(1000)
@@ -369,8 +380,11 @@ export class LexRouter {
 
               socket.send(encodeErrorFrame(lexError))
 
-              // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-              socket.close(1008, lexError.error)
+              socket.close(
+                // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+                error instanceof LexError ? 1008 : 1011,
+                lexError.error,
+              )
             }
 
             // Only report unexpected processing errors
@@ -392,14 +406,10 @@ export class LexRouter {
     method: LexMethod,
     error: unknown,
   ) {
-    try {
-      // Only report unexpected processing errors
-      const { onHandlerError } = this.options
-      if (onHandlerError && !isAbortReason(request.signal, error)) {
-        await onHandlerError({ error, request, method })
-      }
-    } finally {
-      if (!request.bodyUsed) await request.body?.cancel()
+    // Only report unexpected processing errors
+    const { onHandlerError } = this.options
+    if (onHandlerError && !isAbortReason(request.signal, error)) {
+      await onHandlerError({ error, request, method })
     }
 
     if (error instanceof LexError) {
@@ -416,12 +426,10 @@ export class LexRouter {
     request: Request,
     connection?: ConnectionInfo,
   ): Promise<Response> => {
-    const nsid = extractXrpcMethodNsid(request)
+    const nsid = extractMethodNsid(request)
 
     const handler = (this.handlers as Map<string | null, Handler>).get(nsid)
     if (handler) return handler(request, connection)
-
-    await request.body?.cancel()
 
     if (!nsid || !isNsidString(nsid)) {
       return Response.json(
@@ -443,7 +451,7 @@ export class LexRouter {
   }
 }
 
-function extractXrpcMethodNsid(request: Request): string | null {
+function extractMethodNsid(request: Request): string | null {
   const { pathname } = new URL(request.url)
   if (!pathname.startsWith('/xrpc/')) return null
   if (pathname.includes('/', 6)) return null
@@ -471,7 +479,6 @@ async function getProcedureInput<M extends Procedure>(
       : undefined)
 
   if (!this.input.matchesEncoding(encoding)) {
-    await request.body?.cancel()
     throw new LexError('InvalidRequest', `Invalid content-type: ${encoding}`)
   }
 
@@ -485,7 +492,6 @@ async function getProcedureInput<M extends Procedure>(
     const body: Body = request
     return { encoding, body } as InferMethodInput<M, Body>
   } else {
-    await request.body?.cancel()
     return undefined as InferMethodInput<M, Body>
   }
 }
@@ -499,7 +505,6 @@ async function getQueryInput<M extends Query>(
     request.headers.has('content-type') ||
     request.headers.has('content-length')
   ) {
-    await request.body?.cancel()
     throw new LexError('InvalidRequest', 'GET requests must not have a body')
   }
 
@@ -543,36 +548,4 @@ function isAbortReason(signal: AbortSignal, error: unknown): boolean {
     error === signal.reason ||
     (error instanceof Error && error.cause === signal.reason)
   )
-}
-
-const HIGH_WATER_MARK = 250_000 // 250 KB
-const LOW_WATER_MARK = 50_000 // 50 KB
-
-async function flowControl(
-  socket: WebSocket,
-  signal: AbortSignal,
-): Promise<void> {
-  if (socket.bufferedAmount > HIGH_WATER_MARK) {
-    while (socket.readyState === 1 && socket.bufferedAmount > LOW_WATER_MARK) {
-      await sleep(10, signal)
-    }
-  }
-}
-
-async function sleep(ms: number, signal: AbortSignal): Promise<void> {
-  signal.throwIfAborted()
-
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      signal.removeEventListener('abort', onAbort)
-      resolve()
-    }, ms)
-
-    const onAbort = () => {
-      clearTimeout(timeout)
-      reject(signal.reason)
-    }
-
-    signal.addEventListener('abort', onAbort)
-  })
 }

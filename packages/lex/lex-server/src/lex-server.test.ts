@@ -1,3 +1,8 @@
+import { AddressInfo } from 'node:net'
+import { scheduler } from 'node:timers/promises'
+import { describe, expect, it, vi } from 'vitest'
+import { WebSocket } from 'ws'
+import { decodeAll } from '@atproto/lex-cbor'
 import { buildAgent, xrpc } from '@atproto/lex-client'
 import { LexError, parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
@@ -6,6 +11,7 @@ import {
   LexRouterAuth,
   LexRouterMethodHandler,
 } from './lex-server.js'
+import { serve, upgradeWebSocket } from './nodejs.js'
 
 // ============================================================================
 // Schema Definitions
@@ -211,7 +217,7 @@ describe('lex-client integration', () => {
 
 describe('IPLD values', () => {
   it('can send and receive ipld vals', async () => {
-    const ipldHandler: LexRouterMethodHandler<typeof io.example.ipld> = jest.fn(
+    const ipldHandler: LexRouterMethodHandler<typeof io.example.ipld> = vi.fn(
       async ({ input }) => {
         return { body: input.body! }
       },
@@ -570,8 +576,8 @@ describe('Error Handling', () => {
   })
 
   describe('Custom Error Handlers', () => {
-    it.only('allows custom onHandlerError handler', async () => {
-      const onHandlerError = jest.fn()
+    it('allows custom onHandlerError handler', async () => {
+      const onHandlerError = vi.fn()
       const customRouter = new LexRouter({
         onHandlerError,
       })
@@ -1484,3 +1490,132 @@ describe('Body Handling', () => {
     })
   })
 })
+
+describe('Subscription', () => {
+  const io = {
+    example: {
+      subscribe: l.subscription(
+        'io.example.subscribe',
+        l.params({
+          message: l.string({ default: 'hello' }),
+        }),
+        l.object({
+          message: l.string(),
+          count: l.integer(),
+        }),
+      ),
+    },
+  }
+
+  it('handles subscriptions with cleanup', async () => {
+    let sentCount = 0
+
+    const { resolve, promise: finallyPromise } = timeoutDeferred(5000)
+
+    const router = new LexRouter({ upgradeWebSocket }).add(
+      io.example.subscribe,
+      async function* ({ params: { message }, request: { signal } }) {
+        try {
+          for (; sentCount < 10; ) {
+            await scheduler.wait(5, { signal })
+            yield { message, count: ++sentCount }
+          }
+        } finally {
+          resolve()
+        }
+      },
+    )
+
+    await using server = await serve(router)
+
+    const { port } = server.address() as AddressInfo
+    const ws = new WebSocket(
+      `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+    )
+    ws.binaryType = 'arraybuffer'
+
+    const messages: unknown[] = []
+    ws.addEventListener('message', (event) => {
+      try {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        const data = [...decodeAll(bytes)]
+        messages.push(data)
+      } catch (err) {
+        messages.push(err)
+      }
+      if (messages.length >= 3) {
+        ws.close()
+      }
+    })
+
+    // Ensures that "finally" block is indeed called
+    await finallyPromise
+
+    expect(messages).toStrictEqual([
+      [{ op: 1 }, { message: 'ping', count: 1 }],
+      [{ op: 1 }, { message: 'ping', count: 2 }],
+      [{ op: 1 }, { message: 'ping', count: 3 }],
+    ])
+
+    expect(sentCount).toBeGreaterThanOrEqual(3)
+    expect(sentCount).toBeLessThan(5)
+  })
+
+  it('returns 405 for non-GET request', async () => {
+    const router = new LexRouter({ upgradeWebSocket }).add(
+      io.example.subscribe,
+      async function* () {},
+    )
+
+    await using server = await serve(router)
+    const { port } = server.address() as AddressInfo
+
+    const response = await fetch(
+      `http://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      { method: 'POST' },
+    )
+
+    expect(response.status).toBe(405)
+    const data = await response.json()
+    expect(data.error).toBe('InvalidRequest')
+    expect(data.message).toBe('Method not allowed')
+  })
+
+  it('returns 426 for non-WebSocket request', async () => {
+    const router = new LexRouter({ upgradeWebSocket }).add(
+      io.example.subscribe,
+      async function* () {},
+    )
+
+    await using server = await serve(router)
+    const { port } = server.address() as AddressInfo
+
+    const response = await fetch(
+      `http://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      { method: 'GET' },
+    )
+
+    expect(response.status).toBe(426)
+    expect(response.headers.get('upgrade')).toBe('websocket')
+    expect(response.headers.get('connection')).toBe('Upgrade')
+    const data = await response.json()
+    expect(data.error).toBe('InvalidRequest')
+    expect(data.message).toBe(
+      'XRPC subscriptions are only available over WebSocket',
+    )
+  })
+})
+
+function timeoutDeferred(ms: number) {
+  let resolve: () => void
+  let reject: (err: unknown) => void
+  const promise = new Promise<void>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  const to = setTimeout(() => reject(new Error('Timed out')), ms).unref()
+  promise.finally(() => {
+    clearTimeout(to)
+  })
+  return { resolve: resolve!, promise }
+}

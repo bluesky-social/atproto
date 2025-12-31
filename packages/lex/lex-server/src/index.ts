@@ -4,5 +4,5 @@ export {
   type LexErrorData,
 } from '@atproto/lex-data'
 
-export * from './lex-auth-error.js'
+export * from './errors.js'
 export * from './lex-server.js'

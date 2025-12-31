@@ -1,7 +1,7 @@
 import { LexMap, LexValue } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 
-export async function extractXrpcErrorCode(
+export async function extractLexRpcErrorCode(
   response: Response,
 ): Promise<string | null> {
   const json = await peekJson(response, 10 * 1024) // Avoid reading large bodies

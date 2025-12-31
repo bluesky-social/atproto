@@ -14,31 +14,16 @@ import { pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 
-const kServerResponse = Symbol.for('serverResponse')
+// @ts-expect-error
+Symbol.asyncDispose ??= Symbol.for('Symbol.asyncDispose')
 
-export function getServerResponse<T extends ServerResponse>(
-  request: Request,
-): T {
-  if (kServerResponse in request) {
-    return (request as any)[kServerResponse] as T
-  }
-  throw new TypeError('No native ServerResponse associated with Response')
-}
+const kResponseWs = Symbol.for('@atproto/lex-server:WebSocket')
 
-export function getIncomingMessage<T extends IncomingMessage>(
-  request: Request,
-): T {
-  return getServerResponse(request).req as T
-}
-
-const kRequestSocket = Symbol.for('ws:request')
-
-function getRequestSocket(req: IncomingMessage): WebSocketPonyfill {
-  if (kRequestSocket in req) {
-    return (req as any)[kRequestSocket] as WebSocketPonyfill
-  }
-  throw new TypeError(
-    'Returning a 101 Response is requires using upgradeWebSocket()',
+function isUpgradeRequest(request: Request, upgrade: string): boolean {
+  return (
+    request.method === 'GET' &&
+    request.headers.get('connection')?.toLowerCase() === 'upgrade' &&
+    request.headers.get('upgrade')?.toLowerCase() === upgrade
   )
 }
 
@@ -46,25 +31,9 @@ export function upgradeWebSocket(request: Request): {
   response: Response
   socket: WebSocket
 } {
-  if (
-    request.method !== 'GET' ||
-    request.headers.get('upgrade') !== 'websocket'
-  ) {
-    throw new TypeError('WebSocket upgrade request must use GET method')
+  if (!isUpgradeRequest(request, 'websocket')) {
+    throw new TypeError('upgradeWebSocket() expects a WebSocket upgrade')
   }
-
-  // @ts-expect-error
-  const socket: WebSocket = new WebSocketPonyfill(null, undefined, {
-    autoPong: true,
-  })
-
-  const req = getIncomingMessage(request)
-  Object.defineProperty(req, kRequestSocket, {
-    value: socket,
-    enumerable: false,
-    configurable: false,
-    writable: false,
-  })
 
   // Placeholder response for WebSocket upgrade. The actual handling will happen
   // through the handleWebSocketUpgrade function. Headers set on the response
@@ -81,21 +50,39 @@ export function upgradeWebSocket(request: Request): {
     writable: false,
   })
 
+  // @ts-expect-error
+  const socket: WebSocket = new WebSocketPonyfill(null, undefined, {
+    autoPong: true,
+  })
+
+  // Attach the WebSocket to the response for later retrieval
+  Object.defineProperty(response, kResponseWs, {
+    value: socket,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  })
+
   return { response, socket }
 }
 
-function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
-  const { req } = res
+function handleWebSocketUpgrade(
+  req: IncomingMessage,
+  response: Response,
+): void {
+  const ws = (response as { [kResponseWs]?: WebSocketPonyfill })[kResponseWs]
+  if (!ws) throw new TypeError('Response not created by upgradeWebSocket()')
 
-  const socket = getRequestSocket(req)
-
+  // Create a one time use WebSocketServer to handle the upgrade
   const wss = new WebSocketServer({
     autoPong: true,
     noServer: true,
+    clientTracking: false,
+    perMessageDeflate: true,
     // @ts-expect-error
     WebSocket: function () {
       // Return the websocket that was created earlier instead of a new instance
-      return socket
+      return ws
     },
   })
 
@@ -107,17 +94,11 @@ function handleWebSocketUpgrade(res: ServerResponse, response: Response): void {
     }
   })
 
-  let ws: WebSocketPonyfill | undefined
-  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (upgradedWs) => {
-    ws = upgradedWs
+  wss.handleUpgrade(req, req.socket, Buffer.alloc(0), (_socket) => {
+    // @TODO find a way to properly "close" the _socket when the server is
+    // shutting down (might require replacing http-terminator with a local
+    // implementation)
   })
-
-  if (!ws || ws !== socket) {
-    req.socket.destroy() // should trigger websocket 'close' event
-    throw new Error('WebSocket upgrade failed')
-  }
-
-  // The request handling now happens through the socket exclusively
 }
 
 async function sendResponse(
@@ -125,11 +106,13 @@ async function sendResponse(
   res: ServerResponse,
   response: Response,
 ): Promise<void> {
-  // Request was handled by something else
-  if (res.headersSent) return
+  // Invalid usage
+  if (res.headersSent) {
+    throw new TypeError('Response has already been sent')
+  }
 
   if (response.status === 101) {
-    return handleWebSocketUpgrade(res, response)
+    return handleWebSocketUpgrade(req, response)
   }
 
   res.statusCode = response.status
@@ -139,30 +122,25 @@ async function sendResponse(
     res.appendHeader(key, value)
   }
 
-  if (req.method === 'HEAD') {
-    res.end()
-    await response.body?.cancel()
-  } else if (response.body) {
+  if (response.body != null && req.method !== 'HEAD') {
     const stream = Readable.fromWeb(response.body as any)
     await pipeline(stream, res)
   } else {
+    await response.body?.cancel()
     res.end()
   }
 }
 
-export function toRequest(req: IncomingMessage, _res: ServerResponse): Request {
-  const host = req.headers.host ?? 'localhost'
+function toRequest(req: IncomingMessage): Request {
+  const host = req.headers.host ?? req.socket?.localAddress ?? 'localhost'
   const isEncrypted = (req.socket as any).encrypted === true
   const protocol = isEncrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
   const headers = toHeaders(req.headers)
-  const body =
-    req.method === 'GET' || req.method === 'HEAD'
-      ? null
-      : (Readable.toWeb(req) as ReadableStream<Uint8Array>)
+  const body = toBody(req)
 
   const abortController = new AbortController()
-  const abort = () => abortController.abort()
+  const abort = (err?: Error) => abortController.abort(err)
 
   req.on('close', abort)
   req.on('error', abort)
@@ -186,11 +164,11 @@ export function toRequest(req: IncomingMessage, _res: ServerResponse): Request {
     referrer: headers.get('referrer') ?? headers.get('referer') ?? undefined,
     redirect: 'manual',
     // @ts-expect-error
-    duplex: 'half',
+    duplex: body ? 'half' : undefined,
   })
 }
 
-export function toHeaders(headers: IncomingHttpHeaders): Headers {
+function toHeaders(headers: IncomingHttpHeaders): Headers {
   const result = new Headers()
   for (const [key, value] of Object.entries(headers)) {
     if (value === undefined) continue
@@ -201,6 +179,26 @@ export function toHeaders(headers: IncomingHttpHeaders): Headers {
     }
   }
   return result
+}
+
+function toBody(req: IncomingMessage): null | ReadableStream<Uint8Array> {
+  if (
+    req.method === 'GET' ||
+    req.method === 'HEAD' ||
+    req.method === 'OPTIONS'
+  ) {
+    return null
+  }
+
+  if (
+    req.headers['content-type'] == null &&
+    req.headers['transfer-encoding'] == null &&
+    req.headers['content-length'] == null
+  ) {
+    return null
+  }
+
+  return Readable.toWeb(req) as ReadableStream<Uint8Array>
 }
 
 export type NetAddr = {
@@ -214,31 +212,28 @@ export type NodeConnectionInfo = {
   remoteAddr?: NetAddr
 }
 
-export type Handler = (
-  req: Request,
-  info: NodeConnectionInfo,
-) => Promise<Response>
-export type HandlerObject = { handle: Handler }
+export interface HandlerFunction {
+  (req: Request, info: NodeConnectionInfo): Response | Promise<Response>
+}
 
-async function handle(
+export interface HandlerObject {
+  handle: HandlerFunction
+}
+
+async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
-  handler: Handler,
+  handlerFn: HandlerFunction,
 ) {
-  const request = toRequest(req, res)
+  const request = toRequest(req)
+  const info = toConnectionInfo(req)
+  const response = await handlerFn(request, info)
+  await sendResponse(req, res, response)
+}
 
-  // Attach the original ServerResponse for access to Node.js-specific
-  // properties
-  Object.defineProperty(request, kServerResponse, {
-    value: res,
-    enumerable: false,
-    configurable: false,
-    writable: false,
-  })
-
+function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
   const { socket } = req
-
-  const info: NodeConnectionInfo = {
+  return {
     localAddr:
       socket.localAddress != null
         ? {
@@ -256,9 +251,6 @@ async function handle(
           }
         : undefined,
   }
-
-  const response = await handler(request, info)
-  await sendResponse(req, res, response)
 }
 
 export function toRequestListener<
@@ -266,21 +258,21 @@ export function toRequestListener<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
->(handler: Handler | HandlerObject) {
-  if (typeof handler === 'object') handler = handler.handle.bind(handler)
+>(handlerFn: HandlerFunction) {
   return ((
     req: InstanceType<Request>,
     res: InstanceType<Response> & { req: InstanceType<Request> },
     next?: (err?: unknown) => void,
   ): void => {
-    handle(req, res, handler).catch((err) => {
+    handleRequest(req, res, handlerFn).catch((err) => {
       if (next) next(err)
       else {
         if (!res.headersSent) {
           res.statusCode = 500
+          res.setHeader('content-type', 'text/plain; charset=utf-8')
           res.end('Internal Server Error')
         } else if (!res.writableEnded) {
-          res.end()
+          res.destroy()
         }
       }
     })
@@ -301,8 +293,10 @@ export interface Server<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
-> extends HttpServer<Request, Response> {
-  shutdown(): Promise<void>
+> extends HttpServer<Request, Response>,
+    AsyncDisposable {
+  terminate(): Promise<void>
+  [Symbol.asyncDispose](): Promise<void>
 }
 
 export function createServer<
@@ -311,24 +305,43 @@ export function createServer<
     InstanceType<Request>
   > = typeof ServerResponse,
 >(
-  handler: Handler | HandlerObject,
+  handler: HandlerFunction | HandlerObject,
   options: CreateServerOptions<Request, Response> = {},
 ): Server<Request, Response> {
-  const server = createHttpServer(options, toRequestListener(handler))
+  const handlerFn =
+    typeof handler === 'function' ? handler : handler.handle.bind(handler)
+
+  const listener = toRequestListener(handlerFn)
+  const server = createHttpServer(options, listener)
+
   const terminator = createHttpTerminator({
     server: server as HttpServer,
     gracefulTerminationTimeout: options?.gracefulTerminationTimeout,
   })
 
-  return Object.defineProperty(server, 'shutdown', {
-    value: async function shutdown() {
-      if (this === server) await terminator.terminate()
-      else throw new TypeError('Server.shutdown called with incorrect context')
-    },
+  const terminate = async function terminate(this: Server<Request, Response>) {
+    if (this !== server) {
+      throw new TypeError('Server.terminate called with incorrect context')
+    }
+    // @TODO properly close all active WebSocket connections
+    return terminator.terminate()
+  }
+
+  Object.defineProperty(server, 'terminate', {
+    value: terminate,
     enumerable: false,
     configurable: false,
     writable: false,
-  }) as Server<Request, Response>
+  })
+
+  Object.defineProperty(server, Symbol.asyncDispose, {
+    value: terminate,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  })
+
+  return server as Server<Request, Response>
 }
 
 export type StartServerOptions<
@@ -344,7 +357,7 @@ export async function serve<
     InstanceType<Request>
   > = typeof ServerResponse,
 >(
-  handler: Handler | HandlerObject,
+  handler: HandlerFunction | HandlerObject,
   options?: StartServerOptions<Request, Response>,
 ): Promise<Server<Request, Response>> {
   const server = createServer(handler, options)

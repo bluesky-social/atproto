@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
+import { describe, expect, it } from 'vitest'
 import { DidString, HandleString } from '@atproto/lex-schema'
-import { LexAuthError } from '@atproto/lex-server'
+import { LexServerAuthError } from '@atproto/lex-server'
 
 const randomString = () =>
   Math.random().toString(36).substring(2, 10) +
@@ -64,10 +65,16 @@ export class AuthVerifier {
     authFactorToken?: string
   }) {
     if (!credentials.identifier || credentials.password !== 'password123') {
-      throw new LexAuthError('AuthenticationRequired', 'Invalid identifier')
+      throw new LexServerAuthError(
+        'AuthenticationRequired',
+        'Invalid identifier',
+      )
     }
     if (credentials.authFactorToken !== '2fa-token') {
-      throw new LexAuthError('AuthFactorTokenRequired', '2FA token is required')
+      throw new LexServerAuthError(
+        'AuthFactorTokenRequired',
+        '2FA token is required',
+      )
     }
     const session = new Session(credentials.identifier)
     this.sessions.push(session)
@@ -83,7 +90,9 @@ export class AuthVerifier {
     const token = auth?.startsWith('Bearer ') && auth.slice(7)
     const session = await this.findBy((s) => s.accessJwt === token)
     if (!session) {
-      throw new LexAuthError('AuthenticationRequired', 'Invalid token')
+      throw new LexServerAuthError('AuthenticationRequired', 'Invalid token', {
+        Bearer: { realm: 'access token' },
+      })
     }
     return { session }
   }
@@ -93,7 +102,9 @@ export class AuthVerifier {
     const token = auth?.startsWith('Bearer ') && auth.slice(7)
     const session = await this.findBy((s) => s.refreshJwt === token)
     if (!session) {
-      throw new LexAuthError('ExpiredToken', 'Invalid token')
+      throw new LexServerAuthError('ExpiredToken', 'Invalid token', {
+        Bearer: { realm: 'refresh token' },
+      })
     }
     return { session }
   }

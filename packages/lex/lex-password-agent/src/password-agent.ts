@@ -1,14 +1,14 @@
 import {
   Agent,
-  XrpcError,
-  XrpcFailure,
-  XrpcResponseError,
+  LexRpcError,
+  LexRpcFailure,
+  LexRpcResponseError,
   buildAgent,
   xrpcSafe,
 } from '@atproto/lex-client'
 import { DatetimeString, ResultSuccess, success } from '@atproto/lex-schema'
 import { com } from './lexicons.js'
-import { extractPdsUrl, extractXrpcErrorCode } from './util.js'
+import { extractLexRpcErrorCode, extractPdsUrl } from './util.js'
 
 export type Session = {
   data: com.atproto.server.createSession.OutputBody
@@ -42,7 +42,7 @@ export type PasswordAuthAgentHooks = {
   onRefreshFailure?: (
     this: PasswordAgent,
     session: Session,
-    err: XrpcFailure<typeof com.atproto.server.refreshSession.main>,
+    err: LexRpcFailure<typeof com.atproto.server.refreshSession.main>,
   ) => void | Promise<void>
 
   /**
@@ -72,7 +72,7 @@ export type PasswordAuthAgentHooks = {
   onDeleteFailure?: (
     this: PasswordAgent,
     session: Session,
-    err: XrpcFailure<typeof com.atproto.server.deleteSession.main>,
+    err: LexRpcFailure<typeof com.atproto.server.deleteSession.main>,
   ) => void | Promise<void>
 }
 
@@ -105,7 +105,7 @@ export class PasswordAgent implements Agent {
 
   get session(): Session {
     if (this.#session) return this.#session
-    throw new XrpcError('AuthenticationRequired', 'Logged out')
+    throw new LexRpcError('AuthenticationRequired', 'Logged out')
   }
 
   get destroyed(): boolean {
@@ -132,7 +132,7 @@ export class PasswordAgent implements Agent {
     const refreshNeeded =
       initialRes.status === 401 ||
       (initialRes.status === 400 &&
-        (await extractXrpcErrorCode(initialRes)) === 'ExpiredToken')
+        (await extractLexRpcErrorCode(initialRes)) === 'ExpiredToken')
 
     if (!refreshNeeded) {
       return initialRes
@@ -169,7 +169,9 @@ export class PasswordAgent implements Agent {
 
     // Make sure the initial request is cancelled to avoid leaking resources
     // (NodeJS 👀): https://undici.nodejs.org/#/?id=garbage-collection
-    await initialRes.body?.cancel()
+    if (!initialRes.bodyUsed) {
+      await initialRes.body?.cancel()
+    }
 
     // Finally, retry the request with the new access token
     headers.set('authorization', `Bearer ${newSession.data.accessJwt}`)
@@ -237,7 +239,7 @@ export class PasswordAgent implements Agent {
   }
 
   async logout(): Promise<void> {
-    let reason: XrpcFailure<
+    let reason: LexRpcFailure<
       typeof com.atproto.server.deleteSession.main
     > | null = null
 
@@ -253,7 +255,7 @@ export class PasswordAgent implements Agent {
 
         // Update the session promise to a rejected state
         this.#session = null
-        throw new XrpcError('AuthenticationRequired', 'Logged out')
+        throw new LexRpcError('AuthenticationRequired', 'Logged out')
       } else {
         // Capture the reason for the failure to re-throw in the outer promise
         reason = result
@@ -294,7 +296,7 @@ export class PasswordAgent implements Agent {
     authFactorToken?: string
   }): Promise<
     | ResultSuccess<PasswordAgent>
-    | XrpcResponseError<typeof com.atproto.server.createSession.main>
+    | LexRpcResponseError<typeof com.atproto.server.createSession.main>
   > {
     const xrpcAgent = buildAgent({
       service,
