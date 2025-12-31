@@ -43,11 +43,11 @@
   },
   "devDependencies": {
     "@types/yargs": "^17.0.33",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "prebuild": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema -- ignore additional npm args",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }

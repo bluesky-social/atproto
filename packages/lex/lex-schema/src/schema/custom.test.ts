@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from 'vitest'
 import { IssueCustom } from '../core.js'
 import { CustomSchema } from './custom.js'
 
@@ -371,7 +372,7 @@ describe('CustomSchema', () => {
 
   describe('assertion context behavior', () => {
     it('calls assertion with null as this', () => {
-      const assertion = jest.fn(function (
+      const assertion = vi.fn(function (
         this: unknown,
         input: unknown,
       ): input is string {

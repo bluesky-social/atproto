@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { graphemeLenNative, graphemeLenPonyfill } from './utf8-grapheme-len.js'
 
 describe('graphemeLenSegmenter', () => {

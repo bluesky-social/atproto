@@ -44,10 +44,10 @@
   },
   "devDependencies": {
     "@ts-morph/common": "^0.28.0",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }

@@ -73,9 +73,6 @@ describe('Node.js RequestListener', () => {
           await scheduler.wait(0) // Yield to event loop
           if (sentBytes === totalSize) controller.close()
         },
-        cancel() {
-          console.error('Stream canceled')
-        },
       }),
     })
 

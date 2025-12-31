@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { lexiconsManifestSchema } from './lexicons-manifest.js'
 
 describe('lexiconsManifestSchema', () => {

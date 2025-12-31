@@ -1,10 +1,10 @@
 import { LexError, LexErrorCode } from '@atproto/lex-data'
+import {
+  WWWAuthenticate,
+  formatWWWAuthenticateHeader,
+} from './lib/www-authenticate.js'
 
-export type WWWAuthenticate = {
-  [authScheme in string]?:
-    | string // token68
-    | { [authParam in string]?: string }
-}
+export type { WWWAuthenticate }
 
 export class LexServerAuthError<
   N extends LexErrorCode = LexErrorCode,
@@ -21,22 +21,7 @@ export class LexServerAuthError<
   }
 
   get wwwAuthenticateHeader(): string {
-    return Object.entries(this.wwwAuthenticate)
-      .map(([authScheme, authParams]) => {
-        if (authParams === undefined) return null
-        const paramsEnc =
-          typeof authParams === 'string'
-            ? [authParams]
-            : Object.entries(authParams)
-                .filter(([_, val]) => val != null)
-                .map(([name, val]) => `${name}=${JSON.stringify(val)}`)
-        const authChallenge = paramsEnc?.length
-          ? `${authScheme} ${paramsEnc.join(', ')}`
-          : authScheme
-        return authChallenge
-      })
-      .filter(Boolean)
-      .join(', ')
+    return formatWWWAuthenticateHeader(this.wwwAuthenticate)
   }
 
   toJSON() {

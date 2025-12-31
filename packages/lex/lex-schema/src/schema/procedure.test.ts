@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ObjectSchema } from './object.js'
 import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'

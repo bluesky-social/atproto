@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { EnumSchema } from './enum.js'
 import { IntegerSchema } from './integer.js'
 import { NullableSchema } from './nullable.js'

@@ -44,11 +44,11 @@
   "devDependencies": {
     "@atproto/lex-cbor": "workspace:*",
     "@atproto/lex-builder": "workspace:*",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "prebuild": "node ./scripts/lex-build.mjs",
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }

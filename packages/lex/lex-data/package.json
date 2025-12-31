@@ -43,10 +43,10 @@
   },
   "devDependencies": {
     "core-js": "^3",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }

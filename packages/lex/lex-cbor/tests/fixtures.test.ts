@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ui8Equals } from '@atproto/lex-data'
 import { jsonToLex, lexToJson } from '@atproto/lex-json'
 import { cidForLex, decodeAll, encode } from '..'

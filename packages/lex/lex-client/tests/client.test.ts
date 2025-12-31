@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from 'vitest'
 import { LexValue, cidForLex, cidForRawBytes } from '@atproto/lex-cbor'
 import { lexParse, lexStringify } from '@atproto/lex-json'
 import { Action, Client } from '..'
@@ -21,7 +22,7 @@ describe('utils', () => {
 describe('Client', () => {
   describe('actions', () => {
     it('updatePreferences', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           if (url === '/xrpc/app.bsky.actor.getPreferences') {
             return new Response(
@@ -156,7 +157,7 @@ describe('Client', () => {
         },
       ])
 
-      expect(async () => {
+      await expect(async () => {
         await client.call(upsertPreference, {
           $type: 'app.bsky.actor.defs#adultContentPref',
           // @ts-expect-error invalid preference value
@@ -168,7 +169,7 @@ describe('Client', () => {
 
   describe('query', () => {
     it('allows perfoming a GET request and parsing the response', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
           expect(init?.method).toBe('GET')
@@ -223,7 +224,7 @@ describe('Client', () => {
 
   describe('errors', () => {
     it('handles invalid XRPC error payloads', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
           expect(init?.method).toBe('GET')
@@ -247,7 +248,7 @@ describe('Client', () => {
     })
 
     it('handles XRPC errors with invalid body data', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
           expect(init?.method).toBe('GET')
@@ -267,7 +268,7 @@ describe('Client', () => {
     })
 
     it('handles XRPC errors with invalid status code', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
           expect(init?.method).toBe('GET')
@@ -286,7 +287,7 @@ describe('Client', () => {
     })
 
     it('handles XRPC server errors', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
           expect(init?.method).toBe('GET')
@@ -306,7 +307,7 @@ describe('Client', () => {
     })
 
     it('propatages server error messages', async () => {
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
           expect(init?.method).toBe('GET')
@@ -345,10 +346,10 @@ describe('Client', () => {
     it('allows creating records', async () => {
       let currentTid = 0
       // Only works 8 times
-      const nextTid = jest.fn(() => `2222222222${2 + currentTid++}22`)
+      const nextTid = vi.fn(() => `2222222222${2 + currentTid++}22`)
 
       const did = 'did:plc:alice'
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(url).toBe('/xrpc/com.atproto.repo.createRecord')
           expect(init?.method).toBe('POST')
@@ -454,7 +455,7 @@ describe('Client', () => {
 
     it('allows fetching records', async () => {
       const did = 'did:plc:alice'
-      const fetchHandler = jest.fn(
+      const fetchHandler = vi.fn(
         async (url: string, init?: RequestInit): Promise<Response> => {
           expect(init?.method).toBe('GET')
           const urlObj = new URL(url, 'https://example.com')
@@ -506,7 +507,7 @@ describe('Client', () => {
   })
 
   describe('blobs', () => {
-    const fetchHandler = jest.fn(
+    const fetchHandler = vi.fn(
       async (url: string, init?: RequestInit): Promise<Response> => {
         expect(url).toBe('/xrpc/com.atproto.repo.uploadBlob')
         expect(init?.method).toBe('POST')

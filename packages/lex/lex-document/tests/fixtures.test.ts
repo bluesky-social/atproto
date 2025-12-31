@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { lexiconDocumentSchema } from '..'
 import invalidLexicons from './lexicon-invalid.json' with { type: 'json' }
 import validLexicons from './lexicon-valid.json' with { type: 'json' }

@@ -819,9 +819,9 @@ importers:
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.35
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-builder:
     dependencies:
@@ -844,9 +844,9 @@ importers:
       '@ts-morph/common':
         specifier: ^0.28.0
         version: 0.28.1
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-cbor:
     dependencies:
@@ -866,12 +866,12 @@ importers:
       cborg:
         specifier: ^4.3.0
         version: 4.3.0
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-client:
     dependencies:
@@ -894,9 +894,9 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:*
         version: link:../lex-cbor
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-data:
     dependencies:
@@ -919,9 +919,9 @@ importers:
       core-js:
         specifier: ^3
         version: 3.45.1
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-document:
     dependencies:
@@ -938,9 +938,9 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:*
         version: link:../lex-data
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-installer:
     dependencies:
@@ -969,9 +969,9 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-json:
     dependencies:
@@ -982,9 +982,9 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-password-agent:
     dependencies:
@@ -1041,6 +1041,9 @@ importers:
       '@atproto/lex-builder':
         specifier: workspace:*
         version: link:../lex-builder
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-schema:
     dependencies:
@@ -1054,9 +1057,9 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/lex/lex-server:
     dependencies:
@@ -6643,7 +6646,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.22.10
-      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3)
+      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.2)
       '@lingui/message-utils': 5.2.0
       babel-plugin-macros: 3.1.0
       unraw: 3.0.0

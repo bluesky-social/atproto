@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { parseCid } from './cid.js'
 import { lexEquals } from './lex-equals.js'
 import { LexValue } from './lex.js'

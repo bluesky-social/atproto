@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isBlobRef, isLegacyBlobRef } from './blob.js'
 import { parseCid } from './cid.js'
 
