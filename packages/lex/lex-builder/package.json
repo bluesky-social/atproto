@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-builder",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "license": "MIT",
   "description": "TypeScript schema builder for AT Lexicons",
   "keywords": [

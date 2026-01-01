@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-password-agent",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "description": "Password based client authentication for AT Lexicons",
   "keywords": [
