@@ -29,9 +29,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "dependencies": {
@@ -46,10 +46,12 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@atproto/lex-builder": "workspace:*"
+    "@atproto/lex-builder": "workspace:*",
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "prebuild": "node ./scripts/lex-build.mjs",
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
   }
 }

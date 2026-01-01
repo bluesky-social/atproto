@@ -1,11 +1,14 @@
-import { LexiconRecordKey, NsidString, Simplify, TidString } from '../core.js'
 import {
   Infer,
+  LexiconRecordKey,
+  NsidString,
   Schema,
+  Simplify,
+  TidString,
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
 import { TypedObject } from './typed-union.js'

@@ -1,0 +1,23 @@
+{
+  "extends": ["../../../tsconfig/isomorphic.json"],
+  "include": [
+    "./examples/**/*.ts",
+    "./examples/**/*.js",
+    "./examples/**/*.mjs",
+    "./examples/**/*.cjs"
+  ],
+  "compilerOptions": {
+    "allowJs": true,
+    "noImplicitAny": true,
+    "importHelpers": true,
+    "noEmit": true,
+    "target": "ES2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "rootDir": ".",
+    "baseUrl": "."
+  }
+}

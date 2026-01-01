@@ -624,7 +624,7 @@ if (result.success) {
   if (result.error === 'Unknown') {
     // Unable to perform the request
     const { reason } = result
-    if (reason instanceof XrpcResponseError) {
+    if (reason instanceof LexRpcResponseError) {
       // The server returned a syntactically valid XRPC error response, but
       // used an error code that is not declared for this method
       reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
@@ -632,7 +632,7 @@ if (result.success) {
       reason.status // number
       reason.headers // Headers
       reason.payload // { body: { error: string, message?: string }; encoding: string }
-    } else if (reason instanceof XrpcInvalidResponseError) {
+    } else if (reason instanceof LexRpcUpstreamError) {
       // The response was incomplete (e.g. connection dropped), or
       // invalid (e.g. malformed JSON, data does not match schema).
       reason.error // "InvalidResponse"
@@ -645,7 +645,7 @@ if (result.success) {
     }
   } else {
     // A declared error for that method
-    result // XrpcResponseError<"HandleNotFound">
+    result // LexRpcResponseError<"HandleNotFound">
     result.error // "HandleNotFound"
     result.message // string
   }
@@ -654,38 +654,38 @@ if (result.success) {
 
 The `ResponseFailure<M>` type is a union with three possible error types:
 
-1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `XrpcResponseError<N>` instance:
+1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `LexRpcResponseError<N>` instance:
 
    ```typescript
-   // XrpcResponseError<N>
-   type KnownXrpcResponseFailure<N extends string> = {
+   // LexRpcResponseError<N>
+   type KnownLexRpcResponseFailure<N extends string> = {
      success: false
      name: N
-     error: XrpcResponseError<N>
+     error: LexRpcResponseError<N>
 
      // Additional response details
      status: number
      headers: Headers
      encoding: undefined | string
-     body: XrpcErrorBody<N>
+     body: LexErrorData<N>
    }
    ```
 
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   // XrpcResponseFailure<'Unexpected', XrpcResponseError>
-   type UnknownXrpcResponseFailure = {
+   // LexRpcResponseFailure<'Unexpected', LexRpcResponseError>
+   type UnknownLexRpcResponseFailure = {
      success: false
      name: 'Unexpected'
-     error: XrpcResponseError<string>
+     error: LexRpcResponseError<string>
    }
    ```
 
 3. **Unexpected errors** - Network errors, invalid responses, or other client-side errors:
    ```typescript
-   // XrpcResponseFailure<'UnexpectedError', unknown>
-   type UnexpectedXrpcResponseFailure = {
+   // LexRpcResponseFailure<'UnexpectedError', unknown>
+   type UnexpectedLexRpcResponseFailure = {
      success: false
      name: 'UnexpectedError'
      error: unknown // Could be anything (network error, parsing error, etc.)
@@ -1216,7 +1216,7 @@ await client.call(unfollow, { followUri: uri })
 #### Updating Profile with Retry Logic
 
 ```typescript
-import { Action, XrpcResponseError } from '@atproto/lex'
+import { Action, LexRpcResponseError } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 
@@ -1258,7 +1258,7 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
     } catch (error) {
       // Retry on swap/concurrent modification errors
       if (
-        error instanceof XrpcResponseError &&
+        error instanceof LexRpcResponseError &&
         error.name === 'SwapError' &&
         attempt < maxRetries - 1
       ) {

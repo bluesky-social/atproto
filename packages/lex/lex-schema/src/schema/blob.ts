@@ -4,7 +4,7 @@ import {
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export type BlobSchemaOptions = {
   /**

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { paramSchema, paramsSchema } from './_parameters.js'
 
 describe('paramSchema', () => {

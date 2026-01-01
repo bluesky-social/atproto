@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { asNsidString } from '../core.js'
 import { PermissionSet } from './permission-set.js'
 import { Permission } from './permission.js'

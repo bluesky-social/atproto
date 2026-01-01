@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { ObjectSchema } from './object.js'
 import { RecordSchema } from './record.js'
 import { StringSchema } from './string.js'

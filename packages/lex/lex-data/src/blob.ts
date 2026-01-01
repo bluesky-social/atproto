@@ -35,12 +35,7 @@ export function isBlobRef(
     return false
   }
 
-  if (
-    typeof size !== 'number' ||
-    size < 0 ||
-    !Number.isInteger(size) ||
-    !Number.isSafeInteger(size)
-  ) {
+  if (typeof size !== 'number' || size < 0 || !Number.isSafeInteger(size)) {
     return false
   }
 
@@ -97,7 +92,7 @@ export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
     return false
   }
 
-  if (typeof mimeType !== 'string') {
+  if (typeof mimeType !== 'string' || mimeType.length === 0) {
     return false
   }
 
