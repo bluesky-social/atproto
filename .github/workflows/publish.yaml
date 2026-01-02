@@ -8,15 +8,16 @@ on:
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
 jobs:
   build:
     name: Build & Publish
     if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
     steps:
       - uses: actions/checkout@v3
       - run: corepack enable && corepack prepare --activate
