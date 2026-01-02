@@ -10,7 +10,7 @@ import {
 } from 'node:http'
 import { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
+import { finished, pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 
@@ -161,8 +161,8 @@ function requestSignal(req: IncomingMessage): AbortSignal {
 
   const abortController = new AbortController()
 
-  const abort = (err?: Error) => {
-    abortController.abort(err)
+  const abort = (err?: Error | WebSocket) => {
+    abortController.abort(err instanceof Error ? err : undefined)
 
     req.off('close', abort)
     req.off('error', abort)
