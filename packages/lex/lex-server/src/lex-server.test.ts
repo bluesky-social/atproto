@@ -1514,7 +1514,7 @@ describe('Subscription', () => {
 
     const router = new LexRouter({ upgradeWebSocket }).add(
       io.example.subscribe,
-      async function* ({ params: { message }, request: { signal } }) {
+      async function* ({ params: { message }, signal }) {
         try {
           for (; sentCount < 10; ) {
             await scheduler.wait(5, { signal })

@@ -18,6 +18,7 @@ import {
 } from '@atproto/lex-schema'
 import { drainWebsocket } from './lib/drain-websocket.js'
 
+type Awaitable<T> = T | Promise<T>
 type LexMethod = Query | Procedure | Subscription
 
 export type NetAddr = {
@@ -31,11 +32,11 @@ export type UnixAddr = {
   transport: 'unix' | 'unixpacket'
 }
 
-export type Addr = NetAddr | UnixAddr
+export type Addr = NetAddr | UnixAddr | undefined
 
-export type ConnectionInfo = {
-  localAddr?: Addr
-  remoteAddr?: Addr
+export type ConnectionInfo<A extends Addr = Addr> = {
+  remoteAddr: A
+  completed: Promise<void>
 }
 
 type Handler = (
@@ -48,6 +49,7 @@ export type LexRouterHandlerContext<Method extends LexMethod, Credentials> = {
   input: InferMethodInput<Method, Body>
   params: InferMethodParams<Method>
   request: Request
+  signal: AbortSignal
   connection?: ConnectionInfo
 }
 
@@ -72,7 +74,7 @@ export type LexRouterMethodHandler<
   Credentials = unknown,
 > = (
   ctx: LexRouterHandlerContext<Method, Credentials>,
-) => Promise<LexRouterHandlerOutput<Method>>
+) => Awaitable<LexRouterHandlerOutput<Method>>
 
 export type LexRouterMethodConfig<
   Method extends Query | Procedure = Query | Procedure,
@@ -193,10 +195,7 @@ export class LexRouter {
         : getQueryInput.bind(method)
     ) as (request: Request) => Promise<InferMethodInput<Method, Body>>
 
-    return async (
-      request: Request,
-      connection?: ConnectionInfo,
-    ): Promise<Response> => {
+    return async (request, connection) => {
       // @NOTE CORS requests should be handled by a middleware before reaching
       // this point.
       if (
@@ -227,6 +226,7 @@ export class LexRouter {
           input,
           request,
           connection,
+          signal: request.signal,
         })
 
         if (output instanceof Response) {
@@ -272,10 +272,7 @@ export class LexRouter {
       )
     }
 
-    return async (
-      request: Request,
-      connection?: ConnectionInfo,
-    ): Promise<Response> => {
+    return async (request, connection) => {
       if (request.method !== 'GET') {
         return Response.json(
           { error: 'InvalidRequest', message: 'Method not allowed' },
@@ -302,19 +299,34 @@ export class LexRouter {
         )
       }
 
+      if (request.signal.aborted) {
+        return Response.json(
+          { error: 'RequestAborted', message: 'The request was aborted' },
+          { status: 499 },
+        )
+      }
+
       try {
         const { response, socket } = upgradeWebSocket(request)
 
-        socket.addEventListener('message', () => {
+        // @NOTE We are using a distinct signal than request.signal because that
+        // signal may get aborted before the WebSocket is closed (this is the
+        // case with Deno).
+        const abortController = new AbortController()
+        const { signal } = abortController
+        const abort = () => abortController.abort()
+
+        const onMessage = (event: unknown) => {
           const error = new LexError(
             'InvalidRequest',
             'XRPC subscriptions do not accept messages',
+            { cause: event },
           )
           socket.send(encodeErrorFrame(error))
           socket.close(1008, error.error)
-        })
+        }
 
-        socket.addEventListener('open', async () => {
+        const onOpen = async () => {
           try {
             const url = new URL(request.url)
             const params = method.parameters.fromURLSearchParams(
@@ -325,7 +337,7 @@ export class LexRouter {
               ? await auth({ params, request, connection })
               : (undefined as Credentials)
 
-            request.signal.throwIfAborted()
+            signal.throwIfAborted()
 
             const iterable = methodHandler({
               credentials,
@@ -333,30 +345,19 @@ export class LexRouter {
               input: undefined as InferMethodInput<Method, Body>,
               request,
               connection,
+              signal,
             })
 
             const iterator = iterable[Symbol.asyncIterator]()
 
-            if (iterator.return) {
-              const abort = async () => {
-                socket.removeEventListener('error', abort)
-                socket.removeEventListener('close', abort)
-                try {
-                  await iterator.return!()
-                } catch {
-                  // Ignore
-                }
-              }
-              socket.addEventListener('error', abort)
-              socket.addEventListener('close', abort)
-            }
+            signal.addEventListener('abort', async () => {
+              // @NOTE will cause the process to crash if this throws
+              await iterator.return?.()
+            })
 
-            while (socket.readyState === 1) {
+            while (!signal.aborted && socket.readyState === 1) {
               const result = await iterator.next()
               if (result.done) break
-
-              // Should not be needed (socket would emit "close" event)
-              request.signal.throwIfAborted()
 
               // @TODO add validation of output based on method.output.schema?
 
@@ -366,10 +367,12 @@ export class LexRouter {
 
               // Apply backpressure by waiting for the buffered data to drain
               // before generating the next message
-              await drainWebsocket(socket, request.signal, this.options)
+              await drainWebsocket(socket, signal, this.options)
             }
 
-            socket.close(1000)
+            if (socket.readyState === 1) {
+              socket.close(1000)
+            }
           } catch (error) {
             // If the socket is still open, send an error frame before closing
             if (socket.readyState === 1) {
@@ -391,8 +394,15 @@ export class LexRouter {
             if (onHandlerError && !isAbortReason(request.signal, error)) {
               await onHandlerError({ error, request, method })
             }
+          } finally {
+            abortController.abort()
           }
-        })
+        }
+
+        socket.addEventListener('error', abort)
+        socket.addEventListener('close', abort)
+        socket.addEventListener('open', onOpen)
+        socket.addEventListener('message', onMessage)
 
         return response
       } catch (error) {
