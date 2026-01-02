@@ -10,7 +10,7 @@ import {
 } from 'node:http'
 import { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
-import { finished, pipeline } from 'node:stream/promises'
+import { pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 
