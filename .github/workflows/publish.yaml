@@ -21,21 +21,25 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v3
-      - run: corepack enable && corepack prepare --activate
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-          registry-url: 'https://registry.npmjs.org/'
           node-version-file: '.nvmrc'
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Configure Dependency Cache
+        uses: actions/setup-node@v4
+        with:
           cache: 'pnpm'
+      - run: npm i -g npm@latest
       - run: pnpm i --frozen-lockfile
-      - run: pnpm build
-      - run: pnpm verify
       - name: Publish
-        id: changesets
         uses: changesets/action@v1
+        id: changesets
         with:
           publish: pnpm release
-          version: pnpm version-packages
+          version: pnpm run version-packages
           commit: 'Version packages'
           title: 'Version packages'
