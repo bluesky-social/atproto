@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-json",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in JSON format",
   "keywords": [
