@@ -66,6 +66,8 @@ export function upgradeWebSocket(request: Request): {
   return { response, socket }
 }
 
+const kUpgradeEvent = Symbol.for('@atproto/lex-server:upgrade')
+
 function handleWebSocketUpgrade(
   req: IncomingMessage,
   response: Response,
@@ -98,6 +100,8 @@ function handleWebSocketUpgrade(
     // @TODO find a way to properly "close" the _socket when the server is
     // shutting down (might require replacing http-terminator with a local
     // implementation)
+
+    req.emit(kUpgradeEvent, ws)
   })
 }
 
@@ -138,26 +142,10 @@ function toRequest(req: IncomingMessage): Request {
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
   const headers = toHeaders(req.headers)
   const body = toBody(req)
-
-  const abortController = new AbortController()
-  const abort = (err?: Error) => abortController.abort(err)
-
-  req.on('close', abort)
-  req.on('error', abort)
-  req.on('end', abort)
-
-  abortController.signal.addEventListener(
-    'abort',
-    () => {
-      req.off('close', abort)
-      req.off('error', abort)
-      req.off('end', abort)
-    },
-    { once: true },
-  )
+  const signal = requestSignal(req)
 
   return new Request(url, {
-    signal: abortController.signal,
+    signal,
     method: req.method,
     headers,
     body,
@@ -165,6 +153,58 @@ function toRequest(req: IncomingMessage): Request {
     redirect: 'manual',
     // @ts-expect-error
     duplex: body ? 'half' : undefined,
+  })
+}
+
+function requestSignal(req: IncomingMessage): AbortSignal {
+  if (req.destroyed) return AbortSignal.abort()
+
+  const abortController = new AbortController()
+
+  const abort = (err?: Error) => {
+    abortController.abort(err)
+
+    req.off('close', abort)
+    req.off('error', abort)
+    req.off('end', abort)
+    req.off(kUpgradeEvent, abort)
+  }
+
+  req.on('close', abort)
+  req.on('error', abort)
+  req.on('end', abort)
+  req.on(kUpgradeEvent, abort)
+
+  return abortController.signal
+}
+
+function requestCompletion(req: IncomingMessage): Promise<void> {
+  if (req.destroyed) return Promise.resolve()
+
+  // Unlike the abort signal, we complete the promise only when the request
+  // is fully done, accounting for websocket upgrade.
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      req.off('close', done)
+      req.off('error', done)
+      req.off('end', done)
+      req.off(kUpgradeEvent, onUpgrade)
+    }
+
+    const onUpgrade = (ws: WebSocket) => {
+      cleanup()
+      ws.addEventListener('close', () => resolve())
+    }
+
+    const done = () => {
+      resolve()
+      cleanup()
+    }
+
+    req.on('close', done)
+    req.on('error', done)
+    req.on('end', done)
+    req.on(kUpgradeEvent, onUpgrade)
   })
 }
 
@@ -202,14 +242,14 @@ function toBody(req: IncomingMessage): null | ReadableStream<Uint8Array> {
 }
 
 export type NetAddr = {
+  transport: 'tcp'
   hostname: string
   port: number
-  transport: 'tcp'
 }
 
 export type NodeConnectionInfo = {
-  localAddr?: NetAddr
-  remoteAddr?: NetAddr
+  completed: Promise<void>
+  remoteAddr: NetAddr | undefined
 }
 
 export interface HandlerFunction {
@@ -233,21 +273,15 @@ async function handleRequest(
 
 function toConnectionInfo(req: IncomingMessage): NodeConnectionInfo {
   const { socket } = req
+
   return {
-    localAddr:
-      socket.localAddress != null
-        ? {
-            hostname: socket.localAddress,
-            port: socket.localPort!,
-            transport: 'tcp',
-          }
-        : undefined,
+    completed: requestCompletion(req),
     remoteAddr:
       socket.remoteAddress != null
         ? {
+            transport: 'tcp',
             hostname: socket.remoteAddress,
             port: socket.remotePort!,
-            transport: 'tcp',
           }
         : undefined,
   }
