@@ -7,7 +7,8 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
+  pull-requests: write
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -17,23 +18,20 @@ jobs:
     name: Build & Publish
     if: github.repository == 'bluesky-social/atproto'
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
+          registry-url: 'https://registry.npmjs.org'
       - name: Enable Corepack
         run: corepack enable
       - name: Configure Dependency Cache
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           cache: 'pnpm'
-      - run: npm i -g npm@latest
       - run: pnpm i --frozen-lockfile
       - name: Publish
         uses: changesets/action@v1
