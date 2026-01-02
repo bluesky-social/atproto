@@ -1,5 +1,11 @@
 # @atproto/lex-server
 
+## 0.0.2
+
+### Patch Changes
+
+- [#4498](https://github.com/bluesky-social/atproto/pull/4498) [`e9f065f`](https://github.com/bluesky-social/atproto/commit/e9f065fce85cd7940617eb611050e6ef65c54c04) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add AbortSignal to context
+
 ## 0.0.1
 
 ### Patch Changes
