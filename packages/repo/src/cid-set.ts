@@ -1,14 +1,14 @@
-import { CID } from 'multiformats'
+import { Cid, parseCid } from '@atproto/lex-data'
 
 export class CidSet {
   private set: Set<string>
 
-  constructor(arr: CID[] = []) {
+  constructor(arr: Cid[] = []) {
     const strArr = arr.map((c) => c.toString())
     this.set = new Set(strArr)
   }
 
-  add(cid: CID): CidSet {
+  add(cid: Cid): CidSet {
     this.set.add(cid.toString())
     return this
   }
@@ -23,12 +23,12 @@ export class CidSet {
     return this
   }
 
-  delete(cid: CID) {
+  delete(cid: Cid) {
     this.set.delete(cid.toString())
     return this
   }
 
-  has(cid: CID): boolean {
+  has(cid: Cid): boolean {
     return this.set.has(cid.toString())
   }
 
@@ -41,8 +41,8 @@ export class CidSet {
     return this
   }
 
-  toList(): CID[] {
-    return [...this.set].map((c) => CID.parse(c))
+  toList(): Cid[] {
+    return [...this.set].map((c) => parseCid(c))
   }
 }
 

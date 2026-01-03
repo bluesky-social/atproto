@@ -27,7 +27,7 @@ describe('labeler service views', () => {
       dbPostgresSchema: 'bsky_views_labeler_service',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

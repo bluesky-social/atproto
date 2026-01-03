@@ -21,7 +21,7 @@ describe('account', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {
@@ -357,7 +357,7 @@ const makeLoggedInAccount = async (
 ) => {
   const code = await createInviteCode(network, inviterAgent, 1)
   const account = await createAccountWithInvite(inviterAgent, code)
-  const agent = network.pds.getClient()
+  const agent = network.pds.getAgent()
   await agent.login({
     identifier: account.handle,
     password: account.password,
