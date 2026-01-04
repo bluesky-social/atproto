@@ -54,6 +54,10 @@ app.bsky.actor.profile.$validate({
   - [Generated Schema Structure](#generated-schema-structure)
   - [Type definitions](#type-definitions)
   - [Validation Helpers](#validation-helpers)
+- [Data Model](#data-model)
+  - [Types](#types)
+  - [JSON Encoding](#json-encoding)
+  - [Utilities](#utilities)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -338,6 +342,92 @@ declare const data:
 if (app.bsky.feed.post.$isTypeOf(data)) {
   // data is a post
 }
+```
+
+## Data Model
+
+The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional types: **CIDs** (content-addressed links) and **bytes**. This data is encoded as JSON for XRPC (HTTP API) or as [DAG-CBOR](https://ipld.io/docs/codecs/known/dag-cbor/) for repository storage (see [`@atproto/lex-cbor`](../lex-cbor)).
+
+### Types
+
+```typescript
+import type {
+  LexValue,
+  LexMap,
+  LexScalar,
+  TypedLexMap,
+  Cid,
+  BlobRef,
+} from '@atproto/lex'
+import {
+  isLexValue,
+  isLexMap,
+  isTypedLexMap,
+  isCid,
+  isBlobRef,
+} from '@atproto/lex'
+
+// LexScalar: number | string | boolean | null | Cid | Uint8Array
+// LexValue:  LexScalar | LexValue[] | { [key: string]?: LexValue }
+// LexMap:    { [key: string]?: LexValue }
+// TypedLexMap: LexMap & { $type: string }
+// Cid: Content Identifier (link by hash)
+// BlobRef: { $type: 'blob', ref: Cid, mimeType: string, size: number }
+
+if (isTypedLexMap(data)) {
+  console.log(data.$type) // e.g., 'app.bsky.feed.post'
+}
+```
+
+### JSON Encoding
+
+In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`:
+
+```typescript
+import { lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
+
+// Parse JSON string → data model (decodes $link and $bytes)
+const data = lexParse('{"ref": {"$link": "bafyrei..."}}')
+
+// Data model → JSON string (encodes CIDs and bytes)
+const json = lexStringify({ ref: someCid, data: someBytes })
+
+// Convert between parsed JSON objects and data model values
+const lex = jsonToLex(jsonObject)
+const obj = lexToJson(lexValue)
+```
+
+### Utilities
+
+```typescript
+import {
+  // CID utilities
+  parseCid, // Parse CID string (throws on invalid)
+  asCid, // Coerce to Cid or null
+  isCid, // Type guard for Cid values
+
+  // Equality
+  lexEquals, // Deep equality (handles CIDs and bytes)
+
+  // String length for Lexicon validation
+  graphemeLen, // Count user-perceived characters
+  utf8Len, // Count UTF-8 bytes
+
+  // Language tag validation (BCP-47)
+  isLanguageString, // Validate language tags (e.g., 'en', 'pt-BR')
+
+  // Low-level JSON encoding helpers
+  parseLexLink, // { $link: string } → Cid
+  encodeLexLink, // Cid → { $link: string }
+  parseLexBytes, // { $bytes: string } → Uint8Array
+  encodeLexBytes, // Uint8Array → { $bytes: string }
+} from '@atproto/lex'
+
+// Examples
+const cid = parseCid('bafyreiabc...')
+graphemeLen('👨‍👩‍👧‍👦') // 1
+utf8Len('👨‍👩‍👧‍👦') // 25
+isLanguageString('en-US') // true
 ```
 
 ## Client API
