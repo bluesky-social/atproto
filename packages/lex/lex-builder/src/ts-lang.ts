@@ -1,6 +1,8 @@
-const RESERVED_WORDS = new Set([
-  // JavaScript keywords
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
+/**
+ * JavaScript keywords
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar}
+ */
+const JS_KEYWORDS = new Set([
   'abstract',
   'arguments',
   'as',
@@ -73,29 +75,22 @@ const RESERVED_WORDS = new Set([
   'while',
   'with',
   'yield',
-  // Constructors and globals
-  'Array',
-  'Boolean',
-  'Buffer',
-  'Date',
-  'Error',
-  'Function',
-  'Infinity',
-  'JSON',
-  'Map',
-  'Math',
-  'NaN',
-  'Number',
-  'Object',
-  'Set',
-  'String',
-  'Symbol',
-  'console',
-  'document',
-  'global',
-  'globalThis',
-  'window',
-  // Test globals
+])
+
+export function isJsKeyword(word: string) {
+  return JS_KEYWORDS.has(word)
+}
+
+const WELL_KNOWN_GLOBALS = new Set([
+  // ESM
+  'import',
+  // CommonJS
+  '__dirname',
+  '__filename',
+  'require',
+  'module',
+  'exports',
+  // Jest
   'afterAll',
   'afterEach',
   'assert',
@@ -105,30 +100,70 @@ const RESERVED_WORDS = new Set([
   'expect',
   'it',
   'test',
-  // CommonJS globals
-  '__dirname',
-  '__filename',
-  'require',
-  'module',
-  'exports',
-  // TypeScript
-  'Record',
+])
+
+const TYPE_SCRIPT_GLOBALS = new Set([
+  // Primitives
   'any',
+  'bigint',
+  'boolean',
   'declare',
   'never',
+  'null',
   'number',
   'object',
   'string',
   'symbol',
+  'undefined',
   'unknown',
-  // Future reserved words
-  'constructor',
-  'meta',
+  'void',
+  // Utility types
+  'Record',
+  'Partial',
+  'Readonly',
+  'Pick',
+  'Omit',
+  'Exclude',
+  'Extract',
+  'InstanceType',
+  'ReturnType',
+  'Required',
+  'ThisType',
+  'Uppercase',
+  'Lowercase',
+  'Capitalize',
+  'Uncapitalize',
 ])
-export function isReservedWord(word: string) {
-  return RESERVED_WORDS.has(word)
+
+export function isGlobalIdentifier(word: string) {
+  return (
+    // Should cover most useful globals
+    word in globalThis ||
+    WELL_KNOWN_GLOBALS.has(word) ||
+    TYPE_SCRIPT_GLOBALS.has(word)
+  )
 }
 
-export function isSafeIdentifier(name: string) {
-  return !isReservedWord(name) && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
+export function isReservedWord(word: string) {
+  return isJsKeyword(word) || isGlobalIdentifier(word)
+}
+
+type SafeIdentifierOptions = {
+  /** Defaults to `false` */
+  allowGlobal?: boolean
+}
+
+export function isSafeIdentifier(
+  name: string,
+  options?: SafeIdentifierOptions,
+) {
+  if (!options?.allowGlobal && isGlobalIdentifier(name)) {
+    return false
+  }
+
+  return isJsIdentifier(name)
+}
+
+export function isJsIdentifier(name: string) {
+  return !isJsKeyword(name) && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
 }

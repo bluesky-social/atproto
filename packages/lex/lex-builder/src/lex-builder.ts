@@ -113,7 +113,7 @@ export class LexBuilder {
       if (!dec) {
         file.addExportDeclaration({
           moduleSpecifier: childModuleSpecifier,
-          namespaceExport: isSafeIdentifier(childNs)
+          namespaceExport: isSafeIdentifier(childNs, { allowGlobal: true })
             ? childNs
             : JSON.stringify(childNs),
         })
