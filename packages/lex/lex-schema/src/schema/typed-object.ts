@@ -1,9 +1,10 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
   $Type,
+  $Typed,
   Infer,
+  Maybe$Typed,
   Schema,
-  Simplify,
   ValidationResult,
   Validator,
   ValidatorContext,
@@ -13,7 +14,7 @@ import { TypedObject } from './typed-union.js'
 export type TypedObjectSchemaOutput<
   T extends $Type,
   S extends Validator<{ [k: string]: unknown }>,
-> = Simplify<Infer<S> & { $type?: T }>
+> = Maybe$Typed<Infer<S>, T>
 
 export class TypedObjectSchema<
   const T extends $Type = any,
@@ -29,16 +30,18 @@ export class TypedObjectSchema<
   isTypeOf<X extends Record<string, unknown>>(
     value: X,
   ): value is Exclude<
-    X extends { $type?: T } ? X : X & { $type?: T },
+    X extends { $type?: T } ? X : Maybe$Typed<X, T>,
     TypedObject
   > {
     return value.$type === undefined || value.$type === this.$type
   }
 
-  build<X extends Omit<Infer<S>, '$type'>>(
-    input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: T }> {
-    return { ...input, $type: this.$type }
+  build<X extends Omit<Infer<S>, '$type'>>(input: X) {
+    // Using "parse" to ensure defaults are applied
+    return this.parse(
+      input.$type === this.$type ? input : { ...input, $type: this.$type },
+      { allowTransform: true },
+    ) as $Typed<Infer<S>, T>
   }
 
   $isTypeOf<X extends Record<string, unknown>>(value: X) {

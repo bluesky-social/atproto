@@ -1,9 +1,9 @@
 import {
+  $Typed,
   Infer,
   LexiconRecordKey,
   NsidString,
   Schema,
-  Simplify,
   TidString,
   ValidationResult,
   Validator,
@@ -19,7 +19,7 @@ export type InferRecordKey<R extends RecordSchema> =
 export type RecordSchemaOutput<
   T extends NsidString,
   S extends Validator<{ [k: string]: unknown }>,
-> = Simplify<{ $type: T } & Omit<Infer<S>, '$type'>>
+> = $Typed<Infer<S>, T>
 
 export class RecordSchema<
   K extends LexiconRecordKey = any,
@@ -39,17 +39,16 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is Exclude<
-    X extends { $type?: T } ? X : X & { $type?: T },
-    TypedObject
-  > {
+  ): value is Exclude<X extends { $type: T } ? X : $Typed<X, T>, TypedObject> {
     return value.$type === this.$type
   }
 
-  build<X extends Omit<Infer<S>, '$type'>>(
-    input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: T }> {
-    return { ...input, $type: this.$type }
+  build<X extends Omit<Infer<S>, '$type'>>(input: X) {
+    // Using "parse" to ensure defaults are applied
+    return this.parse(
+      input.$type === this.$type ? input : { ...input, $type: this.$type },
+      { allowTransform: true },
+    )
   }
 
   $isTypeOf<X extends { $type?: unknown }>(value: X) {

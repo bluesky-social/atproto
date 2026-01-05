@@ -23,4 +23,5 @@ export function $type<N extends NsidString, H extends string>(
 }
 
 export type $Typed<V, T extends string = string> = V & { $type: T }
+export type Maybe$Typed<V, T extends string = string> = V & { $type?: T }
 export type Un$Typed<V extends { $type?: string }> = OmitKey<V, '$type'>

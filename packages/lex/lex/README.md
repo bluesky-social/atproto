@@ -53,11 +53,12 @@ app.bsky.actor.profile.$validate({
 - [TypeScript Schemas](#typescript-schemas)
   - [Generated Schema Structure](#generated-schema-structure)
   - [Type definitions](#type-definitions)
+  - [Building data](#building-data)
   - [Validation Helpers](#validation-helpers)
 - [Data Model](#data-model)
   - [Types](#types)
   - [JSON Encoding](#json-encoding)
-  - [Utilities](#utilities)
+  - [DAG-CBOR Encoding](#dag-cbor-encoding)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -65,6 +66,8 @@ app.bsky.actor.profile.$validate({
   - [Authentication Methods](#authentication-methods)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
+- [Blob references](#blob-references)
+- [Utilities](#utilities)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
   - [Tree-Shaking](#tree-shaking)
@@ -93,7 +96,7 @@ This creates:
 
 > [!NOTE]
 >
-> The `lex` command might conflict with other binaries intalled on your system.
+> The `lex` command might conflict with other binaries installed on your system.
 > If that happens, you can also run the CLI using `ts-lex`, `pnpm exec lex` or
 > `npx @atproto/lex`.
 
@@ -213,15 +216,25 @@ You can extract TypeScript types from the generated schemas for use in you appli
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Extract the type for a post record
-type Post = app.bsky.feed.post.Main
-
-// Use the extracted types
-const post: Post = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello, AT Protocol!',
-  createdAt: new Date().toISOString(),
+function renderPost(p: app.bsky.feed.post.Main) {
+  console.log(p.$type) // 'app.bsky.feed.post'
+  console.log(p.text)
 }
+```
+
+### Building data
+
+It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present and that optional fields have appropriate default values.
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// variable type will be inferred as "app.bsky.feed.post.Main"
+const post = app.bsky.feed.post.$build({
+  // No need to specify $type when using $build
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
+})
 ```
 
 ### Validation Helpers
@@ -288,6 +301,10 @@ try {
 }
 ```
 
+> [!NOTE]
+>
+> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$parse()`.
+
 #### `$validate(data)` - Get Validation Result
 
 Returns a detailed validation result object without throwing:
@@ -308,6 +325,10 @@ if (result.success) {
 }
 ```
 
+> [!NOTE]
+>
+> Like `$parse`, the `$validate` method will apply defaults and coercion. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$validate()`.
+
 #### `$build(data)` - Build with Defaults
 
 Creates a valid object by applying defaults for optional fields:
@@ -327,7 +348,7 @@ const like = app.bsky.feed.like.$build({
 
 #### `$isTypeOf(data)` - Type Discriminator
 
-Discriminates (already validated) data by `$type`, without re-validating. This is especially useful when working with union types:
+Discriminates (pre-validated) data based on its `$type` property, without re-validating. This is especially useful when working with union types:
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -346,7 +367,7 @@ if (app.bsky.feed.post.$isTypeOf(data)) {
 
 ## Data Model
 
-The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional types: **CIDs** (content-addressed links) and **bytes**. This data is encoded as JSON for XRPC (HTTP API) or as [DAG-CBOR](https://ipld.io/docs/codecs/known/dag-cbor/) for repository storage (see [`@atproto/lex-cbor`](../lex-cbor)).
+The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional types: **CIDs** (content-addressed links) and **bytes**. This data is encoded as JSON for XRPC (HTTP API) or as [DAG-CBOR](https://ipld.io/docs/codecs/known/dag-cbor/) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
 
 ### Types
 
@@ -357,25 +378,17 @@ import type {
   LexScalar,
   TypedLexMap,
   Cid,
-  BlobRef,
 } from '@atproto/lex'
-import {
-  isLexValue,
-  isLexMap,
-  isTypedLexMap,
-  isCid,
-  isBlobRef,
-} from '@atproto/lex'
+import { isLexValue, isLexMap, isTypedLexMap, isCid } from '@atproto/lex'
 
 // LexScalar: number | string | boolean | null | Cid | Uint8Array
 // LexValue:  LexScalar | LexValue[] | { [key: string]?: LexValue }
 // LexMap:    { [key: string]?: LexValue }
 // TypedLexMap: LexMap & { $type: string }
 // Cid: Content Identifier (link by hash)
-// BlobRef: { $type: 'blob', ref: Cid, mimeType: string, size: number }
 
 if (isTypedLexMap(data)) {
-  console.log(data.$type) // e.g., 'app.bsky.feed.post'
+  console.log(data.$type) // some string
 }
 ```
 
@@ -397,37 +410,19 @@ const lex = jsonToLex(jsonObject)
 const obj = lexToJson(lexValue)
 ```
 
-### Utilities
+### DAG-CBOR Encoding
+
+Use `@atproto/lex-cbor` to encode/decode the data model to/from DAG-CBOR format for storage and authentication:
 
 ```typescript
-import {
-  // CID utilities
-  parseCid, // Parse CID string (throws on invalid)
-  asCid, // Coerce to Cid or null
-  isCid, // Type guard for Cid values
+import { encode, decode } from '@atproto/lex-cbor'
+import type { LexValue } from '@atproto/lex'
 
-  // Equality
-  lexEquals, // Deep equality (handles CIDs and bytes)
+// Encode data model to DAG-CBOR bytes
+const cborBytes = encode(someLexValue)
 
-  // String length for Lexicon validation
-  graphemeLen, // Count user-perceived characters
-  utf8Len, // Count UTF-8 bytes
-
-  // Language tag validation (BCP-47)
-  isLanguageString, // Validate language tags (e.g., 'en', 'pt-BR')
-
-  // Low-level JSON encoding helpers
-  parseLexLink, // { $link: string } → Cid
-  encodeLexLink, // Cid → { $link: string }
-  parseLexBytes, // { $bytes: string } → Uint8Array
-  encodeLexBytes, // Uint8Array → { $bytes: string }
-} from '@atproto/lex'
-
-// Examples
-const cid = parseCid('bafyreiabc...')
-graphemeLen('👨‍👩‍👧‍👦') // 1
-utf8Len('👨‍👩‍👧‍👦') // 25
-isLanguageString('en-US') // true
+// Decode DAG-CBOR bytes to data model
+const lexValue: LexValue = decode(cborBytes)
 ```
 
 ## Client API
@@ -855,6 +850,77 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
 console.log(response.status)
 console.log(response.headers)
 console.log(response.body)
+```
+
+## Blob references
+
+In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+
+```typescript
+import { BlobRef, isBlobRef } from '@atproto/lex'
+
+const blobRef: BlobRef = {
+  $type: 'blob',
+  ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
+  mimeType: 'image/png',
+  size: 12345,
+}
+
+if (isBlobRef(blobRef)) {
+  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+}
+```
+
+> [!NOTE]
+>
+> Historically, references to blobs were represented as simple objects with the following structure:
+>
+> ```typescript
+> type LegacyBlobRef = {
+>   ref: string
+>   mimeType: string
+> }
+> ```
+>
+> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
+
+## Utilities
+
+Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are available:
+
+```typescript
+import {
+  // CID utilities
+  parseCid, // Parse CID string (throws on invalid)
+  asCid, // Coerce to Cid or null
+  isCid, // Type guard for Cid values
+
+  // Blob references
+  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef objects
+
+  // Equality
+  lexEquals, // Deep equality (handles CIDs and bytes)
+
+  // String length for Lexicon validation
+  graphemeLen, // Count user-perceived characters
+  utf8Len, // Count UTF-8 bytes
+
+  // Language tag validation (BCP-47)
+  isLanguageString, // Validate language tags (e.g., 'en', 'pt-BR')
+
+  // Low-level JSON encoding helpers
+  parseLexLink, // { $link: string } → Cid
+  encodeLexLink, // Cid → { $link: string }
+  parseLexBytes, // { $bytes: string } → Uint8Array
+  encodeLexBytes, // Uint8Array → { $bytes: string }
+} from '@atproto/lex'
+
+// Examples
+const cid = parseCid('bafyreiabc...')
+graphemeLen('👨‍👩‍👧‍👦') // 1
+utf8Len('👨‍👩‍👧‍👦') // 25
+isLanguageString('en-US') // true
 ```
 
 ## Advanced Usage
