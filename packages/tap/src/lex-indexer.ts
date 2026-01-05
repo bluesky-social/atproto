@@ -1,6 +1,7 @@
 import { Infer, Namespace, RecordSchema, getMain } from '@atproto/lex'
 import { HandlerOpts, TapHandler } from './channel'
 import { IdentityEvent, RecordEvent, TapEvent } from './types'
+import { AtUri } from '@atproto/syntax'
 
 type BaseRecordEvent = Omit<RecordEvent, 'record' | 'action' | 'cid'>
 
@@ -124,16 +125,25 @@ export class LexIndexer implements TapHandler {
   }
 
   other(fn: UntypedHandler): this {
+    if (this.otherHandler) {
+      throw new Error(`Handler already registered for "other"`)
+    }
     this.otherHandler = fn
     return this
   }
 
   identity(fn: IdentityHandler): this {
+    if (this.identityHandler) {
+      throw new Error(`Handler already registered for "identity"`)
+    }
     this.identityHandler = fn
     return this
   }
 
   error(fn: ErrorHandler): this {
+    if (this.errorHandler) {
+      throw new Error(`Handler already registered for "error"`)
+    }
     this.errorHandler = fn
     return this
   }
@@ -161,11 +171,10 @@ export class LexIndexer implements TapHandler {
     }
 
     if (action === 'create' || action === 'update') {
-      const result = registered.schema.safeParse(evt.record)
-      if (!result.success) {
-        throw new Error(
-          `Record validation failed for ${collection}: ${result.reason}`,
-        )
+      const match = registered.schema.matches(evt.record)
+      if (!match) {
+        const uriStr = AtUri.make(evt.did, evt.collection, evt.rkey).toString()
+        throw new Error(`Record validation failed for ${uriStr}`)
       }
     }
 
