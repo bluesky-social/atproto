@@ -128,5 +128,70 @@ Most API routes are under /xrpc/
     })
   }
 
+  // Neuro RemoteLogin callback endpoint
+  if (ctx.neuroRemoteLoginManager) {
+    router.post('/neuro/remotelogin/callback', async function (req, res) {
+      try {
+        const { PetitionId, Rejected, Token } = req.body
+
+        // Validate required fields
+        if (!PetitionId || typeof Rejected !== 'boolean') {
+          req.log.warn(
+            { body: req.body },
+            'RemoteLogin callback missing fields',
+          )
+          return res.status(400).json({
+            error: 'Missing required fields',
+            code: 'NEURO_REMOTELOGIN_CALLBACK_MISSING_FIELDS',
+            details: 'PetitionId and Rejected are required',
+          })
+        }
+
+        // Token required if not rejected
+        if (!Rejected && !Token) {
+          req.log.warn(
+            { petitionId: PetitionId },
+            'RemoteLogin callback missing Token when not rejected',
+          )
+          return res.status(400).json({
+            error: 'Token required when not rejected',
+            code: 'NEURO_REMOTELOGIN_CALLBACK_MISSING_TOKEN',
+          })
+        }
+
+        // Process callback
+        if (!ctx.neuroRemoteLoginManager) {
+          return res.status(503).json({
+            success: false,
+            code: 'NEURO_REMOTELOGIN_NOT_CONFIGURED',
+            message: 'Neuro RemoteLogin not configured',
+          })
+        }
+
+        ctx.neuroRemoteLoginManager.handleCallback({
+          PetitionId,
+          Rejected,
+          Token,
+        })
+
+        req.log.info(
+          {
+            petitionId: PetitionId.substring(0, 8) + '...',
+            rejected: Rejected,
+          },
+          'RemoteLogin callback processed',
+        )
+
+        res.status(200).json({ success: true })
+      } catch (err) {
+        req.log.error({ err }, 'RemoteLogin callback error')
+        res.status(500).json({
+          error: err instanceof Error ? err.message : 'Internal server error',
+          code: 'NEURO_REMOTELOGIN_CALLBACK_ERROR',
+        })
+      }
+    })
+  }
+
   return router
 }

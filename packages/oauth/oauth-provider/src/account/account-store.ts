@@ -46,9 +46,10 @@ export type ResetPasswordConfirmInput = ConfirmResetPasswordInput
 export type CreateAccountData = {
   locale: string
   email: string
-  password: string
+  password?: string // Optional for RemoteLogin
   handle: string
   inviteCode?: string | undefined
+  emailOtp?: string | undefined // Legal ID for RemoteLogin
 }
 
 export type AuthenticateAccountData = {

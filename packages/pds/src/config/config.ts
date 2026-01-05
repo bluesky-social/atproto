@@ -532,4 +532,15 @@ export type NeuroConfig = {
   domain: string
   storageBackend: 'database' | 'redis'
   customUiPath?: string
+  // RemoteLogin API configuration
+  apiType?: 'quicklogin' | 'remotelogin' | 'both'
+  callbackBaseUrl?: string
+  // Authentication for RemoteLogin API
+  authMethod?: 'basic' | 'bearer' | 'mtls'
+  basicUsername?: string
+  basicPassword?: string
+  bearerToken?: string
+  // JWT verification
+  verifyJwtSignature?: boolean
+  petitionTimeoutSeconds?: number
 }
