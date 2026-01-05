@@ -1,7 +1,7 @@
-import { Infer, Namespace, RecordSchema, getMain } from '@atproto/lex'
+import { Infer, Main, RecordSchema, getMain } from '@atproto/lex'
+import { AtUri } from '@atproto/syntax'
 import { HandlerOpts, TapHandler } from './channel'
 import { IdentityEvent, RecordEvent, TapEvent } from './types'
-import { AtUri } from '@atproto/syntax'
 
 type BaseRecordEvent = Omit<RecordEvent, 'record' | 'action' | 'cid'>
 
@@ -83,7 +83,7 @@ export class LexIndexer implements TapHandler {
 
   private register<const T extends RecordSchema>(
     action: string,
-    ns: Namespace<T>,
+    ns: Main<T>,
     handler: RecordHandler<Infer<T>>,
   ): this {
     const schema = getMain(ns)
@@ -96,28 +96,28 @@ export class LexIndexer implements TapHandler {
   }
 
   create<const T extends RecordSchema>(
-    ns: Namespace<T>,
+    ns: Main<T>,
     handler: CreateHandler<Infer<T>>,
   ): this {
     return this.register('create', ns, handler)
   }
 
   update<const T extends RecordSchema>(
-    ns: Namespace<T>,
+    ns: Main<T>,
     handler: UpdateHandler<Infer<T>>,
   ): this {
     return this.register('update', ns, handler)
   }
 
   delete<const T extends RecordSchema>(
-    ns: Namespace<T>,
+    ns: Main<T>,
     handler: DeleteHandler,
   ): this {
     return this.register('delete', ns, handler)
   }
 
   put<const T extends RecordSchema>(
-    ns: Namespace<T>,
+    ns: Main<T>,
     handler: PutHandler<Infer<T>>,
   ): this {
     this.register('create', ns, handler)
