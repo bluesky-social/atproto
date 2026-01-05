@@ -809,9 +809,15 @@ importers:
       '@atproto/lex-client':
         specifier: workspace:*
         version: link:../lex-client
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
       '@atproto/lex-installer':
         specifier: workspace:*
         version: link:../lex-installer
+      '@atproto/lex-json':
+        specifier: workspace:*
+        version: link:../lex-json
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
