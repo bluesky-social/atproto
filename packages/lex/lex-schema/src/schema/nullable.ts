@@ -3,7 +3,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 export class NullableSchema<V> extends Schema<V | null> {
   constructor(readonly schema: Validator<V>) {

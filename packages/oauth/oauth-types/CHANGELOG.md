@@ -1,5 +1,15 @@
 # @atproto/oauth-types
 
+## 0.6.0
+
+### Minor Changes
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add prompt_values_supported to Authorization Server Metadata
+
+### Patch Changes
+
+- [#4465](https://github.com/bluesky-social/atproto/pull/4465) [`95ef3c2`](https://github.com/bluesky-social/atproto/commit/95ef3c24e8072e9d49412950b033cb8607764ee0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error message in case of invalid redirect uri
+
 ## 0.5.2
 
 ### Patch Changes

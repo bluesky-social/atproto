@@ -1,6 +1,6 @@
 import 'core-js/modules/es.uint8-array.from-base64.js'
 import 'core-js/modules/es.uint8-array.to-base64.js'
-import assert from 'node:assert'
+import { assert, describe, expect, it } from 'vitest'
 import {
   toBase64Native,
   toBase64Node,

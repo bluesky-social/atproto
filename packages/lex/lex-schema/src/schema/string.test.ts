@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { StringSchema } from './string.js'
 import { TokenSchema } from './token.js'
 

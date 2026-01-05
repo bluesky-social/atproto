@@ -1,10 +1,10 @@
-import { Simplify } from '../core.js'
 import {
   Infer,
   Schema,
+  Simplify,
   ValidationResult,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 import { DictSchema } from './dict.js'
 import { ObjectSchema } from './object.js'
 

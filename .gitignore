@@ -16,3 +16,4 @@ test.sqlite
 *~
 *.swp
 .claude/
+coverage

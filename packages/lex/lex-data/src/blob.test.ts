@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isBlobRef, isLegacyBlobRef } from './blob.js'
 import { parseCid } from './cid.js'
 
@@ -10,7 +11,7 @@ const lexCid = parseCid(
   'bafyreic52vzks7wdklat4evp3vimohl55i2unzqpshz2ytka5omzr7exdy',
 )
 
-describe('isBlobRef', () => {
+describe(isBlobRef, () => {
   it('tests valid blobCid and lexCid', () => {
     expect(blobCid.code).toBe(0x55) // raw
     expect(blobCid.multihash.code).toBe(0x12) // sha2-256
@@ -51,6 +52,25 @@ describe('isBlobRef', () => {
         size: '10000',
       }),
     ).toBe(false)
+
+    expect(
+      isBlobRef({
+        // $type: 'blob',
+        ref: blobCid,
+        mimeType: 'image/jpeg',
+        size: 10000,
+      }),
+    ).toBe(false)
+
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        ref: blobCid,
+        mimeType: { toString: () => 'image/jpeg' },
+        size: 10000,
+      }),
+    ).toBe(false)
+
     expect(
       isBlobRef(
         {
@@ -80,6 +100,22 @@ describe('isBlobRef', () => {
         },
         { strict: true },
       ),
+    ).toBe(false)
+
+    expect(isBlobRef('not an object')).toBe(false)
+    expect(isBlobRef([])).toBe(false)
+    expect(isBlobRef(new Date())).toBe(false)
+    expect(isBlobRef(new Map())).toBe(false)
+  })
+
+  it('rejects non-integer size', () => {
+    expect(
+      isBlobRef({
+        $type: 'blob',
+        ref: blobCid,
+        mimeType: 'image/jpeg',
+        size: 10000.5,
+      }),
     ).toBe(false)
   })
 
@@ -133,9 +169,28 @@ describe('isBlobRef', () => {
       ),
     ).toBe(false)
   })
+
+  describe('strict mode', () => {
+    it('rejects invalid CID version', () => {
+      const cidV0 = parseCid(
+        'QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG', // CID v0
+      )
+      expect(
+        isBlobRef(
+          {
+            $type: 'blob',
+            ref: cidV0,
+            mimeType: 'image/jpeg',
+            size: 10000,
+          },
+          { strict: true },
+        ),
+      ).toBe(false)
+    })
+  })
 })
 
-describe('isLegacyBlobRef', () => {
+describe(isLegacyBlobRef, () => {
   it('parses valid legacy blob', () => {
     expect(
       isLegacyBlobRef({
@@ -172,6 +227,32 @@ describe('isLegacyBlobRef', () => {
         mimeType: 'image/jpeg',
       }),
     ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: { toString: () => 'image/jpeg' },
+      }),
+    ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: 3,
+      }),
+    ).toBe(false)
+
+    expect(
+      isLegacyBlobRef({
+        cid: lexCid.toString(),
+        mimeType: '',
+      }),
+    ).toBe(false)
+
+    expect(isLegacyBlobRef([])).toBe(false)
+    expect(isLegacyBlobRef('not an object')).toBe(false)
+    expect(isLegacyBlobRef(new Date())).toBe(false)
+    expect(isLegacyBlobRef(new Map())).toBe(false)
   })
 
   it('rejects extra keys', () => {

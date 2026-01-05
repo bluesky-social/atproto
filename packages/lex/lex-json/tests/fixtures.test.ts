@@ -1,5 +1,6 @@
+import { describe, expect, it } from 'vitest'
 import { isPlainObject } from '@atproto/lex-data'
-import { JsonValue, jsonToLex } from '..'
+import { JsonValue, jsonToLex } from '../src/index.js'
 import invalidFixtures from './data-model-invalid.json' with { type: 'json' }
 import validFixtures from './data-model-valid.json' with { type: 'json' }
 

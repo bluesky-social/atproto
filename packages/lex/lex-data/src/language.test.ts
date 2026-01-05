@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isLanguageString, parseLanguageString } from './language'
 
 describe('string', () => {

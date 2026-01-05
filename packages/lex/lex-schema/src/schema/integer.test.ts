@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { IntegerSchema } from './integer.js'
 
 describe('IntegerSchema', () => {

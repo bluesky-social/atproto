@@ -6,7 +6,7 @@ import { countGraphemes } from 'unicode-segmenter/grapheme'
 const segmenter =
   'Segmenter' in Intl && typeof Intl.Segmenter === 'function'
     ? /*#__PURE__*/ new Intl.Segmenter()
-    : null
+    : /* v8 ignore next -- @preserve */ null
 
 export const graphemeLenNative = segmenter
   ? function graphemeLenNative(str: string): number {
@@ -14,7 +14,7 @@ export const graphemeLenNative = segmenter
       for (const _ of segmenter.segment(str)) length++
       return length
     }
-  : null
+  : /* v8 ignore next -- @preserve */ null
 
 export function graphemeLenPonyfill(str: string): number {
   return countGraphemes(str)

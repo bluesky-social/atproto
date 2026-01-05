@@ -1,12 +1,13 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { $Type, Simplify } from '../core.js'
 import {
+  $Type,
   Infer,
   Schema,
+  Simplify,
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 import { TypedObject } from './typed-union.js'
 
 export type TypedObjectSchemaOutput<

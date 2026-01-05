@@ -1,4 +1,4 @@
-import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export type IntegerSchemaOptions = {
   default?: number
@@ -32,8 +32,8 @@ export class IntegerSchema extends Schema<number> {
 }
 
 /**
- * Simple wrapper around {@link Number.isInteger} that acts as a type guard.
+ * Simple wrapper around {@link Number.isSafeInteger} that acts as a type guard.
  */
 function isInteger(input: unknown): input is number {
-  return Number.isInteger(input) && Number.isSafeInteger(input)
+  return Number.isSafeInteger(input)
 }

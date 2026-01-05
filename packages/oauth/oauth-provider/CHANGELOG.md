@@ -1,5 +1,33 @@
 # @atproto/oauth-provider
 
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [[`9af7a2d`](https://github.com/bluesky-social/atproto/commit/9af7a2d12240e91248610ce4fe7d93387733c59c)]:
+  - @atproto/lex-document@0.0.7
+  - @atproto/lex-resolver@0.0.7
+  - @atproto/common@0.5.5
+
+## 0.15.0
+
+### Minor Changes
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Expose prompt_values_supported in Authorization Server Metadata
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Support initiating user registration via prompt=create
+
+### Patch Changes
+
+- Updated dependencies [[`95ef3c2`](https://github.com/bluesky-social/atproto/commit/95ef3c24e8072e9d49412950b033cb8607764ee0), [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41), [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41)]:
+  - @atproto/oauth-types@0.6.0
+  - @atproto/oauth-provider-ui@0.4.0
+  - @atproto/lex-resolver@0.0.6
+  - @atproto/common@0.5.4
+  - @atproto/lex-document@0.0.6
+  - @atproto/oauth-provider-api@0.3.5
+  - @atproto/oauth-provider-frontend@0.2.6
+
 ## 0.14.1
 
 ### Patch Changes

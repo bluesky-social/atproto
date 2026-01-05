@@ -1,5 +1,27 @@
 # @atproto/lex-data
 
+## 0.0.5
+
+### Patch Changes
+
+- [#4443](https://github.com/bluesky-social/atproto/pull/4443) [`9af7a2d`](https://github.com/bluesky-social/atproto/commit/9af7a2d12240e91248610ce4fe7d93387733c59c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `LexErrorData` type, and an `LexError` class to represent structured error information
+
+- [#4443](https://github.com/bluesky-social/atproto/pull/4443) [`9af7a2d`](https://github.com/bluesky-social/atproto/commit/9af7a2d12240e91248610ce4fe7d93387733c59c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ui8Concat` utility for concatenating `Uint8Array`s
+
+## 0.0.4
+
+### Patch Changes
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use stack based approach in `isLexValue` allowing to be called with very deep structures;
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Do not throw an error from `isLexScalar` (return `false` instead)
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Forbid use of unsafe integers
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `isPlainProto` utility to check if an object is a plain object.
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `parseLanguage` and `isLanguage` exports to `parseLanguageString` and `isLanguageString` respectively
+
 ## 0.0.3
 
 ### Patch Changes

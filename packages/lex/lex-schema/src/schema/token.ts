@@ -1,4 +1,4 @@
-import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export class TokenSchema<V extends string = any> extends Schema<V> {
   constructor(protected readonly value: V) {

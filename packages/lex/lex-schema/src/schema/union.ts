@@ -6,7 +6,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 export type UnionSchemaValidators = readonly [Validator, ...Validator[]]
 export type UnionSchemaOutput<V extends readonly Validator[]> = Infer<V[number]>

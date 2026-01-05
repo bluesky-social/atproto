@@ -1,3 +1,4 @@
+import { describe, test } from 'vitest'
 import * as l from './external.js'
 
 class BinaryValue {
