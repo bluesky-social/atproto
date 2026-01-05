@@ -36,7 +36,9 @@ export class TypedObjectSchema<
     return value.$type === undefined || value.$type === this.$type
   }
 
-  build<X extends Omit<Infer<S>, '$type'>>(input: X): $Typed<X, T> {
+  build<X extends Omit<Infer<S>, '$type'>>(
+    input: X,
+  ): $Typed<Omit<X, '$type'>, T> {
     return input.$type === this.$type
       ? (input as $Typed<X, T>)
       : { ...input, $type: this.$type }
