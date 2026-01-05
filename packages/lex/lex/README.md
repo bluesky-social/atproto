@@ -224,7 +224,7 @@ function renderPost(p: app.bsky.feed.post.Main) {
 
 ### Building data
 
-It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present and that optional fields have appropriate default values.
+It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
 
 ```typescript
 import * as app from './lexicons/app.js'
@@ -331,12 +331,12 @@ if (result.success) {
 
 #### `$build(data)` - Build with Defaults
 
-Creates a valid object by applying defaults for optional fields:
+Builds data without needing to specify the `$type` property, and properly types the result:
 
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Build a like record with defaults (and without needing to specify $type)
+// The type of the "like" variable will be "app.bsky.feed.like.Main"
 const like = app.bsky.feed.like.$build({
   subject: {
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',

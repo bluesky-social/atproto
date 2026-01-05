@@ -43,12 +43,10 @@ export class RecordSchema<
     return value.$type === this.$type
   }
 
-  build<X extends Omit<Infer<S>, '$type'>>(input: X) {
-    // Using "parse" to ensure defaults are applied
-    return this.parse(
-      input.$type === this.$type ? input : { ...input, $type: this.$type },
-      { allowTransform: true },
-    )
+  build<X extends Omit<Infer<S>, '$type'>>(input: X): $Typed<X, T> {
+    return input.$type === this.$type
+      ? (input as $Typed<X, T>)
+      : { ...input, $type: this.$type }
   }
 
   $isTypeOf<X extends { $type?: unknown }>(value: X) {
