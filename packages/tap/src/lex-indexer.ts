@@ -17,11 +17,7 @@ export type UpdateEvent<R> = BaseRecordEvent & {
   cid: string
 }
 
-export type PutEvent<R> = BaseRecordEvent & {
-  action: 'create' | 'update'
-  record: R
-  cid: string
-}
+export type PutEvent<R> = CreateEvent<R> | UpdateEvent<R>
 
 export type DeleteEvent = BaseRecordEvent & {
   action: 'delete'
@@ -65,14 +61,14 @@ export type RecordHandler<R> =
   | PutHandler<R>
   | DeleteHandler
 
-interface RegisteredHandler<R> {
+interface RegisteredHandler {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  handler: RecordHandler<any>
   schema: RecordSchema
-  handler: RecordHandler<R>
 }
 
 export class LexIndexer implements TapHandler {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private handlers = new Map<string, RegisteredHandler<any>>()
+  private handlers = new Map<string, RegisteredHandler>()
   private otherHandler: UntypedHandler | undefined
   private identityHandler: IdentityHandler | undefined
   private errorHandler: ErrorHandler | undefined
