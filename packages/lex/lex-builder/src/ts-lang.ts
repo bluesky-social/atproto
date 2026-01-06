@@ -167,3 +167,9 @@ export function isSafeIdentifier(
 function isValidJsIdentifier(name: string) {
   return !isJsKeyword(name) && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
 }
+
+export function asNamespaceExport(name: string) {
+  return isSafeIdentifier(name, { allowGlobal: true })
+    ? name
+    : JSON.stringify(name)
+}

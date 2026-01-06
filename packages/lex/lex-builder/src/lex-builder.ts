@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { IndentationText, Project } from 'ts-morph'
@@ -10,9 +11,17 @@ import {
   LexiconDirectoryIndexer,
   LexiconDirectoryIndexerOptions,
 } from './lexicon-directory-indexer.js'
-import { isSafeIdentifier } from './ts-lang.js'
+import { asNamespaceExport } from './ts-lang.js'
 
 export type LexBuilderOptions = LexDefBuilderOptions & {
+  /**
+   * Whether to generate an index file at the root exporting all top-level
+   * namespaces.
+   *
+   * @note This could theoretically cause name conflicts if a
+   * @default false
+   */
+  indexFile?: boolean
   importExt?: string
   fileExt?: string
 }
@@ -100,6 +109,23 @@ export class LexBuilder {
   private async createExportTree(doc: LexiconDocument) {
     const namespaces = doc.id.split('.')
 
+    if (this.options.indexFile) {
+      const indexFile = this.getFile(`/index${this.fileExt}`)
+
+      const tldNs = namespaces[0]!
+      assert(
+        tldNs !== 'index',
+        'The "indexFile" options cannot be used with namespaces using a ".index" tld.',
+      )
+      const tldNsSpecifier = `./${tldNs}${this.importExt}`
+      if (!indexFile.getExportDeclaration(tldNsSpecifier)) {
+        indexFile.addExportDeclaration({
+          moduleSpecifier: tldNsSpecifier,
+          namespaceExport: asNamespaceExport(tldNs),
+        })
+      }
+    }
+
     // First create the parent namespaces
     for (let i = 0; i < namespaces.length - 1; i++) {
       const currentNs = namespaces[i]
@@ -113,9 +139,7 @@ export class LexBuilder {
       if (!dec) {
         file.addExportDeclaration({
           moduleSpecifier: childModuleSpecifier,
-          namespaceExport: isSafeIdentifier(childNs, { allowGlobal: true })
-            ? childNs
-            : JSON.stringify(childNs),
+          namespaceExport: asNamespaceExport(childNs),
         })
       }
     }

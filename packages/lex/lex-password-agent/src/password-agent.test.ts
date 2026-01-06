@@ -5,7 +5,7 @@ import { Client, LexRpcResponseError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
-import { com } from './lexicons.js'
+import { com } from './lexicons/index.js'
 import { AuthVerifier } from './password-agent-utils.test.js'
 import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
 

@@ -20,7 +20,7 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { com } from './lexicons.js'
+import { com } from './lexicons/index.js'
 import { LexRpcResponse, LexRpcResponseBody } from './response.js'
 import { BinaryBodyInit, CallOptions, Service } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
