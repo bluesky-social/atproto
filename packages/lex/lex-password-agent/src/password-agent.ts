@@ -7,7 +7,7 @@ import {
   xrpcSafe,
 } from '@atproto/lex-client'
 import { DatetimeString, ResultSuccess, success } from '@atproto/lex-schema'
-import { com } from './lexicons.js'
+import { com } from './lexicons/index.js'
 import { extractLexRpcErrorCode, extractPdsUrl } from './util.js'
 
 export type Session = {

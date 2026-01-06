@@ -809,9 +809,15 @@ importers:
       '@atproto/lex-client':
         specifier: workspace:*
         version: link:../lex-client
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
       '@atproto/lex-installer':
         specifier: workspace:*
         version: link:../lex-installer
+      '@atproto/lex-json':
+        specifier: workspace:*
+        version: link:../lex-json
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
@@ -1069,6 +1075,15 @@ importers:
 
   packages/lex/lex-server:
     dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:*
+        version: link:../../internal/did-resolver
+      '@atproto/crypto':
+        specifier: workspace:*
+        version: link:../../crypto
+      '@atproto/did':
+        specifier: workspace:*
+        version: link:../../did
       '@atproto/lex-cbor':
         specifier: workspace:*
         version: link:../lex-cbor

@@ -6,6 +6,7 @@ import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
 import {
   asRelativePath,
   memoize,
+  startsWithLowerLetter,
   toCamelCase,
   toPascalCase,
   ucFirst,
@@ -299,8 +300,16 @@ export function getPublicIdentifiers(hash: string): ResolvedRef {
 }
 
 function asSafeDefinitionIdentifier(name: string) {
-  if (isSafeIdentifier(name) && isSafeIdentifier(ucFirst(name))) return name
+  if (
+    startsWithLowerLetter(name) &&
+    isSafeIdentifier(name) &&
+    isSafeIdentifier(ucFirst(name))
+  ) {
+    return name
+  }
   const camel = toCamelCase(name)
-  if (isSafeIdentifier(camel) && isSafeIdentifier(ucFirst(camel))) return camel
+  if (isSafeIdentifier(camel) && isSafeIdentifier(ucFirst(camel))) {
+    return camel
+  }
   return undefined
 }
