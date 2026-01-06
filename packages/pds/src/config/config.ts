@@ -534,7 +534,9 @@ export type NeuroConfig = {
   customUiPath?: string
   // RemoteLogin API configuration
   apiType?: 'quicklogin' | 'remotelogin' | 'both'
+  responseMethod?: 'Callback' | 'Poll'
   callbackBaseUrl?: string
+  pollIntervalMs?: number
   // Authentication for RemoteLogin API
   authMethod?: 'basic' | 'bearer' | 'mtls'
   basicUsername?: string

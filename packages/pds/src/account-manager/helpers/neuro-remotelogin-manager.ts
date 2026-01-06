@@ -1,4 +1,6 @@
 import EventEmitter from 'events'
+import http from 'http'
+import https from 'https'
 import { NeuroConfig } from '../../config'
 import { NeuronAuthClient } from './neuron-auth-client'
 
@@ -76,38 +78,94 @@ export class NeuroRemoteLoginManager {
       ? 'http'
       : 'https'
 
-    const fetchOptions = this.authClient.getAuthenticatedFetchOptions('POST', {
-      AddressType: 'LegalId',
-      Address: legalId,
-      ResponseMethod: 'Callback',
-      CallbackURL: callbackUrl,
-      Seconds: this.config.petitionTimeoutSeconds || 300,
-      Purpose: purpose,
-    })
+    const responseMethod = this.config.responseMethod || 'Callback'
+    const payload =
+      responseMethod === 'Poll'
+        ? {
+            AddressType: 'LegalId',
+            Address: legalId,
+            ResponseMethod: 'Poll',
+            Seconds: this.config.petitionTimeoutSeconds || 300,
+            Purpose: purpose,
+          }
+        : {
+            AddressType: 'LegalId',
+            Address: legalId,
+            ResponseMethod: 'Callback',
+            CallbackURL: callbackUrl,
+            Seconds: this.config.petitionTimeoutSeconds || 300,
+            Purpose: purpose,
+          }
+
+    const authHeader = this.authClient.getAuthHeader()
+    const body = JSON.stringify(payload)
 
     try {
-      const fetchResponse = await fetch(
-        `${protocol}://${this.config.domain}/RemoteLogin`,
-        fetchOptions,
+      const response = await new Promise<{ PetitionId: string }>(
+        (resolve, reject) => {
+          const options = {
+            hostname: this.config.domain,
+            port: protocol === 'https' ? 443 : 80,
+            path: '/RemoteLogin',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(body),
+              ...(authHeader ? { Authorization: authHeader } : {}),
+            },
+          }
+
+          this.logger?.info(
+            {
+              protocol,
+              hostname: options.hostname,
+              port: options.port,
+              path: options.path,
+              hasAuth: !!authHeader,
+              bodyLength: body.length,
+            },
+            'Making RemoteLogin API request',
+          )
+
+          const httpModule = protocol === 'https' ? https : http
+          const req = httpModule.request(options, (res) => {
+            this.logger?.info({ statusCode: res.statusCode }, 'RemoteLogin API response received')
+            let data = ''
+            res.on('data', (chunk) => (data += chunk))
+            res.on('end', () => {
+              if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                try {
+                  resolve(JSON.parse(data))
+                } catch (e) {
+                  reject(new Error(`Invalid JSON response: ${data}`))
+                }
+              } else {
+                reject(
+                  new Error(
+                    `RemoteLogin API error (${res.statusCode}): ${data}`,
+                  ),
+                )
+              }
+            })
+          })
+
+          req.on('error', (e) => {
+            this.logger?.error({ error: e.message }, 'RemoteLogin request error')
+            reject(e)
+          })
+
+          req.setTimeout(60000, () => {
+            this.logger?.error({}, 'RemoteLogin request socket timeout')
+            req.destroy()
+            reject(new Error('Request timeout after 60 seconds'))
+          })
+
+          req.write(body)
+          req.end()
+        },
       )
 
-      if (!fetchResponse.ok) {
-        const errorText = await fetchResponse.text()
-        this.logger?.error(
-          {
-            status: fetchResponse.status,
-            statusText: fetchResponse.statusText,
-            error: errorText,
-          },
-          'RemoteLogin API error',
-        )
-        throw new Error(
-          `RemoteLogin API error (${fetchResponse.status}): ${errorText}`,
-        )
-      }
-
-      const response = await fetchResponse.json()
-      const { PetitionId } = response as { PetitionId?: string }
+      const { PetitionId } = response
 
       if (!PetitionId) {
         throw new Error('RemoteLogin API did not return PetitionId')
@@ -141,6 +199,8 @@ export class NeuroRemoteLoginManager {
       this.logger?.error(
         {
           error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorStack: error instanceof Error ? error.stack : undefined,
           legalId: legalId.substring(0, 20) + '...',
         },
         'Failed to initiate RemoteLogin petition',
@@ -251,33 +311,163 @@ export class NeuroRemoteLoginManager {
       throw new Error(`Petition not found: ${petitionId}`)
     }
 
+    const responseMethod = this.config.responseMethod || 'Callback'
+
+    if (responseMethod === 'Poll') {
+      // Poll mode: actively check petition status
+      return this.pollForApproval(petitionId, petition)
+    } else {
+      // Callback mode: wait for EventEmitter
+      return new Promise((resolve, reject) => {
+        // Set timeout
+        const timeout = setTimeout(() => {
+          this.petitions.delete(petitionId)
+          reject(new Error('Petition timeout - user did not respond in time'))
+        }, petition.expiresAt - Date.now())
+
+        // Listen for approval
+        petition.emitter.once('approved', (result) => {
+          clearTimeout(timeout)
+          this.petitions.delete(petitionId)
+          resolve(result)
+        })
+
+        // Listen for rejection
+        petition.emitter.once('rejected', (error) => {
+          clearTimeout(timeout)
+          this.petitions.delete(petitionId)
+          reject(error)
+        })
+
+        // Listen for errors
+        petition.emitter.once('error', (error) => {
+          clearTimeout(timeout)
+          this.petitions.delete(petitionId)
+          reject(error)
+        })
+      })
+    }
+  }
+
+  /**
+   * Poll Neuro API for petition status
+   */
+  private async pollForApproval(
+    petitionId: string,
+    petition: PetitionState,
+  ): Promise<{
+    legalId: string
+    claims: JWTClaims
+    token: string
+  }> {
+    const protocol = this.config.domain.startsWith('localhost')
+      ? 'http'
+      : 'https'
+    const pollIntervalMs = this.config.pollIntervalMs || 2000
+    const authHeader = this.authClient.getAuthHeader()
+
     return new Promise((resolve, reject) => {
-      // Set timeout
-      const timeout = setTimeout(() => {
-        this.petitions.delete(petitionId)
-        reject(new Error('Petition timeout - user did not respond in time'))
-      }, petition.expiresAt - Date.now())
+      const checkStatus = async () => {
+        if (Date.now() >= petition.expiresAt) {
+          this.petitions.delete(petitionId)
+          reject(new Error('Petition timeout - user did not respond in time'))
+          return
+        }
 
-      // Listen for approval
-      petition.emitter.once('approved', (result) => {
-        clearTimeout(timeout)
-        this.petitions.delete(petitionId)
-        resolve(result)
-      })
+        try {
+          const payload = { PetitionId: petitionId }
+          const body = JSON.stringify(payload)
 
-      // Listen for rejection
-      petition.emitter.once('rejected', (error) => {
-        clearTimeout(timeout)
-        this.petitions.delete(petitionId)
-        reject(error)
-      })
+          const response = await new Promise<{
+            Pending: boolean
+            Token?: string
+          }>((resolveHttp, rejectHttp) => {
+            const options = {
+              hostname: this.config.domain,
+              port: protocol === 'https' ? 443 : 80,
+              path: '/RemoteLogin',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(body),
+                ...(authHeader ? { Authorization: authHeader } : {}),
+              },
+            }
 
-      // Listen for errors
-      petition.emitter.once('error', (error) => {
-        clearTimeout(timeout)
-        this.petitions.delete(petitionId)
-        reject(error)
-      })
+            const httpModule = protocol === 'https' ? https : http
+            const req = httpModule.request(options, (res) => {
+              let data = ''
+              res.on('data', (chunk) => (data += chunk))
+              res.on('end', () => {
+                if (
+                  res.statusCode &&
+                  res.statusCode >= 200 &&
+                  res.statusCode < 300
+                ) {
+                  try {
+                    resolveHttp(JSON.parse(data))
+                  } catch (e) {
+                    rejectHttp(new Error(`Invalid JSON response: ${data}`))
+                  }
+                } else {
+                  rejectHttp(
+                    new Error(
+                      `Poll API error (${res.statusCode}): ${data}`,
+                    ),
+                  )
+                }
+              })
+            })
+
+            req.on('error', (e) => {
+              this.logger?.error(
+                { error: e.message, petitionId },
+                'Poll request error',
+              )
+              rejectHttp(e)
+            })
+
+            req.setTimeout(10000, () => {
+              req.destroy()
+              rejectHttp(new Error('Poll request timeout'))
+            })
+
+            req.write(body)
+            req.end()
+          })
+
+          if (!response.Pending && response.Token) {
+            // Petition approved!
+            this.petitions.delete(petitionId)
+            const claims = this.parseJwtToken(response.Token)
+            resolve({
+              legalId: petition.legalId,
+              claims,
+              token: response.Token,
+            })
+          } else if (!response.Pending && !response.Token) {
+            // Petition rejected
+            this.petitions.delete(petitionId)
+            reject(new Error('Petition was rejected by user'))
+          } else {
+            // Still pending, poll again
+            setTimeout(checkStatus, pollIntervalMs)
+          }
+        } catch (error) {
+          this.logger?.error(
+            {
+              error,
+              petitionId,
+            },
+            'Error polling petition status',
+          )
+          // Continue polling on transient errors
+          setTimeout(checkStatus, pollIntervalMs)
+        }
+      }
+
+      // Start polling
+      checkStatus()
     })
   }
 

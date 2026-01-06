@@ -167,7 +167,9 @@ export function readEnv() {
           customUiPath: envStr('PDS_NEURO_CUSTOM_UI_PATH'),
           // RemoteLogin API configuration
           apiType: (envStr('PDS_NEURO_API_TYPE') as 'quicklogin' | 'remotelogin' | 'both') || 'remotelogin',
+          responseMethod: (envStr('PDS_NEURO_RESPONSE_METHOD') as 'Callback' | 'Poll') || 'Callback',
           callbackBaseUrl: envStr('PDS_NEURO_CALLBACK_BASE_URL'),
+          pollIntervalMs: envInt('PDS_NEURO_POLL_INTERVAL_MS') || 2000,
           // Authentication for RemoteLogin API
           authMethod: (envStr('PDS_NEURO_AUTH_METHOD') as 'basic' | 'bearer' | 'mtls') || 'basic',
           basicUsername: envStr('PDS_NEURO_BASIC_USERNAME'),

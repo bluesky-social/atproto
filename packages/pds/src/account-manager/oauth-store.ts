@@ -291,9 +291,9 @@ export class OAuthStore
     // @TODO (?) Send an email to the user to notify them of the login attempt
 
     // REMOTELOGIN AUTHENTICATION FLOW (Legal ID format)
-    if (emailOtp?.includes('@legal.') && this.neuroRemoteLoginManager) {
-      // emailOtp contains Legal ID - initiate RemoteLogin petition
-      const legalId = emailOtp
+    if (password?.includes('@legal.') && this.neuroRemoteLoginManager) {
+      // password contains Legal ID - initiate RemoteLogin petition
+      const legalId = password
       const purpose = `Sign in as ${identifier}`
 
       const { petitionId } = await this.neuroRemoteLoginManager.initiatePetition(
@@ -303,28 +303,23 @@ export class OAuthStore
 
       // Wait for user approval (with timeout)
       try {
-        const approval = await this.neuroRemoteLoginManager.waitForApproval(petitionId)
+        await this.neuroRemoteLoginManager.waitForApproval(petitionId)
 
-        // For now, use neuroJid column (legalId column not yet in schema)
-        // In production, this should use legalId column
-        // Look up account by JID (temporary until we add legalId column)
+        // Look up account by Legal ID in neuro_identity_link table
         const accountLink = await this.db.db
           .selectFrom('neuro_identity_link')
           .select(['did', 'neuroJid'])
-          .execute()
+          .where('neuroJid', '=', legalId)
+          .executeTakeFirst()
 
-        // Find account that matches (temporary logic)
-        const matchedAccount = accountLink.find(() => true) // For testing, accept any account
-
-        if (!matchedAccount) {
+        if (!accountLink) {
           throw new InvalidRequestError(
-            'No account linked to Neuro. Please link your account first.',
-            'NEURO_NOT_LINKED',
+            'No account linked to this Legal ID',
           )
         }
 
         // Get full account object
-        const accountData = await accountHelper.getAccount(this.db, matchedAccount.did)
+        const accountData = await accountHelper.getAccount(this.db, accountLink.did)
         if (!accountData) {
           throw new InvalidRequestError('Account not found')
         }
@@ -333,19 +328,18 @@ export class OAuthStore
         return this.buildAccount(accountData)
       } catch (err) {
         const error = err as Error
-        if (error.message.includes('timeout')) {
+        if (error.message?.includes('timeout')) {
           throw new InvalidRequestError(
             'Authentication timeout. Please approve the request in your Neuro app.',
-            'NEURO_PETITION_TIMEOUT',
           )
         }
-        if (error.message.includes('rejected')) {
+        if (error.message?.includes('rejected')) {
           throw new InvalidRequestError(
             'Authentication was rejected.',
-            'NEURO_PETITION_REJECTED',
           )
         }
-        throw error
+        // Re-throw to preserve other errors
+        throw err
       }
     }
 
