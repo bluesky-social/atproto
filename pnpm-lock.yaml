@@ -2117,6 +2117,9 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
