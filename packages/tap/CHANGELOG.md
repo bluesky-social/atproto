@@ -1,5 +1,11 @@
 # @atproto/tap
 
+## 0.1.0
+
+### Minor Changes
+
+- [#4483](https://github.com/bluesky-social/atproto/pull/4483) [`e3357e9`](https://github.com/bluesky-social/atproto/commit/e3357e9c781ff84430556f4c891639acfcef3486) Thanks [@dholms](https://github.com/dholms)! - Add LexIndexer
+
 ## 0.0.3
 
 ### Patch Changes
