@@ -39,6 +39,32 @@ export default function (server: Server, ctx: AppContext) {
         ? await validateInputsForEntrywayPds(ctx, input.body)
         : await validateInputsForLocalPds(ctx, input.body, requester)
 
+      // Pre-validate Neuro Legal ID before creating account
+      if (password && password.includes('@') && password.includes('legal.')) {
+        if (!ctx.neuroAuthManager) {
+          throw new InvalidRequestError(
+            'Neuro authentication is not configured on this server. Please use a regular password instead.',
+          )
+        }
+
+        // Check if this Legal ID is already linked
+        const existingLink = await ctx.accountManager.db.db
+          .selectFrom('neuro_identity_link')
+          .select('did')
+          .where('neuroJid', '=', password)
+          .executeTakeFirst()
+
+        if (existingLink) {
+          throw new InvalidRequestError(
+            'This Neuro Legal ID is already linked to another account. Each Legal ID can only be used for one account.',
+          )
+        }
+      } else {
+        throw new InvalidRequestError(
+          'Password must be a Neuro Legal ID (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@legal.yourdomain.io). Regular passwords are not supported on this server.',
+        )
+      }
+
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }
       await ctx.actorStore.create(did, signingKey)
@@ -72,6 +98,33 @@ export default function (server: Server, ctx: AppContext) {
           inviteCode,
           deactivated,
         })
+
+        // If password looks like a Neuro Legal ID, link the account
+        if (password && password.includes('@') && password.includes('legal.')) {
+          if (!ctx.neuroAuthManager) {
+            throw new InvalidRequestError(
+              'Neuro authentication is not configured on this server. Please use a regular password instead.',
+            )
+          }
+
+          try {
+            req.log.info({ did, legalId: password }, 'Linking Neuro identity during account creation')
+            await ctx.neuroAuthManager.linkIdentity(password, did, email)
+          } catch (err) {
+            req.log.error({ err, did, legalId: password }, 'Failed to link Neuro identity')
+            const errorMsg = err instanceof Error ? err.message : String(err)
+
+            if (errorMsg.includes('UNIQUE constraint failed')) {
+              throw new InvalidRequestError(
+                'This Neuro Legal ID is already linked to another account. Each Legal ID can only be used for one account.',
+              )
+            } else {
+              throw new InvalidRequestError(
+                `Failed to link Neuro Legal ID: ${errorMsg}. Please ensure you entered a valid Neuro Legal ID or use a regular password instead.`,
+              )
+            }
+          }
+        }
 
         if (!deactivated) {
           await ctx.sequencer.sequenceIdentityEvt(did, handle)
