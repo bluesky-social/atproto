@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { LiteralSchema } from './literal.js'
 
 describe('LiteralSchema', () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import * as com from './lexicons/com.js'
 
 describe('com.example.4-2.unsafeDefs', () => {

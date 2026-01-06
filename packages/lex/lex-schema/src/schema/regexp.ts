@@ -1,4 +1,4 @@
-import { Schema, ValidationResult, ValidatorContext } from '../validation'
+import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export class RegexpSchema<T extends string> extends Schema<T> {
   constructor(public readonly pattern: RegExp) {

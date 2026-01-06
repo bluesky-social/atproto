@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { DiscriminatedUnionSchema } from './discriminated-union.js'
 import { EnumSchema } from './enum.js'
 import { IntegerSchema } from './integer.js'

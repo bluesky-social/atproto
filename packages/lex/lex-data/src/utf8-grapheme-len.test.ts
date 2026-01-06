@@ -1,6 +1,7 @@
+import { describe, expect, it } from 'vitest'
 import { graphemeLenNative, graphemeLenPonyfill } from './utf8-grapheme-len.js'
 
-describe('graphemeLenSegmenter', () => {
+describe(graphemeLenNative!, () => {
   it('computes grapheme length', () => {
     expect(graphemeLenNative!('a')).toBe(1)
     expect(graphemeLenNative!('~')).toBe(1)
@@ -18,7 +19,7 @@ describe('graphemeLenSegmenter', () => {
   })
 })
 
-describe('graphemeLenInternal', () => {
+describe(graphemeLenPonyfill, () => {
   it('computes grapheme length', () => {
     expect(graphemeLenPonyfill('a')).toBe(1)
     expect(graphemeLenPonyfill('~')).toBe(1)

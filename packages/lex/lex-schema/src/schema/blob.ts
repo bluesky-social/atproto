@@ -1,21 +1,18 @@
 import {
   BlobRef,
+  BlobRefValidationOptions,
   LegacyBlobRef,
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
-export type BlobSchemaOptions = {
+export type BlobSchemaOptions = BlobRefValidationOptions & {
   /**
    * Whether to allow legacy blob references format
    * @see {@link LegacyBlobRef}
    */
   allowLegacy?: boolean
-  /**
-   * Whether to enforce strict validation on the blob reference (CID version, codec, hash function)
-   */
-  strict?: boolean
   /**
    * List of accepted mime types
    */

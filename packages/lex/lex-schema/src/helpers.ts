@@ -1,14 +1,23 @@
-import { Restricted } from './core.js'
+import { LexErrorData } from '@atproto/lex-data'
+import { Infer, Restricted, Schema } from './core.js'
 import {
   InferPayload,
   InferPayloadBody,
   InferPayloadEncoding,
+  ObjectSchema,
+  OptionalSchema,
   Payload,
   Procedure,
   Query,
+  StringSchema,
   Subscription,
 } from './schema.js'
-import { Infer, Schema } from './validation.js'
+
+export type Main<T> = T | { main: T }
+
+export function getMain<T extends object>(ns: Main<T>): T {
+  return 'main' in ns ? ns.main : ns
+}
 
 /**
  * Every XRPC implementation should translate `application/json` and `text/*`
@@ -59,3 +68,8 @@ export type InferMethodMessage<
   //
   M extends Procedure | Query | Subscription,
 > = M extends { message: Schema } ? Infer<M['message']> : undefined
+
+export const lexErrorData: Schema<LexErrorData> = new ObjectSchema({
+  error: new StringSchema({ minLength: 1 }),
+  message: new OptionalSchema(new StringSchema({})),
+})

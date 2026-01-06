@@ -53,7 +53,12 @@ app.bsky.actor.profile.$validate({
 - [TypeScript Schemas](#typescript-schemas)
   - [Generated Schema Structure](#generated-schema-structure)
   - [Type definitions](#type-definitions)
+  - [Building data](#building-data)
   - [Validation Helpers](#validation-helpers)
+- [Data Model](#data-model)
+  - [Types](#types)
+  - [JSON Encoding](#json-encoding)
+  - [DAG-CBOR Encoding](#dag-cbor-encoding)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -61,6 +66,8 @@ app.bsky.actor.profile.$validate({
   - [Authentication Methods](#authentication-methods)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
+- [Blob references](#blob-references)
+- [Utilities](#utilities)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
   - [Tree-Shaking](#tree-shaking)
@@ -89,7 +96,7 @@ This creates:
 
 > [!NOTE]
 >
-> The `lex` command might conflict with other binaries intalled on your system.
+> The `lex` command might conflict with other binaries installed on your system.
 > If that happens, you can also run the CLI using `ts-lex`, `pnpm exec lex` or
 > `npx @atproto/lex`.
 
@@ -193,6 +200,7 @@ Options:
 - `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
+- `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
 
 ### Generated Schema Structure
 
@@ -209,15 +217,25 @@ You can extract TypeScript types from the generated schemas for use in you appli
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Extract the type for a post record
-type Post = app.bsky.feed.post.Main
-
-// Use the extracted types
-const post: Post = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello, AT Protocol!',
-  createdAt: new Date().toISOString(),
+function renderPost(p: app.bsky.feed.post.Main) {
+  console.log(p.$type) // 'app.bsky.feed.post'
+  console.log(p.text)
 }
+```
+
+### Building data
+
+It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// variable type will be inferred as "app.bsky.feed.post.Main"
+const post = app.bsky.feed.post.$build({
+  // No need to specify $type when using $build
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
+})
 ```
 
 ### Validation Helpers
@@ -284,6 +302,10 @@ try {
 }
 ```
 
+> [!NOTE]
+>
+> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$parse()`.
+
 #### `$validate(data)` - Get Validation Result
 
 Returns a detailed validation result object without throwing:
@@ -304,14 +326,18 @@ if (result.success) {
 }
 ```
 
+> [!NOTE]
+>
+> Like `$parse`, the `$validate` method will apply defaults and coercion. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$validate()`.
+
 #### `$build(data)` - Build with Defaults
 
-Creates a valid object by applying defaults for optional fields:
+Builds data without needing to specify the `$type` property, and properly types the result:
 
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Build a like record with defaults (and without needing to specify $type)
+// The type of the "like" variable will be "app.bsky.feed.like.Main"
 const like = app.bsky.feed.like.$build({
   subject: {
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
@@ -323,7 +349,7 @@ const like = app.bsky.feed.like.$build({
 
 #### `$isTypeOf(data)` - Type Discriminator
 
-Discriminates (already validated) data by `$type`, without re-validating. This is especially useful when working with union types:
+Discriminates (pre-validated) data based on its `$type` property, without re-validating. This is especially useful when working with union types:
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -338,6 +364,66 @@ declare const data:
 if (app.bsky.feed.post.$isTypeOf(data)) {
   // data is a post
 }
+```
+
+## Data Model
+
+The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional types: **CIDs** (content-addressed links) and **bytes**. This data is encoded as JSON for XRPC (HTTP API) or as [DAG-CBOR](https://ipld.io/docs/codecs/known/dag-cbor/) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
+
+### Types
+
+```typescript
+import type {
+  LexValue,
+  LexMap,
+  LexScalar,
+  TypedLexMap,
+  Cid,
+} from '@atproto/lex'
+import { isLexValue, isLexMap, isTypedLexMap, isCid } from '@atproto/lex'
+
+// LexScalar: number | string | boolean | null | Cid | Uint8Array
+// LexValue:  LexScalar | LexValue[] | { [key: string]?: LexValue }
+// LexMap:    { [key: string]?: LexValue }
+// TypedLexMap: LexMap & { $type: string }
+// Cid: Content Identifier (link by hash)
+
+if (isTypedLexMap(data)) {
+  console.log(data.$type) // some string
+}
+```
+
+### JSON Encoding
+
+In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`:
+
+```typescript
+import { lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
+
+// Parse JSON string → data model (decodes $link and $bytes)
+const data = lexParse('{"ref": {"$link": "bafyrei..."}}')
+
+// Data model → JSON string (encodes CIDs and bytes)
+const json = lexStringify({ ref: someCid, data: someBytes })
+
+// Convert between parsed JSON objects and data model values
+const lex = jsonToLex(jsonObject)
+const obj = lexToJson(lexValue)
+```
+
+### DAG-CBOR Encoding
+
+Use `@atproto/lex-cbor` to encode/decode the data model to/from DAG-CBOR format for storage and authentication:
+
+```typescript
+import { encode, decode } from '@atproto/lex-cbor'
+import type { LexValue } from '@atproto/lex'
+
+// Encode data model to DAG-CBOR bytes
+const cborBytes = encode(someLexValue)
+
+// Decode DAG-CBOR bytes to data model
+const lexValue: LexValue = decode(cborBytes)
 ```
 
 ## Client API
@@ -624,7 +710,7 @@ if (result.success) {
   if (result.error === 'Unknown') {
     // Unable to perform the request
     const { reason } = result
-    if (reason instanceof XrpcResponseError) {
+    if (reason instanceof LexRpcResponseError) {
       // The server returned a syntactically valid XRPC error response, but
       // used an error code that is not declared for this method
       reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
@@ -632,7 +718,7 @@ if (result.success) {
       reason.status // number
       reason.headers // Headers
       reason.payload // { body: { error: string, message?: string }; encoding: string }
-    } else if (reason instanceof XrpcInvalidResponseError) {
+    } else if (reason instanceof LexRpcUpstreamError) {
       // The response was incomplete (e.g. connection dropped), or
       // invalid (e.g. malformed JSON, data does not match schema).
       reason.error // "InvalidResponse"
@@ -645,7 +731,7 @@ if (result.success) {
     }
   } else {
     // A declared error for that method
-    result // XrpcResponseError<"HandleNotFound">
+    result // LexRpcResponseError<"HandleNotFound">
     result.error // "HandleNotFound"
     result.message // string
   }
@@ -654,38 +740,38 @@ if (result.success) {
 
 The `ResponseFailure<M>` type is a union with three possible error types:
 
-1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `XrpcResponseError<N>` instance:
+1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `LexRpcResponseError<N>` instance:
 
    ```typescript
-   // XrpcResponseError<N>
-   type KnownXrpcResponseFailure<N extends string> = {
+   // LexRpcResponseError<N>
+   type KnownLexRpcResponseFailure<N extends string> = {
      success: false
      name: N
-     error: XrpcResponseError<N>
+     error: LexRpcResponseError<N>
 
      // Additional response details
      status: number
      headers: Headers
      encoding: undefined | string
-     body: XrpcErrorBody<N>
+     body: LexErrorData<N>
    }
    ```
 
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   // XrpcResponseFailure<'Unexpected', XrpcResponseError>
-   type UnknownXrpcResponseFailure = {
+   // LexRpcResponseFailure<'Unexpected', LexRpcResponseError>
+   type UnknownLexRpcResponseFailure = {
      success: false
      name: 'Unexpected'
-     error: XrpcResponseError<string>
+     error: LexRpcResponseError<string>
    }
    ```
 
 3. **Unexpected errors** - Network errors, invalid responses, or other client-side errors:
    ```typescript
-   // XrpcResponseFailure<'UnexpectedError', unknown>
-   type UnexpectedXrpcResponseFailure = {
+   // LexRpcResponseFailure<'UnexpectedError', unknown>
+   type UnexpectedLexRpcResponseFailure = {
      success: false
      name: 'UnexpectedError'
      error: unknown // Could be anything (network error, parsing error, etc.)
@@ -765,6 +851,77 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
 console.log(response.status)
 console.log(response.headers)
 console.log(response.body)
+```
+
+## Blob references
+
+In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+
+```typescript
+import { BlobRef, isBlobRef } from '@atproto/lex'
+
+const blobRef: BlobRef = {
+  $type: 'blob',
+  ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
+  mimeType: 'image/png',
+  size: 12345,
+}
+
+if (isBlobRef(blobRef)) {
+  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+}
+```
+
+> [!NOTE]
+>
+> Historically, references to blobs were represented as simple objects with the following structure:
+>
+> ```typescript
+> type LegacyBlobRef = {
+>   ref: string
+>   mimeType: string
+> }
+> ```
+>
+> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
+
+## Utilities
+
+Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are available:
+
+```typescript
+import {
+  // CID utilities
+  parseCid, // Parse CID string (throws on invalid)
+  asCid, // Coerce to Cid or null
+  isCid, // Type guard for Cid values
+
+  // Blob references
+  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef objects
+
+  // Equality
+  lexEquals, // Deep equality (handles CIDs and bytes)
+
+  // String length for Lexicon validation
+  graphemeLen, // Count user-perceived characters
+  utf8Len, // Count UTF-8 bytes
+
+  // Language tag validation (BCP-47)
+  isLanguageString, // Validate language tags (e.g., 'en', 'pt-BR')
+
+  // Low-level JSON encoding helpers
+  parseLexLink, // { $link: string } → Cid
+  encodeLexLink, // Cid → { $link: string }
+  parseLexBytes, // { $bytes: string } → Uint8Array
+  encodeLexBytes, // Uint8Array → { $bytes: string }
+} from '@atproto/lex'
+
+// Examples
+const cid = parseCid('bafyreiabc...')
+graphemeLen('👨‍👩‍👧‍👦') // 1
+utf8Len('👨‍👩‍👧‍👦') // 25
+isLanguageString('en-US') // true
 ```
 
 ## Advanced Usage
@@ -1216,7 +1373,7 @@ await client.call(unfollow, { followUri: uri })
 #### Updating Profile with Retry Logic
 
 ```typescript
-import { Action, XrpcResponseError } from '@atproto/lex'
+import { Action, LexRpcResponseError } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 
@@ -1258,7 +1415,7 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
     } catch (error) {
       // Retry on swap/concurrent modification errors
       if (
-        error instanceof XrpcResponseError &&
+        error instanceof LexRpcResponseError &&
         error.name === 'SwapError' &&
         attempt < maxRetries - 1
       ) {

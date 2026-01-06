@@ -8,7 +8,7 @@ export const utf8LenNode = NodeJSBuffer
   ? function utf8LenNode(string: string): number {
       return NodeJSBuffer!.byteLength(string, 'utf8')
     }
-  : null
+  : /* v8 ignore next -- @preserve */ null
 
 export function utf8LenCompute(string: string): number {
   // The code below is similar to TextEncoder's implementation of UTF-8

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import * as com from './lexicons/com.js'
 
 describe('integer', () => {
