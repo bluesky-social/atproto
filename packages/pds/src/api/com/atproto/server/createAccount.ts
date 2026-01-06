@@ -59,6 +59,32 @@ export default function (server: Server, ctx: AppContext) {
             'This Neuro Legal ID is already linked to another account. Each Legal ID can only be used for one account.',
           )
         }
+
+        // Verify ownership of Legal ID via RemoteLogin
+        if (!ctx.neuroRemoteLoginManager) {
+          throw new InvalidRequestError(
+            'Neuro RemoteLogin is not configured on this server.',
+          )
+        }
+
+        req.log.info({ legalId: password, handle }, 'Verifying Legal ID ownership during account creation')
+
+        const purpose = `Create account: ${handle}`
+        const { petitionId } = await ctx.neuroRemoteLoginManager.initiatePetition(
+          password,
+          purpose,
+        )
+
+        // Wait for user approval on Neuro app
+        try {
+          await ctx.neuroRemoteLoginManager.waitForApproval(petitionId)
+          req.log.info({ legalId: password, handle }, 'Legal ID ownership verified')
+        } catch (err) {
+          req.log.error({ err, legalId: password, handle }, 'Failed to verify Legal ID ownership')
+          throw new InvalidRequestError(
+            'Failed to verify ownership of Neuro Legal ID. Please approve the login request on your Neuro app.',
+          )
+        }
       } else {
         throw new InvalidRequestError(
           'Password must be a Neuro Legal ID (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@legal.yourdomain.io). Regular passwords are not supported on this server.',
