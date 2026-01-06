@@ -1,5 +1,16 @@
 # @atproto/lex-client
 
+## 0.0.7
+
+### Patch Changes
+
+- [#4501](https://github.com/bluesky-social/atproto/pull/4501) [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **breaking:** Use a record type (`com.example.record.Main`) instead of a record schema type (`typeof com.example.record.$defs.main`) as the generic parameter for `ListRecord`.
+
+- Updated dependencies [[`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98), [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98), [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98), [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98)]:
+  - @atproto/lex-data@0.0.6
+  - @atproto/lex-schema@0.0.7
+  - @atproto/lex-json@0.0.6
+
 ## 0.0.6
 
 ### Patch Changes
