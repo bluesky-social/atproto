@@ -1,5 +1,13 @@
 # @atproto/tap
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98), [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98)]:
+  - @atproto/lex@0.0.9
+  - @atproto/common@0.5.6
+
 ## 0.1.0
 
 ### Minor Changes
