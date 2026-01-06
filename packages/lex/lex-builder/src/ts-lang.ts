@@ -137,7 +137,7 @@ const TYPE_SCRIPT_GLOBALS = new Set([
 
 export function isGlobalIdentifier(word: string) {
   return (
-    // Should cover most useful globals
+    // Should cover most common globals
     word in globalThis ||
     WELL_KNOWN_GLOBALS.has(word) ||
     TYPE_SCRIPT_GLOBALS.has(word)
@@ -161,9 +161,9 @@ export function isSafeIdentifier(
     return false
   }
 
-  return isJsIdentifier(name)
+  return isValidJsIdentifier(name)
 }
 
-export function isJsIdentifier(name: string) {
+function isValidJsIdentifier(name: string) {
   return !isJsKeyword(name) && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
 }

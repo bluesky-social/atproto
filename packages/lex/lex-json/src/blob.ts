@@ -1,9 +1,14 @@
-import { BlobRef, LexMap, isBlobRef } from '@atproto/lex-data'
+import {
+  BlobRef,
+  BlobRefValidationOptions,
+  LexMap,
+  isBlobRef,
+} from '@atproto/lex-data'
 import { parseLexLink } from './link.js'
 
 export function parseBlobRef(
   input: LexMap,
-  options?: { strict?: boolean },
+  options?: BlobRefValidationOptions,
 ): BlobRef | undefined {
   if (input.$type !== 'blob') return undefined
 
