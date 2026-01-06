@@ -3,12 +3,65 @@ import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { ReasonType } from '../../lexicon/types/com/atproto/moderation/defs'
 import { ModerationService } from '../../mod-service'
-import { subjectFromInput } from '../../mod-service/subject'
+import { ModSubject, subjectFromInput } from '../../mod-service/subject'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { isAppealReport } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
+  const createReportHandler = async ({
+    requester,
+    reasonType,
+    reason,
+    subject,
+    modTool,
+  }: {
+    requester: string
+    reasonType: string
+    reason?: string
+    subject: ModSubject
+    modTool?: { name: string; meta?: Record<string, unknown> }
+  }) => {
+    // If the report is an appeal, the requester must be the author of the subject
+    if (isAppealReport(reasonType) && requester !== subject.did) {
+      throw new ForbiddenError('You cannot appeal this report')
+    }
+
+    const db = ctx.db
+
+    await Promise.all([
+      assertValidReporter(ctx.modService(db), reasonType, requester),
+      ctx.moderationServiceProfile().validateReasonType(reasonType),
+    ])
+
+    const report = await db.transaction(async (dbTxn) => {
+      const moderationTxn = ctx.modService(dbTxn)
+      const { event: reportEvent, subjectStatus } = await moderationTxn.report({
+        reason,
+        subject,
+        reasonType,
+        reportedBy: requester || ctx.cfg.service.did,
+        modTool,
+      })
+
+      const tagService = new TagService(
+        subject,
+        subjectStatus,
+        ctx.cfg.service.did,
+        moderationTxn,
+      )
+      await tagService.evaluateForSubject([getTagForReport(reasonType)])
+
+      return reportEvent
+    })
+
+    const body = ctx.modService(db).views.formatReport(report)
+    return {
+      encoding: 'application/json' as const,
+      body,
+    }
+  }
+
   server.com.atproto.moderation.createReport({
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
@@ -17,45 +70,31 @@ export default function (server: Server, ctx: AppContext) {
       const { reasonType, reason, modTool } = input.body
       const subject = subjectFromInput(input.body.subject)
 
-      // If the report is an appeal, the requester must be the author of the subject
-      if (isAppealReport(reasonType) && requester !== subject.did) {
-        throw new ForbiddenError('You cannot appeal this report')
-      }
-
-      const db = ctx.db
-
-      await Promise.all([
-        assertValidReporter(ctx.modService(db), reasonType, requester),
-        ctx.moderationServiceProfile().validateReasonType(reasonType),
-      ])
-
-      const report = await db.transaction(async (dbTxn) => {
-        const moderationTxn = ctx.modService(dbTxn)
-        const { event: reportEvent, subjectStatus } =
-          await moderationTxn.report({
-            reason,
-            subject,
-            reasonType,
-            reportedBy: requester || ctx.cfg.service.did,
-            modTool,
-          })
-
-        const tagService = new TagService(
-          subject,
-          subjectStatus,
-          ctx.cfg.service.did,
-          moderationTxn,
-        )
-        await tagService.evaluateForSubject([getTagForReport(reasonType)])
-
-        return reportEvent
+      return await createReportHandler({
+        requester,
+        reasonType,
+        reason,
+        subject,
+        modTool,
       })
+    },
+  })
 
-      const body = ctx.modService(db).views.formatReport(report)
-      return {
-        encoding: 'application/json',
-        body,
-      }
+  server.tools.ozone.report.createReport({
+    auth: ctx.authVerifier.standard,
+    handler: async ({ input, auth }) => {
+      const requester =
+        'iss' in auth.credentials ? auth.credentials.iss : ctx.cfg.service.did
+      const { reasonType, reason, modTool } = input.body
+      const subject = subjectFromInput(input.body.subject)
+
+      return await createReportHandler({
+        requester,
+        reasonType,
+        reason,
+        subject,
+        modTool,
+      })
     },
   })
 }

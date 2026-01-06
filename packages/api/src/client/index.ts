@@ -283,6 +283,7 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneReportCreateReport from './types/tools/ozone/report/createReport.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -590,6 +591,7 @@ export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneReportCreateReport from './types/tools/ozone/report/createReport.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -4982,6 +4984,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  report: ToolsOzoneReportNS
   safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -4995,6 +4998,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
+    this.report = new ToolsOzoneReportNS(client)
     this.safelink = new ToolsOzoneSafelinkNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
@@ -5263,6 +5267,26 @@ export class ToolsOzoneModerationNS {
       'tools.ozone.moderation.searchRepos',
       params,
       undefined,
+      opts,
+    )
+  }
+}
+
+export class ToolsOzoneReportNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  createReport(
+    data?: ToolsOzoneReportCreateReport.InputSchema,
+    opts?: ToolsOzoneReportCreateReport.CallOptions,
+  ): Promise<ToolsOzoneReportCreateReport.Response> {
+    return this._client.call(
+      'tools.ozone.report.createReport',
+      opts?.qp,
+      data,
       opts,
     )
   }
