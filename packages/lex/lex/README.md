@@ -200,6 +200,7 @@ Options:
 - `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
+- `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
 
 ### Generated Schema Structure
 
