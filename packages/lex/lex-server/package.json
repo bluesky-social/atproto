@@ -42,6 +42,9 @@
     }
   },
   "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:*",
+    "@atproto/crypto": "workspace:*",
+    "@atproto/did": "workspace:*",
     "@atproto/lex-cbor": "workspace:*",
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-json": "workspace:*",

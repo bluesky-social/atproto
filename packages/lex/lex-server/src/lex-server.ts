@@ -19,7 +19,7 @@ import {
 import { drainWebsocket } from './lib/drain-websocket.js'
 
 type Awaitable<T> = T | Promise<T>
-type LexMethod = Query | Procedure | Subscription
+export type LexMethod = Query | Procedure | Subscription
 
 export type NetAddr = {
   hostname: string
@@ -81,7 +81,7 @@ export type LexRouterMethodConfig<
   Credentials = unknown,
 > = {
   handler: LexRouterMethodHandler<Method, Credentials>
-  auth: LexRouterAuth<Method, Credentials>
+  auth: LexRouterAuth<Credentials, Method>
 }
 
 export type LexRouterSubscriptionHandler<
@@ -96,18 +96,19 @@ export type LexRouterSubscriptionConfig<
   Credentials = unknown,
 > = {
   handler: LexRouterSubscriptionHandler<Method, Credentials>
-  auth: LexRouterAuth<Method, Credentials>
+  auth: LexRouterAuth<Credentials, Method>
 }
 
 export type LexRouterAuthContext<Method extends LexMethod = LexMethod> = {
+  method: Method
   params: InferMethodParams<Method>
   request: Request
   connection?: ConnectionInfo
 }
 
 export type LexRouterAuth<
-  Method extends LexMethod = LexMethod,
   Credentials = unknown,
+  Method extends LexMethod = LexMethod,
 > = (ctx: LexRouterAuthContext<Method>) => Credentials | Promise<Credentials>
 
 export type LexErrorHandlerContext = {
@@ -187,7 +188,7 @@ export class LexRouter {
   private buildMethodHandler<Method extends Query | Procedure, Credentials>(
     method: Method,
     methodHandler: LexRouterMethodHandler<Method, Credentials>,
-    auth?: LexRouterAuth<Method, Credentials>,
+    auth?: LexRouterAuth<Credentials, Method>,
   ): Handler {
     const getInput = (
       method.type === 'procedure'
@@ -215,7 +216,7 @@ export class LexRouter {
         const params = method.parameters.fromURLSearchParams(url.searchParams)
 
         const credentials = auth
-          ? await auth({ params, request, connection })
+          ? await auth({ method, params, request, connection })
           : (undefined as Credentials)
 
         const input = await getInput(request)
@@ -258,7 +259,7 @@ export class LexRouter {
   private buildSubscriptionHandler<Method extends Subscription, Credentials>(
     method: Method,
     methodHandler: LexRouterSubscriptionHandler<Method, Credentials>,
-    auth?: LexRouterAuth<Method, Credentials>,
+    auth?: LexRouterAuth<Credentials, Method>,
   ): Handler {
     const {
       onHandlerError,
@@ -334,7 +335,7 @@ export class LexRouter {
             )
 
             const credentials: Credentials = auth
-              ? await auth({ params, request, connection })
+              ? await auth({ method, params, request, connection })
               : (undefined as Credentials)
 
             signal.throwIfAborted()
