@@ -53,7 +53,7 @@ describe('notification views', () => {
     })
     db = network.bsky.db
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.bsky.db.db
@@ -662,7 +662,8 @@ describe('notification views', () => {
     // only notifs from follow (alice)
     expect(
       priority.data.notifications.every(
-        (notif) => ![sc.dids.bob, sc.dids.dan].includes(notif.author.did),
+        (notif) =>
+          !([sc.dids.bob, sc.dids.dan] as string[]).includes(notif.author.did),
       ),
     ).toBe(true)
     expect(forSnapshot(priority.data)).toMatchSnapshot()
@@ -702,7 +703,8 @@ describe('notification views', () => {
     // only notifs from follow (alice)
     expect(
       notifs.data.notifications.every(
-        (notif) => ![sc.dids.bob, sc.dids.dan].includes(notif.author.did),
+        (notif) =>
+          !([sc.dids.bob, sc.dids.dan] as string[]).includes(notif.author.did),
       ),
     ).toBe(true)
     expect(forSnapshot(notifs.data)).toMatchSnapshot()

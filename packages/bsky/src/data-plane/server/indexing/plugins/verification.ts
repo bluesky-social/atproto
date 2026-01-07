@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Verification from '../../../../lexicon/types/app/bsky/graph/verification'
@@ -14,7 +14,7 @@ type IndexedVerification = Selectable<DatabaseSchemaType['verification']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Verification.Record,
   timestamp: string,
 ): Promise<IndexedVerification | null> => {

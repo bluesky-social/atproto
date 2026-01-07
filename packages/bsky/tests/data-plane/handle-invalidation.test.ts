@@ -18,7 +18,7 @@ describe('handle invalidation', () => {
       dbPostgresSchema: 'bsky_handle_invalidation',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()

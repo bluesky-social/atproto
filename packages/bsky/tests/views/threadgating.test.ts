@@ -19,7 +19,7 @@ describe('views with thread gating', () => {
       dbPostgresSchema: 'bsky_views_thread_gating',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await sc.createAccount('eve', {

@@ -1,18 +1,17 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.confirmEmail({
+  server.add(com.atproto.server.confirmEmail, {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       authorize: (permissions) => {
         permissions.assertAccount({ attr: 'email', action: 'manage' })
       },
     }),
-    handler: async ({ auth, input, req }) => {
-      const did = auth.credentials.did
+    handler: async ({ auth, input: { body }, req }) => {
+      const { did } = auth.credentials
 
       const user = await ctx.accountManager.getAccount(did, {
         includeDeactivated: true,
@@ -21,19 +20,21 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('user not found', 'AccountNotFound')
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.confirmEmail(
-          input.body,
-          await ctx.entrywayAuthHeaders(
-            req,
-            auth.credentials.did,
-            ids.ComAtprotoServerConfirmEmail,
-          ),
+      if (ctx.entrywayClient) {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.confirmEmail.$lxm,
         )
+        await ctx.entrywayClient.xrpc(com.atproto.server.confirmEmail, {
+          validateResponse: false, // ignore invalid upstream responses
+          headers,
+          body,
+        })
         return
       }
 
-      const { token, email } = input.body
+      const { token, email } = body
 
       if (user.email !== email.toLowerCase()) {
         throw new InvalidRequestError('invalid email', 'InvalidEmail')

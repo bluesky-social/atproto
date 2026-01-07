@@ -1,50 +1,44 @@
 import assert from 'node:assert'
-import { AtUri } from '@atproto/syntax'
-import { XRPCError } from '@atproto/xrpc'
+import { l } from '@atproto/lex'
+import { AtUri, AtUriString } from '@atproto/syntax'
+import { Server, XRPCError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import {
-  ThreadViewPost,
-  isThreadViewPost,
-} from '../../../../lexicon/types/app/bsky/feed/defs'
-import {
-  OutputSchema,
-  QueryParams,
-} from '../../../../lexicon/types/app/bsky/feed/getPostThread'
-import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { $Typed } from '../../../../lexicon/util'
+import { app } from '../../../../lexicons/index.js'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
   LocalViewer,
+  MungeFn,
   RecordDescript,
   formatMungedResponse,
   getLocalLag,
-  getRepoRev,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return
 
-  server.app.bsky.feed.getPostThread({
+  server.add(app.bsky.feed.getPostThread, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {
-        const lxm = ids.AppBskyFeedGetPostThread
+        const lxm = app.bsky.feed.getPostThread.$lxm
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
     }),
     handler: async (reqCtx) => {
       try {
-        return await pipethroughReadAfterWrite(ctx, reqCtx, getPostThreadMunge)
+        return await pipethroughReadAfterWrite(
+          ctx,
+          reqCtx,
+          app.bsky.feed.getPostThread,
+          getPostThreadMunge,
+        )
       } catch (err) {
         if (err instanceof XRPCError && err.error === 'NotFound') {
           const { auth, params } = reqCtx
           const requester = auth.credentials.did
 
-          const rev = err.headers && getRepoRev(err.headers)
+          const rev = err.headers?.get('atproto-repo-rev')
           if (!rev) throw err
 
           const uri = new AtUri(params.uri)
@@ -83,14 +77,12 @@ export default function (server: Server, ctx: AppContext) {
 // READ AFTER WRITE
 // ----------------
 
-const getPostThreadMunge = async (
-  localViewer: LocalViewer,
-  original: OutputSchema,
-  local: LocalRecords,
-): Promise<OutputSchema> => {
+const getPostThreadMunge: MungeFn<
+  app.bsky.feed.getPostThread.OutputBody
+> = async (localViewer, original, local) => {
   // @TODO if is NotFoundPost, handle similarly to error
   // @NOTE not necessary right now as we never return those for the requested uri
-  if (!isThreadViewPost(original.thread)) {
+  if (!app.bsky.feed.defs.threadViewPost.$matches(original.thread)) {
     return original
   }
   const thread = await addPostsToThread(
@@ -106,12 +98,12 @@ const getPostThreadMunge = async (
 
 const addPostsToThread = async (
   localViewer: LocalViewer,
-  original: $Typed<ThreadViewPost>,
-  posts: RecordDescript<PostRecord>[],
+  original: l.$Typed<app.bsky.feed.defs.ThreadViewPost>,
+  posts: RecordDescript<app.bsky.feed.post.Main>[],
 ) => {
   const inThread = findPostsInThread(original, posts)
   if (inThread.length === 0) return original
-  let thread: $Typed<ThreadViewPost> = original
+  let thread: l.$Typed<app.bsky.feed.defs.ThreadViewPost> = original
   for (const record of inThread) {
     thread = await insertIntoThreadReplies(localViewer, thread, record)
   }
@@ -119,22 +111,25 @@ const addPostsToThread = async (
 }
 
 const findPostsInThread = (
-  thread: ThreadViewPost,
-  posts: RecordDescript<PostRecord>[],
-): RecordDescript<PostRecord>[] => {
+  thread: app.bsky.feed.defs.ThreadViewPost,
+  posts: RecordDescript<app.bsky.feed.post.Main>[],
+): RecordDescript<app.bsky.feed.post.Main>[] => {
   return posts.filter((post) => {
     const rootUri = post.record.reply?.root.uri
     if (!rootUri) return false
     if (rootUri === thread.post.uri) return true
-    return (thread.post.record as PostRecord).reply?.root.uri === rootUri
+    return (
+      (thread.post.record as app.bsky.feed.post.Main).reply?.root.uri ===
+      rootUri
+    )
   })
 }
 
 const insertIntoThreadReplies = async (
   localViewer: LocalViewer,
-  view: $Typed<ThreadViewPost>,
-  descript: RecordDescript<PostRecord>,
-): Promise<$Typed<ThreadViewPost>> => {
+  view: l.$Typed<app.bsky.feed.defs.ThreadViewPost>,
+  descript: RecordDescript<app.bsky.feed.post.Main>,
+): Promise<l.$Typed<app.bsky.feed.defs.ThreadViewPost>> => {
   if (descript.record.reply?.parent.uri === view.post.uri) {
     const postView = await threadPostView(localViewer, descript)
     if (!postView) return view
@@ -147,7 +142,7 @@ const insertIntoThreadReplies = async (
   if (!view.replies) return view
   const replies = await Promise.all(
     view.replies.map(async (reply) =>
-      isThreadViewPost(reply)
+      app.bsky.feed.defs.threadViewPost.$matches(reply)
         ? await insertIntoThreadReplies(localViewer, reply, descript)
         : reply,
     ),
@@ -160,8 +155,8 @@ const insertIntoThreadReplies = async (
 
 const threadPostView = async (
   localViewer: LocalViewer,
-  descript: RecordDescript<PostRecord>,
-): Promise<$Typed<ThreadViewPost> | null> => {
+  descript: RecordDescript<app.bsky.feed.post.Main>,
+): Promise<l.$Typed<app.bsky.feed.defs.ThreadViewPost> | null> => {
   const postView = await localViewer.getPost(descript)
   if (!postView) return null
   return {
@@ -176,11 +171,14 @@ const threadPostView = async (
 const readAfterWriteNotFound = async (
   ctx: AppContext,
   localViewer: LocalViewer,
-  params: QueryParams,
+  params: app.bsky.feed.getPostThread.Params,
   requester: string,
   rev: string,
   resolvedUri: AtUri,
-): Promise<{ data: OutputSchema; lag?: number } | null> => {
+): Promise<{
+  data: app.bsky.feed.getPostThread.OutputBody
+  lag?: number
+} | null> => {
   if (resolvedUri.hostname !== requester) {
     return null
   }
@@ -199,12 +197,15 @@ const readAfterWriteNotFound = async (
   if (highestParent) {
     try {
       assert(ctx.bskyAppView)
-      const parentsRes =
-        await ctx.bskyAppView.agent.app.bsky.feed.getPostThread(
-          { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
-          await ctx.appviewAuthHeaders(requester, ids.AppBskyFeedGetPostThread),
-        )
-      thread.parent = parentsRes.data.thread
+      const parentsRes = await ctx.bskyAppView.client.call(
+        app.bsky.feed.getPostThread.main,
+        { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
+        await ctx.appviewAuthHeaders(
+          requester,
+          app.bsky.feed.getPostThread.$lxm,
+        ),
+      )
+      thread.parent = parentsRes.thread
     } catch (err) {
       // do nothing
     }
@@ -217,10 +218,21 @@ const readAfterWriteNotFound = async (
   }
 }
 
-const getHighestParent = (thread: ThreadViewPost): string | undefined => {
-  if (isThreadViewPost(thread.parent)) {
-    return getHighestParent(thread.parent)
-  } else {
-    return (thread.post.record as PostRecord).reply?.parent.uri
+const getHighestParent = (
+  thread: app.bsky.feed.defs.ThreadViewPost,
+): AtUriString | undefined => {
+  while (
+    thread.parent &&
+    app.bsky.feed.defs.threadViewPost.$isTypeOf(thread.parent)
+  ) {
+    thread = thread.parent
   }
+
+  // @NOTE we might get away with type casting here, but being safe to avoid
+  // potential issues
+  if (!app.bsky.feed.post.$matches(thread.post.record)) {
+    return undefined
+  }
+
+  return thread.post.record.reply?.parent.uri
 }

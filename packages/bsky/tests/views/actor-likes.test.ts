@@ -18,7 +18,7 @@ describe('bsky actor likes feed views', () => {
       dbPostgresSchema: 'bsky_views_actor_likes',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

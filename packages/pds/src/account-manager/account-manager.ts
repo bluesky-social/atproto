@@ -1,8 +1,8 @@
 import { KeyObject } from 'node:crypto'
-import { CID } from 'multiformats/cid'
 import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
-import { isValidTld } from '@atproto/syntax'
+import { Cid } from '@atproto/lex-data'
+import { HandleString, isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
@@ -12,7 +12,7 @@ import {
   ensureHandleServiceConstraints,
   isServiceDomain,
 } from '../handle/index'
-import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import { com } from '../lexicons/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
@@ -110,7 +110,7 @@ export class AccountManager {
       did?: string
       allowAnyValid?: boolean
     } = {},
-  ): Promise<string> {
+  ): Promise<HandleString> {
     const normalized = baseNormalizeAndValidate(handle)
 
     // tld validation
@@ -166,7 +166,7 @@ export class AccountManager {
     handle: string
     email?: string
     password?: string
-    repoCid: CID
+    repoCid: Cid
     repoRev: string
     inviteCode?: string
     deactivated?: boolean
@@ -211,7 +211,7 @@ export class AccountManager {
     handle: string
     email?: string
     password?: string
-    repoCid: CID
+    repoCid: Cid
     repoRev: string
     inviteCode?: string
     deactivated?: boolean
@@ -238,7 +238,10 @@ export class AccountManager {
     return account.deleteAccount(this.db, did)
   }
 
-  async takedownAccount(did: string, takedown: StatusAttr) {
+  async takedownAccount(
+    did: string,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
     await this.db.transaction(async (dbTxn) =>
       Promise.all([
         account.updateAccountTakedownStatus(dbTxn, did, takedown),
@@ -252,7 +255,7 @@ export class AccountManager {
     return account.getAccountAdminStatus(this.db, did)
   }
 
-  async updateRepoRoot(did: string, cid: CID, rev: string) {
+  async updateRepoRoot(did: string, cid: Cid, rev: string) {
     return repo.updateRoot(this.db, did, cid, rev)
   }
 

@@ -1,6 +1,7 @@
 import { randomStr } from '@atproto/crypto'
+import { DatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AppPassword } from '../../lexicon/types/com/atproto/server/createAppPassword'
+import { com } from '../../lexicons/index.js'
 import { AccountDb } from '../db'
 import * as scrypt from './scrypt'
 
@@ -61,7 +62,7 @@ export const createAppPassword = async (
   did: string,
   name: string,
   privileged: boolean,
-): Promise<AppPassword> => {
+): Promise<com.atproto.server.createAppPassword.AppPassword> => {
   // create an app password with format:
   // 1234-abcd-5678-efgh
   const str = randomStr(16, 'base32').slice(0, 16)
@@ -91,7 +92,7 @@ export const createAppPassword = async (
   return {
     name,
     password,
-    createdAt: got.createdAt,
+    createdAt: new Date(got.createdAt).toISOString(),
     privileged,
   }
 }
@@ -99,7 +100,9 @@ export const createAppPassword = async (
 export const listAppPasswords = async (
   db: AccountDb,
   did: string,
-): Promise<{ name: string; createdAt: string; privileged: boolean }[]> => {
+): Promise<
+  { name: string; createdAt: DatetimeString; privileged: boolean }[]
+> => {
   const res = await db.db
     .selectFrom('app_password')
     .select(['name', 'createdAt', 'privileged'])
@@ -108,7 +111,7 @@ export const listAppPasswords = async (
     .execute()
   return res.map((row) => ({
     name: row.name,
-    createdAt: row.createdAt,
+    createdAt: row.createdAt as DatetimeString,
     privileged: row.privileged === 1 ? true : false,
   }))
 }

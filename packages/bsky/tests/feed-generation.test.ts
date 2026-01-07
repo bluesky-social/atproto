@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import assert from 'node:assert'
 import { AtUri, AtpAgent } from '@atproto/api'
 import { TID } from '@atproto/common'
@@ -8,16 +10,13 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
+import { SkeletonHandler, lexicons } from '@atproto/pds'
 import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError, MethodHandler } from '@atproto/xrpc-server'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { ids } from '../src/lexicon/lexicons'
-import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
+import { FeedViewPost } from '../src/lexicon/types/app/bsky/feed/defs'
 import { OutputSchema as GetActorFeedsOutputSchema } from '../src/lexicon/types/app/bsky/feed/getActorFeeds'
 import { OutputSchema as GetFeedOutputSchema } from '../src/lexicon/types/app/bsky/feed/getFeed'
-import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('feed generation', () => {
@@ -46,7 +45,7 @@ describe('feed generation', () => {
       dbPostgresSchema: 'bsky_feed_generation',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -835,18 +834,13 @@ describe('feed generation', () => {
         | 'bad-pagination-cursor'
         | 'needs-auth'
         | 'accepts-interactions',
-    ): MethodHandler<
-      void,
-      AppBskyFeedGetFeedSkeleton.QueryParams,
-      AppBskyFeedGetFeedSkeleton.HandlerInput,
-      AppBskyFeedGetFeedSkeleton.HandlerOutput
-    > =>
+    ): SkeletonHandler =>
     async ({ req, params }) => {
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')
       }
-      const { limit, cursor } = params
-      const candidates: SkeletonFeedPost[] = [
+      const { limit = 50, cursor } = params
+      const candidates: lexicons.app.bsky.feed.defs.SkeletonFeedPost[] = [
         { post: sc.posts[sc.dids.alice][0].ref.uriStr },
         { post: sc.posts[sc.dids.bob][0].ref.uriStr },
         { post: sc.posts[sc.dids.carol][0].ref.uriStr },
@@ -868,9 +862,17 @@ describe('feed generation', () => {
             repost: sc.reposts[sc.dids.carol][0].uriStr,
           },
         },
-      ].map((item, i) => ({ ...item, feedContext: `item-${i}` })) // add a deterministic context to test passthrough
+      ]
+
+      const candidatesWithContext = candidates.map(
+        <I>(item: I, i: number): I & { feedContext: string } => ({
+          ...item,
+          feedContext: `item-${i}`,
+        }),
+      ) // add a deterministic context to test passthrough
+
       const offset = cursor ? parseInt(cursor, 10) : 0
-      const fullFeed = candidates.filter((_, i) => {
+      const fullFeed = candidatesWithContext.filter((_, i) => {
         if (feedName === 'even') {
           return i % 2 === 0
         }
@@ -891,14 +893,17 @@ describe('feed generation', () => {
             ? (fullFeed.indexOf(lastResult) + 1).toString()
             : undefined
 
+      const body: lexicons.app.bsky.feed.getFeedSkeleton.OutputBody = {
+        feed: feedResults,
+        cursor: cursorResult,
+        reqId: 'req-id-abc-def-ghi',
+        // @ts-expect-error for testing purposes
+        $auth: jwtBody(req.headers.authorization),
+      }
+
       return {
         encoding: 'application/json',
-        body: {
-          feed: feedResults,
-          cursor: cursorResult,
-          reqId: 'req-id-abc-def-ghi',
-          $auth: jwtBody(req.headers.authorization), // for testing purposes
-        },
+        body,
       }
     }
 })

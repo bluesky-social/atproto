@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
@@ -13,7 +13,7 @@ type IndexedProfile = DatabaseSchemaType['profile']
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Profile.Record,
   timestamp: string,
 ): Promise<IndexedProfile | null> => {

@@ -1,12 +1,12 @@
-import { CID } from 'multiformats'
 import { z } from 'zod'
-import { cidForCbor, dataToCborBlock, schema as common } from '@atproto/common'
+import { cidForLex, encode } from '@atproto/lex-cbor'
+import { Cid, cidForCbor } from '@atproto/lex-data'
 import { BlockMap } from '../block-map'
 import { CidSet } from '../cid-set'
 import { MissingBlockError, MissingBlocksError } from '../error'
 import * as parse from '../parse'
 import { ReadableBlockstore } from '../storage'
-import { CarBlock } from '../types'
+import { CarBlock, schema } from '../types'
 import * as util from './util'
 
 /**
@@ -16,7 +16,7 @@ import * as util from './util'
  * Keys are laid out in alphabetic order.
  * The key insight of an MST is that each key is hashed and starting 0s are counted
  * to determine which layer it falls on (5 zeros for ~32 fanout).
- * This is a merkle tree, so each subtree is referred to by it's hash (CID).
+ * This is a merkle tree, so each subtree is referred to by it's hash (Cid).
  * When a leaf is changed, ever tree on the path to that leaf is changed as well,
  * thereby updating the root hash.
  *
@@ -42,11 +42,11 @@ import * as util from './util'
  * Then the first will be described as `prefix: 0, key: 'bsky/posts/abcdefg'`,
  * and the second will be described as `prefix: 16, key: 'hi'.`
  */
-const subTreePointer = z.nullable(common.cid)
+const subTreePointer = z.nullable(schema.cid)
 const treeEntry = z.object({
   p: z.number(), // prefix count of ascii chars that this key shares with the prev key
-  k: common.bytes, // the rest of the key outside the shared prefix
-  v: common.cid, // value
+  k: schema.bytes, // the rest of the key outside the shared prefix
+  v: schema.cid, // value
   t: subTreePointer, // next subtree (to the right of leaf)
 })
 const nodeData = z.object({
@@ -70,12 +70,12 @@ export class MST {
   storage: ReadableBlockstore
   entries: NodeEntry[] | null
   layer: number | null
-  pointer: CID
+  pointer: Cid
   outdatedPointer = false
 
   constructor(
     storage: ReadableBlockstore,
-    pointer: CID,
+    pointer: Cid,
     entries: NodeEntry[] | null,
     layer: number | null,
   ) {
@@ -102,14 +102,14 @@ export class MST {
   ): Promise<MST> {
     const { layer = null } = opts || {}
     const entries = await util.deserializeNodeData(storage, data, opts)
-    const pointer = await cidForCbor(data)
+    const pointer = await cidForLex(data)
     return new MST(storage, pointer, entries, layer)
   }
 
   // this is really a *lazy* load, doesn't actually touch storage
   static load(
     storage: ReadableBlockstore,
-    cid: CID,
+    cid: Cid,
     opts?: Partial<MstOpts>,
   ): MST {
     const { layer = null } = opts || {}
@@ -145,12 +145,12 @@ export class MST {
 
       return this.entries
     }
-    throw new Error('No entries or CID provided')
+    throw new Error('No entries or Cid provided')
   }
 
   // We don't hash the node on every mutation for performance reasons
   // Instead we keep track of whether the pointer is outdated and only (recursively) calculate when needed
-  async getPointer(): Promise<CID> {
+  async getPointer(): Promise<Cid> {
     if (!this.outdatedPointer) return this.pointer
     const { cid } = await this.serialize()
     this.pointer = cid
@@ -158,7 +158,7 @@ export class MST {
     return this.pointer
   }
 
-  async serialize(): Promise<{ cid: CID; bytes: Uint8Array }> {
+  async serialize(): Promise<{ cid: Cid; bytes: Uint8Array }> {
     let entries = await this.getEntries()
     const outdated = entries.filter(
       (e) => e.isTree() && e.outdatedPointer,
@@ -168,11 +168,9 @@ export class MST {
       entries = await this.getEntries()
     }
     const data = util.serializeNodeData(entries)
-    const block = await dataToCborBlock(data)
-    return {
-      cid: block.cid,
-      bytes: block.bytes,
-    }
+    const bytes = encode(data)
+    const cid = await cidForCbor(bytes)
+    return { cid, bytes }
   }
 
   // In most cases, we get the layer of a node from a hint on creation
@@ -208,7 +206,7 @@ export class MST {
   // -------------------
 
   // Return the necessary blocks to persist the MST to repo storage
-  async getUnstoredBlocks(): Promise<{ root: CID; blocks: BlockMap }> {
+  async getUnstoredBlocks(): Promise<{ root: Cid; blocks: BlockMap }> {
     const blocks = new BlockMap()
     const pointer = await this.getPointer()
     const alreadyHas = await this.storage.has(pointer)
@@ -227,7 +225,7 @@ export class MST {
 
   // Adds a new leaf for the given key/value pair
   // Throws if a leaf with that key already exists
-  async add(key: string, value: CID, knownZeros?: number): Promise<MST> {
+  async add(key: string, value: Cid, knownZeros?: number): Promise<MST> {
     util.ensureValidMstKey(key)
     const keyZeros = knownZeros ?? (await util.leadingZerosOnHash(key))
     const layer = await this.getLayer()
@@ -297,7 +295,7 @@ export class MST {
   }
 
   // Gets the value at the given key
-  async get(key: string): Promise<CID | null> {
+  async get(key: string): Promise<Cid | null> {
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     if (found && found.isLeaf() && found.key === key) {
@@ -312,7 +310,7 @@ export class MST {
 
   // Edits the value at the given key
   // Throws if the given key does not exist
-  async update(key: string, value: CID): Promise<MST> {
+  async update(key: string, value: Cid): Promise<MST> {
     util.ensureValidMstKey(key)
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
@@ -765,8 +763,8 @@ export class MST {
     }
   }
 
-  async cidsForPath(key: string): Promise<CID[]> {
-    const cids: CID[] = [await this.getPointer()]
+  async cidsForPath(key: string): Promise<Cid[]> {
+    const cids: Cid[] = [await this.getPointer()]
     const index = await this.findGtOrEqualLeafIndex(key)
     const found = await this.atIndex(index)
     if (found && found.isLeaf() && found.key === key) {
@@ -873,7 +871,7 @@ export class MST {
 export class Leaf {
   constructor(
     public key: string,
-    public value: CID,
+    public value: Cid,
   ) {}
 
   isTree(): this is MST {

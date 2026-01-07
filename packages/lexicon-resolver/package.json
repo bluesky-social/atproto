@@ -8,11 +8,6 @@
     "atproto",
     "lexicon"
   ],
-  "scripts": {
-    "test": "jest",
-    "prebuild": "lex gen-api --yes ./src/client ../../lexicons/com/atproto/sync/getRecord.json",
-    "build": "tsc --build tsconfig.build.json"
-  },
   "homepage": "https://atproto.com",
   "repository": {
     "type": "git",
@@ -30,16 +25,19 @@
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex": "workspace:^",
+    "@atproto/lex-document": "workspace:^",
     "@atproto/repo": "workspace:^",
-    "@atproto/syntax": "workspace:^",
-    "@atproto/xrpc": "workspace:^",
-    "multiformats": "^9.9.0"
+    "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
-    "@atproto/common": "workspace:^",
-    "@atproto/lex-cli": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
     "jest": "^28.1.2",
     "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "test": "jest",
+    "prebuild": "lex build --lexicons ../../lexicons --clear --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema",
+    "build": "tsc --build tsconfig.build.json"
   }
 }

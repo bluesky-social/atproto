@@ -21,7 +21,7 @@ describe('recovery', () => {
     })
     ctx = network.pds.ctx
     sc = network.getSeedClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     await basicSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob

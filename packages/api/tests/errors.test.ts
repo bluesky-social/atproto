@@ -9,7 +9,7 @@ describe('errors', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'known_errors',
     })
-    client = network.pds.getClient()
+    client = network.pds.getAgent()
   })
 
   afterAll(async () => {

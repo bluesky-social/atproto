@@ -5,10 +5,10 @@ import { Redis } from 'ioredis'
 import * as nodemailer from 'nodemailer'
 import * as ui8 from 'uint8arrays'
 import * as undici from 'undici'
-import { AtpAgent } from '@atproto/api'
 import { KmsKeypair, S3BlobStore } from '@atproto/aws'
 import * as crypto from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client } from '@atproto/lex'
 import {
   AccessTokenMode,
   JoseKey,
@@ -66,10 +66,10 @@ export type AppContextOptions = {
   redisScratch?: Redis
   crawlers: Crawlers
   bskyAppView?: BskyAppView
-  moderationAgent?: AtpAgent
-  reportingAgent?: AtpAgent
-  entrywayAgent?: AtpAgent
-  entrywayAdminAgent?: AtpAgent
+  moderationClient?: Client
+  reportingClient?: Client
+  entrywayClient?: Client
+  entrywayAdminClient?: Client
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
@@ -93,10 +93,10 @@ export class AppContext {
   public redisScratch?: Redis
   public crawlers: Crawlers
   public bskyAppView?: BskyAppView
-  public moderationAgent: AtpAgent | undefined
-  public reportingAgent: AtpAgent | undefined
-  public entrywayAgent: AtpAgent | undefined
-  public entrywayAdminAgent: AtpAgent | undefined
+  public moderationClient: Client | undefined
+  public reportingClient: Client | undefined
+  public entrywayClient: Client | undefined
+  public entrywayAdminClient: Client | undefined
   public proxyAgent: undici.Dispatcher
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
@@ -119,10 +119,10 @@ export class AppContext {
     this.redisScratch = opts.redisScratch
     this.crawlers = opts.crawlers
     this.bskyAppView = opts.bskyAppView
-    this.moderationAgent = opts.moderationAgent
-    this.reportingAgent = opts.reportingAgent
-    this.entrywayAgent = opts.entrywayAgent
-    this.entrywayAdminAgent = opts.entrywayAdminAgent
+    this.moderationClient = opts.moderationClient
+    this.reportingClient = opts.reportingClient
+    this.entrywayClient = opts.entrywayClient
+    this.entrywayAdminClient = opts.entrywayAdminClient
     this.proxyAgent = opts.proxyAgent
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
@@ -201,23 +201,29 @@ export class AppContext {
       ? new BskyAppView(cfg.bskyAppView)
       : undefined
 
-    const moderationAgent = cfg.modService
-      ? new AtpAgent({ service: cfg.modService.url })
+    const moderationClient = cfg.modService
+      ? new Client({ service: cfg.modService.url })
       : undefined
-    const reportingAgent = cfg.reportService
-      ? new AtpAgent({ service: cfg.reportService.url })
+    const reportingClient = cfg.reportService
+      ? new Client({ service: cfg.reportService.url })
       : undefined
-    const entrywayAgent = cfg.entryway
-      ? new AtpAgent({ service: cfg.entryway.url })
+    const entrywayClient = cfg.entryway
+      ? new Client({ service: cfg.entryway.url })
       : undefined
-    let entrywayAdminAgent: AtpAgent | undefined
-    if (cfg.entryway && secrets.entrywayAdminToken) {
-      entrywayAdminAgent = new AtpAgent({ service: cfg.entryway.url })
-      entrywayAdminAgent.api.setHeader(
-        'authorization',
-        basicAuthHeader('admin', secrets.entrywayAdminToken),
-      )
-    }
+    const entrywayAdminClient =
+      cfg.entryway && secrets.entrywayAdminToken
+        ? new Client(
+            { service: cfg.entryway.url },
+            {
+              headers: {
+                authorization: basicAuthHeader(
+                  'admin',
+                  secrets.entrywayAdminToken,
+                ),
+              },
+            },
+          )
+        : undefined
 
     const jwtSecretKey = createSecretKeyObject(secrets.jwtSecret)
     const jwtPublicKey = cfg.entryway
@@ -404,8 +410,8 @@ export class AppContext {
         })
       : undefined
 
-    const scopeRefGetter = entrywayAgent
-      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
+    const scopeRefGetter = entrywayClient
+      ? new ScopeReferenceGetter(entrywayClient, redisScratch)
       : undefined
 
     const oauthVerifier: OAuthVerifier =
@@ -464,10 +470,10 @@ export class AppContext {
       redisScratch,
       crawlers,
       bskyAppView,
-      moderationAgent,
-      reportingAgent,
-      entrywayAgent,
-      entrywayAdminAgent,
+      moderationClient,
+      reportingClient,
+      entrywayClient,
+      entrywayAdminClient,
       proxyAgent,
       safeFetch,
       authVerifier,

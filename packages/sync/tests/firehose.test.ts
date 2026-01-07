@@ -5,8 +5,7 @@ import {
   mockResolvers,
 } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
-import { Firehose, FirehoseOptions, MemoryRunner } from '../src'
-import { Create, Event } from '../src/events'
+import { Create, Event, Firehose, FirehoseOptions, MemoryRunner } from '..'
 
 describe('firehose', () => {
   let network: TestNetworkNoAppView

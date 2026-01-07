@@ -1,16 +1,15 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectStatus'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.getSubjectStatus({
+  server.add(com.atproto.admin.getSubjectStatus, {
     auth: ctx.authVerifier.moderator,
     handler: async ({ params }) => {
       const { did, uri, blob } = params
-      let body: OutputSchema | null = null
+      let body: com.atproto.admin.getSubjectStatus.OutputBody | null = null
       if (blob) {
         if (!did) {
           throw new InvalidRequestError(
@@ -18,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
         const takedown = await ctx.actorStore.read(did, (store) =>
-          store.repo.blob.getBlobTakedownStatus(CID.parse(blob)),
+          store.repo.blob.getBlobTakedownStatus(parseCid(blob)),
         )
         if (takedown) {
           body = {
@@ -69,7 +68,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Subject not found', 'NotFound')
       }
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body,
       }
     },

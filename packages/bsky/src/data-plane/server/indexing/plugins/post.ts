@@ -1,5 +1,5 @@
 import { Insertable, Selectable, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
@@ -77,7 +77,7 @@ const REPLY_NOTIF_DEPTH = 5
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: PostRecord,
   timestamp: string,
 ): Promise<IndexedPost | null> => {

@@ -54,8 +54,8 @@ describe('Ipld vals', () => {
     assert(ctx.input?.body, 'expected input body')
     assert(typeof ctx.input.body === 'object', 'expected input body')
 
-    const asCid = CID.asCID(ctx.input.body['cid'])
-    if (!(asCid instanceof CID)) {
+    const ifCid = CID.asCID(ctx.input.body['cid'])
+    if (!(ifCid instanceof CID)) {
       throw new Error('expected cid')
     }
     const bytes = ctx.input.body['bytes']

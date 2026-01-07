@@ -14,8 +14,9 @@ import {
   AtpAgent,
   ComAtprotoModerationCreateReport,
 } from '@atproto/api'
+import { Client } from '@atproto/lex'
 import { BlobRef } from '@atproto/lexicon'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString } from '@atproto/syntax'
 import { TestNetworkNoAppView } from '../network-no-appview'
 
 // Makes it simple to create data via the XRPC client,
@@ -44,18 +45,18 @@ export class RecordRef {
     this.cid = CID.parse(cid.toString())
   }
 
-  get raw(): { uri: string; cid: string } {
+  get raw() {
     return {
       uri: this.uri.toString(),
       cid: this.cid.toString(),
     }
   }
 
-  get uriStr(): string {
+  get uriStr() {
     return this.uri.toString()
   }
 
-  get cidStr(): string {
+  get cidStr() {
     return this.cid.toString()
   }
 }
@@ -120,11 +121,12 @@ export class SeedClient<
 
   verifications: Record<string, Record<string, AtUri>>
 
-  dids: Record<string, string>
+  dids: Record<string, DidString>
 
   constructor(
     public network: Network,
     public agent: AtpAgent,
+    public client: Client,
   ) {
     this.accounts = {}
     this.profiles = {}
@@ -153,7 +155,7 @@ export class SeedClient<
   ) {
     const { data: account } =
       await this.agent.com.atproto.server.createAccount(params)
-    this.dids[shortName] = account.did
+    this.dids[shortName] = account.did as DidString
     this.accounts[account.did] = {
       ...account,
       email: params.email,

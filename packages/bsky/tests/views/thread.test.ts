@@ -25,7 +25,7 @@ describe('appview thread views', () => {
       dbPostgresSchema: 'bsky_views_thread',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

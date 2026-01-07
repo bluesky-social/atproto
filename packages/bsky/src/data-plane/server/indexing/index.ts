@@ -1,8 +1,8 @@
 import { Selectable, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
 import { IdResolver, getPds } from '@atproto/identity'
+import { Cid, parseCid } from '@atproto/lex-data'
 import { ValidationError } from '@atproto/lexicon'
 import {
   VerifiedRepo,
@@ -96,7 +96,7 @@ export class IndexingService {
 
   async indexRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
@@ -230,15 +230,15 @@ export class IndexingService {
       (acc, cur) => {
         acc[cur.uri] = {
           uri: new AtUri(cur.uri),
-          cid: CID.parse(cur.cid),
+          cid: parseCid(cur.cid),
         }
         return acc
       },
-      {} as Record<string, { uri: AtUri; cid: CID }>,
+      {} as Record<string, { uri: AtUri; cid: Cid }>,
     )
   }
 
-  async setCommitLastSeen(did: string, commit: CID, rev: string) {
+  async setCommitLastSeen(did: string, commit: Cid, rev: string) {
     const { ref } = this.db.db.dynamic
     await this.db.db
       .insertInto('actor_sync')
@@ -384,7 +384,7 @@ export class IndexingService {
 
 type UriAndCid = {
   uri: AtUri
-  cid: CID
+  cid: Cid
 }
 
 type IndexOp =

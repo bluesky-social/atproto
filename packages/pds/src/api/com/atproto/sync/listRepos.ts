@@ -1,11 +1,12 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { DidString } from '@atproto/syntax'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
 import { Cursor, GenericKeyset, paginate } from '../../../../db/pagination'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.listRepos(async ({ params }) => {
+  server.add(com.atproto.sync.listRepos, async ({ params }) => {
     const { limit, cursor } = params
     const db = ctx.accountManager.db
     const { ref } = db.db.dynamic
@@ -29,10 +30,10 @@ export default function (server: Server, ctx: AppContext) {
       tryIndex: true,
     })
     const res = await builder.execute()
-    const repos = res.map((row) => {
+    const repos = res.map((row): com.atproto.sync.listRepos.Repo => {
       const { active, status } = formatAccountStatus(row)
       return {
-        did: row.did,
+        did: row.did as DidString,
         head: row.head,
         rev: row.rev ?? '',
         active,
@@ -40,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
       }
     })
     return {
-      encoding: 'application/json',
+      encoding: 'application/json' as const,
       body: {
         cursor: keyset.packFromResult(res),
         repos,

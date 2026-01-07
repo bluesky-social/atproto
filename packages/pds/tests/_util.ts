@@ -1,14 +1,11 @@
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
-import { CID } from 'multiformats/cid'
 import { ToolsOzoneModerationDefs } from '@atproto/api'
-import { lexToJson } from '@atproto/lexicon'
+import { isCidString } from '@atproto/lex'
+import { isCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import {
-  FeedViewPost,
-  isReasonRepost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
+import { app } from '../src/lexicons.js'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -18,11 +15,9 @@ export const forSnapshot = (obj: unknown) => {
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
   const unknown = { [kTake]: 'unknown' }
-  const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
-  return mapLeafValues(toWalk, (item) => {
-    const asCid = CID.asCID(item)
-    if (asCid !== null) {
-      return take(cids, asCid.toString())
+  return mapLeafValues(obj, (item) => {
+    if (isCid(item)) {
+      return take(cids, item.toString())
     }
     if (typeof item !== 'string') {
       return item
@@ -84,14 +79,7 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+::pds-public-url-/)) {
       return '0000000000000::invite-code'
     }
-    let isCid: boolean
-    try {
-      CID.parse(str)
-      isCid = true
-    } catch (_err) {
-      isCid = false
-    }
-    if (isCid) {
+    if (isCidString(str)) {
       return take(cids, str)
     }
     return item
@@ -100,8 +88,8 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-export const getOriginator = (item: FeedViewPost) => {
-  if (isReasonRepost(item.reason)) {
+export const getOriginator = (item: app.bsky.feed.defs.FeedViewPost) => {
+  if (app.bsky.feed.defs.reasonRepost.$matches(item.reason)) {
     return item.reason.by.did
   } else {
     return item.post.author.did

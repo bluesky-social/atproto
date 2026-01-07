@@ -1,5 +1,5 @@
-import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
+import { Cid as Cid } from '@atproto/lex-data'
 import { jsonToLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../lexicon/lexicons'
@@ -112,10 +112,10 @@ export const parseString = (str: string | undefined): string | undefined => {
   return str && str.length > 0 ? str : undefined
 }
 
-export const parseCid = (cidStr: string | undefined): CID | undefined => {
+export const parseCid = (cidStr: string | undefined): Cid | undefined => {
   if (!cidStr || cidStr.length === 0) return
   try {
-    return CID.parse(cidStr)
+    return parseCid(cidStr)
   } catch {
     return
   }

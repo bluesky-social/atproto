@@ -1,6 +1,5 @@
-import { CID } from 'multiformats/cid'
 import { TID } from '@atproto/common'
-import { BlobRef, LexValue, RepoRecord } from '@atproto/lexicon'
+import { LexMap, enumBlobRefs } from '@atproto/lex-data'
 import {
   BlockMap,
   WriteOpAction,
@@ -9,13 +8,13 @@ import {
   verifyDiff,
 } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.importRepo({
+  server.add(com.atproto.repo.importRepo, {
     opts: {
       blobLimit: ctx.cfg.service.maxImportSize,
     },
@@ -70,7 +69,7 @@ export default function (server: Server, ctx: AppContext) {
           if (write.action === WriteOpAction.Delete) {
             await store.record.deleteRecord(uri)
           } else {
-            let parsedRecord: RepoRecord
+            let parsedRecord: LexMap
             try {
               // @NOTE getAndParseRecord returns a promise for historical
               // reasons but it's internal processing is actually synchronous.
@@ -90,35 +89,11 @@ export default function (server: Server, ctx: AppContext) {
               rev,
               now,
             )
-            const recordBlobs = findBlobRefs(parsedRecord)
+            const recordBlobs = Array.from(enumBlobRefs(parsedRecord))
             await store.repo.blob.insertBlobs(uri.toString(), recordBlobs)
           }
         }
       })
     },
   })
-}
-
-export const findBlobRefs = (val: LexValue, layer = 0): BlobRef[] => {
-  if (layer > 32) {
-    return []
-  }
-  // walk arrays
-  if (Array.isArray(val)) {
-    return val.flatMap((item) => findBlobRefs(item, layer + 1))
-  }
-  // objects
-  if (val && typeof val === 'object') {
-    // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
-    if (val instanceof BlobRef) {
-      return [val]
-    }
-    // retain cids & bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
-      return []
-    }
-    return Object.values(val).flatMap((item) => findBlobRefs(item, layer + 1))
-  }
-  // pass through
-  return []
 }

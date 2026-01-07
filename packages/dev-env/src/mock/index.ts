@@ -1,6 +1,6 @@
 import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, AtUriString } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
 import * as seedThreadV2 from '../seed/thread-v2'
 import { postTexts, replyTexts } from './data'
@@ -31,7 +31,7 @@ export async function generateMockSetup(env: TestNetwork) {
     throw new Error('Not found')
   }
 
-  const loggedOut = env.pds.getClient()
+  const loggedOut = env.pds.getAgent()
 
   const users = [
     {
@@ -53,17 +53,17 @@ export async function generateMockSetup(env: TestNetwork) {
 
   const userAgents = await Promise.all(
     users.map(async (user, i) => {
-      const client: AtpAgent = env.pds.getClient()
-      await client.createAccount(user)
-      client.assertAuthenticated()
-      await client.app.bsky.actor.profile.create(
-        { repo: client.did },
+      const agent: AtpAgent = env.pds.getAgent()
+      await agent.createAccount(user)
+      agent.assertAuthenticated()
+      await agent.app.bsky.actor.profile.create(
+        { repo: agent.did },
         {
           displayName: ucfirst(user.handle).slice(0, -5),
           description: `Test user ${i}`,
         },
       )
-      return client
+      return agent
     }),
   )
 
@@ -249,7 +249,7 @@ export async function generateMockSetup(env: TestNetwork) {
     [fg1Uri.toString()]: async () => {
       const feed = posts
         .filter(() => rand(2) === 0)
-        .map((post) => ({ post: post.uri }))
+        .map((post) => ({ post: post.uri as AtUriString }))
       return {
         encoding: 'application/json',
         body: {
@@ -303,7 +303,7 @@ export async function generateMockSetup(env: TestNetwork) {
     [fg2Uri.toString()]: async () => {
       const feed = posts
         .filter(() => rand(2) === 0)
-        .map((post) => ({ post: post.uri }))
+        .map((post) => ({ post: post.uri as AtUriString }))
       return {
         encoding: 'application/json',
         body: {
@@ -342,7 +342,7 @@ export async function generateMockSetup(env: TestNetwork) {
     [fg3Uri.toString()]: async () => {
       const feed = posts
         .filter(() => rand(2) === 0)
-        .map((post) => ({ post: post.uri }))
+        .map((post) => ({ post: post.uri as AtUriString }))
       return {
         encoding: 'application/json',
         body: {
@@ -375,7 +375,7 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // create a labeler account
   {
-    const labeler = env.pds.getClient()
+    const labeler = env.pds.getAgent()
     const res = await labeler.createAccount({
       email: 'labeler@test.com',
       handle: 'labeler.test',

@@ -1,17 +1,12 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 import { WriteOpAction } from '@atproto/repo'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import {
-  CreateResult,
-  DeleteResult,
-  HandlerInput,
-  UpdateResult,
-  isCreate,
-  isDelete,
-  isUpdate,
-} from '../../../../lexicon/types/com/atproto/repo/applyWrites'
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -22,12 +17,16 @@ import {
   prepareUpdate,
 } from '../../../../repo'
 
-const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
+const ratelimitPoints = ({
+  input,
+}: {
+  input: com.atproto.repo.applyWrites.Input
+}) => {
   let points = 0
   for (const op of input.body.writes) {
-    if (isCreate(op)) {
+    if (com.atproto.repo.applyWrites.create.$isTypeOf(op)) {
       points += 3
-    } else if (isUpdate(op)) {
+    } else if (com.atproto.repo.applyWrites.update.$isTypeOf(op)) {
       points += 2
     } else {
       points += 1
@@ -37,7 +36,7 @@ const ratelimitPoints = ({ input }: { input: HandlerInput }) => {
 }
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.applyWrites({
+  server.add(com.atproto.repo.applyWrites, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -87,9 +86,30 @@ export default function (server: Server, ctx: AppContext) {
       if (auth.credentials.type === 'oauth') {
         // @NOTE Unlike "importRepo", we do not require "action" = "*" here.
         for (const [action, collections] of [
-          ['create', new Set(writes.filter(isCreate).map((w) => w.collection))],
-          ['update', new Set(writes.filter(isUpdate).map((w) => w.collection))],
-          ['delete', new Set(writes.filter(isDelete).map((w) => w.collection))],
+          [
+            'create',
+            new Set(
+              writes
+                .filter((v) => com.atproto.repo.applyWrites.create.$isTypeOf(v))
+                .map((w) => w.collection),
+            ),
+          ],
+          [
+            'update',
+            new Set(
+              writes
+                .filter((v) => com.atproto.repo.applyWrites.update.$isTypeOf(v))
+                .map((w) => w.collection),
+            ),
+          ],
+          [
+            'delete',
+            new Set(
+              writes
+                .filter((v) => com.atproto.repo.applyWrites.delete.$isTypeOf(v))
+                .map((w) => w.collection),
+            ),
+          ],
         ] as const) {
           for (const collection of collections) {
             auth.credentials.permissions.assertRepo({ action, collection })
@@ -102,7 +122,7 @@ export default function (server: Server, ctx: AppContext) {
       try {
         preparedWrites = await Promise.all(
           writes.map(async (write) => {
-            if (isCreate(write)) {
+            if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
               return prepareCreate({
                 did,
                 collection: write.collection,
@@ -110,7 +130,7 @@ export default function (server: Server, ctx: AppContext) {
                 rkey: write.rkey,
                 validate,
               })
-            } else if (isUpdate(write)) {
+            } else if (com.atproto.repo.applyWrites.update.$isTypeOf(write)) {
               return prepareUpdate({
                 did,
                 collection: write.collection,
@@ -118,7 +138,7 @@ export default function (server: Server, ctx: AppContext) {
                 rkey: write.rkey,
                 validate,
               })
-            } else if (isDelete(write)) {
+            } else if (com.atproto.repo.applyWrites.delete.$isTypeOf(write)) {
               return prepareDelete({
                 did,
                 collection: write.collection,
@@ -138,7 +158,7 @@ export default function (server: Server, ctx: AppContext) {
         throw err
       }
 
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 
       const commit = await ctx.actorStore.transact(did, async (actorTxn) => {
         const commit = await actorTxn.repo
@@ -165,7 +185,7 @@ export default function (server: Server, ctx: AppContext) {
         })
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           commit: {
             cid: commit.cid.toString(),
@@ -181,23 +201,19 @@ export default function (server: Server, ctx: AppContext) {
 const writeToOutputResult = (write: PreparedWrite) => {
   switch (write.action) {
     case WriteOpAction.Create:
-      return {
-        $type: 'com.atproto.repo.applyWrites#createResult',
+      return com.atproto.repo.applyWrites.createResult.$build({
         cid: write.cid.toString(),
         uri: write.uri.toString(),
         validationStatus: write.validationStatus,
-      } satisfies CreateResult
+      })
     case WriteOpAction.Update:
-      return {
-        $type: 'com.atproto.repo.applyWrites#updateResult',
+      return com.atproto.repo.applyWrites.updateResult.$build({
         cid: write.cid.toString(),
         uri: write.uri.toString(),
         validationStatus: write.validationStatus,
-      } satisfies UpdateResult
+      })
     case WriteOpAction.Delete:
-      return {
-        $type: 'com.atproto.repo.applyWrites#deleteResult',
-      } satisfies DeleteResult
+      return com.atproto.repo.applyWrites.deleteResult.$build({})
     default:
       throw new Error(`Unrecognized action: ${write}`)
   }

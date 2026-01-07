@@ -111,7 +111,13 @@ export type HandlerContext<
   I extends Input = Input,
 > = MethodAuthContext<P> & {
   auth: A
-  input: I
+  // input: I
+  input: I extends HandlerInput
+    ? {
+        encoding: I['encoding']
+        body: I['body']
+      }
+    : I
   resetRouteRateLimits: () => Promise<void>
 }
 
@@ -173,6 +179,19 @@ export type RouteOptions = {
   textLimit?: number
 }
 
+export type MethodAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+> = MethodAuthVerifier<Extract<A, AuthResult>, P>
+
+export type MethodRateLimit<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+> =
+  | RateLimitOpts<HandlerContext<A, P, I>>
+  | RateLimitOpts<HandlerContext<A, P, I>>[]
+
 export type MethodConfig<
   A extends Auth = Auth,
   P extends Params = Params,
@@ -180,11 +199,21 @@ export type MethodConfig<
   O extends Output = Output,
 > = {
   handler: MethodHandler<A, P, I, O>
-  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P>
+  auth?: MethodAuth<A, P>
   opts?: RouteOptions
-  rateLimit?:
-    | RateLimitOpts<HandlerContext<A, P, I>>
-    | RateLimitOpts<HandlerContext<A, P, I>>[]
+  rateLimit?: MethodRateLimit<A, P, I>
+}
+
+export type MethodConfigWithAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = {
+  handler: MethodHandler<A, P, I, O>
+  auth: MethodAuth<A, P>
+  opts?: RouteOptions
+  rateLimit?: MethodRateLimit<A, P, I>
 }
 
 export type MethodConfigOrHandler<

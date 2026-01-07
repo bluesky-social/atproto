@@ -1,5 +1,5 @@
 import { Insertable, Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
@@ -18,7 +18,7 @@ type IndexedLike = Selectable<DatabaseSchemaType['like']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Like.Record,
   timestamp: string,
 ): Promise<IndexedLike | null> => {

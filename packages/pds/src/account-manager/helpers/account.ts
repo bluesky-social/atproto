@@ -1,6 +1,6 @@
 import { DAY } from '@atproto/common'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { com } from '../../lexicons/index.js'
 import { AccountDb, ActorEntry } from '../db'
 
 export class UserAlreadyExistsError extends Error {}
@@ -232,7 +232,10 @@ export const setEmailConfirmedAt = async (
 export const getAccountAdminStatus = async (
   db: AccountDb,
   did: string,
-): Promise<{ takedown: StatusAttr; deactivated: StatusAttr } | null> => {
+): Promise<{
+  takedown: com.atproto.admin.defs.StatusAttr
+  deactivated: com.atproto.admin.defs.StatusAttr
+} | null> => {
   const res = await db.db
     .selectFrom('actor')
     .select(['takedownRef', 'deactivatedAt'])
@@ -249,7 +252,7 @@ export const getAccountAdminStatus = async (
 export const updateAccountTakedownStatus = async (
   db: AccountDb,
   did: string,
-  takedown: StatusAttr,
+  takedown: com.atproto.admin.defs.StatusAttr,
 ) => {
   const takedownRef = takedown.applied
     ? takedown.ref ?? new Date().toISOString()

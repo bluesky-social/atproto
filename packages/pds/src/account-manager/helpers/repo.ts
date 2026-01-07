@@ -1,10 +1,10 @@
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AccountDb } from '../db'
 
 export const updateRoot = async (
   db: AccountDb,
   did: string,
-  cid: CID,
+  cid: Cid,
   rev: string,
 ) => {
   // @TODO balance risk of a race in the case of a long retry

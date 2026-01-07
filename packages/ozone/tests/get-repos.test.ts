@@ -27,7 +27,7 @@ describe('admin get multiple repos', () => {
     })
     ozone = network.ozone
     agent = ozone.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

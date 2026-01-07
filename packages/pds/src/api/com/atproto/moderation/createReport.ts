@@ -1,16 +1,16 @@
-import { AtpAgent } from '@atproto/api'
+import { Client } from '@atproto/lex'
+import { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { com } from '../../../../lexicons/index.js'
 import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.moderation.createReport({
+  server.add(com.atproto.moderation.createReport, {
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.Takendown],
       authorize: (permissions, { req }) => {
-        const lxm = ids.ComAtprotoModerationCreateReport
+        const lxm = com.atproto.moderation.createReport.$lxm
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
@@ -19,22 +19,22 @@ export default function (server: Server, ctx: AppContext) {
       const { url, did: aud } = await parseProxyInfo(
         ctx,
         req,
-        ids.ComAtprotoModerationCreateReport,
+        com.atproto.moderation.createReport.$lxm,
       )
-      const agent = new AtpAgent({ service: url })
+      const client = new Client({ service: url })
       const serviceAuth = await ctx.serviceAuthHeaders(
         auth.credentials.did,
         aud,
-        ids.ComAtprotoModerationCreateReport,
+        com.atproto.moderation.createReport.$lxm,
       )
-      const res = await agent.com.atproto.moderation.createReport(input.body, {
-        ...serviceAuth,
-        encoding: 'application/json',
-      })
 
       return {
-        encoding: 'application/json',
-        body: res.data,
+        encoding: 'application/json' as const,
+        body: await client.call(
+          com.atproto.moderation.createReport,
+          input.body,
+          serviceAuth,
+        ),
       }
     },
   })

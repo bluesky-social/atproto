@@ -50,7 +50,7 @@ describe('pds author feed views', () => {
       dbPostgresSchema: 'bsky_views_author_feed',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await authorFeedSeed(sc)
     await network.processAll()

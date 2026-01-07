@@ -1,8 +1,8 @@
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
-import { CID } from 'multiformats/cid'
 import { AppBskyFeedGetPostThread } from '@atproto/api'
+import { asCid, parseCid } from '@atproto/lex-data'
 import { lexToJson } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import {
@@ -47,9 +47,9 @@ export const forSnapshot = (obj: unknown) => {
   const unknown = { [kTake]: 'unknown' }
   const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
   return mapLeafValues(toWalk, (item) => {
-    const asCid = CID.asCID(item)
-    if (asCid !== null) {
-      return take(cids, asCid.toString())
+    const cid = asCid(item)
+    if (cid !== null) {
+      return take(cids, cid.toString())
     }
     if (typeof item !== 'string') {
       return item
@@ -100,7 +100,7 @@ export const forSnapshot = (obj: unknown) => {
     }
     let isCid: boolean
     try {
-      CID.parse(str)
+      parseCid(str)
       isCid = true
     } catch (_err) {
       isCid = false

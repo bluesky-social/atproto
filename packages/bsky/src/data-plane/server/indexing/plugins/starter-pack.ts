@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as StarterPack from '../../../../lexicon/types/app/bsky/graph/starterpack'
@@ -14,7 +14,7 @@ type IndexedStarterPack = Selectable<DatabaseSchemaType['starter_pack']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: StarterPack.Record,
   timestamp: string,
 ): Promise<IndexedStarterPack | null> => {

@@ -1,12 +1,12 @@
-import { CID } from 'multiformats/cid'
-import { BlobRef } from '@atproto/lexicon'
+import { parseCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { Record as ProfileRecord } from '../../../../lexicon/types/app/bsky/actor/profile'
+import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -19,7 +19,7 @@ import {
 } from '../../../../repo'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.putRecord({
+  server.add(com.atproto.repo.putRecord, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -81,9 +81,9 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const uri = AtUri.make(did, collection, rkey)
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
       const swapRecordCid =
-        typeof swapRecord === 'string' ? CID.parse(swapRecord) : swapRecord
+        typeof swapRecord === 'string' ? parseCid(swapRecord) : swapRecord
 
       const { commit, write } = await ctx.actorStore.transact(
         did,
@@ -91,10 +91,6 @@ export default function (server: Server, ctx: AppContext) {
           const current = await actorTxn.record.getRecord(uri, null, true)
           const isUpdate = current !== null
 
-          // @TODO temporaray hack for legacy blob refs in profiles - remove after migrating legacy blobs
-          if (isUpdate && collection === ids.AppBskyActorProfile) {
-            await updateProfileLegacyBlobRef(actorTxn, record)
-          }
           const writeInfo = {
             did,
             collection,
@@ -155,7 +151,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),
@@ -170,27 +166,4 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
-}
-
-// WARNING: mutates object
-const updateProfileLegacyBlobRef = async (
-  actorStore: ActorStoreTransactor,
-  record: Partial<ProfileRecord>,
-) => {
-  if (record.avatar && !record.avatar.original['$type']) {
-    const blob = await actorStore.repo.blob.getBlobMetadata(record.avatar.ref)
-    record.avatar = new BlobRef(
-      record.avatar.ref,
-      record.avatar.mimeType,
-      blob.size,
-    )
-  }
-  if (record.banner && !record.banner.original['$type']) {
-    const blob = await actorStore.repo.blob.getBlobMetadata(record.banner.ref)
-    record.banner = new BlobRef(
-      record.banner.ref,
-      record.banner.mimeType,
-      blob.size,
-    )
-  }
 }

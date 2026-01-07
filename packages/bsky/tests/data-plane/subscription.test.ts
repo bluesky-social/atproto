@@ -17,7 +17,7 @@ describe('sync', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_subscription_repo',
     })
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
   })

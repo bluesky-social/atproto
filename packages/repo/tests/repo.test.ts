@@ -1,4 +1,4 @@
-import { TID } from '@atproto/common'
+import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { RepoContents, WriteOpAction, verifyCommitSig } from '../src'

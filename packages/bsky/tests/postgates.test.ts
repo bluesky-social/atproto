@@ -15,7 +15,7 @@ describe('postgates', () => {
       dbPostgresSchema: 'bsky_tests_postgates',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
 
     const result = await postgatesSeed(sc)

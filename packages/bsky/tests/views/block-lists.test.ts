@@ -20,7 +20,7 @@ describe('pds views with blocking from block lists', () => {
       dbPostgresSchema: 'views_block_lists',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

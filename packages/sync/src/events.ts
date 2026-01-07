@@ -1,6 +1,5 @@
-import type { CID } from 'multiformats/cid'
 import { DidDocument } from '@atproto/identity'
-import type { RepoRecord } from '@atproto/lexicon'
+import { Cid, LexMap } from '@atproto/lex'
 import { BlockMap } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 
@@ -9,7 +8,7 @@ export type Event = CommitEvt | SyncEvt | IdentityEvt | AccountEvt
 export type CommitMeta = {
   seq: number
   time: string
-  commit: CID
+  commit: Cid
   blocks: BlockMap
   rev: string
   uri: AtUri
@@ -22,14 +21,14 @@ export type CommitEvt = Create | Update | Delete
 
 export type Create = CommitMeta & {
   event: 'create'
-  record: RepoRecord
-  cid: CID
+  record: LexMap
+  cid: Cid
 }
 
 export type Update = CommitMeta & {
   event: 'update'
-  record: RepoRecord
-  cid: CID
+  record: LexMap
+  cid: Cid
 }
 
 export type Delete = CommitMeta & {
@@ -41,7 +40,7 @@ export type SyncEvt = {
   time: string
   event: 'sync'
   did: string
-  cid: CID
+  cid: Cid
   rev: string
   blocks: BlockMap
 }
