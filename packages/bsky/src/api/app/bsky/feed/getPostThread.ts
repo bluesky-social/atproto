@@ -1,14 +1,14 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
 import { isNotFoundPost } from '../../../../lexicon/types/app/bsky/feed/defs'
 import {
   OutputSchema,
   QueryParams,
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, // handled in presentation: 3p block-violating replies are turned to #blockedPost, viewer blocks turned to #notFoundPost.
     presentation,
   )
-  server.app.bsky.feed.getPostThread({
+  server.add(app.bsky.feed.getPostThread, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req, res }) => {
       const { viewer, includeTakedowns, include3pBlocks } =

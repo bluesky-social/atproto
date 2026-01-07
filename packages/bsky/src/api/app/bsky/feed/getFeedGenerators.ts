@@ -1,12 +1,13 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getFeedGenerators'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.feed.getFeedGenerators.Params
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
@@ -18,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.feed.getFeedGenerators({
+  server.add(app.bsky.feed.getFeedGenerators, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

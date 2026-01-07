@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import {
@@ -8,8 +8,8 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorFeeds'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.feed.getActorFeeds.Params
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.feed.getActorFeeds({
+  server.add(app.bsky.feed.getActorFeeds, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss

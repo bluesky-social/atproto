@@ -1,11 +1,11 @@
 import AtpAgent from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
 import { TrendingTopic } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.unspecced.getTrendingTopics.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.unspecced.getTrendingTopics({
+  server.add(app.bsky.unspecced.getTrendingTopics, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss

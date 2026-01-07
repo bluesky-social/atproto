@@ -1,13 +1,14 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
 import { MatchAndContactIndex } from '../../../../lexicon/types/app/bsky/contact/defs'
-import { InputSchema } from '../../../../lexicon/types/app/bsky/contact/importContacts'
+import { app } from '../../../../lexicons/index.js'
+type InputSchema = app.bsky.contact.importContacts.InputBody
 import {
   HydrationFnInput,
   SkeletonFnInput,
@@ -26,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, //
     presentation,
   )
-  server.app.bsky.contact.importContacts({
+  server.add(app.bsky.contact.importContacts, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)

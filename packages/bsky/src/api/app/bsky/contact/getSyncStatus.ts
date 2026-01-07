@@ -1,10 +1,11 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import { SyncStatus } from '../../../../lexicon/types/app/bsky/contact/defs'
+import { app } from '../../../../lexicons/index.js'
 import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.contact.getSyncStatus({
+  server.add(app.bsky.contact.getSyncStatus, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       assertRolodexOrThrowUnimplemented(ctx)

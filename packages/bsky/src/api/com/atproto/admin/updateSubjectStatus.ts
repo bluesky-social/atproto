@@ -1,15 +1,19 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import {
   isRepoBlobRef,
   isRepoRef,
 } from '../../../../lexicon/types/com/atproto/admin/defs'
 import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateSubjectStatus({
+  server.add(com.atproto.admin.updateSubjectStatus, {
     auth: ctx.authVerifier.roleOrModService,
     handler: async ({ input, auth }) => {
       const { canPerformTakedown } = ctx.authVerifier.parseCreds(auth)

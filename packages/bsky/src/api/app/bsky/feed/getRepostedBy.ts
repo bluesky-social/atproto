@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
@@ -6,8 +7,8 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getRepostedBy'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.feed.getRepostedBy.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.feed.getRepostedBy({
+  server.add(app.bsky.feed.getRepostedBy, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)

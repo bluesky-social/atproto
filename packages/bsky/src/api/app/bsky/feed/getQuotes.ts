@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
@@ -6,8 +7,8 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getQuotes'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.feed.getQuotes.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrNeedsReview,
     presentation,
   )
-  server.app.bsky.feed.getQuotes({
+  server.add(app.bsky.feed.getQuotes, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
