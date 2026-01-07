@@ -1,4 +1,3 @@
-import { l } from '@atproto/lex'
 import { DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
