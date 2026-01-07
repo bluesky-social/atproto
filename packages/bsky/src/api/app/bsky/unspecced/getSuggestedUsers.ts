@@ -1,6 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { FeatureGates } from '../../../../feature-gates'
 import {
@@ -8,8 +8,7 @@ import {
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getSuggestedUsers'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -26,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrFollows,
     presentation,
   )
-  server.app.bsky.unspecced.getSuggestedUsers({
+  server.add(app.bsky.unspecced.getSuggestedUsers, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -162,7 +161,7 @@ type Context = {
   featureGates: FeatureGates
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.unspecced.getTrendingTopics.Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
   category?: string

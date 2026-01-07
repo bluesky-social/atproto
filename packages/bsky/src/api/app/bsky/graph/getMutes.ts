@@ -1,8 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.getMutes.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -15,7 +16,7 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.graph.getMutes({
+  server.add(app.bsky.graph.getMutes, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

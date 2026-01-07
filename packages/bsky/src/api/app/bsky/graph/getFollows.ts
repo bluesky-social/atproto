@@ -1,13 +1,13 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
   mergeStates,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getFollowers'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.getFollowers.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -20,7 +20,7 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getFollows = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.graph.getFollows({
+  server.add(app.bsky.graph.getFollows, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)

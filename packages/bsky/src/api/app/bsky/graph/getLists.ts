@@ -1,13 +1,13 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
 import {
   CURATELIST,
   MODLIST,
 } from '../../../../lexicon/types/app/bsky/graph/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.getLists.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     filterPurposes,
     presentation,
   )
-  server.app.bsky.graph.getLists({
+  server.add(app.bsky.graph.getLists, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const labelers = ctx.reqLabelers(req)

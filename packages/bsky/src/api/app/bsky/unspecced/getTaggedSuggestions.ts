@@ -1,9 +1,10 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 
 // THIS IS A TEMPORARY UNSPECCED ROUTE
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.unspecced.getTaggedSuggestions({
+  server.add(app.bsky.unspecced.getTaggedSuggestions, {
     handler: async () => {
       const res = await ctx.dataplane.getSuggestedEntities({})
       const suggestions = res.entities.map((entity) => ({

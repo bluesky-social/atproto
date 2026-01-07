@@ -1,10 +1,10 @@
-import { UpstreamFailureError } from '@atproto/xrpc-server'
+import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 import { ActorInfo } from '../../../../proto/bsky_pb'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.ageassurance.getState({
+  server.add(app.bsky.ageassurance.getState, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       const viewer = auth.credentials.iss

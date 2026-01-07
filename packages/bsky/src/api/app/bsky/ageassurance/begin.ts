@@ -5,10 +5,11 @@ import { getAgeAssuranceRegionConfig } from '@atproto/api'
 import {
   InvalidRequestError,
   MethodNotImplementedError,
+  Server,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { InputSchema } from '../../../../lexicon/types/app/bsky/ageassurance/begin'
+type InputSchema = app.bsky.ageassurance.begin.InputBody
+import { app } from '../../../../lexicons/index.js'
 import { httpLogger as log } from '../../../../logger'
 import { ActorInfo } from '../../../../proto/bsky_pb'
 import { AGE_ASSURANCE_CONFIG } from '../../../age-assurance/const'
@@ -26,7 +27,7 @@ import { createLocationString } from '../../../age-assurance/util'
 import { getClientUa } from '../../../kws/util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.ageassurance.begin({
+  server.add(app.bsky.ageassurance.begin, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, input, req }) => {
       if (!ctx.kwsClient) {

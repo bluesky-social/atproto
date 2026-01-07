@@ -1,11 +1,11 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { HeadersMap } from '@atproto/xrpc'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.getSuggestedFollowsByActor.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.graph.getSuggestedFollowsByActor({
+  server.add(app.bsky.graph.getSuggestedFollowsByActor, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss

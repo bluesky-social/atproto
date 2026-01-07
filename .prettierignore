@@ -13,7 +13,6 @@ packages/bsync/src/proto
 
 # codegen
 packages/api/src/client
-packages/bsky/src/lexicon
 packages/ozone/src/lexicon
 
 # @atproto/lex
@@ -22,6 +21,7 @@ packages/lex/*/tests/lexicons
 packages/lexicon-resolver/src/lexicons
 packages/oauth/oauth-client-browser-example/src/lexicons
 packages/pds/src/lexicons
+packages/bsky/src/lexicons
 packages/sync/src/lexicons
 
 # others

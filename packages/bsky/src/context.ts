@@ -2,9 +2,9 @@ import * as plc from '@did-plc/lib'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { Dispatcher } from 'undici'
-import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client } from '@atproto/lex'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
@@ -30,9 +30,9 @@ export class AppContext {
       etcd: Etcd3 | undefined
       dataplane: DataPlaneClient
       dataplaneHostList: HostList
-      searchAgent: AtpAgent | undefined
-      suggestionsAgent: AtpAgent | undefined
-      topicsAgent: AtpAgent | undefined
+      searchClient: Client | undefined
+      suggestionsClient: Client | undefined
+      topicsClient: Client | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -64,16 +64,16 @@ export class AppContext {
     return this.opts.dataplaneHostList
   }
 
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
+  get searchClient(): Client | undefined {
+    return this.opts.searchClient
   }
 
-  get suggestionsAgent(): AtpAgent | undefined {
-    return this.opts.suggestionsAgent
+  get suggestionsClient(): Client | undefined {
+    return this.opts.suggestionsClient
   }
 
-  get topicsAgent(): AtpAgent | undefined {
-    return this.opts.topicsAgent
+  get topicsClient(): Client | undefined {
+    return this.opts.topicsClient
   }
 
   get hydrator(): Hydrator {

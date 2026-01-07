@@ -1,11 +1,12 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActorsTypeahead'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.actor.searchActorsTypeahead.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -23,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.actor.searchActorsTypeahead({
+  server.add(app.bsky.actor.searchActorsTypeahead, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

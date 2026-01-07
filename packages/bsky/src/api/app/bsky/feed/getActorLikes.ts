@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { FeedItem } from '../../../../hydration/feed'
@@ -9,8 +9,8 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getActorLikes'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.feed.getActorLikes.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     noPostBlocks,
     presentation,
   )
-  server.app.bsky.feed.getActorLikes({
+  server.add(app.bsky.feed.getActorLikes, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

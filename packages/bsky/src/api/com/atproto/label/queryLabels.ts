@@ -1,9 +1,9 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.label.queryLabels(async ({ params }) => {
+  server.add(com.atproto.label.queryLabels, async ({ params }) => {
     const { uriPatterns, sources } = params
 
     if (uriPatterns.find((uri) => uri.includes('*'))) {

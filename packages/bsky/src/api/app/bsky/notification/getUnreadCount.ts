@@ -1,8 +1,8 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/getUnreadCount'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.notification.getUnreadCount.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.notification.getUnreadCount({
+  server.add(app.bsky.notification.getUnreadCount, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth, params }) => {
       const viewer = auth.credentials.iss

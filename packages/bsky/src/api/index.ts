@@ -1,5 +1,5 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
-import { Server } from '../lexicon'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getSuggestions from './app/bsky/actor/getSuggestions'

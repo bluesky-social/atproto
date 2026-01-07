@@ -1,8 +1,8 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPack'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.getStarterPack.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.graph.getStarterPack({
+  server.add(app.bsky.graph.getStarterPack, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)

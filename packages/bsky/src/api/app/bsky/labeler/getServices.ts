@@ -1,10 +1,11 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.labeler.getServices({
+  server.add(app.bsky.labeler.getServices, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
       const { dids, detailed } = params

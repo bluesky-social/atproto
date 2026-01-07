@@ -1,14 +1,13 @@
 import AtpAgent, { AtUri } from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getOnboardingSuggestedStarterPacks'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.unspecced.getOnboardingSuggestedStarterPacks({
+  server.add(app.bsky.unspecced.getOnboardingSuggestedStarterPacks, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -142,7 +141,7 @@ type Context = {
   topicsAgent: AtpAgent | undefined
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.unspecced.getTrendingTopics.Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
 }

@@ -1,11 +1,11 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
 import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.notification.listNotifications.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlockOrMutesOrNeedsFiltering,
     presentation,
   )
-  server.app.bsky.notification.listNotifications({
+  server.add(app.bsky.notification.listNotifications, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

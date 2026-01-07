@@ -1,12 +1,13 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/contact/getMatches'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.contact.getMatches.Params
 import {
   HydrationFnInput,
   SkeletonFnInput,
@@ -18,7 +19,7 @@ import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.contact.getMatches({
+  server.add(app.bsky.contact.getMatches, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)

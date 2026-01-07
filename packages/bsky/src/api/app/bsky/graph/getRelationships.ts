@@ -1,8 +1,9 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.graph.getRelationships({
+  server.add(app.bsky.graph.getRelationships, {
     handler: async ({ params }) => {
       const { actor, others = [] } = params
       if (others.length < 1) {

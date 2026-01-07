@@ -1,11 +1,11 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.actor.searchActors({
+  server.add(app.bsky.actor.searchActors, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -111,7 +111,7 @@ type Context = {
   searchAgent?: AtpAgent
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.actor.searchActors.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   dids: string[]

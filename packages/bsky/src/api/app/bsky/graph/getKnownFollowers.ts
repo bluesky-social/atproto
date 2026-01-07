@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getKnownFollowers'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.getKnownFollowers.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.graph.getKnownFollowers({
+  server.add(app.bsky.graph.getKnownFollowers, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

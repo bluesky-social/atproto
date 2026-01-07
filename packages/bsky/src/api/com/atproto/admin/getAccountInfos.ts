@@ -1,10 +1,11 @@
 import { mapDefined } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.getAccountInfos({
+  server.add(com.atproto.admin.getAccountInfos, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth }) => {
       const { dids } = params

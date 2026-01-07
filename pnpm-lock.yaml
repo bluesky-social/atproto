@@ -196,12 +196,12 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
-      '@atproto/lexicon':
-        specifier: workspace:^
-        version: link:../lexicon
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
@@ -274,9 +274,6 @@ importers:
       leo-profanity:
         specifier: ^1.8.0
         version: 1.8.0
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       murmurhash:
         specifier: ^2.0.1
         version: 2.0.1
@@ -311,15 +308,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
-      '@atproto/lex-cli':
-        specifier: workspace:^
-        version: link:../lex-cli
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
-      '@atproto/xrpc':
-        specifier: workspace:^
-        version: link:../xrpc
       '@bufbuild/buf':
         specifier: ^1.28.1
         version: 1.28.1

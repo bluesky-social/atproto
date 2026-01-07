@@ -1,8 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listActivitySubscriptions'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.notification.listActivitySubscriptions.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.notification.listActivitySubscriptions({
+  server.add(app.bsky.notification.listActivitySubscriptions, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss

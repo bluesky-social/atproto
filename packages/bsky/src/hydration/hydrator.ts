@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
 import { ids } from '../lexicon/lexicons'
@@ -1347,7 +1347,7 @@ export class Hydrator {
 // service refs may look like "did:plc:example#service_id". we want to extract the did part "did:plc:example".
 const serviceRefToDid = (serviceRef: string) => {
   const idx = serviceRef.indexOf('#')
-  return idx !== -1 ? serviceRef.slice(0, idx) : serviceRef
+  return (idx !== -1 ? serviceRef.slice(0, idx) : serviceRef) as DidString
 }
 
 const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {

@@ -1,11 +1,12 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/searchStarterPacks'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.graph.searchStarterPacks.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -24,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.graph.searchStarterPacks({
+  server.add(app.bsky.graph.searchStarterPacks, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
