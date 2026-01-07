@@ -31,6 +31,7 @@ describe('age-assurance', () => {
 
       expect(result).toEqual({
         countryCode: 'US',
+        minAccessAge: 13,
         rules: [],
       })
     })
@@ -44,6 +45,7 @@ describe('age-assurance', () => {
       expect(result).toEqual({
         countryCode: 'US',
         regionCode: 'CA',
+        minAccessAge: 13,
         rules: [],
       })
     })
