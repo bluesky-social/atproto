@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.18.11
+
+### Patch Changes
+
+- [#4513](https://github.com/bluesky-social/atproto/pull/4513) [`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `minAccessAge` to Age Assurance regional configs.
+
 ## 0.18.10
 
 ### Patch Changes
