@@ -1,0 +1,113 @@
+{
+  "$type": "com.atproto.lexicon.schema",
+  "lexicon": 1,
+  "id": "com.atproto.lexicon.validateLexicon",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Validates a lexicon schema, and optionally validates data against it. If data is omitted, only validates the schema structure.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "schema"
+          ],
+          "properties": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "lexicon"
+              ],
+              "properties": {
+                "lexicon": {
+                  "type": "integer",
+                  "description": "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system."
+                }
+              },
+              "description": "The lexicon schema to validate (as JSON object)."
+            },
+            "data": {
+              "type": "unknown",
+              "description": "The data to validate against the schema. If omitted, only validates the schema structure."
+            },
+            "flags": {
+              "type": "ref",
+              "ref": "#validateFlags",
+              "description": "Optional flags for validation behavior."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "valid"
+          ],
+          "properties": {
+            "valid": {
+              "type": "boolean",
+              "description": "Whether the schema (and data, if provided) is valid."
+            },
+            "errors": {
+              "type": "array",
+              "description": "Validation errors, if any.",
+              "items": {
+                "type": "ref",
+                "ref": "#validationError"
+              }
+            }
+          }
+        }
+      }
+    },
+    "validateFlags": {
+      "type": "object",
+      "description": "Optional flags to control validation behavior.",
+      "properties": {
+        "allowLegacyBlob": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow legacy blob format (cid field instead of ref)."
+        },
+        "allowLenientDatetime": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow lenient datetime parsing."
+        },
+        "skipExternalRefs": {
+          "type": "boolean",
+          "default": false,
+          "description": "Skip validation of external references (treat them as valid)."
+        },
+        "externalSchemas": {
+          "type": "array",
+          "default": [],
+          "description": "External schemas to use for validation (as JSON objects).",
+          "items": {
+            "type": "unknown"
+          }
+        }
+      }
+    },
+    "validationError": {
+      "type": "object",
+      "description": "A validation error with message and optional path.",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "The error message describing what validation failed."
+        },
+        "path": {
+          "type": "string",
+          "description": "The path to the error location in the data (if applicable)."
+        }
+      }
+    }
+  }
+}
