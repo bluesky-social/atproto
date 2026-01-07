@@ -545,7 +545,8 @@ export class Views {
     if (!actor?.status) return
 
     const { status } = actor
-    const { record, sortedAt } = status
+    const { record, sortedAt, cid } = status
+    const uri = AtUri.make(did, ids.AppBskyActorStatus, 'self').toString()
 
     const minDuration = 5 * MINUTE
     const maxDuration = 4 * HOUR
@@ -564,6 +565,8 @@ export class Views {
     const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
 
     return {
+      uri,
+      cid,
       record: record,
       status: record.status,
       embed: isExternalEmbed(record.embed)
