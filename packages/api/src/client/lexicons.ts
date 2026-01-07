@@ -1345,7 +1345,7 @@ export const schemaDict = {
       configRegion: {
         type: 'object',
         description: 'The Age Assurance configuration for a specific region.',
-        required: ['countryCode', 'rules'],
+        required: ['countryCode', 'minAccessAge', 'rules'],
         properties: {
           countryCode: {
             type: 'string',
@@ -1356,6 +1356,11 @@ export const schemaDict = {
             type: 'string',
             description:
               'The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country.',
+          },
+          minAccessAge: {
+            type: 'integer',
+            description:
+              'The minimum age (as a whole integer) required to use Bluesky in this region.',
           },
           rules: {
             type: 'array',
