@@ -11,6 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       const { includeTakedowns } = ctx.authVerifier.parseCreds(auth)
 
       const actors = await ctx.hydrator.actor.getActors(dids, {
+        includeActorTakedowns: true,
         includeTakedowns: true,
         skipCacheForDids: dids,
       })

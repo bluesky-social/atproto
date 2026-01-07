@@ -228,16 +228,16 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, {
-        includeTakedowns,
+        includeActorTakedowns: ctx.includeActorTakedowns,
+        includeTakedowns: ctx.includeTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
-    if (!includeTakedowns) {
+    if (!ctx.includeActorTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
     return mergeStates(profileViewersState ?? {}, {
@@ -1316,6 +1316,7 @@ export class Hydrator {
     return new HydrateCtx({
       labelers: availableLabelers,
       viewer: vals.viewer,
+      includeActorTakedowns: vals.includeActorTakedowns,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,

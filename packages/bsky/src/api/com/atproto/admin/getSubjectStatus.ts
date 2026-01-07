@@ -49,6 +49,7 @@ export default function (server: Server, ctx: AppContext) {
       } else if (did) {
         const res = (
           await ctx.hydrator.actor.getActors([did], {
+            includeActorTakedowns: true,
             includeTakedowns: true,
             skipCacheForDids: [did],
           })

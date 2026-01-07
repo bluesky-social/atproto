@@ -15,6 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const actors = await ctx.hydrator.actor.getActors([did], {
+        includeActorTakedowns: includeTakedowns,
         includeTakedowns,
       })
       if (!actors.get(did)) {

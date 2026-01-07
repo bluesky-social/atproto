@@ -35,6 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         viewer,
         includeTakedowns,
+        includeActorTakedowns: includeTakedowns,
       })
 
       const result = await getAuthorFeed({ ...params, hydrateCtx }, ctx)
@@ -71,6 +72,7 @@ export const skeleton = async (inputs: {
     throw new InvalidRequestError('Profile not found')
   }
   const actors = await ctx.hydrator.actor.getActors([did], {
+    includeActorTakedowns: params.hydrateCtx.includeActorTakedowns,
     includeTakedowns: params.hydrateCtx.includeTakedowns,
     skipCacheForDids: params.hydrateCtx.skipCacheForViewer,
   })
