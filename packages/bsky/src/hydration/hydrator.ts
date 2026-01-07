@@ -80,7 +80,7 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
-  includeActorTakedowns = this.vals.includeActorTakedowns
+  overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
   featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
@@ -99,7 +99,7 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
-  includeActorTakedowns?: boolean
+  overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
   featureGates?: CheckedFeatureGatesMap
@@ -228,10 +228,17 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
+    /**
+     * Special case here, we want to include takedowns in special cases, like
+     * `getProfile`, since we throw client-facing errors later in the pipeline.
+     */
+    const includeTakedowns =
+      ctx.includeTakedowns || ctx.overrideIncludeTakedownsForActor
+    const includeTakedownsBase = ctx.includeTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, {
         includeTakedowns,
+        includeTakedownsBase,
         skipCacheForDids: ctx.skipCacheForViewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
