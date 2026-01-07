@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import { BackgroundQueue } from '../../background'
@@ -13,7 +13,7 @@ const lexId = lex.ids.AppBskyActorStatus
 const insertFn = async (
   _db: DatabaseSchema,
   uri: AtUri,
-  _cid: CID,
+  _cid: Cid,
   _obj: unknown,
   _timestamp: string,
 ): Promise<unknown | null> => {

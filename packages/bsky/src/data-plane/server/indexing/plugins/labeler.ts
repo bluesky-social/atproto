@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Labeler from '../../../../lexicon/types/app/bsky/labeler/service'
@@ -14,7 +14,7 @@ type IndexedLabeler = Selectable<DatabaseSchemaType['labeler']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Labeler.Record,
   timestamp: string,
 ): Promise<IndexedLabeler | null> => {

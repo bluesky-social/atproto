@@ -1,5 +1,5 @@
 import { Insertable, Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Repost from '../../../../lexicon/types/app/bsky/feed/repost'
@@ -17,7 +17,7 @@ type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Repost.Record,
   timestamp: string,
 ): Promise<IndexedRepost | null> => {

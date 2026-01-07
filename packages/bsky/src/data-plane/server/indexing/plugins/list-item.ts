@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as lex from '../../../../lexicon/lexicons'
@@ -15,7 +15,7 @@ type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: ListItem.Record,
   timestamp: string,
 ): Promise<IndexedListItem | null> => {

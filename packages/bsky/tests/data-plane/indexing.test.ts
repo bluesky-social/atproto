@@ -1,7 +1,6 @@
 /* eslint-disable import/no-deprecated */
 
 import { sql } from 'kysely'
-import { CID } from 'multiformats/cid'
 import {
   AppBskyActorProfile,
   AppBskyFeedLike,
@@ -12,6 +11,7 @@ import {
 } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed, usersSeed } from '@atproto/dev-env'
+import { Cid } from '@atproto/lex-data'
 import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
@@ -31,7 +31,7 @@ describe('indexing', () => {
       dbPostgresSchema: 'bsky_indexing',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     db = network.bsky.db
     await usersSeed(sc)
@@ -657,7 +657,7 @@ describe('indexing', () => {
 
     it('reindexes handle for existing did when forced', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = network.pds.getClient()
+      const sessionAgent = network.pds.getAgent()
       const {
         data: { did },
       } = await sessionAgent.createAccount({
@@ -678,7 +678,7 @@ describe('indexing', () => {
 
     it('handles profile aggregations out of order', async () => {
       const now = new Date().toISOString()
-      const agent = network.pds.getClient()
+      const agent = network.pds.getAgent()
       await agent.createAccount({
         email: 'did3@test.com',
         handle: 'did3.test',
@@ -789,7 +789,7 @@ async function prepareCreate(opts: {
   rkey?: string
   record: unknown
   timestamp?: string
-}): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string]> {
+}): Promise<[AtUri, Cid, unknown, WriteOpAction.Create, string]> {
   const rkey = opts.rkey ?? TID.nextStr()
   return [
     AtUri.make(opts.did, opts.collection, rkey),
@@ -806,7 +806,7 @@ async function prepareUpdate(opts: {
   rkey: string
   record: unknown
   timestamp?: string
-}): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string]> {
+}): Promise<[AtUri, Cid, unknown, WriteOpAction.Update, string]> {
   return [
     AtUri.make(opts.did, opts.collection, opts.rkey),
     await cidForCbor(opts.record),

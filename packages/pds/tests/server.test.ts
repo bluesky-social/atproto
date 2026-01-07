@@ -21,7 +21,7 @@ describe('server', () => {
         version: '0.0.0',
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

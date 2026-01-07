@@ -1,32 +1,34 @@
 /* eslint-disable import/no-deprecated */
 
-import { CID } from 'multiformats/cid'
-import { AtpAgent } from '@atproto/api'
-import { TID, cidForCbor } from '@atproto/common'
+import { TID } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client, asNsidString, asRecordKeyString } from '@atproto/lex'
+import { cidForLex } from '@atproto/lex-cbor'
+import { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { MemoryBlockstore } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString, NsidString } from '@atproto/syntax'
+import { com } from '../../src/lexicons.js'
 
 describe('repo sync', () => {
   let network: TestNetworkNoAppView
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
-  let did: string
+  let did: DidString
   let signingKey: Keypair
 
   const repoData: repo.RepoContents = {}
   const uris: AtUri[] = []
   const storage = new MemoryBlockstore()
-  let currRoot: CID | undefined
+  let currRoot: Cid | undefined
   let currRev: string | undefined
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'repo_sync',
     })
-    agent = network.pds.getClient()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
@@ -52,8 +54,8 @@ describe('repo sync', () => {
       uris.push(uri)
     }
 
-    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
-    const car = await repo.readCarWithRoot(carRes.data)
+    const carRes = await client.call(com.atproto.sync.getRepo, { did })
+    const car = await repo.readCarWithRoot(carRes)
     const synced = await repo.verifyRepo(
       car.blocks,
       car.root,
@@ -88,8 +90,8 @@ describe('repo sync', () => {
       delete repoData[uri.collection][uri.rkey]
     }
 
-    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
-    const car = await repo.readCarWithRoot(carRes.data)
+    const carRes = await client.call(com.atproto.sync.getRepo, { did })
+    const car = await repo.readCarWithRoot(carRes)
     const currRepo = await repo.Repo.load(storage, currRoot)
     const synced = await repo.verifyDiff(
       currRepo,
@@ -109,8 +111,8 @@ describe('repo sync', () => {
   })
 
   it('syncs repo status', async () => {
-    const status = await agent.api.com.atproto.sync.getRepoStatus({ did })
-    expect(status.data).toEqual({
+    const status = await client.call(com.atproto.sync.getRepoStatus, { did })
+    expect(status).toEqual({
       did,
       active: true,
       rev: currRev,
@@ -118,8 +120,8 @@ describe('repo sync', () => {
   })
 
   it('syncs latest repo commit', async () => {
-    const commit = await agent.api.com.atproto.sync.getLatestCommit({ did })
-    expect(commit.data.cid).toEqual(currRoot?.toString())
+    const commit = await client.call(com.atproto.sync.getLatestCommit, { did })
+    expect(commit.cid).toEqual(currRoot?.toString())
   })
 
   it('syncs `since` a given rev', async () => {
@@ -133,11 +135,11 @@ describe('repo sync', () => {
     repoData[uri.collection][uri.rkey] = obj
     uris.push(uri)
 
-    const carRes = await agent.api.com.atproto.sync.getRepo({
+    const carRes = await client.call(com.atproto.sync.getRepo, {
       did,
       since: repoBefore.commit.rev,
     })
-    const car = await repo.readCarWithRoot(carRes.data)
+    const car = await repo.readCarWithRoot(carRes)
     expect(car.blocks.size).toBeLessThan(10) // should only contain new blocks
     const synced = await repo.verifyDiff(
       repoBefore,
@@ -156,27 +158,27 @@ describe('repo sync', () => {
   })
 
   it('sync a record proof', async () => {
-    const collection = Object.keys(repoData)[0]
+    const collection = Object.keys(repoData)[0] as NsidString
     const rkey = Object.keys(repoData[collection])[0]
-    const car = await agent.api.com.atproto.sync.getRecord({
+    const car = await client.call(com.atproto.sync.getRecord, {
       did,
       collection,
       rkey,
     })
     const records = await repo.verifyRecords(
-      new Uint8Array(car.data),
+      new Uint8Array(car),
       did,
       signingKey.did(),
     )
     const claim = {
       collection,
       rkey,
-      cid: await cidForCbor(repoData[collection][rkey]),
+      cid: await cidForLex(repoData[collection][rkey]),
     }
     expect(records.length).toBe(1)
-    expect(await cidForCbor(records[0].record)).toEqual(claim.cid)
+    expect(await cidForLex(records[0].record)).toEqual(claim.cid)
     const result = await repo.verifyProofs(
-      new Uint8Array(car.data),
+      new Uint8Array(car),
       [claim],
       did,
       signingKey.did(),
@@ -186,9 +188,9 @@ describe('repo sync', () => {
   })
 
   it('sync a proof of non-existence', async () => {
-    const collection = Object.keys(repoData)[0]
+    const collection = asNsidString(Object.keys(repoData)[0])
     const rkey = TID.nextStr() // rkey that doesn't exist
-    const car = await agent.api.com.atproto.sync.getRecord({
+    const car = await client.call(com.atproto.sync.getRecord, {
       did,
       collection,
       rkey,
@@ -199,7 +201,7 @@ describe('repo sync', () => {
       cid: null,
     }
     const result = await repo.verifyProofs(
-      new Uint8Array(car.data),
+      new Uint8Array(car),
       [claim],
       did,
       signingKey.did(),
@@ -210,7 +212,8 @@ describe('repo sync', () => {
 
   describe('repo takedown', () => {
     beforeAll(async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
+      await client.call(
+        com.atproto.admin.updateSubjectStatus,
         {
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -219,14 +222,14 @@ describe('repo sync', () => {
           takedown: { applied: true },
         },
         {
-          encoding: 'application/json',
           headers: network.pds.adminAuthHeaders(),
         },
       )
     })
 
     afterAll(async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
+      await client.call(
+        com.atproto.admin.updateSubjectStatus,
         {
           subject: {
             $type: 'com.atproto.admin.defs#repoRef',
@@ -235,15 +238,14 @@ describe('repo sync', () => {
           takedown: { applied: false },
         },
         {
-          encoding: 'application/json',
           headers: network.pds.adminAuthHeaders(),
         },
       )
     })
 
     it('returns takendown status', async () => {
-      const res = await agent.api.com.atproto.sync.getRepoStatus({ did })
-      expect(res.data).toEqual({
+      const res = await client.call(com.atproto.sync.getRepoStatus, { did })
+      expect(res).toEqual({
         did,
         active: false,
         status: 'takendown',
@@ -251,24 +253,26 @@ describe('repo sync', () => {
     })
 
     it('lists as takendown in listRepos', async () => {
-      const res = await agent.api.com.atproto.sync.listRepos()
-      const found = res.data.repos.find((r) => r.did === did)
+      const res = await client.call(com.atproto.sync.listRepos)
+      const found = res.repos.find((r) => r.did === did)
       expect(found?.active).toBe(false)
       expect(found?.status).toBe('takendown')
     })
 
     it('does not sync repo unauthed', async () => {
-      const tryGetRepo = agent.api.com.atproto.sync.getRepo({ did })
+      const tryGetRepo = client.call(com.atproto.sync.getRepo, { did })
       await expect(tryGetRepo).rejects.toThrow(/Repo has been takendown/)
     })
 
     it('syncs repo to owner or admin', async () => {
-      const tryGetRepoOwner = agent.api.com.atproto.sync.getRepo(
+      const tryGetRepoOwner = client.call(
+        com.atproto.sync.getRepo,
         { did },
         { headers: sc.getHeaders(did) },
       )
       await expect(tryGetRepoOwner).resolves.toBeDefined()
-      const tryGetRepoAdmin = agent.api.com.atproto.sync.getRepo(
+      const tryGetRepoAdmin = client.call(
+        com.atproto.sync.getRepo,
         { did },
         { headers: network.pds.adminAuthHeaders() },
       )
@@ -276,14 +280,16 @@ describe('repo sync', () => {
     })
 
     it('does not sync latest commit unauthed', async () => {
-      const tryGetLatest = agent.api.com.atproto.sync.getLatestCommit({ did })
+      const tryGetLatest = client.call(com.atproto.sync.getLatestCommit, {
+        did,
+      })
       await expect(tryGetLatest).rejects.toThrow(/Repo has been takendown/)
     })
 
     it('does not sync a record proof unauthed', async () => {
-      const collection = Object.keys(repoData)[0]
-      const rkey = Object.keys(repoData[collection])[0]
-      const tryGetRecord = agent.api.com.atproto.sync.getRecord({
+      const collection = asNsidString(Object.keys(repoData)[0])
+      const rkey = asRecordKeyString(Object.keys(repoData[collection])[0])
+      const tryGetRecord = client.call(com.atproto.sync.getRecord, {
         did,
         collection,
         rkey,
@@ -296,13 +302,13 @@ describe('repo sync', () => {
 const makePost = async (sc: SeedClient, did: string) => {
   const res = await sc.post(did, randomStr(32, 'base32'))
   const uri = res.ref.uri
-  const record = await sc.agent.api.com.atproto.repo.getRecord({
-    repo: did,
-    collection: uri.collection,
+  const data = await sc.client.call(com.atproto.repo.getRecord, {
+    repo: did as DidString,
+    collection: uri.collection as NsidString,
     rkey: uri.rkey,
   })
   return {
     uri,
-    obj: record.data.value,
+    obj: data.value,
   }
 }

@@ -1,6 +1,6 @@
 import { Insertable } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
+import { Cid, parseCid } from '@atproto/lex-data'
 import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
 import { AtUri } from '@atproto/syntax'
 import { lexicons } from '../../../lexicon/lexicons'
@@ -16,7 +16,7 @@ type RecordProcessorParams<T, S> = {
   insertFn: (
     db: DatabaseSchema,
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: T,
     timestamp: string,
   ) => Promise<S | null>
@@ -63,7 +63,7 @@ export class RecordProcessor<T, S> {
 
   async insertRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     timestamp: string,
     opts?: { disableNotifs?: boolean },
@@ -116,7 +116,7 @@ export class RecordProcessor<T, S> {
   // straightforward in the general case. We still get nice control over notifications.
   async updateRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     timestamp: string,
     opts?: { disableNotifs?: boolean },
@@ -212,7 +212,7 @@ export class RecordProcessor<T, S> {
       const inserted = await this.params.insertFn(
         this.db,
         new AtUri(found.uri),
-        CID.parse(found.cid),
+        parseCid(found.cid),
         record,
         found.indexedAt,
       )

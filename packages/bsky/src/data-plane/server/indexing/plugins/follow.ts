@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import * as lex from '../../../../lexicon/lexicons'
 import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
@@ -15,7 +15,7 @@ type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Follow.Record,
   timestamp: string,
 ): Promise<IndexedFollow | null> => {

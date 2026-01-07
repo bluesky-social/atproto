@@ -12,6 +12,7 @@ import express, {
 } from 'express'
 import { check, schema } from '@atproto/common'
 import { LexMap, LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import {
   LexXrpcProcedure,
   LexXrpcQuery,
@@ -114,13 +115,96 @@ export class Server {
     }
   }
 
+  listen(port: number, callback?: () => void) {
+    return this.router.listen(port, callback)
+  }
+
   // handlers
   // =
+
+  add<const M extends l.Procedure | l.Query | l.Subscription>(
+    _schema: M | { main: M },
+    _configOrFn: M extends l.Procedure | l.Query
+      ? MethodConfigOrHandler<
+          void,
+          l.InferMethodParams<M>,
+          l.InferMethodInput<M, Readable>,
+          | l.InferMethodOutput<M, Readable>
+          | (M extends { errors: readonly (infer E extends string)[] }
+              ? {
+                  status: number
+                  error: E
+                  message?: string
+                }
+              : never)
+        >
+      : M extends l.Subscription
+        ? StreamConfigOrHandler<
+            void,
+            l.InferMethodParams<M>,
+            l.InferMethodMessage<M>
+          >
+        : never,
+  ): void
+  add<
+    const M extends l.Procedure | l.Query | l.Subscription,
+    A extends AuthResult,
+  >(
+    _schema: M | { main: M },
+    _configOrFn: M extends l.Procedure | l.Query
+      ? MethodConfig<
+          A,
+          l.InferMethodParams<M>,
+          l.InferMethodInput<M, Readable>,
+          | l.InferMethodOutput<M, Readable>
+          | (M extends { errors: readonly (infer E extends string)[] }
+              ? {
+                  status: number
+                  error: E
+                  message?: string
+                }
+              : never)
+        > & {
+          auth: NonNullable<unknown>
+        }
+      : M extends l.Subscription
+        ? Required<
+            StreamConfig<A, l.InferMethodParams<M>, l.InferMethodMessage<M>>
+          >
+        : never,
+  ): void
+  add<
+    const M extends l.Procedure | l.Query | l.Subscription,
+    A extends Auth = void,
+  >(
+    _schema: M | { main: M },
+    _configOrFn: M extends l.Procedure | l.Query
+      ? MethodConfigOrHandler<
+          A,
+          l.InferMethodParams<M>,
+          l.InferMethodInput<M, Readable>,
+          | l.InferMethodOutput<M, Readable>
+          | (M extends { errors: readonly (infer E extends string)[] }
+              ? {
+                  status: number
+                  error: E
+                  message?: string
+                }
+              : never)
+        >
+      : M extends l.Subscription
+        ? StreamConfigOrHandler<
+            A,
+            l.InferMethodParams<M>,
+            l.InferMethodMessage<M>
+          >
+        : never,
+  ): void {}
 
   method<A extends Auth = Auth>(
     nsid: string,
     configOrFn: MethodConfigOrHandler<A>,
-  ) {
+  ): void {
     this.addMethod(nsid, configOrFn)
   }
 
@@ -257,9 +341,18 @@ export class Server {
   protected createInputVerifier(
     nsid: string,
     def: LexXrpcQuery | LexXrpcProcedure,
-    routeOpts: RouteOptions,
+    opts?: RouteOptions,
   ) {
-    return createInputVerifier(nsid, def, routeOpts, this.lex)
+    return createInputVerifier(
+      nsid,
+      def,
+      {
+        blobLimit: opts?.blobLimit ?? this.options.payload?.blobLimit,
+        jsonLimit: opts?.jsonLimit ?? this.options.payload?.jsonLimit,
+        textLimit: opts?.textLimit ?? this.options.payload?.textLimit,
+      },
+      this.lex,
+    )
   }
 
   protected createAuthVerifier<C, A extends Auth>(cfg: {
@@ -281,11 +374,7 @@ export class Server {
   ): RequestHandler {
     const authVerifier = this.createAuthVerifier(cfg)
     const paramsVerifier = this.createParamsVerifier(nsid, def)
-    const inputVerifier = this.createInputVerifier(nsid, def, {
-      blobLimit: cfg.opts?.blobLimit ?? this.options.payload?.blobLimit,
-      jsonLimit: cfg.opts?.jsonLimit ?? this.options.payload?.jsonLimit,
-      textLimit: cfg.opts?.textLimit ?? this.options.payload?.textLimit,
-    })
+    const inputVerifier = this.createInputVerifier(nsid, def, cfg.opts)
 
     const validateResOutput =
       this.options.validateResponse === false
@@ -547,6 +636,10 @@ function createErrorMiddleware({
 
     if (res.headersSent) {
       return next(err)
+    }
+
+    if (xrpcError.headers) {
+      res.setHeaders(xrpcError.headers)
     }
 
     return res.status(xrpcError.statusCode).json(xrpcError.payload)

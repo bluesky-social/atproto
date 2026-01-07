@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import * as lex from '../../../../lexicon/lexicons'
@@ -14,7 +14,7 @@ type IndexedGate = DatabaseSchemaType['thread_gate']
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
+  cid: Cid,
   obj: Threadgate.Record,
   timestamp: string,
 ): Promise<IndexedGate | null> => {

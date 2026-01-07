@@ -17,7 +17,7 @@ describe('agent', () => {
   })
 
   it('migrates legacy content-label prefs (no mutations)', async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user1.test',
@@ -97,7 +97,7 @@ describe('agent', () => {
   })
 
   it('adds/removes moderation services', async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user5.test',
@@ -195,7 +195,7 @@ describe('agent', () => {
   })
 
   it('sets label preferences globally and per-moderator', async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user7.test',
@@ -257,7 +257,7 @@ describe('agent', () => {
   })
 
   it(`updates label pref`, async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user8.test',
@@ -281,7 +281,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'graphic-media' in sync with 'gore'`, async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user9.test',
@@ -303,7 +303,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'porn' in sync with 'nsfw'`, async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user10.test',
@@ -325,7 +325,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: 'sexual' in sync with 'suggestive'`, async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user11.test',
@@ -347,7 +347,7 @@ describe('agent', () => {
   })
 
   it(`double-write for legacy: filters out existing old label pref if double-written`, async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user12.test',
@@ -366,7 +366,7 @@ describe('agent', () => {
   })
 
   it(`remaps old values to new on read`, async () => {
-    const agent = network.pds.getClient()
+    const agent = network.pds.getAgent()
 
     await agent.createAccount({
       handle: 'user13.test',
