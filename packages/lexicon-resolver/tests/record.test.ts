@@ -39,7 +39,7 @@ describe('Record resolution', () => {
 
   it('resolves record by AT-URI string.', async () => {
     const post = await sc.post(sc.dids.alice, 'post2')
-    l.assertAtUri(post.ref.uriStr)
+    l.assertAtUriString(post.ref.uriStr)
     const result = await resolveRecord(post.ref.uriStr, {
       forceRefresh: true,
     })
