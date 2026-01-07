@@ -652,6 +652,8 @@ export function validatePostInteractionSettingsPref<V>(v: V) {
 
 export interface StatusView {
   $type?: 'app.bsky.actor.defs#statusView'
+  uri?: string
+  cid?: string
   /** The status for the account. */
   status: 'app.bsky.actor.status#live' | (string & {})
   record: { [_ in string]: unknown }
