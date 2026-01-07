@@ -865,9 +865,6 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:*
         version: link:../lex-data
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1

@@ -26,10 +26,10 @@ export type LexParseOptions = {
   strict?: boolean
 }
 
-export function lexParse(
+export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: LexParseOptions = { strict: false },
-): LexValue {
+): T {
   return JSON.parse(input, function (key: string, value: JsonValue): LexValue {
     switch (typeof value) {
       case 'object':

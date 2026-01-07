@@ -893,7 +893,7 @@ Various utilities for working with CIDs, string lengths, language tags, and low-
 import {
   // CID utilities
   parseCid, // Parse CID string (throws on invalid)
-  asCid, // Coerce to Cid or null
+  ifCid, // Coerce to Cid or null
   isCid, // Type guard for Cid values
 
   // Blob references

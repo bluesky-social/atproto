@@ -137,7 +137,7 @@ export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
   invalid: LexMap[]
 }
 export type ListRecord<Value extends LexMap> =
-  com.atproto.repo.listRecords.DefRecord & {
+  com.atproto.repo.listRecords.Record & {
     value: Value
   }
 

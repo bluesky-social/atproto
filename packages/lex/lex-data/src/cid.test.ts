@@ -2,8 +2,8 @@ import { CID } from 'multiformats/cid'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
 import { describe, expect, it } from 'vitest'
 import {
-  RAW_BIN_MULTICODEC,
-  createCid,
+  DAG_CBOR_MULTICODEC,
+  RAW_MULTICODEC,
   decodeCid,
   ensureValidCidString,
   isCid,
@@ -23,7 +23,7 @@ describe(isCid, () => {
     it('returns true for CID v0 and v1', async () => {
       const digest = await sha256.digest(Buffer.from('hello world'))
       const cidV0 = CID.createV0(digest)
-      const cidV1 = CID.createV1(RAW_BIN_MULTICODEC, digest)
+      const cidV1 = CID.createV1(RAW_MULTICODEC, digest)
       expect(isCid(cidV0)).toBe(true)
       expect(isCid(cidV1)).toBe(true)
     })
@@ -35,41 +35,58 @@ describe(isCid, () => {
     })
   })
 
-  describe('strict mode', () => {
-    it('returns true for valid CIDs in strict mode', async () => {
-      const digest = await sha256.digest(Buffer.from('hello world'))
-      const cid = CID.createV1(RAW_BIN_MULTICODEC, digest)
-      expect(isCid(cid, { strict: true })).toBe(true)
+  describe('flavors', () => {
+    describe('raw', () => {
+      it('validated "raw" cids', async () => {
+        const digest = await sha256.digest(Buffer.from('hello world'))
+        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        expect(isCid(cid, { flavor: 'raw' })).toBe(true)
+      })
+
+      it('allows other hash algorithms', async () => {
+        const digest = await sha512.digest(Buffer.from('hello world'))
+        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        expect(isCid(cid, { flavor: 'raw' })).toBe(true)
+      })
+
+      it('rejects CID v0 when strict option is set', async () => {
+        const digest = await sha256.digest(Buffer.from('hello world'))
+        const cid = CID.createV0(digest)
+        expect(isCid(cid, { flavor: 'raw' })).toBe(false)
+      })
+
+      it('rejects CIDs with invalid code', async () => {
+        const digest = await sha256.digest(Buffer.from('hello world'))
+        const cid = CID.createV1(3333, digest)
+        expect(isCid(cid, { flavor: 'raw' })).toBe(false)
+      })
     })
 
-    it('rejects CID v0 when strict option is set', async () => {
-      const digest = await sha256.digest(Buffer.from('hello world'))
-      const cid = CID.createV0(digest)
-      expect(isCid(cid, { strict: true })).toBe(false)
-    })
+    describe('cbor', () => {
+      it('validated "cbor" cids', async () => {
+        const digest = await sha256.digest(Buffer.from('hello world'))
+        const cid = CID.createV1(DAG_CBOR_MULTICODEC, digest)
+        expect(isCid(cid, { flavor: 'cbor' })).toBe(true)
+      })
 
-    it('rejects CIDs with invalid hash algorithm', async () => {
-      const digest = await sha512.digest(Buffer.from('hello world'))
-      const cid = CID.createV1(RAW_BIN_MULTICODEC, digest)
-      expect(isCid(cid, { strict: true })).toBe(false)
-    })
+      it('rejects CIDs with invalid hash algorithm', async () => {
+        const digest = await sha512.digest(Buffer.from('hello world'))
+        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        expect(isCid(cid, { flavor: 'cbor' })).toBe(false)
+      })
 
-    it('rejects CIDs with invalid code', async () => {
-      const digest = await sha256.digest(Buffer.from('hello world'))
-      const cid = CID.createV1(3333, digest)
-      expect(isCid(cid, { strict: true })).toBe(false)
-    })
-  })
-})
+      it('rejects CID v0 when strict option is set', async () => {
+        const digest = await sha256.digest(Buffer.from('hello world'))
+        const cid = CID.createV0(digest)
+        expect(isCid(cid, { flavor: 'cbor' })).toBe(false)
+      })
 
-describe(createCid, () => {
-  it('creates a valid CID v1', async () => {
-    const digest = await sha256.digest(Buffer.from('hello world'))
-    const cid = createCid(RAW_BIN_MULTICODEC, digest)
-    expect(cid.version).toBe(1)
-    expect(cid.code).toBe(RAW_BIN_MULTICODEC)
-    expect(cid.multihash.code).toBe(sha256.code)
-    expect(cid.multihash.digest).toEqual(digest.digest)
+      it('rejects CIDs with invalid code', async () => {
+        const digest = await sha256.digest(Buffer.from('hello world'))
+        const cid = CID.createV1(3333, digest)
+        expect(isCid(cid, { flavor: 'cbor' })).toBe(false)
+      })
+    })
   })
 })
 
