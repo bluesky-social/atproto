@@ -13,10 +13,12 @@ describe('age-assurance', () => {
         {
           countryCode: 'US',
           regionCode: 'CA',
+          minAccessAge: 13,
           rules: [],
         },
         {
           countryCode: 'US',
+          minAccessAge: 13,
           rules: [],
         },
       ],
@@ -58,6 +60,7 @@ describe('age-assurance', () => {
   describe('computeAgeAssuranceRegionAccess', () => {
     const region: AppBskyAgeassuranceDefs.ConfigRegion = {
       countryCode: 'US',
+      minAccessAge: 13,
       rules: [
         {
           $type: ageAssuranceRuleIDs.IfAccountNewerThan,
