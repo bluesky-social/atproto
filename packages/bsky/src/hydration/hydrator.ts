@@ -229,7 +229,8 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     /**
-     * Special case here, we want to include takedowns in special cases, like `getProfile`, since we throw client-facing errors later in the pipeline.
+     * Special case here, we want to include takedowns in special cases, like
+     * `getProfile`, since we throw client-facing errors later in the pipeline.
      */
     const includeTakedowns =
       ctx.includeTakedowns || ctx.overrideIncludeTakedownsForActor
