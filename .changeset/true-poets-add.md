@@ -2,4 +2,4 @@
 '@atproto/lex-password-session': patch
 ---
 
-`@atproto/lex-client` ready password based session manager
+Password based session manager for `@atproto/lex-client`
