@@ -10,6 +10,7 @@ import * as inviteCode from './invite-code'
 import * as lexicon from './lexicon'
 import * as neuroIdentityLink from './neuro-identity-link'
 import * as neuroPendingSession from './neuro-pending-session'
+import * as neuroProvisionNonce from './neuro-provision-nonce'
 import * as refreshToken from './refresh-token'
 import * as repoRoot from './repo-root'
 import * as token from './token'
@@ -30,7 +31,8 @@ export type DatabaseSchema = actor.PartialDB &
   lexicon.PartialDB &
   emailToken.PartialDB &
   neuroIdentityLink.PartialDB &
-  neuroPendingSession.PartialDB
+  neuroPendingSession.PartialDB &
+  neuroProvisionNonce.PartialDB
 
 export type { Actor, ActorEntry } from './actor'
 export type { Account, AccountEntry } from './account'
@@ -47,3 +49,4 @@ export type { InviteCode, InviteCodeUse } from './invite-code'
 export type { EmailToken, EmailTokenPurpose } from './email-token'
 export type { NeuroIdentityLink } from './neuro-identity-link'
 export type { NeuroPendingSession } from './neuro-pending-session'
+export type { NeuroProvisionNonce } from './neuro-provision-nonce'
