@@ -13,9 +13,7 @@ import {
   SessionData,
 } from './password-session.js'
 
-const hooks: Required<
-  Pick<PasswordSessionOptions, 'onDeleteFailure' | 'onUpdateFailure'>
-> = {
+const defaultOptions: Partial<PasswordSessionOptions> = {
   onUpdateFailure: async (session, cause) => {
     throw new Error('Should not fail to refresh session', { cause })
   },
@@ -173,10 +171,10 @@ describe(PasswordSession, () => {
 
     await expect(
       PasswordSession.create({
+        ...defaultOptions,
         service: entrywayOrigin,
         identifier: 'alice',
         password: 'wrong-password',
-        ...hooks,
         onDeleted,
         onUpdated,
       }),
@@ -195,15 +193,19 @@ describe(PasswordSession, () => {
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
     const result = await PasswordSession.create({
+      ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'alice',
       password: 'password123',
-      ...hooks,
       onDeleted,
       onUpdated,
-    })
+    }).then(
+      () => {
+        throw new Error('Expected to fail')
+      },
+      (err: unknown) => err,
+    )
 
-    assert(!result.success)
     assert(result instanceof LexRpcResponseError)
     expect(result.status).toBe(401)
     expect(result.error).toBe('AuthFactorTokenRequired')
@@ -215,8 +217,8 @@ describe(PasswordSession, () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const result = await PasswordSession.create({
-      ...hooks,
+    const session = await PasswordSession.create({
+      ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'alice',
       password: 'password123',
@@ -227,9 +229,7 @@ describe(PasswordSession, () => {
 
     expect(onUpdated).toHaveBeenCalledTimes(1)
 
-    assert(result.success)
-    const agent = result
-    const client = new Client(agent)
+    const client = new Client(session)
 
     await expect(
       client.call(app.example.customMethod, { message: 'hello' }),
@@ -247,7 +247,7 @@ describe(PasswordSession, () => {
 
     expect(onDeleted).not.toHaveBeenCalled()
 
-    await agent.logout()
+    await session.logout()
 
     expect(onDeleted).toHaveBeenCalled()
 
@@ -278,19 +278,17 @@ describe(PasswordSession, () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const result = await PasswordSession.create({
+    const session = await PasswordSession.create({
+      ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'bob',
       password: 'password123',
       authFactorToken: '2fa-token',
-      ...hooks,
       onUpdated,
       onDeleted,
     })
 
-    assert(result.success)
-
-    const client = new Client(result.value)
+    const client = new Client(session)
 
     await expect(
       client.call(app.example.customMethod, { message: 'before' }),
@@ -334,18 +332,16 @@ describe(PasswordSession, () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const loginResult = await PasswordSession.create({
+    const initialAgent = await PasswordSession.create({
+      ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'carla',
       password: 'password123',
       authFactorToken: '2fa-token',
-      ...hooks,
       onUpdated,
       onDeleted,
     })
 
-    assert(loginResult.success)
-    const initialAgent = loginResult.value
     expect(initialAgent.did).toEqual('did:example:carla')
     expect(onDeleted).toHaveBeenCalledTimes(0)
     expect(onUpdated).toHaveBeenCalledTimes(1)
@@ -356,10 +352,10 @@ describe(PasswordSession, () => {
       }),
     )
 
-    const session = loginResult.value.session
+    const sessionData = initialAgent.session
 
-    const resumedAgent = await PasswordSession.resume(session, {
-      ...hooks,
+    const resumedAgent = await PasswordSession.resume(sessionData, {
+      ...defaultOptions,
       onUpdated,
       onDeleted,
     })
@@ -395,27 +391,26 @@ describe(PasswordSession, () => {
   })
 
   it('silently ignores expected logout errors', async () => {
-    let session: SessionData | null = null
+    let sessionData: SessionData | null = null
 
-    const agent = await PasswordSession.create({
+    const session = await PasswordSession.create({
+      ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'dave',
       password: 'password123',
       authFactorToken: '2fa-token',
-      ...hooks,
       onUpdated: (data) => {
-        session = structuredClone(data)
+        sessionData = structuredClone(data)
       },
       onDeleted: () => {},
     })
 
-    assert(agent.success)
-    assert(session)
+    assert(sessionData)
 
-    await agent.logout()
-    await agent.logout()
+    await session.logout()
+    await session.logout()
 
-    await PasswordSession.delete(session)
-    await PasswordSession.delete(session)
+    await PasswordSession.delete(sessionData)
+    await PasswordSession.delete(sessionData)
   })
 })
