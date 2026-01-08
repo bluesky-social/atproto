@@ -572,7 +572,7 @@ const session = await PasswordSession.create({
 ```typescript
 import {
   PasswordSession,
-  AuthFactorTokenRequiredError,
+  AuthFactorTokenError,
 } from '@atproto/lex-password-session'
 
 async function loginWithMainCredentials(
@@ -591,7 +591,7 @@ async function loginWithMainCredentials(
       onDeleted: (data) => removeFromStorage(data.did),
     })
   } catch (err) {
-    if (err instanceof AuthFactorTokenRequiredError && !authFactorToken) {
+    if (err instanceof AuthFactorTokenError && !authFactorToken) {
       // 2FA required
       const token = await promptUserFor2FACode(err.message)
       return loginWithMainCredentials(identifier, password, token)

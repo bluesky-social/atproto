@@ -5,8 +5,8 @@ export type AuthFactorTokenRequiredResponse = LexRpcResponseError<
   typeof com.atproto.server.createSession.main
 >
 
-export class AuthFactorTokenRequiredError extends LexRpcError<'AuthFactorTokenRequired'> {
-  name = 'AuthFactorTokenRequiredError'
+export class AuthFactorTokenError extends LexRpcError<'AuthFactorTokenRequired'> {
+  name = 'AuthFactorTokenError'
 
   constructor(readonly cause: AuthFactorTokenRequiredResponse) {
     super('AuthFactorTokenRequired', cause.message, { cause })
