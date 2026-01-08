@@ -20,7 +20,10 @@ export type RecordDescript = {
 }
 
 export class RecordReader {
-  constructor(public db: ActorDb) {}
+  constructor(
+    public db: ActorDb,
+    public did: string,
+  ) {}
 
   async recordCount(): Promise<number> {
     const res = await this.db.db
@@ -91,23 +94,30 @@ export class RecordReader {
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
-      .orderBy('record.rkey', reverse ? 'asc' : 'desc')
+      .orderBy('record.uri', reverse ? 'asc' : 'desc') // equivalent to order by rkey
       .limit(limit)
       .selectAll()
 
     // prioritize cursor but fall back to soon-to-be-depcreated rkey start/end
     if (cursor !== undefined) {
+      const cursorUri = AtUri.make(this.did, collection, cursor).toString()
       if (reverse) {
-        builder = builder.where('record.rkey', '>', cursor)
+        builder = builder.where('record.uri', '>', cursorUri)
       } else {
-        builder = builder.where('record.rkey', '<', cursor)
+        builder = builder.where('record.uri', '<', cursorUri)
       }
     } else {
       if (rkeyStart !== undefined) {
-        builder = builder.where('record.rkey', '>', rkeyStart)
+        const rkeyStartUri = AtUri.make(
+          this.did,
+          collection,
+          rkeyStart,
+        ).toString()
+        builder = builder.where('record.uri', '>', rkeyStartUri)
       }
       if (rkeyEnd !== undefined) {
-        builder = builder.where('record.rkey', '<', rkeyEnd)
+        const rkeyEndUri = AtUri.make(this.did, collection, rkeyEnd).toString()
+        builder = builder.where('record.uri', '<', rkeyEndUri)
       }
     }
     const res = await builder.execute()
