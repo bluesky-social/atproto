@@ -16,6 +16,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'GB',
       regionCode: undefined,
+      minAccessAge: 13,
       rules: [
         {
           $type: ids.IfAssuredOverAge,
@@ -36,6 +37,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'AU',
       regionCode: undefined,
+      minAccessAge: 16,
       rules: [
         {
           $type: ids.IfAccountNewerThan,
@@ -66,6 +68,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'US',
       regionCode: 'SD',
+      minAccessAge: 13,
       rules: [
         {
           $type: ids.IfAssuredOverAge,
@@ -86,6 +89,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'US',
       regionCode: 'WY',
+      minAccessAge: 13,
       rules: [
         {
           $type: ids.IfAssuredOverAge,
@@ -106,6 +110,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'US',
       regionCode: 'OH',
+      minAccessAge: 13,
       rules: [
         {
           $type: ids.IfAssuredOverAge,
@@ -126,6 +131,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'US',
       regionCode: 'MS',
+      minAccessAge: 18,
       rules: [
         {
           $type: ids.IfAssuredOverAge,
@@ -141,6 +147,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'US',
       regionCode: 'VA',
+      minAccessAge: 16,
       rules: [
         {
           $type: ids.IfAssuredOverAge,
@@ -161,6 +168,7 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
     {
       countryCode: 'US',
       regionCode: 'TN',
+      minAccessAge: 18,
       rules: [
         {
           $type: ids.IfAssuredOverAge,

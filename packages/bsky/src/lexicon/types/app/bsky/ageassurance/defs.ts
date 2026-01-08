@@ -83,6 +83,8 @@ export interface ConfigRegion {
   countryCode: string
   /** The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country. */
   regionCode?: string
+  /** The minimum age (as a whole integer) required to use Bluesky in this region. */
+  minAccessAge: number
   /** The ordered list of Age Assurance rules that apply to this region. Rules should be applied in order, and the first matching rule determines the access level granted. The rules array should always include a default rule as the last item. */
   rules: (
     | $Typed<ConfigRegionRuleDefault>

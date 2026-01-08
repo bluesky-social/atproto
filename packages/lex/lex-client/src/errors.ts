@@ -2,6 +2,9 @@ import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import { Payload } from './util.js'
 
+export { LexError }
+export type { LexErrorCode, LexErrorData }
+
 export type LexRpcErrorPayload<N extends LexErrorCode = LexErrorCode> = Payload<
   LexErrorData<N>,
   'application/json'

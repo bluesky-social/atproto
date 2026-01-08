@@ -458,6 +458,149 @@ const client = new Client(session)
 
 For detailed OAuth setup, see the [@atproto/oauth-client](../../../oauth/oauth-client) documentation.
 
+#### Authenticated Client with Password
+
+For simpler use cases (CLI tools, scripts, server-to-server), you can use password-based authentication with `@atproto/lex-password-session`:
+
+```bash
+npm install @atproto/lex-password-session
+```
+
+```typescript
+import { Client } from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
+import * as app from './lexicons/app.js'
+
+// Create a session with app password credentials
+const session = await PasswordSession.create({
+  service: 'https://bsky.social',
+  identifier: 'alice.bsky.social', // handle or email
+  password: 'xxxx-xxxx-xxxx-xxxx', // App password (not your main password)
+
+  // Called when session is created or refreshed - persist the session data
+  onUpdated: (data) => {
+    saveToStorage(data) // Your persistence logic
+  },
+
+  // Called when session becomes invalid - clean up stored data
+  onDeleted: (data) => {
+    removeFromStorage(data.did)
+  },
+})
+
+// Use the session with a Client
+const client = new Client(session)
+
+const profile = await client.call(app.bsky.actor.getProfile, {
+  actor: 'atproto.com',
+})
+```
+
+**Resuming a Session**
+
+Resume a previously persisted session. The `resume()` method validates the session by refreshing it:
+
+```typescript
+const savedData = loadFromStorage() // Your retrieval logic
+
+// Resume validates the session by refreshing it
+// Throws if the session is definitively invalid
+const session = await PasswordSession.resume(savedData, {
+  onUpdated: (data) => saveToStorage(data),
+  onDeleted: (data) => removeFromStorage(data.did),
+})
+
+const client = new Client(session)
+
+// Access session properties
+console.log(session.did) // User's DID
+console.log(session.handle) // User's handle
+console.log(session.destroyed) // false (session is active)
+```
+
+**Logging Out**
+
+```typescript
+await session.logout()
+```
+
+**Deleting a Session Without Resuming**
+
+Delete a stored session without needing to resume it first:
+
+```typescript
+const savedData = loadFromStorage()
+
+// Delete the session directly - throws on transient errors (network, server down)
+await PasswordSession.delete(savedData)
+```
+
+**Error Handling Hooks**
+
+Handle transient errors (network issues, server unavailability) separately from permanent failures:
+
+```typescript
+const session = await PasswordSession.create({
+  service: 'https://bsky.social',
+  identifier: 'alice.bsky.social',
+  password: 'xxxx-xxxx-xxxx-xxxx',
+
+  onUpdated: (data) => saveToStorage(data),
+  onDeleted: (data) => removeFromStorage(data.did),
+
+  // Called when refresh fails due to transient errors (network, server down)
+  // The session may still be valid - don't delete stored credentials
+  onUpdateFailure: (data, error) => {
+    console.warn('Session refresh failed, will retry:', error.message)
+  },
+
+  // Called when logout fails due to transient errors
+  // Consider retrying later to avoid orphaned sessions
+  onDeleteFailure: (data, error) => {
+    console.error('Logout failed, session may still be active:', error.message)
+    scheduleRetry(data) // Your retry logic
+  },
+})
+```
+
+**Handling Two-Factor Authentication (2FA)**
+
+> [!CAUTION]
+>
+> Two-factor authentication only applies when using **main account credentials**, which is **strongly discouraged**. Password authentication should be used with [app passwords](https://bsky.app/settings/app-passwords) only because they are designed for programmatic access (bots, scripts, CLI tools). For user-facing applications, use OAuth via [@atproto/oauth-client](../../../oauth/oauth-client) which provides better security and user control.
+
+```typescript
+import {
+  PasswordSession,
+  LexAuthFactorError,
+} from '@atproto/lex-password-session'
+
+async function loginWithMainCredentials(
+  identifier: string,
+  password: string,
+  authFactorToken?: string,
+): Promise<PasswordSession> {
+  try {
+    return await PasswordSession.create({
+      service: 'https://bsky.social',
+      identifier,
+      password,
+      authFactorToken,
+
+      onUpdated: (data) => saveToStorage(data),
+      onDeleted: (data) => removeFromStorage(data.did),
+    })
+  } catch (err) {
+    if (err instanceof LexAuthFactorError && !authFactorToken) {
+      // 2FA required
+      const token = await promptUserFor2FACode(err.message)
+      return loginWithMainCredentials(identifier, password, token)
+    }
+    throw err
+  }
+}
+```
+
 #### Creating a Client from Another Client
 
 You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.

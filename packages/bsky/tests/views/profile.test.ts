@@ -490,7 +490,47 @@ describe('pds profile views', () => {
         )
 
         // Doesn't need `forSnapshot` because the dates are already mocked.
-        expect(data.status).toMatchSnapshot()
+        expect(forSnapshot(data.status)).toMatchSnapshot()
+      })
+    })
+
+    describe('when taken down', () => {
+      it('it does not return the live status', async () => {
+        const res = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        await network.bsky.ctx.dataplane.takedownRecord({
+          recordUri: res.data.uri,
+        })
+        await network.processAll()
+
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        expect(forSnapshot(data.status)).toBeUndefined()
       })
     })
   })

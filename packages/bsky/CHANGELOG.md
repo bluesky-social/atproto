@@ -1,5 +1,23 @@
 # @atproto/bsky
 
+## 0.0.207
+
+### Patch Changes
+
+- [#4516](https://github.com/bluesky-social/atproto/pull/4516) [`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `uri` and `cid` to `#statusView`
+
+- Updated dependencies [[`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a)]:
+  - @atproto/api@0.18.12
+
+## 0.0.206
+
+### Patch Changes
+
+- [#4513](https://github.com/bluesky-social/atproto/pull/4513) [`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `minAccessAge` to Age Assurance regional configs.
+
+- Updated dependencies [[`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53)]:
+  - @atproto/api@0.18.11
+
 ## 0.0.205
 
 ### Patch Changes
