@@ -1,5 +1,16 @@
 # @atproto/lex-cbor
 
+## 0.0.7
+
+### Patch Changes
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove direct depdency on `multiformats`
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **breaking**: Removed CID utilities (they can be imported from `@atproto/lex-data` instead)
+
+- Updated dependencies [[`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe)]:
+  - @atproto/lex-data@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

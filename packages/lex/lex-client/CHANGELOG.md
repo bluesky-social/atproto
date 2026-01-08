@@ -1,5 +1,14 @@
 # @atproto/lex-client
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [[`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe)]:
+  - @atproto/lex-data@0.0.7
+  - @atproto/lex-schema@0.0.8
+  - @atproto/lex-json@0.0.7
+
 ## 0.0.7
 
 ### Patch Changes

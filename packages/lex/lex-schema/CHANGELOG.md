@@ -1,5 +1,16 @@
 # @atproto/lex-schema
 
+## 0.0.8
+
+### Patch Changes
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add stricter validation rules for `CidSchema`
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `tokenSchema` `value` as public property
+
+- Updated dependencies [[`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe)]:
+  - @atproto/lex-data@0.0.7
+
 ## 0.0.7
 
 ### Patch Changes
