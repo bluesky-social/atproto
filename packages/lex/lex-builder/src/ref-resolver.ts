@@ -53,21 +53,27 @@ export class RefResolver {
   )
 
   #defCounters = new Map<string, number>()
-  private nextSafeDefinitionIdentifier(hash: string) {
+  private nextSafeDefinitionIdentifier(name: string) {
     // use camelCase version of the hash as base name
-    const name = toCamelCase(hash).replace(/^[0-9]+/g, '') || 'def'
+    const nameSafe =
+      startsWithLower(name) && isValidJsIdentifier(name)
+        ? name
+        : toCamelCase(name).replace(/^[0-9]+/g, '') || 'def'
 
-    const count = this.#defCounters.get(name) ?? 0
-    this.#defCounters.set(name, count + 1)
+    const count = this.#defCounters.get(nameSafe) ?? 0
+    this.#defCounters.set(nameSafe, count + 1)
+
     // @NOTE We don't need to check against local declarations in the file here
     // since we are using a naming system that should guarantee no other
-    // identifier has a <name>$<number> format ("$" cannot appear in
+    // identifier has a <nameSafe>$<number> format ("$" cannot appear in
     // hashes so only *we* are generating such identifiers).
 
-    const identifier = `${name}$${count}`
+    const identifier = `${nameSafe}$${count}`
 
-    // If the input is safe, the output will also be safe
-    assert(isValidJsIdentifier(identifier), `Expected safe identifier`)
+    assert(
+      isValidJsIdentifier(identifier),
+      `Unable to generate safe identifier for: "${name}"`,
+    )
 
     return identifier
   }
