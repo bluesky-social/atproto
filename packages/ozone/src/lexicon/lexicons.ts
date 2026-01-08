@@ -812,6 +812,14 @@ export const schemaDict = {
         type: 'object',
         required: ['status', 'record'],
         properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
           status: {
             type: 'string',
             description: 'The status for the account.',

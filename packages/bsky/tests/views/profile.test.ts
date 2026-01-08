@@ -490,7 +490,7 @@ describe('pds profile views', () => {
         )
 
         // Doesn't need `forSnapshot` because the dates are already mocked.
-        expect(data.status).toMatchSnapshot()
+        expect(forSnapshot(data.status)).toMatchSnapshot()
       })
     })
 
@@ -530,7 +530,7 @@ describe('pds profile views', () => {
           },
         )
 
-        expect(data.status).toBeUndefined()
+        expect(forSnapshot(data.status)).toBeUndefined()
       })
     })
   })
