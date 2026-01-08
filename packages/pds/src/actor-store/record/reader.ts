@@ -86,11 +86,24 @@ export class RecordReader {
       includeSoftDeleted = false,
     } = opts
 
+    // There is no index on record(collection, rkey)
+    // However, the primary key (uri) acts like an index on (did, collection, rkey), which we
+    // can use equivalently if we construct the appropriate URI strings.
+
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
-      .where('record.collection', '=', collection)
+      .where(
+        'record.uri',
+        '>=',
+        AtUri.make(this.did, collection, '').toString(),
+      )
+      .where(
+        'record.uri',
+        '<',
+        AtUri.make(this.did, collection, '\x7f').toString(),
+      ) // together, these two .where() clauses are equivalent to .where('record.collection', '=', collection), but index-friendly
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
