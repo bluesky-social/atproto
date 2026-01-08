@@ -1,5 +1,14 @@
 import path from 'node:path'
 import { defineConfig } from 'vite'
+import pkg from './package.json' assert { type: 'json' }
+
+// We rely on a bundler to handle bundling of the "cborg" package. This is
+// required because "cborg" is an ESM-only package that uses "exports" fields
+// in its package.json, which causes issues when trying to import it directly
+// in a CJS context without bundling.
+
+// Whenever this package is converted to ESM only, we can likely remove this
+// bundling step.
 
 export default defineConfig({
   build: {
@@ -19,8 +28,8 @@ export default defineConfig({
       },
     },
     rollupOptions: {
-      // We only want to bundle cborg because it's ESM
-      external: [/@atproto/, /multiformats/, 'tslib'],
+      // Only devpendencies should be bundled
+      external: Object.keys(pkg.dependencies),
     },
   },
 })

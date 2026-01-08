@@ -1,5 +1,25 @@
 # @atproto/lex-data
 
+## 0.0.7
+
+### Patch Changes
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **breaking**: replace `strict` options with `flavor` checking when parsing/decoding/validating `Cid` values
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose CID creation and validation utilities
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **breaking**: `asCid` now throws if the input cannot be cast into a `Cid`
+
+## 0.0.6
+
+### Patch Changes
+
+- [#4501](https://github.com/bluesky-social/atproto/pull/4501) [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `enumBlobRefs` utility function
+
+- [#4501](https://github.com/bluesky-social/atproto/pull/4501) [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Perform strict `BlobRef` validation by default
+
+- [#4501](https://github.com/bluesky-social/atproto/pull/4501) [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `base64ToUtf8` and `utf8ToBase64` utilities
+
 ## 0.0.5
 
 ### Patch Changes

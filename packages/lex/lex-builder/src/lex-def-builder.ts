@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import {
   JSDocStructure,
   OptionalKind,
@@ -37,7 +36,7 @@ import {
   ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
-import { isSafeIdentifier } from './ts-lang.js'
+import { asNamespaceExport } from './ts-lang.js'
 
 export type LexDefBuilderOptions = RefResolverOptions & {
   lib?: string
@@ -378,11 +377,6 @@ export class LexDefBuilder {
     const ref = await this.refResolver.resolveLocal(hash)
     const pub = getPublicIdentifiers(hash)
 
-    // Fool-proofing
-    assert(isSafeIdentifier(ref.varName), 'Expected safe type identifier')
-    assert(isSafeIdentifier(ref.typeName), 'Expected safe type identifier')
-    assert(isSafeIdentifier(pub.typeName), 'Expected safe type identifier')
-
     if (type) {
       this.file.addTypeAlias({
         name: ref.typeName,
@@ -395,7 +389,10 @@ export class LexDefBuilder {
         namedExports: [
           {
             name: ref.typeName,
-            alias: ref.typeName === pub.typeName ? undefined : pub.typeName,
+            alias:
+              ref.typeName === pub.typeName
+                ? undefined
+                : asNamespaceExport(pub.typeName),
           },
         ],
       })
@@ -420,9 +417,7 @@ export class LexDefBuilder {
             alias:
               ref.varName === pub.varName
                 ? undefined
-                : isSafeIdentifier(pub.varName)
-                  ? pub.varName
-                  : JSON.stringify(pub.varName),
+                : asNamespaceExport(pub.varName),
           },
         ],
       })

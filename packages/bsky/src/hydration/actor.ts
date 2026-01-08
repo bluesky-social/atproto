@@ -184,7 +184,14 @@ export class ActorHydrator {
         : undefined
 
       const status = actor.statusRecord
-        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedowns)
+        ? parseRecord<StatusRecord>(
+            actor.statusRecord,
+            /*
+             * Always true, we filter this out in the `Views.status()`. If we
+             * ever remove that filter, we'll want to reinstate this here.
+             */
+            true,
+          )
         : undefined
 
       const verifications = mapDefined(

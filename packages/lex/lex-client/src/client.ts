@@ -20,7 +20,7 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { com } from './lexicons.js'
+import { com } from './lexicons/index.js'
 import { LexRpcResponse, LexRpcResponseBody } from './response.js'
 import { BinaryBodyInit, CallOptions, Service } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
@@ -131,14 +131,14 @@ export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
   typeof com.atproto.repo.listRecords.main,
   Uint8Array
 > & {
-  records: ListRecord<T>[]
+  records: ListRecord<Infer<T>>[]
   // @NOTE Because the schema uses "type": "unknown" instead of an open union,
   // we have to use LexMap instead of TypedObject here.
   invalid: LexMap[]
 }
-export type ListRecord<T extends RecordSchema> =
-  com.atproto.repo.listRecords.DefRecord & {
-    value: Infer<T>
+export type ListRecord<Value extends LexMap> =
+  com.atproto.repo.listRecords.Record & {
+    value: Value
   }
 
 export class Client implements Agent {
@@ -497,7 +497,7 @@ export class Client implements Agent {
     const schema = getMain(ns)
     const { body } = await this.listRecords(schema.$type, options)
 
-    const records: ListRecord<T>[] = []
+    const records: ListRecord<Infer<T>>[] = []
     const invalid: LexMap[] = []
 
     for (const record of body.records) {

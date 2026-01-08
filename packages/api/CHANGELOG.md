@@ -1,5 +1,29 @@
 # @atproto/api
 
+## 0.18.13
+
+### Patch Changes
+
+- [#4520](https://github.com/bluesky-social/atproto/pull/4520) [`d2ed731`](https://github.com/bluesky-social/atproto/commit/d2ed7311a20b8c990003628c932e3e5aa6569086) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `isDisabled` to `#statusView`
+
+## 0.18.12
+
+### Patch Changes
+
+- [#4516](https://github.com/bluesky-social/atproto/pull/4516) [`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `uri` and `cid` to `#statusView`
+
+## 0.18.11
+
+### Patch Changes
+
+- [#4513](https://github.com/bluesky-social/atproto/pull/4513) [`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `minAccessAge` to Age Assurance regional configs.
+
+## 0.18.10
+
+### Patch Changes
+
+- [#4440](https://github.com/bluesky-social/atproto/pull/4440) [`63f97ae`](https://github.com/bluesky-social/atproto/commit/63f97ae9c1f57def2d489ab8ce7f83a84a7d1ba1) Thanks [@iwsmith](https://github.com/iwsmith)! - Add `recID` field to `getSuggestedUsers` and `getSuggestedUsersSkeleton`
+
 ## 0.18.9
 
 ### Patch Changes

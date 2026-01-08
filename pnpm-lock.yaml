@@ -809,9 +809,15 @@ importers:
       '@atproto/lex-client':
         specifier: workspace:*
         version: link:../lex-client
+      '@atproto/lex-data':
+        specifier: workspace:*
+        version: link:../lex-data
       '@atproto/lex-installer':
         specifier: workspace:*
         version: link:../lex-installer
+      '@atproto/lex-json':
+        specifier: workspace:*
+        version: link:../lex-json
       '@atproto/lex-schema':
         specifier: workspace:*
         version: link:../lex-schema
@@ -859,9 +865,6 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:*
         version: link:../lex-data
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -992,7 +995,7 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@18.19.67)
 
-  packages/lex/lex-password-agent:
+  packages/lex/lex-password-session:
     dependencies:
       '@atproto/lex-client':
         specifier: workspace:*
@@ -1069,6 +1072,15 @@ importers:
 
   packages/lex/lex-server:
     dependencies:
+      '@atproto-labs/did-resolver':
+        specifier: workspace:*
+        version: link:../../internal/did-resolver
+      '@atproto/crypto':
+        specifier: workspace:*
+        version: link:../../crypto
+      '@atproto/did':
+        specifier: workspace:*
+        version: link:../../did
       '@atproto/lex-cbor':
         specifier: workspace:*
         version: link:../lex-cbor
@@ -2117,6 +2129,9 @@ importers:
       '@atproto/common':
         specifier: workspace:^
         version: link:../common
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax

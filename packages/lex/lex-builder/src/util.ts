@@ -13,6 +13,11 @@ export function memoize<T extends (arg: string) => NonNullable<unknown> | null>(
   }) as T
 }
 
+export function startsWithLower(str: string) {
+  const code = str.charCodeAt(0)
+  return code >= 97 && code <= 122 // 'a' to 'z'
+}
+
 export function ucFirst(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }

@@ -31,7 +31,7 @@ export const fromBase64Native =
           lastChunkHandling: 'loose',
         })
       }
-    : null
+    : /* v8 ignore next -- @preserve */ null
 
 export const fromBase64Node = Buffer
   ? function fromBase64Node(

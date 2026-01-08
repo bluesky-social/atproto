@@ -22,7 +22,7 @@ import {
   extractAtprotoData,
 } from '@atproto-labs/did-resolver'
 import { LexResolverError } from './lex-resolver-error.js'
-import * as com from './lexicons/com.js'
+import { com } from './lexicons/index.js'
 
 export type LexResolverResult = {
   uri: AtUri

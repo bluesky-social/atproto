@@ -1,4 +1,4 @@
-import { asCid, graphemeLen, utf8Len } from '@atproto/lex-data'
+import { graphemeLen, ifCid, utf8Len } from '@atproto/lex-data'
 import {
   InferStringFormat,
   Schema,
@@ -124,7 +124,7 @@ export function coerceToString(input: unknown): string | null {
         return input.toString()
       }
 
-      const cid = asCid(input)
+      const cid = ifCid(input)
       if (cid) return cid.toString()
 
       if (input instanceof String) {

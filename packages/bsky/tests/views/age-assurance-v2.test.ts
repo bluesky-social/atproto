@@ -33,6 +33,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
       {
         countryCode: 'AA',
         regionCode: undefined,
+        minAccessAge: 13,
         rules: [
           {
             $type: ruleIds.IfAssuredOverAge,
@@ -48,6 +49,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
       {
         countryCode: 'BB',
         regionCode: undefined,
+        minAccessAge: 13,
         rules: [
           {
             $type: ruleIds.IfAssuredOverAge,

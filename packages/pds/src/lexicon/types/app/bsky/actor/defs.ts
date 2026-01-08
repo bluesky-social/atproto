@@ -652,6 +652,8 @@ export function validatePostInteractionSettingsPref<V>(v: V) {
 
 export interface StatusView {
   $type?: 'app.bsky.actor.defs#statusView'
+  uri?: string
+  cid?: string
   /** The status for the account. */
   status: 'app.bsky.actor.status#live' | (string & {})
   record: { [_ in string]: unknown }
@@ -660,6 +662,8 @@ export interface StatusView {
   expiresAt?: string
   /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
   isActive?: boolean
+  /** True if the user's go-live access has been disabled by a moderator, false otherwise. */
+  isDisabled?: boolean
 }
 
 const hashStatusView = 'statusView'

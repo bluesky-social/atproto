@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-server",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "license": "MIT",
   "description": "Request router for Atproto Lexicon protocols and schemas",
   "keywords": [
@@ -42,6 +42,9 @@
     }
   },
   "dependencies": {
+    "@atproto-labs/did-resolver": "workspace:*",
+    "@atproto/crypto": "workspace:*",
+    "@atproto/did": "workspace:*",
     "@atproto/lex-cbor": "workspace:*",
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-json": "workspace:*",

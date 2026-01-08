@@ -287,7 +287,7 @@ describe('Authentication', () => {
   function createBasicAuth(allowed: {
     username: string
     password: string
-  }): LexRouterAuth<typeof io.example.authTest, BasicAuthCredentials> {
+  }): LexRouterAuth<BasicAuthCredentials> {
     return async ({ request }) => {
       const header = request.headers.get('authorization') ?? ''
       if (!header.startsWith('Basic ')) {

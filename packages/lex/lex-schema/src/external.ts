@@ -122,9 +122,9 @@ export const integer = /*#__PURE__*/ memoizedOptions(function (
   return new IntegerSchema(options)
 })
 
-export const cidLink = /*#__PURE__*/ memoizedOptions(function (
-  options?: CidSchemaOptions,
-) {
+export const cidLink = /*#__PURE__*/ memoizedOptions(function <
+  O extends CidSchemaOptions = NonNullable<unknown>,
+>(options: O = {} as O) {
   return new CidSchema(options)
 })
 

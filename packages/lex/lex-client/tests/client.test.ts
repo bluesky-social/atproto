@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { LexValue, cidForLex, cidForRawBytes } from '@atproto/lex-cbor'
+import { LexValue, cidForLex } from '@atproto/lex-cbor'
+import { cidForRawBytes } from '@atproto/lex-data'
 import { lexParse, lexStringify } from '@atproto/lex-json'
 import { Action, Client } from '../src/index.js'
-import * as app from './lexicons/app.js'
-import * as com from './lexicons/com.js'
+import { app, com } from './lexicons/index.js'
 
 type Preference = app.bsky.actor.defs.Preferences[number]
 

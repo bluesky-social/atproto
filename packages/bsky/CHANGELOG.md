@@ -1,5 +1,57 @@
 # @atproto/bsky
 
+## 0.0.210
+
+### Patch Changes
+
+- [#4524](https://github.com/bluesky-social/atproto/pull/4524) [`6752056`](https://github.com/bluesky-social/atproto/commit/6752056f4666f1f85149d1c6821aed1ad8d88442) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `unregisterPush` to appview server routes.
+
+## 0.0.209
+
+### Patch Changes
+
+- [#4520](https://github.com/bluesky-social/atproto/pull/4520) [`d2ed731`](https://github.com/bluesky-social/atproto/commit/d2ed7311a20b8c990003628c932e3e5aa6569086) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `isDisabled` to `#statusView`
+
+- Updated dependencies [[`d2ed731`](https://github.com/bluesky-social/atproto/commit/d2ed7311a20b8c990003628c932e3e5aa6569086)]:
+  - @atproto/api@0.18.13
+
+## 0.0.208
+
+### Patch Changes
+
+- [`b329266`](https://github.com/bluesky-social/atproto/commit/b329266853b4867fbbcafc8845e479c888f8ac36) Thanks [@mary-ext](https://github.com/mary-ext)! - properly convert did:web to service endpoints in `.well-known/did.json`
+
+- Updated dependencies []:
+  - @atproto/common@0.5.7
+  - @atproto/xrpc-server@0.10.8
+
+## 0.0.207
+
+### Patch Changes
+
+- [#4516](https://github.com/bluesky-social/atproto/pull/4516) [`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `uri` and `cid` to `#statusView`
+
+- Updated dependencies [[`7750b91`](https://github.com/bluesky-social/atproto/commit/7750b91500eef6965a17bc8ec0b3ddfd6327485a)]:
+  - @atproto/api@0.18.12
+
+## 0.0.206
+
+### Patch Changes
+
+- [#4513](https://github.com/bluesky-social/atproto/pull/4513) [`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Adds `minAccessAge` to Age Assurance regional configs.
+
+- Updated dependencies [[`7ef8935`](https://github.com/bluesky-social/atproto/commit/7ef893563b25252ecf246e0d75e17855a7284e53)]:
+  - @atproto/api@0.18.11
+
+## 0.0.205
+
+### Patch Changes
+
+- [#4440](https://github.com/bluesky-social/atproto/pull/4440) [`63f97ae`](https://github.com/bluesky-social/atproto/commit/63f97ae9c1f57def2d489ab8ce7f83a84a7d1ba1) Thanks [@iwsmith](https://github.com/iwsmith)! - Add `recID` field to `getSuggestedUsers` and `getSuggestedUsersSkeleton`
+
+- Updated dependencies [[`63f97ae`](https://github.com/bluesky-social/atproto/commit/63f97ae9c1f57def2d489ab8ce7f83a84a7d1ba1)]:
+  - @atproto/api@0.18.10
+
 ## 0.0.204
 
 ### Patch Changes

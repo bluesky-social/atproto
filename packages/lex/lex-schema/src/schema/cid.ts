@@ -1,29 +1,23 @@
-import { Cid, isCid } from '@atproto/lex-data'
+import { Cid, CidCheckOptions, InferCheckedCid, isCid } from '@atproto/lex-data'
 import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export type { Cid }
 
-export type CidSchemaOptions = {
-  /**
-   * In strict mode, only CID with the following properties are accepted:
-   * - version: 1
-   * - codec: raw binary (0x55) or DAG-CBOR (0x71)
-   * - hash function: SHA-256 (0x12)
-   *
-   * @default false
-   */
-  strict?: boolean
-}
+export type CidSchemaOptions = CidCheckOptions
+export type CidSchemaOutput<TOptions extends CidSchemaOptions> =
+  InferCheckedCid<TOptions>
 
-export class CidSchema extends Schema<Cid> {
-  constructor(readonly options: CidSchemaOptions = {}) {
+export class CidSchema<TOptions extends CidSchemaOptions> extends Schema<
+  CidSchemaOutput<TOptions>
+> {
+  constructor(readonly options: TOptions) {
     super()
   }
 
   validateInContext(
     input: unknown,
     ctx: ValidatorContext,
-  ): ValidationResult<Cid> {
+  ): ValidationResult<CidSchemaOutput<TOptions>> {
     if (!isCid(input, this.options)) {
       return ctx.issueInvalidType(input, 'cid')
     }

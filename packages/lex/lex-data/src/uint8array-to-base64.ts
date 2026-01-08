@@ -25,7 +25,7 @@ export const toBase64Native =
       ): string {
         return bytes.toBase64!({ alphabet, omitPadding: true })
       }
-    : null
+    : /* v8 ignore next -- @preserve */ null
 
 export const toBase64Node = Buffer
   ? function toBase64Node(
@@ -45,7 +45,7 @@ export const toBase64Node = Buffer
           : b64.slice(0, -1) // '='
         : b64
     }
-  : null
+  : /* v8 ignore next -- @preserve */ null
 
 export function toBase64Ponyfill(
   bytes: Uint8Array,

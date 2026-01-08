@@ -1,16 +1,13 @@
-import {
-  AtprotoDid,
-  AtprotoIdentityDidMethods,
-  DidDocument,
-} from '@atproto-labs/did-resolver'
+import { AtprotoDid, AtprotoDidDocument } from '@atproto-labs/did-resolver'
 import { HANDLE_INVALID } from './constants'
+
+export type { AtprotoDid, AtprotoDidDocument }
 
 // Consistent with `com.atproto.identity.defs#identityInfo` returned by
 // `com.atproto.identity.resolveIdentity` endpoint.
 export type IdentityInfo = {
   did: AtprotoDid
-
-  didDoc: DidDocument<AtprotoIdentityDidMethods>
+  didDoc: AtprotoDidDocument
 
   /**
    * Will be 'handle.invalid' if the handle does not resolve to the

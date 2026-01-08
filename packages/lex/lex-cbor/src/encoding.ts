@@ -8,7 +8,7 @@ import {
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
-import { Cid, LexValue, asCid, decodeCid } from '@atproto/lex-data'
+import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
 
 // @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
 // match the AT Data Model constraints. Floats, in particular, are not allowed.
@@ -31,7 +31,7 @@ function objectEncoder(
   _typ: string,
   _options: EncodeOptions,
 ): Token[] | null {
-  const cid = asCid(obj)
+  const cid = ifCid(obj)
   if (cid) return cidEncoder(cid)
 
   // @TODO strip undefined values somehow

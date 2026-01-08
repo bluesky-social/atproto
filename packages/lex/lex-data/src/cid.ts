@@ -1,9 +1,18 @@
 import { CID } from 'multiformats/cid'
+import {
+  create as createDigest,
+  equals as digestEquals,
+} from 'multiformats/hashes/digest'
+import { sha256, sha512 } from 'multiformats/hashes/sha2'
 
-export const DAG_CBOR_MULTICODEC = 0x71
-export const RAW_BIN_MULTICODEC = 0x55
+export const DAG_CBOR_MULTICODEC = 0x71 // DRISL conformant DAG-CBOR
+export type DAG_CBOR_MULTICODEC = typeof DAG_CBOR_MULTICODEC
 
-export const SHA2_256_MULTIHASH_CODE = 0x12
+export const RAW_MULTICODEC = 0x55 // raw binary codec used in DASL CIDs
+export type RAW_MULTICODEC = typeof RAW_MULTICODEC
+
+export const SHA256_MULTIHASH = sha256.code
+export type SHA256_MULTIHASH = typeof SHA256_MULTIHASH
 
 export type MultihashDigest<Code extends number = number> = {
   code: Code
@@ -15,8 +24,8 @@ export type MultihashDigest<Code extends number = number> = {
 declare module 'multiformats/cid' {
   /**
    * @deprecated use the {@link Cid} interface from `@atproto/lex-data`, and
-   * related helpers ({@link asCid}, {@link parseCid}, {@link decodeCid},
-   * {@link createCid}, {@link isCid}), instead.
+   * related helpers ({@link isCid}, {@link ifCid}, {@link asCid},
+   * {@link parseCid}, {@link decodeCid}), instead.
    *
    * This is marked as deprecated because we want to discourage direct usage of
    * `multiformats/cid` in dependent packages, and instead have them rely on the
@@ -69,60 +78,216 @@ export interface Cid {
   toString(): string
 }
 
-export function asCid(value: unknown): Cid | null {
-  return CID.asCID(value)
+/**
+ * Represents the cid of raw binary data (like media blobs).
+ * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats ATproto Data Model - Link and CID Formats}
+ */
+export interface RawCid extends Cid {
+  version: 1
+  code: RAW_MULTICODEC
 }
 
-export function parseCid(input: string): Cid {
-  return CID.parse(input)
+export function isRawCid(cid: Cid): cid is RawCid {
+  return cid.version === 1 && cid.code === RAW_MULTICODEC
 }
 
-export function decodeCid(bytes: Uint8Array): Cid {
-  return CID.decode(bytes)
+/**
+ * Represents a DASL compliant CID.
+ * @see {@link https://dasl.ing/cid.html DASL-CIDs}
+ */
+export interface DaslCid extends Cid {
+  version: 1
+  code: RAW_MULTICODEC | DAG_CBOR_MULTICODEC
+  multihash: MultihashDigest<SHA256_MULTIHASH>
 }
 
-export function createCid(code: number, digest: MultihashDigest): Cid {
-  return CID.createV1(code, digest)
+export function isDaslCid(cid: Cid): cid is DaslCid {
+  return (
+    cid.version === 1 &&
+    (cid.code === RAW_MULTICODEC || cid.code === DAG_CBOR_MULTICODEC) &&
+    cid.multihash.code === SHA256_MULTIHASH &&
+    cid.multihash.size === 32 // Should always be 32 bytes (256 bits) for SHA-256
+  )
 }
 
-export function isCid(
+/**
+ * Represents the cid of ATProto DAG-CBOR data (like repository MST nodes).
+ * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats ATproto Data Model - Link and CID Formats}
+ */
+export interface CborCid extends DaslCid {
+  code: DAG_CBOR_MULTICODEC
+}
+
+export function isCborCid(cid: Cid): cid is CborCid {
+  return cid.code === DAG_CBOR_MULTICODEC && isDaslCid(cid)
+}
+
+export type CidCheckOptions = {
+  flavor?: 'raw' | 'cbor' | 'dasl'
+}
+export type InferCheckedCid<TOptions> = TOptions extends { flavor: 'raw' }
+  ? RawCid
+  : TOptions extends { flavor: 'cbor' }
+    ? CborCid
+    : Cid
+
+/**
+ * Coerces the input value to a Cid, or returns null if not possible.
+ */
+export function ifCid<TOptions extends CidCheckOptions>(
   value: unknown,
-  options?: { strict?: boolean },
-): value is Cid {
-  const cid = asCid(value)
+  options: TOptions,
+): InferCheckedCid<TOptions> | null
+export function ifCid(value: unknown, options?: CidCheckOptions): Cid | null
+export function ifCid(value: unknown, options?: CidCheckOptions): Cid | null {
+  const cid = CID.asCID(value)
   if (!cid) {
-    return false
+    return null
   }
 
-  if (options?.strict) {
-    if (cid.version !== 1) {
-      return false
-    }
-    if (cid.code !== RAW_BIN_MULTICODEC && cid.code !== DAG_CBOR_MULTICODEC) {
-      return false
-    }
-    if (cid.multihash.code !== SHA2_256_MULTIHASH_CODE) {
-      return false
-    }
+  switch (options?.flavor) {
+    case 'cbor':
+      return isCborCid(cid) ? cid : null
+    case 'raw':
+      return isRawCid(cid) ? cid : null
+    case 'dasl':
+      return isDaslCid(cid) ? cid : null
+    default:
+      return cid
   }
-
-  return true
 }
 
-export function validateCidString(input: string): boolean {
-  return parseCidString(input)?.toString() === input
+export function isCid<TOptions extends CidCheckOptions>(
+  value: unknown,
+  options: TOptions,
+): value is InferCheckedCid<TOptions>
+export function isCid(value: unknown, options?: CidCheckOptions): value is Cid
+export function isCid(value: unknown, options?: CidCheckOptions): value is Cid {
+  return ifCid(value, options) !== null
 }
 
-export function parseCidString(input: string): Cid | undefined {
+/**
+ * Coerces the input value to a Cid, or throws if not possible.
+ */
+export function asCid<TOptions extends CidCheckOptions>(
+  value: unknown,
+  options: TOptions,
+): InferCheckedCid<TOptions>
+export function asCid(value: unknown, options?: CidCheckOptions): Cid
+export function asCid(value: unknown, options?: CidCheckOptions): Cid {
+  const cid = ifCid(value, options)
+  if (cid) return cid
+  throw new Error('Not a valid CID')
+}
+
+/**
+ * Parses a CID string into a Cid object.
+ *
+ * @throws if the input is not a valid CID string.
+ */
+export function parseCid<TOptions extends CidCheckOptions>(
+  input: string,
+  options: TOptions,
+): InferCheckedCid<TOptions>
+export function parseCid(input: string, options?: CidCheckOptions): Cid
+export function parseCid(input: string, options?: CidCheckOptions): Cid {
+  const cid = CID.parse(input)
+  return asCid(cid, options)
+}
+
+/**
+ * Decodes a CID from its binary representation.
+ *
+ * @see {@link https://dasl.ing/cid.html DASL-CIDs}
+ * @throws if the input do not represent a valid DASL {@link Cid}
+ */
+export function decodeCid<TOptions extends CidCheckOptions>(
+  cidBytes: Uint8Array,
+  options: TOptions,
+): InferCheckedCid<TOptions>
+export function decodeCid(cidBytes: Uint8Array, options?: CidCheckOptions): Cid
+export function decodeCid(
+  cidBytes: Uint8Array,
+  options?: CidCheckOptions,
+): Cid {
+  const cid = CID.decode(cidBytes)
+  return asCid(cid, options)
+}
+
+export function validateCidString(
+  input: string,
+  options?: CidCheckOptions,
+): boolean {
+  return parseCidString(input, options)?.toString() === input
+}
+
+export function parseCidString<TOptions extends CidCheckOptions>(
+  input: string,
+  options: TOptions,
+): InferCheckedCid<TOptions> | undefined
+export function parseCidString(
+  input: string,
+  options?: CidCheckOptions,
+): Cid | undefined
+export function parseCidString(
+  input: string,
+  options?: CidCheckOptions,
+): Cid | undefined {
   try {
-    return parseCid(input)
+    return parseCid(input, options)
   } catch {
     return undefined
   }
 }
 
-export function ensureValidCidString(input: string): void {
-  if (!validateCidString(input)) {
+export function ensureValidCidString(
+  input: string,
+  options?: CidCheckOptions,
+): void {
+  if (!validateCidString(input, options)) {
     throw new Error(`Invalid CID string`)
   }
+}
+
+/**
+ * Verifies whether the multihash of a given {@link cid} matches the hash of the provided {@link bytes}.
+ * @params cid The CID to match against the bytes.
+ * @params bytes The bytes to verify.
+ * @returns true if the CID matches the bytes, false otherwise.
+ */
+export async function isCidForBytes(
+  cid: Cid,
+  bytes: Uint8Array,
+): Promise<boolean> {
+  if (cid.multihash.code === sha256.code) {
+    const digest = await sha256.digest(bytes)
+    return digestEquals(cid.multihash, digest)
+  }
+
+  if (cid.multihash.code === sha512.code) {
+    const digest = await sha512.digest(bytes)
+    return digestEquals(cid.multihash, digest)
+  }
+
+  // Don't know how to verify other multihash codes
+  throw new Error('Unsupported CID multihash')
+}
+
+export async function cidForCbor(bytes: Uint8Array): Promise<CborCid> {
+  const digest = await sha256.digest(bytes)
+  return CID.createV1(DAG_CBOR_MULTICODEC, digest) as CborCid
+}
+
+export async function cidForRawBytes(bytes: Uint8Array): Promise<RawCid> {
+  const digest = await sha256.digest(bytes)
+  return CID.createV1(RAW_MULTICODEC, digest) as RawCid
+}
+
+export function cidForRawHash(hash: Uint8Array): RawCid {
+  // Fool-proofing
+  if (hash.length !== 32) {
+    throw new Error(`Invalid SHA-256 hash length: ${hash.length}`)
+  }
+  const digest = createDigest(sha256.code, hash)
+  return CID.createV1(RAW_MULTICODEC, digest) as RawCid
 }
