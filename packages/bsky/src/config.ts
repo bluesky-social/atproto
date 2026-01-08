@@ -211,7 +211,10 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
+<<<<<<< HEAD
     const growthBookUrl = process.env.BSKY_GROWTHBOOK_URL || undefined
+=======
+>>>>>>> 219779876 (Adds GrowthBook feature flag for suggested users from Discover)
     const growthBookKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'

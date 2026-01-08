@@ -22,6 +22,7 @@ export enum FeatureGateID {
   _ = '',
   SuggestedUsersFromDiscover = 'disc_onboarding_follow_suggest',
   ThreadsV2ReplyRankingExploration = 'threads_v2_reply_ranking_exploration',
+  SearchFilteringExploration = 'search_filtering_exploration',
 }
 
 /**
@@ -51,6 +52,13 @@ export class FeatureGates {
     }
   }
 
+  destroy() {
+    if (this.ready) {
+      this.ready = false
+      this.client = undefined
+    }
+  }
+
   contextForDid(did: string): Context {
     return { attributes: { did: did } }
   }
@@ -59,8 +67,9 @@ export class FeatureGates {
     if (!this.ready || !this.client) return false
     if (!ctx.attributes || !ctx.attributes.did) return false
 
-    // TODO: migrate from StatSig to GrowthBook
+    // TODO: migrate from StatSig to GrowthBook (remove these two lines)
     if (gate === FeatureGateID.ThreadsV2ReplyRankingExploration) return false
+    if (gate === FeatureGateID.SearchFilteringExploration) return false
 
     return this.client.isOn(gate, ctx)
   }

@@ -21,6 +21,7 @@ import {
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
+import { FeatureGateID } from '../../../../feature-gates'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
@@ -122,11 +123,20 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
+    let tagged = false
+    if (
+      params.hydrateCtx.featureGates.get(
+        FeatureGateID.SearchFilteringExploration,
+      )
+    ) {
+      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
+    } else {
+      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    }
+
     // Cases to conditionally show based on tagging.
-    const tagged = post.tags.has(ctx.cfg.visibilityTagHide)
     if (isCuratedSearch && tagged) return false
     if (!parsedQuery.author && tagged) return false
-
     return true
   })
   return skeleton
