@@ -85,11 +85,8 @@ export default function (server: Server, ctx: AppContext) {
             'Failed to verify ownership of Neuro Legal ID. Please approve the login request on your Neuro app.',
           )
         }
-      } else {
-        throw new InvalidRequestError(
-          'Password must be a Neuro Legal ID (e.g., xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@legal.yourdomain.io). Regular passwords are not supported on this server.',
-        )
       }
+      // Regular password - no special validation needed
 
       let didDoc: DidDocument | undefined
       let creds: { accessJwt: string; refreshJwt: string }

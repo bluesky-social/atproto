@@ -21,6 +21,7 @@ docker run -d \
   -e PDS_DATA_DIRECTORY=/app/data \
   -e PDS_BSKY_APP_VIEW_URL=https://api.bsky.app \
   -e PDS_BSKY_APP_VIEW_DID=did:web:api.bsky.app \
+  -e PDS_INVITES_REQUIRED=false \
   -e PDS_NEURO_ENABLED=true \
   -e PDS_NEURO_DOMAIN=lab.tagroot.io \
   -e PDS_NEURO_API_TYPE=remotelogin \

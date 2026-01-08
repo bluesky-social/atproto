@@ -7,6 +7,7 @@ import * as mig006 from './006-oauth-permission-sets'
 import * as mig007 from './007-lexicon-failures-index'
 import * as mig008 from './008-neuro-identity'
 import * as mig009 from './009-nullable-password'
+import * as mig010 from './010-neuro-provision-nonce'
 
 export default {
   '001': mig001,
@@ -18,4 +19,5 @@ export default {
   '007': mig007,
   '008': mig008,
   '009': mig009,
+  '010': mig010,
 }

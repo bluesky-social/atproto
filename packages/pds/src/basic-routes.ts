@@ -2,6 +2,7 @@ import { Router } from 'express'
 import express from 'express'
 import { sql } from 'kysely'
 import { AppContext } from './context'
+import { createProvisionAccountRoute } from './api/neuro/provisionAccount'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
@@ -191,6 +192,12 @@ Most API routes are under /xrpc/
         })
       }
     })
+  }
+
+  // Neuro auto-provision endpoint
+  if (ctx.neuroAuthManager) {
+    const provisionRouter = createProvisionAccountRoute(ctx)
+    router.use(provisionRouter)
   }
 
   return router
