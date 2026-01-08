@@ -703,6 +703,7 @@ Object {
 
 exports[`pds profile views status returns active status when within the duration 1`] = `
 Object {
+  "cid": "cids(0)",
   "embed": Object {
     "$type": "app.bsky.embed.external#view",
     "external": Object {
@@ -728,11 +729,13 @@ Object {
     "status": "app.bsky.actor.status#live",
   },
   "status": "app.bsky.actor.status#live",
+  "uri": "record(0)",
 }
 `;
 
 exports[`pds profile views status when outside the duration returns inactive status 1`] = `
 Object {
+  "cid": "bafyreiezb5sptqozd5u2actzfksgfoj2xpolhvl6pe3tkapxhrpuufmnv4",
   "embed": Object {
     "$type": "app.bsky.embed.external#view",
     "external": Object {
@@ -758,5 +761,6 @@ Object {
     "status": "app.bsky.actor.status#live",
   },
   "status": "app.bsky.actor.status#live",
+  "uri": "at://did:plc:z3eqvo7vby4gkdwmziz7cmxc/app.bsky.actor.status/self",
 }
 `;
