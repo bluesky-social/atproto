@@ -101,7 +101,7 @@ const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const useDiscover = input.ctx.featureGates.check(
     input.ctx.featureGates.ids.SuggestedUsersFromDiscover,
-    input.ctx.featureGates.user({ did: input.params.viewer }),
+    input.ctx.featureGates.contextForDid(input.params.viewer ?? ''),
   )
   const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
   return skeletonFn(input)

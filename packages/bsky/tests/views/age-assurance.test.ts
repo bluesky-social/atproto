@@ -47,8 +47,6 @@ describe('age assurance views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_age_assurance',
       bsky: {
-        statsigEnv: 'test',
-        statsigKey: 'secret-key',
         kws: {
           apiKey: 'apiKey',
           apiOrigin: kwsServer.url,
