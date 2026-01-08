@@ -6,11 +6,17 @@ import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
 import { com } from './lexicons/index.js'
-import { AuthVerifier } from './password-agent-utils.test.js'
-import { PasswordAgent, PasswordAuthAgentHooks } from './password-agent.js'
+import { AuthVerifier } from './password-session-utils.test.js'
+import {
+  PasswordSession,
+  PasswordSessionOptions,
+  SessionData,
+} from './password-session.js'
 
-const hooks: PasswordAuthAgentHooks = {
-  onRefreshFailure: async (session, cause) => {
+const hooks: Required<
+  Pick<PasswordSessionOptions, 'onDeleteFailure' | 'onUpdateFailure'>
+> = {
+  onUpdateFailure: async (session, cause) => {
     throw new Error('Should not fail to refresh session', { cause })
   },
   onDeleteFailure: async (session, cause) => {
@@ -43,7 +49,7 @@ namespace app {
   }
 }
 
-describe('PasswordAgent', () => {
+describe(PasswordSession, () => {
   let entrywayServer: Server
   let entrywayOrigin: string
 
@@ -162,50 +168,67 @@ describe('PasswordAgent', () => {
   })
 
   it('fails with invalid credentials', async () => {
+    const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
+    const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
+
     await expect(
-      PasswordAgent.login({
+      PasswordSession.create({
         service: entrywayOrigin,
         identifier: 'alice',
         password: 'wrong-password',
-        hooks,
+        ...hooks,
+        onDeleted,
+        onUpdated,
       }),
     ).rejects.toMatchObject({
       success: false,
       status: 401,
       error: 'AuthenticationRequired',
     })
+
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(onUpdated).not.toHaveBeenCalled()
   })
 
   it('requires 2fa', async () => {
-    const result = await PasswordAgent.login({
+    const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
+    const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
+
+    const result = await PasswordSession.create({
       service: entrywayOrigin,
       identifier: 'alice',
       password: 'password123',
-      hooks,
+      ...hooks,
+      onDeleted,
+      onUpdated,
     })
 
     assert(!result.success)
     assert(result instanceof LexRpcResponseError)
     expect(result.status).toBe(401)
     expect(result.error).toBe('AuthFactorTokenRequired')
+    expect(onDeleted).not.toHaveBeenCalled()
+    expect(onUpdated).not.toHaveBeenCalled()
   })
 
   it('logs in', async () => {
-    const onDeleted = vi.fn()
-    const onRefreshed = vi.fn()
+    const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
+    const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const result = await PasswordAgent.login({
+    const result = await PasswordSession.create({
+      ...hooks,
       service: entrywayOrigin,
       identifier: 'alice',
       password: 'password123',
       authFactorToken: '2fa-token',
-      hooks: { ...hooks, onDeleted, onRefreshed },
+      onDeleted,
+      onUpdated,
     })
 
-    expect(onRefreshed).not.toHaveBeenCalled()
+    expect(onUpdated).toHaveBeenCalledTimes(1)
 
     assert(result.success)
-    const agent = result.value
+    const agent = result
     const client = new Client(agent)
 
     await expect(
@@ -252,19 +275,22 @@ describe('PasswordAgent', () => {
   })
 
   it('refreshes expired token', async () => {
-    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = vi.fn()
-    const result = await PasswordAgent.login({
+    const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
+    const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
+
+    const result = await PasswordSession.create({
       service: entrywayOrigin,
       identifier: 'bob',
       password: 'password123',
       authFactorToken: '2fa-token',
-      hooks: { ...hooks, onRefreshed },
+      ...hooks,
+      onUpdated,
+      onDeleted,
     })
 
     assert(result.success)
 
-    const agent = result.value
-    const client = new Client(agent)
+    const client = new Client(result.value)
 
     await expect(
       client.call(app.example.customMethod, { message: 'before' }),
@@ -273,27 +299,26 @@ describe('PasswordAgent', () => {
       did: 'did:example:bob',
     })
 
-    expect(onRefreshed).not.toHaveBeenCalled()
+    expect(onUpdated).toHaveBeenCalledTimes(1)
 
     await expect(client.call(app.example.expiredToken)).rejects.toThrow(
       'Token expired',
     )
 
-    expect(onRefreshed).toHaveBeenCalled()
-    expect(onRefreshed).toHaveBeenCalledWith(
+    expect(onUpdated).toHaveBeenCalledTimes(2)
+    expect(onUpdated).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          accessJwt: expect.any(String),
-          refreshJwt: expect.any(String),
+        service: entrywayOrigin,
 
-          email: expect.stringContaining('@'),
-          emailConfirmed: true,
-          emailAuthFactor: false,
-          handle: 'bob.example',
-          did: 'did:example:bob',
-          didDoc: expect.objectContaining({ id: 'did:example:bob' }),
-        }),
-        pdsUrl: pdsOrigin,
+        accessJwt: expect.any(String),
+        refreshJwt: expect.any(String),
+
+        email: expect.stringContaining('@'),
+        emailConfirmed: true,
+        emailAuthFactor: false,
+        handle: 'bob.example',
+        did: 'did:example:bob',
+        didDoc: expect.objectContaining({ id: 'did:example:bob' }),
       }),
     )
 
@@ -306,61 +331,91 @@ describe('PasswordAgent', () => {
   })
 
   it('restores session from storage', async () => {
-    const loginResult = await PasswordAgent.login({
+    const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
+    const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
+
+    const loginResult = await PasswordSession.create({
       service: entrywayOrigin,
       identifier: 'carla',
       password: 'password123',
       authFactorToken: '2fa-token',
-      hooks,
+      ...hooks,
+      onUpdated,
+      onDeleted,
     })
 
     assert(loginResult.success)
-    const loginAgent = loginResult.value
-    expect(loginAgent.did).toEqual('did:example:carla')
-    const session = structuredClone(loginResult.value.session)
+    const initialAgent = loginResult.value
+    expect(initialAgent.did).toEqual('did:example:carla')
+    expect(onDeleted).toHaveBeenCalledTimes(0)
+    expect(onUpdated).toHaveBeenCalledTimes(1)
+    expect(onUpdated).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accessJwt: expect.any(String),
+        refreshJwt: expect.any(String),
+      }),
+    )
 
-    const onRefreshed: PasswordAuthAgentHooks['onRefreshed'] = vi.fn()
-    const agent = await PasswordAgent.resume(session, {
-      hooks: { ...hooks, onRefreshed },
+    const session = loginResult.value.session
+
+    const resumedAgent = await PasswordSession.resume(session, {
+      ...hooks,
+      onUpdated,
+      onDeleted,
     })
 
-    expect(agent.did).toEqual('did:example:carla')
-    expect(onRefreshed).toHaveBeenCalled()
+    expect(resumedAgent.did).toEqual('did:example:carla')
+    expect(onDeleted).toHaveBeenCalledTimes(0)
+    expect(onUpdated).toHaveBeenCalledTimes(2)
 
-    // The initial session was refreshed and is now expired
-    await expect(loginAgent.refresh()).rejects.toMatchObject({
+    // The initial session was refreshed. The data it contains is now invalid.
+    await expect(initialAgent.refresh()).rejects.toMatchObject({
       success: false,
       error: 'ExpiredToken',
       status: 401,
     })
 
-    const client = new Client(agent)
+    expect(onDeleted).toHaveBeenCalledTimes(1)
+
+    const client = new Client(resumedAgent)
     await expect(
       client.call(app.example.customMethod, { message: 'resume' }),
     ).resolves.toMatchObject({
       message: 'resume',
       did: 'did:example:carla',
     })
+
+    expect(onDeleted).toHaveBeenCalledTimes(1)
+    expect(onUpdated).toHaveBeenCalledTimes(2)
+
+    await resumedAgent.logout()
+
+    expect(onDeleted).toHaveBeenCalledTimes(2)
+    expect(onUpdated).toHaveBeenCalledTimes(2)
   })
 
   it('silently ignores expected logout errors', async () => {
-    const result = await PasswordAgent.login({
+    let session: SessionData | null = null
+
+    const agent = await PasswordSession.create({
       service: entrywayOrigin,
       identifier: 'dave',
       password: 'password123',
       authFactorToken: '2fa-token',
-      hooks,
+      ...hooks,
+      onUpdated: (data) => {
+        session = structuredClone(data)
+      },
+      onDeleted: () => {},
     })
 
-    assert(result.success)
-    const agent = result.value
-
-    const session = structuredClone(agent.session)
+    assert(agent.success)
+    assert(session)
 
     await agent.logout()
     await agent.logout()
 
-    await PasswordAgent.delete(session)
-    await PasswordAgent.delete(session)
+    await PasswordSession.delete(session)
+    await PasswordSession.delete(session)
   })
 })
