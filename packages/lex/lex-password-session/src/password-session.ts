@@ -2,19 +2,12 @@ import {
   Agent,
   LexRpcError,
   LexRpcFailure,
-  LexRpcResponseError,
   buildAgent,
+  xrpc,
   xrpcSafe,
 } from '@atproto/lex-client'
-import { ResultSuccess } from '@atproto/lex-schema'
 import { com } from './lexicons/index.js'
 import { extractLexRpcErrorCode, extractPdsUrl, noop } from './util.js'
-
-export type CreateResult = CreateSuccess | CreateFailure
-export type CreateSuccess = PasswordSession
-export type CreateFailure = LexRpcResponseError<
-  typeof com.atproto.server.createSession.main
->
 
 export type RefreshFailure = LexRpcFailure<
   typeof com.atproto.server.refreshSession.main
@@ -91,11 +84,7 @@ export type PasswordSessionOptions = {
   ) => void | Promise<void>
 }
 
-/**
- * @implements {ResultSuccess<PasswordSession>} to be compatible with result
- * handling utilities
- */
-export class PasswordSession implements Agent, ResultSuccess<PasswordSession> {
+export class PasswordSession implements Agent {
   /**
    * Internal {@link Agent} used for session management towards the
    * authentication service only.
@@ -116,14 +105,6 @@ export class PasswordSession implements Agent, ResultSuccess<PasswordSession> {
 
     this.#sessionData = sessionData
     this.#sessionPromise = Promise.resolve(this.#sessionData)
-  }
-
-  /** @see {@link ResultSuccess.success} */
-  success = true as const
-
-  /** @see {@link ResultSuccess.value} */
-  get value() {
-    return this
   }
 
   get did() {
@@ -306,35 +287,57 @@ export class PasswordSession implements Agent, ResultSuccess<PasswordSession> {
   }
 
   /**
-   * @throws In case of unexpected error
+   * @note It is **not** recommended to use {@link PasswordSession} with main
+   * account credentials. Instead, it is strongly advised to use OAuth based
+   * authentication for main username/password credentials and use
+   * {@link PasswordSession} with an app-password, for bots, scripts, or similar
+   * use-cases.
+   *
+   * @throws If unable to create a session. In particular, if the server
+   * requires a 2FA token, a {@link LexRpcResponseError} with the
+   * `AuthFactorTokenRequired` error code will be thrown.
+   *
+   *
+   * @example Handling 2FA errors
+   *
+   * ```ts
+   * try {
+   *   const session = await PasswordSession.create({
+   *     service: 'https://example.com',
+   *     identifier: 'alice',
+   *     password: 'correct horse battery staple',
+   *   })
+   * } catch (err) {
+   *   if (err instanceof LexRpcResponseError && err.error === 'AuthFactorTokenRequired') {
+   *     // Prompt user for 2FA token and re-attempt session creation
+   *   }
+   * }
+   * ```
    */
   static async create({
     service,
     identifier,
     password,
+    allowTakendown,
     authFactorToken,
     ...options
   }: PasswordSessionOptions & {
     service: string | URL
     identifier: string
     password: string
+    allowTakendown?: boolean
     authFactorToken?: string
-  }): Promise<CreateResult> {
+  }): Promise<PasswordSession> {
     const xrpcAgent = buildAgent({
       service,
       fetch: options.fetch,
     })
 
-    const response = await xrpcSafe(
+    const response = await xrpc(
       xrpcAgent,
       com.atproto.server.createSession.main,
-      { body: { identifier, password, authFactorToken } },
+      { body: { identifier, password, allowTakendown, authFactorToken } },
     )
-
-    if (!response.success) {
-      if (response.matchesSchema()) return response
-      throw response
-    }
 
     const data: SessionData = {
       ...response.body,
