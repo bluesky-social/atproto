@@ -1,5 +1,15 @@
 # @atproto/bsky
 
+## 0.0.208
+
+### Patch Changes
+
+- [`b329266`](https://github.com/bluesky-social/atproto/commit/b329266853b4867fbbcafc8845e479c888f8ac36) Thanks [@mary-ext](https://github.com/mary-ext)! - properly convert did:web to service endpoints in `.well-known/did.json`
+
+- Updated dependencies []:
+  - @atproto/common@0.5.7
+  - @atproto/xrpc-server@0.10.8
+
 ## 0.0.207
 
 ### Patch Changes
