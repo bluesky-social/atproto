@@ -545,7 +545,13 @@ export class Views {
     if (!actor?.status) return
 
     const { status } = actor
-    const { record, sortedAt, cid } = status
+    const { record, sortedAt, cid, takedownRef } = status
+
+    if (takedownRef) {
+      // send statusDisabledView to authed user
+      return undefined
+    }
+
     const uri = AtUri.make(did, ids.AppBskyActorStatus, 'self').toString()
 
     const minDuration = 5 * MINUTE
