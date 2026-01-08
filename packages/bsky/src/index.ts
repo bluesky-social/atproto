@@ -182,8 +182,7 @@ export class BskyAppView {
     })
 
     const featureGates = new FeatureGates({
-      apiKey: config.statsigKey,
-      env: config.statsigEnv,
+      apiKey: config.growthBookKey,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
