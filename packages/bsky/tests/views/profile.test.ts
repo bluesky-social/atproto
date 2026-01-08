@@ -495,7 +495,7 @@ describe('pds profile views', () => {
     })
 
     describe('when taken down', () => {
-      it('it does not return the live status', async () => {
+      beforeAll(async () => {
         const res = await sc.agent.com.atproto.repo.putRecord(
           {
             repo: alice,
@@ -519,12 +519,29 @@ describe('pds profile views', () => {
           recordUri: res.data.uri,
         })
         await network.processAll()
+      })
 
+      it('it returns the live status with isDisabled=true for status owner', async () => {
         const { data } = await agent.api.app.bsky.actor.getProfile(
           { actor: alice },
           {
             headers: await network.serviceHeaders(
               alice,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        expect(data.status?.isDisabled).toBe(true)
+        expect(forSnapshot(data.status)).toMatchSnapshot()
+      })
+
+      it('it does not return the live status for non-owner', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              bob,
               ids.AppBskyActorGetProfile,
             ),
           },
