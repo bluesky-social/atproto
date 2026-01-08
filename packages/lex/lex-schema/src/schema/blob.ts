@@ -1,13 +1,13 @@
 import {
   BlobRef,
-  BlobRefValidationOptions,
+  BlobRefCheckOptions,
   LegacyBlobRef,
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
 import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
-export type BlobSchemaOptions = BlobRefValidationOptions & {
+export type BlobSchemaOptions = BlobRefCheckOptions & {
   /**
    * Whether to allow legacy blob references format
    * @see {@link LegacyBlobRef}

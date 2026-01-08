@@ -150,6 +150,18 @@ export class LexRouter {
     ns: Main<M>,
     config: LexRouterMethodConfig<M, Credentials>,
   ): this
+  add<M extends LexMethod, Credentials = unknown>(
+    ns: Main<M>,
+    config: M extends Subscription
+      ?
+          | LexRouterSubscriptionHandler<M, Credentials>
+          | LexRouterSubscriptionConfig<M, Credentials>
+      : M extends Query | Procedure
+        ?
+            | LexRouterMethodHandler<M, Credentials>
+            | LexRouterMethodConfig<M, Credentials>
+        : never,
+  ): this
   add<M extends LexMethod>(
     ns: Main<M>,
     config:

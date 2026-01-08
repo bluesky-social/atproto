@@ -1,4 +1,4 @@
-import { asCid, isPlainObject } from '@atproto/lex-data'
+import { ifCid, isPlainObject } from '@atproto/lex-data'
 import { PropertyKey } from './property-key.js'
 
 export abstract class Issue {
@@ -229,7 +229,7 @@ function stringifyType(value: unknown): string {
     case 'object':
       if (value === null) return 'null'
       if (Array.isArray(value)) return 'array'
-      if (asCid(value)) return 'cid'
+      if (ifCid(value)) return 'cid'
       if (value instanceof Date) return 'date'
       if (value instanceof RegExp) return 'regexp'
       if (value instanceof Map) return 'map'
