@@ -576,7 +576,7 @@ export class Views {
 
     const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
 
-    return {
+    const response: StatusView = {
       uri,
       cid,
       record: record,
@@ -586,8 +586,13 @@ export class Views {
         : undefined,
       expiresAt,
       isActive,
-      isDisabled: isTakenDown,
     }
+
+    if (isViewerStatusOwner) {
+      response.isDisabled = isTakenDown
+    }
+
+    return response
   }
 
   blockedProfileViewer(
