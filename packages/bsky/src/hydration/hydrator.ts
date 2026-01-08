@@ -82,8 +82,6 @@ export class HydrateCtx {
   includeTakedowns = this.vals.includeTakedowns
   overrideIncludeActorRecordTakedowns =
     this.vals.overrideIncludeActorRecordTakedowns
-  overrideIncludeActorStatusTakedowns =
-    this.vals.overrideIncludeActorStatusTakedowns
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
   featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
@@ -109,13 +107,6 @@ export type HydrateCtxVals = {
    * fallback override.
    */
   overrideIncludeActorRecordTakedowns?: boolean
-  /**
-   * In some special cases, like `getProfile`, we want to include takedowns
-   * since we server different views to the user in question later on.
-   * `includeTakedowns` should take precedence in any case, this is just a
-   * fallback override.
-   */
-  overrideIncludeActorStatusTakedowns?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
   featureGates?: CheckedFeatureGatesMap
@@ -251,8 +242,6 @@ export class Hydrator {
         includeTakedowns: ctx.includeTakedowns,
         overrideIncludeActorRecordTakedowns:
           ctx.overrideIncludeActorRecordTakedowns,
-        overrideIncludeActorStatusTakedowns:
-          ctx.overrideIncludeActorStatusTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),

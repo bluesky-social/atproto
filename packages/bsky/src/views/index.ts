@@ -544,11 +544,17 @@ export class Views {
     const actor = state.actors?.get(did)
     if (!actor?.status) return
 
+    const isViewerStatusOwner = did === state.ctx?.viewer
     const { status } = actor
     const { record, sortedAt, cid, takedownRef } = status
+    const isTakenDown = !!takedownRef
 
-    if (takedownRef) {
-      // send statusDisabledView to authed user
+    /*
+     * Manual filter for takendown status records. If this is ever removed, we
+     * need to reinstate `includeTakedowns` handling in the `Actor.getActors`
+     * hydrator.
+     */
+    if (isTakenDown && !isViewerStatusOwner) {
       return undefined
     }
 
@@ -580,6 +586,7 @@ export class Views {
         : undefined,
       expiresAt,
       isActive,
+      isDisabled: isTakenDown,
     }
   }
 

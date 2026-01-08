@@ -161,7 +161,6 @@ export class ActorHydrator {
     opts: {
       includeTakedowns?: boolean
       overrideIncludeActorRecordTakedowns?: boolean
-      overrideIncludeActorStatusTakedowns?: boolean
       skipCacheForDids?: string[]
     } = {},
   ): Promise<Actors> {
@@ -169,7 +168,6 @@ export class ActorHydrator {
     const {
       includeTakedowns = false,
       overrideIncludeActorRecordTakedowns = false,
-      overrideIncludeActorStatusTakedowns = false,
       skipCacheForDids,
     } = opts
     const overrideIncludeTakedowns =
@@ -195,7 +193,11 @@ export class ActorHydrator {
       const status = actor.statusRecord
         ? parseRecord<StatusRecord>(
             actor.statusRecord,
-            includeTakedowns || overrideIncludeActorStatusTakedowns,
+            /*
+             * Always true, we filter this out in the `Views.status()`. If we
+             * ever remove that filter, we'll want to reinstate this here.
+             */
+            true,
           )
         : undefined
 

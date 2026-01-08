@@ -62,7 +62,6 @@ const hydration = async (input: {
     [skeleton.did],
     params.hydrateCtx.copy({
       overrideIncludeActorRecordTakedowns: true,
-      overrideIncludeActorStatusTakedowns: true,
     }),
   )
 }
