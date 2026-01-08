@@ -998,7 +998,7 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@18.19.67)
 
-  packages/lex/lex-password-agent:
+  packages/lex/lex-password-session:
     dependencies:
       '@atproto/lex-client':
         specifier: workspace:*

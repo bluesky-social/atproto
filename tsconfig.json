@@ -25,7 +25,7 @@
     { "path": "./packages/lex/lex-builder" },
     { "path": "./packages/lex/lex-cbor" },
     { "path": "./packages/lex/lex-client" },
-    { "path": "./packages/lex/lex-password-agent" },
+    { "path": "./packages/lex/lex-password-session" },
     { "path": "./packages/lex/lex-data" },
     { "path": "./packages/lex/lex-document" },
     { "path": "./packages/lex/lex-installer" },
