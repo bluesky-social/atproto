@@ -544,8 +544,20 @@ export class Views {
     const actor = state.actors?.get(did)
     if (!actor?.status) return
 
+    const isViewerStatusOwner = did === state.ctx?.viewer
     const { status } = actor
-    const { record, sortedAt, cid } = status
+    const { record, sortedAt, cid, takedownRef } = status
+    const isTakenDown = !!takedownRef
+
+    /*
+     * Manual filter for takendown status records. If this is ever removed, we
+     * need to reinstate `includeTakedowns` handling in the `Actor.getActors`
+     * hydrator.
+     */
+    if (isTakenDown && !isViewerStatusOwner) {
+      return undefined
+    }
+
     const uri = AtUri.make(did, ids.AppBskyActorStatus, 'self').toString()
 
     const minDuration = 5 * MINUTE
@@ -564,7 +576,7 @@ export class Views {
 
     const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
 
-    return {
+    const response: StatusView = {
       uri,
       cid,
       record: record,
@@ -575,6 +587,12 @@ export class Views {
       expiresAt,
       isActive,
     }
+
+    if (isViewerStatusOwner) {
+      response.isDisabled = isTakenDown
+    }
+
+    return response
   }
 
   blockedProfileViewer(

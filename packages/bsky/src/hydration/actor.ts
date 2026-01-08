@@ -160,20 +160,10 @@ export class ActorHydrator {
     dids: string[],
     opts: {
       includeTakedowns?: boolean
-      /**
-       * The raw `HydrationCtx.includeTakedowns` value, independent of any
-       * special casing that may apply to `includeTakedowns` within this
-       * method.
-       */
-      includeTakedownsBase?: boolean
       skipCacheForDids?: string[]
     } = {},
   ): Promise<Actors> {
-    const {
-      includeTakedowns = false,
-      skipCacheForDids,
-      includeTakedownsBase = false,
-    } = opts
+    const { includeTakedowns = false, skipCacheForDids } = opts
     if (!dids.length) return new HydrationMap<Actor>()
     const res = await this.dataplane.getActors({ dids, skipCacheForDids })
     return dids.reduce((acc, did, i) => {
@@ -194,7 +184,14 @@ export class ActorHydrator {
         : undefined
 
       const status = actor.statusRecord
-        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedownsBase)
+        ? parseRecord<StatusRecord>(
+            actor.statusRecord,
+            /*
+             * Always true, we filter this out in the `Views.status()`. If we
+             * ever remove that filter, we'll want to reinstate this here.
+             */
+            true,
+          )
         : undefined
 
       const verifications = mapDefined(

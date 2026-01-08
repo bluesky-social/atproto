@@ -662,6 +662,8 @@ export interface StatusView {
   expiresAt?: string
   /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
   isActive?: boolean
+  /** True if the user's go-live access has been disabled by a moderator, false otherwise. */
+  isDisabled?: boolean
 }
 
 const hashStatusView = 'statusView'

@@ -234,11 +234,9 @@ export class Hydrator {
      */
     const includeTakedowns =
       ctx.includeTakedowns || ctx.overrideIncludeTakedownsForActor
-    const includeTakedownsBase = ctx.includeTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, {
         includeTakedowns,
-        includeTakedownsBase,
         skipCacheForDids: ctx.skipCacheForViewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
