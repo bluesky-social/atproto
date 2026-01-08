@@ -1,4 +1,4 @@
-# AT Protocol Reference Implementation (TypeScript) / WSocial fork
+# AT Protocol Reference Implementation (TypeScript) / WSocial fork version
 
 Welcome friends!
 
