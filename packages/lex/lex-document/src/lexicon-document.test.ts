@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { lexiconDocumentSchema } from './lexicon-document.js'
 
 describe('lexiconDocumentSchema', () => {

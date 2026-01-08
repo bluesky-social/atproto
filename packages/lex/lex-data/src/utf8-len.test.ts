@@ -1,6 +1,7 @@
+import { describe, expect, it } from 'vitest'
 import { utf8LenCompute, utf8LenNode } from './utf8-len.js'
 
-describe('utf8LenNode', () => {
+describe(utf8LenNode!, () => {
   it('computes utf8 string length', () => {
     expect(utf8LenNode!('a')).toBe(1)
     expect(utf8LenNode!('~')).toBe(1)
@@ -15,7 +16,7 @@ describe('utf8LenNode', () => {
   })
 })
 
-describe('utf8LenInternal', () => {
+describe(utf8LenCompute, () => {
   it('computes utf8 string length', () => {
     expect(utf8LenCompute('a')).toBe(1)
     expect(utf8LenCompute('~')).toBe(1)

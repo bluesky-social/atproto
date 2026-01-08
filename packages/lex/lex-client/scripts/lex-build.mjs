@@ -24,6 +24,7 @@ Promise.all([
     lib: '@atproto/lex-schema',
     pretty: true,
     pureAnnotations: true,
+    indexFile: true,
   }),
 
   // For tests
@@ -40,6 +41,7 @@ Promise.all([
     ],
     lib: '@atproto/lex-schema',
     pretty: true,
+    indexFile: true,
   }),
 ]).catch((err) => {
   console.error('Error building lexicon schemas:', err)

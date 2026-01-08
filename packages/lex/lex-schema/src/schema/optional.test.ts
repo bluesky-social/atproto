@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { BooleanSchema } from './boolean.js'
 import { IntegerSchema } from './integer.js'
 import { OptionalSchema } from './optional.js'

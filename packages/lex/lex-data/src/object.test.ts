@@ -1,5 +1,7 @@
+import { describe, expect, it } from 'vitest'
 import { parseCid } from './cid.js'
 import { isObject, isPlainObject } from './object.js'
+
 describe('isObject', () => {
   it('returns true for plain objects', () => {
     expect(isObject({})).toBe(true)

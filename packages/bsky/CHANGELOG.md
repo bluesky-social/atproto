@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.204
+
+### Patch Changes
+
+- [#4426](https://github.com/bluesky-social/atproto/pull/4426) [`ce497e8`](https://github.com/bluesky-social/atproto/commit/ce497e85437c7ced3147691fb877e1f76f6ff472) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add Age Assurance config for Virginia
+
+- Updated dependencies [[`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164), [`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164)]:
+  - @atproto/api@0.18.9
+  - @atproto/common@0.5.4
+  - @atproto/xrpc-server@0.10.5
+
 ## 0.0.203
 
 ### Patch Changes

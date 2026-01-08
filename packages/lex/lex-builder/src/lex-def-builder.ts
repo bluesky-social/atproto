@@ -452,6 +452,12 @@ export class LexDefBuilder {
   private async compilePayload(def: LexiconPayload | undefined) {
     if (!def) return this.pure(`l.payload()`)
 
+    // Special case for JSON object payloads
+    if (def.encoding === 'application/json' && def.schema?.type === 'object') {
+      const properties = await this.compilePropertiesSchemas(def.schema)
+      return this.pure(`l.jsonPayload({${properties.join(',')}})`)
+    }
+
     const encodedEncoding = JSON.stringify(def.encoding)
     if (def.schema) {
       const bodySchema = await this.compileBodySchema(def.schema)
@@ -470,7 +476,7 @@ export class LexDefBuilder {
   }
 
   private async compileParamsSchema(def: undefined | LexiconParameters) {
-    if (!def) return this.pure(`l.params({})`)
+    if (!def) return this.pure(`l.params()`)
 
     const properties = await this.compilePropertiesSchemas(def)
     return this.pure(`l.params({${properties.join(',')}})`)

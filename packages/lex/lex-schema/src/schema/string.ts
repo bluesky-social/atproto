@@ -1,6 +1,12 @@
 import { asCid, graphemeLen, utf8Len } from '@atproto/lex-data'
-import { InferStringFormat, StringFormat, assertStringFormat } from '../core.js'
-import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+import {
+  InferStringFormat,
+  Schema,
+  StringFormat,
+  ValidationResult,
+  ValidatorContext,
+  assertStringFormat,
+} from '../core.js'
 import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {

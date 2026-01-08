@@ -1,6 +1,6 @@
 import 'core-js/modules/es.uint8-array.from-base64.js'
 import 'core-js/modules/es.uint8-array.to-base64.js'
-import assert from 'node:assert'
+import { assert, describe, expect, it } from 'vitest'
 import {
   toBase64Native,
   toBase64Node,
@@ -14,9 +14,9 @@ for (const toBase64 of [
 ] as const) {
   // Tests should run in NodeJS where implementations are either available or
   // polyfilled (see core-js imports above).
-  assert(toBase64 !== null, 'toBase64 implementation should not be null')
+  assert(toBase64, 'toBase64 implementation should not be null')
 
-  describe(toBase64.name, () => {
+  describe(toBase64, () => {
     describe('basic encoding', () => {
       it('encodes empty Uint8Array', () => {
         const encoded = toBase64(new Uint8Array(0))

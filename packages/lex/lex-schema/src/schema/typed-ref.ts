@@ -3,7 +3,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 // Basically a RecordSchema or TypedObjectSchema
 export type TypedRefSchemaValidator<V extends { $type?: string } = any> =

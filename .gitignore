@@ -15,8 +15,8 @@ test.sqlite
 \#*\#
 *~
 *.swp
-# Local RemoteLogin test files and temporary scripts
 test-*-local.*
 *-local.html
 old/
-/tmp/pds-docker-data/
+.claude/
+coverage

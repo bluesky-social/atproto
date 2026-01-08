@@ -1,5 +1,24 @@
 # @atproto/oauth-client-node
 
+## 0.3.15
+
+### Patch Changes
+
+- Updated dependencies [[`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98)]:
+  - @atproto/did@0.2.4
+  - @atproto/oauth-client@0.5.13
+  - @atproto-labs/did-resolver@0.2.5
+  - @atproto-labs/handle-resolver-node@0.1.24
+  - @atproto/oauth-types@0.6.1
+
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`95ef3c2`](https://github.com/bluesky-social/atproto/commit/95ef3c24e8072e9d49412950b033cb8607764ee0), [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41)]:
+  - @atproto/oauth-types@0.6.0
+  - @atproto/oauth-client@0.5.12
+
 ## 0.3.13
 
 ### Patch Changes

@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
+import express, { Application, json } from 'express'
 import {
   AppBskyAgeassuranceDefs,
   AtpAgent,
@@ -665,7 +665,7 @@ class MockKwsServer {
     sendAdultVerifiedFlowEmailMock: jest.Mock
   }) {
     this.app = express()
-      .use(express.json())
+      .use(json())
       .post('/auth/realms/kws/protocol/openid-connect/token', (_, res) =>
         oauthMock(_, res),
       )

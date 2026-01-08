@@ -1,13 +1,13 @@
 import { isPlainObject } from '@atproto/lex-data'
-import { WithOptionalProperties } from '../core.js'
-import { lazyProperty } from '../util/lazy-property.js'
 import {
   Infer,
   Schema,
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+  WithOptionalProperties,
+} from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 
 export type ObjectSchemaShape = Record<string, Validator>
 

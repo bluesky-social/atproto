@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-document",
-  "version": "0.0.5",
+  "version": "0.0.8",
   "license": "MIT",
   "description": "Lexicon document validation tools for AT",
   "keywords": [
@@ -29,10 +29,10 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "dependencies": {
@@ -42,10 +42,10 @@
   },
   "devDependencies": {
     "@atproto/lex-data": "workspace:*",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }
