@@ -160,18 +160,14 @@ export class ActorHydrator {
     dids: string[],
     opts: {
       includeTakedowns?: boolean
-      overrideIncludeActorRecordTakedowns?: boolean
       skipCacheForDids?: string[]
     } = {},
   ): Promise<Actors> {
-    if (!dids.length) return new HydrationMap<Actor>()
     const {
       includeTakedowns = false,
-      overrideIncludeActorRecordTakedowns = false,
       skipCacheForDids,
     } = opts
-    const overrideIncludeTakedowns =
-      includeTakedowns || overrideIncludeActorRecordTakedowns
+    if (!dids.length) return new HydrationMap<Actor>()
     const res = await this.dataplane.getActors({ dids, skipCacheForDids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
@@ -180,14 +176,14 @@ export class ActorHydrator {
         (actor.upstreamStatus && actor.upstreamStatus !== 'active')
       if (
         !actor.exists ||
-        (isNoHosted && !overrideIncludeTakedowns) ||
+        (isNoHosted && !includeTakedowns) ||
         !!actor.tombstonedAt
       ) {
         return acc.set(did, null)
       }
 
       const profile = actor.profile?.record
-        ? parseRecord<ProfileRecord>(actor.profile, overrideIncludeTakedowns)
+        ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
         : undefined
 
       const status = actor.statusRecord
