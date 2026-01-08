@@ -3,9 +3,9 @@ import {
   LexRpcError,
   LexRpcFailure,
   buildAgent,
-  xrpc,
   xrpcSafe,
 } from '@atproto/lex-client'
+import { AuthFactorTokenRequiredError } from './error.js'
 import { com } from './lexicons/index.js'
 import { extractLexRpcErrorCode, extractPdsUrl, noop } from './util.js'
 
@@ -333,11 +333,18 @@ export class PasswordSession implements Agent {
       fetch: options.fetch,
     })
 
-    const response = await xrpc(
+    const response = await xrpcSafe(
       xrpcAgent,
       com.atproto.server.createSession.main,
       { body: { identifier, password, allowTakendown, authFactorToken } },
     )
+
+    if (!response.success) {
+      if (response.error === 'AuthFactorTokenRequired') {
+        throw new AuthFactorTokenRequiredError(response)
+      }
+      throw response.reason
+    }
 
     const data: SessionData = {
       ...response.body,

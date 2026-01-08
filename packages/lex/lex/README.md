@@ -471,11 +471,11 @@ import { Client } from '@atproto/lex'
 import { PasswordSession } from '@atproto/lex-password-session'
 import * as app from './lexicons/app.js'
 
-// Create a session with credentials
-const result = await PasswordSession.create({
+// Create a session with app password credentials
+const session = await PasswordSession.create({
   service: 'https://bsky.social',
   identifier: 'alice.bsky.social', // handle or email
-  password: 'app-password', // Use app passwords, not your main password
+  password: 'xxxx-xxxx-xxxx-xxxx', // App password (not your main password)
 
   // Called when session is created or refreshed - persist the session data
   onUpdated: (data) => {
@@ -488,14 +488,8 @@ const result = await PasswordSession.create({
   },
 })
 
-if (!result.success) {
-  // Handle login errors (wrong password, 2FA required, etc.)
-  console.error(result.error, result.message)
-  process.exit(1)
-}
-
 // Use the session with a Client
-const client = new Client(result.value)
+const client = new Client(session)
 
 const profile = await client.call(app.bsky.actor.getProfile, {
   actor: 'atproto.com',
@@ -504,18 +498,24 @@ const profile = await client.call(app.bsky.actor.getProfile, {
 
 **Resuming a Session**
 
-Resume a previously persisted session:
+Resume a previously persisted session. The `resume()` method validates the session by refreshing it:
 
 ```typescript
 const savedData = loadFromStorage() // Your retrieval logic
 
 // Resume validates the session by refreshing it
+// Throws if the session is definitively invalid
 const session = await PasswordSession.resume(savedData, {
   onUpdated: (data) => saveToStorage(data),
   onDeleted: (data) => removeFromStorage(data.did),
 })
 
 const client = new Client(session)
+
+// Access session properties
+console.log(session.did) // User's DID
+console.log(session.handle) // User's handle
+console.log(session.destroyed) // false (session is active)
 ```
 
 **Logging Out**
@@ -524,15 +524,26 @@ const client = new Client(session)
 await session.logout()
 ```
 
+**Deleting a Session Without Resuming**
+
+Delete a stored session without needing to resume it first:
+
+```typescript
+const savedData = loadFromStorage()
+
+// Delete the session directly - throws on transient errors (network, server down)
+await PasswordSession.delete(savedData)
+```
+
 **Error Handling Hooks**
 
 Handle transient errors (network issues, server unavailability) separately from permanent failures:
 
 ```typescript
-const result = await PasswordSession.create({
+const session = await PasswordSession.create({
   service: 'https://bsky.social',
   identifier: 'alice.bsky.social',
-  password: 'app-password',
+  password: 'xxxx-xxxx-xxxx-xxxx',
 
   onUpdated: (data) => saveToStorage(data),
   onDeleted: (data) => removeFromStorage(data.did),
@@ -552,9 +563,43 @@ const result = await PasswordSession.create({
 })
 ```
 
-> [!WARNING]
+**Handling Two-Factor Authentication (2FA)**
+
+> [!CAUTION]
 >
-> Password authentication should be used with **app passwords** (generated in account settings), not your main account password. For user-facing applications, prefer OAuth which provides better security and user control.
+> Two-factor authentication only applies when using **main account credentials**, which is **strongly discouraged**. Password authentication should be used with [app passwords](https://bsky.app/settings/app-passwords) only because they are designed for programmatic access (bots, scripts, CLI tools). For user-facing applications, use OAuth via [@atproto/oauth-client](../../../oauth/oauth-client) which provides better security and user control.
+
+```typescript
+import {
+  PasswordSession,
+  AuthFactorTokenRequiredError,
+} from '@atproto/lex-password-session'
+
+async function loginWithMainCredentials(
+  identifier: string,
+  password: string,
+  authFactorToken?: string,
+): Promise<PasswordSession> {
+  try {
+    return await PasswordSession.create({
+      service: 'https://bsky.social',
+      identifier,
+      password,
+      authFactorToken,
+
+      onUpdated: (data) => saveToStorage(data),
+      onDeleted: (data) => removeFromStorage(data.did),
+    })
+  } catch (err) {
+    if (err instanceof AuthFactorTokenRequiredError && !authFactorToken) {
+      // 2FA required
+      const token = await promptUserFor2FACode(err.message)
+      return loginWithMainCredentials(identifier, password, token)
+    }
+    throw err
+  }
+}
+```
 
 #### Creating a Client from Another Client
 
