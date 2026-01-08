@@ -761,6 +761,6 @@ Object {
     "status": "app.bsky.actor.status#live",
   },
   "status": "app.bsky.actor.status#live",
-  "uri": "at://did:plc:z3eqvo7vby4gkdwmziz7cmxc/app.bsky.actor.status/self",
+  "uri": "at://did:plc:aa7sizuyacuqgixuijgrxiet/app.bsky.actor.status/self",
 }
 `;
