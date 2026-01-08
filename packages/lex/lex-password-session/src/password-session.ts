@@ -5,7 +5,7 @@ import {
   buildAgent,
   xrpcSafe,
 } from '@atproto/lex-client'
-import { AuthFactorTokenError } from './error.js'
+import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { extractLexRpcErrorCode, extractPdsUrl, noop } from './util.js'
 
@@ -341,7 +341,7 @@ export class PasswordSession implements Agent {
 
     if (!response.success) {
       if (response.error === 'AuthFactorTokenRequired') {
-        throw new AuthFactorTokenError(response)
+        throw new LexAuthFactorError(response)
       }
       throw response.reason
     }

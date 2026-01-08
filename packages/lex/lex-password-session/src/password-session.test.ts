@@ -5,7 +5,7 @@ import { Client, LexRpcResponseError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
-import { AuthFactorTokenError } from './error.js'
+import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { AuthVerifier } from './password-session-utils.test.js'
 import {
@@ -207,7 +207,7 @@ describe(PasswordSession, () => {
       (err: unknown) => err,
     )
 
-    assert(result instanceof AuthFactorTokenError)
+    assert(result instanceof LexAuthFactorError)
     expect(result.error).toBe('AuthFactorTokenRequired')
     expect(onDeleted).not.toHaveBeenCalled()
     expect(onUpdated).not.toHaveBeenCalled()

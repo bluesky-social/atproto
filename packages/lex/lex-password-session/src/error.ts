@@ -1,8 +1,8 @@
 import { LexError, LexRpcResponseError } from '@atproto/lex-client'
 import { com } from './lexicons'
 
-export class AuthFactorTokenError extends LexError {
-  name = 'AuthFactorTokenError'
+export class LexAuthFactorError extends LexError {
+  name = 'LexAuthFactorError'
 
   constructor(
     readonly response: LexRpcResponseError<
