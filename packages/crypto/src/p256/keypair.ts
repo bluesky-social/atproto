@@ -11,6 +11,7 @@ import { Keypair } from '../types'
 
 export type P256KeypairOptions = {
   exportable: boolean
+  isCompressed: boolean
 }
 
 export class P256Keypair implements Keypair {
@@ -20,16 +21,18 @@ export class P256Keypair implements Keypair {
   constructor(
     private privateKey: Uint8Array,
     private exportable: boolean,
+    isCompressed: boolean,
   ) {
-    this.publicKey = p256.getPublicKey(privateKey)
+    this.publicKey = p256.getPublicKey(privateKey, isCompressed)
   }
 
   static async create(
     opts?: Partial<P256KeypairOptions>,
   ): Promise<P256Keypair> {
     const { exportable = false } = opts || {}
+    const { isCompressed = true } = opts || {}
     const privKey = p256.utils.randomPrivateKey()
-    return new P256Keypair(privKey, exportable)
+    return new P256Keypair(privKey, exportable, isCompressed)
   }
 
   static async import(
@@ -37,9 +40,10 @@ export class P256Keypair implements Keypair {
     opts?: Partial<P256KeypairOptions>,
   ): Promise<P256Keypair> {
     const { exportable = false } = opts || {}
+    const { isCompressed = true } = opts || {}
     const privKeyBytes =
       typeof privKey === 'string' ? ui8FromString(privKey, 'hex') : privKey
-    return new P256Keypair(privKeyBytes, exportable)
+    return new P256Keypair(privKeyBytes, exportable, isCompressed)
   }
 
   publicKeyBytes(): Uint8Array {
