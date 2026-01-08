@@ -1,11 +1,14 @@
-import { LexiconRecordKey, NsidString, Simplify, TidString } from '../core.js'
 import {
+  $Typed,
   Infer,
+  LexiconRecordKey,
+  NsidString,
   Schema,
+  TidString,
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
 import { TypedObject } from './typed-union.js'
@@ -16,7 +19,7 @@ export type InferRecordKey<R extends RecordSchema> =
 export type RecordSchemaOutput<
   T extends NsidString,
   S extends Validator<{ [k: string]: unknown }>,
-> = Simplify<{ $type: T } & Omit<Infer<S>, '$type'>>
+> = $Typed<Infer<S>, T>
 
 export class RecordSchema<
   K extends LexiconRecordKey = any,
@@ -36,17 +39,16 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is Exclude<
-    X extends { $type?: T } ? X : X & { $type?: T },
-    TypedObject
-  > {
+  ): value is Exclude<X extends { $type: T } ? X : $Typed<X, T>, TypedObject> {
     return value.$type === this.$type
   }
 
   build<X extends Omit<Infer<S>, '$type'>>(
     input: X,
-  ): Simplify<Omit<X, '$type'> & { $type: T }> {
-    return { ...input, $type: this.$type }
+  ): $Typed<Omit<X, '$type'>, T> {
+    return input.$type === this.$type
+      ? (input as $Typed<X, T>)
+      : { ...input, $type: this.$type }
   }
 
   $isTypeOf<X extends { $type?: unknown }>(value: X) {

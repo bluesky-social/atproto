@@ -1,5 +1,16 @@
 # @atproto/api
 
+## 0.18.9
+
+### Patch Changes
+
+- [#4470](https://github.com/bluesky-social/atproto/pull/4470) [`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use 401 status code as signal that the credentials are invalid and should no longer be used.
+
+- [#4470](https://github.com/bluesky-social/atproto/pull/4470) [`10cf1c1`](https://github.com/bluesky-social/atproto/commit/10cf1c10188596724b0c38a5af507d95a382a164) Thanks [@matthieusieben](https://github.com/matthieusieben)! - The `CredentialSession.resumeSession()` method now leverages full session data to restore user sessions in a single HTTP call (instead of up to three before). Servers that do not return `email` and `emailConfirmed` session fields will still be supported, but will cause an additional request to `com.atproto.server.getSession` to fetch the missing data.
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.8
+
 ## 0.18.8
 
 ### Patch Changes

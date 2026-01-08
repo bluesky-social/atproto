@@ -1,6 +1,6 @@
-import assert from 'node:assert'
+import { assert, describe, expect, it } from 'vitest'
 import { LexValue, isLexMap, parseCid } from '@atproto/lex-data'
-import { decode, decodeAll, encode } from '..'
+import { decode, decodeAll, encode } from '../src/index.js'
 
 describe('encode', () => {
   it('encodes data to CBOR format', () => {

@@ -1,5 +1,6 @@
+import { describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
-import { l } from '..'
+import { l } from '../src/index.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
 const blobCid = parseCid(
@@ -21,6 +22,19 @@ describe('simple schemas', () => {
     it('rejects strings', () => {
       expect(schema.matches('42')).toBe(false)
     })
+
+    it('memoizes instances', () => {
+      expect(l.integer({})).toBe(schema)
+      expect(l.integer()).toBe(schema)
+    })
+
+    it('does not memoize with options', () => {
+      // @ts-expect-error
+      expect(l.integer({ unknownOption: 43 })).not.toBe(schema)
+      expect(l.integer({ minimum: 0 })).not.toBe(schema)
+      expect(l.integer({ minimum: 0 })).not.toBe(l.integer({ minimum: 0 }))
+      expect(l.integer({ maximum: 100 })).not.toBe(l.integer({ maximum: 100 }))
+    })
   })
 
   describe('l.string', () => {
@@ -37,6 +51,11 @@ describe('simple schemas', () => {
     it('rejects null', () => {
       expect(schema.matches(null)).toBe(false)
     })
+
+    it('memoizes instances', () => {
+      expect(l.string({})).toBe(schema)
+      expect(l.string()).toBe(schema)
+    })
   })
 
   describe('l.boolean', () => {
@@ -52,6 +71,14 @@ describe('simple schemas', () => {
 
     it('rejects strings', () => {
       expect(schema.matches('true')).toBe(false)
+    })
+
+    it('memoizes instances', () => {
+      expect(l.boolean({})).toBe(schema)
+      expect(l.boolean()).toBe(schema)
+
+      expect(l.boolean({ default: true })).toBe(l.boolean({ default: true }))
+      expect(l.boolean({ default: false })).toBe(l.boolean({ default: false }))
     })
   })
 
@@ -82,6 +109,11 @@ describe('simple schemas', () => {
     it('rejects non-objects', () => {
       expect(schema.matches('not a blob')).toBe(false)
     })
+
+    it('memoizes instances', () => {
+      expect(l.blob({})).toBe(schema)
+      expect(l.blob()).toBe(schema)
+    })
   })
 
   describe('l.null', () => {
@@ -97,6 +129,10 @@ describe('simple schemas', () => {
 
     it('rejects strings', () => {
       expect(schema.matches('null')).toBe(false)
+    })
+
+    it('memoizes instances', () => {
+      expect(l.null()).toBe(schema)
     })
   })
 
@@ -166,7 +202,7 @@ describe('simple schemas', () => {
   })
 
   describe('l.nullable', () => {
-    const schema = l.nullable(l.string({}))
+    const schema = l.nullable(l.string())
 
     it('validates null', () => {
       expect(schema.matches(null)).toBe(true)
@@ -178,6 +214,10 @@ describe('simple schemas', () => {
 
     it('rejects invalid types', () => {
       expect(schema.matches(123)).toBe(false)
+    })
+
+    it('memoizes instances', () => {
+      expect(l.nullable(l.string({}))).toBe(schema)
     })
   })
 
@@ -195,6 +235,10 @@ describe('simple schemas', () => {
     it('rejects null', () => {
       expect(schema.matches(null)).toBe(false)
     })
+
+    it('memoizes instances', () => {
+      expect(l.optional(l.string({}))).toBe(schema)
+    })
   })
 
   describe('l.unknown', () => {
@@ -206,6 +250,10 @@ describe('simple schemas', () => {
       expect(schema.matches(null)).toBe(true)
       expect(schema.matches({ key: 'value' })).toBe(true)
     })
+
+    it('memoizes instances', () => {
+      expect(l.unknown()).toBe(schema)
+    })
   })
 
   describe('l.never', () => {
@@ -216,6 +264,12 @@ describe('simple schemas', () => {
       expect(schema.matches(123)).toBe(false)
       expect(schema.matches(null)).toBe(false)
       expect(schema.matches(undefined)).toBe(false)
+    })
+
+    it('memoizes instances', () => {
+      expect(l.never()).toBe(schema)
+      expect(l.never()).toBe(schema)
+      expect(l.never()).toBe(schema)
     })
   })
 })

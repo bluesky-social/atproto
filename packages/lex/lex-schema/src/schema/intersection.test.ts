@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { BooleanSchema } from './boolean.js'
 import { DictSchema } from './dict.js'
 import { EnumSchema } from './enum.js'

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { RegexpSchema } from './regexp.js'
 
 describe('RegexpSchema', () => {

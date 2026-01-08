@@ -122,9 +122,10 @@ export type SignUpInput = {
   locale: string
   handle: string
   email: string
-  password: string
+  password?: string // Optional for RemoteLogin
   inviteCode?: string
   hcaptchaToken?: string
+  emailOtp?: string // Legal ID for RemoteLogin (format: GUID@legal.domain.com)
 }
 
 export type SignUpOutput = {

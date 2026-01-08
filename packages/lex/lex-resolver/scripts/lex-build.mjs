@@ -14,6 +14,7 @@ build({
   lib: '@atproto/lex-schema',
   pretty: true,
   pureAnnotations: true,
+  indexFile: true,
 }).catch((err) => {
   console.error('Error building lexicon schemas:', err)
   process.exit(1)

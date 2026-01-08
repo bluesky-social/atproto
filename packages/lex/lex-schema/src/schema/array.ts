@@ -4,7 +4,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 export type ArraySchemaOptions = {
   minLength?: number

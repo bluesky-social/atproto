@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-builder",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "license": "MIT",
   "description": "TypeScript schema builder for AT Lexicons",
   "keywords": [
@@ -29,10 +29,10 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "require": "./dist/index.js",
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     }
   },
   "dependencies": {
@@ -44,10 +44,10 @@
   },
   "devDependencies": {
     "@ts-morph/common": "^0.28.0",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }

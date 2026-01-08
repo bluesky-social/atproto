@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { arrayAgg } from './array-agg.js'
 
 describe('arrayAgg', () => {

@@ -94,6 +94,12 @@ yargs(hideBin(process.argv))
           describe:
             'file extension to use for generated files (e.g. ".ts", ".mts", ".cts")',
         },
+        indexFile: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'generate an "index.<fileExt>" file that exports all root-level namespaces',
+        },
         ignoreInvalidLexicons: {
           type: 'boolean',
           default: false,

@@ -191,35 +191,43 @@ export class LexiconSchemaBuilder {
 
     switch (def.type) {
       case 'string': {
-        const schema: l.StringSchema = l.string(def)
-        if (def.const != null) {
-          schema.assert(def.const)
-          return l.literal(def.const, def)
-        } else if (def.enum != null) {
-          for (const v of def.enum) schema.assert(v)
-          return l.enum(def.enum, def)
-        } else {
-          return schema
-        }
+        const schema = l.string(def)
+        if (def.default != null) schema.check(def.default)
+        if (def.const != null) schema.check(def.const)
+        if (def.enum != null) for (const v of def.enum) schema.check(v)
+
+        const result =
+          def.const != null
+            ? l.literal(def.const, def)
+            : def.enum != null
+              ? l.enum(def.enum, def)
+              : schema
+
+        if (def.default != null) result.check(def.default)
+        return result
       }
       case 'integer': {
-        const schema: l.IntegerSchema = l.integer(def)
-        if (def.const != null) {
-          schema.assert(def.const)
-          return l.literal(def.const, def)
-        } else if (def.enum != null) {
-          for (const v of def.enum) schema.assert(v)
-          return l.enum(def.enum, def)
-        } else {
-          return schema
-        }
+        const schema = l.integer(def)
+        if (def.default != null) schema.check(def.default)
+        if (def.const != null) schema.check(def.const)
+        if (def.enum != null) for (const v of def.enum) schema.check(v)
+
+        const result =
+          def.const != null
+            ? l.literal(def.const, def)
+            : def.enum != null
+              ? l.enum(def.enum, def)
+              : schema
+
+        if (def.default != null) result.check(def.default)
+        return result
       }
       case 'boolean': {
-        if (def.const != null) {
-          return l.literal(def.const, def)
-        } else {
-          return l.boolean(def)
-        }
+        const result =
+          def.const != null ? l.literal(def.const, def) : l.boolean(def)
+
+        if (def.default != null) result.check(def.default)
+        return result
       }
       case 'blob':
         return l.blob(def)

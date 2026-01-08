@@ -1,39 +1,7 @@
 import { HandlerOpts } from '../src/channel'
 import { SimpleIndexer } from '../src/simple-indexer'
 import { IdentityEvent, RecordEvent } from '../src/types'
-
-const createMockOpts = (): HandlerOpts & { acked: boolean } => {
-  const opts = {
-    signal: new AbortController().signal,
-    acked: false,
-    ack: async () => {
-      opts.acked = true
-    },
-  }
-  return opts
-}
-
-const createRecordEvent = (): RecordEvent => ({
-  id: 1,
-  type: 'record',
-  did: 'did:example:alice',
-  rev: 'abc123',
-  collection: 'com.example.post',
-  rkey: 'abc123',
-  action: 'create',
-  record: { text: 'hello' },
-  cid: 'bafyabc',
-  live: true,
-})
-
-const createIdentityEvent = (): IdentityEvent => ({
-  id: 2,
-  type: 'identity',
-  did: 'did:example:alice',
-  handle: 'alice.test',
-  isActive: true,
-  status: 'active',
-})
+import { createIdentityEvent, createMockOpts, createRecordEvent } from './_util'
 
 describe('SimpleIndexer', () => {
   describe('event routing', () => {

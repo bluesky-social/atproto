@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { NullSchema } from './null.js'
 
 describe('NullSchema', () => {

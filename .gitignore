@@ -15,3 +15,8 @@ test.sqlite
 \#*\#
 *~
 *.swp
+test-*-local.*
+*-local.html
+old/
+.claude/
+coverage

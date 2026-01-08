@@ -5,7 +5,7 @@ import {
   ValidationResult,
   Validator,
   ValidatorContext,
-} from '../validation.js'
+} from '../core.js'
 
 export type DictSchemaOutput<
   KeySchema extends Validator<string>,

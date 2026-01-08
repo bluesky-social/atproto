@@ -31,7 +31,7 @@ export const fromBase64Native =
           lastChunkHandling: 'loose',
         })
       }
-    : null
+    : /* v8 ignore next -- @preserve */ null
 
 export const fromBase64Node = Buffer
   ? function fromBase64Node(
@@ -45,7 +45,7 @@ export const fromBase64Node = Buffer
       // results in unexpected behavior downstream (e.g. in tests)
       return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     }
-  : null
+  : /* v8 ignore next -- @preserve */ null
 
 export function fromBase64Ponyfill(
   b64: string,

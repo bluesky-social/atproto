@@ -1,4 +1,4 @@
-import { Infer, Validator } from '../validation.js'
+import { Infer, Validator } from '../core.js'
 import { ArraySchema } from './array.js'
 import { BooleanSchema } from './boolean.js'
 import { DictSchema } from './dict.js'
