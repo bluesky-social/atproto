@@ -66,6 +66,7 @@ import putActivitySubscription from './app/bsky/notification/putActivitySubscrip
 import putPreferences from './app/bsky/notification/putPreferences'
 import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
+import unregisterPush from './app/bsky/notification/unregisterPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState'
 import getConfig from './app/bsky/unspecced/getConfig'
@@ -172,6 +173,7 @@ export default function (server: Server, ctx: AppContext) {
   putPreferences(server, ctx)
   putPreferencesV2(server, ctx)
   registerPush(server, ctx)
+  unregisterPush(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)
