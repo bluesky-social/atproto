@@ -844,6 +844,11 @@ export const schemaDict = {
             description:
               'True if the status is not expired, false if it is expired. Only present if expiration was set.',
           },
+          isDisabled: {
+            type: 'boolean',
+            description:
+              "True if the user's go-live access has been disabled by a moderator, false otherwise.",
+          },
         },
       },
     },
