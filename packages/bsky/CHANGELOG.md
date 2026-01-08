@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.210
+
+### Patch Changes
+
+- [#4524](https://github.com/bluesky-social/atproto/pull/4524) [`6752056`](https://github.com/bluesky-social/atproto/commit/6752056f4666f1f85149d1c6821aed1ad8d88442) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `unregisterPush` to appview server routes.
+
 ## 0.0.209
 
 ### Patch Changes
