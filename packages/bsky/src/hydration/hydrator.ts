@@ -80,7 +80,10 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
-  overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
+  overrideIncludeActorRecordTakedowns =
+    this.vals.overrideIncludeActorRecordTakedowns
+  overrideIncludeActorStatusTakedowns =
+    this.vals.overrideIncludeActorStatusTakedowns
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
   featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
@@ -99,7 +102,20 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
-  overrideIncludeTakedownsForActor?: boolean
+  /**
+   * In some special cases, like `getProfile`, we want to include takedowns
+   * since we throw client-facing errors later in the pipeline.
+   * `includeTakedowns` should take precedence in any case, this is just a
+   * fallback override.
+   */
+  overrideIncludeActorRecordTakedowns?: boolean
+  /**
+   * In some special cases, like `getProfile`, we want to include takedowns
+   * since we server different views to the user in question later on.
+   * `includeTakedowns` should take precedence in any case, this is just a
+   * fallback override.
+   */
+  overrideIncludeActorStatusTakedowns?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
   featureGates?: CheckedFeatureGatesMap
@@ -228,23 +244,21 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    /**
-     * Special case here, we want to include takedowns in special cases, like
-     * `getProfile`, since we throw client-facing errors later in the pipeline.
-     */
-    const includeTakedowns =
-      ctx.includeTakedowns || ctx.overrideIncludeTakedownsForActor
-    const includeTakedownsBase = ctx.includeTakedowns
+    const overrideIncludeTakedowns =
+      ctx.includeTakedowns || ctx.overrideIncludeActorRecordTakedowns
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, {
-        includeTakedowns,
-        includeTakedownsBase,
+        includeTakedowns: ctx.includeTakedowns,
+        overrideIncludeActorRecordTakedowns:
+          ctx.overrideIncludeActorRecordTakedowns,
+        overrideIncludeActorStatusTakedowns:
+          ctx.overrideIncludeActorStatusTakedowns,
         skipCacheForDids: ctx.skipCacheForViewer,
       }),
       this.label.getLabelsForSubjects(labelSubjectsForDid(dids), ctx.labelers),
       this.hydrateProfileViewers(dids, ctx),
     ])
-    if (!includeTakedowns) {
+    if (!overrideIncludeTakedowns) {
       actionTakedownLabels(dids, actors, labels)
     }
     return mergeStates(profileViewersState ?? {}, {

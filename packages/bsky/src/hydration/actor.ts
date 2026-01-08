@@ -160,21 +160,20 @@ export class ActorHydrator {
     dids: string[],
     opts: {
       includeTakedowns?: boolean
-      /**
-       * The raw `HydrationCtx.includeTakedowns` value, independent of any
-       * special casing that may apply to `includeTakedowns` within this
-       * method.
-       */
-      includeTakedownsBase?: boolean
+      overrideIncludeActorRecordTakedowns?: boolean
+      overrideIncludeActorStatusTakedowns?: boolean
       skipCacheForDids?: string[]
     } = {},
   ): Promise<Actors> {
+    if (!dids.length) return new HydrationMap<Actor>()
     const {
       includeTakedowns = false,
+      overrideIncludeActorRecordTakedowns = false,
+      overrideIncludeActorStatusTakedowns = false,
       skipCacheForDids,
-      includeTakedownsBase = false,
     } = opts
-    if (!dids.length) return new HydrationMap<Actor>()
+    const overrideIncludeTakedowns =
+      includeTakedowns || overrideIncludeActorRecordTakedowns
     const res = await this.dataplane.getActors({ dids, skipCacheForDids })
     return dids.reduce((acc, did, i) => {
       const actor = res.actors[i]
@@ -183,18 +182,21 @@ export class ActorHydrator {
         (actor.upstreamStatus && actor.upstreamStatus !== 'active')
       if (
         !actor.exists ||
-        (isNoHosted && !includeTakedowns) ||
+        (isNoHosted && !overrideIncludeTakedowns) ||
         !!actor.tombstonedAt
       ) {
         return acc.set(did, null)
       }
 
       const profile = actor.profile?.record
-        ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
+        ? parseRecord<ProfileRecord>(actor.profile, overrideIncludeTakedowns)
         : undefined
 
       const status = actor.statusRecord
-        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedownsBase)
+        ? parseRecord<StatusRecord>(
+            actor.statusRecord,
+            includeTakedowns || overrideIncludeActorStatusTakedowns,
+          )
         : undefined
 
       const verifications = mapDefined(
