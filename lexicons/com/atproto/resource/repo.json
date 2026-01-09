@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.resource.repo",
+  "defs": {
+    "main": {
+      "type": "auth-resource",
+      "description": "Grants access to records in the public repo",
+      "parameters": {
+        "type": "params",
+        "required": ["collection"],
+        "properties": {
+          "collection": {
+            "type": "string",
+            "description": "The collection being granted access to. The value '*' gives access to the entire repository."
+          },
+          "create": {
+            "type": "boolean",
+            "default": false
+          },
+          "update": {
+            "type": "boolean",
+            "default": false
+          },
+          "delete": {
+            "type": "boolean",
+            "default": false
+          },
+          "import": {
+            "type": "boolean",
+            "description": "Allows import of CAR files. Mostly likely used in account migration. The value of 'collection' should be '*'.",
+            "default": false
+          }
+        }
+      }
+    }
+  }
+}
