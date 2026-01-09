@@ -12,6 +12,7 @@ import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { LocalRecords } from '../../read-after-write/types'
 import { ActorDb, Backlink } from '../db'
+import { makeAtUriStringWithoutValidation } from './util'
 
 export type RecordDescript = {
   uri: string
@@ -97,12 +98,12 @@ export class RecordReader {
       .where(
         'record.uri',
         '>=',
-        AtUri.make(this.did, collection, '').toString(),
+        makeAtUriStringWithoutValidation(this.did, collection, ''),
       )
       .where(
         'record.uri',
         '<',
-        AtUri.make(this.did, collection, '\x7f').toString(),
+        makeAtUriStringWithoutValidation(this.did, collection, '\x7f'),
       ) // together, these two .where() clauses are equivalent to .where('record.collection', '=', collection), but index-friendly
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
@@ -113,7 +114,11 @@ export class RecordReader {
 
     // prioritize cursor but fall back to soon-to-be-depcreated rkey start/end
     if (cursor !== undefined) {
-      const cursorUri = AtUri.make(this.did, collection, cursor).toString()
+      const cursorUri = makeAtUriStringWithoutValidation(
+        this.did,
+        collection,
+        cursor,
+      )
       if (reverse) {
         builder = builder.where('record.uri', '>', cursorUri)
       } else {
@@ -121,15 +126,19 @@ export class RecordReader {
       }
     } else {
       if (rkeyStart !== undefined) {
-        const rkeyStartUri = AtUri.make(
+        const rkeyStartUri = makeAtUriStringWithoutValidation(
           this.did,
           collection,
           rkeyStart,
-        ).toString()
+        )
         builder = builder.where('record.uri', '>', rkeyStartUri)
       }
       if (rkeyEnd !== undefined) {
-        const rkeyEndUri = AtUri.make(this.did, collection, rkeyEnd).toString()
+        const rkeyEndUri = makeAtUriStringWithoutValidation(
+          this.did,
+          collection,
+          rkeyEnd,
+        )
         builder = builder.where('record.uri', '<', rkeyEndUri)
       }
     }
