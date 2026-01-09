@@ -43,16 +43,16 @@ describe('image processing server', () => {
     const info = await getInfo(Readable.from([bytes]))
 
     expect(info).toEqual({
-      height: 580,
-      width: 1000,
-      size: 127578,
+      height: 1160,
+      width:  2000,
+      size: 368506,
       mime: 'image/jpeg',
     })
     expect(Object.fromEntries(res.headers)).toEqual(
       expect.objectContaining({
         'content-type': 'image/jpeg',
         'cache-control': 'public, max-age=31536000',
-        'content-length': '127578',
+        'content-length': '368506',
       }),
     )
   })

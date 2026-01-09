@@ -61,10 +61,10 @@ describe('image uri builder', () => {
       cid: cid.toString(),
       fit: 'inside',
       format: 'jpeg',
-      height: 2000,
+      height: 1000,
       min: true,
       preset: 'feed_thumbnail',
-      width: 2000,
+      width: 1000,
     })
   })
 
