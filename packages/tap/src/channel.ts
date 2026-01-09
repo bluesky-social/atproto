@@ -1,6 +1,6 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
-import { JsonValue } from '@atproto/lex'
+import { lexParse } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
 import { formatAdminAuthHeader } from './util'
@@ -123,8 +123,11 @@ export class TapChannel {
   private async processWsEvent(chunk: Uint8Array) {
     let evt: TapEvent
     try {
-      const data = chunk.toString()
-      evt = parseTapEvent(JSON.parse(data) as JsonValue)
+      const data = lexParse(chunk.toString(), {
+        // Reject invalid CIDs and blobs
+        strict: true,
+      })
+      evt = parseTapEvent(data)
     } catch (err) {
       this.handler.onError(new Error('Failed to parse message', { cause: err }))
       return

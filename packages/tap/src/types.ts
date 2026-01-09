@@ -1,4 +1,4 @@
-import { JsonObject, JsonValue, LexMap, jsonToLex, l } from '@atproto/lex'
+import { LexMap, LexValue, l } from '@atproto/lex'
 import { DidString, HandleString, NsidString } from '@atproto/syntax'
 
 export const recordEventDataSchema = l.object({
@@ -73,7 +73,7 @@ export type RepoStatus =
 
 export type TapEvent = IdentityEvent | RecordEvent
 
-export const parseTapEvent = (data: JsonValue): TapEvent => {
+export const parseTapEvent = (data: LexValue): TapEvent => {
   const parsed = tapEventSchema.parse(data)
   if (parsed.type === 'identity') {
     return {
@@ -96,10 +96,7 @@ export const parseTapEvent = (data: JsonValue): TapEvent => {
       record:
         parsed.record.record === undefined
           ? undefined
-          : (jsonToLex(parsed.record.record as JsonObject, {
-              // reject invalid blobs/cids in records
-              strict: true,
-            }) as LexMap),
+          : (parsed.record.record as LexMap),
       cid: parsed.record.cid,
       live: parsed.record.live,
     }
