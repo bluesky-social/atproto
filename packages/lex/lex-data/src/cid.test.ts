@@ -1,23 +1,69 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import {
+  Cid,
   DAG_CBOR_MULTICODEC,
   RAW_MULTICODEC,
+  SHA256_MULTIHASH,
+  asMultiformatsCID,
+  cidForRawHash,
   decodeCid,
   ensureValidCidString,
   isCid,
   parseCid,
-  parseCidString,
+  parseCidSafe,
 } from './cid.js'
+import { ui8Equals } from './uint8array.js'
+
+const invalidCidStr = 'invalidcidstring'
+
+const cborCidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
+const cborCid = parseCid(cborCidStr, { flavor: 'cbor' })
+assert(cborCid.code === DAG_CBOR_MULTICODEC)
+
+const rawCidStr = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
+const rawCid = parseCid(rawCidStr, { flavor: 'raw' })
+assert(rawCid.code === RAW_MULTICODEC)
+
+const customCid: Cid = {
+  version: 1,
+  code: RAW_MULTICODEC,
+  multihash: {
+    code: SHA256_MULTIHASH,
+    digest: new Uint8Array(32),
+  },
+  bytes: new Uint8Array([
+    0x01,
+    RAW_MULTICODEC,
+    SHA256_MULTIHASH,
+    0x20,
+    ...new Uint8Array(32),
+  ]),
+  toString() {
+    return 'foobar' // Not implemented
+  },
+  equals(this: Cid, other: Cid) {
+    return (
+      this.version === other.version &&
+      this.code === other.code &&
+      this.multihash.code === other.multihash.code &&
+      ui8Equals(this.multihash.digest, other.multihash.digest)
+    )
+  },
+}
 
 describe(isCid, () => {
   describe('non-strict mode', () => {
     it('returns true for parsed CIDs', () => {
-      const cid = parseCid(
-        'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-      )
-      expect(isCid(cid)).toBe(true)
+      expect(isCid(cborCid)).toBe(true)
+      expect(isCid(rawCid)).toBe(true)
+    })
+
+    it('returns true for custom compatible CID implementations', () => {
+      expect(isCid(customCid)).toBe(true)
     })
 
     it('returns true for CID v0 and v1', async () => {
@@ -88,56 +134,131 @@ describe(isCid, () => {
       })
     })
   })
+
+  describe('alternative cid implementations', () => {
+    it('accepts compatible CID implementations', () => {
+      expect(isCid(customCid)).toBe(true)
+    })
+
+    it('rejects non-matching version', () => {
+      expect(isCid({ ...customCid, version: 0 })).toBe(false)
+    })
+
+    it('rejects non-matching code', () => {
+      expect(isCid({ ...customCid, code: 0 })).toBe(false)
+    })
+
+    it('rejects non-matching multihash code', () => {
+      expect(
+        isCid({
+          ...customCid,
+          multihash: { ...customCid.multihash, code: 0 },
+        }),
+      ).toBe(false)
+    })
+
+    it('rejects non-matching multihash digest', () => {
+      const differentDigest = new Uint8Array(32)
+      differentDigest[0] = 1
+      expect(
+        isCid({
+          ...customCid,
+          multihash: { ...customCid.multihash, digest: differentDigest },
+        }),
+      ).toBe(false)
+    })
+
+    it('rejects objects without equals method', () => {
+      expect(isCid({ ...customCid, equals: undefined })).toBe(false)
+    })
+
+    it('rejects object with throwing equals method', () => {
+      expect(
+        isCid({
+          ...customCid,
+          equals: () => {
+            throw new Error('fail')
+          },
+        }),
+      ).toBe(false)
+    })
+  })
 })
 
 describe(decodeCid, () => {
   it('decodes CID from bytes', () => {
-    const cidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
-    const cid = parseCid(cidStr)
+    const cid = parseCid(cborCidStr)
     const bytes = cid.bytes
     const decodedCid = decodeCid(bytes)
-    expect(decodedCid.toString()).toBe(cidStr)
+    expect(decodedCid.toString()).toBe(cborCidStr)
   })
 })
 
 describe(parseCid, () => {
   it('parses valid CIDs', () => {
-    const cidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
-    const cid = parseCid(cidStr)
-    expect(cid.toString()).toBe(cidStr)
+    expect(parseCid(cborCidStr).toString()).toBe(cborCidStr)
+    expect(parseCid(rawCidStr).toString()).toBe(rawCidStr)
   })
 
   it('throws for invalid CIDs', () => {
-    const invalidCidStr = 'invalidcidstring'
     expect(() => parseCid(invalidCidStr)).toThrow()
   })
 })
 
-describe(parseCidString, () => {
+describe(parseCidSafe, () => {
   it('parses valid CIDs', () => {
-    const cidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
-    const cid = parseCidString(cidStr)
-    expect(cid).toBeDefined()
-    expect(cid!.toString()).toBe(cidStr)
+    expect(parseCidSafe(cborCidStr)?.toString()).toBe(cborCidStr)
+    expect(parseCidSafe(rawCidStr)?.toString()).toBe(rawCidStr)
   })
 
   it('returns undefined for invalid CIDs', () => {
-    const invalidCidStr = 'invalidcidstring'
-    const cid = parseCidString(invalidCidStr)
-    expect(cid).toBeUndefined()
+    expect(parseCidSafe(invalidCidStr)).toBeNull()
   })
 })
 
 describe(ensureValidCidString, () => {
   it('does not throw for valid CIDs', () => {
-    const cidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
-    expect(() => ensureValidCidString(cidStr)).not.toThrow()
+    expect(() => ensureValidCidString(cborCidStr)).not.toThrow()
   })
 
   it('throws for invalid CIDs', () => {
-    const invalidCidStr = 'invalidcidstring'
     expect(() => ensureValidCidString(invalidCidStr)).toThrow(
       'Invalid CID string',
     )
+  })
+})
+
+describe(cidForRawHash, () => {
+  it('creates a RawCid from a SHA-256 hash', () => {
+    const hash = new Uint8Array(32)
+    const cid = cidForRawHash(hash)
+    expect(cid.code).toBe(RAW_MULTICODEC)
+    expect(cid.multihash.code).toBe(SHA256_MULTIHASH)
+    expect(ui8Equals(cid.multihash.digest, hash)).toBe(true)
+  })
+
+  it('rejects hashes on invalid lengths', () => {
+    expect(() => cidForRawHash(new Uint8Array(31))).toThrow(
+      'Invalid SHA-256 hash length',
+    )
+    expect(() => cidForRawHash(new Uint8Array(33))).toThrow(
+      'Invalid SHA-256 hash length',
+    )
+  })
+})
+
+describe(asMultiformatsCID, () => {
+  it('converts compatible CID to multiformats CID', () => {
+    for (const cid of [cborCid, rawCid, customCid]) {
+      expect(asMultiformatsCID(cid)).toBeInstanceOf(CID)
+      expect(asMultiformatsCID(cid)).toMatchObject({
+        version: cid.version,
+        code: cid.code,
+        multihash: {
+          code: cid.multihash.code,
+          digest: cid.multihash.digest,
+        },
+      })
+    }
   })
 })

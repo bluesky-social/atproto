@@ -254,21 +254,6 @@ export function asCid(value: unknown, options?: CheckCidOptions): Cid {
 }
 
 /**
- * Parses a CID string into a Cid object.
- *
- * @throws if the input is not a valid CID string.
- */
-export function parseCid<TOptions extends CheckCidOptions>(
-  input: string,
-  options: TOptions,
-): InferCheckedCid<TOptions>
-export function parseCid(input: string, options?: CheckCidOptions): Cid
-export function parseCid(input: string, options?: CheckCidOptions): Cid {
-  const cid = CID.parse(input)
-  return asCid(cid, options)
-}
-
-/**
  * Decodes a CID from its binary representation.
  *
  * @see {@link https://dasl.ing/cid.html DASL-CIDs}
@@ -287,29 +272,44 @@ export function decodeCid(
   return asCid(cid, options)
 }
 
+/**
+ * Parses a CID string into a Cid object.
+ *
+ * @throws if the input is not a valid CID string.
+ */
+export function parseCid<TOptions extends CheckCidOptions>(
+  input: string,
+  options: TOptions,
+): InferCheckedCid<TOptions>
+export function parseCid(input: string, options?: CheckCidOptions): Cid
+export function parseCid(input: string, options?: CheckCidOptions): Cid {
+  const cid = CID.parse(input)
+  return asCid(cid, options)
+}
+
 export function validateCidString(
   input: string,
   options?: CheckCidOptions,
 ): boolean {
-  return parseCidString(input, options)?.toString() === input
+  return parseCidSafe(input, options)?.toString() === input
 }
 
-export function parseCidString<TOptions extends CheckCidOptions>(
+export function parseCidSafe<TOptions extends CheckCidOptions>(
   input: string,
   options: TOptions,
-): InferCheckedCid<TOptions> | undefined
-export function parseCidString(
+): InferCheckedCid<TOptions> | null
+export function parseCidSafe(
   input: string,
   options?: CheckCidOptions,
-): Cid | undefined
-export function parseCidString(
+): Cid | null
+export function parseCidSafe(
   input: string,
   options?: CheckCidOptions,
-): Cid | undefined {
+): Cid | null {
   try {
     return parseCid(input, options)
   } catch {
-    return undefined
+    return null
   }
 }
 
@@ -333,13 +333,13 @@ export async function isCidForBytes(
   bytes: Uint8Array,
 ): Promise<boolean> {
   if (cid.multihash.code === sha256.code) {
-    const digest = await sha256.digest(bytes)
-    return multihashEquals(digest, cid.multihash)
+    const multihash = await sha256.digest(bytes)
+    return multihashEquals(multihash, cid.multihash)
   }
 
   if (cid.multihash.code === sha512.code) {
-    const digest = await sha512.digest(bytes)
-    return multihashEquals(digest, cid.multihash)
+    const multihash = await sha512.digest(bytes)
+    return multihashEquals(multihash, cid.multihash)
   }
 
   // Don't know how to verify other multihash codes
@@ -356,21 +356,21 @@ export function createCid<TCode extends number, TMultihashCode extends number>(
 }
 
 export async function cidForCbor(bytes: Uint8Array): Promise<CborCid> {
-  const digest = await sha256.digest(bytes)
-  return CID.createV1(DAG_CBOR_MULTICODEC, digest) as CborCid
+  const multihash = await sha256.digest(bytes)
+  return CID.createV1(DAG_CBOR_MULTICODEC, multihash) as CborCid
 }
 
 export async function cidForRawBytes(bytes: Uint8Array): Promise<RawCid> {
-  const digest = await sha256.digest(bytes)
-  return CID.createV1(RAW_MULTICODEC, digest) as RawCid
+  const multihash = await sha256.digest(bytes)
+  return CID.createV1(RAW_MULTICODEC, multihash) as RawCid
 }
 
-export function cidForRawHash(hash: Uint8Array): RawCid {
+export function cidForRawHash(digest: Uint8Array): RawCid {
   // Fool-proofing
-  if (hash.length !== 32) {
-    throw new Error(`Invalid SHA-256 hash length: ${hash.length}`)
+  if (digest.length !== 32) {
+    throw new Error(`Invalid SHA-256 hash length: ${digest.length}`)
   }
-  return createCid(RAW_MULTICODEC, sha256.code, hash)
+  return createCid(RAW_MULTICODEC, sha256.code, digest)
 }
 
 /**
