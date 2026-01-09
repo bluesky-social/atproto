@@ -1,0 +1,29 @@
+{
+  "lexicon": 1,
+  "id": "app.bsky.draft.putDraft",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upserts a draft using private storage (stash). Requires authentication.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "draft": {
+              "type": "ref",
+              "ref": "app.bsky.draft.defs#draft"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "TODO",
+          "description": "TODO"
+        }
+      ]
+    }
+  }
+}
