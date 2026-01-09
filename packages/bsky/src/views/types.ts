@@ -101,6 +101,8 @@ export const isFollowingRule = app.bsky.feed.threadgate.followingRule.$matches
 export const isListRule = app.bsky.feed.threadgate.listRule.$matches
 export const isMentionRule = app.bsky.feed.threadgate.mentionRule.$matches
 
+export type FeedGenRecord = app.bsky.feed.generator.Main
+
 // app.bsky.graph
 
 export type BlockRecord = app.bsky.graph.block.Main
