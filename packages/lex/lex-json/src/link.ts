@@ -1,22 +1,22 @@
 import {
+  CheckCidOptions,
   Cid,
-  CidCheckOptions,
   InferCheckedCid,
   parseCid,
 } from '@atproto/lex-data'
 import { JsonValue } from './json.js'
 
-export function parseLexLink<TOptions extends CidCheckOptions>(
+export function parseLexLink<TOptions extends CheckCidOptions>(
   input: undefined | Record<string, unknown>,
   options: TOptions,
 ): InferCheckedCid<TOptions> | undefined
 export function parseLexLink(
   input?: Record<string, unknown>,
-  options?: CidCheckOptions,
+  options?: CheckCidOptions,
 ): Cid | undefined
 export function parseLexLink(
   input?: Record<string, unknown>,
-  options?: CidCheckOptions,
+  options?: CheckCidOptions,
 ): Cid | undefined {
   if (!input || !('$link' in input)) {
     return undefined

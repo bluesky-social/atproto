@@ -1,11 +1,12 @@
-import { Cid, CidCheckOptions, InferCheckedCid, isCid } from '@atproto/lex-data'
+import { CheckCidOptions, Cid, InferCheckedCid, isCid } from '@atproto/lex-data'
 import { Schema, ValidationResult, ValidatorContext } from '../core.js'
 
 export type { Cid }
 
-export type CidSchemaOptions = CidCheckOptions
-export type CidSchemaOutput<TOptions extends CidSchemaOptions> =
-  InferCheckedCid<TOptions>
+export type CidSchemaOptions = CheckCidOptions
+export type CidSchemaOutput<
+  TOptions extends CidSchemaOptions = { flavor: undefined },
+> = InferCheckedCid<TOptions>
 
 export class CidSchema<TOptions extends CidSchemaOptions> extends Schema<
   CidSchemaOutput<TOptions>
