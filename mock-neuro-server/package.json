@@ -1,0 +1,14 @@
+{
+  "name": "mock-neuro-server",
+  "version": "1.0.0",
+  "description": "Mock Neuro RemoteLogin server for local PDS testing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jose": "^5.2.0"
+  }
+}
