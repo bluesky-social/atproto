@@ -246,7 +246,7 @@ msgstr "展开详情"
 
 #: src/components/utils/password-strength-label.tsx:25
 msgid "Extra"
-msgstr "额外信息"
+msgstr "极强"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:53
 msgid "Forgot Password"
@@ -297,7 +297,7 @@ msgstr "无效验证码"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:55
 msgid "Let's get your password reset!"
-msgstr "让我们帮你重置密码吧！"
+msgstr "开始重置密码吧！"
 
 #: src/views/authorize/authorize-view.tsx:190
 msgid "Login complete"
@@ -317,7 +317,7 @@ msgstr "看起来像 {example}"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
-msgstr "使其可见"
+msgstr "显示"
 
 #: src/components/utils/scope-description.tsx:430
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
@@ -469,7 +469,7 @@ msgstr "以 {0} 身份登录"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:64
 msgid "Sign in as..."
-msgstr "以……"
+msgstr "以……登录"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:88
 #: src/views/authorize/sign-in/sign-in-picker.tsx:53
