@@ -29,6 +29,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
+    cookieSecret: env.cookieSecret,
   }
 
   const dbLoc = (name: string) => {
@@ -41,6 +42,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     accountDbLoc: env.accountDbLocation ?? dbLoc('account.sqlite'),
     sequencerDbLoc: env.sequencerDbLocation ?? dbLoc('sequencer.sqlite'),
     didCacheDbLoc: env.didCacheDbLocation ?? dbLoc('did_cache.sqlite'),
+    ssoDbLoc: env.ssoDbLocation ?? dbLoc('sso.sqlite'),
     disableWalAutoCheckpoint,
   }
 
@@ -388,12 +390,14 @@ export type ServiceConfig = {
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
+  cookieSecret?: string,
 }
 
 export type DatabaseConfig = {
   accountDbLoc: string
   sequencerDbLoc: string
   didCacheDbLoc: string
+  ssoDbLoc: string
   disableWalAutoCheckpoint: boolean
 }
 
