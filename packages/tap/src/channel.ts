@@ -1,5 +1,6 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
+import { JsonValue } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
 import { formatAdminAuthHeader } from './util'
@@ -123,7 +124,7 @@ export class TapChannel {
     let evt: TapEvent
     try {
       const data = chunk.toString()
-      evt = parseTapEvent(JSON.parse(data))
+      evt = parseTapEvent(JSON.parse(data) as JsonValue)
     } catch (err) {
       this.handler.onError(new Error('Failed to parse message', { cause: err }))
       return
