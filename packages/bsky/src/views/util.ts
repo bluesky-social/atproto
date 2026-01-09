@@ -1,4 +1,5 @@
 import * as util from 'node:util'
+import { UriString } from '@atproto/lex'
 import { BlobRef } from '@atproto/lex-data'
 import { DidString } from '@atproto/syntax'
 import {
@@ -104,18 +105,18 @@ export class VideoUriBuilder {
       thumbnailUrlPattern: string // e.g. https://hostname/vid/%s/%s/thumbnail.jpg
     },
   ) {}
-  playlist({ did, cid }: { did: DidString; cid: string }) {
+  playlist({ did, cid }: { did: DidString; cid: string }): UriString {
     return util.format(
       this.opts.playlistUrlPattern,
       encodeURIComponent(did),
       encodeURIComponent(cid),
-    )
+    ) as UriString
   }
-  thumbnail({ did, cid }: { did: DidString; cid: string }) {
+  thumbnail({ did, cid }: { did: DidString; cid: string }): UriString {
     return util.format(
       this.opts.thumbnailUrlPattern,
       encodeURIComponent(did),
       encodeURIComponent(cid),
-    )
+    ) as UriString
   }
 }

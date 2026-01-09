@@ -1,21 +1,20 @@
 import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Postgate from '../../../../lexicon/types/app/bsky/feed/postgate'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyFeedPostgate
+const lexId = app.bsky.feed.postgate.$type
 type IndexedGate = DatabaseSchemaType['post_gate']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: Postgate.Record,
+  obj: app.bsky.feed.postgate.Main,
   timestamp: string,
 ): Promise<IndexedGate | null> => {
   const postUri = new AtUri(obj.post)
@@ -48,7 +47,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: Postgate.Record,
+  obj: app.bsky.feed.postgate.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('post_gate')
@@ -85,7 +84,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Postgate.Record, IndexedGate>
+export type PluginType = RecordProcessor<
+  app.bsky.feed.postgate.Main,
+  IndexedGate
+>
 
 export const makePlugin = (
   db: Database,

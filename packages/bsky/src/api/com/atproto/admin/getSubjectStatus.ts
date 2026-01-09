@@ -1,7 +1,6 @@
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { OutputSchema } from '../../../../lexicon/types/com/atproto/admin/getSubjectStatus'
-import { app } from '../../../../lexicons/index.js'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.getSubjectStatus, {
@@ -9,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { did, uri, blob } = params
 
-      let body: OutputSchema | null = null
+      let body: com.atproto.admin.getSubjectStatus.OutputBody | null = null
       if (blob) {
         if (!did) {
           throw new InvalidRequestError(

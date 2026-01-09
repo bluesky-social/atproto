@@ -1,7 +1,6 @@
 import { TID } from '@atproto/common'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Notification } from '../../../../lexicon/types/app/bsky/contact/defs'
 import { app } from '../../../../lexicons/index.js'
 import { Namespaces } from '../../../../stash'
 import { assertRolodexOrThrowUnimplemented } from './util'
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
         payload: {
           from,
           to,
-        } satisfies Notification,
+        } satisfies app.bsky.contact.defs.Notification,
         key: TID.nextStr(),
       })
 

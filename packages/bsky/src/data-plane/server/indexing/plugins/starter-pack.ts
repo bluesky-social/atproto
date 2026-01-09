@@ -1,21 +1,20 @@
 import { Selectable } from 'kysely'
 import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as StarterPack from '../../../../lexicon/types/app/bsky/graph/starterpack'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphStarterpack
+const lexId = app.bsky.graph.starterpack.$type
 type IndexedStarterPack = Selectable<DatabaseSchemaType['starter_pack']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: StarterPack.Record,
+  obj: app.bsky.graph.starterpack.Main,
   timestamp: string,
 ): Promise<IndexedStarterPack | null> => {
   const inserted = await db
@@ -58,7 +57,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<StarterPack.Record, IndexedStarterPack>
+export type PluginType = RecordProcessor<
+  app.bsky.graph.starterpack.Main,
+  IndexedStarterPack
+>
 
 export const makePlugin = (
   db: Database,

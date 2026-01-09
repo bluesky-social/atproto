@@ -140,10 +140,16 @@ export const isMentionFacet = app.bsky.richtext.facet.mention.$matches
 
 // app.bsky.unspecced
 
+export type ThreadItemBlocked = app.bsky.unspecced.defs.ThreadItemBlocked
+export type ThreadItemNoUnauthenticated =
+  app.bsky.unspecced.defs.ThreadItemNoUnauthenticated
+export type ThreadItemNotFound = app.bsky.unspecced.defs.ThreadItemNotFound
+export type ThreadItemPost = app.bsky.unspecced.defs.ThreadItemPost
+
 export type ThreadOtherItem = app.bsky.unspecced.getPostThreadOtherV2.ThreadItem
-export type ThreadItem = app.bsky.unspecced.getPostThreadV2.ThreadItem
 export type GetPostThreadV2QueryParams =
   app.bsky.unspecced.getPostThreadV2.Params
+export type ThreadItem = app.bsky.unspecced.getPostThreadV2.ThreadItem
 
 // chat.bsky.actor
 

@@ -5,12 +5,7 @@ import {
   Server,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import {
-  isRepoBlobRef,
-  isRepoRef,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
-import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
-import { app } from '../../../../lexicons/index.js'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(com.atproto.admin.updateSubjectStatus, {
@@ -25,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date()
       const { subject, takedown } = input.body
       if (takedown) {
-        if (isRepoRef(subject)) {
+        if (com.atproto.admin.defs.repoRef.$matches(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownActor({
               did: subject.did,
@@ -38,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
               seen: Timestamp.fromDate(now),
             })
           }
-        } else if (isStrongRef(subject)) {
+        } else if (com.atproto.repo.strongRef.$matches(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownRecord({
               recordUri: subject.uri,
@@ -51,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
               seen: Timestamp.fromDate(now),
             })
           }
-        } else if (isRepoBlobRef(subject)) {
+        } else if (com.atproto.admin.defs.repoBlobRef.$matches(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownBlob({
               did: subject.did,

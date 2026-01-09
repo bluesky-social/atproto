@@ -2,21 +2,20 @@ import { Selectable } from 'kysely'
 import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import * as lex from '../../../../lexicon/lexicons'
-import * as ListItem from '../../../../lexicon/types/app/bsky/graph/listitem'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphListitem
+const lexId = app.bsky.graph.listitem.$type
 type IndexedListItem = Selectable<DatabaseSchemaType['list_item']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: ListItem.Record,
+  obj: app.bsky.graph.listitem.Main,
   timestamp: string,
 ): Promise<IndexedListItem | null> => {
   const listUri = new AtUri(obj.list)
@@ -45,7 +44,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   _uri: AtUri,
-  obj: ListItem.Record,
+  obj: app.bsky.graph.listitem.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('list_item')
@@ -76,7 +75,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<ListItem.Record, IndexedListItem>
+export type PluginType = RecordProcessor<
+  app.bsky.graph.listitem.Main,
+  IndexedListItem
+>
 
 export const makePlugin = (
   db: Database,

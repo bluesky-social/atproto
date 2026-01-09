@@ -126,7 +126,7 @@ export const parseJsonBytes = <T extends LexValue = LexValue>(
 }
 
 export const parseString = <T extends string | undefined>(
-  str: string,
+  str: undefined | string,
 ): T | undefined => {
   return str ? (str as T) : undefined
 }

@@ -1,13 +1,10 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import {
-  CURATELIST,
-  MODLIST,
-} from '../../../../lexicon/types/app/bsky/graph/defs'
+import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getLists.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -17,6 +14,10 @@ import {
 } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
+type QueryParams = app.bsky.graph.getLists.Params
+
+const CURATELIST = app.bsky.graph.defs.curatelist.value
+const MODLIST = app.bsky.graph.defs.modlist.value
 
 export default function (server: Server, ctx: AppContext) {
   const getLists = createPipeline(
@@ -62,7 +63,10 @@ const skeleton = async (
     cursor: params.cursor,
     limit: params.limit,
   })
-  return { listUris, cursor: cursor || undefined }
+  return {
+    listUris: listUris as AtUriString[],
+    cursor: parseString(cursor),
+  }
 }
 
 const hydration = async (
@@ -115,6 +119,6 @@ type Params = QueryParams & {
 }
 
 type SkeletonState = {
-  listUris: string[]
+  listUris: AtUriString[]
   cursor?: string
 }

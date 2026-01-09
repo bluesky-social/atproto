@@ -1,22 +1,21 @@
 import { Selectable } from 'kysely'
 import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Follow from '../../../../lexicon/types/app/bsky/graph/follow'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphFollow
+const lexId = app.bsky.graph.follow.$type
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: Follow.Record,
+  obj: app.bsky.graph.follow.Main,
   timestamp: string,
 ): Promise<IndexedFollow | null> => {
   const inserted = await db
@@ -38,7 +37,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Follow.Record,
+  obj: app.bsky.graph.follow.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('follow')
@@ -115,7 +114,10 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
   await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
 }
 
-export type PluginType = RecordProcessor<Follow.Record, IndexedFollow>
+export type PluginType = RecordProcessor<
+  app.bsky.graph.follow.Main,
+  IndexedFollow
+>
 
 export const makePlugin = (
   db: Database,
