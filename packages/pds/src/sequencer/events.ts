@@ -2,7 +2,15 @@
 
 import assert from 'node:assert'
 import { z } from 'zod'
-import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
+import { noUndefinedVals, schema } from '@atproto/common'
+import {
+  DatetimeString,
+  DidString,
+  HandleString,
+  isDidString,
+  isHandleString,
+} from '@atproto/lex'
+import { encode as cborEncode } from '@atproto/lex-cbor'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager'
 import { CommitDataWithOps, SyncEvtData } from '../repo'
@@ -44,7 +52,7 @@ export const formatSeqSyncEvt = async (
 ): Promise<RepoSeqInsert> => {
   const blocks = await blocksToCarFile(data.cid, data.blocks)
   const evt: SyncEvt = {
-    did,
+    did: did as DidString,
     rev: data.rev,
     blocks,
   }
@@ -78,10 +86,10 @@ export const formatSeqIdentityEvt = async (
   handle?: string,
 ): Promise<RepoSeqInsert> => {
   const evt: IdentityEvt = {
-    did,
+    did: did as DidString,
   }
   if (handle) {
-    evt.handle = handle
+    evt.handle = handle as HandleString
   }
   return {
     did,
@@ -96,7 +104,7 @@ export const formatSeqAccountEvt = async (
   status: AccountStatus,
 ): Promise<RepoSeqInsert> => {
   const evt: AccountEvt = {
-    did,
+    did: did as DidString,
     active: status === 'active',
   }
   if (status !== AccountStatus.Active) {
@@ -126,7 +134,7 @@ export type CommitEvtOp = z.infer<typeof commitEvtOp>
 export const commitEvt = z.object({
   rebase: z.boolean(),
   tooBig: z.boolean(),
-  repo: z.string(),
+  repo: z.string().refine(isDidString),
   commit: schema.cid,
   rev: z.string(),
   since: z.string().nullable(),
@@ -138,20 +146,20 @@ export const commitEvt = z.object({
 export type CommitEvt = z.infer<typeof commitEvt>
 
 export const syncEvt = z.object({
-  did: z.string(),
+  did: z.string().refine(isDidString),
   blocks: schema.bytes,
   rev: z.string(),
 })
 export type SyncEvt = z.infer<typeof syncEvt>
 
 export const identityEvt = z.object({
-  did: z.string(),
-  handle: z.string().optional(),
+  did: z.string().refine(isDidString),
+  handle: z.string().refine(isHandleString).optional(),
 })
 export type IdentityEvt = z.infer<typeof identityEvt>
 
 export const accountEvt = z.object({
-  did: z.string(),
+  did: z.string().refine(isDidString),
   active: z.boolean(),
   status: z
     .enum([
@@ -167,25 +175,25 @@ export type AccountEvt = z.infer<typeof accountEvt>
 type TypedCommitEvt = {
   type: 'commit'
   seq: number
-  time: string
+  time: DatetimeString
   evt: CommitEvt
 }
 type TypedSyncEvt = {
   type: 'sync'
   seq: number
-  time: string
+  time: DatetimeString
   evt: SyncEvt
 }
 type TypedIdentityEvt = {
   type: 'identity'
   seq: number
-  time: string
+  time: DatetimeString
   evt: IdentityEvt
 }
 type TypedAccountEvt = {
   type: 'account'
   seq: number
-  time: string
+  time: DatetimeString
   evt: AccountEvt
 }
 export type SeqEvt =

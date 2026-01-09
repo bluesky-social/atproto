@@ -36,7 +36,7 @@ describe('account', () => {
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
 
     // Catch emails for use in tests
     _origSendMail = mailer.transporter.sendMail

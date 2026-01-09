@@ -1,20 +1,21 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  const { entrywayAgent } = ctx
-  if (entrywayAgent) {
-    server.com.atproto.server.deleteSession(async ({ req }) => {
-      await entrywayAgent.com.atproto.server.deleteSession(
-        undefined,
-        ctx.entrywayPassthruHeaders(req),
-      )
+  const { entrywayClient } = ctx
+
+  if (entrywayClient) {
+    server.add(com.atproto.server.deleteSession, async ({ req }) => {
+      const { headers } = ctx.entrywayPassthruHeaders(req)
+      await entrywayClient.xrpc(com.atproto.server.deleteSession, {
+        validateResponse: false, // ignore invalid upstream responses
+        headers,
+      })
     })
   } else {
-    server.com.atproto.server.deleteSession({
-      auth: ctx.authVerifier.refresh({
-        allowExpired: true,
-      }),
+    server.add(com.atproto.server.deleteSession, {
+      auth: ctx.authVerifier.refresh({ allowExpired: true }),
       handler: async ({ auth }) => {
         await ctx.accountManager.revokeRefreshToken(auth.credentials.tokenId)
       },

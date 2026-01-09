@@ -1,14 +1,16 @@
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  ForbiddenError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { CodeDetail } from '../../../../account-manager/helpers/invite'
 import { ACCESS_FULL } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { resultPassthru } from '../../../proxy'
+import { com } from '../../../../lexicons/index.js'
 import { genInvCodes } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.getAccountInviteCodes({
+  server.add(com.atproto.server.getAccountInviteCodes, {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       scopes: ACCESS_FULL,
@@ -19,16 +21,19 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth, req }) => {
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.getAccountInviteCodes(
+      if (ctx.entrywayClient) {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.getAccountInviteCodes.$lxm,
+        )
+        return ctx.entrywayClient.xrpc(
+          com.atproto.server.getAccountInviteCodes,
+          {
+            validateResponse: false, // ignore invalid upstream responses
             params,
-            await ctx.entrywayAuthHeaders(
-              req,
-              auth.credentials.did,
-              ids.ComAtprotoServerGetAccountInviteCodes,
-            ),
-          ),
+            headers,
+          },
         )
       }
 
@@ -77,10 +82,8 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       return {
-        encoding: 'application/json',
-        body: {
-          codes: filtered,
-        },
+        encoding: 'application/json' as const,
+        body: { codes: filtered },
       }
     },
   })

@@ -1,18 +1,12 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { resultPassthru } from '../../../proxy'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.sendEmail({
+  server.add(com.atproto.admin.sendEmail, {
     auth: ctx.authVerifier.moderator,
-    handler: async ({ input, req }) => {
-      const {
-        content,
-        recipientDid,
-        subject = 'Message via your PDS',
-      } = input.body
+    handler: async ({ input: { body }, req }) => {
+      const { content, recipientDid, subject = 'Message via your PDS' } = body
 
       const account = await ctx.accountManager.getAccount(recipientDid, {
         includeDeactivated: true,
@@ -22,17 +16,18 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Recipient not found')
       }
 
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.admin.sendEmail(
-            input.body,
-            await ctx.entrywayAuthHeaders(
-              req,
-              recipientDid,
-              ids.ComAtprotoAdminSendEmail,
-            ),
-          ),
+      if (ctx.entrywayClient) {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          recipientDid,
+          com.atproto.admin.sendEmail.$lxm,
         )
+
+        return ctx.entrywayClient.xrpc(com.atproto.admin.sendEmail, {
+          validateResponse: false, // ignore invalid upstream responses
+          headers,
+          body,
+        })
       }
 
       if (!account.email) {
@@ -45,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: { sent: true },
       }
     },

@@ -1,11 +1,12 @@
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons/index.js'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.feed.getSuggestedFeeds({
+  server.add(app.bsky.feed.getSuggestedFeeds, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss

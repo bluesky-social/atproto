@@ -1,15 +1,16 @@
 import { DAY, MINUTE } from '@atproto/common'
-import { INVALID_HANDLE } from '@atproto/syntax'
-import { AuthRequiredError } from '@atproto/xrpc-server'
+import { DidString, HandleString, INVALID_HANDLE } from '@atproto/syntax'
+import { AuthRequiredError, Server } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
 import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { resultPassthru } from '../../../proxy'
+import { com } from '../../../../lexicons/index.js'
 import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.createSession({
+  const { entrywayClient } = ctx
+
+  server.add(com.atproto.server.createSession, {
     rateLimit: [
       {
         durationMs: DAY,
@@ -22,54 +23,61 @@ export default function (server: Server, ctx: AppContext) {
         calcKey: ({ input, req }) => `${input.body.identifier}-${req.ip}`,
       },
     ],
-    handler: async ({ input, req }) => {
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.createSession(
-            input.body,
-            ctx.entrywayPassthruHeaders(req),
-          ),
-        )
-      }
+    handler: entrywayClient
+      ? async ({ input: { body }, req }) => {
+          const { headers } = ctx.entrywayPassthruHeaders(req)
+          return entrywayClient.xrpc(com.atproto.server.createSession, {
+            validateResponse: false, // ignore invalid upstream responses
+            headers,
+            body,
+          })
+        }
+      : async ({
+          input: { body },
+        }): Promise<com.atproto.server.createSession.Output> => {
+          if (body.password.length > OLD_PASSWORD_MAX_LENGTH) {
+            throw new AuthRequiredError(
+              'Password too long. Consider resetting your password.',
+            )
+          }
 
-      if (input.body.password.length > OLD_PASSWORD_MAX_LENGTH) {
-        throw new AuthRequiredError(
-          'Password too long. Consider resetting your password.',
-        )
-      }
+          const { user, isSoftDeleted, appPassword } =
+            await ctx.accountManager.login(body)
 
-      const { user, isSoftDeleted, appPassword } =
-        await ctx.accountManager.login(input.body)
+          if (!body.allowTakendown && isSoftDeleted) {
+            throw new AuthRequiredError(
+              'Account has been taken down',
+              'AccountTakedown',
+            )
+          }
 
-      if (!input.body.allowTakendown && isSoftDeleted) {
-        throw new AuthRequiredError(
-          'Account has been taken down',
-          'AccountTakedown',
-        )
-      }
+          const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
+            ctx.accountManager.createSession(
+              user.did,
+              appPassword,
+              isSoftDeleted,
+            ),
+            didDocForSession(ctx, user.did),
+          ])
 
-      const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
-        ctx.accountManager.createSession(user.did, appPassword, isSoftDeleted),
-        didDocForSession(ctx, user.did),
-      ])
+          const { status, active } = formatAccountStatus(user)
 
-      const { status, active } = formatAccountStatus(user)
+          return {
+            encoding: 'application/json',
+            body: {
+              accessJwt,
+              refreshJwt,
 
-      return {
-        encoding: 'application/json',
-        body: {
-          accessJwt,
-          refreshJwt,
-
-          did: user.did,
-          didDoc,
-          handle: user.handle ?? INVALID_HANDLE,
-          email: user.email ?? undefined,
-          emailConfirmed: !!user.emailConfirmedAt,
-          active,
-          status,
+              did: user.did as DidString,
+              // @ts-expect-error https://github.com/bluesky-social/atproto/pull/4406
+              didDoc,
+              handle: (user.handle ?? INVALID_HANDLE) as HandleString,
+              email: user.email ?? undefined,
+              emailConfirmed: !!user.emailConfirmedAt,
+              active,
+              status,
+            },
+          }
         },
-      }
-    },
   })
 }

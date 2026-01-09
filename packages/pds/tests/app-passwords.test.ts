@@ -12,9 +12,9 @@ describe('app_passwords', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'app_passwords',
     })
-    accntAgent = network.pds.getClient()
-    appAgent = network.pds.getClient()
-    priviAgent = network.pds.getClient()
+    accntAgent = network.pds.getAgent()
+    appAgent = network.pds.getAgent()
+    priviAgent = network.pds.getAgent()
 
     await accntAgent.createAccount({
       handle: 'alice.test',
@@ -242,7 +242,7 @@ describe('app_passwords', () => {
   })
 
   it('no longer allows session creation after revocation', async () => {
-    const newAgent = network.pds.getClient()
+    const newAgent = network.pds.getAgent()
     const attempt = newAgent.login({
       identifier: 'alice.test',
       password: appPass,

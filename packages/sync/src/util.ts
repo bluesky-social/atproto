@@ -1,16 +1,16 @@
-import {
-  RepoEvent,
-  isAccount,
-  isCommit,
-  isIdentity,
-  isSync,
-} from './firehose/lexicons'
+import { com } from './lexicons/index.js'
 
 export const didAndSeqForEvt = (
-  evt: RepoEvent,
+  evt: com.atproto.sync.subscribeRepos.Message,
 ): { did: string; seq: number } | undefined => {
-  if (isCommit(evt)) return { seq: evt.seq, did: evt.repo }
-  else if (isAccount(evt) || isIdentity(evt) || isSync(evt))
+  if (com.atproto.sync.subscribeRepos.commit.$isTypeOf(evt)) {
+    return { seq: evt.seq, did: evt.repo }
+  } else if (
+    com.atproto.sync.subscribeRepos.account.$isTypeOf(evt) ||
+    com.atproto.sync.subscribeRepos.identity.$isTypeOf(evt) ||
+    com.atproto.sync.subscribeRepos.sync.$isTypeOf(evt)
+  ) {
     return { seq: evt.seq, did: evt.did }
+  }
   return undefined
 }

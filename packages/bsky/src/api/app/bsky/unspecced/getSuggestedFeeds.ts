@@ -1,10 +1,10 @@
 import AtpAgent from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.unspecced.getTrendingTopics.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -16,7 +16,7 @@ import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeeds = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.unspecced.getSuggestedFeeds({
+  server.add(app.bsky.unspecced.getSuggestedFeeds, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss

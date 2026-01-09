@@ -1,32 +1,32 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateAccountEmail({
+  server.add(com.atproto.admin.updateAccountEmail, {
     auth: ctx.authVerifier.adminToken,
-    handler: async ({ input, req }) => {
-      const account = await ctx.accountManager.getAccount(input.body.account, {
+    handler: async ({ input: { body }, req }) => {
+      const account = await ctx.accountManager.getAccount(body.account, {
         includeDeactivated: true,
         includeTakenDown: true,
       })
       if (!account) {
-        throw new InvalidRequestError(
-          `Account does not exist: ${input.body.account}`,
-        )
+        throw new InvalidRequestError(`Account does not exist: ${body.account}`)
       }
 
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.admin.updateAccountEmail(
-          input.body,
-          ctx.entrywayPassthruHeaders(req),
-        )
+      if (ctx.entrywayClient) {
+        const { headers } = ctx.entrywayPassthruHeaders(req)
+        await ctx.entrywayClient.xrpc(com.atproto.admin.updateAccountEmail, {
+          validateResponse: false, // ignore invalid upstream responses
+          headers,
+          body,
+        })
         return
       }
 
       await ctx.accountManager.updateEmail({
         did: account.did,
-        email: input.body.email,
+        email: body.email,
       })
     },
   })

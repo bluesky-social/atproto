@@ -1,16 +1,16 @@
 /* eslint-disable import/no-deprecated */
 
 import { Readable } from 'node:stream'
-import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
+import { Cid } from '@atproto/lex-data'
 import { getInfo } from '../../src/image/sharp'
 import { ImageUriBuilder } from '../../src/image/uri'
 
 describe('image processing server', () => {
   let network: TestNetwork
   let fileDid: string
-  let fileCid: CID
+  let fileCid: Cid
 
   beforeAll(async () => {
     network = await TestNetwork.create({

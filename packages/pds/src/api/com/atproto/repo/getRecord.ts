@@ -1,11 +1,11 @@
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 import { pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord(async ({ req, params }) => {
+  server.add(com.atproto.repo.getRecord, async ({ req, params }) => {
     const { repo, collection, rkey, cid } = params
     const did = await ctx.accountManager.getDidForActor(repo)
 
@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           uri: uri.toString(),
           cid: record.cid,

@@ -1,9 +1,7 @@
-import { AtUri } from '@atproto/syntax'
+import { AtUri, AtUriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { ids } from '../lexicon/lexicons'
-import { Record as LabelerRecord } from '../lexicon/types/app/bsky/labeler/service'
-import { Label } from '../lexicon/types/com/atproto/label/defs'
 import { ParsedLabelers } from '../util'
+import { Label, LabelerRecord } from '../views/types.js'
 import {
   HydrationMap,
   Merges,
@@ -13,7 +11,7 @@ import {
   parseString,
 } from './util'
 
-export type { Label } from '../lexicon/types/com/atproto/label/defs'
+export type { Label }
 
 export type SubjectLabels = {
   isImpersonation: boolean
@@ -60,7 +58,7 @@ export type Labeler = RecordInfo<LabelerRecord>
 export type Labelers = HydrationMap<Labeler>
 
 export type LabelerViewerState = {
-  like?: string
+  like?: AtUriString
 }
 
 export type LabelerViewerStates = HydrationMap<LabelerViewerState>
@@ -174,7 +172,7 @@ export class LabelHydrator {
 }
 
 const labelerDidToUri = (did: string): string => {
-  return AtUri.make(did, ids.AppBskyLabelerService, 'self').toString()
+  return AtUri.make(did, 'app.bsky.labeler.service', 'self').toString()
 }
 
 const IMPERSONATION_LABEL = 'impersonation'

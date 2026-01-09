@@ -1,13 +1,13 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { MatchAndContactIndex } from '../../../../lexicon/types/app/bsky/contact/defs'
-import { InputSchema } from '../../../../lexicon/types/app/bsky/contact/importContacts'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   SkeletonFnInput,
@@ -18,6 +18,7 @@ import { ImportContactsMatch } from '../../../../proto/rolodex_pb'
 import { RolodexClient } from '../../../../rolodex'
 import { Views } from '../../../../views'
 import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
+type InputSchema = app.bsky.contact.importContacts.InputBody
 
 export default function (server: Server, ctx: AppContext) {
   const importContacts = createPipeline(
@@ -26,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules, //
     presentation,
   )
-  server.app.bsky.contact.importContacts({
+  server.add(app.bsky.contact.importContacts, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth, req }) => {
       assertRolodexOrThrowUnimplemented(ctx)
@@ -87,8 +88,11 @@ const presentation = (input: {
   const { ctx, skeleton, hydration } = input
   const matchesAndContactIndexes = mapDefined(
     skeleton.matches,
-    ({ subject, inputIndex }): MatchAndContactIndex | undefined => {
-      const profile = ctx.views.profile(subject, hydration)
+    ({
+      subject,
+      inputIndex,
+    }): app.bsky.contact.defs.MatchAndContactIndex | undefined => {
+      const profile = ctx.views.profile(subject as DidString, hydration)
 
       if (!profile) {
         return undefined

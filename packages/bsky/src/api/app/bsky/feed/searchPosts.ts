@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -10,8 +11,8 @@ import {
 import { FeatureGateID } from '../../../../feature-gates'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
+import { app } from '../../../../lexicons/index.js'
+type QueryParams = app.bsky.feed.searchPosts.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -30,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrTagged,
     presentation,
   )
-  server.app.bsky.feed.searchPosts({
+  server.add(app.bsky.feed.searchPosts, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)

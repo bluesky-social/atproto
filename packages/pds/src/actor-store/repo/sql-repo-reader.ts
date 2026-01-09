@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
+import { Cid, parseCid } from '@atproto/lex-data'
 import {
   BlockMap,
   CarBlock,
@@ -18,24 +18,24 @@ export class SqlRepoReader extends ReadableBlockstore {
     super()
   }
 
-  async getRoot(): Promise<CID> {
+  async getRoot(): Promise<Cid> {
     const root = await this.getRootDetailed()
     return root.cid
   }
 
-  async getRootDetailed(): Promise<{ cid: CID; rev: string }> {
+  async getRootDetailed(): Promise<{ cid: Cid; rev: string }> {
     const res = await this.db.db
       .selectFrom('repo_root')
       .select(['cid', 'rev'])
       .limit(1)
       .executeTakeFirstOrThrow()
     return {
-      cid: CID.parse(res.cid),
+      cid: parseCid(res.cid),
       rev: res.rev,
     }
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array | null> {
+  async getBytes(cid: Cid): Promise<Uint8Array | null> {
     const cached = this.cache.get(cid)
     if (cached) return cached
     const found = await this.db.db
@@ -48,12 +48,12 @@ export class SqlRepoReader extends ReadableBlockstore {
     return found.content
   }
 
-  async has(cid: CID): Promise<boolean> {
+  async has(cid: Cid): Promise<boolean> {
     const got = await this.getBytes(cid)
     return !!got
   }
 
-  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
     const cached = this.cache.getMany(cids)
     if (cached.missing.length < 1) return cached
     const missing = new CidSet(cached.missing)
@@ -66,7 +66,7 @@ export class SqlRepoReader extends ReadableBlockstore {
         .select(['repo_block.cid as cid', 'repo_block.content as content'])
         .execute()
       for (const row of res) {
-        const cid = CID.parse(row.cid)
+        const cid = parseCid(row.cid)
         blocks.set(cid, row.content)
         missing.delete(cid)
       }
@@ -91,14 +91,14 @@ export class SqlRepoReader extends ReadableBlockstore {
       const res = await this.getBlockRange(since, cursor)
       for (const row of res) {
         yield {
-          cid: CID.parse(row.cid),
+          cid: parseCid(row.cid),
           bytes: row.content,
         }
       }
       const lastRow = res.at(-1)
       if (lastRow && lastRow.repoRev) {
         cursor = {
-          cid: CID.parse(lastRow.cid),
+          cid: parseCid(lastRow.cid),
           rev: lastRow.repoRev,
         }
       } else {
@@ -143,7 +143,7 @@ export class SqlRepoReader extends ReadableBlockstore {
 }
 
 type RevCursor = {
-  cid: CID
+  cid: Cid
   rev: string
 }
 
