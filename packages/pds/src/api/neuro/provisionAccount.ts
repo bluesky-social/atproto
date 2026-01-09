@@ -262,7 +262,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
         if (emailFromNeuro && email) {
           await setEmailConfirmedAt(
             ctx.accountManager.db,
-            account.did,
+            did,
             new Date().toISOString()
           )
           req.log.info({ did, email }, 'Email marked as verified (verified by Neuro)')
