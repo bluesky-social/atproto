@@ -234,10 +234,11 @@ export const parseCommitAuthenticated = async (
   }
   const verifiedOps: com.atproto.sync.subscribeRepos.RepoOp[] = ops.filter(
     (op) => {
+      const verifiedCid = verifiedCids[op.path]
       if (op.action === 'delete') {
-        return verifiedCids[op.path] === null
+        return verifiedCid === null
       } else {
-        return op.cid !== null && op.cid.equals(verifiedCids[op.path])
+        return op.cid != null && verifiedCid?.equals(op.cid)
       }
     },
   )

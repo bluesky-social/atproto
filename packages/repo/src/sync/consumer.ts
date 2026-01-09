@@ -155,7 +155,7 @@ export const verifyProofs = async (
         unverified.push(claim)
       }
     } else {
-      if (claim.cid.equals(found)) {
+      if (found?.equals(claim.cid)) {
         verified.push(claim)
       } else {
         unverified.push(claim)
