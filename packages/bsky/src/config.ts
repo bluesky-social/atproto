@@ -81,6 +81,7 @@ export interface ServerConfigValues {
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
+  growthBookUrl?: string
   growthBookKey?: string
   // threads
   bigThreadUris: Set<string>
@@ -210,6 +211,7 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
+    const growthBookUrl = process.env.BSKY_GROWTHBOOK_URL || undefined
     const growthBookKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
@@ -361,6 +363,7 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
+      growthBookUrl,
       growthBookKey,
       clientCheckEmailConfirmed,
       topicsEnabled,
@@ -558,6 +561,10 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get growthBookUrl() {
+    return this.cfg.growthBookUrl
   }
 
   get growthBookKey() {
