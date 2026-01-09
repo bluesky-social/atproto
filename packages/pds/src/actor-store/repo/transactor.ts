@@ -144,7 +144,12 @@ export class RepoTransactor extends RepoReader {
         if (action === WriteOpAction.Delete && swapCid === null) {
           throw new BadRecordSwapError(currRecord) // There should be a current record for a delete
         }
-        if ((currRecord || swapCid) && !currRecord?.equals(swapCid)) {
+        if (
+          // If we have either a current CID or a swap CID
+          (currRecord || swapCid) &&
+          // We make sure that both are provided and equal
+          !(swapCid && currRecord && currRecord.equals(swapCid))
+        ) {
           throw new BadRecordSwapError(currRecord)
         }
       }
