@@ -3,7 +3,7 @@
 import { CID } from 'multiformats/cid'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
 import { describe, expect, it } from 'vitest'
-import { createCustomCid } from './cid-implementation.test.js'
+import { BytesCid, createCustomCid } from './cid-implementation.test.js'
 import {
   Cid,
   DAG_CBOR_MULTICODEC,
@@ -31,8 +31,9 @@ const rawCidCustom: Cid = createCustomCid(
   1,
   RAW_MULTICODEC,
   SHA256_MULTIHASH,
-  new Uint8Array(32),
+  rawCid.multihash.digest,
 )
+const rawCidCustomBytes = new BytesCid(rawCid.bytes)
 
 describe(isCid, () => {
   describe('non-strict mode', () => {
@@ -43,6 +44,7 @@ describe(isCid, () => {
 
     it('returns true for custom compatible CID implementations', () => {
       expect(isCid(rawCidCustom)).toBe(true)
+      expect(isCid(rawCidCustomBytes)).toBe(true)
     })
 
     it('returns true for CID v0 and v1', async () => {
@@ -228,7 +230,7 @@ describe(cidForRawHash, () => {
 
 describe(asMultiformatsCID, () => {
   it('converts compatible CID to multiformats CID', () => {
-    for (const cid of [cborCid, rawCid, rawCidCustom]) {
+    for (const cid of [cborCid, rawCid, rawCidCustom, rawCidCustomBytes]) {
       expect(asMultiformatsCID(cid)).toBeInstanceOf(CID)
       expect(asMultiformatsCID(cid)).toMatchObject({
         version: cid.version,
