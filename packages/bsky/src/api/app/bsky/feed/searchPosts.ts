@@ -123,7 +123,7 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
     // Cases to conditionally show based on tagging.
-    const tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    const tagged = post.tags.has(ctx.cfg.visibilityTagHide)
     if (isCuratedSearch && tagged) return false
     if (!parsedQuery.author && tagged) return false
     return true
