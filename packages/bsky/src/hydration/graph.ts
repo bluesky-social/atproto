@@ -1,11 +1,14 @@
+import { AtUriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { Record as BlockRecord } from '../lexicon/types/app/bsky/graph/block'
-import { Record as FollowRecord } from '../lexicon/types/app/bsky/graph/follow'
-import { Record as ListRecord } from '../lexicon/types/app/bsky/graph/list'
-import { Record as ListItemRecord } from '../lexicon/types/app/bsky/graph/listitem'
-import { Record as StarterPackRecord } from '../lexicon/types/app/bsky/graph/starterpack'
-import { Record as VerificationRecord } from '../lexicon/types/app/bsky/graph/verification'
 import { FollowInfo } from '../proto/bsky_pb'
+import {
+  BlockRecord,
+  FollowRecord,
+  ListItemRecord,
+  ListRecord,
+  StarterPackRecord,
+  VerificationRecord,
+} from '../views/types.js'
 import { HydrationMap, ItemRef, RecordInfo, parseRecord } from './util'
 
 export type List = RecordInfo<ListRecord>
@@ -16,7 +19,7 @@ export type ListItems = HydrationMap<ListItem>
 
 export type ListViewerState = {
   viewerMuted?: string
-  viewerListBlockUri?: string
+  viewerListBlockUri?: AtUriString
   viewerInList?: string
 }
 
@@ -44,7 +47,7 @@ export type Verifications = HydrationMap<Verification>
 export type StarterPackAgg = {
   joinedWeek: number
   joinedAllTime: number
-  listItemSampleUris?: string[] // gets set during starter pack hydration (not for basic view)
+  listItemSampleUris?: AtUriString[] // gets set during starter pack hydration (not for basic view)
 }
 
 export type StarterPackAggs = HydrationMap<StarterPackAgg>
@@ -159,7 +162,7 @@ export class GraphHydrator {
     ])
     return {
       muted: muted.subscribed,
-      listBlockUri: listBlockUri.listblockUri,
+      listBlockUri: listBlockUri.listblockUri as AtUriString,
     }
   }
 

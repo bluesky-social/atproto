@@ -1,3 +1,4 @@
+import { UriString } from '@atproto/lex'
 import { Options } from './util'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
@@ -10,7 +11,7 @@ export type ImagePreset =
 const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)@(.+?)$/
 
 export class ImageUriBuilder {
-  constructor(public endpoint: string) {}
+  constructor(public endpoint: UriString) {}
 
   static presets: ImagePreset[] = [
     'avatar',
@@ -19,19 +20,19 @@ export class ImageUriBuilder {
     'feed_fullsize',
   ]
 
-  getPresetUri(id: ImagePreset, did: string, cid: string): string {
+  getPresetUri(id: ImagePreset, did: string, cid: string): UriString {
     const options = presets[id]
     if (!options) {
       throw new Error(`Unrecognized requested common uri type: ${id}`)
     }
-    return (
-      this.endpoint +
-      ImageUriBuilder.getPath({
-        preset: id,
-        did,
-        cid,
-      })
-    )
+
+    const path = ImageUriBuilder.getPath({
+      preset: id,
+      did,
+      cid,
+    })
+
+    return `${this.endpoint}${path}`
   }
 
   static getPath(opts: { preset: ImagePreset } & BlobLocation) {

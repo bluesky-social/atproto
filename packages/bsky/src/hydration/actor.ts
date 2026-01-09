@@ -1,12 +1,20 @@
 import { AppBskyNotificationDeclaration } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import {
+  AtUriString,
+  DatetimeString,
+  DidString,
+  HandleString,
+} from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
-import { Record as NotificationDeclarationRecord } from '../lexicon/types/app/bsky/notification/declaration'
-import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
-import { Record as GermDeclarationRecord } from '../lexicon/types/com/germnetwork/declaration'
 import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
+import {
+  ChatDeclarationRecord,
+  GermDeclarationRecord,
+  NotificationDeclarationRecord,
+  ProfileRecord,
+  StatusRecord,
+} from '../views/types.js'
 import {
   HydrationMap,
   RecordInfo,
@@ -22,8 +30,8 @@ type AllowActivitySubscriptions = Extract<
 >
 
 export type Actor = {
-  did: string
-  handle?: string
+  did: DidString
+  handle?: HandleString
   profile?: ProfileRecord
   profileCid?: string
   profileTakedownRef?: string
@@ -47,16 +55,15 @@ export type Actor = {
     pagerank?: number
     accountTags?: string[]
     profileTags?: string[]
-    [key: string]: unknown
   }
 }
 
 export type VerificationHydrationState = {
-  issuer: string
-  uri: string
-  handle: string
+  issuer: DidString
+  uri: AtUriString
+  handle: HandleString
   displayName: string
-  createdAt: string
+  createdAt: DatetimeString
 }
 
 export type VerificationMetaRequired = Required<VerificationMeta>
@@ -77,13 +84,13 @@ export type Statuses = HydrationMap<Status>
 
 export type ProfileViewerState = {
   muted?: boolean
-  mutedByList?: string
-  blockedBy?: string
-  blocking?: string
-  blockedByList?: string
-  blockingByList?: string
-  following?: string
-  followedBy?: string
+  mutedByList?: AtUriString
+  blockedBy?: AtUriString
+  blocking?: AtUriString
+  blockedByList?: AtUriString
+  blockingByList?: AtUriString
+  following?: AtUriString
+  followedBy?: AtUriString
 }
 
 export type ProfileViewerStates = HydrationMap<ProfileViewerState>
@@ -99,7 +106,7 @@ export type ActivitySubscriptionStates = HydrationMap<
 
 type KnownFollowersState = {
   count: number
-  followers: string[]
+  followers: DidString[]
 }
 
 export type KnownFollowersStates = HydrationMap<KnownFollowersState | undefined>
@@ -131,7 +138,7 @@ export class ActorHydrator {
   async getDids(
     handleOrDids: string[],
     opts?: { lookupUnidirectional?: boolean },
-  ): Promise<(string | undefined)[]> {
+  ): Promise<(DidString | undefined)[]> {
     const handles = handleOrDids.filter((actor) => !actor.startsWith('did:'))
     const res = handles.length
       ? await this.dataplane.getDidsByHandles({
@@ -149,8 +156,8 @@ export class ActorHydrator {
       },
       new Map() as Map<string, string>,
     )
-    return handleOrDids.map((id) =>
-      id.startsWith('did:') ? id : didByHandle.get(id),
+    return handleOrDids.map(
+      (id) => (id.startsWith('did:') ? id : didByHandle.get(id)) as DidString,
     )
   }
 
@@ -161,10 +168,10 @@ export class ActorHydrator {
   }
 
   async getActors(
-    dids: string[],
+    dids: DidString[],
     opts: {
       includeTakedowns?: boolean
-      skipCacheForDids?: string[]
+      skipCacheForDids?: DidString[]
     } = {},
   ): Promise<Actors> {
     const { includeTakedowns = false, skipCacheForDids } = opts
@@ -203,17 +210,18 @@ export class ActorHydrator {
         : undefined
 
       const verifications = mapDefined(
-        Object.entries(actor.verifiedBy),
+        Object.entries(actor.verifiedBy) as [DidString, VerificationMeta][],
         ([actorDid, verificationMeta]) => {
           if (
             verificationMeta.handle &&
             verificationMeta.rkey &&
             verificationMeta.sortedAt
           ) {
+            const uri: AtUriString = `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`
             return {
               issuer: actorDid,
-              uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
-              handle: verificationMeta.handle,
+              uri,
+              handle: verificationMeta.handle as HandleString,
               displayName: verificationMeta.displayName,
               createdAt: verificationMeta.sortedAt.toDate().toISOString(),
             }
@@ -245,7 +253,7 @@ export class ActorHydrator {
 
       return acc.set(did, {
         did,
-        handle: parseString(actor.handle),
+        handle: parseString<HandleString>(actor.handle),
         profile: profile?.record,
         profileCid: profile?.cid,
         profileTakedownRef: profile?.takedownRef,
@@ -346,10 +354,10 @@ export class ActorHydrator {
         muted: rels.muted ?? false,
         mutedByList: parseString(rels.mutedByList),
         blockedBy: parseString(rels.blockedBy),
-        blocking: parseString(rels.blocking),
+        blocking: parseString<AtUriString>(rels.blocking),
         blockedByList: parseString(rels.blockedByList),
         blockingByList: parseString(rels.blockingByList),
-        following: parseString(rels.following),
+        following: parseString<AtUriString>(rels.following),
         followedBy: parseString(rels.followedBy),
       })
     }, new HydrationMap<ProfileViewerState>())
@@ -372,7 +380,7 @@ export class ActorHydrator {
       )
       .catch(() => ({ results: [] }))
     return dids.reduce((acc, did, i) => {
-      const result = knownFollowersResults[i]?.dids
+      const result = knownFollowersResults[i]?.dids as DidString[] | undefined
       return acc.set(
         did,
         result && result.length > 0

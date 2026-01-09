@@ -1,5 +1,6 @@
 import { AtIdentifierString, ensureValidAtIdentifier } from './at-identifier.js'
 import { AtUriString } from './aturi_validation.js'
+import { DidString, ensureValidDid } from './did.js'
 import { NsidString, ensureValidNsid } from './nsid.js'
 
 export * from './aturi_validation.js'
@@ -45,6 +46,12 @@ export class AtUri {
 
   get origin() {
     return `at://${this.host}` as const
+  }
+
+  get did(): DidString {
+    const { hostname } = this
+    ensureValidDid(hostname)
+    return hostname
   }
 
   get hostname() {

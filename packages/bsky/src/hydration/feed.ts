@@ -1,16 +1,19 @@
 import { dedupeStrs } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { Record as FeedGenRecord } from '../lexicon/types/app/bsky/feed/generator'
-import { Record as LikeRecord } from '../lexicon/types/app/bsky/feed/like'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
-import { Record as PostgateRecord } from '../lexicon/types/app/bsky/feed/postgate'
-import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
-import { Record as ThreadgateRecord } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
   uriToDid as didFromUri,
 } from '../util/uris'
+import {
+  FeedGenRecord,
+  GateRecord,
+  LikeRecord,
+  PostRecord,
+  PostgateRecord,
+  RepostRecord,
+} from '../views/types.js'
 import {
   HydrationMap,
   ItemRef,
@@ -78,12 +81,12 @@ export type FeedGen = RecordInfo<FeedGenRecord>
 export type FeedGens = HydrationMap<FeedGen>
 
 export type FeedGenViewerState = {
-  like?: string
+  like?: AtUriString
 }
 
 export type FeedGenViewerStates = HydrationMap<FeedGenViewerState>
 
-export type Threadgate = RecordInfo<ThreadgateRecord>
+export type Threadgate = RecordInfo<GateRecord>
 export type Threadgates = HydrationMap<Threadgate>
 export type Postgate = RecordInfo<PostgateRecord>
 export type Postgates = HydrationMap<Postgate>
@@ -326,10 +329,7 @@ export class FeedHydrator {
   ): Promise<Threadgates> {
     const res = await this.dataplane.getThreadGateRecords({ uris })
     return uris.reduce((acc, uri, i) => {
-      const record = parseRecord<ThreadgateRecord>(
-        res.records[i],
-        includeTakedowns,
-      )
+      const record = parseRecord<GateRecord>(res.records[i], includeTakedowns)
       return acc.set(uri, record ?? null)
     }, new HydrationMap<Threadgate>())
   }

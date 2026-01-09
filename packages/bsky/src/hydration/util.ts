@@ -1,8 +1,8 @@
 import * as ui8 from 'uint8arrays'
-import { Cid as Cid } from '@atproto/lex-data'
-import { jsonToLex } from '@atproto/lexicon'
-import { AtUri } from '@atproto/syntax'
-import { lexicons } from '../lexicon/lexicons'
+import { RecordSchema, lexParse } from '@atproto/lex'
+import { Cid, LexValue, TypedLexMap, isPlainObject } from '@atproto/lex-data'
+import { AtUri, AtUriString } from '@atproto/syntax'
+import { app, chat, com } from '../lexicons/index.js'
 import { Record } from '../proto/bsky_pb'
 
 export class HydrationMap<T> extends Map<string, T | null> implements Merges {
@@ -18,10 +18,8 @@ export interface Merges {
   merge<T extends this>(map: T): this
 }
 
-type UnknownRecord = { $type: string; [x: string]: unknown }
-
-export type RecordInfo<T extends UnknownRecord> = {
-  record: T
+export type RecordInfo<T extends { $type: string }> = {
+  record: T & TypedLexMap
   cid: string
   sortedAt: Date
   indexedAt: Date
@@ -56,16 +54,16 @@ export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
   return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
 }
 
-export type ItemRef = { uri: string; cid?: string }
+export type ItemRef = { uri: AtUriString; cid?: string }
 
-export const parseRecord = <T extends UnknownRecord>(
+export const parseRecord = <T extends { $type: string }>(
   entry: Record,
   includeTakedowns: boolean,
 ): RecordInfo<T> | undefined => {
   if (!includeTakedowns && entry.takenDown) {
     return undefined
   }
-  const record = parseRecordBytes<T>(entry.record)
+  const record = parseJsonBytes<T>(entry.record)
   const cid = entry.cid
   const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
   const indexedAt = entry.indexedAt?.toDate() ?? new Date(0)
@@ -82,34 +80,55 @@ export const parseRecord = <T extends UnknownRecord>(
   }
 }
 
-const isValidRecord = (json: unknown) => {
-  const lexRecord = jsonToLex(json)
-  if (typeof lexRecord?.['$type'] !== 'string') {
+export const KNOWN_RECORD_TYPES = new Map<string, RecordSchema>(
+  [
+    // Note: maybe we can generate this by "exploring" the whole app, com and chat namespaces ?
+    app.bsky.actor.profile.main,
+    app.bsky.actor.status.main,
+    app.bsky.feed.generator.main,
+    app.bsky.feed.like.main,
+    app.bsky.feed.post.main,
+    app.bsky.feed.postgate.main,
+    app.bsky.feed.repost.main,
+    app.bsky.feed.threadgate.main,
+    app.bsky.graph.block.main,
+    app.bsky.graph.follow.main,
+    app.bsky.graph.list.main,
+    app.bsky.graph.listblock.main,
+    app.bsky.graph.listitem.main,
+    app.bsky.graph.starterpack.main,
+    app.bsky.graph.verification.main,
+    app.bsky.labeler.service.main,
+    app.bsky.notification.declaration.main,
+    chat.bsky.actor.declaration.main,
+    com.atproto.lexicon.schema.main,
+  ].map((schema) => [schema.$type, schema]),
+)
+
+const isValidRecord = (value: LexValue) => {
+  if (!isPlainObject(value) || typeof value.$type !== 'string') {
     return false
   }
-  try {
-    lexicons.assertValidRecord(lexRecord['$type'], lexRecord)
-    return true
-  } catch {
+
+  const schema = KNOWN_RECORD_TYPES.get(value.$type)
+  if (!schema) {
     return false
   }
+
+  return schema.$matches(value)
 }
 
-// @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.
-export const parseRecordBytes = <T>(
+export const parseJsonBytes = <T extends LexValue = LexValue>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
-  return parseJsonBytes(bytes) as T
+  if (!bytes || bytes.byteLength === 0) return undefined
+  return lexParse<T>(ui8.toString(bytes, 'utf8'))
 }
 
-export const parseJsonBytes = (bytes: Uint8Array | undefined): unknown => {
-  if (!bytes || bytes.byteLength === 0) return
-  const parsed = JSON.parse(ui8.toString(bytes, 'utf8'))
-  return parsed ?? undefined
-}
-
-export const parseString = (str: string | undefined): string | undefined => {
-  return str && str.length > 0 ? str : undefined
+export const parseString = <T extends string | undefined>(
+  str: string,
+): T | undefined => {
+  return str ? (str as T) : undefined
 }
 
 export const parseCid = (cidStr: string | undefined): Cid | undefined => {
