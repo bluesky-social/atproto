@@ -8,70 +8,70 @@ msgstr ""
 "Language: zh-TW\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"PO-Revision-Date: 2026-01-09 16:23+0800\n"
+"Last-Translator: auroursa\n"
+"Language-Team: Chinese\n"
 "Plural-Forms: \n"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:221
 msgid "2FA Confirmation"
-msgstr ""
+msgstr "雙重驗證"
 
 #: src/components/utils/error-message.tsx:27
 msgid "A second authentication factor is required"
-msgstr ""
+msgstr "需要進行雙重驗證"
 
 #: src/components/utils/scope-description.tsx:851
 msgid "A service controlled by <0>{domain}</0>"
-msgstr ""
+msgstr "由 <0>{domain}</0> 所控制的服務"
 
 #: src/components/utils/scope-description.tsx:282
 msgid "Account"
-msgstr ""
+msgstr "帳號"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:71
 msgid "Already have a code?"
-msgstr ""
+msgstr "已經有驗證碼了？"
 
 #: src/components/utils/client-name.tsx:46
 msgid "An application on your device"
-msgstr ""
+msgstr "裝置上的應用程式"
 
 #: src/components/utils/error-message.tsx:87
 msgid "An unknown error occurred"
-msgstr ""
+msgstr "發生未知錯誤"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:113
 msgid "Another account"
-msgstr ""
+msgstr "其他帳號"
 
 #: src/components/utils/scope-description.tsx:879
 msgid "Any collection"
-msgstr ""
+msgstr "任何集合"
 
 #: src/components/utils/scope-description.tsx:821
 msgid "Any method"
-msgstr ""
+msgstr "任何方法"
 
 #: src/components/utils/scope-description.tsx:860
 msgid "Any service"
-msgstr ""
+msgstr "任何服務"
 
 #: src/views/authorize/welcome/welcome-view.tsx:28
 #: src/components/utils/scope-description.tsx:458
 #: src/components/utils/scope-description.tsx:478
 msgid "Authenticate"
-msgstr ""
+msgstr "驗證"
 
 #: src/views/authorize/consent/consent-view.tsx:60
 #: src/views/authorize/consent/consent-form.tsx:105
 #: src/views/authorize/consent/consent-form.tsx:174
 msgid "Authorize"
-msgstr ""
+msgstr "授權"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:79
 msgid "Avatar"
-msgstr ""
+msgstr "大頭貼照"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:59
 #: src/views/authorize/sign-in/sign-in-form.tsx:132
@@ -80,584 +80,584 @@ msgstr ""
 #: src/views/authorize/consent/consent-form.tsx:99
 #: src/components/forms/wizard-card.tsx:93
 msgid "Back"
-msgstr ""
+msgstr "返回"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:152
 msgid "Between {minLength} and {maxLength} characters"
-msgstr ""
+msgstr "介於 {minLength} 到 {maxLength} 個字元之間"
 
 #: src/components/utils/scope-description.tsx:745
 msgid "Blob storage"
-msgstr ""
+msgstr "Blob 儲存空間"
 
 #: src/components/utils/scope-description.tsx:836
 msgid "Bluesky App services"
-msgstr ""
+msgstr "Bluesky 應用程式服務"
 
 #: src/components/utils/scope-description.tsx:843
 msgid "Bluesky Chat services"
-msgstr ""
+msgstr "Bluesky 對話服務"
 
 #. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
 #: src/views/authorize/consent/consent-form.tsx:173
 msgid "By clicking <0>{0}</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr ""
+msgstr "點擊 <0>{0}</0>，即代表您同意此應用程式依其 <1>服務條款</1> 及 <2>隱私權政策</2> 存取您的帳號。"
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr ""
+msgstr "創建帳號即表示您同意本服務的 {0} 與 {1}。"
 
 #: src/components/utils/scope-description.tsx:553
 msgctxt "RPC lxm"
 msgid "Call"
-msgstr ""
+msgstr "呼叫"
 
 #: src/views/authorize/authorize-view.tsx:151
 #: src/views/authorize/welcome/welcome-view.tsx:51
 #: src/components/forms/form-card-async.tsx:85
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: src/components/utils/scope-description.tsx:434
 msgid "Change your <0>@handle</0>"
-msgstr ""
+msgstr "更改您的 <0>@帳號代碼</0>"
 
 #: src/components/utils/scope-description.tsx:394
 msgid "Chat"
-msgstr ""
+msgstr "對話"
 
 #. placeholder {0}: secondFactor.hint
 #: src/views/authorize/sign-in/sign-in-form.tsx:234
 msgid "Check your {0} email for a login code and enter it here."
-msgstr ""
+msgstr "請檢查您的電子信箱 {0} 收取登入驗證碼，並在此輸入。"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:99
 msgid "Choose a username"
-msgstr ""
+msgstr "選擇使用者名稱"
 
 #: src/components/utils/error-card.tsx:76
 msgid "Code"
-msgstr ""
+msgstr "驗證碼"
 
 #: src/components/utils/description-card.tsx:74
 #: src/components/utils/description-card.tsx:76
 msgid "Collapse details"
-msgstr ""
+msgstr "收合詳細資訊"
 
 #: src/components/utils/scope-description.tsx:713
 msgid "Collection"
-msgstr ""
+msgstr "收藏"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:139
 msgctxt "verb"
 msgid "Confirm"
-msgstr ""
+msgstr "確認"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:69
 msgid "Confirm your password to continue"
-msgstr ""
+msgstr "請確認密碼以繼續"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:225
 msgid "Confirmation code"
-msgstr ""
+msgstr "驗證碼"
 
 #: src/components/utils/scope-description.tsx:714
 msgid "Create"
-msgstr ""
+msgstr "建立"
 
 #: src/views/authorize/welcome/welcome-view.tsx:35
 msgid "Create a new account"
-msgstr ""
+msgstr "建立新帳號"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:82
 msgid "Create Account"
-msgstr ""
+msgstr "建立帳號"
 
 #: src/components/utils/scope-description.tsx:599
 msgid "Create, update, and delete any public record"
-msgstr ""
+msgstr "建立、更新及刪除任何公開紀錄"
 
 #: src/components/utils/scope-description.tsx:716
 msgid "Delete"
-msgstr ""
+msgstr "刪除"
 
 #: src/views/authorize/consent/consent-form.tsx:109
 msgid "Deny access"
-msgstr ""
+msgstr "拒絕存取"
 
 #: src/components/utils/error-card.tsx:83
 msgid "Description"
-msgstr ""
+msgstr "描述"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
 #: src/components/utils/scope-description.tsx:242
 msgid "Email"
-msgstr ""
+msgstr "電子信箱"
 
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:55
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:60
 #: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
-msgstr ""
+msgstr "電子信箱地址"
 
 #: src/components/forms/input-new-password.tsx:44
 msgid "Enter a password"
-msgstr ""
+msgstr "輸入密碼"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:85
 msgid "Enter the code you received to reset your password."
-msgstr ""
+msgstr "輸入您收到的驗證碼以重設密碼。"
 
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:70
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr ""
+msgstr "輸入您註冊帳號時使用的電子信箱，我們將寄送「重設驗證碼」讓您設定新密碼。"
 
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:58
 msgid "Enter your email address"
-msgstr ""
+msgstr "輸入您的電子信箱地址"
 
 #: src/components/forms/input-new-password.tsx:45
 msgid "Enter your new password"
-msgstr ""
+msgstr "輸入您的新密碼"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:90
 msgid "Enter your password"
-msgstr ""
+msgstr "輸入密碼"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:109
 #: src/views/authorize/sign-in/sign-in-view.tsx:126
 msgid "Enter your username and password"
-msgstr ""
+msgstr "輸入用戶名稱與密碼"
 
 #: src/views/error/error-view.tsx:27
 msgid "Error"
-msgstr ""
+msgstr "錯誤"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:102
 msgid "example-com-xxxxx-xxxxx"
-msgstr ""
+msgstr "example-com-xxxxx-xxxxx"
 
 #: src/components/utils/description-card.tsx:74
 #: src/components/utils/description-card.tsx:76
 msgid "Expand details"
-msgstr ""
+msgstr "展開詳細資訊"
 
 #: src/components/utils/password-strength-label.tsx:25
 msgid "Extra"
-msgstr ""
+msgstr "極強"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:53
 msgid "Forgot Password"
-msgstr ""
+msgstr "忘記密碼"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:189
 msgid "Forgot?"
-msgstr ""
+msgstr "忘記？"
 
 #. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/views/authorize/consent/consent-view.tsx:45
 msgid "Grant access to your <0>{0}</0> account"
-msgstr ""
+msgstr "授權存取您的 <0>{0}</0> 帳號"
 
 #: src/components/utils/help-card.tsx:32
 msgid "Having trouble? <0>Contact support</0>"
-msgstr ""
+msgstr "遇到問題？<0>聯絡支援</0>"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Hide"
-msgstr ""
+msgstr "隱藏"
 
 #: src/components/utils/link-title.tsx:17
 msgid "Home"
-msgstr ""
+msgstr "首頁"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:91
 #: src/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Identifier"
-msgstr ""
+msgstr "帳號識別碼"
 
 #: src/components/utils/scope-description.tsx:427
 msgid "Identity"
-msgstr ""
+msgstr "身份"
 
 #: src/locales/locale-selector.tsx:46
 msgid "Interface language selector"
-msgstr ""
+msgstr "介面語言選擇器"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:286
 msgid "Invalid"
-msgstr ""
+msgstr "無效"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:96
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:101
 msgid "Invite code"
-msgstr ""
+msgstr "邀請碼"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:55
 msgid "Let's get your password reset!"
-msgstr ""
+msgstr "開始重設您的密碼吧！"
 
 #: src/views/authorize/authorize-view.tsx:190
 msgid "Login complete"
-msgstr ""
+msgstr "登入完成"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:107
 msgid "Login to account that is not listed"
-msgstr ""
+msgstr "登入未列出的帳號"
 
 #: src/components/layouts/layout-welcome.tsx:50
 msgid "Logo"
-msgstr ""
+msgstr "標誌"
 
 #: src/components/forms/input-token.tsx:59
 msgid "Looks like {example}"
-msgstr ""
+msgstr "看起來像 {example}"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
-msgstr ""
+msgstr "顯示"
 
 #: src/components/utils/scope-description.tsx:430
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
-msgstr ""
+msgstr "管理您的 <0>完整身份</0>，包括您的 <1>@帳號代碼</1>"
 
 #: src/components/utils/scope-description.tsx:365
 msgid "Manage your profile, posts, likes and follows"
-msgstr ""
+msgstr "管理您的個人資料、貼文、喜歡與跟隨"
 
 #: src/components/utils/scope-description.tsx:360
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
-msgstr ""
+msgstr "管理您的個人資料、貼文、喜歡與跟隨，以及查看您的個人偏好設定"
 
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
-msgstr ""
+msgstr "缺失"
 
 #: src/components/utils/password-strength-label.tsx:29
 msgid "Moderate"
-msgstr ""
+msgstr "中等"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:84
 msgid "Name"
-msgstr ""
+msgstr "名稱"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:74
 msgid "New password"
-msgstr ""
+msgstr "新密碼"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:60
 #: src/views/authorize/reset-password/reset-password-view.tsx:90
 #: src/components/forms/wizard-card.tsx:96
 msgid "Next"
-msgstr ""
+msgstr "下一步"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:119
 msgid "Okay"
-msgstr ""
+msgstr "勉強"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
 msgid "Only letters, numbers, and hyphens"
-msgstr ""
+msgstr "僅能包含英文字母、數字及連字號"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:128
 #: src/views/authorize/sign-in/sign-in-form.tsx:170
 #: src/components/forms/input-password.tsx:53
 msgid "Password"
-msgstr ""
+msgstr "密碼"
 
 #: src/components/utils/password-strength-label.tsx:23
 msgid "Password strength"
-msgstr ""
+msgstr "密碼強度"
 
 #: src/components/utils/password-strength-meter.tsx:45
 msgid "Password strength indicator"
-msgstr ""
+msgstr "密碼強度指示"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:106
 msgid "Password Updated"
-msgstr ""
+msgstr "密碼已更新"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:113
 msgid "Password updated!"
-msgstr ""
+msgstr "密碼已更新！"
 
 #: src/components/forms/input-new-password.tsx:46
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
-msgstr ""
+msgstr "密碼必須至少包含 {MIN_PASSWORD_LENGTH} 個字元"
 
 #: src/components/utils/scope-description.tsx:479
 msgid "Perform actions on your behalf"
-msgstr ""
+msgstr "代表您執行操作"
 
 #: src/components/utils/scope-description.tsx:460
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
-msgstr ""
+msgstr "代表您對 <0>任何服務</0> 執行經授權操作"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:201
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
-msgstr ""
+msgstr "請在輸入密碼前確認網站網域，切勿在您不信任的網域上輸入密碼。"
 
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
 #: src/components/utils/link-title.tsx:18
 msgid "Privacy Policy"
-msgstr ""
+msgstr "隱私權政策"
 
 #: src/components/utils/scope-description.tsx:620
 msgid "Publish changes"
-msgstr ""
+msgstr "發佈更改"
 
 #: src/components/utils/scope-description.tsx:395
 msgid "Read and send messages"
-msgstr ""
+msgstr "查看並傳送私訊"
 
 #: src/components/utils/scope-description.tsx:245
 msgid "Read and update your account's email address"
-msgstr ""
+msgstr "查看並更新您的帳號電子信箱"
 
 #: src/components/utils/scope-description.tsx:247
 msgid "Read your account's email address"
-msgstr ""
+msgstr "查看您的帳號電子信箱"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:209
 #: src/views/authorize/sign-in/sign-in-form.tsx:214
 msgid "Remember this account on this device"
-msgstr ""
+msgstr "在此裝置上記住此帳號"
 
 #: src/components/utils/scope-description.tsx:598
 #: src/components/utils/scope-description.tsx:619
 msgid "Repository"
-msgstr ""
+msgstr "儲存庫"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:59
 msgid "Reset code"
-msgstr ""
+msgstr "重設驗證碼"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:82
 msgid "Reset Password"
-msgstr ""
+msgstr "重設密碼"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:187
 msgid "Reset your password"
-msgstr ""
+msgstr "重設您的密碼"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:196
 msgid "Select domain"
-msgstr ""
+msgstr "選擇網域"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:141
 msgid "Select from an existing account"
-msgstr ""
+msgstr "從現有帳號中選擇"
 
 #: src/views/authorize/welcome/welcome-view.tsx:45
 #: src/views/authorize/sign-in/sign-in-form.tsx:141
 msgctxt "verb"
 msgid "Sign in"
-msgstr ""
+msgstr "登入"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:52
 msgctxt "noun"
 msgid "Sign in"
-msgstr ""
+msgstr "登入"
 
 #. placeholder {0}: account.name
 #: src/views/authorize/sign-in/sign-in-picker.tsx:78
 msgid "Sign in as {0}"
-msgstr ""
+msgstr "以 {0} 身份登入"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:64
 msgid "Sign in as..."
-msgstr ""
+msgstr "以……登入"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:88
 #: src/views/authorize/sign-in/sign-in-picker.tsx:53
 msgid "Sign up"
-msgstr ""
+msgstr "註冊"
 
 #: src/components/forms/wizard-card.tsx:106
 msgid "Step {currentPosition} of {count}"
-msgstr ""
+msgstr "第 {currentPosition} 步，共 {count} 步"
 
 #: src/components/utils/password-strength-label.tsx:27
 msgid "Strong"
-msgstr ""
+msgstr "強"
 
 #: src/components/forms/form-card-async.tsx:96
 msgid "Submit"
-msgstr ""
+msgstr "送出"
 
 #: src/components/utils/link-title.tsx:20
 msgid "Support"
-msgstr ""
+msgstr "支援"
 
 #: src/views/authorize/consent/consent-form.tsx:142
 msgid "Technical details"
-msgstr ""
+msgstr "技術細節"
 
 #: src/components/utils/scope-description.tsx:283
 msgid "Temporarily activate or deactivate your account"
-msgstr ""
+msgstr "暫時啟用或停用您的帳號"
 
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:34
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:37
 #: src/components/utils/link-title.tsx:19
 msgid "Terms of Service"
-msgstr ""
+msgstr "服務條款"
 
 #: src/components/utils/error-message.tsx:52
 msgid "That handle cannot be used"
-msgstr ""
+msgstr "無法使用此帳號代碼"
 
 #: src/components/utils/scope-description.tsx:205
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr ""
+msgstr "此應用請求完全控制您的網路身份，這意味著它可能會永久破壞，甚至竊取您的帳號，請僅向您真正信任的應用授權此權限。"
 
 #: src/components/utils/scope-description.tsx:605
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
-msgstr ""
+msgstr "此應用請求能夠在您的儲存庫中創建、更新及刪除任何資料。"
 
 #: src/components/utils/scope-description.tsx:172
 #: src/components/utils/scope-description.tsx:485
 #: src/components/utils/scope-description.tsx:626
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
-msgstr ""
+msgstr "此應用請求必要權限，以便能代表您執行以下操作："
 
 #: src/components/utils/scope-description.tsx:500
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
-msgstr ""
+msgstr "ATProto 網路使用一種認證機制，可在與外部服務互動時唯一識別使用者。通常用於取得或更新與您的帳號相關的資料，例如動態源或審核內容。"
 
 #: src/components/utils/error-message.tsx:69
 msgid "The data you submitted is invalid. Please check the form and try again."
-msgstr ""
+msgstr "您提交的資料無效，請確認表單並重試。"
 
 #: src/components/utils/error-message.tsx:43
 msgid "The domain name is not allowed"
-msgstr ""
+msgstr "不允許使用此網域名稱"
 
 #: src/components/utils/error-message.tsx:45
 msgid "The handle contains inappropriate language"
-msgstr ""
+msgstr "此帳號代碼含有不當用語"
 
 #: src/components/utils/error-message.tsx:50
 msgid "The handle is already in use"
-msgstr ""
+msgstr "此帳號代碼已被使用"
 
 #: src/components/utils/error-message.tsx:41
 msgid "The handle is invalid"
-msgstr ""
+msgstr "此帳號代碼無效"
 
 #: src/components/utils/error-message.tsx:35
 msgid "The invite code is not valid"
-msgstr ""
+msgstr "此邀請碼無效"
 
 #: src/views/authorize/consent/consent-form.tsx:147
 msgid "This application is requesting the following list of technical permissions, summarized hereafter:"
-msgstr ""
+msgstr "此應用請求以下技術權限，概述如下："
 
 #: src/components/utils/error-message.tsx:77
 msgid "This authorization request has been denied. Please try again."
-msgstr ""
+msgstr "此次授權請求已被拒絕，請重試。"
 
 #: src/components/utils/error-message.tsx:57
 msgid "This email is already used"
-msgstr ""
+msgstr "此電子信箱已被使用"
 
 #: src/components/utils/error-message.tsx:48
 msgid "This handle is reserved"
-msgstr ""
+msgstr "此帳號代碼已被保留"
 
 #: src/components/utils/error-message.tsx:64
 msgid "This sign-in session has expired"
-msgstr ""
+msgstr "本次登入會話已過期"
 
 #: src/components/utils/scope-description.tsx:556
 msgctxt "RPC aud"
 msgid "Towards"
-msgstr ""
+msgstr "針對"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:166
 msgid "Type your desired username"
-msgstr ""
+msgstr "輸入您想使用的用戶名稱"
 
 #: src/components/utils/error-message.tsx:84
 msgid "Unexpected server response"
-msgstr ""
+msgstr "伺服器回應異常"
 
 #: src/components/utils/scope-description.tsx:715
 msgid "Update"
-msgstr ""
+msgstr "更新"
 
 #: src/components/utils/scope-description.tsx:748
 msgid "Upload files"
-msgstr ""
+msgstr "上傳檔案"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:151
 msgid "Username or email address"
-msgstr ""
+msgstr "用戶名稱或電子信箱地址"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
 msgid "Valid"
-msgstr ""
+msgstr "有效"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:140
 msgid "Verify you are human"
-msgstr ""
+msgstr "請驗證您是人類"
 
 #: src/views/authorize/consent/consent-form.tsx:136
 msgid "wants to access your <0/> account"
-msgstr ""
+msgstr "想要存取您的 <0/> 帳號"
 
 #: src/views/authorize/consent/consent-form.tsx:131
 msgid "wants to uniquely identify you through your <0/> account"
-msgstr ""
+msgstr "想要透過您的 <0/> 帳號唯一識別您"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:200
 msgid "Warning"
-msgstr ""
+msgstr "警告"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:84
 msgid "We're so excited to have you join us!"
-msgstr ""
+msgstr "我們很高興您加入我們！"
 
 #: src/components/utils/password-strength-label.tsx:31
 msgid "Weak"
-msgstr ""
+msgstr "弱"
 
 #: src/components/utils/error-message.tsx:31
 msgid "Wrong identifier or password"
-msgstr ""
+msgstr "錯誤的識別符或密碼"
 
 #: src/views/authorize/authorize-view.tsx:191
 msgid "You are being redirected..."
-msgstr ""
+msgstr "您即將被重新導向……"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
 msgid "You can change this username to any domain name you control after your account is set up."
-msgstr ""
+msgstr "完成帳號設定後，您可以將此用戶名稱更改為您控制的任何網域名稱。"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:116
 msgid "You can now sign in with your new password."
-msgstr ""
+msgstr "您現在可以使用新密碼登入了。"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr ""
+msgstr "您將收到一封包含「重設驗證碼」的電子郵件，請在此輸入驗證碼，然後輸入您的新密碼。"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:121
 msgid "Your account"
-msgstr ""
+msgstr "您的帳號"
 
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
 msgid "Your full username will be: {0}"
-msgstr ""
+msgstr "您的完整用戶名稱將修改為：{0}"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:108
 msgid "Your password has been updated!"
-msgstr ""
+msgstr "您的密碼已更新！"
 
 #: src/components/utils/scope-description.tsx:641
 msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
-msgstr ""
+msgstr "您的儲存庫包含 ATProto 網路上所有公開資料，例如 Bluesky 帖文、喜歡和跟隨紀錄。同時，它也包含透過您使用此帳號登入的其他應用程式所創建的資料。"

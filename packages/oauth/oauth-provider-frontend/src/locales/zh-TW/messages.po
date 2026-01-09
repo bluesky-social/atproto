@@ -8,318 +8,318 @@ msgstr ""
 "Language: zh-TW\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"PO-Revision-Date: 2026-01-09 15:47+0800\n"
+"Last-Translator: auroursa\n"
+"Language-Team: Chinese\n"
 "Plural-Forms: \n"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:162
 msgid "@handle or email"
-msgstr ""
+msgstr "@帳號代碼或電子信箱"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:51
 msgid "← Back to accounts"
-msgstr ""
+msgstr "← 回到帳號"
 
 #: src/data/useClientName.ts:18
 msgid "A local app"
-msgstr ""
+msgstr "本機應用程式"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:76
 msgid "A new password is required"
-msgstr ""
+msgstr "請設定新密碼"
 
 #: src/routes/account/_minimalLayout/index.tsx:26
 #: src/routes/account/_minimalLayout/index.tsx:75
 msgid "Accounts"
-msgstr ""
+msgstr "帳號"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:127
 #: src/routes/account/_minimalLayout/reset-password.tsx:62
 #: src/routes/account/_minimalLayout/reset-password.tsx:89
 msgid "An error occurred, please try again."
-msgstr ""
+msgstr "發生錯誤，請稍後再試。"
 
 #: src/routes/account/_appLayout/$sub.tsx:303
 msgid "Are you sure you want to remove this device?"
-msgstr ""
+msgstr "您確定要移除此裝置嗎？"
 
 #: src/routes/account/_appLayout/$sub.tsx:201
 msgid "Are you sure you want to revoke access? This application won't be able to access your account anymore."
-msgstr ""
+msgstr "您確定要撤銷存取權限嗎？此應用程式將無法再存取您的帳號。"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:133
 #: src/routes/account/_minimalLayout/reset-password.tsx:212
 msgid "Back to sign in"
-msgstr ""
+msgstr "返回登入頁面"
 
 #: src/routes/account/_minimalLayout/branding.tsx:14
 msgid "Branding"
-msgstr ""
+msgstr "品牌"
 
 #: src/components/Prompt.tsx:56
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
-msgstr ""
+msgstr "點擊此處以發送新的驗證碼到您的電子信箱"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:204
 #: src/routes/account/_minimalLayout/reset-password.tsx:239
 msgid "Code"
-msgstr ""
+msgstr "驗證碼"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:99
 msgid "Code was resent"
-msgstr ""
+msgstr "已重新發送驗證碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:63
 msgid "Connected apps"
-msgstr ""
+msgstr "已連結的應用程式"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:145
 msgid "Credentials"
-msgstr ""
+msgstr "登入憑證"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:340
 msgid "Don't see the email? <0>Try sending again.</0>"
-msgstr ""
+msgstr "沒收到電子郵件？<0>再試一次發送。</0>"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:160
 msgid "Email"
-msgstr ""
+msgstr "電子信箱"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:73
 msgid "Email code is required"
-msgstr ""
+msgstr "請輸入電子郵件驗證碼"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:53
 msgid "Email is required"
-msgstr ""
+msgstr "請輸入電子信箱"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:290
 msgid "Enter a new password"
-msgstr ""
+msgstr "輸入新密碼"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:171
 msgid "Enter your email"
-msgstr ""
+msgstr "輸入您的電子信箱"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:143
 msgid "Enter your email to receive a reset code."
-msgstr ""
+msgstr "輸入您的電子信箱以接收重設驗證碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:78
 msgid "Failed to load connected apps"
-msgstr ""
+msgstr "無法載入已連結的應用程式"
 
 #: src/routes/account/_appLayout/$sub.tsx:118
 msgid "Failed to load devices"
-msgstr ""
+msgstr "無法載入裝置"
 
 #: src/routes/account/_appLayout/$sub.tsx:250
 msgid "Failed to remove device"
-msgstr ""
+msgstr "無法移除裝置"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:105
 msgid "Failed to resend code"
-msgstr ""
+msgstr "無法重新發送驗證碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:172
 msgid "Failed to sign out"
-msgstr ""
+msgstr "無法登出"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:250
 msgid "Forgot password?"
-msgstr ""
+msgstr "忘記密碼？"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:203
 msgid "Get reset code"
-msgstr ""
+msgstr "取得重設驗證碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:53
 #: src/components/Footer.tsx:70
 msgid "Home"
-msgstr ""
+msgstr "首頁"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:152
 msgid "Identifier"
-msgstr ""
+msgstr "帳號識別碼"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:52
 msgid "Invalid email"
-msgstr ""
+msgstr "無效的電子信箱"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:85
 msgid "Invalid handle"
-msgstr ""
+msgstr "無效的帳號代碼"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:125
 msgid "Invalid identifier or password."
-msgstr ""
+msgstr "無效的帳號識別碼或密碼。"
 
 #: src/routes/account/_appLayout/$sub.tsx:95
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
-msgstr ""
+msgstr "看起來您還沒有使用此帳號登入過任何應用程式。"
 
 #: src/routes/account/_minimalLayout.tsx:21
 #: src/components/Nav.tsx:18
 msgid "Logo"
-msgstr ""
+msgstr "標誌"
 
 #: src/routes/account/_appLayout/$sub.tsx:134
 msgid "Looks like you aren't logged in on any other devices."
-msgstr ""
+msgstr "看起來您還沒有在其他裝置上登入過。"
 
 #: src/data/useFriendlyClientId.ts:15
 msgid "loopback"
-msgstr ""
+msgstr "本機回環"
 
 #: src/routes/account/_appLayout/$sub.tsx:101
 msgid "My devices"
-msgstr ""
+msgstr "我的裝置"
 
 #: src/routes/account/_appLayout/$sub.tsx:93
 msgid "No connected apps"
-msgstr ""
+msgstr "沒有已連結的應用程式"
 
 #: src/routes/account/_appLayout/$sub.tsx:133
 msgid "No devices"
-msgstr ""
+msgstr "沒有裝置"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:177
 #: src/routes/account/_minimalLayout/sign-in.tsx:187
 #: src/routes/account/_minimalLayout/reset-password.tsx:278
 msgid "Password"
-msgstr ""
+msgstr "密碼"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:90
 msgid "Password is required"
-msgstr ""
+msgstr "請輸入密碼"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:79
 msgid "Password must be at least {MIN_PASSWORD_LENGTH} characters"
-msgstr ""
+msgstr "密碼必須至少包含 {MIN_PASSWORD_LENGTH} 個字元"
 
 #: src/components/Footer.tsx:71
 msgid "Privacy Policy"
-msgstr ""
+msgstr "隱私權政策"
 
 #: src/routes/account/_appLayout/$sub.tsx:302
 msgid "Remove this device"
-msgstr ""
+msgstr "移除此裝置"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:29
 #: src/routes/account/_minimalLayout/reset-password.tsx:140
 #: src/routes/account/_minimalLayout/reset-password.tsx:334
 msgid "Reset password"
-msgstr ""
+msgstr "重設密碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:203
 #: src/routes/account/_appLayout/$sub.tsx:208
 msgid "Revoke access"
-msgstr ""
+msgstr "撤銷存取權限"
 
 #: src/routes/account/_appLayout/$sub.tsx:197
 msgid "Revoke access to {clientName}"
-msgstr ""
+msgstr "撤銷 {clientName} 的存取權限"
 
 #: src/routes/account/_appLayout/$sub.tsx:198
 msgid "Revoke access to this application"
-msgstr ""
+msgstr "撤銷此應用程式的存取權限"
 
 #: src/components/AccountSelector.tsx:32
 msgid "Select an account"
-msgstr ""
+msgstr "選擇帳號"
 
 #: src/routes/account/_minimalLayout/index.tsx:78
 msgid "Select the account you would like to manage."
-msgstr ""
+msgstr "選擇您想管理的帳號。"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:32
 #: src/routes/account/_minimalLayout/sign-in.tsx:136
 #: src/routes/account/_minimalLayout/sign-in.tsx:241
 msgid "Sign in"
-msgstr ""
+msgstr "登入"
 
 #: src/routes/account/_minimalLayout/index.tsx:123
 msgid "Sign in with another account"
-msgstr ""
+msgstr "使用其他帳號登入"
 
 #: src/routes/account/_appLayout/$sub.tsx:304
 #: src/routes/account/_appLayout/$sub.tsx:314
 #: src/components/AccountSelector.tsx:103
 msgid "Sign out"
-msgstr ""
+msgstr "登出"
 
 #: src/routes/account/_minimalLayout/index.tsx:50
 msgid "Something went wrong"
-msgstr ""
+msgstr "發生錯誤"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:126
 msgid "Success!"
-msgstr ""
+msgstr "成功！"
 
 #: src/routes/account/_appLayout/$sub.tsx:244
 msgid "Successfully removed device"
-msgstr ""
+msgstr "已成功移除此裝置"
 
 #: src/routes/account/_appLayout/$sub.tsx:166
 msgid "Successfully signed out"
-msgstr ""
+msgstr "已成功登出"
 
 #: src/components/Footer.tsx:73
 msgid "Support"
-msgstr ""
+msgstr "支援"
 
 #: src/components/Footer.tsx:72
 msgid "Terms of Service"
-msgstr ""
+msgstr "服務條款"
 
 #: src/routes/account/_appLayout/$sub.tsx:298
 msgid "This device"
-msgstr ""
+msgstr "此裝置"
 
 #: src/routes/account/_appLayout/$sub.tsx:67
 msgid "This is a list of all the applications you have authorized to access your account."
-msgstr ""
+msgstr "這是您已授權存取帳號的所有應用程式列表。"
 
 #: src/routes/account/_appLayout/$sub.tsx:105
 msgid "This is a list of all the devices you have used to sign in to your account. New apps can be authorized from any of these devices. If you believe that your account has been compromised, we recommend that you revoke access to all devices."
-msgstr ""
+msgstr "這是您用來登入帳號的所有裝置列表。新應用程式可從任一裝置進行授權。如果您認為帳號可能遭到入侵，我們建議您撤銷所有裝置的存取權限。"
 
 #: src/routes/account/_appLayout/$sub.tsx:283
 msgid "Unknown user agent"
-msgstr ""
+msgstr "未知的用戶代理"
 
 #: src/components/Avatar.tsx:24
 msgid "User avatar"
-msgstr ""
+msgstr "用戶頭像"
 
 #. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:98
 msgid "View and manage account for {0}"
-msgstr ""
+msgstr "查看並管理帳號 {0}"
 
 #: src/routes/account/_minimalLayout/index.tsx:52
 msgid "We weren't able to load your accounts. Please refresh the page to try again."
-msgstr ""
+msgstr "我們無法載入您的帳號，請刷新頁面後重試。"
 
 #: src/components/ErrorScreen.tsx:19
 msgid "Whoops! An error occurred."
-msgstr ""
+msgstr "糟糕！發生錯誤。"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:213
 #: src/routes/account/_minimalLayout/reset-password.tsx:249
 msgid "XXXXX-XXXXX"
-msgstr ""
+msgstr "XXXXX-XXXXX"
 
 #: src/routes/account/_appLayout/$sub.tsx:32
 #: src/routes/account/_appLayout/$sub.tsx:58
 msgid "Your account"
-msgstr ""
+msgstr "您的帳號"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:129
 msgid "Your password has been reset."
-msgstr ""
+msgstr "您的密碼已重設完成"

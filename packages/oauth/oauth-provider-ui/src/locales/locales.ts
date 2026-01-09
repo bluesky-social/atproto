@@ -135,10 +135,10 @@ export const locales = {
   //   name: '中文(香港)',
   //   flag: '🇭🇰',
   // },
-  // 'zh-TW': {
-  //   name: '中文(繁體)',
-  //   flag: '🇹🇼',
-  // },
+  'zh-TW': {
+    name: '中文(繁體)',
+    flag: '🇹🇼',
+  },
 } as const satisfies Record<string, { name: string; flag?: string }>
 
 export type Locale = keyof typeof locales
