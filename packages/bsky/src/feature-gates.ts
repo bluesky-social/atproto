@@ -1,10 +1,8 @@
 import { GrowthBookClient } from '@growthbook/growthbook'
 import { featureGatesLogger } from './logger'
 
-// TODO: double-check that (this URL is mostly a placeholder by now)
-const growthBookUrl = 'https://growthbook.prod.k1.bsky.dev'
-
 export type Config = {
+  apiUrl?: string
   apiKey?: string
 }
 
@@ -42,7 +40,7 @@ export class FeatureGates {
     try {
       if (this.config.apiKey) {
         this.client = new GrowthBookClient({
-          apiHost: growthBookUrl,
+          apiHost: this.config.apiUrl,
           clientKey: this.config.apiKey,
         })
         this.ready = true
