@@ -2,7 +2,8 @@
 
 import { CID } from 'multiformats/cid'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
-import { assert, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { createCustomCid } from './cid-implementation.test.js'
 import {
   Cid,
   DAG_CBOR_MULTICODEC,
@@ -22,38 +23,16 @@ const invalidCidStr = 'invalidcidstring'
 
 const cborCidStr = 'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'
 const cborCid = parseCid(cborCidStr, { flavor: 'cbor' })
-assert(cborCid.code === DAG_CBOR_MULTICODEC)
 
 const rawCidStr = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
 const rawCid = parseCid(rawCidStr, { flavor: 'raw' })
-assert(rawCid.code === RAW_MULTICODEC)
 
-const customCid: Cid = {
-  version: 1,
-  code: RAW_MULTICODEC,
-  multihash: {
-    code: SHA256_MULTIHASH,
-    digest: new Uint8Array(32),
-  },
-  bytes: new Uint8Array([
-    0x01,
-    RAW_MULTICODEC,
-    SHA256_MULTIHASH,
-    0x20,
-    ...new Uint8Array(32),
-  ]),
-  toString() {
-    return 'foobar' // Not implemented
-  },
-  equals(this: Cid, other: Cid) {
-    return (
-      this.version === other.version &&
-      this.code === other.code &&
-      this.multihash.code === other.multihash.code &&
-      ui8Equals(this.multihash.digest, other.multihash.digest)
-    )
-  },
-}
+const rawCidCustom: Cid = createCustomCid(
+  1,
+  RAW_MULTICODEC,
+  SHA256_MULTIHASH,
+  new Uint8Array(32),
+)
 
 describe(isCid, () => {
   describe('non-strict mode', () => {
@@ -63,7 +42,7 @@ describe(isCid, () => {
     })
 
     it('returns true for custom compatible CID implementations', () => {
-      expect(isCid(customCid)).toBe(true)
+      expect(isCid(rawCidCustom)).toBe(true)
     })
 
     it('returns true for CID v0 and v1', async () => {
@@ -137,22 +116,22 @@ describe(isCid, () => {
 
   describe('alternative cid implementations', () => {
     it('accepts compatible CID implementations', () => {
-      expect(isCid(customCid)).toBe(true)
+      expect(isCid(rawCidCustom)).toBe(true)
     })
 
     it('rejects non-matching version', () => {
-      expect(isCid({ ...customCid, version: 0 })).toBe(false)
+      expect(isCid({ ...rawCidCustom, version: 0 })).toBe(false)
     })
 
     it('rejects non-matching code', () => {
-      expect(isCid({ ...customCid, code: 0 })).toBe(false)
+      expect(isCid({ ...rawCidCustom, code: 0 })).toBe(false)
     })
 
     it('rejects non-matching multihash code', () => {
       expect(
         isCid({
-          ...customCid,
-          multihash: { ...customCid.multihash, code: 0 },
+          ...rawCidCustom,
+          multihash: { ...rawCidCustom.multihash, code: 0 },
         }),
       ).toBe(false)
     })
@@ -162,20 +141,20 @@ describe(isCid, () => {
       differentDigest[0] = 1
       expect(
         isCid({
-          ...customCid,
-          multihash: { ...customCid.multihash, digest: differentDigest },
+          ...rawCidCustom,
+          multihash: { ...rawCidCustom.multihash, digest: differentDigest },
         }),
       ).toBe(false)
     })
 
     it('rejects objects without equals method', () => {
-      expect(isCid({ ...customCid, equals: undefined })).toBe(false)
+      expect(isCid({ ...rawCidCustom, equals: undefined })).toBe(false)
     })
 
     it('rejects object with throwing equals method', () => {
       expect(
         isCid({
-          ...customCid,
+          ...rawCidCustom,
           equals: () => {
             throw new Error('fail')
           },
@@ -249,7 +228,7 @@ describe(cidForRawHash, () => {
 
 describe(asMultiformatsCID, () => {
   it('converts compatible CID to multiformats CID', () => {
-    for (const cid of [cborCid, rawCid, customCid]) {
+    for (const cid of [cborCid, rawCid, rawCidCustom]) {
       expect(asMultiformatsCID(cid)).toBeInstanceOf(CID)
       expect(asMultiformatsCID(cid)).toMatchObject({
         version: cid.version,
