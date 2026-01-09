@@ -3,6 +3,7 @@ import crypto from 'crypto'
 import * as plc from '@did-plc/lib'
 import { AppContext } from '../../context'
 import { AccountStatus } from '../../account-manager/account-manager'
+import { setEmailConfirmedAt } from '../../account-manager/helpers/account'
 
 export const createProvisionAccountRoute = (ctx: AppContext): Router => {
   const router = Router()
@@ -256,6 +257,16 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
 
         accountCreated = true
         req.log.info({ did, handle, legalId }, 'Account auto-provisioned successfully')
+
+        // Mark email as verified since Neuro already verified it during Legal ID approval
+        if (emailFromNeuro && email) {
+          await setEmailConfirmedAt(
+            ctx.accountManager.db,
+            account.did,
+            new Date().toISOString()
+          )
+          req.log.info({ did, email }, 'Email marked as verified (verified by Neuro)')
+        }
 
         return res.status(201).json({
           success: true,
