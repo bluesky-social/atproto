@@ -259,6 +259,11 @@
             "app.bsky.feed.defs#interactionShare"
           ]
         },
+        "durationMs": {
+          "type": "integer",
+          "description": "Duration of the interaction in milliseconds. Intended for use with #interactionSeen.",
+          "minimum": 0
+        },
         "feedContext": {
           "type": "string",
           "description": "Context on a feed item that was originally supplied by the feed generator on getFeedSkeleton.",
