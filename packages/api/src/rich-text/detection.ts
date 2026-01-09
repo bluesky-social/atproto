@@ -41,17 +41,19 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
     // links
     const re = URL_REGEX
     while ((match = re.exec(text.utf16))) {
-      let uri = match[2]
-      if (!uri.startsWith('http')) {
+      let uri = match.groups?.uri
+      const protocol = match.groups?.protocol
+      const tld = match.groups?.tld
+      if (protocol === undefined) {
         const domain = match.groups?.domain
-        if (!domain || !isValidDomain(domain)) {
+        if (!domain || (tld !== undefined && !isValidDomain(domain))) {
           continue
         }
         uri = `https://${uri}`
       }
-      const start = text.utf16.indexOf(match[2], match.index)
-      const index = { start, end: start + match[2].length }
-      // strip ending puncuation
+      const start = text.utf16.indexOf(match.groups?.uri, match.index)
+      const index = { start, end: start + match.groups?.uri.length }
+      // strip ending punctuation
       if (/[.,;:!?]$/.test(uri)) {
         uri = uri.slice(0, -1)
         index.end--
