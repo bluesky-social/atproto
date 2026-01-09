@@ -1,8 +1,7 @@
 import { Insertable, Selectable } from 'kysely'
 import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Like from '../../../../lexicon/types/app/bsky/feed/like'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
@@ -10,7 +9,7 @@ import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyFeedLike
+const lexId = app.bsky.feed.like.$type
 
 type Notif = Insertable<Notification>
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
@@ -19,7 +18,7 @@ const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: Like.Record,
+  obj: app.bsky.feed.like.Main,
   timestamp: string,
 ): Promise<IndexedLike | null> => {
   const inserted = await db
@@ -44,7 +43,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Like.Record,
+  obj: app.bsky.feed.like.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('like')
@@ -135,7 +134,7 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
   await likeCountQb.execute()
 }
 
-export type PluginType = RecordProcessor<Like.Record, IndexedLike>
+export type PluginType = RecordProcessor<app.bsky.feed.like.Main, IndexedLike>
 
 export const makePlugin = (
   db: Database,

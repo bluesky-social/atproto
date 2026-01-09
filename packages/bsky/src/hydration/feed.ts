@@ -34,14 +34,13 @@ export type Post = RecordInfo<PostRecord> & {
    */
   debug?: {
     tags?: string[]
-    [key: string]: unknown
   }
 }
 export type Posts = HydrationMap<Post>
 
 export type PostViewerState = {
-  like?: string
-  repost?: string
+  like?: AtUriString
+  repost?: AtUriString
   bookmarked?: boolean
   threadMuted?: boolean
 }
@@ -50,7 +49,7 @@ export type PostViewerStates = HydrationMap<PostViewerState>
 
 export type ThreadContext = {
   // Whether the root author has liked the post.
-  like?: string
+  like?: AtUriString
 }
 
 export type ThreadContexts = HydrationMap<ThreadContext>
@@ -233,11 +232,11 @@ export class FeedHydrator {
       (acc, [_rootAuthor, refsForAuthor], i) => {
         const likesForRootAuthor = rootAuthorsLikes[i]
         refsForAuthor.forEach(({ uri }, j) => {
-          acc.set(uri, likesForRootAuthor.uris[j])
+          acc.set(uri, likesForRootAuthor.uris[j] as AtUriString)
         })
         return acc
       },
-      new Map<string, string>(),
+      new Map<AtUriString, AtUriString>(),
     )
 
     return refs.reduce((acc, { uri }) => {

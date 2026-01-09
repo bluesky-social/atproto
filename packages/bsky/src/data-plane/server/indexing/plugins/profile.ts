@@ -1,20 +1,19 @@
 import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Profile from '../../../../lexicon/types/app/bsky/actor/profile'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyActorProfile
+const lexId = app.bsky.actor.profile.$type
 type IndexedProfile = DatabaseSchemaType['profile']
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: Profile.Record,
+  obj: app.bsky.actor.profile.Main,
   timestamp: string,
 ): Promise<IndexedProfile | null> => {
   if (uri.rkey !== 'self') return null
@@ -74,7 +73,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Profile.Record, IndexedProfile>
+export type PluginType = RecordProcessor<
+  app.bsky.actor.profile.Main,
+  IndexedProfile
+>
 
 export const makePlugin = (
   db: Database,

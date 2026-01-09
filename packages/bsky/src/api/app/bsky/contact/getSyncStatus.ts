@@ -1,6 +1,5 @@
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { SyncStatus } from '../../../../lexicon/types/app/bsky/contact/defs'
 import { app } from '../../../../lexicons/index.js'
 import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
@@ -17,7 +16,7 @@ export default function (server: Server, ctx: AppContext) {
         }),
       )
 
-      let syncStatus: SyncStatus | undefined
+      let syncStatus: app.bsky.contact.defs.SyncStatus | undefined
       if (res.status && res.status.syncedAt) {
         const syncedAt = res.status?.syncedAt?.toDate().toISOString()
         syncStatus = {

@@ -1,21 +1,20 @@
 import { Selectable } from 'kysely'
 import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Labeler from '../../../../lexicon/types/app/bsky/labeler/service'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyLabelerService
+const lexId = app.bsky.labeler.service.$type
 type IndexedLabeler = Selectable<DatabaseSchemaType['labeler']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: Labeler.Record,
+  obj: app.bsky.labeler.service.Main,
   timestamp: string,
 ): Promise<IndexedLabeler | null> => {
   if (uri.rkey !== 'self') return null
@@ -58,7 +57,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Labeler.Record, IndexedLabeler>
+export type PluginType = RecordProcessor<
+  app.bsky.labeler.service.Main,
+  IndexedLabeler
+>
 
 export const makePlugin = (
   db: Database,

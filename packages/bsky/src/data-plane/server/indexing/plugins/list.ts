@@ -1,21 +1,20 @@
 import { Selectable } from 'kysely'
 import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as List from '../../../../lexicon/types/app/bsky/graph/list'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphList
+const lexId = app.bsky.graph.list.$type
 type IndexedList = Selectable<DatabaseSchemaType['list']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
   cid: Cid,
-  obj: List.Record,
+  obj: app.bsky.graph.list.Main,
   timestamp: string,
 ): Promise<IndexedList | null> => {
   const inserted = await db
@@ -64,7 +63,7 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<List.Record, IndexedList>
+export type PluginType = RecordProcessor<app.bsky.graph.list.Main, IndexedList>
 
 export const makePlugin = (
   db: Database,

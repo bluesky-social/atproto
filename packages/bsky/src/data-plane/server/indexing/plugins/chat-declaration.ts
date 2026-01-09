@@ -1,6 +1,6 @@
 import { Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
+import { chat } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema } from '../../db/database-schema'
@@ -8,7 +8,7 @@ import { RecordProcessor } from '../processor'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 
-const lexId = lex.ids.ChatBskyActorDeclaration
+const lexId = chat.bsky.actor.declaration.$type
 
 const insertFn = async (
   _db: DatabaseSchema,

@@ -13,9 +13,9 @@ import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
-import { RecordInfo } from '../hydration/util'
+import { RecordInfo, parseString } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
-import { app, com } from '../lexicons/index.js'
+import { app } from '../lexicons/index.js'
 import { Notification } from '../proto/bsky_pb'
 import {
   postUriToPostgateUri,
@@ -248,8 +248,8 @@ export class Views {
   }
 
   replyIsHiddenByThreadgate(
-    replyUri: string,
-    rootPostUri: string,
+    replyUri: AtUriString,
+    rootPostUri: AtUriString,
     state: HydrationState,
   ) {
     const threadgateUri = postUriToThreadgateUri(rootPostUri)
@@ -1038,7 +1038,6 @@ export class Views {
       parent.record.reply
     ) {
       grandparentAuthor = this.profileBasic(
-        // @ts-expect-error isValidPostRecord(parent.record) should be used but the "parent" is not IPDL decoded
         creatorFromUri(parent.record.reply.parent.uri),
         state,
       )
@@ -1066,7 +1065,7 @@ export class Views {
 
   blockedPost(
     uri: AtUriString,
-    authorDid: string,
+    authorDid: DidString,
     state: HydrationState,
   ): $Typed<BlockedPost> {
     return {
@@ -1124,13 +1123,13 @@ export class Views {
     if (!bookmark) return
 
     const atUri = new AtUri(bookmark.subjectUri)
-    if (atUri.collection !== ids.AppBskyFeedPost) return
+    if (atUri.collection !== 'app.bsky.feed.post') return
 
-    const item = this.maybePost(bookmark.subjectUri, state)
+    const item = this.maybePost(atUri.href, state)
     return {
       createdAt: bookmark.indexedAt?.toDate().toISOString(),
       subject: {
-        uri: bookmark.subjectUri,
+        uri: atUri.href,
         cid: bookmark.subjectCid,
       },
       item,
@@ -1141,7 +1140,7 @@ export class Views {
   // ------------
 
   thread(
-    skele: { anchor: string; uris: string[] },
+    skele: { anchor: AtUriString; uris: AtUriString[] },
     state: HydrationState,
     opts: { height: number; depth: number },
   ): $Typed<ThreadViewPost> | $Typed<NotFoundPost> | $Typed<BlockedPost> {
@@ -1153,7 +1152,7 @@ export class Views {
       return this.blockedPost(anchor, post.author.did, state)
     }
     const includedPosts = new Set<string>([anchor])
-    const childrenByParentUri: Record<string, string[]> = {}
+    const childrenByParentUri: Record<AtUriString, AtUriString[]> = {}
     uris.forEach((uri) => {
       const post = state.posts?.get(uri)
       const parentUri = post?.record.reply?.parent.uri
@@ -1224,9 +1223,9 @@ export class Views {
   }
 
   threadReplies(
-    parentUri: string,
-    rootUri: string,
-    childrenByParentUri: Record<string, string[]>,
+    parentUri: AtUriString,
+    rootUri: AtUriString,
+    childrenByParentUri: Record<AtUriString, AtUriString[]>,
     state: HydrationState,
     depth: number,
   ): ($Typed<ThreadViewPost> | $Typed<BlockedPost>)[] | undefined {
@@ -1275,7 +1274,7 @@ export class Views {
   // ------------
 
   threadV2(
-    skeleton: { anchor: string; uris: string[] },
+    skeleton: { anchor: AtUriString; uris: AtUriString[] },
     state: HydrationState,
     {
       above,
@@ -1552,11 +1551,11 @@ export class Views {
       depth,
       branchingFactor,
     }: {
-      parentUri: string
+      parentUri: AtUriString
       isOPThread: boolean
       opDid: string
-      rootUri: string
-      childrenByParentUri: Record<string, string[]>
+      rootUri: AtUriString
+      childrenByParentUri: Record<AtUriString, AtUriString[]>
       below: number
       depth: number
       branchingFactor: number
@@ -1568,7 +1567,7 @@ export class Views {
       return { replies: undefined, hasOtherReplies: false }
     }
 
-    const childrenUris = childrenByParentUri[parentUri] ?? []
+    const childrenUris: AtUriString[] = childrenByParentUri[parentUri] ?? []
     let hasOtherReplies = false
     const replies = mapDefined(childrenUris, (uri) => {
       const replyInclusion = this.checkThreadV2ReplyInclusion({
@@ -1712,7 +1711,7 @@ export class Views {
   }: {
     uri: AtUriString
     depth: number
-    authorDid: string
+    authorDid: DidString
     state: HydrationState
   }): ThreadItemValueBlocked {
     return {
@@ -1729,7 +1728,7 @@ export class Views {
   }
 
   threadOtherV2(
-    skeleton: { anchor: string; uris: string[] },
+    skeleton: { anchor: AtUriString; uris: AtUriString[] },
     state: HydrationState,
     {
       below,
@@ -1800,9 +1799,9 @@ export class Views {
       below,
       depth,
     }: {
-      parentUri: string
-      rootUri: string
-      childrenByParentUri: Record<string, string[]>
+      parentUri: AtUriString
+      rootUri: AtUriString
+      childrenByParentUri: Record<AtUriString, AtUriString[]>
       below: number
       depth: number
     },
@@ -1813,7 +1812,7 @@ export class Views {
       return undefined
     }
 
-    const childrenUris = childrenByParentUri[parentUri] ?? []
+    const childrenUris: AtUriString[] = childrenByParentUri[parentUri] ?? []
     return mapDefined(childrenUris, (uri) => {
       const replyInclusion = this.checkThreadV2ReplyInclusion({
         uri,
@@ -1969,7 +1968,7 @@ export class Views {
     }: {
       post: Post
       postView: PostView
-      rootUri: string
+      rootUri: AtUriString
       uri: AtUriString
     },
     state: HydrationState,
@@ -2015,13 +2014,13 @@ export class Views {
   }
 
   private groupThreadChildrenByParent(
-    anchorUri: string,
-    uris: string[],
+    anchorUri: AtUriString,
+    uris: AtUriString[],
     state: HydrationState,
-  ): Record<string, string[]> {
+  ): Record<AtUriString, AtUriString[]> {
     // Groups children of each parent.
-    const includedPosts = new Set<string>([anchorUri])
-    const childrenByParentUri: Record<string, string[]> = {}
+    const includedPosts = new Set<AtUriString>([anchorUri])
+    const childrenByParentUri: Record<AtUriString, AtUriString[]> = {}
     uris.forEach((uri) => {
       const post = state.posts?.get(uri)
       const parentUri = post?.record.reply?.parent.uri
@@ -2038,7 +2037,7 @@ export class Views {
   // ------------
 
   embed(
-    postUri: string,
+    postUri: AtUriString,
     embed: Embed | { $type: string },
     state: HydrationState,
     depth: number,
@@ -2187,21 +2186,21 @@ export class Views {
   }
 
   recordEmbed(
-    postUri: string,
+    postUri: AtUriString,
     embed: RecordEmbed,
     state: HydrationState,
     depth: number,
     withTypeTag: false,
   ): RecordEmbedView
   recordEmbed(
-    postUri: string,
+    postUri: AtUriString,
     embed: RecordEmbed,
     state: HydrationState,
     depth: number,
     withTypeTag?: true,
   ): $Typed<RecordEmbedView>
   recordEmbed(
-    postUri: string,
+    postUri: AtUriString,
     embed: RecordEmbed,
     state: HydrationState,
     depth: number,
@@ -2221,7 +2220,7 @@ export class Views {
       return this.embedDetached(uri)
     }
 
-    if (parsedUri.collection === ids.AppBskyFeedPost) {
+    if (parsedUri.collection === 'app.bsky.feed.post') {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
       const postgateRecordUri = postUriToPostgateUri(parsedUri.toString())
@@ -2230,28 +2229,28 @@ export class Views {
         return this.embedDetached(uri)
       }
       return this.recordEmbedWrapper(view, withTypeTag)
-    } else if (parsedUri.collection === ids.AppBskyFeedGenerator) {
+    } else if (parsedUri.collection === 'app.bsky.feed.generator') {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
         { ...view, $type: 'app.bsky.feed.defs#generatorView' },
         withTypeTag,
       )
-    } else if (parsedUri.collection === ids.AppBskyGraphList) {
+    } else if (parsedUri.collection === 'app.bsky.graph.list') {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
         { ...view, $type: 'app.bsky.graph.defs#listView' },
         withTypeTag,
       )
-    } else if (parsedUri.collection === ids.AppBskyLabelerService) {
-      const view = this.labeler(parsedUri.hostname, state)
+    } else if (parsedUri.collection === 'app.bsky.labeler.service') {
+      const view = this.labeler(parsedUri.did, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
         { ...view, $type: 'app.bsky.labeler.defs#labelerView' },
         withTypeTag,
       )
-    } else if (parsedUri.collection === ids.AppBskyGraphStarterpack) {
+    } else if (parsedUri.collection === 'app.bsky.graph.starterpack') {
       const view = this.starterPackBasic(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
@@ -2273,7 +2272,7 @@ export class Views {
   }
 
   recordWithMediaEmbed(
-    postUri: string,
+    postUri: AtUriString,
     embed: RecordWithMedia,
     state: HydrationState,
     depth: number,
@@ -2381,8 +2380,8 @@ export class Views {
   ): Un$Typed<NotificationView> | undefined {
     if (!notif.timestamp || !notif.reason) return
     const uri = new AtUri(notif.uri)
-    const authorDid = uri.hostname
-    const author = this.profile(authorDid, state)
+
+    const author = this.profile(uri.did, state)
     if (!author) return
 
     let recordInfo:
@@ -2396,49 +2395,49 @@ export class Views {
       | undefined
       | null
 
-    if (uri.collection === ids.AppBskyFeedPost) {
+    if (uri.collection === 'app.bsky.feed.post') {
       recordInfo = state.posts?.get(notif.uri)
-    } else if (uri.collection === ids.AppBskyFeedLike) {
+    } else if (uri.collection === 'app.bsky.feed.like') {
       recordInfo = state.likes?.get(notif.uri)
-    } else if (uri.collection === ids.AppBskyFeedRepost) {
+    } else if (uri.collection === 'app.bsky.feed.repost') {
       recordInfo = state.reposts?.get(notif.uri)
-    } else if (uri.collection === ids.AppBskyGraphFollow) {
+    } else if (uri.collection === 'app.bsky.graph.follow') {
       recordInfo = state.follows?.get(notif.uri)
-    } else if (uri.collection === ids.AppBskyGraphVerification) {
+    } else if (uri.collection === 'app.bsky.graph.verification') {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.
       recordInfo = state.verifications?.get(notif.uri) ?? {
         record: notificationDeletedRecord,
         cid: notificationDeletedRecordCid,
       }
-    } else if (uri.collection === ids.AppBskyActorProfile) {
-      const actor = state.actors?.get(authorDid)
+    } else if (uri.collection === 'app.bsky.actor.profile') {
+      const actor = state.actors?.get(author.did)
       recordInfo =
         actor && actor.profile && actor.profileCid
-          ? {
+          ? ({
               record: actor.profile,
               cid: actor.profileCid,
               sortedAt: actor.sortedAt ?? new Date(0), // @NOTE will be present since profile record is present
               indexedAt: actor.indexedAt ?? new Date(0), // @NOTE will be present since profile record is present
               takedownRef: actor.profileTakedownRef,
-            }
+            } satisfies RecordInfo<ProfileRecord>)
           : undefined
     }
     if (!recordInfo) return
 
     const labels = state.labels?.getBySubject(notif.uri) ?? []
     const selfLabels = this.selfLabels({
-      uri: notif.uri,
+      uri: parseString<AtUriString>(notif.uri),
       cid: recordInfo.cid,
       record: recordInfo.record,
     })
     const indexedAt = notif.timestamp.toDate().toISOString()
     return {
-      uri: notif.uri,
+      uri: notif.uri as AtUriString,
       cid: recordInfo.cid,
       author,
       reason: notif.reason,
-      reasonSubject: notif.reasonSubject || undefined,
+      reasonSubject: parseString<AtUriString>(notif.reasonSubject),
       record: recordInfo.record,
       // @NOTE works with a hack in listNotifications so that when there's no last-seen time,
       // the user's first notification is marked unread, and all previous read. in this case,
@@ -2455,6 +2454,6 @@ export class Views {
   }
 }
 
-const getRootUri = (uri: AtUriString, post: Post): string => {
+const getRootUri = (uri: AtUriString, post: Post): AtUriString => {
   return post.record.reply?.root.uri ?? uri
 }
