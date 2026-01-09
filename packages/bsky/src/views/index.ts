@@ -297,6 +297,12 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
+        germ: actor.germ?.record.messageMe
+          ? {
+              showButtonTo: actor.germ.record.messageMe.showButtonTo,
+              messageMeUrl: actor.germ.record.messageMe.messageMeUrl,
+            }
+          : undefined,
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
@@ -366,6 +372,12 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
+        germ: actor.germ?.record.messageMe
+          ? {
+              showButtonTo: actor.germ.record.messageMe.showButtonTo,
+              messageMeUrl: actor.germ.record.messageMe.messageMeUrl,
+            }
+          : undefined,
       },
       viewer: this.profileViewer(did, state),
       labels,

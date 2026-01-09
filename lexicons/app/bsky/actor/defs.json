@@ -149,7 +149,8 @@
         "activitySubscription": {
           "type": "ref",
           "ref": "#profileAssociatedActivitySubscription"
-        }
+        },
+        "germ": { "type": "ref", "ref": "#profileAssociatedGerm" }
       }
     },
     "profileAssociatedChat": {
@@ -159,6 +160,20 @@
         "allowIncoming": {
           "type": "string",
           "knownValues": ["all", "none", "following"]
+        }
+      }
+    },
+    "profileAssociatedGerm": {
+      "type": "object",
+      "required": ["showButtonTo", "messageMeUrl"],
+      "properties": {
+        "messageMeUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "showButtonTo": {
+          "type": "string",
+          "knownValues": ["usersIFollow", "everyone"]
         }
       }
     },

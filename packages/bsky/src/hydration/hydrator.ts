@@ -1269,6 +1269,13 @@ export class Hydrator {
           uri,
         ) ?? undefined
       )
+    } else if (collection === ids.ComGermnetworkDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getGermDeclarations([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
     } else if (collection === ids.AppBskyNotificationDeclaration) {
       if (parsed.rkey !== 'self') return
       return (
