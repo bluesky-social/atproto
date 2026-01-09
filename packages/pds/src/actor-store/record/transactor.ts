@@ -12,9 +12,10 @@ import { RecordReader, getBacklinks } from './reader'
 export class RecordTransactor extends RecordReader {
   constructor(
     public db: ActorDb,
+    public did: string,
     public blobstore: BlobStore,
   ) {
-    super(db)
+    super(db, did)
   }
 
   async indexRecord(
