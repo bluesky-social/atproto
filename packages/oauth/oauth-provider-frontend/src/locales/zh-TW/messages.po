@@ -63,7 +63,7 @@ msgstr "取消"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
-msgstr "點一下這裡以發送新的驗證碼到您的電子信箱"
+msgstr "點一下這裡以傳送新的驗證碼到您的電子信箱"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:204
 #: src/routes/account/_minimalLayout/reset-password.tsx:239
