@@ -131,7 +131,7 @@ msgstr "對話"
 #. placeholder {0}: secondFactor.hint
 #: src/views/authorize/sign-in/sign-in-form.tsx:234
 msgid "Check your {0} email for a login code and enter it here."
-msgstr "請檢查您的電子信箱 {0} 收取登入驗證碼，並在此輸入。"
+msgstr "在這裡輸入傳送至您電子信箱 {0} 的登入驗證碼。"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:99
 msgid "Choose a username"
