@@ -652,7 +652,7 @@ msgstr "您的帳號"
 #. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
 msgid "Your full username will be: {0}"
-msgstr "您的完整用戶名稱將修改為：{0}"
+msgstr "您的完整用戶名稱將變更為：{0}"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:108
 msgid "Your password has been updated!"
