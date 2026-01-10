@@ -516,7 +516,7 @@ msgstr "此应用请求完全控制你的网络身份，这意味着它可能会
 
 #: src/components/utils/scope-description.tsx:605
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
-msgstr "此应用请求能够创建、更新和删除存储库中的任何数据。"
+msgstr "此应用请求能够创建、更新和删除存储库中的 <0>任何数据</0>。"
 
 #: src/components/utils/scope-description.tsx:172
 #: src/components/utils/scope-description.tsx:485
