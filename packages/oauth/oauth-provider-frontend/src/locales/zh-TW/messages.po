@@ -72,7 +72,7 @@ msgstr "驗證碼"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:99
 msgid "Code was resent"
-msgstr "已重新發送驗證碼"
+msgstr "已重新傳送驗證碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:63
 msgid "Connected apps"
