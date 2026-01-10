@@ -595,7 +595,7 @@ msgstr "上傳檔案"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:151
 msgid "Username or email address"
-msgstr "用戶名稱或電子信箱地址"
+msgstr "用戶名稱或電子郵件地址"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
 msgid "Valid"
