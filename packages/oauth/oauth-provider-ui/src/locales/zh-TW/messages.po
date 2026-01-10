@@ -397,7 +397,7 @@ msgstr "代表您對<0>任何服務</0>執行經授權動作"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:201
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
-msgstr "請在輸入密碼前確認網站網域，切勿在您不信任的網域上輸入密碼。"
+msgstr "請在輸入密碼前確認網站的網域名稱，切勿在您不信任的網域上輸入密碼。"
 
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
