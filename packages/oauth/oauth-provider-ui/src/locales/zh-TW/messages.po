@@ -321,7 +321,7 @@ msgstr "顯示"
 
 #: src/components/utils/scope-description.tsx:430
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
-msgstr "管理您的 <0>完整身份</0>，包括您的 <1>@帳號代碼</1>"
+msgstr "管理您的 <0>完整身分</0>，包含您的 <1>@帳號代碼</1>"
 
 #: src/components/utils/scope-description.tsx:365
 msgid "Manage your profile, posts, likes and follows"
