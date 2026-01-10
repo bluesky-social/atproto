@@ -512,7 +512,7 @@ msgstr "無法使用此帳號代碼"
 
 #: src/components/utils/scope-description.tsx:205
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr "此應用程式請求完全控制您的網路身份，這意味著它可能會永久破壞，甚至竊取您的帳號，請僅向您真正信任的應用程式授權此權限。"
+msgstr "此應用程式正在要求取得您網路身份的完整控制權，這表示其有權<0>永久破壞</0>、甚至<1>竊取</1>您的帳號。請僅向您真正信任的應用程式授予此權限。"
 
 #: src/components/utils/scope-description.tsx:605
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
