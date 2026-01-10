@@ -522,7 +522,7 @@ msgstr "此應用程式正在要求在您的儲存庫中建立、更新及刪除
 #: src/components/utils/scope-description.tsx:485
 #: src/components/utils/scope-description.tsx:626
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
-msgstr "此應用程式請求必要權限，以便能代表您執行以下操作："
+msgstr "此應用程式正在要求取得代表您執行下列動作所需的必要權限："
 
 #: src/components/utils/scope-description.tsx:500
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
