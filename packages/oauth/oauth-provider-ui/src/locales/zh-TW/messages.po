@@ -212,7 +212,7 @@ msgstr "輸入您收到的驗證碼以重設密碼。"
 
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:70
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
-msgstr "輸入您註冊帳號時使用的電子信箱，我們將寄送「重設驗證碼」讓您設定新密碼。"
+msgstr "輸入您建立帳號時使用的電子信箱。我們將向您傳送一組「重設代碼」，驗證後即可設定新密碼。"
 
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:58
 msgid "Enter your email address"
