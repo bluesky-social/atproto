@@ -84,7 +84,7 @@ msgstr "登入憑證"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:340
 msgid "Don't see the email? <0>Try sending again.</0>"
-msgstr "沒收到電子郵件？<0>嘗試再次發送。</0>"
+msgstr "沒有收到電子郵件？<0>再傳送一次。</0>"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:160
 msgid "Email"
