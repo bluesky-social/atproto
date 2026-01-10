@@ -280,7 +280,7 @@ msgstr "帳號識別碼"
 
 #: src/components/utils/scope-description.tsx:427
 msgid "Identity"
-msgstr "身份"
+msgstr "身分"
 
 #: src/locales/locale-selector.tsx:46
 msgid "Interface language selector"
