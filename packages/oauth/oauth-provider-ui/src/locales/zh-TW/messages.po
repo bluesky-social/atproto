@@ -433,7 +433,7 @@ msgstr "儲存庫"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:59
 msgid "Reset code"
-msgstr "重設驗證碼"
+msgstr "重設代碼"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:82
 msgid "Reset Password"
