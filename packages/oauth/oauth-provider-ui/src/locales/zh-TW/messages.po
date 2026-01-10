@@ -411,7 +411,7 @@ msgstr "發布變更"
 
 #: src/components/utils/scope-description.tsx:395
 msgid "Read and send messages"
-msgstr "檢視並傳送私訊"
+msgstr "檢視及傳送私人訊息"
 
 #: src/components/utils/scope-description.tsx:245
 msgid "Read and update your account's email address"
