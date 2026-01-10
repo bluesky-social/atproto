@@ -124,7 +124,7 @@ msgstr "無法移除裝置"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:105
 msgid "Failed to resend code"
-msgstr "無法重新發送驗證碼"
+msgstr "無法重新傳送驗證碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:172
 msgid "Failed to sign out"
