@@ -8,7 +8,7 @@ msgstr ""
 "Language: zh-TW\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-09 15:47+0800\n"
+"PO-Revision-Date: 2026-01-10 11:56+0800\n"
 "Last-Translator: auroursa\n"
 "Language-Team: Chinese\n"
 "Plural-Forms: \n"
@@ -63,7 +63,7 @@ msgstr "取消"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:345
 msgid "Click here to send a new code to your email."
-msgstr "點擊此處以發送新的驗證碼到您的電子信箱"
+msgstr "點一下這裡以發送新的驗證碼到您的電子信箱"
 
 #: src/routes/account/_minimalLayout/sign-in.tsx:204
 #: src/routes/account/_minimalLayout/reset-password.tsx:239
@@ -84,7 +84,7 @@ msgstr "登入憑證"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:340
 msgid "Don't see the email? <0>Try sending again.</0>"
-msgstr "沒收到電子郵件？<0>再試一次發送。</0>"
+msgstr "沒收到電子郵件？<0>嘗試再次發送。</0>"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:160
 msgid "Email"
@@ -295,16 +295,16 @@ msgstr "未知的用戶代理"
 
 #: src/components/Avatar.tsx:24
 msgid "User avatar"
-msgstr "用戶頭像"
+msgstr "用戶大頭貼"
 
 #. placeholder {0}: getAccountName(account)
 #: src/routes/account/_minimalLayout/index.tsx:98
 msgid "View and manage account for {0}"
-msgstr "查看並管理帳號 {0}"
+msgstr "檢視並管理帳號 {0}"
 
 #: src/routes/account/_minimalLayout/index.tsx:52
 msgid "We weren't able to load your accounts. Please refresh the page to try again."
-msgstr "我們無法載入您的帳號，請刷新頁面後重試。"
+msgstr "我們無法載入您的帳號，請重新整理頁面後重試。"
 
 #: src/components/ErrorScreen.tsx:19
 msgid "Whoops! An error occurred."
