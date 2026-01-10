@@ -419,7 +419,7 @@ msgstr "檢視及更新您的帳號電子郵件地址"
 
 #: src/components/utils/scope-description.tsx:247
 msgid "Read your account's email address"
-msgstr "檢視您的帳號電子信箱"
+msgstr "檢視您的帳號電子郵件地址"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:209
 #: src/views/authorize/sign-in/sign-in-form.tsx:214
