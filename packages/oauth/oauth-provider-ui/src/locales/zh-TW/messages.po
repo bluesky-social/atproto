@@ -516,7 +516,7 @@ msgstr "此應用程式正在要求取得您網路身份的完整控制權，這
 
 #: src/components/utils/scope-description.tsx:605
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
-msgstr "此應用程式請求能夠在您的儲存庫中建立、更新及刪除任何資料。"
+msgstr "此應用程式正在要求在您的儲存庫中建立、更新及刪除<0>任何資料</0>的權限。"
 
 #: src/components/utils/scope-description.tsx:172
 #: src/components/utils/scope-description.tsx:485
