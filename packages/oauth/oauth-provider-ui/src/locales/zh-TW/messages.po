@@ -611,7 +611,7 @@ msgstr "想要存取您的 <0/> 帳號"
 
 #: src/views/authorize/consent/consent-form.tsx:131
 msgid "wants to uniquely identify you through your <0/> account"
-msgstr "想要透過您的 <0/> 帳號唯一識別您"
+msgstr "想要透過您的 <0/> 帳號識別唯一身分"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:200
 msgid "Warning"
