@@ -101,13 +101,13 @@ msgstr "Bluesky 對話服務"
 #. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
 #: src/views/authorize/consent/consent-form.tsx:173
 msgid "By clicking <0>{0}</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "點擊 <0>{0}</0>，即代表您同意此應用程式依其 <1>服務條款</1> 及 <2>隱私權政策</2> 存取您的帳號。"
+msgstr "點選 <0>{0}</0>，即代表您同意此應用程式依其 <1>服務條款</1> 及 <2>隱私權政策</2> 存取您的帳號。"
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
 msgid "By creating an account you agree to the {0} and the {1} of this service."
-msgstr "創建帳號即表示您同意本服務的 {0} 與 {1}。"
+msgstr "建立帳號即表示您同意本服務的 {0} 與 {1}。"
 
 #: src/components/utils/scope-description.tsx:553
 msgctxt "RPC lxm"
@@ -122,7 +122,7 @@ msgstr "取消"
 
 #: src/components/utils/scope-description.tsx:434
 msgid "Change your <0>@handle</0>"
-msgstr "更改您的 <0>@帳號代碼</0>"
+msgstr "變更您的 <0>@帳號代碼</0>"
 
 #: src/components/utils/scope-description.tsx:394
 msgid "Chat"
@@ -144,7 +144,7 @@ msgstr "驗證碼"
 #: src/components/utils/description-card.tsx:74
 #: src/components/utils/description-card.tsx:76
 msgid "Collapse details"
-msgstr "收合詳細資訊"
+msgstr "摺疊詳細資訊"
 
 #: src/components/utils/scope-description.tsx:713
 msgid "Collection"
@@ -309,7 +309,7 @@ msgstr "登入未列出的帳號"
 
 #: src/components/layouts/layout-welcome.tsx:50
 msgid "Logo"
-msgstr "標誌"
+msgstr "商標"
 
 #: src/components/forms/input-token.tsx:59
 msgid "Looks like {example}"
@@ -329,7 +329,7 @@ msgstr "管理您的個人資料、貼文、喜歡與跟隨"
 
 #: src/components/utils/scope-description.tsx:360
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
-msgstr "管理您的個人資料、貼文、喜歡與跟隨，以及查看您的個人偏好設定"
+msgstr "管理您的個人資料、貼文、喜歡與跟隨，以及檢視您的個人偏好設定"
 
 #: src/components/utils/password-strength-label.tsx:33
 msgid "Missing"
@@ -407,19 +407,19 @@ msgstr "隱私權政策"
 
 #: src/components/utils/scope-description.tsx:620
 msgid "Publish changes"
-msgstr "發佈更改"
+msgstr "發佈變更"
 
 #: src/components/utils/scope-description.tsx:395
 msgid "Read and send messages"
-msgstr "查看並傳送私訊"
+msgstr "檢視並傳送私訊"
 
 #: src/components/utils/scope-description.tsx:245
 msgid "Read and update your account's email address"
-msgstr "查看並更新您的帳號電子信箱"
+msgstr "檢視並更新您的帳號電子信箱"
 
 #: src/components/utils/scope-description.tsx:247
 msgid "Read your account's email address"
-msgstr "查看您的帳號電子信箱"
+msgstr "檢視您的帳號電子信箱"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:209
 #: src/views/authorize/sign-in/sign-in-form.tsx:214
@@ -512,17 +512,17 @@ msgstr "無法使用此帳號代碼"
 
 #: src/components/utils/scope-description.tsx:205
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr "此應用請求完全控制您的網路身份，這意味著它可能會永久破壞，甚至竊取您的帳號，請僅向您真正信任的應用授權此權限。"
+msgstr "此應用程式請求完全控制您的網路身份，這意味著它可能會永久破壞，甚至竊取您的帳號，請僅向您真正信任的應用程式授權此權限。"
 
 #: src/components/utils/scope-description.tsx:605
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
-msgstr "此應用請求能夠在您的儲存庫中創建、更新及刪除任何資料。"
+msgstr "此應用程式請求能夠在您的儲存庫中建立、更新及刪除任何資料。"
 
 #: src/components/utils/scope-description.tsx:172
 #: src/components/utils/scope-description.tsx:485
 #: src/components/utils/scope-description.tsx:626
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
-msgstr "此應用請求必要權限，以便能代表您執行以下操作："
+msgstr "此應用程式請求必要權限，以便能代表您執行以下操作："
 
 #: src/components/utils/scope-description.tsx:500
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
@@ -627,7 +627,7 @@ msgstr "弱"
 
 #: src/components/utils/error-message.tsx:31
 msgid "Wrong identifier or password"
-msgstr "錯誤的識別符或密碼"
+msgstr "錯誤的帳號識別碼或密碼"
 
 #: src/views/authorize/authorize-view.tsx:191
 msgid "You are being redirected..."
@@ -635,7 +635,7 @@ msgstr "您即將被重新導向……"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
 msgid "You can change this username to any domain name you control after your account is set up."
-msgstr "完成帳號設定後，您可以將此用戶名稱更改為您控制的任何網域名稱。"
+msgstr "完成帳號設定後，您可以將此用戶名稱變更為您控制的任何網域名稱。"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:116
 msgid "You can now sign in with your new password."
@@ -660,4 +660,4 @@ msgstr "您的密碼已更新！"
 
 #: src/components/utils/scope-description.tsx:641
 msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
-msgstr "您的儲存庫包含 ATProto 網路上所有公開資料，例如 Bluesky 帖文、喜歡和跟隨紀錄。同時，它也包含透過您使用此帳號登入的其他應用程式所創建的資料。"
+msgstr "您的儲存庫包含 ATProto 網路上所有公開資料，例如 Bluesky 帖文、喜歡和跟隨紀錄。同時，它也包含透過您使用此帳號登入的其他應用程式所建立的資料。"
