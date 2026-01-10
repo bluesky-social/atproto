@@ -660,4 +660,4 @@ msgstr "您的密碼已更新！"
 
 #: src/components/utils/scope-description.tsx:641
 msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
-msgstr "您的儲存庫包含 ATProto 網路上所有公開資料，例如 Bluesky 帖文、喜歡和跟隨紀錄。同時，它也包含透過您使用此帳號登入的其他應用程式所建立的資料。"
+msgstr "您的儲存庫包含 ATProto 網路上所有公開的資訊，例如 Bluesky 貼文、喜歡和跟隨紀錄。同時，它也包含您透過使用此帳號登入的其他應用程式所建立的資料。"
