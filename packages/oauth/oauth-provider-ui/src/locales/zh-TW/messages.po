@@ -359,7 +359,7 @@ msgstr "勉強"
 
 #: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
 msgid "Only letters, numbers, and hyphens"
-msgstr "僅能包含英文字母、數字及連字號"
+msgstr "只能包含英文字母、數字及連字號 (-)"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:128
 #: src/views/authorize/sign-in/sign-in-form.tsx:170
