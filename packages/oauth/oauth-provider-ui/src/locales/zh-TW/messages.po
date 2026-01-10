@@ -407,7 +407,7 @@ msgstr "隱私權政策"
 
 #: src/components/utils/scope-description.tsx:620
 msgid "Publish changes"
-msgstr "發佈變更"
+msgstr "發布變更"
 
 #: src/components/utils/scope-description.tsx:395
 msgid "Read and send messages"
