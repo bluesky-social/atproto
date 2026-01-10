@@ -526,7 +526,7 @@ msgstr "此應用程式正在要求取得代表您執行下列動作所需的必
 
 #: src/components/utils/scope-description.tsx:500
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
-msgstr "ATProto 網路使用一種認證機制，可在與外部服務互動時唯一識別使用者。通常用於取得或更新與您的帳號相關的資料，例如動態源或審核內容。"
+msgstr "ATProto 網路使用一種身分認證機制，可在與外部服務互動時識別使用者的唯一身分。通常用於取得或更新與您的帳號相關的資料，例如動態源或審核內容。"
 
 #: src/components/utils/error-message.tsx:69
 msgid "The data you submitted is invalid. Please check the form and try again."
