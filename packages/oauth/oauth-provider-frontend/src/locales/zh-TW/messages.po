@@ -136,7 +136,7 @@ msgstr "忘記密碼？"
 
 #: src/routes/account/_minimalLayout/reset-password.tsx:203
 msgid "Get reset code"
-msgstr "取得重設驗證碼"
+msgstr "取得重設代碼"
 
 #: src/routes/account/_appLayout/$sub.tsx:53
 #: src/components/Footer.tsx:70
