@@ -21,11 +21,11 @@ msgstr "2단계 인증"
 msgid "A second authentication factor is required"
 msgstr "2단계 인증이 필요합니다"
 
-#: src/components/utils/scope-description.tsx:851
+#: src/components/utils/scope-description.tsx:848
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0>(이)가 관리하는 서비스"
 
-#: src/components/utils/scope-description.tsx:282
+#: src/components/utils/scope-description.tsx:279
 msgid "Account"
 msgstr "계정"
 
@@ -45,27 +45,27 @@ msgstr "알 수 없는 오류가 발생했습니다"
 msgid "Another account"
 msgstr "다른 계정"
 
-#: src/components/utils/scope-description.tsx:879
+#: src/components/utils/scope-description.tsx:876
 msgid "Any collection"
 msgstr "모든 콜렉션"
 
-#: src/components/utils/scope-description.tsx:821
+#: src/components/utils/scope-description.tsx:818
 msgid "Any method"
 msgstr "모든 메서드"
 
-#: src/components/utils/scope-description.tsx:860
+#: src/components/utils/scope-description.tsx:857
 msgid "Any service"
 msgstr "모든 서비스"
 
+#: src/components/utils/scope-description.tsx:455
+#: src/components/utils/scope-description.tsx:475
 #: src/views/authorize/welcome/welcome-view.tsx:28
-#: src/components/utils/scope-description.tsx:458
-#: src/components/utils/scope-description.tsx:478
 msgid "Authenticate"
 msgstr "인증"
 
-#: src/views/authorize/consent/consent-view.tsx:60
 #: src/views/authorize/consent/consent-form.tsx:105
 #: src/views/authorize/consent/consent-form.tsx:174
+#: src/views/authorize/consent/consent-view.tsx:60
 msgid "Authorize"
 msgstr "승인"
 
@@ -73,12 +73,12 @@ msgstr "승인"
 msgid "Avatar"
 msgstr "아바타"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:59
-#: src/views/authorize/sign-in/sign-in-form.tsx:132
+#: src/components/forms/wizard-card.tsx:93
+#: src/views/authorize/consent/consent-form.tsx:99
 #: src/views/authorize/reset-password/reset-password-view.tsx:65
 #: src/views/authorize/reset-password/reset-password-view.tsx:95
-#: src/views/authorize/consent/consent-form.tsx:99
-#: src/components/forms/wizard-card.tsx:93
+#: src/views/authorize/sign-in/sign-in-form.tsx:132
+#: src/views/authorize/sign-in/sign-in-picker.tsx:59
 msgid "Back"
 msgstr "뒤로"
 
@@ -86,15 +86,15 @@ msgstr "뒤로"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength}~{maxLength}자 사이"
 
-#: src/components/utils/scope-description.tsx:745
+#: src/components/utils/scope-description.tsx:742
 msgid "Blob storage"
 msgstr "Blob 스토리지"
 
-#: src/components/utils/scope-description.tsx:836
+#: src/components/utils/scope-description.tsx:833
 msgid "Bluesky App services"
 msgstr "Bluesky 앱 서비스"
 
-#: src/components/utils/scope-description.tsx:843
+#: src/components/utils/scope-description.tsx:840
 msgid "Bluesky Chat services"
 msgstr "Bluesky 대화 서비스"
 
@@ -109,22 +109,22 @@ msgstr "<0>{0}</0>을 클릭하면 해당 서비스의 <1>서비스 이용약관
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "계정을 만들면 {0} 및 {1}에 동의하는 것입니다."
 
-#: src/components/utils/scope-description.tsx:553
+#: src/components/utils/scope-description.tsx:550
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "호출"
 
-#: src/views/authorize/authorize-view.tsx:151
-#: src/views/authorize/welcome/welcome-view.tsx:51
 #: src/components/forms/form-card-async.tsx:85
+#: src/views/authorize/authorize-view.tsx:176
+#: src/views/authorize/welcome/welcome-view.tsx:51
 msgid "Cancel"
 msgstr "취소"
 
-#: src/components/utils/scope-description.tsx:434
+#: src/components/utils/scope-description.tsx:431
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@핸들</0> 변경"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:391
 msgid "Chat"
 msgstr "대화"
 
@@ -146,7 +146,7 @@ msgstr "코드"
 msgid "Collapse details"
 msgstr "세부 정보 접기"
 
-#: src/components/utils/scope-description.tsx:713
+#: src/components/utils/scope-description.tsx:710
 msgid "Collection"
 msgstr "콜렉션"
 
@@ -163,7 +163,7 @@ msgstr "계속하려면 비밀번호를 다시 한번 입력하세요"
 msgid "Confirmation code"
 msgstr "인증 코드"
 
-#: src/components/utils/scope-description.tsx:714
+#: src/components/utils/scope-description.tsx:711
 msgid "Create"
 msgstr "생성"
 
@@ -175,11 +175,11 @@ msgstr "새 계정 만들기"
 msgid "Create Account"
 msgstr "계정 만들기"
 
-#: src/components/utils/scope-description.tsx:599
+#: src/components/utils/scope-description.tsx:596
 msgid "Create, update, and delete any public record"
 msgstr "모든 공개 레코드를 생성, 갱신, 삭제합니다"
 
-#: src/components/utils/scope-description.tsx:716
+#: src/components/utils/scope-description.tsx:713
 msgid "Delete"
 msgstr "삭제"
 
@@ -191,14 +191,14 @@ msgstr "거부"
 msgid "Description"
 msgstr "설명"
 
+#: src/components/utils/scope-description.tsx:239
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:242
 msgid "Email"
 msgstr "이메일"
 
+#: src/components/forms/input-email-address.tsx:51
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:55
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:60
-#: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
 msgstr "이메일 주소"
 
@@ -273,12 +273,12 @@ msgstr "숨기기"
 msgid "Home"
 msgstr "홈"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:91
 #: src/views/authorize/sign-in/sign-in-form.tsx:146
+#: src/views/authorize/sign-in/sign-in-picker.tsx:91
 msgid "Identifier"
 msgstr "아이디"
 
-#: src/components/utils/scope-description.tsx:427
+#: src/components/utils/scope-description.tsx:424
 msgid "Identity"
 msgstr "신원"
 
@@ -299,7 +299,7 @@ msgstr "초대 코드"
 msgid "Let's get your password reset!"
 msgstr "비밀번호를 재설정해 봅시다!"
 
-#: src/views/authorize/authorize-view.tsx:190
+#: src/views/authorize/authorize-view.tsx:215
 msgid "Login complete"
 msgstr "로그인 완료"
 
@@ -307,27 +307,27 @@ msgstr "로그인 완료"
 msgid "Login to account that is not listed"
 msgstr "목록에 없는 계정으로 로그인"
 
-#: src/components/layouts/layout-welcome.tsx:50
+#: src/components/layouts/layout-welcome.tsx:48
 msgid "Logo"
 msgstr "로고"
 
 #: src/components/forms/input-token.tsx:59
-msgid "{example}"
+msgid "Looks like {example}"
 msgstr "{example} 형식"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
 msgstr "표시"
 
-#: src/components/utils/scope-description.tsx:430
+#: src/components/utils/scope-description.tsx:427
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "<1>@핸들</1>을 포함한 내 <0>전체 신원</0> 관리"
 
-#: src/components/utils/scope-description.tsx:365
+#: src/components/utils/scope-description.tsx:362
 msgid "Manage your profile, posts, likes and follows"
 msgstr "프로필, 게시물, 좋아요, 팔로우 관리"
 
-#: src/components/utils/scope-description.tsx:360
+#: src/components/utils/scope-description.tsx:357
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "프로필, 게시물, 좋아요, 팔로우 관리 및 비공개 설정 읽기"
 
@@ -347,9 +347,9 @@ msgstr "이름"
 msgid "New password"
 msgstr "새 비밀번호"
 
+#: src/components/forms/wizard-card.tsx:96
 #: src/views/authorize/reset-password/reset-password-view.tsx:60
 #: src/views/authorize/reset-password/reset-password-view.tsx:90
-#: src/components/forms/wizard-card.tsx:96
 msgid "Next"
 msgstr "다음"
 
@@ -361,9 +361,9 @@ msgstr "확인"
 msgid "Only letters, numbers, and hyphens"
 msgstr "영문자, 숫자, 하이픈만 사용할 수 있습니다"
 
-#: src/views/authorize/sign-up/sign-up-account-form.tsx:128
-#: src/views/authorize/sign-in/sign-in-form.tsx:170
 #: src/components/forms/input-password.tsx:53
+#: src/views/authorize/sign-in/sign-in-form.tsx:170
+#: src/views/authorize/sign-up/sign-up-account-form.tsx:128
 msgid "Password"
 msgstr "비밀번호"
 
@@ -387,11 +387,11 @@ msgstr "비밀번호를 변경했습니다!"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "비밀번호는 {MIN_PASSWORD_LENGTH}자 이상이어야 합니다"
 
-#: src/components/utils/scope-description.tsx:479
+#: src/components/utils/scope-description.tsx:476
 msgid "Perform actions on your behalf"
 msgstr "나를 대신하여 작업 수행"
 
-#: src/components/utils/scope-description.tsx:460
+#: src/components/utils/scope-description.tsx:457
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "귀하를 대신하여 <0>모든 서비스</0>에 대해 인증된 작업을 수행합니다"
 
@@ -399,25 +399,25 @@ msgstr "귀하를 대신하여 <0>모든 서비스</0>에 대해 인증된 작�
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
 msgstr "비밀번호를 입력하기 전에 웹사이트의 도메인 이름을 확인해 주세요. 신뢰하지 않는 도메인에는 절대로 비밀번호를 입력하지 마세요."
 
+#: src/components/utils/link-title.tsx:18
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
-#: src/components/utils/link-title.tsx:18
 msgid "Privacy Policy"
 msgstr "개인정보 처리방침"
 
-#: src/components/utils/scope-description.tsx:620
+#: src/components/utils/scope-description.tsx:617
 msgid "Publish changes"
 msgstr "변경 사항 게시"
 
-#: src/components/utils/scope-description.tsx:395
+#: src/components/utils/scope-description.tsx:392
 msgid "Read and send messages"
 msgstr "메시지 읽기 및 보내기"
 
-#: src/components/utils/scope-description.tsx:245
+#: src/components/utils/scope-description.tsx:242
 msgid "Read and update your account's email address"
 msgstr "내 계정의 이메일 주소 읽기 및 변경"
 
-#: src/components/utils/scope-description.tsx:247
+#: src/components/utils/scope-description.tsx:244
 msgid "Read your account's email address"
 msgstr "내 계정의 이메일 주소 읽기"
 
@@ -426,8 +426,8 @@ msgstr "내 계정의 이메일 주소 읽기"
 msgid "Remember this account on this device"
 msgstr "이 기기에서 이 계정 기억하기"
 
-#: src/components/utils/scope-description.tsx:598
-#: src/components/utils/scope-description.tsx:619
+#: src/components/utils/scope-description.tsx:595
+#: src/components/utils/scope-description.tsx:616
 msgid "Repository"
 msgstr "저장소"
 
@@ -451,14 +451,14 @@ msgstr "도메인 선택"
 msgid "Select from an existing account"
 msgstr "기존 계정에서 선택하기"
 
-#: src/views/authorize/welcome/welcome-view.tsx:45
-#: src/views/authorize/sign-in/sign-in-form.tsx:141
-msgctxt "verb"
+#: src/views/authorize/sign-in/sign-in-view.tsx:52
+msgctxt "noun"
 msgid "Sign in"
 msgstr "로그인"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:52
-msgctxt "noun"
+#: src/views/authorize/sign-in/sign-in-form.tsx:141
+#: src/views/authorize/welcome/welcome-view.tsx:45
+msgctxt "verb"
 msgid "Sign in"
 msgstr "로그인"
 
@@ -471,8 +471,8 @@ msgstr "{0}(으)로 로그인"
 msgid "Sign in as..."
 msgstr "로그인"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:88
 #: src/views/authorize/sign-in/sign-in-picker.tsx:53
+#: src/views/authorize/sign-up/sign-up-view.tsx:88
 msgid "Sign up"
 msgstr "가입"
 
@@ -496,13 +496,13 @@ msgstr "지원"
 msgid "Technical details"
 msgstr "기술 세부 정보"
 
-#: src/components/utils/scope-description.tsx:283
+#: src/components/utils/scope-description.tsx:280
 msgid "Temporarily activate or deactivate your account"
 msgstr "계정을 일시적으로 활성화 또는 비활성화합니다"
 
+#: src/components/utils/link-title.tsx:19
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:34
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:37
-#: src/components/utils/link-title.tsx:19
 msgid "Terms of Service"
 msgstr "서비스 이용약관"
 
@@ -510,21 +510,21 @@ msgstr "서비스 이용약관"
 msgid "That handle cannot be used"
 msgstr "사용할 수 없는 핸들입니다"
 
-#: src/components/utils/scope-description.tsx:205
+#: src/components/utils/scope-description.tsx:202
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "애플리케이션이 귀하의 네트워크 신원에 대한 전체 제어 권한을 요청하고 있습니다. 이는 계정을 <0>영구적으로 손상</0>시키거나 심지어 <1>탈취</1>할 수도 있음을 의미합니다. 반드시 진심으로 신뢰하는 애플리케이션에만 이 권한을 허용하세요."
 
-#: src/components/utils/scope-description.tsx:605
+#: src/components/utils/scope-description.tsx:602
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
 msgstr "애플리케이션이 귀하의 저장소에 있는 <0>모든 데이터</0>를 생성, 갱신, 삭제할 수 있는 권한을 요청하고 있습니다."
 
-#: src/components/utils/scope-description.tsx:172
-#: src/components/utils/scope-description.tsx:485
-#: src/components/utils/scope-description.tsx:626
+#: src/components/utils/scope-description.tsx:169
+#: src/components/utils/scope-description.tsx:482
+#: src/components/utils/scope-description.tsx:623
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "애플리케이션이 귀하를 대신하여 다음 작업을 수행하는 데 필요한 권한을 요청합니다:"
 
-#: src/components/utils/scope-description.tsx:500
+#: src/components/utils/scope-description.tsx:497
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
 msgstr "ATProto 네트워크는 외부 서비스와 통신할 때 사용자를 고유하게 식별할 수 있는 인증 메커니즘을 사용합니다. 이는 주로 피드나 콘텐츠 검토 설정과 같이 귀하의 계정에 연결된 데이터를 가져오거나 업데이트하는 데 사용됩니다."
 
@@ -572,7 +572,7 @@ msgstr "예약된 핸들입니다"
 msgid "This sign-in session has expired"
 msgstr "로그인 세션이 만료되었습니다"
 
-#: src/components/utils/scope-description.tsx:556
+#: src/components/utils/scope-description.tsx:553
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "대상"
@@ -585,11 +585,11 @@ msgstr "원하는 사용자 이름을 입력하세요"
 msgid "Unexpected server response"
 msgstr "예상치 못한 서버 응답입니다"
 
-#: src/components/utils/scope-description.tsx:715
+#: src/components/utils/scope-description.tsx:712
 msgid "Update"
 msgstr "갱신"
 
-#: src/components/utils/scope-description.tsx:748
+#: src/components/utils/scope-description.tsx:745
 msgid "Upload files"
 msgstr "파일 업로드"
 
@@ -629,7 +629,7 @@ msgstr "취약"
 msgid "Wrong identifier or password"
 msgstr "잘못된 아이디 또는 비밀번호입니다"
 
-#: src/views/authorize/authorize-view.tsx:191
+#: src/views/authorize/authorize-view.tsx:216
 msgid "You are being redirected..."
 msgstr "페이지 이동 중…"
 
@@ -658,6 +658,6 @@ msgstr "내 전체 사용자 이름: {0}"
 msgid "Your password has been updated!"
 msgstr "비밀번호를 변경했습니다!"
 
-#: src/components/utils/scope-description.tsx:641
+#: src/components/utils/scope-description.tsx:638
 msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
 msgstr "귀하의 저장소에는 Bluesky의 게시물, 좋아요, 팔로우 등 ATProto 네트워크에 공개된 모든 데이터가 포함되어 있습니다. 또한 이 계정으로 로그인한 다른 앱을 통해 생성된 데이터도 함께 포함됩니다."
