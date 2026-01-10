@@ -570,7 +570,7 @@ msgstr "此帳號代碼已被保留"
 
 #: src/components/utils/error-message.tsx:64
 msgid "This sign-in session has expired"
-msgstr "本次登入會話已過期"
+msgstr "本次登入階段已過期"
 
 #: src/components/utils/scope-description.tsx:556
 msgctxt "RPC aud"
