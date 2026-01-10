@@ -200,7 +200,7 @@ msgstr "電子信箱"
 #: src/views/authorize/reset-password/reset-password-request-form.tsx:60
 #: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
-msgstr "電子信箱地址"
+msgstr "電子郵件地址"
 
 #: src/components/forms/input-new-password.tsx:44
 msgid "Enter a password"
