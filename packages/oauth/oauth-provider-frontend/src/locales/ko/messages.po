@@ -34,9 +34,9 @@ msgstr "새 비밀번호를 입력해 주세요"
 msgid "Accounts"
 msgstr "계정"
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:127
 #: src/routes/account/_minimalLayout/reset-password.tsx:62
 #: src/routes/account/_minimalLayout/reset-password.tsx:89
+#: src/routes/account/_minimalLayout/sign-in.tsx:127
 msgid "An error occurred, please try again."
 msgstr "오류가 발생했습니다. 다시 시도해 주세요."
 
@@ -65,8 +65,8 @@ msgstr "취소"
 msgid "Click here to send a new code to your email."
 msgstr "이메일로 새 코드를 받으려면 이곳을 클릭하세요."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:204
 #: src/routes/account/_minimalLayout/reset-password.tsx:239
+#: src/routes/account/_minimalLayout/sign-in.tsx:204
 msgid "Code"
 msgstr "코드"
 
@@ -138,8 +138,8 @@ msgstr "비밀번호를 잊었나요?"
 msgid "Get reset code"
 msgstr "재설정 코드 얻기"
 
-#: src/routes/account/_appLayout/$sub.tsx:53
 #: src/components/Footer.tsx:70
+#: src/routes/account/_appLayout/$sub.tsx:53
 msgid "Home"
 msgstr "홈"
 
@@ -163,8 +163,8 @@ msgstr "잘못된 아이디 또는 비밀번호입니다."
 msgid "It appears that you haven’t used this account to sign in to any apps yet."
 msgstr "아직 이 계정으로 로그인한 앱이 없습니다."
 
-#: src/routes/account/_minimalLayout.tsx:21
 #: src/components/Nav.tsx:18
+#: src/routes/account/_minimalLayout.tsx:21
 msgid "Logo"
 msgstr "로고"
 
@@ -188,9 +188,9 @@ msgstr "연결된 앱이 없습니다"
 msgid "No devices"
 msgstr "기기가 없습니다"
 
+#: src/routes/account/_minimalLayout/reset-password.tsx:278
 #: src/routes/account/_minimalLayout/sign-in.tsx:177
 #: src/routes/account/_minimalLayout/sign-in.tsx:187
-#: src/routes/account/_minimalLayout/reset-password.tsx:278
 msgid "Password"
 msgstr "비밀번호"
 
@@ -247,9 +247,9 @@ msgstr "로그인"
 msgid "Sign in with another account"
 msgstr "다른 계정으로 로그인"
 
+#: src/components/AccountSelector.tsx:103
 #: src/routes/account/_appLayout/$sub.tsx:304
 #: src/routes/account/_appLayout/$sub.tsx:314
-#: src/components/AccountSelector.tsx:103
 msgid "Sign out"
 msgstr "로그아웃"
 
@@ -310,8 +310,8 @@ msgstr "계정 목록을 불러올 수 없습니다. 페이지를 새로 고침�
 msgid "Whoops! An error occurred."
 msgstr "이런! 오류가 발생했습니다."
 
-#: src/routes/account/_minimalLayout/sign-in.tsx:213
 #: src/routes/account/_minimalLayout/reset-password.tsx:249
+#: src/routes/account/_minimalLayout/sign-in.tsx:213
 msgid "XXXXX-XXXXX"
 msgstr "XXXXX-XXXXX"
 
