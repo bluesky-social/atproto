@@ -554,7 +554,7 @@ msgstr "此邀請碼無效"
 
 #: src/views/authorize/consent/consent-form.tsx:147
 msgid "This application is requesting the following list of technical permissions, summarized hereafter:"
-msgstr "此應用請求以下技術權限，概述如下："
+msgstr "此應用程式正在要求下列技術權限，其摘要如下："
 
 #: src/components/utils/error-message.tsx:77
 msgid "This authorization request has been denied. Please try again."
