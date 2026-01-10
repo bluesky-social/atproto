@@ -4,6 +4,8 @@
   "compilerOptions": {
     "types": ["node", "jest"],
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "esnext",
+    "skipLibCheck": true,
     "noEmit": true
   }
 }

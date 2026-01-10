@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { Readable } from 'node:stream'
 import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'

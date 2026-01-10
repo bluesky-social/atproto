@@ -34,6 +34,7 @@ Object {
           "accountStats": Object {
             "$type": "tools.ozone.moderation.defs#accountStats",
           },
+          "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "hosting": Object {
             "$type": "tools.ozone.moderation.defs#recordHosting",

@@ -71,7 +71,7 @@ export const assertValidTokenAndFindDid = async (
 ): Promise<string> => {
   const res = await db.db
     .selectFrom('email_token')
-    .selectAll()
+    .select(['did', 'requestedAt'])
     .where('purpose', '=', purpose)
     .where('token', '=', token.toUpperCase())
     .executeTakeFirst()

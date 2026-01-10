@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
 import { check } from '@atproto/common'

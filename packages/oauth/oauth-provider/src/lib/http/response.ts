@@ -101,16 +101,16 @@ export function cacheControlMiddleware(maxAge: number): Middleware<void> {
   }
 }
 
+export type JsonResponse<P = unknown> = WriteResponseOptions & {
+  json: P
+}
+
 export function jsonHandler<
   T,
   Req extends IncomingMessage = IncomingMessage,
   Res extends ServerResponse = ServerResponse,
 >(
-  buildJson: (
-    this: T,
-    req: Req,
-    res: Res,
-  ) => Awaitable<{ payload: unknown; status?: number }>,
+  buildJson: (this: T, req: Req, res: Res) => Awaitable<JsonResponse>,
 ): Middleware<T, Req, Res> {
   return function (req, res, next) {
     // Ensure we can agree on a content encoding & type before starting to
@@ -120,18 +120,19 @@ export function jsonHandler<
       // promise and return it.
       void (async () => {
         try {
-          const { payload, status = 200 } = await buildJson.call(this, req, res)
-          writeJson(res, payload, { status })
-        } catch (cause) {
-          const error =
-            cause instanceof Error
-              ? cause
-              : new Error('Failed to build JSON response', { cause })
-          next(error satisfies Error)
+          const jsonResponse = await buildJson.call(this, req, res)
+          const { json, status = 200, ...options } = jsonResponse
+          writeJson(res, json, { ...options, status })
+        } catch (err) {
+          next(asError(err, 'Failed to build JSON response'))
         }
       })()
     } else {
       next(createHttpError(406, 'Unsupported media type'))
     }
   }
+}
+
+function asError(cause: unknown, message: string): Error {
+  return cause instanceof Error ? cause : new Error(message, { cause })
 }

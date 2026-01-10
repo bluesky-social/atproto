@@ -1,31 +1,32 @@
+import { isAtprotoDid } from '@atproto/did'
+import { LexResolverError } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
+import { isAtprotoOauthScope } from '@atproto/oauth-scopes'
 import {
-  CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAuthorizationRequestParameters,
   OAuthAuthorizationServerMetadata,
 } from '@atproto/oauth-types'
+import { isValidHandle } from '@atproto/syntax'
 import { ClientAuth } from '../client/client-auth.js'
 import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
 import {
   AUTHORIZATION_INACTIVITY_TIMEOUT,
+  NODE_ENV,
   PAR_EXPIRES_IN,
   TOKEN_MAX_AGE,
 } from '../constants.js'
 import { DeviceId } from '../device/device-id.js'
 import { AccessDeniedError } from '../errors/access-denied-error.js'
+import { AuthorizationError } from '../errors/authorization-error.js'
 import { ConsentRequiredError } from '../errors/consent-required-error.js'
 import { InvalidAuthorizationDetailsError } from '../errors/invalid-authorization-details-error.js'
-import { InvalidDpopKeyBindingError } from '../errors/invalid-dpop-key-binding-error.js'
-import { InvalidDpopProofError } from '../errors/invalid-dpop-proof-error.js'
 import { InvalidGrantError } from '../errors/invalid-grant-error.js'
-import { InvalidParametersError } from '../errors/invalid-parameters-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { InvalidScopeError } from '../errors/invalid-scope-error.js'
+import { LexiconManager } from '../lexicon/lexicon-manager.js'
 import { RequestMetadata } from '../lib/http/request.js'
-import { callAsync } from '../lib/util/function.js'
 import { OAuthHooks } from '../oauth-hooks.js'
-import { DpopProof } from '../oauth-verifier.js'
 import { Signer } from '../signer/signer.js'
 import { Code, generateCode } from './code.js'
 import {
@@ -33,7 +34,6 @@ import {
   isRequestDataAuthorized,
 } from './request-data.js'
 import { generateRequestId } from './request-id.js'
-import { RequestInfo } from './request-info.js'
 import { RequestStore, UpdateRequestData } from './request-store.js'
 import {
   RequestUri,
@@ -44,6 +44,7 @@ import {
 export class RequestManager {
   constructor(
     protected readonly store: RequestStore,
+    protected readonly lexiconManager: LexiconManager,
     protected readonly signer: Signer,
     protected readonly metadata: OAuthAuthorizationServerMetadata,
     protected readonly hooks: OAuthHooks,
@@ -56,25 +57,22 @@ export class RequestManager {
 
   async createAuthorizationRequest(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     input: Readonly<OAuthAuthorizationRequestParameters>,
     deviceId: null | DeviceId,
-    dpopProof: null | DpopProof,
-  ): Promise<RequestInfo> {
-    const parameters = await this.validate(client, clientAuth, input, dpopProof)
-    return this.create(client, clientAuth, parameters, deviceId)
-  }
+  ) {
+    const parameters = await this.validate(client, clientAuth, input)
 
-  protected async create(
-    client: Client,
-    clientAuth: ClientAuth,
-    parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    deviceId: null | DeviceId = null,
-  ): Promise<RequestInfo> {
+    await this.hooks.onAuthorizationRequest?.call(null, {
+      client,
+      clientAuth,
+      parameters,
+    })
+
     const expiresAt = new Date(Date.now() + PAR_EXPIRES_IN)
-    const id = await generateRequestId()
+    const requestId = await generateRequestId()
 
-    await this.store.createRequest(id, {
+    await this.store.createRequest(requestId, {
       clientId: client.id,
       clientAuth,
       parameters,
@@ -84,15 +82,14 @@ export class RequestManager {
       code: null,
     })
 
-    const uri = encodeRequestUri(id)
-    return { id, uri, expiresAt, parameters, clientId: client.id, clientAuth }
+    const requestUri = encodeRequestUri(requestId)
+    return { requestUri, expiresAt, parameters }
   }
 
   protected async validate(
     client: Client,
-    clientAuth: ClientAuth,
+    clientAuth: null | ClientAuth,
     parameters: Readonly<OAuthAuthorizationRequestParameters>,
-    dpopProof: null | DpopProof,
   ): Promise<Readonly<OAuthAuthorizationRequestParameters>> {
     // -------------------------------
     // Validate unsupported parameters
@@ -105,10 +102,7 @@ export class RequestManager {
       'nonce', // note that OIDC "nonce" is redundant with PKCE
     ] as const) {
       if (parameters[k] !== undefined) {
-        throw new InvalidParametersError(
-          parameters,
-          `Unsupported "${k}" parameter`,
-        )
+        throw new AuthorizationError(parameters, `Unsupported "${k}" parameter`)
       }
     }
 
@@ -121,7 +115,7 @@ export class RequestManager {
         parameters.response_type,
       )
     ) {
-      throw new AccessDeniedError(
+      throw new AuthorizationError(
         parameters,
         `Unsupported response_type "${parameters.response_type}"`,
         'unsupported_response_type',
@@ -132,25 +126,11 @@ export class RequestManager {
       parameters.response_type === 'code' &&
       !this.metadata.grant_types_supported?.includes('authorization_code')
     ) {
-      throw new AccessDeniedError(
+      throw new AuthorizationError(
         parameters,
         `Unsupported grant_type "authorization_code"`,
         'invalid_request',
       )
-    }
-
-    if (parameters.scope) {
-      for (const scope of parameters.scope.split(' ')) {
-        // Currently, the implementation requires all the scopes to be statically
-        // defined in the server metadata. In the future, we might add support
-        // for dynamic scopes.
-        if (!this.metadata.scopes_supported?.includes(scope)) {
-          throw new InvalidParametersError(
-            parameters,
-            `Scope "${scope}" is not supported by this server`,
-          )
-        }
-      }
     }
 
     if (parameters.authorization_details) {
@@ -181,7 +161,7 @@ export class RequestManager {
     if (!parameters.redirect_uri) {
       // Should already be ensured by client.validateRequest(). Adding here for
       // clarity & extra safety.
-      throw new InvalidParametersError(parameters, 'Missing "redirect_uri"')
+      throw new AuthorizationError(parameters, 'Missing "redirect_uri"')
     }
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10#section-1.4.1
@@ -192,28 +172,17 @@ export class RequestManager {
     // > server MUST include the scope response parameter in the token response
     // > (Section 3.2.3) to inform the client of the actual scope granted.
 
-    // Let's make sure the scopes are unique (to reduce the token & storage size)
+    // Let's make sure the scopes are unique (to reduce the token & storage
+    // size).
     const scopes = new Set(parameters.scope?.split(' '))
 
-    parameters = { ...parameters, scope: [...scopes].join(' ') || undefined }
-
-    // https://datatracker.ietf.org/doc/html/rfc9449#section-10
-    if (!parameters.dpop_jkt) {
-      if (dpopProof) parameters = { ...parameters, dpop_jkt: dpopProof.jkt }
-    } else if (!dpopProof) {
-      throw new InvalidDpopProofError('DPoP proof required')
-    } else if (parameters.dpop_jkt !== dpopProof.jkt) {
-      throw new InvalidDpopKeyBindingError()
-    }
-
-    if (clientAuth.method === CLIENT_ASSERTION_TYPE_JWT_BEARER) {
-      if (parameters.dpop_jkt && clientAuth.jkt === parameters.dpop_jkt) {
-        throw new InvalidParametersError(
-          parameters,
-          'The DPoP proof must be signed with a different key than the client assertion',
-        )
-      }
-    }
+    // @NOTE An app requesting a not yet supported list of scopes will need to
+    // re-authenticate the user once the scopes are supported. This is due to
+    // the fact that the AS does not know how to properly display those scopes
+    // to the user, so it cannot properly ask for consent.
+    const scope =
+      Array.from(scopes).filter(isAtprotoOauthScope).join(' ') || undefined
+    parameters = { ...parameters, scope }
 
     if (parameters.code_challenge) {
       switch (parameters.code_challenge_method) {
@@ -225,7 +194,7 @@ export class RequestManager {
         case 'S256':
           break
         default: {
-          throw new InvalidParametersError(
+          throw new AuthorizationError(
             parameters,
             `Unsupported code_challenge_method "${parameters.code_challenge_method}"`,
           )
@@ -234,7 +203,7 @@ export class RequestManager {
     } else {
       if (parameters.code_challenge_method) {
         // https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1
-        throw new InvalidParametersError(
+        throw new AuthorizationError(
           parameters,
           'code_challenge is required when code_challenge_method is provided',
         )
@@ -255,7 +224,7 @@ export class RequestManager {
       // atproto does not implement the OpenID Connect nonce mechanism, so we
       // require the use of PKCE for all clients.
 
-      throw new InvalidParametersError(parameters, 'Use of PKCE is required')
+      throw new AuthorizationError(parameters, 'Use of PKCE is required')
     }
 
     // -----------------
@@ -263,7 +232,7 @@ export class RequestManager {
     // -----------------
 
     if (parameters.response_type !== 'code') {
-      throw new InvalidParametersError(
+      throw new AuthorizationError(
         parameters,
         'atproto only supports the "code" response_type',
       )
@@ -279,7 +248,7 @@ export class RequestManager {
     }
 
     if (parameters.code_challenge_method !== 'S256') {
-      throw new InvalidParametersError(
+      throw new AuthorizationError(
         parameters,
         'atproto requires use of "S256" code_challenge_method',
       )
@@ -292,7 +261,7 @@ export class RequestManager {
     if (
       !client.info.isTrusted &&
       !client.info.isFirstParty &&
-      clientAuth.method === 'none'
+      client.metadata.token_endpoint_auth_method === 'none'
     ) {
       if (parameters.prompt === 'none') {
         throw new ConsentRequiredError(
@@ -301,21 +270,56 @@ export class RequestManager {
         )
       }
 
-      // force "consent" for unauthenticated, third party clients
-      parameters = { ...parameters, prompt: 'consent' }
+      // force "consent" for unauthenticated third party clients, unless they
+      // are trying to create accounts:
+      if (parameters.prompt !== 'create') {
+        parameters = { ...parameters, prompt: 'consent' }
+      }
+    }
+
+    // atproto extension: ensure that the login_hint is a valid handle or DID
+    // @NOTE we to allow invalid case here, which is not spec'd anywhere.
+    const hint = parameters.login_hint?.toLowerCase()
+    if (hint) {
+      if (!isAtprotoDid(hint) && !isValidHandle(hint)) {
+        throw new AuthorizationError(parameters, `Invalid login_hint "${hint}"`)
+      }
+
+      // @TODO: ensure that the account actually exists on this server (there is
+      // no point in showing the UI to the user if the account does not exist).
+
+      // Update the parameters to ensure the right case is used
+      parameters = { ...parameters, login_hint: hint }
+    }
+
+    // Make sure that every nsid in the scope resolves to a valid permission set
+    // lexicon
+    if (parameters.scope) {
+      try {
+        await this.lexiconManager.getPermissionSetsFromScope(parameters.scope)
+      } catch (err) {
+        // Parse expected errors
+        if (err instanceof LexResolverError) {
+          throw new AuthorizationError(
+            parameters,
+            err.message,
+            'invalid_scope',
+            err,
+          )
+        }
+
+        // Unexpected error
+        throw err
+      }
     }
 
     return parameters
   }
 
-  async get(
-    uri: RequestUri,
-    deviceId: DeviceId,
-    clientId?: ClientId,
-  ): Promise<RequestInfo> {
-    const id = decodeRequestUri(uri)
+  async get(requestUri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
+    const requestId = decodeRequestUri(requestUri)
 
-    const data = await this.store.readRequest(id)
+    const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
     const updates: UpdateRequestData = {}
@@ -354,57 +358,80 @@ export class RequestManager {
         )
       }
     } catch (err) {
-      await this.store.deleteRequest(id)
+      await this.store.deleteRequest(requestId)
       throw err
     }
 
     if (Object.keys(updates).length > 0) {
-      await this.store.updateRequest(id, updates)
+      await this.store.updateRequest(requestId, updates)
     }
 
     return {
-      id,
-      uri,
+      requestUri,
       expiresAt: updates.expiresAt || data.expiresAt,
       parameters: data.parameters,
       clientId: data.clientId,
-      clientAuth: data.clientAuth,
     }
   }
 
   async setAuthorized(
-    uri: RequestUri,
+    requestUri: RequestUri,
     client: Client,
     account: Account,
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
+    scopeOverride?: string,
   ): Promise<Code> {
-    const requestId = decodeRequestUri(uri)
+    const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
     if (!data) throw new InvalidRequestError('Unknown request_uri')
 
+    let { parameters } = data
+
     try {
       if (data.expiresAt < new Date()) {
-        throw new AccessDeniedError(data.parameters, 'This request has expired')
+        throw new AccessDeniedError(parameters, 'This request has expired')
       }
       if (!data.deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was not initiated',
         )
       }
       if (data.deviceId !== deviceId) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was initiated from another device',
         )
       }
       if (data.sub || data.code) {
         throw new AccessDeniedError(
-          data.parameters,
+          parameters,
           'This request was already authorized',
         )
+      }
+
+      // If a new scope value is provided, update the parameters by ensuring
+      // that every existing scope in the parameters is also present in the
+      // override value. This allows the user to remove scopes from the request,
+      // but not to add new ones.
+      if (scopeOverride != null) {
+        const allowedScopes = new Set(scopeOverride.split(' '))
+        const existingScopes = parameters.scope?.split(' ')
+
+        // Compute the intersection of the existing scopes and the overrides.
+        const newScopes = existingScopes?.filter((s) => allowedScopes.has(s))
+
+        // Validate: make sure the new scopes are valid
+        if (!newScopes?.includes('atproto')) {
+          throw new AccessDeniedError(
+            parameters,
+            'The "atproto" scope is required',
+          )
+        }
+
+        parameters = { ...parameters, scope: newScopes.join(' ') }
       }
 
       // Only response_type=code is supported
@@ -416,12 +443,13 @@ export class RequestManager {
         code,
         // Allow the client to exchange the code for a token within the next 60 seconds.
         expiresAt: new Date(Date.now() + AUTHORIZATION_INACTIVITY_TIMEOUT),
+        parameters,
       })
 
-      await callAsync(this.hooks.onAuthorized, {
+      await this.hooks.onAuthorized?.call(null, {
         client,
         account,
-        parameters: data.parameters,
+        parameters,
         deviceId,
         deviceMetadata,
         requestId,
@@ -438,57 +466,35 @@ export class RequestManager {
    * @note If this method throws an error, any token previously generated from
    * the same `code` **must** me revoked.
    */
-  public async findCode(
-    client: Client,
-    clientAuth: ClientAuth,
-    code: Code,
-  ): Promise<RequestDataAuthorized & { requestUri: RequestUri }> {
-    const result = await this.store.findRequestByCode(code)
+  public async consumeCode(code: Code): Promise<RequestDataAuthorized> {
+    const result = await this.store.consumeRequestCode(code)
     if (!result) throw new InvalidGrantError('Invalid code')
 
-    const { id, data } = result
-    try {
-      if (!isRequestDataAuthorized(data)) {
-        // Should never happen: maybe the store implementation is faulty ?
-        throw new Error('Unexpected request state')
+    const { requestId, data } = result
+
+    // Fool-proofing the store implementation against code replay attacks (in
+    // case consumeRequestCode() does not delete the request).
+    if (NODE_ENV !== 'production') {
+      const result = await this.store.readRequest(requestId)
+      if (result) {
+        throw new Error('Invalid store implementation: request not deleted')
       }
-
-      if (data.clientId !== client.id) {
-        // Note: do not reveal the original client ID to the client using an invalid id
-        throw new InvalidGrantError(
-          `The code was not issued to client "${client.id}"`,
-        )
-      }
-
-      if (data.expiresAt < new Date()) {
-        throw new InvalidGrantError('This code has expired')
-      }
-
-      if (data.clientAuth.method === 'none') {
-        // If the client did not use PAR, it was not authenticated when the
-        // request was created (see authorize() method above). Since PAR is not
-        // mandatory, and since the token exchange currently taking place *is*
-        // authenticated (`clientAuth`), we allow "upgrading" the authentication
-        // method (the token created will be bound to the current clientAuth).
-      } else {
-        if (clientAuth.method !== data.clientAuth.method) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-
-        if (!(await client.validateClientAuth(data.clientAuth))) {
-          throw new InvalidGrantError('Invalid client authentication')
-        }
-      }
-
-      return { ...data, requestUri: encodeRequestUri(id) }
-    } finally {
-      // A "code" can only be used once
-      await this.store.deleteRequest(id)
     }
+
+    if (!isRequestDataAuthorized(data) || data.code !== code) {
+      // Should never happen: maybe the store implementation is faulty ?
+      throw new Error('Unexpected request state')
+    }
+
+    if (data.expiresAt < new Date()) {
+      throw new InvalidGrantError('This code has expired')
+    }
+
+    return data
   }
 
-  async delete(uri: RequestUri): Promise<void> {
-    const id = decodeRequestUri(uri)
-    await this.store.deleteRequest(id)
+  async delete(requestUri: RequestUri): Promise<void> {
+    const requestId = decodeRequestUri(requestUri)
+    await this.store.deleteRequest(requestId)
   }
 }

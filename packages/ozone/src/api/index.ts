@@ -8,7 +8,9 @@ import updateTemplate from './communication/updateTemplate'
 import fetchLabels from './label/fetchLabels'
 import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
+import cancelScheduledActions from './moderation/cancelScheduledActions'
 import emitEvent from './moderation/emitEvent'
+import getAccountTimeline from './moderation/getAccountTimeline'
 import getEvent from './moderation/getEvent'
 import adminGetRecord from './moderation/getRecord'
 import adminGetRecords from './moderation/getRecords'
@@ -16,11 +18,18 @@ import getRepo from './moderation/getRepo'
 import getReporterStats from './moderation/getReporterStats'
 import getRepos from './moderation/getRepos'
 import getSubjects from './moderation/getSubjects'
+import listScheduledActions from './moderation/listScheduledActions'
 import queryEvents from './moderation/queryEvents'
 import queryStatuses from './moderation/queryStatuses'
+import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
 import createReport from './report/createReport'
+import addSafelinkRule from './safelink/addRule'
+import querySafelinkEvents from './safelink/queryEvents'
+import querySafelinkRules from './safelink/queryRules'
+import removeSafelinkRule from './safelink/removeRule'
+import updateSafelinkRule from './safelink/updateRule'
 import getConfig from './server/getConfig'
 import setAddValues from './set/addValues'
 import deleteSet from './set/deleteSet'
@@ -82,5 +91,14 @@ export default function (server: Server, ctx: AppContext) {
   grantVerifications(server, ctx)
   revokeVerifications(server, ctx)
   listVerifications(server, ctx)
+  addSafelinkRule(server, ctx)
+  updateSafelinkRule(server, ctx)
+  removeSafelinkRule(server, ctx)
+  querySafelinkEvents(server, ctx)
+  querySafelinkRules(server, ctx)
+  getAccountTimeline(server, ctx)
+  scheduleAction(server, ctx)
+  listScheduledActions(server, ctx)
+  cancelScheduledActions(server, ctx)
   return server
 }

@@ -88,6 +88,8 @@ message PostRecordMeta {
 
 message GetPostRecordsRequest {
   repeated string uris = 1;
+  optional string process_dynamic_tags_for_view = 2;
+  optional string viewer_did = 3;
 }
 
 message GetPostRecordsResponse {
@@ -108,6 +110,14 @@ message GetActorChatDeclarationRecordsRequest {
 }
 
 message GetActorChatDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
+message GetNotificationDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetNotificationDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
@@ -353,6 +363,7 @@ message GetInteractionCountsResponse {
   repeated int32 reposts = 2;
   repeated int32 replies = 3;
   repeated int32 quotes = 4;
+  repeated int32 bookmarks = 5;
 }
 
 message GetCountsForUsersRequest {
@@ -451,9 +462,11 @@ message GetActorRepostsResponse {
 message GetActorsRequest {
   repeated string dids = 1;
   repeated string skip_cache_for_dids = 2;
+  repeated string return_age_assurance_for_dids = 3;
 }
 
 message ActorInfo {
+  reserved 20; // DO NOT REMOVE — see dataplane repo
   bool exists = 1;
   string handle = 2;
   Record profile = 3;
@@ -473,6 +486,15 @@ message ActorInfo {
   // Tags being applied to the profile record
   repeated string profile_tags = 16;
   Record status_record = 17;
+  string allow_activity_subscriptions_from = 18;
+  optional AgeAssuranceStatus age_assurance_status = 19;
+}
+
+message AgeAssuranceStatus {
+  string status = 1;
+  google.protobuf.Timestamp last_initiated_at = 2;
+  bool override_applied = 3;
+  string access = 4;
 }
 
 message GetActorsResponse {
@@ -765,14 +787,14 @@ message NotificationChannelPush {
   bool enabled = 1;
 }
 
-enum NotificationFilter {
-  NOTIFICATION_FILTER_UNSPECIFIED = 0;
-  NOTIFICATION_FILTER_ALL = 1;
-  NOTIFICATION_FILTER_FOLLOWS = 2;
+enum NotificationInclude {
+  NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  NOTIFICATION_INCLUDE_ALL = 1;
+  NOTIFICATION_INCLUDE_FOLLOWS = 2;
 }
 
 message FilterableNotificationPreference {
-  NotificationFilter filter = 1;
+  NotificationInclude include = 1;
   NotificationChannelList list = 2;
   NotificationChannelPush push = 3;
 }
@@ -782,31 +804,32 @@ message NotificationPreference {
   NotificationChannelPush push = 2;
 }
 
-enum ChatNotificationFilter {
-  CHAT_NOTIFICATION_FILTER_UNSPECIFIED = 0;
-  CHAT_NOTIFICATION_FILTER_ALL = 1;
-  CHAT_NOTIFICATION_FILTER_ACCEPTED = 2;
+enum ChatNotificationInclude {
+  CHAT_NOTIFICATION_INCLUDE_UNSPECIFIED = 0;
+  CHAT_NOTIFICATION_INCLUDE_ALL = 1;
+  CHAT_NOTIFICATION_INCLUDE_ACCEPTED = 2;
 }
 
 message ChatNotificationPreference {
-  ChatNotificationFilter filter = 1;
+  ChatNotificationInclude include = 1;
   NotificationChannelPush push = 2;
 }
 
 message NotificationPreferences {
-  ChatNotificationPreference chat = 1;
-  FilterableNotificationPreference follow = 2;
-  FilterableNotificationPreference like = 3;
-  FilterableNotificationPreference like_via_repost = 4;
-  FilterableNotificationPreference mention = 5;
-  FilterableNotificationPreference quote = 6;
-  FilterableNotificationPreference reply = 7;
-  FilterableNotificationPreference repost = 8;
-  FilterableNotificationPreference repost_via_repost = 9;
-  NotificationPreference starterpack_joined = 10;
-  NotificationPreference subscribed_post = 11;
-  NotificationPreference unverified = 12;
-  NotificationPreference verified = 13;
+  bytes entry = 1;
+  ChatNotificationPreference chat = 2;
+  FilterableNotificationPreference follow = 3;
+  FilterableNotificationPreference like = 4;
+  FilterableNotificationPreference like_via_repost = 5;
+  FilterableNotificationPreference mention = 6;
+  FilterableNotificationPreference quote = 7;
+  FilterableNotificationPreference reply = 8;
+  FilterableNotificationPreference repost = 9;
+  FilterableNotificationPreference repost_via_repost = 10;
+  NotificationPreference starterpack_joined = 11;
+  NotificationPreference subscribed_post = 12;
+  NotificationPreference unverified = 13;
+  NotificationPreference verified = 14;
 }
 
 message GetNotificationPreferencesResponse {
@@ -867,6 +890,39 @@ message GetUnreadNotificationCountRequest {
 
 message GetUnreadNotificationCountResponse {
   int32 count = 1;
+}
+
+message GetActivitySubscriptionDidsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message GetActivitySubscriptionDidsResponse {
+  repeated string dids = 1;
+  string cursor = 2;
+}
+
+message PostActivitySubscription {}
+message ReplyActivitySubscription {}
+
+message ActivitySubscription {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+  optional PostActivitySubscription post = 4;
+  optional ReplyActivitySubscription reply = 5;
+  string subject_did = 6;
+  google.protobuf.Timestamp indexed_at = 7;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string subject_dids = 2;
+}
+
+message GetActivitySubscriptionsByActorAndSubjectsResponse {
+  repeated ActivitySubscription subscriptions = 1;
 }
 
 //
@@ -1200,6 +1256,42 @@ message GetRecordTakedownResponse {
 }
 
 
+//
+// Bookmarks
+//
+message Bookmark {
+  StashRef ref = 1;
+  string subject_uri = 2;
+  string subject_cid = 3;
+  google.protobuf.Timestamp indexed_at = 4;
+}
+
+message GetBookmarksByActorAndSubjectsRequest {
+  string actor_did = 1;
+  repeated string uris = 2;
+}
+
+message GetBookmarksByActorAndSubjectsResponse {
+  repeated Bookmark bookmarks = 1;
+}
+
+message GetActorBookmarksRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message BookmarkInfo {
+  string key = 1; // stash key
+  string subject = 2;
+}
+
+message GetActorBookmarksResponse {
+  repeated BookmarkInfo bookmarks = 1;
+  string cursor = 2;
+}
+
+
 // Polo-backed Graph Endpoints
 
 
@@ -1219,12 +1311,42 @@ message GetFollowsFollowingResponse {
   repeated FollowsFollowing results = 1;
 }
 
+message GetSitemapIndexRequest {
+  SitemapPageType type = 1;
+}
+
+message GetSitemapIndexResponse {
+  // GZIP compressed XML sitemap
+  bytes sitemap = 1;
+}
+
+// Sitemap HTTP paths are typically of the form `/type/yyyy-mm-dd/N.xml.gz`, i.e. `/users/2025-01-01/1.xml.gz`
+message GetSitemapPageRequest {
+  SitemapPageType type = 1;
+  google.protobuf.Timestamp date = 2;
+  // One-indexed
+  int32 bucket = 3;
+}
+
+enum SitemapPageType {
+  SITEMAP_PAGE_TYPE_UNSPECIFIED = 0;
+  SITEMAP_PAGE_TYPE_USER = 1;
+}
+
+message GetSitemapPageResponse {
+  // GZIP compressed XML sitemap
+  bytes sitemap = 1;
+}
+
 // Ping
 message PingRequest {}
 message PingResponse {}
 
-
-
+message StashRef {
+  string actor_did = 1;
+  string namespace = 2;
+  string key = 3;
+}
 
 service Service {
   //
@@ -1242,6 +1364,7 @@ service Service {
   rpc GetPostRecords(GetPostRecordsRequest) returns (GetPostRecordsResponse);
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
+  rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
@@ -1320,6 +1443,8 @@ service Service {
   rpc GetNotifications(GetNotificationsRequest) returns (GetNotificationsResponse);
   rpc GetNotificationSeen(GetNotificationSeenRequest) returns (GetNotificationSeenResponse);
   rpc GetUnreadNotificationCount(GetUnreadNotificationCountRequest) returns (GetUnreadNotificationCountResponse);
+  rpc GetActivitySubscriptionDids(GetActivitySubscriptionDidsRequest) returns (GetActivitySubscriptionDidsResponse);
+  rpc GetActivitySubscriptionsByActorAndSubjects(GetActivitySubscriptionsByActorAndSubjectsRequest) returns (GetActivitySubscriptionsByActorAndSubjectsResponse);
   rpc UpdateNotificationSeen(UpdateNotificationSeenRequest) returns (UpdateNotificationSeenResponse);
 
   // FeedGenerators
@@ -1360,12 +1485,22 @@ service Service {
   rpc GetRecordTakedown(GetRecordTakedownRequest) returns (GetRecordTakedownResponse);
   rpc GetActorTakedown(GetActorTakedownRequest) returns (GetActorTakedownResponse);
 
+  // Bookmarks
+  // Returns bookmarks created by the actor for the specified URIs.
+  rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
+  // Returns the bookmarks created by the actor.
+  rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
+
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
   rpc GetIdentityByHandle(GetIdentityByHandleRequest) returns (GetIdentityByHandleResponse);
 
   // Graph
   rpc GetFollowsFollowing(GetFollowsFollowingRequest) returns (GetFollowsFollowingResponse);
+
+  // Sitemaps
+  rpc GetSitemapIndex(GetSitemapIndexRequest) returns (GetSitemapIndexResponse);
+  rpc GetSitemapPage(GetSitemapPageRequest) returns (GetSitemapPageResponse);
 
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);

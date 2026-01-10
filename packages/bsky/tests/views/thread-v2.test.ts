@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
 import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
 import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
@@ -13,8 +13,6 @@ import {
   ThreadOtherItemValuePost,
 } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
-import * as seeds from '../seed/thread-v2'
-import { TAG_BUMP_DOWN, TAG_HIDE } from '../seed/thread-v2'
 
 type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({
@@ -45,8 +43,8 @@ describe('appview thread views v2', () => {
     network = await TestNetwork.create({
       bsky: {
         maxThreadParents: 15,
-        threadTagsBumpDown: new Set([TAG_BUMP_DOWN]),
-        threadTagsHide: new Set([TAG_HIDE]),
+        threadTagsBumpDown: new Set([seedThreadV2.TAG_BUMP_DOWN]),
+        threadTagsHide: new Set([seedThreadV2.TAG_HIDE]),
       },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
@@ -79,10 +77,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('simple thread', () => {
-    let seed: Awaited<ReturnType<typeof seeds.simple>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.simple>>
 
     beforeAll(async () => {
-      seed = await seeds.simple(sc)
+      seed = await seedThreadV2.simple(sc)
       await network.processAll()
     })
 
@@ -244,10 +242,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('long thread', () => {
-    let seed: Awaited<ReturnType<typeof seeds.long>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.long>>
 
     beforeAll(async () => {
-      seed = await seeds.long(sc)
+      seed = await seedThreadV2.long(sc)
       await network.processAll()
     })
 
@@ -313,10 +311,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('deep thread', () => {
-    let seed: Awaited<ReturnType<typeof seeds.deep>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.deep>>
 
     beforeAll(async () => {
-      seed = await seeds.deep(sc)
+      seed = await seedThreadV2.deep(sc)
       await network.processAll()
     })
 
@@ -432,10 +430,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('branching factor', () => {
-    let seed: Awaited<ReturnType<typeof seeds.branchingFactor>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.branchingFactor>>
 
     beforeAll(async () => {
-      seed = await seeds.branchingFactor(sc)
+      seed = await seedThreadV2.branchingFactor(sc)
       await network.processAll()
     })
 
@@ -611,10 +609,10 @@ describe('appview thread views v2', () => {
   })
 
   describe('annotate more replies', () => {
-    let seed: Awaited<ReturnType<typeof seeds.annotateMoreReplies>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.annotateMoreReplies>>
 
     beforeAll(async () => {
-      seed = await seeds.annotateMoreReplies(sc)
+      seed = await seedThreadV2.annotateMoreReplies(sc)
       await network.processAll()
     })
 
@@ -706,10 +704,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`annotate OP thread`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.annotateOP>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.annotateOP>>
 
     beforeAll(async () => {
-      seed = await seeds.annotateOP(sc)
+      seed = await seedThreadV2.annotateOP(sc)
       await network.processAll()
     })
 
@@ -800,10 +798,10 @@ describe('appview thread views v2', () => {
 
   describe('bumping and sorting', () => {
     describe('sorting', () => {
-      let seed: Awaited<ReturnType<typeof seeds.sort>>
+      let seed: Awaited<ReturnType<typeof seedThreadV2.sort>>
 
       beforeAll(async () => {
-        seed = await seeds.sort(sc)
+        seed = await seedThreadV2.sort(sc)
         await network.processAll()
       })
 
@@ -899,10 +897,10 @@ describe('appview thread views v2', () => {
 
     describe('bumping', () => {
       describe('sorting within bumped post groups', () => {
-        let seed: Awaited<ReturnType<typeof seeds.bumpGroupSorting>>
+        let seed: Awaited<ReturnType<typeof seedThreadV2.bumpGroupSorting>>
 
         beforeAll(async () => {
-          seed = await seeds.bumpGroupSorting(sc)
+          seed = await seedThreadV2.bumpGroupSorting(sc)
           await network.processAll()
         })
 
@@ -951,10 +949,10 @@ describe('appview thread views v2', () => {
       })
 
       describe('OP and viewer', () => {
-        let seed: Awaited<ReturnType<typeof seeds.bumpOpAndViewer>>
+        let seed: Awaited<ReturnType<typeof seedThreadV2.bumpOpAndViewer>>
 
         beforeAll(async () => {
-          seed = await seeds.bumpOpAndViewer(sc)
+          seed = await seedThreadV2.bumpOpAndViewer(sc)
           await network.processAll()
         })
 
@@ -1103,23 +1101,18 @@ describe('appview thread views v2', () => {
       })
 
       describe('followers', () => {
-        let seed: Awaited<ReturnType<typeof seeds.bumpFollows>>
+        let seed: Awaited<ReturnType<typeof seedThreadV2.bumpFollows>>
 
         beforeAll(async () => {
-          seed = await seeds.bumpFollows(sc)
+          seed = await seedThreadV2.bumpFollows(sc)
           await network.processAll()
         })
 
-        const threadForPostAndViewer = async (
-          post: string,
-          viewer: string,
-          prioritizeFollowedUsers: boolean = false,
-        ) => {
+        const threadForPostAndViewer = async (post: string, viewer: string) => {
           const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
             {
               anchor: post,
               sort: 'newest',
-              prioritizeFollowedUsers,
             },
             {
               headers: await network.serviceHeaders(
@@ -1135,13 +1128,10 @@ describe('appview thread views v2', () => {
           return t
         }
 
-        it('bumps up followed users if option is set', async () => {
-          const prioritizeFollowedUsers = true
-
+        it('bumps up followed users', async () => {
           const t1 = await threadForPostAndViewer(
             seed.root.ref.uriStr,
             seed.users.viewerF.did,
-            prioritizeFollowedUsers,
           )
           expect(t1).toEqual([
             expect.objectContaining({ uri: seed.root.ref.uriStr }), // root
@@ -1156,7 +1146,6 @@ describe('appview thread views v2', () => {
           const t2 = await threadForPostAndViewer(
             seed.root.ref.uriStr,
             seed.users.viewerNoF.did,
-            prioritizeFollowedUsers,
           )
           expect(t2).toEqual([
             expect.objectContaining({ uri: seed.root.ref.uriStr }), // root
@@ -1169,45 +1158,15 @@ describe('appview thread views v2', () => {
             expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
           ])
         })
-
-        it('does not prioritize followed users if option is not set', async () => {
-          const t1 = await threadForPostAndViewer(
-            seed.root.ref.uriStr,
-            seed.users.viewerF.did,
-          )
-          expect(t1).toHaveLength(7)
-          expect(t1[0].uri).toBe(seed.root.ref.uriStr) // root
-          expect(t1[1].uri).toBe(seed.r['3'].ref.uriStr) // op reply
-          expect(t1[2].uri).toBe(seed.r['4'].ref.uriStr) // viewer reply
-          // newest to oldest
-          expect(t1[3].uri).toBe(seed.r['5'].ref.uriStr)
-          expect(t1[4].uri).toBe(seed.r['2'].ref.uriStr)
-          expect(t1[5].uri).toBe(seed.r['1'].ref.uriStr)
-          expect(t1[6].uri).toBe(seed.r['0'].ref.uriStr)
-
-          const t2 = await threadForPostAndViewer(
-            seed.root.ref.uriStr,
-            seed.users.viewerNoF.did,
-          )
-          expect(t2).toHaveLength(7)
-          expect(t2[0].uri).toBe(seed.root.ref.uriStr) // root
-          expect(t2[1].uri).toBe(seed.r['3'].ref.uriStr) // op reply
-          expect(t2[2].uri).toBe(seed.r['5'].ref.uriStr) // viewer reply
-          // newest to oldest
-          expect(t2[3].uri).toBe(seed.r['4'].ref.uriStr)
-          expect(t2[4].uri).toBe(seed.r['2'].ref.uriStr)
-          expect(t2[5].uri).toBe(seed.r['1'].ref.uriStr)
-          expect(t2[6].uri).toBe(seed.r['0'].ref.uriStr)
-        })
       })
     })
   })
 
   describe(`blocks, deletions, no-unauthenticated`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.blockDeletionAuth>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.blockDeletionAuth>>
 
     beforeAll(async () => {
-      seed = await seeds.blockDeletionAuth(sc, labelerDid)
+      seed = await seedThreadV2.blockDeletionAuth(sc, labelerDid)
       await network.processAll()
     })
 
@@ -1603,10 +1562,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`mutes`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.mutes>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.mutes>>
 
     beforeAll(async () => {
-      seed = await seeds.mutes(sc)
+      seed = await seedThreadV2.mutes(sc)
       await network.processAll()
     })
 
@@ -1748,10 +1707,10 @@ describe('appview thread views v2', () => {
   })
 
   describe(`threadgated`, () => {
-    let seed: Awaited<ReturnType<typeof seeds.threadgated>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.threadgated>>
 
     beforeAll(async () => {
-      seed = await seeds.threadgated(sc)
+      seed = await seedThreadV2.threadgated(sc)
       await network.processAll()
     })
 
@@ -1954,22 +1913,19 @@ describe('appview thread views v2', () => {
   })
 
   describe('tags', () => {
-    let seed: Awaited<ReturnType<typeof seeds.tags>>
+    let seed: Awaited<ReturnType<typeof seedThreadV2.tags>>
 
     beforeAll(async () => {
-      seed = await seeds.tags(sc)
+      seed = await seedThreadV2.tags(sc)
       await network.processAll()
     })
 
     describe('when prioritizing followed users', () => {
-      const prioritizeFollowedUsers = true
-
       it('considers tags for bumping down and hiding', async () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
           {
             anchor: seed.root.ref.uriStr,
             sort: 'newest',
-            prioritizeFollowedUsers,
           },
           {
             headers: await network.serviceHeaders(
@@ -2005,7 +1961,6 @@ describe('appview thread views v2', () => {
         const { data } = await agent.app.bsky.unspecced.getPostThreadOtherV2(
           {
             anchor: seed.root.ref.uriStr,
-            prioritizeFollowedUsers,
           },
           {
             headers: await network.serviceHeaders(
@@ -2018,70 +1973,6 @@ describe('appview thread views v2', () => {
 
         assertHiddenPosts(t)
         expect(t).toEqual([
-          // Hide.
-          expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
-        ])
-      })
-    })
-
-    describe('when not prioritizing followed users', () => {
-      const prioritizeFollowedUsers = false
-
-      it('considers tags for bumping down and hiding', async () => {
-        const { data } = await agent.app.bsky.unspecced.getPostThreadV2(
-          {
-            anchor: seed.root.ref.uriStr,
-            sort: 'newest',
-            prioritizeFollowedUsers,
-          },
-          {
-            headers: await network.serviceHeaders(
-              seed.users.viewer.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
-            ),
-          },
-        )
-        const { thread: t, hasOtherReplies } = data
-
-        expect(hasOtherReplies).toBe(true)
-        assertPosts(t)
-        expect(t).toEqual([
-          expect.objectContaining({ uri: seed.root.ref.uriStr }),
-          // OP (down overridden).
-          expect.objectContaining({ uri: seed.r['3'].ref.uriStr }),
-          // Viewer (hide overriden).
-          expect.objectContaining({ uri: seed.r['4'].ref.uriStr }),
-          // Following was hidden because not prioritizing.
-          // Not following.
-          expect.objectContaining({ uri: seed.r['0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['0.0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['0.1'].ref.uriStr }),
-          // Down.
-          expect.objectContaining({ uri: seed.r['1'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['1.0'].ref.uriStr }),
-          expect.objectContaining({ uri: seed.r['1.1'].ref.uriStr }),
-        ])
-      })
-
-      it('finds the hidden by tag', async () => {
-        const { data } = await agent.app.bsky.unspecced.getPostThreadOtherV2(
-          {
-            anchor: seed.root.ref.uriStr,
-            prioritizeFollowedUsers,
-          },
-          {
-            headers: await network.serviceHeaders(
-              seed.users.viewer.did,
-              ids.AppBskyUnspeccedGetPostThreadOtherV2,
-            ),
-          },
-        )
-        const { thread: t } = data
-
-        assertHiddenPosts(t)
-        expect(t).toEqual([
-          // Following (hide).
-          expect.objectContaining({ uri: seed.r['5'].ref.uriStr }),
           // Hide.
           expect.objectContaining({ uri: seed.r['2'].ref.uriStr }),
         ])

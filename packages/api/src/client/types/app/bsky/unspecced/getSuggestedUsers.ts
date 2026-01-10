@@ -16,16 +16,17 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.unspecced.getSuggestedUsers'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Category of users to get suggestions for. */
   category?: string
   limit?: number
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
   actors: AppBskyActorDefs.ProfileView[]
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: number
 }
 
 export interface CallOptions {

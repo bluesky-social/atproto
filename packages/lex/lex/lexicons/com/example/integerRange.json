@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.example.integerRange",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "integer": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 4
+          }
+        }
+      }
+    }
+  }
+}

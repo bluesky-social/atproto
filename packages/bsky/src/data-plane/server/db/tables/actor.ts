@@ -7,6 +7,11 @@ export interface Actor {
   takedownRef: string | null
   upstreamStatus: string | null
   trustedVerifier: Generated<boolean>
+  ageAssuranceStatus: string | null
+  ageAssuranceLastInitiatedAt: string | null
+  ageAssuranceAccess: string | null
+  ageAssuranceCountryCode: string | null
+  ageAssuranceRegionCode: string | null
 }
 
 export const tableName = 'actor'

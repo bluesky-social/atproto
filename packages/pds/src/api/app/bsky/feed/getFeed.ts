@@ -3,14 +3,21 @@ import { AtUri } from '@atproto/syntax'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
-import { pipethrough } from '../../../../pipethrough'
+import { computeProxyTo, pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
   if (!bskyAppView) return
 
   server.app.bsky.feed.getFeed({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.authorization({
+      authorize: (permissions, { req }) => {
+        const lxm = ids.AppBskyFeedGetFeed
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
+        permissions.assertRpc({ aud, lxm: ids.AppBskyFeedGetFeedSkeleton })
+      },
+    }),
     handler: async ({ params, auth, req }) => {
       const requester = auth.credentials.did
 

@@ -135,6 +135,64 @@
       "properties": {
         "author": { "type": "ref", "ref": "app.bsky.feed.defs#blockedAuthor" }
       }
+    },
+    "ageAssuranceState": {
+      "type": "object",
+      "description": "The computed state of the age assurance process, returned to the user in question on certain authenticated requests.",
+      "required": ["status"],
+      "properties": {
+        "lastInitiatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The timestamp when this state was last updated."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the age assurance process.",
+          "knownValues": ["unknown", "pending", "assured", "blocked"]
+        }
+      }
+    },
+    "ageAssuranceEvent": {
+      "type": "object",
+      "description": "Object used to store age assurance data in stash.",
+      "required": ["createdAt", "status", "attemptId"],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The date and time of this write operation."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the age assurance process.",
+          "knownValues": ["unknown", "pending", "assured"]
+        },
+        "attemptId": {
+          "type": "string",
+          "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email used for AA."
+        },
+        "initIp": {
+          "type": "string",
+          "description": "The IP address used when initiating the AA flow."
+        },
+        "initUa": {
+          "type": "string",
+          "description": "The user agent used when initiating the AA flow."
+        },
+        "completeIp": {
+          "type": "string",
+          "description": "The IP address used when completing the AA flow."
+        },
+        "completeUa": {
+          "type": "string",
+          "description": "The user agent used when completing the AA flow."
+        }
+      }
     }
   }
 }

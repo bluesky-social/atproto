@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.admin.getInviteCodes'
 
-export interface QueryParams {
+export type QueryParams = {
   sort?: 'recent' | 'usage' | (string & {})
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

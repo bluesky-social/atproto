@@ -1,57 +1,92 @@
 import { jwkAlgorithms } from './alg.js'
-import { JwkError } from './errors.js'
-import { Jwk, jwkSchema } from './jwk.js'
+import {
+  Jwk,
+  KeyUsage,
+  PUBLIC_KEY_USAGE,
+  PrivateJwk,
+  PublicJwk,
+  PublicKeyUsage,
+  hasSharedSecretJwk,
+  isEncKeyUsage,
+  isPrivateJwk,
+  isPublicKeyUsage,
+  isSigKeyUsage,
+  jwkPubSchema,
+  jwkSchema,
+} from './jwk.js'
 import { VerifyOptions, VerifyResult } from './jwt-verify.js'
 import { JwtHeader, JwtPayload, SignedJwt } from './jwt.js'
 import { cachedGetter } from './util.js'
 
-const jwkSchemaReadonly = jwkSchema.readonly()
+export type KeyMatchOptions = {
+  usage?: KeyUsage
+  kid?: string | string[]
+  alg?: string | string[]
+}
+
+export type ActivityCheckOptions = {
+  allowRevoked?: boolean
+  clockTolerance?: number
+  currentDate?: Date
+}
 
 export abstract class Key<J extends Jwk = Jwk> {
-  constructor(protected readonly jwk: Readonly<J>) {
-    // A key should always be used either for signing or encryption.
-    if (!jwk.use) throw new JwkError('Missing "use" Parameter value')
-  }
+  constructor(readonly jwk: Readonly<J>) {}
 
+  @cachedGetter
   get isPrivate(): boolean {
-    const { jwk } = this
-    if ('d' in jwk && jwk.d !== undefined) return true
-    if ('k' in jwk && jwk.k !== undefined) return true
-    return false
-  }
-
-  get isSymetric(): boolean {
-    const { jwk } = this
-    if ('k' in jwk && jwk.k !== undefined) return true
-    return false
-  }
-
-  get privateJwk(): Readonly<J> | undefined {
-    return this.isPrivate ? this.jwk : undefined
+    return isPrivateJwk(this.jwk)
   }
 
   @cachedGetter
-  get publicJwk():
-    | Readonly<Exclude<J, { kty: 'oct' }> & { d?: never }>
-    | undefined {
-    if (this.isSymetric) return undefined
+  get isSymetric(): boolean {
+    return hasSharedSecretJwk(this.jwk)
+  }
 
-    return jwkSchemaReadonly.parse({
+  get privateJwk(): Readonly<PrivateJwk> | undefined {
+    if (!this.isPrivate) return undefined
+
+    return this.jwk as Readonly<PrivateJwk>
+  }
+
+  @cachedGetter
+  get publicJwk(): Readonly<PublicJwk> | undefined {
+    if (this.isSymetric) return undefined
+    if (!this.isPrivate) return this.jwk as Readonly<PublicJwk>
+
+    const validated = jwkPubSchema.safeParse({
       ...this.jwk,
       d: undefined,
       k: undefined,
-    }) as Exclude<J, { kty: 'oct' }> & { d?: never }
+      use: undefined,
+      key_ops: buildPublicKeyOps(this.keyOps) ?? PUBLIC_KEY_USAGE,
+    })
+
+    // One reason why the parsing might fail is if key_ops is empty. This check
+    // also allows to future proof the code (e.g if another type of private key
+    // is added that uses a different property than "d" or "k" to store its
+    // private value).
+    if (!validated.success) return undefined
+
+    return Object.freeze(validated.data)
   }
 
   @cachedGetter
   get bareJwk(): Readonly<Jwk> | undefined {
     if (this.isSymetric) return undefined
     const { kty, crv, e, n, x, y } = this.jwk as any
-    return jwkSchemaReadonly.parse({ crv, e, kty, n, x, y })
+    return Object.freeze(jwkSchema.parse({ crv, e, kty, n, x, y }))
   }
 
-  get use() {
-    return this.jwk.use!
+  /**
+   * @note Only defined on public keys
+   */
+  get use(): 'sig' | 'enc' | undefined {
+    return this.jwk.use
+  }
+
+  get keyOps(): readonly KeyUsage[] | undefined {
+    return this.jwk.key_ops
   }
 
   /**
@@ -81,6 +116,67 @@ export abstract class Key<J extends Jwk = Jwk> {
     return Object.freeze(Array.from(jwkAlgorithms(this.jwk)))
   }
 
+  get isRevoked() {
+    return this.jwk.revoked != null
+  }
+
+  isActive(options?: ActivityCheckOptions) {
+    if (!options?.allowRevoked && this.isRevoked) return false
+
+    const tolerance = options?.clockTolerance ?? 0
+    if (tolerance !== Infinity) {
+      const now = options?.currentDate?.getTime() ?? Date.now()
+      const { exp, nbf } = this.jwk
+
+      if (nbf != null && !(now >= nbf * 1e3 - tolerance)) return false
+      if (exp != null && !(now < exp * 1e3 + tolerance)) return false
+    }
+
+    return true
+  }
+
+  matches(opts: KeyMatchOptions): boolean {
+    if (opts.kid != null) {
+      const matchesKid = Array.isArray(opts.kid)
+        ? this.kid != null && opts.kid.includes(this.kid)
+        : this.kid === opts.kid
+      if (!matchesKid) return false
+    }
+
+    if (opts.alg != null) {
+      const matchesAlg = Array.isArray(opts.alg)
+        ? opts.alg.some((a) => this.algorithms.includes(a))
+        : this.algorithms.includes(opts.alg)
+      if (!matchesAlg) return false
+    }
+
+    if (opts.usage != null) {
+      const matchesOps =
+        this.keyOps == null ||
+        this.keyOps.includes(opts.usage) ||
+        // @NOTE Because this.jwk represents the private key (typically used for
+        // private operations), the public counterpart operations are allowed.
+        (opts.usage === 'verify' && this.keyOps.includes('sign')) ||
+        (opts.usage === 'encrypt' && this.keyOps.includes('decrypt')) ||
+        (opts.usage === 'wrapKey' && this.keyOps.includes('unwrapKey'))
+      if (!matchesOps) return false
+
+      const matchesUse =
+        this.use == null ||
+        (this.use === 'sig' && isSigKeyUsage(opts.usage)) ||
+        (this.use === 'enc' && isEncKeyUsage(opts.usage))
+      if (!matchesUse) return false
+
+      // @NOTE This is only relevant when "key_ops" and "use" are undefined.
+      // This line also ensures that when "opts.usage" is a private key usage
+      // (e.g. "sign"), the key is indeed a private key.
+      const matchesKeyType = this.isPrivate || isPublicKeyUsage(opts.usage)
+      if (!matchesKeyType) return false
+    }
+
+    return true
+  }
+
   /**
    * Create a signed JWT
    */
@@ -95,4 +191,21 @@ export abstract class Key<J extends Jwk = Jwk> {
     token: SignedJwt,
     options?: VerifyOptions<C>,
   ): Promise<VerifyResult<C>>
+}
+
+function buildPublicKeyOps(
+  keyUsages?: readonly KeyUsage[],
+): PublicKeyUsage[] | undefined {
+  if (keyUsages == null) return undefined
+
+  // https://datatracker.ietf.org/doc/html/rfc7517#section-4.3
+  // > Duplicate key operation values MUST NOT be present in the array.
+  const publicOps = new Set(keyUsages.filter(isPublicKeyUsage))
+
+  // @NOTE Translating private key usage into public key usage
+  if (keyUsages.includes('sign')) publicOps.add('verify')
+  if (keyUsages.includes('decrypt')) publicOps.add('encrypt')
+  if (keyUsages.includes('unwrapKey')) publicOps.add('wrapKey')
+
+  return Array.from(publicOps)
 }

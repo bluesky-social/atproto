@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { RepoRecord } from '@atproto/lexicon'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'
@@ -213,19 +215,21 @@ export class RecordReader {
   // Ensures that we don't end-up with duplicate likes, reposts, and follows from race conditions.
 
   async getBacklinkConflicts(uri: AtUri, record: RepoRecord): Promise<AtUri[]> {
-    const recordBacklinks = getBacklinks(uri, record)
-    const conflicts = await Promise.all(
-      recordBacklinks.map((backlink) =>
-        this.getRecordBacklinks({
-          collection: uri.collection,
-          path: backlink.path,
-          linkTo: backlink.linkTo,
-        }),
-      ),
-    )
+    const conflicts: AtUri[] = []
+
+    for (const backlink of getBacklinks(uri, record)) {
+      const backlinks = await this.getRecordBacklinks({
+        collection: uri.collection,
+        path: backlink.path,
+        linkTo: backlink.linkTo,
+      })
+
+      for (const { rkey } of backlinks) {
+        conflicts.push(AtUri.make(uri.hostname, uri.collection, rkey))
+      }
+    }
+
     return conflicts
-      .flat()
-      .map(({ rkey }) => AtUri.make(uri.hostname, uri.collection, rkey))
   }
 
   async listExistingBlocks(): Promise<CidSet> {

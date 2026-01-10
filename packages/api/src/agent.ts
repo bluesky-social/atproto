@@ -33,17 +33,18 @@ import * as predicate from './predicate'
 import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
+  AtprotoProxy,
   AtprotoServiceType,
   BskyFeedViewPreference,
   BskyInterestsPreference,
   BskyPreferences,
   BskyThreadViewPreference,
+  asAtprotoProxy,
+  asDid,
+  isDid,
 } from './types'
 import {
-  Did,
-  asDid,
   getSavedFeedType,
-  isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateNux,
@@ -60,7 +61,6 @@ const FEED_VIEW_PREF_DEFAULTS = {
 
 const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
-  prioritizeFollowedUsers: true,
 }
 
 export type { FetchHandler }
@@ -187,12 +187,11 @@ export class Agent extends XrpcClient {
 
   //#region ATPROTO proxy configuration utilities
 
-  proxy?: `${Did}#${AtprotoServiceType}`
+  proxy?: AtprotoProxy
 
-  configureProxy(value: `${Did}#${AtprotoServiceType}` | null) {
+  configureProxy(value: AtprotoProxy | null) {
     if (value === null) this.proxy = undefined
-    else if (isDid(value)) this.proxy = value
-    else throw new TypeError('Invalid proxy DID')
+    else this.proxy = asAtprotoProxy(value)
   }
 
   /** @deprecated use {@link configureProxy} instead */
@@ -427,12 +426,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async follow(subjectDid: string) {
+  async follow(subjectDid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.graph.follow.create(
       { repo: this.accountDid },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }
@@ -619,6 +619,9 @@ export class Agent extends XrpcClient {
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
+      } else if (predicate.isValidDeclaredAgePref(pref)) {
+        const { $type: _, ...declaredAgePref } = pref
+        prefs.declaredAge = declaredAgePref
       } else if (predicate.isValidFeedViewPref(pref)) {
         // feed view preferences
         const { $type: _, feed, ...v } = pref

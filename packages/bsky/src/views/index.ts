@@ -1,6 +1,7 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { ProfileViewerState } from '../hydration/actor'
+import { FeatureGateID } from '../feature-gates'
+import { Actor, ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
@@ -10,6 +11,7 @@ import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
   KnownFollowers,
+  ProfileAssociatedActivitySubscription,
   ProfileView,
   ProfileViewBasic,
   ProfileViewDetailed,
@@ -22,6 +24,7 @@ import {
   Record as ProfileRecord,
   isRecord as isProfileRecord,
 } from '../lexicon/types/app/bsky/actor/profile'
+import { BookmarkView } from '../lexicon/types/app/bsky/bookmark/defs'
 import {
   BlockedPost,
   FeedViewPost,
@@ -43,6 +46,7 @@ import {
 import { Record as RepostRecord } from '../lexicon/types/app/bsky/feed/repost'
 import { isListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import {
+  ListItemView,
   ListView,
   ListViewBasic,
   StarterPackView,
@@ -58,7 +62,10 @@ import {
   Record as LabelerRecord,
   isRecord as isLabelerRecord,
 } from '../lexicon/types/app/bsky/labeler/service'
-import { RecordDeleted as NotificationRecordDeleted } from '../lexicon/types/app/bsky/notification/defs'
+import {
+  ActivitySubscription,
+  RecordDeleted as NotificationRecordDeleted,
+} from '../lexicon/types/app/bsky/notification/defs'
 import { ThreadItem as ThreadOtherItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
 import {
   QueryParams as GetPostThreadV2QueryParams,
@@ -133,6 +140,8 @@ export class Views {
   public indexedAtEpoch: Date | undefined = this.opts.indexedAtEpoch
   private threadTagsBumpDown: readonly string[] = this.opts.threadTagsBumpDown
   private threadTagsHide: readonly string[] = this.opts.threadTagsHide
+  private visibilityTagHide: string = this.opts.visibilityTagHide
+  private visibilityTagRankPrefix: string = this.opts.visibilityTagRankPrefix
   constructor(
     private opts: {
       imgUriBuilder: ImageUriBuilder
@@ -140,6 +149,8 @@ export class Views {
       indexedAtEpoch: Date | undefined
       threadTagsBumpDown: readonly string[]
       threadTagsHide: readonly string[]
+      visibilityTagHide: string
+      visibilityTagRankPrefix: string
     },
   ) {}
 
@@ -259,6 +270,7 @@ export class Views {
 
     return {
       ...baseView,
+      website: this.profileWebsite(did, state),
       viewer: baseView.viewer
         ? {
             ...baseView.viewer,
@@ -284,6 +296,7 @@ export class Views {
         chat: actor.allowIncomingChatsFrom
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
+        activitySubscription: this.profileAssociatedActivitySubscription(actor),
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
@@ -336,6 +349,7 @@ export class Views {
       did,
       handle: actor.handle ?? INVALID_HANDLE,
       displayName: actor.profile?.displayName,
+      pronouns: actor.profile?.pronouns,
       avatar: actor.profile?.avatar
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
@@ -345,22 +359,27 @@ export class Views {
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
       // on profile and profile-basic views, but should be on profile-detailed.
-      associated:
-        actor.isLabeler || actor.allowIncomingChatsFrom
-          ? {
-              labeler: actor.isLabeler ? true : undefined,
-              // @TODO apply default chat policy?
-              chat: actor.allowIncomingChatsFrom
-                ? { allowIncoming: actor.allowIncomingChatsFrom }
-                : undefined,
-            }
+      associated: {
+        labeler: actor.isLabeler ? true : undefined,
+        // @TODO apply default chat policy?
+        chat: actor.allowIncomingChatsFrom
+          ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
+        activitySubscription: this.profileAssociatedActivitySubscription(actor),
+      },
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
+      debug: state.ctx?.includeDebugField ? actor.debug : undefined,
     }
+  }
+
+  profileAssociatedActivitySubscription(
+    actor: Actor,
+  ): ProfileAssociatedActivitySubscription {
+    return { allowSubscriptions: actor.allowActivitySubscriptionsFrom }
   }
 
   profileKnownFollowers(
@@ -402,7 +421,45 @@ export class Views {
         : undefined,
       following: viewer.following && !block ? viewer.following : undefined,
       followedBy: viewer.followedBy && !block ? viewer.followedBy : undefined,
+      activitySubscription: this.profileViewerActivitySubscription(
+        viewer,
+        did,
+        state,
+      ),
     }
+  }
+
+  profileViewerActivitySubscription(
+    profileViewer: ProfileViewerState,
+    did: string,
+    state: HydrationState,
+  ): ActivitySubscription | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor) return undefined
+
+    const activitySubscription = state.activitySubscriptions?.get(did)
+    if (!activitySubscription) return undefined
+
+    const allowFrom = actor.allowActivitySubscriptionsFrom
+    const actorFollowsViewer = !!profileViewer.followedBy
+    const viewerFollowsActor = !!profileViewer.following
+    if (
+      (allowFrom === 'followers' && viewerFollowsActor) ||
+      (allowFrom === 'mutuals' && actorFollowsViewer && viewerFollowsActor)
+    ) {
+      return activitySubscription
+    }
+    return undefined
+  }
+
+  profileWebsite(did: string, state: HydrationState): string | undefined {
+    const actor = state.actors?.get(did)
+    if (!actor?.profile?.website) return
+    const { website } = actor.profile
+
+    // The record property accepts any URI, but we don't want
+    // to pass the client any schemes other than HTTPS.
+    return website.startsWith('https://') ? website : undefined
   }
 
   knownFollowers(
@@ -487,8 +544,21 @@ export class Views {
     const actor = state.actors?.get(did)
     if (!actor?.status) return
 
+    const isViewerStatusOwner = did === state.ctx?.viewer
     const { status } = actor
-    const { record, sortedAt } = status
+    const { record, sortedAt, cid, takedownRef } = status
+    const isTakenDown = !!takedownRef
+
+    /*
+     * Manual filter for takendown status records. If this is ever removed, we
+     * need to reinstate `includeTakedowns` handling in the `Actor.getActors`
+     * hydrator.
+     */
+    if (isTakenDown && !isViewerStatusOwner) {
+      return undefined
+    }
+
+    const uri = AtUri.make(did, ids.AppBskyActorStatus, 'self').toString()
 
     const minDuration = 5 * MINUTE
     const maxDuration = 4 * HOUR
@@ -506,7 +576,9 @@ export class Views {
 
     const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
 
-    return {
+    const response: StatusView = {
+      uri,
+      cid,
       record: record,
       status: record.status,
       embed: isExternalEmbed(record.embed)
@@ -515,6 +587,12 @@ export class Views {
       expiresAt,
       isActive,
     }
+
+    if (isViewerStatusOwner) {
+      response.isDisabled = isTakenDown
+    }
+
+    return response
   }
 
   blockedProfileViewer(
@@ -586,6 +664,16 @@ export class Views {
           }
         : undefined,
     }
+  }
+
+  listItemView(
+    uri: string,
+    did: string,
+    state: HydrationState,
+  ): Un$Typed<ListItemView> | undefined {
+    const subject = this.profile(did, state)
+    if (!subject) return
+    return { uri, subject }
   }
 
   starterPackBasic(
@@ -803,6 +891,7 @@ export class Views {
           )
         : undefined,
       likeCount: aggs?.likes ?? 0,
+      acceptsInteractions: feedgen.record.acceptsInteractions,
       labels,
       viewer: viewer
         ? {
@@ -862,6 +951,7 @@ export class Views {
         depth < 2 && post.record.embed
           ? this.embed(uri, post.record.embed, state, depth + 1)
           : undefined,
+      bookmarkCount: aggs?.bookmarks ?? 0,
       replyCount: aggs?.replies ?? 0,
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
@@ -871,6 +961,7 @@ export class Views {
         ? {
             repost: viewer.repost,
             like: viewer.like,
+            bookmarked: viewer.bookmarked,
             threadMuted: viewer.threadMuted,
             replyDisabled: this.userReplyDisabled(uri, state),
             embeddingDisabled: this.userPostEmbeddingDisabled(uri, state),
@@ -880,6 +971,9 @@ export class Views {
       labels,
       threadgate: !post.record.reply // only hydrate gate on root post
         ? this.threadgate(threadgateUri, state)
+        : undefined,
+      debug: state.ctx?.includeDebugField
+        ? { post: post.debug, author: author.debug }
         : undefined,
     }
   }
@@ -1005,6 +1099,32 @@ export class Views {
   reasonPin(): $Typed<ReasonPin> {
     return {
       $type: 'app.bsky.feed.defs#reasonPin',
+    }
+  }
+
+  // Bookmarks
+  // ------------
+  bookmark(
+    key: string,
+    state: HydrationState,
+  ): Un$Typed<BookmarkView> | undefined {
+    const viewer = state.ctx?.viewer
+    if (!viewer) return
+
+    const bookmark = state.bookmarks?.get(viewer)?.get(key)
+    if (!bookmark) return
+
+    const atUri = new AtUri(bookmark.subjectUri)
+    if (atUri.collection !== ids.AppBskyFeedPost) return
+
+    const item = this.maybePost(bookmark.subjectUri, state)
+    return {
+      createdAt: bookmark.indexedAt?.toDate().toISOString(),
+      subject: {
+        uri: bookmark.subjectUri,
+        cid: bookmark.subjectCid,
+      },
+      item,
     }
   }
 
@@ -1152,13 +1272,11 @@ export class Views {
       above,
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
       sort,
     }: {
       above: number
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
       sort: GetPostThreadV2QueryParams['sort']
     },
   ): { hasOtherReplies: boolean; thread: ThreadItem[] } {
@@ -1253,7 +1371,6 @@ export class Views {
                 below,
                 depth: 1,
                 branchingFactor,
-                prioritizeFollowedUsers,
               },
               state,
             )
@@ -1276,15 +1393,21 @@ export class Views {
       }
     }
 
-    const thread = sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      sort,
-      prioritizeFollowedUsers,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    const thread = sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        sort,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
 
     return {
       hasOtherReplies,
@@ -1419,7 +1542,6 @@ export class Views {
       below,
       depth,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       isOPThread: boolean
@@ -1429,7 +1551,6 @@ export class Views {
       below: number
       depth: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): { replies: ThreadTreeVisible[] | undefined; hasOtherReplies: boolean } {
@@ -1453,7 +1574,7 @@ export class Views {
 
       // Hidden.
       const { isOther } = this.isOtherThreadPost(
-        { post, postView, prioritizeFollowedUsers, rootUri, uri },
+        { post, postView, rootUri, uri },
         state,
       )
       if (isOther) {
@@ -1476,7 +1597,6 @@ export class Views {
           below,
           depth: depth + 1,
           branchingFactor,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1605,11 +1725,9 @@ export class Views {
     {
       below,
       branchingFactor,
-      prioritizeFollowedUsers,
     }: {
       below: number
       branchingFactor: number
-      prioritizeFollowedUsers: boolean
     },
   ): ThreadOtherItem[] {
     const { anchor: anchorUri, uris } = skeleton
@@ -1644,20 +1762,25 @@ export class Views {
           childrenByParentUri,
           below,
           depth: 1,
-          prioritizeFollowedUsers,
         },
         state,
       ),
     }
 
-    return sortTrimFlattenThreadTree(anchorTree, {
-      opDid,
-      branchingFactor,
-      prioritizeFollowedUsers: false,
-      viewer: state.ctx?.viewer ?? null,
-      threadTagsBumpDown: this.threadTagsBumpDown,
-      threadTagsHide: this.threadTagsHide,
-    })
+    return sortTrimFlattenThreadTree(
+      anchorTree,
+      {
+        opDid,
+        branchingFactor,
+        viewer: state.ctx?.viewer ?? null,
+        threadTagsBumpDown: this.threadTagsBumpDown,
+        threadTagsHide: this.threadTagsHide,
+        visibilityTagRankPrefix: this.visibilityTagRankPrefix,
+      },
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      ),
+    )
   }
 
   private threadOtherV2Replies(
@@ -1667,14 +1790,12 @@ export class Views {
       childrenByParentUri,
       below,
       depth,
-      prioritizeFollowedUsers,
     }: {
       parentUri: string
       rootUri: string
       childrenByParentUri: Record<string, string[]>
       below: number
       depth: number
-      prioritizeFollowedUsers: boolean
     },
     state: HydrationState,
   ): ThreadOtherPostNode[] | undefined {
@@ -1697,10 +1818,7 @@ export class Views {
 
       // Other posts to pull out
       const { isOther, hiddenByThreadgate, mutedByViewer } =
-        this.isOtherThreadPost(
-          { post, postView, rootUri, prioritizeFollowedUsers, uri },
-          state,
-        )
+        this.isOtherThreadPost({ post, postView, rootUri, uri }, state)
       if (isOther) {
         // Only show hidden anchor replies, not all hidden.
         if (depth > 1) {
@@ -1719,7 +1837,6 @@ export class Views {
           childrenByParentUri,
           below,
           depth: depth + 1,
-          prioritizeFollowedUsers,
         },
         state,
       )
@@ -1838,13 +1955,11 @@ export class Views {
     {
       post,
       postView,
-      prioritizeFollowedUsers,
       rootUri,
       uri,
     }: {
       post: Post
       postView: PostView
-      prioritizeFollowedUsers: boolean
       rootUri: string
       uri: string
     },
@@ -1858,22 +1973,32 @@ export class Views {
     const opDid = creatorFromUri(rootUri)
     const authorDid = creatorFromUri(uri)
 
-    const showBecauseFollowing =
-      prioritizeFollowedUsers && !!postView.author.viewer?.following
-    const hiddenByTag =
-      authorDid !== opDid &&
-      authorDid !== state.ctx?.viewer &&
-      !showBecauseFollowing &&
-      this.threadTagsHide.some((t) => post.tags.has(t))
+    let hiddenByTag = false
+    if (
+      state.ctx?.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      )
+    ) {
+      hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
+    } else {
+      const showBecauseFollowing = !!postView.author.viewer?.following
+      hiddenByTag =
+        authorDid !== opDid &&
+        authorDid !== state.ctx?.viewer &&
+        !showBecauseFollowing &&
+        this.threadTagsHide.some((t) => post.tags.has(t))
+    }
 
     const hiddenByThreadgate =
       state.ctx?.viewer !== authorDid &&
       this.replyIsHiddenByThreadgate(uri, rootUri, state)
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
+    const isPushPin =
+      isPostRecord(post.record) && post.record.text.trim() === '📌'
 
     return {
-      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer,
+      isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer || isPushPin,
       hiddenByTag,
       hiddenByThreadgate,
       mutedByViewer,

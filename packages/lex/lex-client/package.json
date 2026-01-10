@@ -1,0 +1,54 @@
+{
+  "name": "@atproto/lex-client",
+  "version": "0.0.8",
+  "license": "MIT",
+  "description": "HTTP client for interacting with Lexicon based APIs",
+  "keywords": [
+    "atproto",
+    "lexicon",
+    "xrpc",
+    "client"
+  ],
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/lex/lex-client"
+  },
+  "files": [
+    "./src",
+    "./tsconfig.build.json",
+    "./tsconfig.tests.json",
+    "./tsconfig.json",
+    "./dist",
+    "./CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@atproto/lex-data": "workspace:*",
+    "@atproto/lex-json": "workspace:*",
+    "@atproto/lex-schema": "workspace:*",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@atproto/lex-cbor": "workspace:*",
+    "@atproto/lex-builder": "workspace:*",
+    "vitest": "^4.0.16"
+  },
+  "scripts": {
+    "prebuild": "node ./scripts/lex-build.mjs",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "vitest run"
+  }
+}

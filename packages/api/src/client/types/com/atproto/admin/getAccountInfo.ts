@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.admin.getAccountInfo'
 
-export interface QueryParams {
+export type QueryParams = {
   did: string
 }
-
 export type InputSchema = undefined
 export type OutputSchema = ComAtprotoAdminDefs.AccountView
 

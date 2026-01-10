@@ -4,7 +4,7 @@ import { MINUTE } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
-import { RateLimiter } from '../src'
+import { MemoryRateLimiter } from '../src'
 import { closeServer, createServer } from './_util'
 
 const LEXICONS: LexiconDoc[] = [
@@ -132,11 +132,8 @@ describe('Parameters', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS, {
     rateLimits: {
-      creator: (opts: xrpcServer.RateLimiterOpts) =>
-        RateLimiter.memory({
-          bypassSecret: 'bypass',
-          ...opts,
-        }),
+      creator: (opts) => new MemoryRateLimiter(opts),
+      bypass: ({ req }) => req.headers['x-ratelimit-bypass'] === 'bypass',
       shared: [
         {
           name: 'shared-limit',
@@ -159,7 +156,7 @@ describe('Parameters', () => {
       points: 5,
       calcKey: ({ params }) => params.str as string,
     },
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
@@ -169,7 +166,7 @@ describe('Parameters', () => {
       durationMs: 5 * MINUTE,
       points: 2,
     },
-    handler: (ctx: xrpcServer.XRPCReqContext) => {
+    handler: (ctx) => {
       if (ctx.params.count === 1) {
         ctx.resetRouteRateLimits()
       }
@@ -185,7 +182,7 @@ describe('Parameters', () => {
       name: 'shared-limit',
       calcPoints: ({ params }) => params.points as number,
     },
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
@@ -195,7 +192,7 @@ describe('Parameters', () => {
       name: 'shared-limit',
       calcPoints: ({ params }) => params.points as number,
     },
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),
@@ -212,7 +209,7 @@ describe('Parameters', () => {
         points: 10,
       },
     ],
-    handler: (ctx: { params: xrpcServer.Params }) => ({
+    handler: (ctx) => ({
       encoding: 'json',
       body: ctx.params,
     }),

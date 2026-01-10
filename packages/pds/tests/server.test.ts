@@ -61,8 +61,11 @@ describe('server', () => {
       `${network.pds.url}/xrpc/com.atproto.repo.createRecord`,
       {
         method: 'POST',
-        body: 'x'.repeat(150 * 1024), // 150kb
-        headers: sc.getHeaders(alice),
+        body: '"' + 'x'.repeat(150 * 1024) + '"', // ~150kb
+        headers: {
+          ...sc.getHeaders(alice),
+          'Content-Type': 'application/json',
+        },
       },
     )
 

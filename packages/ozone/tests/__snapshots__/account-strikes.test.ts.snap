@@ -1,0 +1,159 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`account-strikes tracks strikes and exposes them through queryStatuses and queryEvents 1`] = `
+Object {
+  "accountStats": Object {
+    "$type": "tools.ozone.moderation.defs#accountStats",
+  },
+  "accountStrike": Object {
+    "$type": "tools.ozone.moderation.defs#accountStrike",
+    "activeStrikeCount": 5,
+    "firstStrikeAt": "1970-01-01T00:00:00.000Z",
+    "lastStrikeAt": "1970-01-01T00:00:00.000Z",
+    "totalStrikeCount": 5,
+  },
+  "ageAssuranceState": "unknown",
+  "createdAt": "1970-01-01T00:00:00.000Z",
+  "hosting": Object {
+    "$type": "tools.ozone.moderation.defs#accountHosting",
+    "status": "unknown",
+  },
+  "id": 9,
+  "lastReviewedAt": "1970-01-01T00:00:00.000Z",
+  "lastReviewedBy": "user(0)",
+  "priorityScore": 0,
+  "recordsStats": Object {
+    "$type": "tools.ozone.moderation.defs#recordsStats",
+  },
+  "reviewState": "tools.ozone.moderation.defs#reviewClosed",
+  "subject": Object {
+    "$type": "com.atproto.admin.defs#repoRef",
+    "did": "user(1)",
+  },
+  "subjectBlobCids": Array [],
+  "subjectRepoHandle": "alice.test",
+  "tags": Array [
+    "lang:und",
+  ],
+  "takendown": true,
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+}
+`;
+
+exports[`account-strikes tracks strikes and exposes them through queryStatuses and queryEvents 2`] = `
+Array [
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventReverseTakedown",
+      "comment": "Appeal granted - reversing first takedown",
+      "severityLevel": "sev-2",
+      "strikeCount": -2,
+    },
+    "id": 11,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTakedown",
+      "comment": "Warning only",
+      "severityLevel": "sev-0",
+      "strikeCount": 0,
+    },
+    "id": 9,
+    "subject": Object {
+      "$type": "com.atproto.admin.defs#repoRef",
+      "did": "user(1)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTakedown",
+      "comment": "Second sev-1 violation",
+      "policies": Array [
+        "spam-policy",
+      ],
+      "severityLevel": "sev-1",
+      "strikeCount": 1,
+    },
+    "id": 7,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(1)",
+      "uri": "record(1)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTakedown",
+      "comment": "First sev-1 violation",
+      "policies": Array [
+        "spam-policy",
+      ],
+      "severityLevel": "sev-1",
+      "strikeCount": 0,
+    },
+    "id": 5,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(2)",
+      "uri": "record(2)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTakedown",
+      "comment": "Second violation",
+      "severityLevel": "sev-2",
+      "strikeCount": 2,
+    },
+    "id": 3,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(3)",
+      "uri": "record(3)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+  Object {
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "createdBy": "user(0)",
+    "event": Object {
+      "$type": "tools.ozone.moderation.defs#modEventTakedown",
+      "comment": "First violation",
+      "severityLevel": "sev-2",
+      "strikeCount": 2,
+    },
+    "id": 1,
+    "subject": Object {
+      "$type": "com.atproto.repo.strongRef",
+      "cid": "cids(0)",
+      "uri": "record(0)",
+    },
+    "subjectBlobCids": Array [],
+    "subjectHandle": "alice.test",
+  },
+]
+`;

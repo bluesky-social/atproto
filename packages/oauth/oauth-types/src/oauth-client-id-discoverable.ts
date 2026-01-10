@@ -4,7 +4,7 @@ import { httpsUriSchema } from './uri.js'
 import { extractUrlPath, isHostnameIP } from './util.js'
 
 /**
- * @see {@link https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html}
+ * @see {@link https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html}
  */
 export const oauthClientIdDiscoverableSchema = z
   .intersection(oauthClientIdSchema, httpsUriSchema)

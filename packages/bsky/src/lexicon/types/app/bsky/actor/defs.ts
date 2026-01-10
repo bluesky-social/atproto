@@ -12,6 +12,7 @@ import {
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 import type * as AppBskyGraphDefs from '../graph/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
+import type * as AppBskyNotificationDefs from '../notification/defs.js'
 import type * as AppBskyFeedThreadgate from '../feed/threadgate.js'
 import type * as AppBskyFeedPostgate from '../feed/postgate.js'
 import type * as AppBskyEmbedExternal from '../embed/external.js'
@@ -25,6 +26,7 @@ export interface ProfileViewBasic {
   did: string
   handle: string
   displayName?: string
+  pronouns?: string
   avatar?: string
   associated?: ProfileAssociated
   viewer?: ViewerState
@@ -32,6 +34,8 @@ export interface ProfileViewBasic {
   createdAt?: string
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileViewBasic = 'profileViewBasic'
@@ -49,6 +53,7 @@ export interface ProfileView {
   did: string
   handle: string
   displayName?: string
+  pronouns?: string
   description?: string
   avatar?: string
   associated?: ProfileAssociated
@@ -58,6 +63,8 @@ export interface ProfileView {
   labels?: ComAtprotoLabelDefs.Label[]
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileView = 'profileView'
@@ -76,6 +83,8 @@ export interface ProfileViewDetailed {
   handle: string
   displayName?: string
   description?: string
+  pronouns?: string
+  website?: string
   avatar?: string
   banner?: string
   followersCount?: number
@@ -90,6 +99,8 @@ export interface ProfileViewDetailed {
   pinnedPost?: ComAtprotoRepoStrongRef.Main
   verification?: VerificationState
   status?: StatusView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashProfileViewDetailed = 'profileViewDetailed'
@@ -109,6 +120,7 @@ export interface ProfileAssociated {
   starterPacks?: number
   labeler?: boolean
   chat?: ProfileAssociatedChat
+  activitySubscription?: ProfileAssociatedActivitySubscription
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -136,6 +148,26 @@ export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
 }
 
+export interface ProfileAssociatedActivitySubscription {
+  $type?: 'app.bsky.actor.defs#profileAssociatedActivitySubscription'
+  allowSubscriptions: 'followers' | 'mutuals' | 'none' | (string & {})
+}
+
+const hashProfileAssociatedActivitySubscription =
+  'profileAssociatedActivitySubscription'
+
+export function isProfileAssociatedActivitySubscription<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedActivitySubscription)
+}
+
+export function validateProfileAssociatedActivitySubscription<V>(v: V) {
+  return validate<ProfileAssociatedActivitySubscription & V>(
+    v,
+    id,
+    hashProfileAssociatedActivitySubscription,
+  )
+}
+
 /** Metadata about the requesting account's relationship with the subject account. Only has meaningful content for authed requests. */
 export interface ViewerState {
   $type?: 'app.bsky.actor.defs#viewerState'
@@ -147,6 +179,7 @@ export interface ViewerState {
   following?: string
   followedBy?: string
   knownFollowers?: KnownFollowers
+  activitySubscription?: AppBskyNotificationDefs.ActivitySubscription
 }
 
 const hashViewerState = 'viewerState'
@@ -226,6 +259,7 @@ export type Preferences = (
   | $Typed<SavedFeedsPref>
   | $Typed<SavedFeedsPrefV2>
   | $Typed<PersonalDetailsPref>
+  | $Typed<DeclaredAgePref>
   | $Typed<FeedViewPref>
   | $Typed<ThreadViewPref>
   | $Typed<InterestsPref>
@@ -337,6 +371,27 @@ export function validatePersonalDetailsPref<V>(v: V) {
   return validate<PersonalDetailsPref & V>(v, id, hashPersonalDetailsPref)
 }
 
+/** Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration. */
+export interface DeclaredAgePref {
+  $type?: 'app.bsky.actor.defs#declaredAgePref'
+  /** Indicates if the user has declared that they are over 13 years of age. */
+  isOverAge13?: boolean
+  /** Indicates if the user has declared that they are over 16 years of age. */
+  isOverAge16?: boolean
+  /** Indicates if the user has declared that they are over 18 years of age. */
+  isOverAge18?: boolean
+}
+
+const hashDeclaredAgePref = 'declaredAgePref'
+
+export function isDeclaredAgePref<V>(v: V) {
+  return is$typed(v, id, hashDeclaredAgePref)
+}
+
+export function validateDeclaredAgePref<V>(v: V) {
+  return validate<DeclaredAgePref & V>(v, id, hashDeclaredAgePref)
+}
+
 export interface FeedViewPref {
   $type?: 'app.bsky.actor.defs#feedViewPref'
   /** The URI of the feed, or an identifier which describes the feed. */
@@ -373,8 +428,6 @@ export interface ThreadViewPref {
     | 'random'
     | 'hotness'
     | (string & {})
-  /** Show followed users at the top of all replies. */
-  prioritizeFollowedUsers?: boolean
 }
 
 const hashThreadViewPref = 'threadViewPref'
@@ -599,6 +652,8 @@ export function validatePostInteractionSettingsPref<V>(v: V) {
 
 export interface StatusView {
   $type?: 'app.bsky.actor.defs#statusView'
+  uri?: string
+  cid?: string
   /** The status for the account. */
   status: 'app.bsky.actor.status#live' | (string & {})
   record: { [_ in string]: unknown }
@@ -607,6 +662,8 @@ export interface StatusView {
   expiresAt?: string
   /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
   isActive?: boolean
+  /** True if the user's go-live access has been disabled by a moderator, false otherwise. */
+  isDisabled?: boolean
 }
 
 const hashStatusView = 'statusView'

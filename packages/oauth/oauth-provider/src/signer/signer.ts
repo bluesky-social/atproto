@@ -3,18 +3,17 @@ import {
   JwtPayloadGetter,
   JwtSignHeader,
   Keyset,
-  RequiredKey,
   SignedJwt,
   VerifyOptions,
 } from '@atproto/jwk'
 import { EPHEMERAL_SESSION_MAX_AGE } from '../constants.js'
 import { dateToEpoch } from '../lib/util/date.js'
-import { OmitKey } from '../lib/util/type.js'
-import { ApiTokenPayload, apiTokenPayloadSchema } from './api-token-payload.js'
+import { OmitKey, RequiredKey } from '../lib/util/type.js'
 import {
-  SignedTokenPayload,
-  signedTokenPayloadSchema,
-} from './signed-token-payload.js'
+  AccessTokenPayload,
+  accessTokenPayloadSchema,
+} from './access-token-payload.js'
+import { ApiTokenPayload, apiTokenPayloadSchema } from './api-token-payload.js'
 
 export type SignPayload = JwtPayload & { iss?: never }
 
@@ -50,7 +49,7 @@ export class Signer {
   }
 
   async createAccessToken(
-    payload: OmitKey<SignedTokenPayload, 'iss'>,
+    payload: OmitKey<AccessTokenPayload, 'iss'>,
   ): Promise<SignedJwt> {
     return this.sign(
       {
@@ -69,8 +68,8 @@ export class Signer {
     const result = await this.verify<C>(token, { ...options, typ: 'at+jwt' })
     return {
       protectedHeader: result.protectedHeader,
-      payload: signedTokenPayloadSchema.parse(result.payload) as RequiredKey<
-        SignedTokenPayload,
+      payload: accessTokenPayloadSchema.parse(result.payload) as RequiredKey<
+        AccessTokenPayload,
         C
       >,
     }

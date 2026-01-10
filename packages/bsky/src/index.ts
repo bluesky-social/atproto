@@ -10,7 +10,7 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import API, { blobResolver, health, wellKnown } from './api'
+import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
 import { authWithApiKey as bsyncAuth, createBsyncClient } from './bsync'
@@ -27,8 +27,10 @@ import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
+import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
+import { authWithApiKey as rolodexAuth, createRolodexClient } from './rolodex'
 import { createStashClient } from './stash'
 import { Views } from './views'
 import { VideoUriBuilder } from './views/util'
@@ -58,6 +60,7 @@ export class BskyAppView {
   }): BskyAppView {
     const { config, signingKey } = opts
     const app = express()
+    app.set('trust proxy', true)
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(loggerMiddleware)
     app.use(compression())
@@ -121,13 +124,17 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids)
+    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
+    })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
       indexedAtEpoch: config.indexedAtEpoch,
       threadTagsBumpDown: [...config.threadTagsBumpDown],
       threadTagsHide: [...config.threadTagsHide],
+      visibilityTagHide: config.visibilityTagHide,
+      visibilityTagRankPrefix: config.visibilityTagRankPrefix,
     })
 
     const bsyncClient = createBsyncClient({
@@ -149,6 +156,19 @@ export class BskyAppView {
             : [],
         })
       : undefined
+
+    const rolodexClient = config.rolodexUrl
+      ? createRolodexClient({
+          baseUrl: config.rolodexUrl,
+          httpVersion: config.rolodexHttpVersion ?? '2',
+          nodeOptions: { rejectUnauthorized: !config.rolodexIgnoreBadTls },
+          interceptors: config.rolodexApiKey
+            ? [rolodexAuth(config.rolodexApiKey)]
+            : [],
+        })
+      : undefined
+
+    const kwsClient = config.kws ? createKwsClient(config.kws) : undefined
 
     const entrywayJwtPublicKey = config.entrywayJwtPublicKeyHex
       ? createPublicKeyObject(config.entrywayJwtPublicKeyHex)
@@ -183,9 +203,11 @@ export class BskyAppView {
       bsyncClient,
       stashClient,
       courierClient,
+      rolodexClient,
       authVerifier,
       featureGates,
       blobDispatcher,
+      kwsClient,
     })
 
     let server = createServer({
@@ -203,8 +225,14 @@ export class BskyAppView {
     app.use(wellKnown.createRouter(ctx))
     app.use(blobResolver.createMiddleware(ctx))
     app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
+
+    if (config.dataplaneUrls.length > 0 || config.dataplaneUrlsEtcdKeyPrefix) {
+      app.use(sitemap.createRouter(ctx))
+    }
+
     app.use(server.xrpc.router)
     app.use(error.handler)
+    app.use('/external', external.createRouter(ctx))
 
     return new BskyAppView({ ctx, app })
   }

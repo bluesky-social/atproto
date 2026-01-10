@@ -15,11 +15,10 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.repo.listMissingBlobs'
 
-export interface QueryParams {
+export type QueryParams = {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

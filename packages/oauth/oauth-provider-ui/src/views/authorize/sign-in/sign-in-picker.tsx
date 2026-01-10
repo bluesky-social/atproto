@@ -10,7 +10,7 @@ import { InputContainer } from '../../../components/forms/input-container.tsx'
 import { AccountImage } from '../../../components/utils/account-image.tsx'
 import {
   AtSymbolIcon,
-  CaretRightIcon,
+  ChevronRightIcon,
 } from '../../../components/utils/icons.tsx'
 import { Override } from '../../../lib/util.ts'
 
@@ -77,8 +77,7 @@ export function SignInPicker({
           role="button"
           aria-label={t`Sign in as ${account.name}`}
           icon={<AccountImage src={account.picture} alt={t`Avatar`} />}
-          append={<CaretRightIcon aria-hidden className="h-4" />}
-          className="cursor-pointer"
+          append={<ChevronRightIcon aria-hidden className="h-4" />}
         >
           <span className="flex flex-wrap items-center">
             {account.name && (
@@ -107,9 +106,8 @@ export function SignInPicker({
           onClick={onOther}
           aria-label={t`Login to account that is not listed`}
           role="button"
-          append={<CaretRightIcon aria-hidden className="h-4" />}
+          append={<ChevronRightIcon aria-hidden className="h-4" />}
           icon={<AtSymbolIcon aria-hidden className="h-4" />}
-          className="cursor-pointer"
         >
           <span className="truncate text-slate-700 dark:text-slate-400">
             <Trans>Another account</Trans>

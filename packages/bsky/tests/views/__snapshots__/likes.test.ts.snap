@@ -6,6 +6,11 @@ Object {
   "likes": Array [
     Object {
       "actor": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "did": "user(0)",
         "handle": "eve.test",
         "labels": Array [],
@@ -20,6 +25,9 @@ Object {
     Object {
       "actor": Object {
         "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
           "chat": Object {
             "allowIncoming": "none",
           },
@@ -38,6 +46,11 @@ Object {
     },
     Object {
       "actor": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "did": "user(2)",
         "handle": "carol.test",
         "labels": Array [],
@@ -53,6 +66,11 @@ Object {
     },
     Object {
       "actor": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(0)@jpeg",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
@@ -82,6 +100,11 @@ Object {
   "likes": Array [
     Object {
       "actor": Object {
+        "associated": Object {
+          "activitySubscription": Object {
+            "allowSubscriptions": "followers",
+          },
+        },
         "did": "user(0)",
         "handle": "carol.test",
         "labels": Array [],

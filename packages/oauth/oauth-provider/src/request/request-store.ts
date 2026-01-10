@@ -12,30 +12,34 @@ export type { Awaitable }
 
 export type UpdateRequestData = Pick<
   Partial<RequestData>,
-  'sub' | 'code' | 'deviceId' | 'expiresAt'
+  'sub' | 'code' | 'deviceId' | 'expiresAt' | 'parameters'
 >
 
 export type FoundRequestResult = {
-  id: RequestId
+  requestId: RequestId
   data: RequestData
 }
 
 export { InvalidGrantError }
 
 export interface RequestStore {
-  createRequest(id: RequestId, data: RequestData): Awaitable<void>
+  createRequest(requestId: RequestId, data: RequestData): Awaitable<void>
   /**
    * Note that expired requests **can** be returned to yield a different error
    * message than if the request was not found.
    */
-  readRequest(id: RequestId): Awaitable<RequestData | null>
-  updateRequest(id: RequestId, data: UpdateRequestData): Awaitable<void>
-  deleteRequest(id: RequestId): void | Awaitable<void>
+  readRequest(requestId: RequestId): Awaitable<RequestData | null>
+  updateRequest(requestId: RequestId, data: UpdateRequestData): Awaitable<void>
+  deleteRequest(requestId: RequestId): void | Awaitable<void>
   /**
+   * @note it is **IMPORTANT** that this method prevents concurrent retrieval of
+   * the same code. If two requests are made with the same code, only one of
+   * them should succeed and return the request data.
+   *
    * @throws {InvalidGrantError} - When the request is not found or has expired
    * (allows to provide an error message instead of returning `null`).
    */
-  findRequestByCode(code: Code): Awaitable<FoundRequestResult | null>
+  consumeRequestCode(code: Code): Awaitable<FoundRequestResult | null>
 }
 
 export const isRequestStore = buildInterfaceChecker<RequestStore>([
@@ -43,15 +47,14 @@ export const isRequestStore = buildInterfaceChecker<RequestStore>([
   'readRequest',
   'updateRequest',
   'deleteRequest',
-  'findRequestByCode',
+  'consumeRequestCode',
 ])
 
-export function ifRequestStore<V extends Partial<RequestStore>>(
+export function asRequestStore<V extends Partial<RequestStore>>(
   implementation?: V,
-): (V & RequestStore) | undefined {
-  if (implementation && isRequestStore(implementation)) {
-    return implementation
+): V & RequestStore {
+  if (!implementation || !isRequestStore(implementation)) {
+    throw new Error('Invalid RequestStore implementation')
   }
-
-  return undefined
+  return implementation
 }

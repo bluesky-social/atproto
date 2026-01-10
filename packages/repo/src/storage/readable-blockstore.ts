@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { check } from '@atproto/common'
 import { RepoRecord } from '@atproto/lexicon'

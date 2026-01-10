@@ -1,5 +1,7 @@
-import { CID } from 'multiformats/cid'
+/* eslint-disable import/no-deprecated */
+
 import * as ui8 from 'uint8arrays'
+import { CID } from '@atproto/lex-data'
 import { cborDecodeMulti, cborEncode } from '../src'
 
 describe('ipld decode multi', () => {

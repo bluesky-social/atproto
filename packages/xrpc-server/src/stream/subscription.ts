@@ -1,6 +1,7 @@
 import { ClientOptions } from 'ws'
+import { isPlainObject } from '@atproto/lex-data'
+import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { ensureChunkIsMessage } from './stream'
-import { WebSocketKeepAlive } from './websocket-keepalive'
 
 export class Subscription<T = unknown> {
   constructor(
@@ -33,13 +34,19 @@ export class Subscription<T = unknown> {
       },
     })
     for await (const chunk of ws) {
-      const message = await ensureChunkIsMessage(chunk)
+      const message = ensureChunkIsMessage(chunk)
       const t = message.header.t
-      const clone = message.body !== undefined ? { ...message.body } : undefined
-      if (clone !== undefined && t !== undefined) {
-        clone['$type'] = t.startsWith('#') ? this.opts.method + t : t
-      }
-      const result = this.opts.validate(clone)
+
+      const typedBody = isPlainObject(message.body)
+        ? t !== undefined
+          ? {
+              ...message.body,
+              $type: t.startsWith('#') ? this.opts.method + t : t,
+            }
+          : message.body
+        : undefined
+
+      const result = this.opts.validate(typedBody)
       if (result !== undefined) {
         yield result
       }

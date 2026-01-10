@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.146",
+  "version": "0.4.203",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -33,14 +33,20 @@
   },
   "dependencies": {
     "@atproto-labs/fetch-node": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:*",
+    "@atproto-labs/simple-store-memory": "workspace:*",
+    "@atproto-labs/simple-store-redis": "workspace:*",
     "@atproto-labs/xrpc-utils": "workspace:*",
     "@atproto/api": "workspace:^",
     "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/oauth-provider": "workspace:^",
+    "@atproto/oauth-scopes": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
@@ -77,7 +83,6 @@
   "devDependencies": {
     "@atproto/api": "workspace:^",
     "@atproto/bsky": "workspace:^",
-    "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:*",
     "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.3",

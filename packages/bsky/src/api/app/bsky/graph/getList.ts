@@ -100,11 +100,9 @@ const presentation = (
   const { ctx, skeleton, hydration } = input
   const { listUri, listitems, cursor } = skeleton
   const list = ctx.views.list(listUri, hydration)
-  const items = mapDefined(listitems, ({ uri, did }) => {
-    const subject = ctx.views.profile(did, hydration)
-    if (!subject) return
-    return { uri, subject }
-  })
+  const items = mapDefined(listitems, ({ uri, did }) =>
+    ctx.views.listItemView(uri, did, hydration),
+  )
   if (!list) {
     throw new InvalidRequestError('List not found')
   }

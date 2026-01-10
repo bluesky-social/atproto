@@ -171,12 +171,17 @@ export function useApi({
     [api, locale, upsertSession],
   )
 
-  const doAccept = useSafeCallback(
-    async (sub: string) => {
+  const doConsent = useSafeCallback(
+    async (sub: string, scope?: string) => {
       // If "remember me" was unchecked, we need to use the ephemeral token to
       // authenticate the request.
       const bearer = sessions.find((s) => s.account.sub === sub)?.ephemeralToken
-      const { url } = await api.fetch('POST', '/accept', { sub }, { bearer })
+      const { url } = await api.fetch(
+        'POST',
+        '/consent',
+        { sub, scope },
+        { bearer },
+      )
       performRedirect(url)
     },
     [api, sessions, performRedirect],
@@ -196,7 +201,7 @@ export function useApi({
     doConfirmResetPassword,
     doValidateNewHandle,
     doSignUp,
-    doAccept,
+    doConsent,
     doReject,
   }
 }

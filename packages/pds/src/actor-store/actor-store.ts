@@ -1,18 +1,14 @@
 import assert from 'node:assert'
 import fs, { mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import {
-  chunkArray,
-  fileExists,
-  readIfExists,
-  rmIfExists,
-} from '@atproto/common'
+import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
+import { blobStoreLogger } from '../logger'
 import { ActorStoreReader } from './actor-store-reader'
 import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
@@ -137,9 +133,9 @@ export class ActorStore {
       const cids = await this.read(did, async (store) =>
         store.repo.blob.getBlobCids(),
       )
-      await Promise.allSettled(
-        chunkArray(cids, 500).map((chunk) => blobstore.deleteMany(chunk)),
-      )
+      await blobstore.deleteMany(cids).catch((err) => {
+        blobStoreLogger.error('Failed to delete blobs', { did, cids, err })
+      })
     }
 
     const { directory } = await this.getLocation(did)

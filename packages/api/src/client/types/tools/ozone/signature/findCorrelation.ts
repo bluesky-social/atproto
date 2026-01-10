@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.signature.findCorrelation'
 
-export interface QueryParams {
+export type QueryParams = {
   dids: string[]
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

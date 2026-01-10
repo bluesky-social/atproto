@@ -6,6 +6,7 @@ import {
   usersBulkSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
+import { OutputSchema as SearchReposOutputSchema } from '../src/lexicon/types/tools/ozone/moderation/searchRepos'
 import { paginateAll } from './_util'
 
 describe('admin repo search view', () => {
@@ -85,7 +86,8 @@ describe('admin repo search view', () => {
   })
 
   it('paginates with term', async () => {
-    const results = (results) => results.flatMap((res) => res.users)
+    const results = (results: SearchReposOutputSchema[]) =>
+      results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(
         { term: 'p', cursor, limit: 3 },
@@ -109,7 +111,8 @@ describe('admin repo search view', () => {
   })
 
   it('paginates without term', async () => {
-    const results = (results) => results.flatMap((res) => res.repos)
+    const results = (results: SearchReposOutputSchema[]) =>
+      results.flatMap((res) => res.repos)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.tools.ozone.moderation.searchRepos(
         { cursor, limit: 3 },

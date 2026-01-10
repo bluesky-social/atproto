@@ -73,7 +73,9 @@
             "verified",
             "unverified",
             "like-via-repost",
-            "repost-via-repost"
+            "repost-via-repost",
+            "subscribed-post",
+            "contact-match"
           ]
         },
         "reasonSubject": { "type": "string", "format": "at-uri" },

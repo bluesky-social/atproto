@@ -1,5 +1,77 @@
 # @atproto/lex-cli
 
+## 0.9.8
+
+### Patch Changes
+
+- Updated dependencies [[`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab)]:
+  - @atproto/lexicon@0.6.0
+
+## 0.9.7
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.5.2
+
+## 0.9.6
+
+### Patch Changes
+
+- [#4294](https://github.com/bluesky-social/atproto/pull/4294) [`ac1d29ec0`](https://github.com/bluesky-social/atproto/commit/ac1d29ec0f105b4579491f563e2abd73f36c1df3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export record types using the `Main` identifier
+
+## 0.9.5
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lexicon@0.5.1
+
+## 0.9.4
+
+### Patch Changes
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/lexicon@0.5.0
+  - @atproto/syntax@0.4.1
+
+## 0.9.3
+
+### Patch Changes
+
+- Updated dependencies [[`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59)]:
+  - @atproto/lexicon@0.4.14
+
+## 0.9.2
+
+### Patch Changes
+
+- Updated dependencies [[`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12)]:
+  - @atproto/lexicon@0.4.13
+
+## 0.9.1
+
+### Patch Changes
+
+- [`8d56743a1`](https://github.com/bluesky-social/atproto/commit/8d56743a18413a73e6bbca358336c770553d861f) Thanks [@devinivy](https://github.com/devinivy)! - Fix codegen for nsids containing dashes.
+
+## 0.9.0
+
+### Minor Changes
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `QueryParams` is now always generated as a `type` instead of an `interface`
+
+### Patch Changes
+
+- Updated dependencies [[`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20)]:
+  - @atproto/lexicon@0.4.12
+
+## 0.8.3
+
+### Patch Changes
+
+- [#3995](https://github.com/bluesky-social/atproto/pull/3995) [`e3e31b2b9`](https://github.com/bluesky-social/atproto/commit/e3e31b2b9bf8c4de6b2d7fa992c3b3795686ea72) Thanks [@mozzius](https://github.com/mozzius)! - Add put method to record utility classes
+
 ## 0.8.2
 
 ### Patch Changes

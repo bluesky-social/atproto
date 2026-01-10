@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { ensureValidRecordKey } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AnyQb, DbRef } from './util'
 
@@ -292,5 +293,41 @@ export class IsoSortAtKey extends IsoTimeKey<{
 }> {
   labelResult(result: { sortAt: string }) {
     return { primary: result.sortAt }
+  }
+}
+
+type KeyResult = { key: string }
+type RkeyLabeledResult = SingleKeyCursor
+
+export class RkeyKey<RkeyResult = KeyResult> extends GenericSingleKey<
+  RkeyResult,
+  RkeyLabeledResult
+> {
+  labelResult(result: RkeyResult): RkeyLabeledResult
+  labelResult<RkeyResult extends KeyResult>(result: RkeyResult) {
+    return { primary: result }
+  }
+  labeledResultToCursor(labeled: RkeyLabeledResult) {
+    return {
+      primary: labeled.primary,
+    }
+  }
+  cursorToLabeledResult(cursor: SingleKeyCursor) {
+    try {
+      ensureValidRecordKey(cursor.primary)
+      return {
+        primary: cursor.primary,
+      }
+    } catch {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+  }
+}
+
+export class StashKeyKey extends RkeyKey<{
+  key: string
+}> {
+  labelResult(result: { key: string }) {
+    return { primary: result.key }
   }
 }

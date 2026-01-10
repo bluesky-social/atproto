@@ -1,5 +1,49 @@
 # @atproto/jwk
 
+## 0.6.0
+
+### Minor Changes
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update key matching algorithm to support `key_ops`
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Only allow `"use"` claims in public jwk
+
+### Patch Changes
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Silently ignore invalid JWKs from JSON Web Key Set (as per spec)
+
+- [#4220](https://github.com/bluesky-social/atproto/pull/4220) [`fefe70126`](https://github.com/bluesky-social/atproto/commit/fefe70126d0ea82507ac750f669b3478290f186b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the `jwk` property of `Key` instances public
+
+- [#4103](https://github.com/bluesky-social/atproto/pull/4103) [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid using `revoked` and inactive keys from JWK sets
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4101](https://github.com/bluesky-social/atproto/pull/4101) [`8a88e2c15`](https://github.com/bluesky-social/atproto/commit/8a88e2c15451f5e8239400eeb277ad31d178b8e6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent inconsistent use of `use` and `key_ops` in JWK
+
+### Patch Changes
+
+- [#4101](https://github.com/bluesky-social/atproto/pull/4101) [`8a88e2c15`](https://github.com/bluesky-social/atproto/commit/8a88e2c15451f5e8239400eeb277ad31d178b8e6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove requirement for JWK to define either `use` or `key_ops`.
+
+## 0.4.0
+
+### Minor Changes
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove export of internal utilities
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return object instead of array as result of `findPrivateKey`
+
+### Patch Changes
+
+- [#3976](https://github.com/bluesky-social/atproto/pull/3976) [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `jwkPrivateSchema` to ensure a key is private
+
+## 0.3.0
+
+### Minor Changes
+
+- [#3847](https://github.com/bluesky-social/atproto/pull/3847) [`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `findKey` to `findPrivateKey` to better reflect the method's behavior
+
 ## 0.2.0
 
 ### Minor Changes

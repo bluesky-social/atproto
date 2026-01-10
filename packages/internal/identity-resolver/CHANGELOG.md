@@ -1,5 +1,94 @@
 # @atproto-labs/identity-resolver
 
+## 0.3.5
+
+### Patch Changes
+
+- [#4501](https://github.com/bluesky-social/atproto/pull/4501) [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Re-export types internally used by `IdentityInfo`
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.2.5
+  - @atproto-labs/handle-resolver@0.3.5
+
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.2.4
+  - @atproto-labs/handle-resolver@0.3.4
+
+## 0.3.3
+
+### Patch Changes
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `createIdentityResolver` util
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto-labs/handle-resolver@0.3.3
+  - @atproto-labs/did-resolver@0.2.3
+
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.2.2
+  - @atproto-labs/handle-resolver@0.3.2
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto-labs/did-resolver@0.2.1
+  - @atproto-labs/handle-resolver@0.3.1
+
+## 0.3.0
+
+### Minor Changes
+
+- [#3982](https://github.com/bluesky-social/atproto/pull/3982) [`4c2d49917`](https://github.com/bluesky-social/atproto/commit/4c2d499178c61eb8a9d7f658e89fe68fa07f81e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Identity resolver's `resolve()` method returns value consistent with `com.atproto.identity.resolveIdentity`
+
+- [#3982](https://github.com/bluesky-social/atproto/pull/3982) [`4c2d49917`](https://github.com/bluesky-social/atproto/commit/4c2d499178c61eb8a9d7f658e89fe68fa07f81e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `IdentityResolver` is now an interface. The `IdentityResolverProto` class is the default implementation for the `IdentityResolver` interface.
+
+### Patch Changes
+
+- [#3982](https://github.com/bluesky-social/atproto/pull/3982) [`4c2d49917`](https://github.com/bluesky-social/atproto/commit/4c2d499178c61eb8a9d7f658e89fe68fa07f81e7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `HANDLE_INVALID` constant
+
+## 0.2.0
+
+### Minor Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return the whole did document when resolving an identity
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Reject did documents containing invalid `alsoKnownAs` ATProto handles
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `IdentityResolverError` instances instead of `TypeError`
+
+### Patch Changes
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Perform a bi-directional check when resolving identity from did
+
+- [#3977](https://github.com/bluesky-social/atproto/pull/3977) [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow non-normalized handles in did documents
+
+- Updated dependencies [[`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47), [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47)]:
+  - @atproto-labs/handle-resolver@0.3.0
+
+## 0.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee)]:
+  - @atproto-labs/handle-resolver@0.2.0
+  - @atproto-labs/did-resolver@0.2.0
+
+## 0.1.18
+
+### Patch Changes
+
+- [#3933](https://github.com/bluesky-social/atproto/pull/3933) [`192f3ab89`](https://github.com/bluesky-social/atproto/commit/192f3ab89c943216683541f42cc1332e9c305eee) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Return atproto handle in identity resolution result
+
 ## 0.1.17
 
 ### Patch Changes

@@ -15,8 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.repo.uploadBlob'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = string | Uint8Array | Blob
 
 export interface OutputSchema {

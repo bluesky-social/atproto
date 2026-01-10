@@ -49,7 +49,7 @@ export function SignInView({
   const accounts = useMemo(() => sessions.map((s) => s.account), [sessions])
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
-  title ??= t`Sign in`
+  title ??= t({ message: 'Sign in', context: 'noun' })
 
   useEffect(() => {
     // Make sure the "back" action shows the account picker instead of the

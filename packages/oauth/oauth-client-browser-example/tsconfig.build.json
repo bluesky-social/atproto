@@ -4,6 +4,8 @@
     "../../../tsconfig/bundler.json"
   ],
   "compilerOptions": {
+    "moduleResolution": "bundler",
+    "noImplicitAny": true,
     "rootDir": "./src",
     "outDir": "./dist"
   },

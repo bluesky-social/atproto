@@ -1,5 +1,43 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.9
+
+### Patch Changes
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose bskyClient instance and lexicons on window object
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Add support for signup (prompt=create)
+
+- [#4467](https://github.com/bluesky-social/atproto/pull/4467) [`a78380c`](https://github.com/bluesky-social/atproto/commit/a78380c89cb47c348e77eadb0738e7cb1c867a69) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor ui tweak
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite `getSession` and `getRecord` using generic hooks
+
+- [#4457](https://github.com/bluesky-social/atproto/pull/4457) [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add bin script, allowing to run through npx
+
+## 0.0.8
+
+### Patch Changes
+
+- [#4319](https://github.com/bluesky-social/atproto/pull/4319) [`3202dce91`](https://github.com/bluesky-social/atproto/commit/3202dce91b31daa065769b6387c6b199f515671a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update example app
+
+## 0.0.7
+
+### Patch Changes
+
+- [#4311](https://github.com/bluesky-social/atproto/pull/4311) [`d764c54fe`](https://github.com/bluesky-social/atproto/commit/d764c54fe4ffaccb9ed9580c153373fc6e12f803) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor improvements
+
+## 0.0.6
+
+### Patch Changes
+
+- [`f4cb3e4d0`](https://github.com/bluesky-social/atproto/commit/f4cb3e4d0ac45e567fa14f79b99a84621fa89a56) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update default scopes
+
+## 0.0.5
+
+### Patch Changes
+
+- [#3952](https://github.com/bluesky-social/atproto/pull/3952) [`09d90ae48`](https://github.com/bluesky-social/atproto/commit/09d90ae486c451512e72c098228de3f3dd058101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve UI
+
 ## 0.0.4
 
 ### Patch Changes

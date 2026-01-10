@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.communication.createTemplate'
 
-export interface QueryParams {}
+export type QueryParams = {}
 
 export interface InputSchema {
   /** Name of the template. */

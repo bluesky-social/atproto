@@ -13,24 +13,6 @@ export type RequiredKey<T, K extends keyof T = never> = Simplify<
   }
 >
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type DeepReadonly<T> = T extends Function
-  ? T
-  : T extends object
-    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-    : T extends readonly (infer U)[]
-      ? readonly DeepReadonly<U>[]
-      : T
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type UnReadonly<T> = T extends Function
-  ? T
-  : T extends object
-    ? { -readonly [K in keyof T]: UnReadonly<T[K]> }
-    : T extends readonly (infer U)[]
-      ? UnReadonly<U>[]
-      : T
-
 export const isDefined = <T>(i: T | undefined): i is T => i !== undefined
 
 export const preferredOrderCmp =
@@ -196,4 +178,10 @@ export const segmentedStringRefinementFactory = <C extends number>(
     }
     return true
   }
+}
+
+export function isLastOccurrence<
+  T extends number | boolean | string | null | undefined | symbol | bigint,
+>(v: T, i: number, arr: readonly T[]): boolean {
+  return arr.indexOf(v, i + 1) === -1
 }

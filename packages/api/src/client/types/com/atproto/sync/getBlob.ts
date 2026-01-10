@@ -15,13 +15,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.getBlob'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The DID of the account. */
   did: string
   /** The CID of the blob to fetch */
   cid: string
 }
-
 export type InputSchema = undefined
 
 export interface CallOptions {

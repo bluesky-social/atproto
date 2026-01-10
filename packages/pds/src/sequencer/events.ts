@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import assert from 'node:assert'
 import { z } from 'zod'
 import { cborEncode, noUndefinedVals, schema } from '@atproto/common'

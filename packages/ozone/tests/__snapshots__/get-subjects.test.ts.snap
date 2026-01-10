@@ -6,6 +6,9 @@ Array [
     "profile": Object {
       "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -71,6 +74,7 @@ Array [
             "suspendCount": 0,
             "takedownCount": 1,
           },
+          "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "hosting": Object {
             "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -144,6 +148,7 @@ Array [
         "suspendCount": 0,
         "takedownCount": 1,
       },
+      "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -186,6 +191,9 @@ Array [
     "profile": Object {
       "$type": "app.bsky.actor.defs#profileViewDetailed",
       "associated": Object {
+        "activitySubscription": Object {
+          "allowSubscriptions": "followers",
+        },
         "feedgens": 0,
         "labeler": false,
         "lists": 0,
@@ -246,6 +254,7 @@ Array [
             "suspendCount": 0,
             "takedownCount": 1,
           },
+          "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "hosting": Object {
             "$type": "tools.ozone.moderation.defs#recordHosting",
@@ -295,6 +304,7 @@ Array [
               "suspendCount": 0,
               "takedownCount": 1,
             },
+            "ageAssuranceState": "unknown",
             "createdAt": "1970-01-01T00:00:00.000Z",
             "hosting": Object {
               "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -403,6 +413,7 @@ Array [
             "suspendCount": 0,
             "takedownCount": 1,
           },
+          "ageAssuranceState": "unknown",
           "createdAt": "1970-01-01T00:00:00.000Z",
           "hosting": Object {
             "$type": "tools.ozone.moderation.defs#accountHosting",
@@ -476,6 +487,7 @@ Array [
         "suspendCount": 0,
         "takedownCount": 1,
       },
+      "ageAssuranceState": "unknown",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "hosting": Object {
         "$type": "tools.ozone.moderation.defs#recordHosting",

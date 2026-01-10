@@ -7,7 +7,12 @@ import { httpLogger } from '../../../../logger'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.identity.updateHandle({
-    auth: ctx.authVerifier.accessStandard({ checkTakedown: true }),
+    auth: ctx.authVerifier.authorization({
+      checkTakedown: true,
+      authorize: (permissions) => {
+        permissions.assertIdentity({ attr: 'handle' })
+      },
+    }),
     rateLimit: [
       {
         durationMs: 5 * MINUTE,

@@ -1,6 +1,7 @@
 import { TestNetwork } from '@atproto/dev-env'
 import { ProfileAssociatedChat } from '../dist/lexicon/types/app/bsky/actor/defs'
 import { StashClient } from '../dist/stash'
+import { Namespace } from '../src/stash'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -11,7 +12,7 @@ describe('private data', () => {
 
   const actorDid = 'did:plc:example'
   // This lexicon has nothing special other than being simple, convenient to use in a test.
-  const namespace = 'app.bsky.actor.defs#profileAssociatedChat'
+  const namespace = 'app.bsky.actor.defs#profileAssociatedChat' as Namespace
   const key = 'self'
 
   const validPayload0: ProfileAssociatedChat = { allowIncoming: 'all' }

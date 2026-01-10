@@ -36,6 +36,7 @@ export interface PostView {
     | $Typed<AppBskyEmbedRecord.View>
     | $Typed<AppBskyEmbedRecordWithMedia.View>
     | { $type: string }
+  bookmarkCount?: number
   replyCount?: number
   repostCount?: number
   likeCount?: number
@@ -44,6 +45,8 @@ export interface PostView {
   viewer?: ViewerState
   labels?: ComAtprotoLabelDefs.Label[]
   threadgate?: ThreadgateView
+  /** Debug information for internal development */
+  debug?: { [_ in string]: unknown }
 }
 
 const hashPostView = 'postView'
@@ -61,6 +64,7 @@ export interface ViewerState {
   $type?: 'app.bsky.feed.defs#viewerState'
   repost?: string
   like?: string
+  bookmarked?: boolean
   threadMuted?: boolean
   replyDisabled?: boolean
   embeddingDisabled?: boolean

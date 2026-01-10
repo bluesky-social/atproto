@@ -1,5 +1,5 @@
-import { CID } from 'multiformats/cid'
 import { z } from 'zod'
+import { CID } from '@atproto/lex-data'
 import { Def } from './check'
 
 const cidSchema = z.unknown().transform((obj, ctx): CID => {

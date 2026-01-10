@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { TID, cidForCbor, streamToBuffer } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { RecordCidClaim, RecordPath, Repo, RepoContents } from '../src'

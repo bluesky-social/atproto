@@ -16,13 +16,12 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getListFeed'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Reference (AT-URI) to the list record. */
   list: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

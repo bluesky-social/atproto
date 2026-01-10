@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/simple-store-memory",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MIT",
   "description": "Memory based simple-store implementation",
   "keywords": [

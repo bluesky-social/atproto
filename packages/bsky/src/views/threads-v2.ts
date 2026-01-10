@@ -1,6 +1,4 @@
-import { asPredicate } from '@atproto/api'
 import { HydrateCtx } from '../hydration/hydrator'
-import { validateRecord as validatePostRecord } from '../lexicon/types/app/bsky/feed/post'
 import {
   ThreadItemBlocked,
   ThreadItemNoUnauthenticated,
@@ -110,8 +108,11 @@ export type ThreadTree = ThreadTreeVisible | ThreadTreeOther
 export function sortTrimFlattenThreadTree(
   anchorTree: ThreadTree,
   options: SortTrimFlattenOptions,
+  useExploration?: boolean,
 ) {
-  const sortedAnchorTree = sortTrimThreadTree(anchorTree, options)
+  const sortedAnchorTree = useExploration
+    ? sortTrimThreadTreeExploration(anchorTree, options)
+    : sortTrimThreadTree(anchorTree, options)
 
   return flattenTree(sortedAnchorTree)
 }
@@ -119,14 +120,12 @@ export function sortTrimFlattenThreadTree(
 type SortTrimFlattenOptions = {
   branchingFactor: GetPostThreadV2QueryParams['branchingFactor']
   opDid: string
-  prioritizeFollowedUsers: boolean
   sort?: GetPostThreadV2QueryParams['sort']
   viewer: HydrateCtx['viewer']
   threadTagsBumpDown: readonly string[]
   threadTagsHide: readonly string[]
+  visibilityTagRankPrefix: string
 }
-
-const isPostRecord = asPredicate(validatePostRecord)
 
 /** This function mutates the tree parameter. */
 function sortTrimThreadTree(
@@ -182,13 +181,7 @@ function applyBumping(
     return null
   }
 
-  const {
-    opDid,
-    prioritizeFollowedUsers,
-    viewer,
-    threadTagsBumpDown,
-    threadTagsHide,
-  } = opts
+  const { opDid, viewer, threadTagsBumpDown, threadTagsHide } = opts
 
   type BumpDirection = 'up' | 'down'
   type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
@@ -227,23 +220,12 @@ function applyBumping(
     // Followers posts.
     [
       'up',
-      (i) =>
-        i.type === 'post' &&
-        prioritizeFollowedUsers &&
-        !!i.item.value.post.author.viewer?.following,
+      (i) => i.type === 'post' && !!i.item.value.post.author.viewer?.following,
     ],
     // Bump-down tags.
     [
       'down',
       (i) => i.type === 'post' && threadTagsBumpDown.some((t) => i.tags.has(t)),
-    ],
-    // Pushpin-only.
-    [
-      'down',
-      (i) =>
-        i.type === 'post' &&
-        isPostRecord(i.item.value.post.record) &&
-        i.item.value.post.record.text.trim() === '📌',
     ],
 
     /*
@@ -375,5 +357,156 @@ function* flattenInDirection({
         }
       }
     }
+  }
+}
+
+export function sortTrimThreadTreeExploration(
+  n: ThreadTree,
+  opts: SortTrimFlattenOptions,
+): ThreadTree {
+  if (!isNodeWithReplies(n)) {
+    return n
+  }
+  const node: ThreadNodeWithReplies = n
+
+  if (node.replies) {
+    node.replies.sort((an: ThreadTree, bn: ThreadTree) => {
+      if (!isPostNode(an)) {
+        return 1
+      }
+      if (!isPostNode(bn)) {
+        return -1
+      }
+      const aNode: ThreadMaybeOtherPostNode = an
+      const bNode: ThreadMaybeOtherPostNode = bn
+
+      // First applies bumping.
+      const bump = applyBumpingExploration(aNode, bNode, opts)
+      if (bump !== null) {
+        return bump
+      }
+
+      // Then applies sorting.
+      return applySortingExploration(aNode, bNode, opts)
+    })
+
+    // Trimming: after sorting, apply branching factor to all levels of replies except the anchor direct replies.
+    if (node.item.depth !== 0) {
+      node.replies = node.replies.slice(0, opts.branchingFactor)
+    }
+
+    node.replies.forEach((reply) => sortTrimThreadTreeExploration(reply, opts))
+  }
+
+  return node
+}
+
+function applyBumpingExploration(
+  aNode: ThreadMaybeOtherPostNode,
+  bNode: ThreadMaybeOtherPostNode,
+  opts: SortTrimFlattenOptions,
+): number | null {
+  if (!isPostNode(aNode)) {
+    return null
+  }
+  if (!isPostNode(bNode)) {
+    return null
+  }
+
+  const { opDid, viewer } = opts
+
+  type BumpDirection = 'up' | 'down'
+  type BumpPredicateFn = (i: ThreadMaybeOtherPostNode) => boolean
+
+  const maybeBump = (
+    bump: BumpDirection,
+    predicateFn: BumpPredicateFn,
+  ): number | null => {
+    const aPredicate = predicateFn(aNode)
+    const bPredicate = predicateFn(bNode)
+    if (aPredicate && bPredicate) {
+      return applySortingExploration(aNode, bNode, opts)
+    } else if (aPredicate) {
+      return bump === 'up' ? -1 : 1
+    } else if (bPredicate) {
+      return bump === 'up' ? 1 : -1
+    }
+    return null
+  }
+
+  // The order of the bumps determines the priority with which they are applied.
+  // Bumps-up applied first make the item appear higher in the list than later bumps-up.
+  // Bumps-down applied first make the item appear lower in the list than later bumps-down.
+  const bumps: [BumpDirection, BumpPredicateFn][] = [
+    /*
+      General bumps.
+    */
+    // OP replies.
+    ['up', (i) => i.item.value.post.author.did === opDid],
+    // Viewer replies.
+    ['up', (i) => i.item.value.post.author.did === viewer],
+  ]
+
+  for (const [bump, predicateFn] of bumps) {
+    const bumpResult = maybeBump(bump, predicateFn)
+    if (bumpResult !== null) {
+      return bumpResult
+    }
+  }
+
+  return null
+}
+
+function applySortingExploration(
+  aNode: ThreadMaybeOtherPostNode,
+  bNode: ThreadMaybeOtherPostNode,
+  opts: SortTrimFlattenOptions,
+): number {
+  const { visibilityTagRankPrefix: rp } = opts
+
+  const a = aNode.item.value
+  const ar = !rp ? 0 : parseRankFromTag(rp, findRankTag(aNode.tags, rp))
+  const b = bNode.item.value
+  const br = !rp ? 0 : parseRankFromTag(rp, findRankTag(bNode.tags, rp))
+
+  // Only customize sort for visible posts.
+  if (aNode.type === 'post' && bNode.type === 'post') {
+    const { sort } = opts
+
+    if (sort === 'oldest') {
+      return a.post.indexedAt.localeCompare(b.post.indexedAt)
+    }
+    if (sort === 'top') {
+      const aLikes = a.post.likeCount ?? 0
+      const bLikes = b.post.likeCount ?? 0
+      const aTop = topSortValue(aLikes, aNode.hasOPLike)
+      const bTop = topSortValue(bLikes, bNode.hasOPLike)
+      const aRank = aTop + ar
+      const bRank = bTop + br
+      if (aRank !== bRank) {
+        return bRank - aRank
+      }
+    }
+  }
+
+  // Fallback to newest.
+  return b.post.indexedAt.localeCompare(a.post.indexedAt)
+}
+
+function findRankTag(tags: Set<string>, prefix: string) {
+  return Array.from(tags.values()).find((tag) => tag.startsWith(prefix))
+}
+
+function parseRankFromTag(prefix: string, tag?: string) {
+  if (!tag) return 0
+
+  try {
+    const rank = parseInt(tag.slice(prefix.length), 10)
+    if (typeof rank !== 'number' || isNaN(rank)) {
+      return 0
+    }
+    return rank
+  } catch (e) {
+    return 0
   }
 }

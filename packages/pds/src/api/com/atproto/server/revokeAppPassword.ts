@@ -1,10 +1,17 @@
+import { ForbiddenError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.revokeAppPassword({
-    auth: ctx.authVerifier.accessStandard(),
+    auth: ctx.authVerifier.authorization({
+      authorize: () => {
+        throw new ForbiddenError(
+          'OAuth credentials are not supported for this endpoint',
+        )
+      },
+    }),
     handler: async ({ auth, input, req }) => {
       if (ctx.entrywayAgent) {
         await ctx.entrywayAgent.com.atproto.server.revokeAppPassword(

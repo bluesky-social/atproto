@@ -14,8 +14,12 @@ export type ResolvedHandle = null | AtprotoDid
 /**
  * @see {@link https://atproto.com/specs/did#blessed-did-methods}
  */
-export function isResolvedHandle<T>(value: T): value is T & ResolvedHandle {
+export function isResolvedHandle(value: unknown): value is ResolvedHandle {
   return value === null || isAtprotoDid(value)
+}
+
+export function asResolvedHandle<T>(value: T): null | (T & AtprotoDid) {
+  return isResolvedHandle(value) ? value : null
 }
 
 export interface HandleResolver {

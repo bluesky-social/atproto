@@ -10,4516 +10,6 @@ import {
 import { type $Typed, is$typed, maybe$typed } from './util.js'
 
 export const schemaDict = {
-  ComAtprotoAdminDefs: {
-    lexicon: 1,
-    id: 'com.atproto.admin.defs',
-    defs: {
-      statusAttr: {
-        type: 'object',
-        required: ['applied'],
-        properties: {
-          applied: {
-            type: 'boolean',
-          },
-          ref: {
-            type: 'string',
-          },
-        },
-      },
-      accountView: {
-        type: 'object',
-        required: ['did', 'handle', 'indexedAt'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-          },
-          email: {
-            type: 'string',
-          },
-          relatedRecords: {
-            type: 'array',
-            items: {
-              type: 'unknown',
-            },
-          },
-          indexedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          invitedBy: {
-            type: 'ref',
-            ref: 'lex:com.atproto.server.defs#inviteCode',
-          },
-          invites: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCode',
-            },
-          },
-          invitesDisabled: {
-            type: 'boolean',
-          },
-          emailConfirmedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          inviteNote: {
-            type: 'string',
-          },
-          deactivatedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          threatSignatures: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.admin.defs#threatSignature',
-            },
-          },
-        },
-      },
-      repoRef: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
-      repoBlobRef: {
-        type: 'object',
-        required: ['did', 'cid'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          recordUri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
-      },
-      threatSignature: {
-        type: 'object',
-        required: ['property', 'value'],
-        properties: {
-          property: {
-            type: 'string',
-          },
-          value: {
-            type: 'string',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminDeleteAccount: {
-    lexicon: 1,
-    id: 'com.atproto.admin.deleteAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Delete a user account as an administrator.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminDisableAccountInvites: {
-    lexicon: 1,
-    id: 'com.atproto.admin.disableAccountInvites',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Disable an account from receiving new invite codes, but does not invalidate existing codes.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['account'],
-            properties: {
-              account: {
-                type: 'string',
-                format: 'did',
-              },
-              note: {
-                type: 'string',
-                description: 'Optional reason for disabled invites.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminDisableInviteCodes: {
-    lexicon: 1,
-    id: 'com.atproto.admin.disableInviteCodes',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Disable some set of codes and/or all codes associated with a set of users.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              codes: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              accounts: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminEnableAccountInvites: {
-    lexicon: 1,
-    id: 'com.atproto.admin.enableAccountInvites',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Re-enable an account's ability to receive invite codes.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['account'],
-            properties: {
-              account: {
-                type: 'string',
-                format: 'did',
-              },
-              note: {
-                type: 'string',
-                description: 'Optional reason for enabled invites.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetAccountInfo: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getAccountInfo',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get details about an account.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.admin.defs#accountView',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetAccountInfos: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getAccountInfos',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get details about some accounts.',
-        parameters: {
-          type: 'params',
-          required: ['dids'],
-          properties: {
-            dids: {
-              type: 'array',
-              items: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['infos'],
-            properties: {
-              infos: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#accountView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetInviteCodes: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getInviteCodes',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get an admin view of invite codes.',
-        parameters: {
-          type: 'params',
-          properties: {
-            sort: {
-              type: 'string',
-              knownValues: ['recent', 'usage'],
-              default: 'recent',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 500,
-              default: 100,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['codes'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              codes: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.server.defs#inviteCode',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminGetSubjectStatus: {
-    lexicon: 1,
-    id: 'com.atproto.admin.getSubjectStatus',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get the service-specific admin status of a subject (account, record, or blob).',
-        parameters: {
-          type: 'params',
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-            },
-            uri: {
-              type: 'string',
-              format: 'at-uri',
-            },
-            blob: {
-              type: 'string',
-              format: 'cid',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject'],
-            properties: {
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                  'lex:com.atproto.admin.defs#repoBlobRef',
-                ],
-              },
-              takedown: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#statusAttr',
-              },
-              deactivated: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#statusAttr',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminSearchAccounts: {
-    lexicon: 1,
-    id: 'com.atproto.admin.searchAccounts',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get list of accounts that matches your search query.',
-        parameters: {
-          type: 'params',
-          properties: {
-            email: {
-              type: 'string',
-            },
-            cursor: {
-              type: 'string',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['accounts'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              accounts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.admin.defs#accountView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminSendEmail: {
-    lexicon: 1,
-    id: 'com.atproto.admin.sendEmail',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Send email to a user's account email address.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['recipientDid', 'content', 'senderDid'],
-            properties: {
-              recipientDid: {
-                type: 'string',
-                format: 'did',
-              },
-              content: {
-                type: 'string',
-              },
-              subject: {
-                type: 'string',
-              },
-              senderDid: {
-                type: 'string',
-                format: 'did',
-              },
-              comment: {
-                type: 'string',
-                description:
-                  "Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers",
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['sent'],
-            properties: {
-              sent: {
-                type: 'boolean',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminUpdateAccountEmail: {
-    lexicon: 1,
-    id: 'com.atproto.admin.updateAccountEmail',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Administrative action to update an account's email.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['account', 'email'],
-            properties: {
-              account: {
-                type: 'string',
-                format: 'at-identifier',
-                description: 'The handle or DID of the repo.',
-              },
-              email: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminUpdateAccountHandle: {
-    lexicon: 1,
-    id: 'com.atproto.admin.updateAccountHandle',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Administrative action to update an account's handle.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'handle'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminUpdateAccountPassword: {
-    lexicon: 1,
-    id: 'com.atproto.admin.updateAccountPassword',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Update the password for a user account as an administrator.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'password'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              password: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminUpdateAccountSigningKey: {
-    lexicon: 1,
-    id: 'com.atproto.admin.updateAccountSigningKey',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Administrative action to update an account's signing key in their Did document.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'signingKey'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              signingKey: {
-                type: 'string',
-                format: 'did',
-                description: 'Did-key formatted public key',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoAdminUpdateSubjectStatus: {
-    lexicon: 1,
-    id: 'com.atproto.admin.updateSubjectStatus',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Update the service-specific admin status of a subject (account, record, or blob).',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject'],
-            properties: {
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                  'lex:com.atproto.admin.defs#repoBlobRef',
-                ],
-              },
-              takedown: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#statusAttr',
-              },
-              deactivated: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#statusAttr',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['subject'],
-            properties: {
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                  'lex:com.atproto.admin.defs#repoBlobRef',
-                ],
-              },
-              takedown: {
-                type: 'ref',
-                ref: 'lex:com.atproto.admin.defs#statusAttr',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoIdentityDefs: {
-    lexicon: 1,
-    id: 'com.atproto.identity.defs',
-    defs: {
-      identityInfo: {
-        type: 'object',
-        required: ['did', 'handle', 'didDoc'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-            description:
-              "The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document.",
-          },
-          didDoc: {
-            type: 'unknown',
-            description: 'The complete DID document for the identity.',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoIdentityGetRecommendedDidCredentials: {
-    lexicon: 1,
-    id: 'com.atproto.identity.getRecommendedDidCredentials',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Describe the credentials that should be included in the DID doc of an account that is migrating to this service.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              rotationKeys: {
-                description:
-                  'Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs.',
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              alsoKnownAs: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              verificationMethods: {
-                type: 'unknown',
-              },
-              services: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoIdentityRefreshIdentity: {
-    lexicon: 1,
-    id: 'com.atproto.identity.refreshIdentity',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Request that the server re-resolve an identity (DID and handle). The server may ignore this request, or require authentication, depending on the role, implementation, and policy of the server.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['identifier'],
-            properties: {
-              identifier: {
-                type: 'string',
-                format: 'at-identifier',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.identity.defs#identityInfo',
-          },
-        },
-        errors: [
-          {
-            name: 'HandleNotFound',
-            description:
-              'The resolution process confirmed that the handle does not resolve to any DID.',
-          },
-          {
-            name: 'DidNotFound',
-            description:
-              'The DID resolution process confirmed that there is no current DID.',
-          },
-          {
-            name: 'DidDeactivated',
-            description:
-              'The DID previously existed, but has been deactivated.',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoIdentityRequestPlcOperationSignature: {
-    lexicon: 1,
-    id: 'com.atproto.identity.requestPlcOperationSignature',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Request an email with a code to in order to request a signed PLC operation. Requires Auth.',
-      },
-    },
-  },
-  ComAtprotoIdentityResolveDid: {
-    lexicon: 1,
-    id: 'com.atproto.identity.resolveDid',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Resolves DID to DID document. Does not bi-directionally verify handle.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'DID to resolve.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['didDoc'],
-            properties: {
-              didDoc: {
-                type: 'unknown',
-                description: 'The complete DID document for the identity.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'DidNotFound',
-            description:
-              'The DID resolution process confirmed that there is no current DID.',
-          },
-          {
-            name: 'DidDeactivated',
-            description:
-              'The DID previously existed, but has been deactivated.',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoIdentityResolveHandle: {
-    lexicon: 1,
-    id: 'com.atproto.identity.resolveHandle',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Resolves an atproto handle (hostname) to a DID. Does not necessarily bi-directionally verify against the the DID document.',
-        parameters: {
-          type: 'params',
-          required: ['handle'],
-          properties: {
-            handle: {
-              type: 'string',
-              format: 'handle',
-              description: 'The handle to resolve.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HandleNotFound',
-            description:
-              'The resolution process confirmed that the handle does not resolve to any DID.',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoIdentityResolveIdentity: {
-    lexicon: 1,
-    id: 'com.atproto.identity.resolveIdentity',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Resolves an identity (DID or Handle) to a full identity (DID document and verified handle).',
-        parameters: {
-          type: 'params',
-          required: ['identifier'],
-          properties: {
-            identifier: {
-              type: 'string',
-              format: 'at-identifier',
-              description: 'Handle or DID to resolve.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.identity.defs#identityInfo',
-          },
-        },
-        errors: [
-          {
-            name: 'HandleNotFound',
-            description:
-              'The resolution process confirmed that the handle does not resolve to any DID.',
-          },
-          {
-            name: 'DidNotFound',
-            description:
-              'The DID resolution process confirmed that there is no current DID.',
-          },
-          {
-            name: 'DidDeactivated',
-            description:
-              'The DID previously existed, but has been deactivated.',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoIdentitySignPlcOperation: {
-    lexicon: 1,
-    id: 'com.atproto.identity.signPlcOperation',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Signs a PLC operation to update some value(s) in the requesting DID's document.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              token: {
-                description:
-                  'A token received through com.atproto.identity.requestPlcOperationSignature',
-                type: 'string',
-              },
-              rotationKeys: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              alsoKnownAs: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                },
-              },
-              verificationMethods: {
-                type: 'unknown',
-              },
-              services: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['operation'],
-            properties: {
-              operation: {
-                type: 'unknown',
-                description: 'A signed DID PLC operation.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoIdentitySubmitPlcOperation: {
-    lexicon: 1,
-    id: 'com.atproto.identity.submitPlcOperation',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Validates a PLC operation to ensure that it doesn't violate a service's constraints or get the identity into a bad state, then submits it to the PLC registry",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['operation'],
-            properties: {
-              operation: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoIdentityUpdateHandle: {
-    lexicon: 1,
-    id: 'com.atproto.identity.updateHandle',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Updates the current account's handle. Verifies handle validity, and updates did:plc document if necessary. Implemented by PDS, and requires auth.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle'],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-                description: 'The new handle.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoLabelDefs: {
-    lexicon: 1,
-    id: 'com.atproto.label.defs',
-    defs: {
-      label: {
-        type: 'object',
-        description:
-          'Metadata tag on an atproto resource (eg, repo or record).',
-        required: ['src', 'uri', 'val', 'cts'],
-        properties: {
-          ver: {
-            type: 'integer',
-            description: 'The AT Protocol version of the label object.',
-          },
-          src: {
-            type: 'string',
-            format: 'did',
-            description: 'DID of the actor who created this label.',
-          },
-          uri: {
-            type: 'string',
-            format: 'uri',
-            description:
-              'AT URI of the record, repository (account), or other resource that this label applies to.',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-            description:
-              "Optionally, CID specifying the specific version of 'uri' resource this label applies to.",
-          },
-          val: {
-            type: 'string',
-            maxLength: 128,
-            description:
-              'The short string name of the value or type of this label.',
-          },
-          neg: {
-            type: 'boolean',
-            description:
-              'If true, this is a negation label, overwriting a previous label.',
-          },
-          cts: {
-            type: 'string',
-            format: 'datetime',
-            description: 'Timestamp when this label was created.',
-          },
-          exp: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp at which this label expires (no longer applies).',
-          },
-          sig: {
-            type: 'bytes',
-            description: 'Signature of dag-cbor encoded label.',
-          },
-        },
-      },
-      selfLabels: {
-        type: 'object',
-        description:
-          'Metadata tags on an atproto record, published by the author within the record.',
-        required: ['values'],
-        properties: {
-          values: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#selfLabel',
-            },
-            maxLength: 10,
-          },
-        },
-      },
-      selfLabel: {
-        type: 'object',
-        description:
-          'Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel.',
-        required: ['val'],
-        properties: {
-          val: {
-            type: 'string',
-            maxLength: 128,
-            description:
-              'The short string name of the value or type of this label.',
-          },
-        },
-      },
-      labelValueDefinition: {
-        type: 'object',
-        description:
-          'Declares a label value and its expected interpretations and behaviors.',
-        required: ['identifier', 'severity', 'blurs', 'locales'],
-        properties: {
-          identifier: {
-            type: 'string',
-            description:
-              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
-            maxLength: 100,
-            maxGraphemes: 100,
-          },
-          severity: {
-            type: 'string',
-            description:
-              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing.",
-            knownValues: ['inform', 'alert', 'none'],
-          },
-          blurs: {
-            type: 'string',
-            description:
-              "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
-            knownValues: ['content', 'media', 'none'],
-          },
-          defaultSetting: {
-            type: 'string',
-            description: 'The default setting for this label.',
-            knownValues: ['ignore', 'warn', 'hide'],
-            default: 'warn',
-          },
-          adultOnly: {
-            type: 'boolean',
-            description:
-              'Does the user need to have adult content enabled in order to configure this label?',
-          },
-          locales: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#labelValueDefinitionStrings',
-            },
-          },
-        },
-      },
-      labelValueDefinitionStrings: {
-        type: 'object',
-        description:
-          'Strings which describe the label in the UI, localized into a specific language.',
-        required: ['lang', 'name', 'description'],
-        properties: {
-          lang: {
-            type: 'string',
-            description:
-              'The code of the language these strings are written in.',
-            format: 'language',
-          },
-          name: {
-            type: 'string',
-            description: 'A short human-readable name for the label.',
-            maxGraphemes: 64,
-            maxLength: 640,
-          },
-          description: {
-            type: 'string',
-            description:
-              'A longer description of what the label means and why it might be applied.',
-            maxGraphemes: 10000,
-            maxLength: 100000,
-          },
-        },
-      },
-      labelValue: {
-        type: 'string',
-        knownValues: [
-          '!hide',
-          '!no-promote',
-          '!warn',
-          '!no-unauthenticated',
-          'dmca-violation',
-          'doxxing',
-          'porn',
-          'sexual',
-          'nudity',
-          'nsfl',
-          'gore',
-        ],
-      },
-    },
-  },
-  ComAtprotoLabelQueryLabels: {
-    lexicon: 1,
-    id: 'com.atproto.label.queryLabels',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Find labels relevant to the provided AT-URI patterns. Public endpoint for moderation services, though may return different or additional results with auth.',
-        parameters: {
-          type: 'params',
-          required: ['uriPatterns'],
-          properties: {
-            uriPatterns: {
-              type: 'array',
-              items: {
-                type: 'string',
-              },
-              description:
-                "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI.",
-            },
-            sources: {
-              type: 'array',
-              items: {
-                type: 'string',
-                format: 'did',
-              },
-              description:
-                'Optional list of label sources (DIDs) to filter on.',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 250,
-              default: 50,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['labels'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              labels: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.label.defs#label',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoLabelSubscribeLabels: {
-    lexicon: 1,
-    id: 'com.atproto.label.subscribeLabels',
-    defs: {
-      main: {
-        type: 'subscription',
-        description:
-          'Subscribe to stream of labels (and negations). Public endpoint implemented by mod services. Uses same sequencing scheme as repo event stream.',
-        parameters: {
-          type: 'params',
-          properties: {
-            cursor: {
-              type: 'integer',
-              description: 'The last known event seq number to backfill from.',
-            },
-          },
-        },
-        message: {
-          schema: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.label.subscribeLabels#labels',
-              'lex:com.atproto.label.subscribeLabels#info',
-            ],
-          },
-        },
-        errors: [
-          {
-            name: 'FutureCursor',
-          },
-        ],
-      },
-      labels: {
-        type: 'object',
-        required: ['seq', 'labels'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          labels: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.label.defs#label',
-            },
-          },
-        },
-      },
-      info: {
-        type: 'object',
-        required: ['name'],
-        properties: {
-          name: {
-            type: 'string',
-            knownValues: ['OutdatedCursor'],
-          },
-          message: {
-            type: 'string',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoLexiconSchema: {
-    lexicon: 1,
-    id: 'com.atproto.lexicon.schema',
-    defs: {
-      main: {
-        type: 'record',
-        description:
-          "Representation of Lexicon schemas themselves, when published as atproto records. Note that the schema language is not defined in Lexicon; this meta schema currently only includes a single version field ('lexicon'). See the atproto specifications for description of the other expected top-level fields ('id', 'defs', etc).",
-        key: 'nsid',
-        record: {
-          type: 'object',
-          required: ['lexicon'],
-          properties: {
-            lexicon: {
-              type: 'integer',
-              description:
-                "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system.",
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoModerationCreateReport: {
-    lexicon: 1,
-    id: 'com.atproto.moderation.createReport',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['reasonType', 'subject'],
-            properties: {
-              reasonType: {
-                type: 'ref',
-                description:
-                  'Indicates the broad category of violation the report is for.',
-                ref: 'lex:com.atproto.moderation.defs#reasonType',
-              },
-              reason: {
-                type: 'string',
-                maxGraphemes: 2000,
-                maxLength: 20000,
-                description:
-                  'Additional context about the content and violation.',
-              },
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                ],
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: [
-              'id',
-              'reasonType',
-              'subject',
-              'reportedBy',
-              'createdAt',
-            ],
-            properties: {
-              id: {
-                type: 'integer',
-              },
-              reasonType: {
-                type: 'ref',
-                ref: 'lex:com.atproto.moderation.defs#reasonType',
-              },
-              reason: {
-                type: 'string',
-                maxGraphemes: 2000,
-                maxLength: 20000,
-              },
-              subject: {
-                type: 'union',
-                refs: [
-                  'lex:com.atproto.admin.defs#repoRef',
-                  'lex:com.atproto.repo.strongRef',
-                ],
-              },
-              reportedBy: {
-                type: 'string',
-                format: 'did',
-              },
-              createdAt: {
-                type: 'string',
-                format: 'datetime',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoModerationDefs: {
-    lexicon: 1,
-    id: 'com.atproto.moderation.defs',
-    defs: {
-      reasonType: {
-        type: 'string',
-        knownValues: [
-          'com.atproto.moderation.defs#reasonSpam',
-          'com.atproto.moderation.defs#reasonViolation',
-          'com.atproto.moderation.defs#reasonMisleading',
-          'com.atproto.moderation.defs#reasonSexual',
-          'com.atproto.moderation.defs#reasonRude',
-          'com.atproto.moderation.defs#reasonOther',
-          'com.atproto.moderation.defs#reasonAppeal',
-        ],
-      },
-      reasonSpam: {
-        type: 'token',
-        description: 'Spam: frequent unwanted promotion, replies, mentions',
-      },
-      reasonViolation: {
-        type: 'token',
-        description: 'Direct violation of server rules, laws, terms of service',
-      },
-      reasonMisleading: {
-        type: 'token',
-        description: 'Misleading identity, affiliation, or content',
-      },
-      reasonSexual: {
-        type: 'token',
-        description: 'Unwanted or mislabeled sexual content',
-      },
-      reasonRude: {
-        type: 'token',
-        description:
-          'Rude, harassing, explicit, or otherwise unwelcoming behavior',
-      },
-      reasonOther: {
-        type: 'token',
-        description: 'Other: reports not falling under another report category',
-      },
-      reasonAppeal: {
-        type: 'token',
-        description: 'Appeal: appeal a previously taken moderation action',
-      },
-      subjectType: {
-        type: 'string',
-        description: 'Tag describing a type of subject that might be reported.',
-        knownValues: ['account', 'record', 'chat'],
-      },
-    },
-  },
-  ComAtprotoRepoApplyWrites: {
-    lexicon: 1,
-    id: 'com.atproto.repo.applyWrites',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Apply a batch transaction of repository creates, updates, and deletes. Requires auth, implemented by PDS.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo', 'writes'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description:
-                  'The handle or DID of the repo (aka, current account).',
-              },
-              validate: {
-                type: 'boolean',
-                description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons.",
-              },
-              writes: {
-                type: 'array',
-                items: {
-                  type: 'union',
-                  refs: [
-                    'lex:com.atproto.repo.applyWrites#create',
-                    'lex:com.atproto.repo.applyWrites#update',
-                    'lex:com.atproto.repo.applyWrites#delete',
-                  ],
-                  closed: true,
-                },
-              },
-              swapCommit: {
-                type: 'string',
-                description:
-                  'If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations.',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: [],
-            properties: {
-              commit: {
-                type: 'ref',
-                ref: 'lex:com.atproto.repo.defs#commitMeta',
-              },
-              results: {
-                type: 'array',
-                items: {
-                  type: 'union',
-                  refs: [
-                    'lex:com.atproto.repo.applyWrites#createResult',
-                    'lex:com.atproto.repo.applyWrites#updateResult',
-                    'lex:com.atproto.repo.applyWrites#deleteResult',
-                  ],
-                  closed: true,
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-            description:
-              "Indicates that the 'swapCommit' parameter did not match current commit.",
-          },
-        ],
-      },
-      create: {
-        type: 'object',
-        description: 'Operation which creates a new record.',
-        required: ['collection', 'value'],
-        properties: {
-          collection: {
-            type: 'string',
-            format: 'nsid',
-          },
-          rkey: {
-            type: 'string',
-            maxLength: 512,
-            format: 'record-key',
-            description:
-              'NOTE: maxLength is redundant with record-key format. Keeping it temporarily to ensure backwards compatibility.',
-          },
-          value: {
-            type: 'unknown',
-          },
-        },
-      },
-      update: {
-        type: 'object',
-        description: 'Operation which updates an existing record.',
-        required: ['collection', 'rkey', 'value'],
-        properties: {
-          collection: {
-            type: 'string',
-            format: 'nsid',
-          },
-          rkey: {
-            type: 'string',
-            format: 'record-key',
-          },
-          value: {
-            type: 'unknown',
-          },
-        },
-      },
-      delete: {
-        type: 'object',
-        description: 'Operation which deletes an existing record.',
-        required: ['collection', 'rkey'],
-        properties: {
-          collection: {
-            type: 'string',
-            format: 'nsid',
-          },
-          rkey: {
-            type: 'string',
-            format: 'record-key',
-          },
-        },
-      },
-      createResult: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          validationStatus: {
-            type: 'string',
-            knownValues: ['valid', 'unknown'],
-          },
-        },
-      },
-      updateResult: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          validationStatus: {
-            type: 'string',
-            knownValues: ['valid', 'unknown'],
-          },
-        },
-      },
-      deleteResult: {
-        type: 'object',
-        required: [],
-        properties: {},
-      },
-    },
-  },
-  ComAtprotoRepoCreateRecord: {
-    lexicon: 1,
-    id: 'com.atproto.repo.createRecord',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Create a single new repository record. Requires auth, implemented by PDS.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo', 'collection', 'record'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description:
-                  'The handle or DID of the repo (aka, current account).',
-              },
-              collection: {
-                type: 'string',
-                format: 'nsid',
-                description: 'The NSID of the record collection.',
-              },
-              rkey: {
-                type: 'string',
-                format: 'record-key',
-                description: 'The Record Key.',
-                maxLength: 512,
-              },
-              validate: {
-                type: 'boolean',
-                description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
-              },
-              record: {
-                type: 'unknown',
-                description: 'The record itself. Must contain a $type field.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by CID.',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['uri', 'cid'],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              commit: {
-                type: 'ref',
-                ref: 'lex:com.atproto.repo.defs#commitMeta',
-              },
-              validationStatus: {
-                type: 'string',
-                knownValues: ['valid', 'unknown'],
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-            description:
-              "Indicates that 'swapCommit' didn't match current repo commit.",
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoRepoDefs: {
-    lexicon: 1,
-    id: 'com.atproto.repo.defs',
-    defs: {
-      commitMeta: {
-        type: 'object',
-        required: ['cid', 'rev'],
-        properties: {
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          rev: {
-            type: 'string',
-            format: 'tid',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoRepoDeleteRecord: {
-    lexicon: 1,
-    id: 'com.atproto.repo.deleteRecord',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Delete a repository record, or ensure it doesn't exist. Requires auth, implemented by PDS.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo', 'collection', 'rkey'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description:
-                  'The handle or DID of the repo (aka, current account).',
-              },
-              collection: {
-                type: 'string',
-                format: 'nsid',
-                description: 'The NSID of the record collection.',
-              },
-              rkey: {
-                type: 'string',
-                format: 'record-key',
-                description: 'The Record Key.',
-              },
-              swapRecord: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous record by CID.',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by CID.',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              commit: {
-                type: 'ref',
-                ref: 'lex:com.atproto.repo.defs#commitMeta',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoRepoDescribeRepo: {
-    lexicon: 1,
-    id: 'com.atproto.repo.describeRepo',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get information about an account and repository, including the list of collections. Does not require auth.',
-        parameters: {
-          type: 'params',
-          required: ['repo'],
-          properties: {
-            repo: {
-              type: 'string',
-              format: 'at-identifier',
-              description: 'The handle or DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: [
-              'handle',
-              'did',
-              'didDoc',
-              'collections',
-              'handleIsCorrect',
-            ],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              didDoc: {
-                type: 'unknown',
-                description: 'The complete DID document for this account.',
-              },
-              collections: {
-                type: 'array',
-                description:
-                  'List of all the collections (NSIDs) for which this repo contains at least one record.',
-                items: {
-                  type: 'string',
-                  format: 'nsid',
-                },
-              },
-              handleIsCorrect: {
-                type: 'boolean',
-                description:
-                  'Indicates if handle is currently valid (resolves bi-directionally)',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoRepoGetRecord: {
-    lexicon: 1,
-    id: 'com.atproto.repo.getRecord',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get a single record from a repository. Does not require auth.',
-        parameters: {
-          type: 'params',
-          required: ['repo', 'collection', 'rkey'],
-          properties: {
-            repo: {
-              type: 'string',
-              format: 'at-identifier',
-              description: 'The handle or DID of the repo.',
-            },
-            collection: {
-              type: 'string',
-              format: 'nsid',
-              description: 'The NSID of the record collection.',
-            },
-            rkey: {
-              type: 'string',
-              description: 'The Record Key.',
-              format: 'record-key',
-            },
-            cid: {
-              type: 'string',
-              format: 'cid',
-              description:
-                'The CID of the version of the record. If not specified, then return the most recent version.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['uri', 'value'],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              value: {
-                type: 'unknown',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'RecordNotFound',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoRepoImportRepo: {
-    lexicon: 1,
-    id: 'com.atproto.repo.importRepo',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Import a repo in the form of a CAR file. Requires Content-Length HTTP header to be set.',
-        input: {
-          encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoRepoListMissingBlobs: {
-    lexicon: 1,
-    id: 'com.atproto.repo.listMissingBlobs',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Returns a list of missing blobs for the requesting account. Intended to be used in the account migration flow.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 1000,
-              default: 500,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['blobs'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              blobs: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.repo.listMissingBlobs#recordBlob',
-                },
-              },
-            },
-          },
-        },
-      },
-      recordBlob: {
-        type: 'object',
-        required: ['cid', 'recordUri'],
-        properties: {
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          recordUri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoRepoListRecords: {
-    lexicon: 1,
-    id: 'com.atproto.repo.listRecords',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'List a range of records in a repository, matching a specific collection. Does not require auth.',
-        parameters: {
-          type: 'params',
-          required: ['repo', 'collection'],
-          properties: {
-            repo: {
-              type: 'string',
-              format: 'at-identifier',
-              description: 'The handle or DID of the repo.',
-            },
-            collection: {
-              type: 'string',
-              format: 'nsid',
-              description: 'The NSID of the record type.',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 50,
-              description: 'The number of records to return.',
-            },
-            cursor: {
-              type: 'string',
-            },
-            reverse: {
-              type: 'boolean',
-              description: 'Flag to reverse the order of the returned records.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['records'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              records: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.repo.listRecords#record',
-                },
-              },
-            },
-          },
-        },
-      },
-      record: {
-        type: 'object',
-        required: ['uri', 'cid', 'value'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-          value: {
-            type: 'unknown',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoRepoPutRecord: {
-    lexicon: 1,
-    id: 'com.atproto.repo.putRecord',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Write a repository record, creating or updating it as needed. Requires auth, implemented by PDS.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repo', 'collection', 'rkey', 'record'],
-            nullable: ['swapRecord'],
-            properties: {
-              repo: {
-                type: 'string',
-                format: 'at-identifier',
-                description:
-                  'The handle or DID of the repo (aka, current account).',
-              },
-              collection: {
-                type: 'string',
-                format: 'nsid',
-                description: 'The NSID of the record collection.',
-              },
-              rkey: {
-                type: 'string',
-                format: 'record-key',
-                description: 'The Record Key.',
-                maxLength: 512,
-              },
-              validate: {
-                type: 'boolean',
-                description:
-                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
-              },
-              record: {
-                type: 'unknown',
-                description: 'The record to write.',
-              },
-              swapRecord: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation',
-              },
-              swapCommit: {
-                type: 'string',
-                format: 'cid',
-                description:
-                  'Compare and swap with the previous commit by CID.',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['uri', 'cid'],
-            properties: {
-              uri: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              commit: {
-                type: 'ref',
-                ref: 'lex:com.atproto.repo.defs#commitMeta',
-              },
-              validationStatus: {
-                type: 'string',
-                knownValues: ['valid', 'unknown'],
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidSwap',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoRepoStrongRef: {
-    lexicon: 1,
-    id: 'com.atproto.repo.strongRef',
-    description: 'A URI with a content-hash fingerprint.',
-    defs: {
-      main: {
-        type: 'object',
-        required: ['uri', 'cid'],
-        properties: {
-          uri: {
-            type: 'string',
-            format: 'at-uri',
-          },
-          cid: {
-            type: 'string',
-            format: 'cid',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoRepoUploadBlob: {
-    lexicon: 1,
-    id: 'com.atproto.repo.uploadBlob',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Upload a new blob, to be referenced from a repository record. The blob will be deleted if it is not referenced within a time window (eg, minutes). Blob restrictions (mimetype, size, etc) are enforced when the reference is created. Requires auth, implemented by PDS.',
-        input: {
-          encoding: '*/*',
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['blob'],
-            properties: {
-              blob: {
-                type: 'blob',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerActivateAccount: {
-    lexicon: 1,
-    id: 'com.atproto.server.activateAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Activates a currently deactivated account. Used to finalize account migration after the account's repo is imported and identity is setup.",
-      },
-    },
-  },
-  ComAtprotoServerCheckAccountStatus: {
-    lexicon: 1,
-    id: 'com.atproto.server.checkAccountStatus',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Returns the status of an account, especially as pertaining to import or recovery. Can be called many times over the course of an account migration. Requires auth and can only be called pertaining to oneself.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: [
-              'activated',
-              'validDid',
-              'repoCommit',
-              'repoRev',
-              'repoBlocks',
-              'indexedRecords',
-              'privateStateValues',
-              'expectedBlobs',
-              'importedBlobs',
-            ],
-            properties: {
-              activated: {
-                type: 'boolean',
-              },
-              validDid: {
-                type: 'boolean',
-              },
-              repoCommit: {
-                type: 'string',
-                format: 'cid',
-              },
-              repoRev: {
-                type: 'string',
-              },
-              repoBlocks: {
-                type: 'integer',
-              },
-              indexedRecords: {
-                type: 'integer',
-              },
-              privateStateValues: {
-                type: 'integer',
-              },
-              expectedBlobs: {
-                type: 'integer',
-              },
-              importedBlobs: {
-                type: 'integer',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerConfirmEmail: {
-    lexicon: 1,
-    id: 'com.atproto.server.confirmEmail',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Confirm an email using a token from com.atproto.server.requestEmailConfirmation.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['email', 'token'],
-            properties: {
-              email: {
-                type: 'string',
-              },
-              token: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'AccountNotFound',
-          },
-          {
-            name: 'ExpiredToken',
-          },
-          {
-            name: 'InvalidToken',
-          },
-          {
-            name: 'InvalidEmail',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerCreateAccount: {
-    lexicon: 1,
-    id: 'com.atproto.server.createAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create an account. Implemented by PDS.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle'],
-            properties: {
-              email: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-                description: 'Requested handle for the account.',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-                description:
-                  'Pre-existing atproto DID, being imported to a new account.',
-              },
-              inviteCode: {
-                type: 'string',
-              },
-              verificationCode: {
-                type: 'string',
-              },
-              verificationPhone: {
-                type: 'string',
-              },
-              password: {
-                type: 'string',
-                description:
-                  'Initial account password. May need to meet instance-specific password strength requirements.',
-              },
-              recoveryKey: {
-                type: 'string',
-                description:
-                  'DID PLC rotation key (aka, recovery key) to be included in PLC creation operation.',
-              },
-              plcOp: {
-                type: 'unknown',
-                description:
-                  'A signed DID PLC operation to be submitted as part of importing an existing account to this instance. NOTE: this optional field may be updated when full account migration is implemented.',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            description:
-              'Account login session returned on successful account creation.',
-            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
-            properties: {
-              accessJwt: {
-                type: 'string',
-              },
-              refreshJwt: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-                description: 'The DID of the new account.',
-              },
-              didDoc: {
-                type: 'unknown',
-                description: 'Complete DID document.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'InvalidHandle',
-          },
-          {
-            name: 'InvalidPassword',
-          },
-          {
-            name: 'InvalidInviteCode',
-          },
-          {
-            name: 'HandleNotAvailable',
-          },
-          {
-            name: 'UnsupportedDomain',
-          },
-          {
-            name: 'UnresolvableDid',
-          },
-          {
-            name: 'IncompatibleDidDoc',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerCreateAppPassword: {
-    lexicon: 1,
-    id: 'com.atproto.server.createAppPassword',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create an App Password.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['name'],
-            properties: {
-              name: {
-                type: 'string',
-                description:
-                  'A short name for the App Password, to help distinguish them.',
-              },
-              privileged: {
-                type: 'boolean',
-                description:
-                  "If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients.",
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'ref',
-            ref: 'lex:com.atproto.server.createAppPassword#appPassword',
-          },
-        },
-        errors: [
-          {
-            name: 'AccountTakedown',
-          },
-        ],
-      },
-      appPassword: {
-        type: 'object',
-        required: ['name', 'password', 'createdAt'],
-        properties: {
-          name: {
-            type: 'string',
-          },
-          password: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          privileged: {
-            type: 'boolean',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerCreateInviteCode: {
-    lexicon: 1,
-    id: 'com.atproto.server.createInviteCode',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create an invite code.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['useCount'],
-            properties: {
-              useCount: {
-                type: 'integer',
-              },
-              forAccount: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['code'],
-            properties: {
-              code: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerCreateInviteCodes: {
-    lexicon: 1,
-    id: 'com.atproto.server.createInviteCodes',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create invite codes.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['codeCount', 'useCount'],
-            properties: {
-              codeCount: {
-                type: 'integer',
-                default: 1,
-              },
-              useCount: {
-                type: 'integer',
-              },
-              forAccounts: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'did',
-                },
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['codes'],
-            properties: {
-              codes: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.server.createInviteCodes#accountCodes',
-                },
-              },
-            },
-          },
-        },
-      },
-      accountCodes: {
-        type: 'object',
-        required: ['account', 'codes'],
-        properties: {
-          account: {
-            type: 'string',
-          },
-          codes: {
-            type: 'array',
-            items: {
-              type: 'string',
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerCreateSession: {
-    lexicon: 1,
-    id: 'com.atproto.server.createSession',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Create an authentication session.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['identifier', 'password'],
-            properties: {
-              identifier: {
-                type: 'string',
-                description:
-                  'Handle or other identifier supported by the server for the authenticating user.',
-              },
-              password: {
-                type: 'string',
-              },
-              authFactorToken: {
-                type: 'string',
-              },
-              allowTakendown: {
-                type: 'boolean',
-                description:
-                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
-            properties: {
-              accessJwt: {
-                type: 'string',
-              },
-              refreshJwt: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              didDoc: {
-                type: 'unknown',
-              },
-              email: {
-                type: 'string',
-              },
-              emailConfirmed: {
-                type: 'boolean',
-              },
-              emailAuthFactor: {
-                type: 'boolean',
-              },
-              active: {
-                type: 'boolean',
-              },
-              status: {
-                type: 'string',
-                description:
-                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: ['takendown', 'suspended', 'deactivated'],
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'AccountTakedown',
-          },
-          {
-            name: 'AuthFactorTokenRequired',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerDeactivateAccount: {
-    lexicon: 1,
-    id: 'com.atproto.server.deactivateAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Deactivates a currently active account. Stops serving of repo, and future writes to repo until reactivated. Used to finalize account migration with the old host after the account has been activated on the new host.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              deleteAfter: {
-                type: 'string',
-                format: 'datetime',
-                description:
-                  'A recommendation to server as to how long they should hold onto the deactivated account before deleting.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerDefs: {
-    lexicon: 1,
-    id: 'com.atproto.server.defs',
-    defs: {
-      inviteCode: {
-        type: 'object',
-        required: [
-          'code',
-          'available',
-          'disabled',
-          'forAccount',
-          'createdBy',
-          'createdAt',
-          'uses',
-        ],
-        properties: {
-          code: {
-            type: 'string',
-          },
-          available: {
-            type: 'integer',
-          },
-          disabled: {
-            type: 'boolean',
-          },
-          forAccount: {
-            type: 'string',
-          },
-          createdBy: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          uses: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.server.defs#inviteCodeUse',
-            },
-          },
-        },
-      },
-      inviteCodeUse: {
-        type: 'object',
-        required: ['usedBy', 'usedAt'],
-        properties: {
-          usedBy: {
-            type: 'string',
-            format: 'did',
-          },
-          usedAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerDeleteAccount: {
-    lexicon: 1,
-    id: 'com.atproto.server.deleteAccount',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Delete an actor's account with a token and password. Can only be called after requesting a deletion token. Requires auth.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'password', 'token'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              password: {
-                type: 'string',
-              },
-              token: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'ExpiredToken',
-          },
-          {
-            name: 'InvalidToken',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerDeleteSession: {
-    lexicon: 1,
-    id: 'com.atproto.server.deleteSession',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Delete the current session. Requires auth.',
-      },
-    },
-  },
-  ComAtprotoServerDescribeServer: {
-    lexicon: 1,
-    id: 'com.atproto.server.describeServer',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Describes the server's account creation requirements and capabilities. Implemented by PDS.",
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'availableUserDomains'],
-            properties: {
-              inviteCodeRequired: {
-                type: 'boolean',
-                description:
-                  'If true, an invite code must be supplied to create an account on this instance.',
-              },
-              phoneVerificationRequired: {
-                type: 'boolean',
-                description:
-                  'If true, a phone verification token must be supplied to create an account on this instance.',
-              },
-              availableUserDomains: {
-                type: 'array',
-                description:
-                  'List of domain suffixes that can be used in account handles.',
-                items: {
-                  type: 'string',
-                },
-              },
-              links: {
-                type: 'ref',
-                description: 'URLs of service policy documents.',
-                ref: 'lex:com.atproto.server.describeServer#links',
-              },
-              contact: {
-                type: 'ref',
-                description: 'Contact information',
-                ref: 'lex:com.atproto.server.describeServer#contact',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-            },
-          },
-        },
-      },
-      links: {
-        type: 'object',
-        properties: {
-          privacyPolicy: {
-            type: 'string',
-            format: 'uri',
-          },
-          termsOfService: {
-            type: 'string',
-            format: 'uri',
-          },
-        },
-      },
-      contact: {
-        type: 'object',
-        properties: {
-          email: {
-            type: 'string',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerGetAccountInviteCodes: {
-    lexicon: 1,
-    id: 'com.atproto.server.getAccountInviteCodes',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get all invite codes for the current account. Requires auth.',
-        parameters: {
-          type: 'params',
-          properties: {
-            includeUsed: {
-              type: 'boolean',
-              default: true,
-            },
-            createAvailable: {
-              type: 'boolean',
-              default: true,
-              description:
-                "Controls whether any new 'earned' but not 'created' invites should be created.",
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['codes'],
-            properties: {
-              codes: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.server.defs#inviteCode',
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'DuplicateCreate',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerGetServiceAuth: {
-    lexicon: 1,
-    id: 'com.atproto.server.getServiceAuth',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get a signed token on behalf of the requesting DID for the requested service.',
-        parameters: {
-          type: 'params',
-          required: ['aud'],
-          properties: {
-            aud: {
-              type: 'string',
-              format: 'did',
-              description:
-                'The DID of the service that the token will be used to authenticate with',
-            },
-            exp: {
-              type: 'integer',
-              description:
-                'The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope.',
-            },
-            lxm: {
-              type: 'string',
-              format: 'nsid',
-              description:
-                'Lexicon (XRPC) method to bind the requested token to',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['token'],
-            properties: {
-              token: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'BadExpiration',
-            description:
-              'Indicates that the requested expiration date is not a valid. May be in the past or may be reliant on the requested scopes.',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerGetSession: {
-    lexicon: 1,
-    id: 'com.atproto.server.getSession',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get information about the current auth session. Requires auth.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle', 'did'],
-            properties: {
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              email: {
-                type: 'string',
-              },
-              emailConfirmed: {
-                type: 'boolean',
-              },
-              emailAuthFactor: {
-                type: 'boolean',
-              },
-              didDoc: {
-                type: 'unknown',
-              },
-              active: {
-                type: 'boolean',
-              },
-              status: {
-                type: 'string',
-                description:
-                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: ['takendown', 'suspended', 'deactivated'],
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerListAppPasswords: {
-    lexicon: 1,
-    id: 'com.atproto.server.listAppPasswords',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'List all App Passwords.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['passwords'],
-            properties: {
-              passwords: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.server.listAppPasswords#appPassword',
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'AccountTakedown',
-          },
-        ],
-      },
-      appPassword: {
-        type: 'object',
-        required: ['name', 'createdAt'],
-        properties: {
-          name: {
-            type: 'string',
-          },
-          createdAt: {
-            type: 'string',
-            format: 'datetime',
-          },
-          privileged: {
-            type: 'boolean',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerRefreshSession: {
-    lexicon: 1,
-    id: 'com.atproto.server.refreshSession',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          "Refresh an authentication session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
-            properties: {
-              accessJwt: {
-                type: 'string',
-              },
-              refreshJwt: {
-                type: 'string',
-              },
-              handle: {
-                type: 'string',
-                format: 'handle',
-              },
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              didDoc: {
-                type: 'unknown',
-              },
-              active: {
-                type: 'boolean',
-              },
-              status: {
-                type: 'string',
-                description:
-                  "Hosting status of the account. If not specified, then assume 'active'.",
-                knownValues: ['takendown', 'suspended', 'deactivated'],
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'AccountTakedown',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerRequestAccountDelete: {
-    lexicon: 1,
-    id: 'com.atproto.server.requestAccountDelete',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Initiate a user account deletion via email.',
-      },
-    },
-  },
-  ComAtprotoServerRequestEmailConfirmation: {
-    lexicon: 1,
-    id: 'com.atproto.server.requestEmailConfirmation',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Request an email with a code to confirm ownership of email.',
-      },
-    },
-  },
-  ComAtprotoServerRequestEmailUpdate: {
-    lexicon: 1,
-    id: 'com.atproto.server.requestEmailUpdate',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Request a token in order to update email.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['tokenRequired'],
-            properties: {
-              tokenRequired: {
-                type: 'boolean',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerRequestPasswordReset: {
-    lexicon: 1,
-    id: 'com.atproto.server.requestPasswordReset',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Initiate a user account password reset via email.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['email'],
-            properties: {
-              email: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerReserveSigningKey: {
-    lexicon: 1,
-    id: 'com.atproto.server.reserveSigningKey',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Reserve a repo signing key, for use with account creation. Necessary so that a DID PLC update operation can be constructed during an account migraiton. Public and does not require auth; implemented by PDS. NOTE: this endpoint may change when full account migration is implemented.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-                description: 'The DID to reserve a key for.',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['signingKey'],
-            properties: {
-              signingKey: {
-                type: 'string',
-                description:
-                  'The public key for the reserved signing key, in did:key serialization.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerResetPassword: {
-    lexicon: 1,
-    id: 'com.atproto.server.resetPassword',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Reset a user account password using a token.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['token', 'password'],
-            properties: {
-              token: {
-                type: 'string',
-              },
-              password: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'ExpiredToken',
-          },
-          {
-            name: 'InvalidToken',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoServerRevokeAppPassword: {
-    lexicon: 1,
-    id: 'com.atproto.server.revokeAppPassword',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Revoke an App Password by name.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['name'],
-            properties: {
-              name: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoServerUpdateEmail: {
-    lexicon: 1,
-    id: 'com.atproto.server.updateEmail',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: "Update an account's email.",
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['email'],
-            properties: {
-              email: {
-                type: 'string',
-              },
-              emailAuthFactor: {
-                type: 'boolean',
-              },
-              token: {
-                type: 'string',
-                description:
-                  "Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed.",
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'ExpiredToken',
-          },
-          {
-            name: 'InvalidToken',
-          },
-          {
-            name: 'TokenRequired',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncDefs: {
-    lexicon: 1,
-    id: 'com.atproto.sync.defs',
-    defs: {
-      hostStatus: {
-        type: 'string',
-        knownValues: ['active', 'idle', 'offline', 'throttled', 'banned'],
-      },
-    },
-  },
-  ComAtprotoSyncGetBlob: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getBlob',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get a blob associated with a given account. Returns the full blob as originally uploaded. Does not require auth; implemented by PDS.',
-        parameters: {
-          type: 'params',
-          required: ['did', 'cid'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the account.',
-            },
-            cid: {
-              type: 'string',
-              format: 'cid',
-              description: 'The CID of the blob to fetch',
-            },
-          },
-        },
-        output: {
-          encoding: '*/*',
-        },
-        errors: [
-          {
-            name: 'BlobNotFound',
-          },
-          {
-            name: 'RepoNotFound',
-          },
-          {
-            name: 'RepoTakendown',
-          },
-          {
-            name: 'RepoSuspended',
-          },
-          {
-            name: 'RepoDeactivated',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetBlocks: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getBlocks',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get data blocks from a given repo, by CID. For example, intermediate MST nodes, or records. Does not require auth; implemented by PDS.',
-        parameters: {
-          type: 'params',
-          required: ['did', 'cids'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-            cids: {
-              type: 'array',
-              items: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-        errors: [
-          {
-            name: 'BlockNotFound',
-          },
-          {
-            name: 'RepoNotFound',
-          },
-          {
-            name: 'RepoTakendown',
-          },
-          {
-            name: 'RepoSuspended',
-          },
-          {
-            name: 'RepoDeactivated',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetCheckout: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getCheckout',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-      },
-    },
-  },
-  ComAtprotoSyncGetHead: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getHead',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['root'],
-            properties: {
-              root: {
-                type: 'string',
-                format: 'cid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HeadNotFound',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetHostStatus: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getHostStatus',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Returns information about a specified upstream host, as consumed by the server. Implemented by relays.',
-        parameters: {
-          type: 'params',
-          required: ['hostname'],
-          properties: {
-            hostname: {
-              type: 'string',
-              description:
-                'Hostname of the host (eg, PDS or relay) being queried.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['hostname'],
-            properties: {
-              hostname: {
-                type: 'string',
-              },
-              seq: {
-                type: 'integer',
-                description:
-                  'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
-              },
-              accountCount: {
-                type: 'integer',
-                description:
-                  'Number of accounts on the server which are associated with the upstream host. Note that the upstream may actually have more accounts.',
-              },
-              status: {
-                type: 'ref',
-                ref: 'lex:com.atproto.sync.defs#hostStatus',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HostNotFound',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetLatestCommit: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getLatestCommit',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get the current commit CID & revision of the specified repo. Does not require auth.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['cid', 'rev'],
-            properties: {
-              cid: {
-                type: 'string',
-                format: 'cid',
-              },
-              rev: {
-                type: 'string',
-                format: 'tid',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'RepoNotFound',
-          },
-          {
-            name: 'RepoTakendown',
-          },
-          {
-            name: 'RepoSuspended',
-          },
-          {
-            name: 'RepoDeactivated',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetRecord: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getRecord',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get data blocks needed to prove the existence or non-existence of record in the current version of repo. Does not require auth.',
-        parameters: {
-          type: 'params',
-          required: ['did', 'collection', 'rkey'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-            collection: {
-              type: 'string',
-              format: 'nsid',
-            },
-            rkey: {
-              type: 'string',
-              description: 'Record Key',
-              format: 'record-key',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-        errors: [
-          {
-            name: 'RecordNotFound',
-          },
-          {
-            name: 'RepoNotFound',
-          },
-          {
-            name: 'RepoTakendown',
-          },
-          {
-            name: 'RepoSuspended',
-          },
-          {
-            name: 'RepoDeactivated',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetRepo: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getRepo',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Download a repository export as CAR file. Optionally only a 'diff' since a previous revision. Does not require auth; implemented by PDS.",
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-            since: {
-              type: 'string',
-              format: 'tid',
-              description:
-                "The revision ('rev') of the repo to create a diff from.",
-            },
-          },
-        },
-        output: {
-          encoding: 'application/vnd.ipld.car',
-        },
-        errors: [
-          {
-            name: 'RepoNotFound',
-          },
-          {
-            name: 'RepoTakendown',
-          },
-          {
-            name: 'RepoSuspended',
-          },
-          {
-            name: 'RepoDeactivated',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncGetRepoStatus: {
-    lexicon: 1,
-    id: 'com.atproto.sync.getRepoStatus',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get the hosting status for a repository, on this server. Expected to be implemented by PDS and Relay.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['did', 'active'],
-            properties: {
-              did: {
-                type: 'string',
-                format: 'did',
-              },
-              active: {
-                type: 'boolean',
-              },
-              status: {
-                type: 'string',
-                description:
-                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-                knownValues: [
-                  'takendown',
-                  'suspended',
-                  'deleted',
-                  'deactivated',
-                  'desynchronized',
-                  'throttled',
-                ],
-              },
-              rev: {
-                type: 'string',
-                format: 'tid',
-                description:
-                  'Optional field, the current rev of the repo, if active=true',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'RepoNotFound',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncListBlobs: {
-    lexicon: 1,
-    id: 'com.atproto.sync.listBlobs',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'List blob CIDs for an account, since some repo revision. Does not require auth; implemented by PDS.',
-        parameters: {
-          type: 'params',
-          required: ['did'],
-          properties: {
-            did: {
-              type: 'string',
-              format: 'did',
-              description: 'The DID of the repo.',
-            },
-            since: {
-              type: 'string',
-              format: 'tid',
-              description: 'Optional revision of the repo to list blobs since.',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 1000,
-              default: 500,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['cids'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              cids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
-                },
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'RepoNotFound',
-          },
-          {
-            name: 'RepoTakendown',
-          },
-          {
-            name: 'RepoSuspended',
-          },
-          {
-            name: 'RepoDeactivated',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncListHosts: {
-    lexicon: 1,
-    id: 'com.atproto.sync.listHosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates upstream hosts (eg, PDS or relay instances) that this service consumes from. Implemented by relays.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 1000,
-              default: 200,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['hosts'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              hosts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.sync.listHosts#host',
-                },
-                description:
-                  'Sort order is not formally specified. Recommended order is by time host was first seen by the server, with oldest first.',
-              },
-            },
-          },
-        },
-      },
-      host: {
-        type: 'object',
-        required: ['hostname'],
-        properties: {
-          hostname: {
-            type: 'string',
-            description: 'hostname of server; not a URL (no scheme)',
-          },
-          seq: {
-            type: 'integer',
-            description:
-              'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
-          },
-          accountCount: {
-            type: 'integer',
-          },
-          status: {
-            type: 'ref',
-            ref: 'lex:com.atproto.sync.defs#hostStatus',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoSyncListRepos: {
-    lexicon: 1,
-    id: 'com.atproto.sync.listRepos',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates all the DID, rev, and commit CID for all repos hosted by this service. Does not require auth; implemented by PDS and Relay.',
-        parameters: {
-          type: 'params',
-          properties: {
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 1000,
-              default: 500,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repos'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              repos: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.sync.listRepos#repo',
-                },
-              },
-            },
-          },
-        },
-      },
-      repo: {
-        type: 'object',
-        required: ['did', 'head', 'rev'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          head: {
-            type: 'string',
-            format: 'cid',
-            description: 'Current repo commit CID',
-          },
-          rev: {
-            type: 'string',
-            format: 'tid',
-          },
-          active: {
-            type: 'boolean',
-          },
-          status: {
-            type: 'string',
-            description:
-              'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
-            knownValues: [
-              'takendown',
-              'suspended',
-              'deleted',
-              'deactivated',
-              'desynchronized',
-              'throttled',
-            ],
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoSyncListReposByCollection: {
-    lexicon: 1,
-    id: 'com.atproto.sync.listReposByCollection',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Enumerates all the DIDs which have records with the given collection NSID.',
-        parameters: {
-          type: 'params',
-          required: ['collection'],
-          properties: {
-            collection: {
-              type: 'string',
-              format: 'nsid',
-            },
-            limit: {
-              type: 'integer',
-              description:
-                'Maximum size of response set. Recommend setting a large maximum (1000+) when enumerating large DID lists.',
-              minimum: 1,
-              maximum: 2000,
-              default: 500,
-            },
-            cursor: {
-              type: 'string',
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['repos'],
-            properties: {
-              cursor: {
-                type: 'string',
-              },
-              repos: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.sync.listReposByCollection#repo',
-                },
-              },
-            },
-          },
-        },
-      },
-      repo: {
-        type: 'object',
-        required: ['did'],
-        properties: {
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoSyncNotifyOfUpdate: {
-    lexicon: 1,
-    id: 'com.atproto.sync.notifyOfUpdate',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Notify a crawling service of a recent update, and that crawling should resume. Intended use is after a gap between repo stream events caused the crawling service to disconnect. Does not require auth; implemented by Relay. DEPRECATED: just use com.atproto.sync.requestCrawl',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['hostname'],
-            properties: {
-              hostname: {
-                type: 'string',
-                description:
-                  'Hostname of the current service (usually a PDS) that is notifying of update.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoSyncRequestCrawl: {
-    lexicon: 1,
-    id: 'com.atproto.sync.requestCrawl',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Request a service to persistently crawl hosted repos. Expected use is new PDS instances declaring their existence to Relays. Does not require auth.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['hostname'],
-            properties: {
-              hostname: {
-                type: 'string',
-                description:
-                  'Hostname of the current service (eg, PDS) that is requesting to be crawled.',
-              },
-            },
-          },
-        },
-        errors: [
-          {
-            name: 'HostBanned',
-          },
-        ],
-      },
-    },
-  },
-  ComAtprotoSyncSubscribeRepos: {
-    lexicon: 1,
-    id: 'com.atproto.sync.subscribeRepos',
-    defs: {
-      main: {
-        type: 'subscription',
-        description:
-          'Repository event stream, aka Firehose endpoint. Outputs repo commits with diff data, and identity update events, for all repositories on the current server. See the atproto specifications for details around stream sequencing, repo versioning, CAR diff format, and more. Public and does not require auth; implemented by PDS and Relay.',
-        parameters: {
-          type: 'params',
-          properties: {
-            cursor: {
-              type: 'integer',
-              description: 'The last known event seq number to backfill from.',
-            },
-          },
-        },
-        message: {
-          schema: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.sync.subscribeRepos#commit',
-              'lex:com.atproto.sync.subscribeRepos#sync',
-              'lex:com.atproto.sync.subscribeRepos#identity',
-              'lex:com.atproto.sync.subscribeRepos#account',
-              'lex:com.atproto.sync.subscribeRepos#info',
-            ],
-          },
-        },
-        errors: [
-          {
-            name: 'FutureCursor',
-          },
-          {
-            name: 'ConsumerTooSlow',
-            description:
-              'If the consumer of the stream can not keep up with events, and a backlog gets too large, the server will drop the connection.',
-          },
-        ],
-      },
-      commit: {
-        type: 'object',
-        description:
-          'Represents an update of repository state. Note that empty commits are allowed, which include no repo data changes, but an update to rev and signature.',
-        required: [
-          'seq',
-          'rebase',
-          'tooBig',
-          'repo',
-          'commit',
-          'rev',
-          'since',
-          'blocks',
-          'ops',
-          'blobs',
-          'time',
-        ],
-        nullable: ['since'],
-        properties: {
-          seq: {
-            type: 'integer',
-            description: 'The stream sequence number of this message.',
-          },
-          rebase: {
-            type: 'boolean',
-            description: 'DEPRECATED -- unused',
-          },
-          tooBig: {
-            type: 'boolean',
-            description:
-              'DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data.',
-          },
-          repo: {
-            type: 'string',
-            format: 'did',
-            description:
-              "The repo this event comes from. Note that all other message types name this field 'did'.",
-          },
-          commit: {
-            type: 'cid-link',
-            description: 'Repo commit object CID.',
-          },
-          rev: {
-            type: 'string',
-            format: 'tid',
-            description:
-              'The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event.',
-          },
-          since: {
-            type: 'string',
-            format: 'tid',
-            description:
-              'The rev of the last emitted commit from this repo (if any).',
-          },
-          blocks: {
-            type: 'bytes',
-            description:
-              "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
-            maxLength: 2000000,
-          },
-          ops: {
-            type: 'array',
-            items: {
-              type: 'ref',
-              ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
-              description:
-                'List of repo mutation operations in this commit (eg, records created, updated, or deleted).',
-            },
-            maxLength: 200,
-          },
-          blobs: {
-            type: 'array',
-            items: {
-              type: 'cid-link',
-              description:
-                'DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit.',
-            },
-          },
-          prevData: {
-            type: 'cid-link',
-            description:
-              "The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose.",
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp of when this message was originally broadcast.',
-          },
-        },
-      },
-      sync: {
-        type: 'object',
-        description:
-          'Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.',
-        required: ['seq', 'did', 'blocks', 'rev', 'time'],
-        properties: {
-          seq: {
-            type: 'integer',
-            description: 'The stream sequence number of this message.',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-            description:
-              'The account this repo event corresponds to. Must match that in the commit object.',
-          },
-          blocks: {
-            type: 'bytes',
-            description:
-              "CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'.",
-            maxLength: 10000,
-          },
-          rev: {
-            type: 'string',
-            description:
-              'The rev of the commit. This value must match that in the commit object.',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-            description:
-              'Timestamp of when this message was originally broadcast.',
-          },
-        },
-      },
-      identity: {
-        type: 'object',
-        description:
-          "Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache.",
-        required: ['seq', 'did', 'time'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-          },
-          handle: {
-            type: 'string',
-            format: 'handle',
-            description:
-              "The current handle for the account, or 'handle.invalid' if validation fails. This field is optional, might have been validated or passed-through from an upstream source. Semantics and behaviors for PDS vs Relay may evolve in the future; see atproto specs for more details.",
-          },
-        },
-      },
-      account: {
-        type: 'object',
-        description:
-          "Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active.",
-        required: ['seq', 'did', 'time', 'active'],
-        properties: {
-          seq: {
-            type: 'integer',
-          },
-          did: {
-            type: 'string',
-            format: 'did',
-          },
-          time: {
-            type: 'string',
-            format: 'datetime',
-          },
-          active: {
-            type: 'boolean',
-            description:
-              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
-          },
-          status: {
-            type: 'string',
-            description:
-              'If active=false, this optional field indicates a reason for why the account is not active.',
-            knownValues: [
-              'takendown',
-              'suspended',
-              'deleted',
-              'deactivated',
-              'desynchronized',
-              'throttled',
-            ],
-          },
-        },
-      },
-      info: {
-        type: 'object',
-        required: ['name'],
-        properties: {
-          name: {
-            type: 'string',
-            knownValues: ['OutdatedCursor'],
-          },
-          message: {
-            type: 'string',
-          },
-        },
-      },
-      repoOp: {
-        type: 'object',
-        description: 'A repo operation, ie a mutation of a single record.',
-        required: ['action', 'path', 'cid'],
-        nullable: ['cid'],
-        properties: {
-          action: {
-            type: 'string',
-            knownValues: ['create', 'update', 'delete'],
-          },
-          path: {
-            type: 'string',
-          },
-          cid: {
-            type: 'cid-link',
-            description:
-              'For creates and updates, the new record CID. For deletions, null.',
-          },
-          prev: {
-            type: 'cid-link',
-            description:
-              'For updates and deletes, the previous record CID (required for inductive firehose). For creations, field should not be defined.',
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempAddReservedHandle: {
-    lexicon: 1,
-    id: 'com.atproto.temp.addReservedHandle',
-    defs: {
-      main: {
-        type: 'procedure',
-        description: 'Add a handle to the set of reserved handles.',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['handle'],
-            properties: {
-              handle: {
-                type: 'string',
-              },
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            properties: {},
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempCheckSignupQueue: {
-    lexicon: 1,
-    id: 'com.atproto.temp.checkSignupQueue',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Check accounts location in signup queue.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['activated'],
-            properties: {
-              activated: {
-                type: 'boolean',
-              },
-              placeInQueue: {
-                type: 'integer',
-              },
-              estimatedTimeMs: {
-                type: 'integer',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempFetchLabels: {
-    lexicon: 1,
-    id: 'com.atproto.temp.fetchLabels',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'DEPRECATED: use queryLabels or subscribeLabels instead -- Fetch all labels from a labeler created after a certain date.',
-        parameters: {
-          type: 'params',
-          properties: {
-            since: {
-              type: 'integer',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 250,
-              default: 50,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['labels'],
-            properties: {
-              labels: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.label.defs#label',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  ComAtprotoTempRequestPhoneVerification: {
-    lexicon: 1,
-    id: 'com.atproto.temp.requestPhoneVerification',
-    defs: {
-      main: {
-        type: 'procedure',
-        description:
-          'Request a verification code to be sent to the supplied phone number',
-        input: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['phoneNumber'],
-            properties: {
-              phoneNumber: {
-                type: 'string',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyActorDefs: {
     lexicon: 1,
     id: 'app.bsky.actor.defs',
@@ -4540,6 +30,9 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 64,
             maxLength: 640,
+          },
+          pronouns: {
+            type: 'string',
           },
           avatar: {
             type: 'string',
@@ -4572,6 +65,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       profileView: {
@@ -4590,6 +87,9 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 64,
             maxLength: 640,
+          },
+          pronouns: {
+            type: 'string',
           },
           description: {
             type: 'string',
@@ -4630,6 +130,10 @@ export const schemaDict = {
           status: {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
+          },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
           },
         },
       },
@@ -4654,6 +158,13 @@ export const schemaDict = {
             type: 'string',
             maxGraphemes: 256,
             maxLength: 2560,
+          },
+          pronouns: {
+            type: 'string',
+          },
+          website: {
+            type: 'string',
+            format: 'uri',
           },
           avatar: {
             type: 'string',
@@ -4711,6 +222,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#statusView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       profileAssociated: {
@@ -4732,6 +247,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#profileAssociatedChat',
           },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileAssociatedActivitySubscription',
+          },
         },
       },
       profileAssociatedChat: {
@@ -4741,6 +260,16 @@ export const schemaDict = {
           allowIncoming: {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
+          },
+        },
+      },
+      profileAssociatedActivitySubscription: {
+        type: 'object',
+        required: ['allowSubscriptions'],
+        properties: {
+          allowSubscriptions: {
+            type: 'string',
+            knownValues: ['followers', 'mutuals', 'none'],
           },
         },
       },
@@ -4776,8 +305,16 @@ export const schemaDict = {
             format: 'at-uri',
           },
           knownFollowers: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
             type: 'ref',
             ref: 'lex:app.bsky.actor.defs#knownFollowers',
+          },
+          activitySubscription: {
+            description:
+              'This property is present only in selected cases, as an optimization.',
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
           },
         },
       },
@@ -4864,6 +401,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#savedFeedsPref',
             'lex:app.bsky.actor.defs#savedFeedsPrefV2',
             'lex:app.bsky.actor.defs#personalDetailsPref',
+            'lex:app.bsky.actor.defs#declaredAgePref',
             'lex:app.bsky.actor.defs#feedViewPref',
             'lex:app.bsky.actor.defs#threadViewPref',
             'lex:app.bsky.actor.defs#interestsPref',
@@ -4970,6 +508,28 @@ export const schemaDict = {
           },
         },
       },
+      declaredAgePref: {
+        type: 'object',
+        description:
+          "Read-only preference containing value(s) inferred from the user's declared birthdate. Absence of this preference object in the response indicates that the user has not made a declaration.",
+        properties: {
+          isOverAge13: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 13 years of age.',
+          },
+          isOverAge16: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 16 years of age.',
+          },
+          isOverAge18: {
+            type: 'boolean',
+            description:
+              'Indicates if the user has declared that they are over 18 years of age.',
+          },
+        },
+      },
       feedViewPref: {
         type: 'object',
         required: ['feed'],
@@ -5017,10 +577,6 @@ export const schemaDict = {
               'random',
               'hotness',
             ],
-          },
-          prioritizeFollowedUsers: {
-            type: 'boolean',
-            description: 'Show followed users at the top of all replies.',
           },
         },
       },
@@ -5256,6 +812,14 @@ export const schemaDict = {
         type: 'object',
         required: ['status', 'record'],
         properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
           status: {
             type: 'string',
             description: 'The status for the account.',
@@ -5279,6 +843,11 @@ export const schemaDict = {
             type: 'boolean',
             description:
               'True if the status is not expired, false if it is expired. Only present if expiration was set.',
+          },
+          isDisabled: {
+            type: 'boolean',
+            description:
+              "True if the user's go-live access has been disabled by a moderator, false otherwise.",
           },
         },
       },
@@ -5451,6 +1020,16 @@ export const schemaDict = {
               description: 'Free-form profile description text.',
               maxGraphemes: 256,
               maxLength: 2560,
+            },
+            pronouns: {
+              type: 'string',
+              description: 'Free-form pronouns text.',
+              maxGraphemes: 20,
+              maxLength: 200,
+            },
+            website: {
+              type: 'string',
+              format: 'uri',
             },
             avatar: {
               type: 'blob',
@@ -5650,6 +1229,992 @@ export const schemaDict = {
         type: 'token',
         description:
           'Advertises an account as currently offering live content.',
+      },
+    },
+  },
+  AppBskyAgeassuranceBegin: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.begin',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate Age Assurance for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive Age Assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the Age Assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+              regionCode: {
+                type: 'string',
+                description:
+                  "An optional ISO 3166-2 code of the user's region or state within the country.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#state',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+          {
+            name: 'RegionNotSupported',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyAgeassuranceDefs: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.defs',
+    defs: {
+      access: {
+        description:
+          "The access level granted based on Age Assurance data we've processed.",
+        type: 'string',
+        knownValues: ['unknown', 'none', 'safe', 'full'],
+      },
+      status: {
+        type: 'string',
+        description: 'The status of the Age Assurance process.',
+        knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+      },
+      state: {
+        type: 'object',
+        description: "The user's computed Age Assurance state.",
+        required: ['status', 'access'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#status',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      stateMetadata: {
+        type: 'object',
+        description:
+          'Additional metadata needed to compute Age Assurance state client-side.',
+        required: [],
+        properties: {
+          accountCreatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The account creation timestamp.',
+          },
+        },
+      },
+      config: {
+        type: 'object',
+        description: '',
+        required: ['regions'],
+        properties: {
+          regions: {
+            type: 'array',
+            description: 'The per-region Age Assurance configuration.',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.ageassurance.defs#configRegion',
+            },
+          },
+        },
+      },
+      configRegion: {
+        type: 'object',
+        description: 'The Age Assurance configuration for a specific region.',
+        required: ['countryCode', 'minAccessAge', 'rules'],
+        properties: {
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code this configuration applies to.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code this configuration applies to. If omitted, the configuration applies to the entire country.',
+          },
+          minAccessAge: {
+            type: 'integer',
+            description:
+              'The minimum age (as a whole integer) required to use Bluesky in this region.',
+          },
+          rules: {
+            type: 'array',
+            description:
+              'The ordered list of Age Assurance rules that apply to this region. Rules should be applied in order, and the first matching rule determines the access level granted. The rules array should always include a default rule as the last item.',
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.ageassurance.defs#configRegionRuleDefault',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfDeclaredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredOverAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAssuredUnderAge',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountNewerThan',
+                'lex:app.bsky.ageassurance.defs#configRegionRuleIfAccountOlderThan',
+              ],
+            },
+          },
+        },
+      },
+      configRegionRuleDefault: {
+        type: 'object',
+        description: 'Age Assurance rule that applies by default.',
+        required: ['access'],
+        properties: {
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfDeclaredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has declared themselves under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredOverAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be equal-to or over a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAssuredUnderAge: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the user has been assured to be under a certain age.',
+        required: ['age', 'access'],
+        properties: {
+          age: {
+            type: 'integer',
+            description: 'The age threshold as a whole integer.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountNewerThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is equal-to or newer than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      configRegionRuleIfAccountOlderThan: {
+        type: 'object',
+        description:
+          'Age Assurance rule that applies if the account is older than a certain date.',
+        required: ['date', 'access'],
+        properties: {
+          date: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date threshold as a datetime string.',
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+        },
+      },
+      event: {
+        type: 'object',
+        description: 'Object used to store Age Assurance data in stash.',
+        required: ['createdAt', 'status', 'access', 'attemptId', 'countryCode'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the Age Assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+          access: {
+            description:
+              "The access level granted based on Age Assurance data we've processed.",
+            type: 'string',
+            knownValues: ['unknown', 'none', 'safe', 'full'],
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for Age Assurance.',
+          },
+          initIp: {
+            type: 'string',
+            description:
+              'The IP address used when initiating the Age Assurance flow.',
+          },
+          initUa: {
+            type: 'string',
+            description:
+              'The user agent used when initiating the Age Assurance flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description:
+              'The IP address used when completing the Age Assurance flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description:
+              'The user agent used when completing the Age Assurance flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetConfig: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getConfig',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns Age Assurance configuration for use on the client.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#config',
+          },
+        },
+      },
+    },
+  },
+  AppBskyAgeassuranceGetState: {
+    lexicon: 1,
+    id: 'app.bsky.ageassurance.getState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns server-computed Age Assurance state, if available, and any additional metadata needed to compute Age Assurance state client-side.',
+        parameters: {
+          type: 'params',
+          required: ['countryCode'],
+          properties: {
+            countryCode: {
+              type: 'string',
+            },
+            regionCode: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['state', 'metadata'],
+            properties: {
+              state: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#state',
+              },
+              metadata: {
+                type: 'ref',
+                ref: 'lex:app.bsky.ageassurance.defs#stateMetadata',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyBookmarkCreateBookmark: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.createBookmark',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Creates a private bookmark for the specified record. Currently, only `app.bsky.feed.post` records are supported. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnsupportedCollection',
+            description:
+              'The URI to be bookmarked is for an unsupported collection.',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyBookmarkDefs: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.defs',
+    defs: {
+      bookmark: {
+        description: 'Object used to store bookmark data in stash.',
+        type: 'object',
+        required: ['subject'],
+        properties: {
+          subject: {
+            description:
+              'A strong ref to the record to be bookmarked. Currently, only `app.bsky.feed.post` records are supported.',
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+        },
+      },
+      bookmarkView: {
+        type: 'object',
+        required: ['subject', 'item'],
+        properties: {
+          subject: {
+            description: 'A strong ref to the bookmarked record.',
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          item: {
+            type: 'union',
+            refs: [
+              'lex:app.bsky.feed.defs#blockedPost',
+              'lex:app.bsky.feed.defs#notFoundPost',
+              'lex:app.bsky.feed.defs#postView',
+            ],
+          },
+        },
+      },
+    },
+  },
+  AppBskyBookmarkDeleteBookmark: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.deleteBookmark',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Deletes a private bookmark for the specified record. Currently, only `app.bsky.feed.post` records are supported. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'UnsupportedCollection',
+            description:
+              'The URI to be bookmarked is for an unsupported collection.',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyBookmarkGetBookmarks: {
+    lexicon: 1,
+    id: 'app.bsky.bookmark.getBookmarks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Gets views of records bookmarked by the authenticated user. Requires authentication.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['bookmarks'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              bookmarks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.bookmark.defs#bookmarkView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactDefs: {
+    lexicon: 1,
+    id: 'app.bsky.contact.defs',
+    defs: {
+      matchAndContactIndex: {
+        description:
+          'Associates a profile with the positional index of the contact import input in the call to `app.bsky.contact.importContacts`, so clients can know which phone caused a particular match.',
+        type: 'object',
+        required: ['match', 'contactIndex'],
+        properties: {
+          match: {
+            description: 'Profile of the matched user.',
+            type: 'ref',
+            ref: 'lex:app.bsky.actor.defs#profileView',
+          },
+          contactIndex: {
+            description: 'The index of this match in the import contact input.',
+            type: 'integer',
+            minimum: 0,
+            maximum: 999,
+          },
+        },
+      },
+      syncStatus: {
+        type: 'object',
+        required: ['syncedAt', 'matchesCount'],
+        properties: {
+          syncedAt: {
+            description: 'Last date when contacts where imported.',
+            type: 'string',
+            format: 'datetime',
+          },
+          matchesCount: {
+            description:
+              'Number of existing contact matches resulting of the user imports and of their imported contacts having imported the user. Matches stop being counted when the user either follows the matched contact or dismisses the match.',
+            type: 'integer',
+            minimum: 0,
+          },
+        },
+      },
+      notification: {
+        description:
+          'A stash object to be sent via bsync representing a notification to be created.',
+        type: 'object',
+        required: ['from', 'to'],
+        properties: {
+          from: {
+            description: 'The DID of who this notification comes from.',
+            type: 'string',
+            format: 'did',
+          },
+          to: {
+            description: 'The DID of who this notification should go to.',
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactDismissMatch: {
+    lexicon: 1,
+    id: 'app.bsky.contact.dismissMatch',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Removes a match that was found via contact import. It shouldn't appear again if the same contact is re-imported. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                description: "The subject's DID to dismiss the match with.",
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetMatches: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getMatches',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the matched contacts (contacts that were mutually imported). Excludes dismissed matches. Requires authentication.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matches'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              matches: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidLimit',
+          },
+          {
+            name: 'InvalidCursor',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactGetSyncStatus: {
+    lexicon: 1,
+    id: 'app.bsky.contact.getSyncStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets the user's current contact import status. Requires authentication.",
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              syncStatus: {
+                description:
+                  "If present, indicates the user has imported their contacts. If not present, indicates the user never used the feature or called `app.bsky.contact.removeData` and didn't import again since.",
+                type: 'ref',
+                ref: 'lex:app.bsky.contact.defs#syncStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactImportContacts: {
+    lexicon: 1,
+    id: 'app.bsky.contact.importContacts',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Import contacts for securely matching with other users. This follows the protocol explained in https://docs.bsky.app/blog/contact-import-rfc. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token', 'contacts'],
+            properties: {
+              token: {
+                description:
+                  'JWT to authenticate the call. Use the JWT received as a response to the call to `app.bsky.contact.verifyPhone`.',
+                type: 'string',
+              },
+              contacts: {
+                description:
+                  "List of phone numbers in global E.164 format (e.g., '+12125550123'). Phone numbers that cannot be normalized into a valid phone number will be discarded. Should not repeat the 'phone' input used in `app.bsky.contact.verifyPhone`.",
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                minLength: 1,
+                maxLength: 1000,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['matchesAndContactIndexes'],
+            properties: {
+              matchesAndContactIndexes: {
+                description:
+                  'The users that matched during import and their indexes on the input contacts, so the client can correlate with its local list.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.contact.defs#matchAndContactIndex',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidContacts',
+          },
+          {
+            name: 'TooManyContacts',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactRemoveData: {
+    lexicon: 1,
+    id: 'app.bsky.contact.removeData',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Removes all stored hashes used for contact matching, existing matches, and sync status. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactSendNotification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.sendNotification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'System endpoint to send notifications related to contact imports. Requires role authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['from', 'to'],
+            properties: {
+              from: {
+                description: 'The DID of who this notification comes from.',
+                type: 'string',
+                format: 'did',
+              },
+              to: {
+                description: 'The DID of who this notification should go to.',
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  AppBskyContactStartPhoneVerification: {
+    lexicon: 1,
+    id: 'app.bsky.contact.startPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Starts a phone verification flow. The phone passed will receive a code via SMS that should be passed to `app.bsky.contact.verifyPhone`. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone'],
+            properties: {
+              phone: {
+                description: 'The phone number to receive the code via SMS.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'RateLimitExceeded',
+          },
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidPhone',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyContactVerifyPhone: {
+    lexicon: 1,
+    id: 'app.bsky.contact.verifyPhone',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Verifies control over a phone number with a code received via SMS and starts a contact import session. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phone', 'code'],
+            properties: {
+              phone: {
+                description:
+                  'The phone number to verify. Should be the same as the one passed to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+              code: {
+                description:
+                  'The code received via SMS as a result of the call to `app.bsky.contact.startPhoneVerification`.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                description:
+                  'JWT to be used in a call to `app.bsky.contact.importContacts`. It is only valid for a single call.',
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RateLimitExceeded',
+          },
+          {
+            name: 'InvalidDid',
+          },
+          {
+            name: 'InvalidPhone',
+          },
+          {
+            name: 'InvalidCode',
+          },
+          {
+            name: 'InternalError',
+          },
+        ],
       },
     },
   },
@@ -6125,6 +2690,9 @@ export const schemaDict = {
               'lex:app.bsky.embed.recordWithMedia#view',
             ],
           },
+          bookmarkCount: {
+            type: 'integer',
+          },
           replyCount: {
             type: 'integer',
           },
@@ -6156,6 +2724,10 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.feed.defs#threadgateView',
           },
+          debug: {
+            type: 'unknown',
+            description: 'Debug information for internal development',
+          },
         },
       },
       viewerState: {
@@ -6170,6 +2742,9 @@ export const schemaDict = {
           like: {
             type: 'string',
             format: 'at-uri',
+          },
+          bookmarked: {
+            type: 'boolean',
           },
           threadMuted: {
             type: 'boolean',
@@ -7239,48 +3814,6 @@ export const schemaDict = {
       },
     },
   },
-  AppBskyFeedGetPosts: {
-    lexicon: 1,
-    id: 'app.bsky.feed.getPosts',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
-        parameters: {
-          type: 'params',
-          required: ['uris'],
-          properties: {
-            uris: {
-              type: 'array',
-              description: 'List of post AT-URIs to return hydrated views for.',
-              items: {
-                type: 'string',
-                format: 'at-uri',
-              },
-              maxLength: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['posts'],
-            properties: {
-              posts: {
-                type: 'array',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:app.bsky.feed.defs#postView',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   AppBskyFeedGetPostThread: {
     lexicon: 1,
     id: 'app.bsky.feed.getPostThread',
@@ -7342,6 +3875,48 @@ export const schemaDict = {
             name: 'NotFound',
           },
         ],
+      },
+    },
+  },
+  AppBskyFeedGetPosts: {
+    lexicon: 1,
+    id: 'app.bsky.feed.getPosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Gets post views for a specified list of posts (by AT-URI). This is sometimes referred to as 'hydrating' a 'feed skeleton'.",
+        parameters: {
+          type: 'params',
+          required: ['uris'],
+          properties: {
+            uris: {
+              type: 'array',
+              description: 'List of post AT-URIs to return hydrated views for.',
+              items: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              maxLength: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['posts'],
+            properties: {
+              posts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.feed.defs#postView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -8001,7 +4576,7 @@ export const schemaDict = {
             },
             hiddenReplies: {
               type: 'array',
-              maxLength: 50,
+              maxLength: 300,
               items: {
                 type: 'string',
                 format: 'at-uri',
@@ -8368,6 +4943,30 @@ export const schemaDict = {
             description:
               'if the actor is followed by this DID, contains the AT-URI of the follow record',
           },
+          blocking: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID, this is the AT-URI of the block record',
+          },
+          blockedBy: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID, contains the AT-URI of the block record',
+          },
+          blockingByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor blocks this DID via a block list, this is the AT-URI of the listblock record',
+          },
+          blockedByList: {
+            type: 'string',
+            format: 'at-uri',
+            description:
+              'if the actor is blocked by this DID via a block list, contains the AT-URI of the listblock record',
+          },
         },
       },
     },
@@ -8392,6 +4991,10 @@ export const schemaDict = {
             createdAt: {
               type: 'string',
               format: 'datetime',
+            },
+            via: {
+              type: 'ref',
+              ref: 'lex:com.atproto.repo.strongRef',
             },
           },
         },
@@ -8817,6 +5420,15 @@ export const schemaDict = {
             cursor: {
               type: 'string',
             },
+            purposes: {
+              type: 'array',
+              description:
+                'Optional filter by list purpose. If not specified, all supported types are returned.',
+              items: {
+                type: 'string',
+                knownValues: ['modlist', 'curatelist'],
+              },
+            },
           },
         },
         output: {
@@ -8836,6 +5448,81 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetListsWithMembership: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getListsWithMembership',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates the lists created by the session user, and includes membership information about `actor` in those lists. Only supports curation and moderation lists (no reference lists, used in starter packs). Requires auth.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The account (actor) to check for membership.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+            purposes: {
+              type: 'array',
+              description:
+                'Optional filter by list purpose. If not specified, all supported types are returned.',
+              items: {
+                type: 'string',
+                knownValues: ['modlist', 'curatelist'],
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['listsWithMembership'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              listsWithMembership: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getListsWithMembership#listWithMembership',
+                },
+              },
+            },
+          },
+        },
+      },
+      listWithMembership: {
+        description:
+          'A list and an optional list item indicating membership of a target user to that list.',
+        type: 'object',
+        required: ['list'],
+        properties: {
+          list: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listView',
+          },
+          listItem: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listItemView',
           },
         },
       },
@@ -9016,6 +5703,72 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  AppBskyGraphGetStarterPacksWithMembership: {
+    lexicon: 1,
+    id: 'app.bsky.graph.getStarterPacksWithMembership',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates the starter packs created by the session user, and includes membership information about `actor` in those starter packs. Requires auth.',
+        parameters: {
+          type: 'params',
+          required: ['actor'],
+          properties: {
+            actor: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The account (actor) to check for membership.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacksWithMembership'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              starterPacksWithMembership: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.getStarterPacksWithMembership#starterPackWithMembership',
+                },
+              },
+            },
+          },
+        },
+      },
+      starterPackWithMembership: {
+        description:
+          'A starter pack and an optional list item indicating membership of a target user to that starter pack.',
+        type: 'object',
+        required: ['starterPack'],
+        properties: {
+          starterPack: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#starterPackView',
+          },
+          listItem: {
+            type: 'ref',
+            ref: 'lex:app.bsky.graph.defs#listItemView',
           },
         },
       },
@@ -9724,6 +6477,30 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyNotificationDeclaration: {
+    lexicon: 1,
+    id: 'app.bsky.notification.declaration',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "A declaration of the user's choices related to notifications that can be produced by them.",
+        key: 'literal:self',
+        record: {
+          type: 'object',
+          required: ['allowSubscriptions'],
+          properties: {
+            allowSubscriptions: {
+              type: 'string',
+              description:
+                "A declaration of the user's preference for allowing activity subscriptions from other users. Absence of a record implies 'followers'.",
+              knownValues: ['followers', 'mutuals', 'none'],
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyNotificationDefs: {
     lexicon: 1,
     id: 'app.bsky.notification.defs',
@@ -9734,9 +6511,9 @@ export const schemaDict = {
       },
       chatPreference: {
         type: 'object',
-        required: ['filter', 'push'],
+        required: ['include', 'push'],
         properties: {
-          filter: {
+          include: {
             type: 'string',
             knownValues: ['all', 'accepted'],
           },
@@ -9747,9 +6524,9 @@ export const schemaDict = {
       },
       filterablePreference: {
         type: 'object',
-        required: ['filter', 'list', 'push'],
+        required: ['include', 'list', 'push'],
         properties: {
-          filter: {
+          include: {
             type: 'string',
             knownValues: ['all', 'follows'],
           },
@@ -9845,6 +6622,34 @@ export const schemaDict = {
           },
         },
       },
+      activitySubscription: {
+        type: 'object',
+        required: ['post', 'reply'],
+        properties: {
+          post: {
+            type: 'boolean',
+          },
+          reply: {
+            type: 'boolean',
+          },
+        },
+      },
+      subjectActivitySubscription: {
+        description:
+          'Object used to store activity subscription data in stash.',
+        type: 'object',
+        required: ['subject', 'activitySubscription'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          activitySubscription: {
+            type: 'ref',
+            ref: 'lex:app.bsky.notification.defs#activitySubscription',
+          },
+        },
+      },
     },
   },
   AppBskyNotificationGetPreferences: {
@@ -9903,6 +6708,50 @@ export const schemaDict = {
             properties: {
               count: {
                 type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationListActivitySubscriptions: {
+    lexicon: 1,
+    id: 'app.bsky.notification.listActivitySubscriptions',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerate all accounts to which the requesting account is subscribed to receive notifications for. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subscriptions'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              subscriptions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
               },
             },
           },
@@ -10015,6 +6864,8 @@ export const schemaDict = {
               'unverified',
               'like-via-repost',
               'repost-via-repost',
+              'subscribed-post',
+              'contact-match',
             ],
           },
           reasonSubject: {
@@ -10036,6 +6887,51 @@ export const schemaDict = {
             items: {
               type: 'ref',
               ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationPutActivitySubscription: {
+    lexicon: 1,
+    id: 'app.bsky.notification.putActivitySubscription',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Puts an activity subscription entry. The key should be omitted for creation and provided for updates. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject', 'activitySubscription'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'string',
+                format: 'did',
+              },
+              activitySubscription: {
+                type: 'ref',
+                ref: 'lex:app.bsky.notification.defs#activitySubscription',
+              },
             },
           },
         },
@@ -10157,6 +7053,44 @@ export const schemaDict = {
         type: 'procedure',
         description:
           'Register to receive push notifications, via a specified service, for the requesting account. Requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['serviceDid', 'token', 'platform', 'appId'],
+            properties: {
+              serviceDid: {
+                type: 'string',
+                format: 'did',
+              },
+              token: {
+                type: 'string',
+              },
+              platform: {
+                type: 'string',
+                knownValues: ['ios', 'android', 'web'],
+              },
+              appId: {
+                type: 'string',
+              },
+              ageRestricted: {
+                type: 'boolean',
+                description: 'Set to true when the actor is age restricted',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyNotificationUnregisterPush: {
+    lexicon: 1,
+    id: 'app.bsky.notification.unregisterPush',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'The inverse of registerPush - inform a specified service that push notifications should no longer be sent to the given token for the requesting account. Requires auth.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -10486,6 +7420,84 @@ export const schemaDict = {
           },
         },
       },
+      ageAssuranceState: {
+        type: 'object',
+        description:
+          'The computed state of the age assurance process, returned to the user in question on certain authenticated requests.',
+        required: ['status'],
+        properties: {
+          lastInitiatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The timestamp when this state was last updated.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured', 'blocked'],
+          },
+        },
+      },
+      ageAssuranceEvent: {
+        type: 'object',
+        description: 'Object used to store age assurance data in stash.',
+        required: ['createdAt', 'status', 'attemptId'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the age assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          email: {
+            type: 'string',
+            description: 'The email used for AA.',
+          },
+          initIp: {
+            type: 'string',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetAgeAssuranceState: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getAgeAssuranceState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the current state of the age assurance process for an account. This is used to check if the user has completed age assurance or if further action is required.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+      },
     },
   },
   AppBskyUnspeccedGetConfig: {
@@ -10527,6 +7539,87 @@ export const schemaDict = {
             type: 'array',
             items: {
               type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacks: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested starterpacks for onboarding',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.graph.defs#starterPackView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested starterpacks for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 25,
+              default: 10,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['starterPacks'],
+            properties: {
+              starterPacks: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'at-uri',
+                },
+              },
             },
           },
         },
@@ -10596,12 +7689,6 @@ export const schemaDict = {
               format: 'at-uri',
               description:
                 'Reference (AT-URI) to post record. This is the anchor post.',
-            },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
             },
           },
         },
@@ -10683,12 +7770,6 @@ export const schemaDict = {
               default: 10,
               minimum: 0,
               maximum: 100,
-            },
-            prioritizeFollowedUsers: {
-              type: 'boolean',
-              description:
-                'Whether to prioritize posts from followed users. It only has effect when the user is authenticated.',
-              default: false,
             },
             sort: {
               type: 'string',
@@ -10949,6 +8030,11 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
             },
           },
         },
@@ -10996,6 +8082,11 @@ export const schemaDict = {
                   type: 'string',
                   format: 'did',
                 },
+              },
+              recId: {
+                type: 'integer',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
               },
             },
           },
@@ -11246,6 +8337,59 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  AppBskyUnspeccedInitAgeAssurance: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.initAgeAssurance',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Initiate age assurance for an account. This is a one-time action that will start the process of verifying the user's age.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'language', 'countryCode'],
+            properties: {
+              email: {
+                type: 'string',
+                description:
+                  "The user's email address to receive assurance instructions.",
+              },
+              language: {
+                type: 'string',
+                description:
+                  "The user's preferred language for communication during the assurance process.",
+              },
+              countryCode: {
+                type: 'string',
+                description:
+                  "An ISO 3166-1 alpha-2 code of the user's location.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:app.bsky.unspecced.defs#ageAssuranceState',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+          },
+          {
+            name: 'DidTooLong',
+          },
+          {
+            name: 'InvalidInitiation',
+          },
+        ],
       },
     },
   },
@@ -12954,6 +10098,4819 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminDefs: {
+    lexicon: 1,
+    id: 'com.atproto.admin.defs',
+    defs: {
+      statusAttr: {
+        type: 'object',
+        required: ['applied'],
+        properties: {
+          applied: {
+            type: 'boolean',
+          },
+          ref: {
+            type: 'string',
+          },
+        },
+      },
+      accountView: {
+        type: 'object',
+        required: ['did', 'handle', 'indexedAt'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          email: {
+            type: 'string',
+          },
+          relatedRecords: {
+            type: 'array',
+            items: {
+              type: 'unknown',
+            },
+          },
+          indexedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          invitedBy: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.defs#inviteCode',
+          },
+          invites: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCode',
+            },
+          },
+          invitesDisabled: {
+            type: 'boolean',
+          },
+          emailConfirmedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          inviteNote: {
+            type: 'string',
+          },
+          deactivatedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          threatSignatures: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.admin.defs#threatSignature',
+            },
+          },
+        },
+      },
+      repoRef: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+      repoBlobRef: {
+        type: 'object',
+        required: ['did', 'cid'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          recordUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+      threatSignature: {
+        type: 'object',
+        required: ['property', 'value'],
+        properties: {
+          property: {
+            type: 'string',
+          },
+          value: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDeleteAccount: {
+    lexicon: 1,
+    id: 'com.atproto.admin.deleteAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Delete a user account as an administrator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDisableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.disableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Disable an account from receiving new invite codes, but does not invalidate existing codes.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
+              },
+              note: {
+                type: 'string',
+                description: 'Optional reason for disabled invites.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminDisableInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.admin.disableInviteCodes',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Disable some set of codes and/or all codes associated with a set of users.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminEnableAccountInvites: {
+    lexicon: 1,
+    id: 'com.atproto.admin.enableAccountInvites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Re-enable an account's ability to receive invite codes.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'did',
+              },
+              note: {
+                type: 'string',
+                description: 'Optional reason for enabled invites.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetAccountInfo: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getAccountInfo',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about an account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.admin.defs#accountView',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetAccountInfos: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getAccountInfos',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get details about some accounts.',
+        parameters: {
+          type: 'params',
+          required: ['dids'],
+          properties: {
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['infos'],
+            properties: {
+              infos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getInviteCodes',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get an admin view of invite codes.',
+        parameters: {
+          type: 'params',
+          properties: {
+            sort: {
+              type: 'string',
+              knownValues: ['recent', 'usage'],
+              default: 'recent',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 500,
+              default: 100,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.defs#inviteCode',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminGetSubjectStatus: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getSubjectStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the service-specific admin status of a subject (account, record, or blob).',
+        parameters: {
+          type: 'params',
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+            uri: {
+              type: 'string',
+              format: 'at-uri',
+            },
+            blob: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+              deactivated: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminSearchAccounts: {
+    lexicon: 1,
+    id: 'com.atproto.admin.searchAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get list of accounts that matches your search query.',
+        parameters: {
+          type: 'params',
+          properties: {
+            email: {
+              type: 'string',
+            },
+            cursor: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.defs#accountView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminSendEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.sendEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Send email to a user's account email address.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['recipientDid', 'content', 'senderDid'],
+            properties: {
+              recipientDid: {
+                type: 'string',
+                format: 'did',
+              },
+              content: {
+                type: 'string',
+              },
+              subject: {
+                type: 'string',
+              },
+              senderDid: {
+                type: 'string',
+                format: 'did',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  "Additional comment by the sender that won't be used in the email itself but helpful to provide more context for moderators/reviewers",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sent'],
+            properties: {
+              sent: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountEmail: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's email.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account', 'email'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'at-identifier',
+                description: 'The handle or DID of the repo.',
+              },
+              email: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountHandle: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Administrative action to update an account's handle.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountPassword: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update the password for a user account as an administrator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'password'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              password: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateAccountSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateAccountSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Administrative action to update an account's signing key in their Did document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'signingKey'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              signingKey: {
+                type: 'string',
+                format: 'did',
+                description: 'Did-key formatted public key',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateSubjectStatus: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateSubjectStatus',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Update the service-specific admin status of a subject (account, record, or blob).',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+              deactivated: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subject'],
+            properties: {
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                  'lex:com.atproto.admin.defs#repoBlobRef',
+                ],
+              },
+              takedown: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.defs#statusAttr',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentityDefs: {
+    lexicon: 1,
+    id: 'com.atproto.identity.defs',
+    defs: {
+      identityInfo: {
+        type: 'object',
+        required: ['did', 'handle', 'didDoc'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+            description:
+              "The validated handle of the account; or 'handle.invalid' if the handle did not bi-directionally match the DID document.",
+          },
+          didDoc: {
+            type: 'unknown',
+            description: 'The complete DID document for the identity.',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentityGetRecommendedDidCredentials: {
+    lexicon: 1,
+    id: 'com.atproto.identity.getRecommendedDidCredentials',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Describe the credentials that should be included in the DID doc of an account that is migrating to this service.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              rotationKeys: {
+                description:
+                  'Recommended rotation keys for PLC dids. Should be undefined (or ignored) for did:webs.',
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentityRefreshIdentity: {
+    lexicon: 1,
+    id: 'com.atproto.identity.refreshIdentity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request that the server re-resolve an identity (DID and handle). The server may ignore this request, or require authentication, depending on the role, implementation, and policy of the server.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['identifier'],
+            properties: {
+              identifier: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.identity.defs#identityInfo',
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoIdentityRequestPlcOperationSignature: {
+    lexicon: 1,
+    id: 'com.atproto.identity.requestPlcOperationSignature',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request an email with a code to in order to request a signed PLC operation. Requires Auth.',
+      },
+    },
+  },
+  ComAtprotoIdentityResolveDid: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveDid',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves DID to DID document. Does not bi-directionally verify handle.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'DID to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['didDoc'],
+            properties: {
+              didDoc: {
+                type: 'unknown',
+                description: 'The complete DID document for the identity.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoIdentityResolveHandle: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveHandle',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves an atproto handle (hostname) to a DID. Does not necessarily bi-directionally verify against the the DID document.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              format: 'handle',
+              description: 'The handle to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoIdentityResolveIdentity: {
+    lexicon: 1,
+    id: 'com.atproto.identity.resolveIdentity',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Resolves an identity (DID or Handle) to a full identity (DID document and verified handle).',
+        parameters: {
+          type: 'params',
+          required: ['identifier'],
+          properties: {
+            identifier: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'Handle or DID to resolve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.identity.defs#identityInfo',
+          },
+        },
+        errors: [
+          {
+            name: 'HandleNotFound',
+            description:
+              'The resolution process confirmed that the handle does not resolve to any DID.',
+          },
+          {
+            name: 'DidNotFound',
+            description:
+              'The DID resolution process confirmed that there is no current DID.',
+          },
+          {
+            name: 'DidDeactivated',
+            description:
+              'The DID previously existed, but has been deactivated.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoIdentitySignPlcOperation: {
+    lexicon: 1,
+    id: 'com.atproto.identity.signPlcOperation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Signs a PLC operation to update some value(s) in the requesting DID's document.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              token: {
+                description:
+                  'A token received through com.atproto.identity.requestPlcOperationSignature',
+                type: 'string',
+              },
+              rotationKeys: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              alsoKnownAs: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              verificationMethods: {
+                type: 'unknown',
+              },
+              services: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'unknown',
+                description: 'A signed DID PLC operation.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentitySubmitPlcOperation: {
+    lexicon: 1,
+    id: 'com.atproto.identity.submitPlcOperation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Validates a PLC operation to ensure that it doesn't violate a service's constraints or get the identity into a bad state, then submits it to the PLC registry",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['operation'],
+            properties: {
+              operation: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoIdentityUpdateHandle: {
+    lexicon: 1,
+    id: 'com.atproto.identity.updateHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Updates the current account's handle. Verifies handle validity, and updates did:plc document if necessary. Implemented by PDS, and requires auth.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'The new handle.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoLabelDefs: {
+    lexicon: 1,
+    id: 'com.atproto.label.defs',
+    defs: {
+      label: {
+        type: 'object',
+        description:
+          'Metadata tag on an atproto resource (eg, repo or record).',
+        required: ['src', 'uri', 'val', 'cts'],
+        properties: {
+          ver: {
+            type: 'integer',
+            description: 'The AT Protocol version of the label object.',
+          },
+          src: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the actor who created this label.',
+          },
+          uri: {
+            type: 'string',
+            format: 'uri',
+            description:
+              'AT URI of the record, repository (account), or other resource that this label applies to.',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+            description:
+              "Optionally, CID specifying the specific version of 'uri' resource this label applies to.",
+          },
+          val: {
+            type: 'string',
+            maxLength: 128,
+            description:
+              'The short string name of the value or type of this label.',
+          },
+          neg: {
+            type: 'boolean',
+            description:
+              'If true, this is a negation label, overwriting a previous label.',
+          },
+          cts: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when this label was created.',
+          },
+          exp: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp at which this label expires (no longer applies).',
+          },
+          sig: {
+            type: 'bytes',
+            description: 'Signature of dag-cbor encoded label.',
+          },
+        },
+      },
+      selfLabels: {
+        type: 'object',
+        description:
+          'Metadata tags on an atproto record, published by the author within the record.',
+        required: ['values'],
+        properties: {
+          values: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#selfLabel',
+            },
+            maxLength: 10,
+          },
+        },
+      },
+      selfLabel: {
+        type: 'object',
+        description:
+          'Metadata tag on an atproto record, published by the author within the record. Note that schemas should use #selfLabels, not #selfLabel.',
+        required: ['val'],
+        properties: {
+          val: {
+            type: 'string',
+            maxLength: 128,
+            description:
+              'The short string name of the value or type of this label.',
+          },
+        },
+      },
+      labelValueDefinition: {
+        type: 'object',
+        description:
+          'Declares a label value and its expected interpretations and behaviors.',
+        required: ['identifier', 'severity', 'blurs', 'locales'],
+        properties: {
+          identifier: {
+            type: 'string',
+            description:
+              "The value of the label being defined. Must only include lowercase ascii and the '-' character ([a-z-]+).",
+            maxLength: 100,
+            maxGraphemes: 100,
+          },
+          severity: {
+            type: 'string',
+            description:
+              "How should a client visually convey this label? 'inform' means neutral and informational; 'alert' means negative and warning; 'none' means show nothing.",
+            knownValues: ['inform', 'alert', 'none'],
+          },
+          blurs: {
+            type: 'string',
+            description:
+              "What should this label hide in the UI, if applied? 'content' hides all of the target; 'media' hides the images/video/audio; 'none' hides nothing.",
+            knownValues: ['content', 'media', 'none'],
+          },
+          defaultSetting: {
+            type: 'string',
+            description: 'The default setting for this label.',
+            knownValues: ['ignore', 'warn', 'hide'],
+            default: 'warn',
+          },
+          adultOnly: {
+            type: 'boolean',
+            description:
+              'Does the user need to have adult content enabled in order to configure this label?',
+          },
+          locales: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#labelValueDefinitionStrings',
+            },
+          },
+        },
+      },
+      labelValueDefinitionStrings: {
+        type: 'object',
+        description:
+          'Strings which describe the label in the UI, localized into a specific language.',
+        required: ['lang', 'name', 'description'],
+        properties: {
+          lang: {
+            type: 'string',
+            description:
+              'The code of the language these strings are written in.',
+            format: 'language',
+          },
+          name: {
+            type: 'string',
+            description: 'A short human-readable name for the label.',
+            maxGraphemes: 64,
+            maxLength: 640,
+          },
+          description: {
+            type: 'string',
+            description:
+              'A longer description of what the label means and why it might be applied.',
+            maxGraphemes: 10000,
+            maxLength: 100000,
+          },
+        },
+      },
+      labelValue: {
+        type: 'string',
+        knownValues: [
+          '!hide',
+          '!no-promote',
+          '!warn',
+          '!no-unauthenticated',
+          'dmca-violation',
+          'doxxing',
+          'porn',
+          'sexual',
+          'nudity',
+          'nsfl',
+          'gore',
+        ],
+      },
+    },
+  },
+  ComAtprotoLabelQueryLabels: {
+    lexicon: 1,
+    id: 'com.atproto.label.queryLabels',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Find labels relevant to the provided AT-URI patterns. Public endpoint for moderation services, though may return different or additional results with auth.',
+        parameters: {
+          type: 'params',
+          required: ['uriPatterns'],
+          properties: {
+            uriPatterns: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                "List of AT URI patterns to match (boolean 'OR'). Each may be a prefix (ending with '*'; will match inclusive of the string leading to '*'), or a full URI.",
+            },
+            sources: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description:
+                'Optional list of label sources (DIDs) to filter on.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 250,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoLabelSubscribeLabels: {
+    lexicon: 1,
+    id: 'com.atproto.label.subscribeLabels',
+    defs: {
+      main: {
+        type: 'subscription',
+        description:
+          'Subscribe to stream of labels (and negations). Public endpoint implemented by mod services. Uses same sequencing scheme as repo event stream.',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'integer',
+              description: 'The last known event seq number to backfill from.',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.label.subscribeLabels#labels',
+              'lex:com.atproto.label.subscribeLabels#info',
+            ],
+          },
+        },
+        errors: [
+          {
+            name: 'FutureCursor',
+          },
+        ],
+      },
+      labels: {
+        type: 'object',
+        required: ['seq', 'labels'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['OutdatedCursor'],
+          },
+          message: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoLexiconResolveLexicon: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.resolveLexicon',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Resolves an atproto lexicon (NSID) to a schema.',
+        parameters: {
+          type: 'params',
+          properties: {
+            nsid: {
+              format: 'nsid',
+              type: 'string',
+              description: 'The lexicon NSID to resolve.',
+            },
+          },
+          required: ['nsid'],
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+                description: 'The CID of the lexicon schema record.',
+              },
+              schema: {
+                type: 'ref',
+                ref: 'lex:com.atproto.lexicon.schema#main',
+                description: 'The resolved lexicon schema record.',
+              },
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+                description: 'The AT-URI of the lexicon schema record.',
+              },
+            },
+            required: ['uri', 'cid', 'schema'],
+          },
+        },
+        errors: [
+          {
+            description: 'No lexicon was resolved for the NSID.',
+            name: 'LexiconNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoLexiconSchema: {
+    lexicon: 1,
+    id: 'com.atproto.lexicon.schema',
+    defs: {
+      main: {
+        type: 'record',
+        description:
+          "Representation of Lexicon schemas themselves, when published as atproto records. Note that the schema language is not defined in Lexicon; this meta schema currently only includes a single version field ('lexicon'). See the atproto specifications for description of the other expected top-level fields ('id', 'defs', etc).",
+        key: 'nsid',
+        record: {
+          type: 'object',
+          required: ['lexicon'],
+          properties: {
+            lexicon: {
+              type: 'integer',
+              description:
+                "Indicates the 'version' of the Lexicon language. Must be '1' for the current atproto/Lexicon schema system.",
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoModerationCreateReport: {
+    lexicon: 1,
+    id: 'com.atproto.moderation.createReport',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reasonType', 'subject'],
+            properties: {
+              reasonType: {
+                type: 'ref',
+                description:
+                  'Indicates the broad category of violation the report is for.',
+                ref: 'lex:com.atproto.moderation.defs#reasonType',
+              },
+              reason: {
+                type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
+                description:
+                  'Additional context about the content and violation.',
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.createReport#modTool',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'id',
+              'reasonType',
+              'subject',
+              'reportedBy',
+              'createdAt',
+            ],
+            properties: {
+              id: {
+                type: 'integer',
+              },
+              reasonType: {
+                type: 'ref',
+                ref: 'lex:com.atproto.moderation.defs#reasonType',
+              },
+              reason: {
+                type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              reportedBy: {
+                type: 'string',
+                format: 'did',
+              },
+              createdAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoModerationDefs: {
+    lexicon: 1,
+    id: 'com.atproto.moderation.defs',
+    defs: {
+      reasonType: {
+        type: 'string',
+        knownValues: [
+          'com.atproto.moderation.defs#reasonSpam',
+          'com.atproto.moderation.defs#reasonViolation',
+          'com.atproto.moderation.defs#reasonMisleading',
+          'com.atproto.moderation.defs#reasonSexual',
+          'com.atproto.moderation.defs#reasonRude',
+          'com.atproto.moderation.defs#reasonOther',
+          'com.atproto.moderation.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonOther',
+          'tools.ozone.report.defs#reasonViolenceAnimal',
+          'tools.ozone.report.defs#reasonViolenceThreats',
+          'tools.ozone.report.defs#reasonViolenceGraphicContent',
+          'tools.ozone.report.defs#reasonViolenceGlorification',
+          'tools.ozone.report.defs#reasonViolenceExtremistContent',
+          'tools.ozone.report.defs#reasonViolenceTrafficking',
+          'tools.ozone.report.defs#reasonViolenceOther',
+          'tools.ozone.report.defs#reasonSexualAbuseContent',
+          'tools.ozone.report.defs#reasonSexualNCII',
+          'tools.ozone.report.defs#reasonSexualDeepfake',
+          'tools.ozone.report.defs#reasonSexualAnimal',
+          'tools.ozone.report.defs#reasonSexualUnlabeled',
+          'tools.ozone.report.defs#reasonSexualOther',
+          'tools.ozone.report.defs#reasonChildSafetyCSAM',
+          'tools.ozone.report.defs#reasonChildSafetyGroom',
+          'tools.ozone.report.defs#reasonChildSafetyPrivacy',
+          'tools.ozone.report.defs#reasonChildSafetyHarassment',
+          'tools.ozone.report.defs#reasonChildSafetyOther',
+          'tools.ozone.report.defs#reasonHarassmentTroll',
+          'tools.ozone.report.defs#reasonHarassmentTargeted',
+          'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+          'tools.ozone.report.defs#reasonHarassmentDoxxing',
+          'tools.ozone.report.defs#reasonHarassmentOther',
+          'tools.ozone.report.defs#reasonMisleadingBot',
+          'tools.ozone.report.defs#reasonMisleadingImpersonation',
+          'tools.ozone.report.defs#reasonMisleadingSpam',
+          'tools.ozone.report.defs#reasonMisleadingScam',
+          'tools.ozone.report.defs#reasonMisleadingElections',
+          'tools.ozone.report.defs#reasonMisleadingOther',
+          'tools.ozone.report.defs#reasonRuleSiteSecurity',
+          'tools.ozone.report.defs#reasonRuleProhibitedSales',
+          'tools.ozone.report.defs#reasonRuleBanEvasion',
+          'tools.ozone.report.defs#reasonRuleOther',
+          'tools.ozone.report.defs#reasonSelfHarmContent',
+          'tools.ozone.report.defs#reasonSelfHarmED',
+          'tools.ozone.report.defs#reasonSelfHarmStunts',
+          'tools.ozone.report.defs#reasonSelfHarmSubstances',
+          'tools.ozone.report.defs#reasonSelfHarmOther',
+        ],
+      },
+      reasonSpam: {
+        type: 'token',
+        description:
+          'Spam: frequent unwanted promotion, replies, mentions. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingSpam`.',
+      },
+      reasonViolation: {
+        type: 'token',
+        description:
+          'Direct violation of server rules, laws, terms of service. Prefer new lexicon definition `tools.ozone.report.defs#reasonRuleOther`.',
+      },
+      reasonMisleading: {
+        type: 'token',
+        description:
+          'Misleading identity, affiliation, or content. Prefer new lexicon definition `tools.ozone.report.defs#reasonMisleadingOther`.',
+      },
+      reasonSexual: {
+        type: 'token',
+        description:
+          'Unwanted or mislabeled sexual content. Prefer new lexicon definition `tools.ozone.report.defs#reasonSexualUnlabeled`.',
+      },
+      reasonRude: {
+        type: 'token',
+        description:
+          'Rude, harassing, explicit, or otherwise unwelcoming behavior. Prefer new lexicon definition `tools.ozone.report.defs#reasonHarassmentOther`.',
+      },
+      reasonOther: {
+        type: 'token',
+        description:
+          'Reports not falling under another report category. Prefer new lexicon definition `tools.ozone.report.defs#reasonOther`.',
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal a previously taken moderation action',
+      },
+      subjectType: {
+        type: 'string',
+        description: 'Tag describing a type of subject that might be reported.',
+        knownValues: ['account', 'record', 'chat'],
+      },
+    },
+  },
+  ComAtprotoRepoApplyWrites: {
+    lexicon: 1,
+    id: 'com.atproto.repo.applyWrites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Apply a batch transaction of repository creates, updates, and deletes. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo', 'writes'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description:
+                  'The handle or DID of the repo (aka, current account).',
+              },
+              validate: {
+                type: 'boolean',
+                description:
+                  "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons.",
+              },
+              writes: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.repo.applyWrites#create',
+                    'lex:com.atproto.repo.applyWrites#update',
+                    'lex:com.atproto.repo.applyWrites#delete',
+                  ],
+                  closed: true,
+                },
+              },
+              swapCommit: {
+                type: 'string',
+                description:
+                  'If provided, the entire operation will fail if the current repo commit CID does not match this value. Used to prevent conflicting repo mutations.',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [],
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              results: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.repo.applyWrites#createResult',
+                    'lex:com.atproto.repo.applyWrites#updateResult',
+                    'lex:com.atproto.repo.applyWrites#deleteResult',
+                  ],
+                  closed: true,
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+            description:
+              "Indicates that the 'swapCommit' parameter did not match current commit.",
+          },
+        ],
+      },
+      create: {
+        type: 'object',
+        description: 'Operation which creates a new record.',
+        required: ['collection', 'value'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            maxLength: 512,
+            format: 'record-key',
+            description:
+              'NOTE: maxLength is redundant with record-key format. Keeping it temporarily to ensure backwards compatibility.',
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
+      update: {
+        type: 'object',
+        description: 'Operation which updates an existing record.',
+        required: ['collection', 'rkey', 'value'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
+      delete: {
+        type: 'object',
+        description: 'Operation which deletes an existing record.',
+        required: ['collection', 'rkey'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+        },
+      },
+      createResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      updateResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      deleteResult: {
+        type: 'object',
+        required: [],
+        properties: {},
+      },
+    },
+  },
+  ComAtprotoRepoCreateRecord: {
+    lexicon: 1,
+    id: 'com.atproto.repo.createRecord',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Create a single new repository record. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo', 'collection', 'record'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description:
+                  'The handle or DID of the repo (aka, current account).',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description: 'The NSID of the record collection.',
+              },
+              rkey: {
+                type: 'string',
+                format: 'record-key',
+                description: 'The Record Key.',
+                maxLength: 512,
+              },
+              validate: {
+                type: 'boolean',
+                description:
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
+              },
+              record: {
+                type: 'unknown',
+                description: 'The record itself. Must contain a $type field.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+            description:
+              "Indicates that 'swapCommit' didn't match current repo commit.",
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoRepoDefs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.defs',
+    defs: {
+      commitMeta: {
+        type: 'object',
+        required: ['cid', 'rev'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          rev: {
+            type: 'string',
+            format: 'tid',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoDeleteRecord: {
+    lexicon: 1,
+    id: 'com.atproto.repo.deleteRecord',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Delete a repository record, or ensure it doesn't exist. Requires auth, implemented by PDS.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo', 'collection', 'rkey'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description:
+                  'The handle or DID of the repo (aka, current account).',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description: 'The NSID of the record collection.',
+              },
+              rkey: {
+                type: 'string',
+                format: 'record-key',
+                description: 'The Record Key.',
+              },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by CID.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoRepoDescribeRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.describeRepo',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get information about an account and repository, including the list of collections. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['repo'],
+          properties: {
+            repo: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The handle or DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'handle',
+              'did',
+              'didDoc',
+              'collections',
+              'handleIsCorrect',
+            ],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
+                description: 'The complete DID document for this account.',
+              },
+              collections: {
+                type: 'array',
+                description:
+                  'List of all the collections (NSIDs) for which this repo contains at least one record.',
+                items: {
+                  type: 'string',
+                  format: 'nsid',
+                },
+              },
+              handleIsCorrect: {
+                type: 'boolean',
+                description:
+                  'Indicates if handle is currently valid (resolves bi-directionally)',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoGetRecord: {
+    lexicon: 1,
+    id: 'com.atproto.repo.getRecord',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a single record from a repository. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['repo', 'collection', 'rkey'],
+          properties: {
+            repo: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The handle or DID of the repo.',
+            },
+            collection: {
+              type: 'string',
+              format: 'nsid',
+              description: 'The NSID of the record collection.',
+            },
+            rkey: {
+              type: 'string',
+              description: 'The Record Key.',
+              format: 'record-key',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'The CID of the version of the record. If not specified, then return the most recent version.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'value'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              value: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoRepoImportRepo: {
+    lexicon: 1,
+    id: 'com.atproto.repo.importRepo',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Import a repo in the form of a CAR file. Requires Content-Length HTTP header to be set.',
+        input: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoRepoListMissingBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.repo.listMissingBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns a list of missing blobs for the requesting account. Intended to be used in the account migration flow.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blobs'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              blobs: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.repo.listMissingBlobs#recordBlob',
+                },
+              },
+            },
+          },
+        },
+      },
+      recordBlob: {
+        type: 'object',
+        required: ['cid', 'recordUri'],
+        properties: {
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          recordUri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoListRecords: {
+    lexicon: 1,
+    id: 'com.atproto.repo.listRecords',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List a range of records in a repository, matching a specific collection. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['repo', 'collection'],
+          properties: {
+            repo: {
+              type: 'string',
+              format: 'at-identifier',
+              description: 'The handle or DID of the repo.',
+            },
+            collection: {
+              type: 'string',
+              format: 'nsid',
+              description: 'The NSID of the record type.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+              description: 'The number of records to return.',
+            },
+            cursor: {
+              type: 'string',
+            },
+            reverse: {
+              type: 'boolean',
+              description: 'Flag to reverse the order of the returned records.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['records'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              records: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.repo.listRecords#record',
+                },
+              },
+            },
+          },
+        },
+      },
+      record: {
+        type: 'object',
+        required: ['uri', 'cid', 'value'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoPutRecord: {
+    lexicon: 1,
+    id: 'com.atproto.repo.putRecord',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Write a repository record, creating or updating it as needed. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repo', 'collection', 'rkey', 'record'],
+            nullable: ['swapRecord'],
+            properties: {
+              repo: {
+                type: 'string',
+                format: 'at-identifier',
+                description:
+                  'The handle or DID of the repo (aka, current account).',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description: 'The NSID of the record collection.',
+              },
+              rkey: {
+                type: 'string',
+                format: 'record-key',
+                description: 'The Record Key.',
+                maxLength: 512,
+              },
+              validate: {
+                type: 'boolean',
+                description:
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
+              },
+              record: {
+                type: 'unknown',
+                description: 'The record to write.',
+              },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by CID. WARNING: nullable and optional field; may cause problems with golang implementation',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+                format: 'at-uri',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              commit: {
+                type: 'ref',
+                ref: 'lex:com.atproto.repo.defs#commitMeta',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoRepoStrongRef: {
+    lexicon: 1,
+    id: 'com.atproto.repo.strongRef',
+    description: 'A URI with a content-hash fingerprint.',
+    defs: {
+      main: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'at-uri',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoRepoUploadBlob: {
+    lexicon: 1,
+    id: 'com.atproto.repo.uploadBlob',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Upload a new blob, to be referenced from a repository record. The blob will be deleted if it is not referenced within a time window (eg, minutes). Blob restrictions (mimetype, size, etc) are enforced when the reference is created. Requires auth, implemented by PDS.',
+        input: {
+          encoding: '*/*',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blob'],
+            properties: {
+              blob: {
+                type: 'blob',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerActivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.activateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Activates a currently deactivated account. Used to finalize account migration after the account's repo is imported and identity is setup.",
+      },
+    },
+  },
+  ComAtprotoServerCheckAccountStatus: {
+    lexicon: 1,
+    id: 'com.atproto.server.checkAccountStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns the status of an account, especially as pertaining to import or recovery. Can be called many times over the course of an account migration. Requires auth and can only be called pertaining to oneself.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'activated',
+              'validDid',
+              'repoCommit',
+              'repoRev',
+              'repoBlocks',
+              'indexedRecords',
+              'privateStateValues',
+              'expectedBlobs',
+              'importedBlobs',
+            ],
+            properties: {
+              activated: {
+                type: 'boolean',
+              },
+              validDid: {
+                type: 'boolean',
+              },
+              repoCommit: {
+                type: 'string',
+                format: 'cid',
+              },
+              repoRev: {
+                type: 'string',
+              },
+              repoBlocks: {
+                type: 'integer',
+              },
+              indexedRecords: {
+                type: 'integer',
+              },
+              privateStateValues: {
+                type: 'integer',
+              },
+              expectedBlobs: {
+                type: 'integer',
+              },
+              importedBlobs: {
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerConfirmEmail: {
+    lexicon: 1,
+    id: 'com.atproto.server.confirmEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Confirm an email using a token from com.atproto.server.requestEmailConfirmation.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email', 'token'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'InvalidEmail',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerCreateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.createAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an account. Implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'Requested handle for the account.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Pre-existing atproto DID, being imported to a new account.',
+              },
+              inviteCode: {
+                type: 'string',
+              },
+              verificationCode: {
+                type: 'string',
+              },
+              verificationPhone: {
+                type: 'string',
+              },
+              password: {
+                type: 'string',
+                description:
+                  'Initial account password. May need to meet instance-specific password strength requirements.',
+              },
+              recoveryKey: {
+                type: 'string',
+                description:
+                  'DID PLC rotation key (aka, recovery key) to be included in PLC creation operation.',
+              },
+              plcOp: {
+                type: 'unknown',
+                description:
+                  'A signed DID PLC operation to be submitted as part of importing an existing account to this instance. NOTE: this optional field may be updated when full account migration is implemented.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            description:
+              'Account login session returned on successful account creation.',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the new account.',
+              },
+              didDoc: {
+                type: 'unknown',
+                description: 'Complete DID document.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidHandle',
+          },
+          {
+            name: 'InvalidPassword',
+          },
+          {
+            name: 'InvalidInviteCode',
+          },
+          {
+            name: 'HandleNotAvailable',
+          },
+          {
+            name: 'UnsupportedDomain',
+          },
+          {
+            name: 'UnresolvableDid',
+          },
+          {
+            name: 'IncompatibleDidDoc',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerCreateAppPassword: {
+    lexicon: 1,
+    id: 'com.atproto.server.createAppPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an App Password.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: {
+                type: 'string',
+                description:
+                  'A short name for the App Password, to help distinguish them.',
+              },
+              privileged: {
+                type: 'boolean',
+                description:
+                  "If an app password has 'privileged' access to possibly sensitive account state. Meant for use with trusted clients.",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:com.atproto.server.createAppPassword#appPassword',
+          },
+        },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
+      },
+      appPassword: {
+        type: 'object',
+        required: ['name', 'password', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          password: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          privileged: {
+            type: 'boolean',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerCreateInviteCode: {
+    lexicon: 1,
+    id: 'com.atproto.server.createInviteCode',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an invite code.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['useCount'],
+            properties: {
+              useCount: {
+                type: 'integer',
+              },
+              forAccount: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['code'],
+            properties: {
+              code: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerCreateInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.server.createInviteCodes',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create invite codes.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codeCount', 'useCount'],
+            properties: {
+              codeCount: {
+                type: 'integer',
+                default: 1,
+              },
+              useCount: {
+                type: 'integer',
+              },
+              forAccounts: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.createInviteCodes#accountCodes',
+                },
+              },
+            },
+          },
+        },
+      },
+      accountCodes: {
+        type: 'object',
+        required: ['account', 'codes'],
+        properties: {
+          account: {
+            type: 'string',
+          },
+          codes: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerCreateSession: {
+    lexicon: 1,
+    id: 'com.atproto.server.createSession',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Create an authentication session.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['identifier', 'password'],
+            properties: {
+              identifier: {
+                type: 'string',
+                description:
+                  'Handle or other identifier supported by the server for the authenticating user.',
+              },
+              password: {
+                type: 'string',
+              },
+              authFactorToken: {
+                type: 'string',
+              },
+              allowTakendown: {
+                type: 'boolean',
+                description:
+                  'When true, instead of throwing error for takendown accounts, a valid response with a narrow scoped token will be returned',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
+              },
+              email: {
+                type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+          {
+            name: 'AuthFactorTokenRequired',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerDeactivateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.deactivateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Deactivates a currently active account. Stops serving of repo, and future writes to repo until reactivated. Used to finalize account migration with the old host after the account has been activated on the new host.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              deleteAfter: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'A recommendation to server as to how long they should hold onto the deactivated account before deleting.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerDefs: {
+    lexicon: 1,
+    id: 'com.atproto.server.defs',
+    defs: {
+      inviteCode: {
+        type: 'object',
+        required: [
+          'code',
+          'available',
+          'disabled',
+          'forAccount',
+          'createdBy',
+          'createdAt',
+          'uses',
+        ],
+        properties: {
+          code: {
+            type: 'string',
+          },
+          available: {
+            type: 'integer',
+          },
+          disabled: {
+            type: 'boolean',
+          },
+          forAccount: {
+            type: 'string',
+          },
+          createdBy: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          uses: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.server.defs#inviteCodeUse',
+            },
+          },
+        },
+      },
+      inviteCodeUse: {
+        type: 'object',
+        required: ['usedBy', 'usedAt'],
+        properties: {
+          usedBy: {
+            type: 'string',
+            format: 'did',
+          },
+          usedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerDeleteAccount: {
+    lexicon: 1,
+    id: 'com.atproto.server.deleteAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Delete an actor's account with a token and password. Can only be called after requesting a deletion token. Requires auth.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'password', 'token'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              password: {
+                type: 'string',
+              },
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerDeleteSession: {
+    lexicon: 1,
+    id: 'com.atproto.server.deleteSession',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Delete the current session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
+        errors: [
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'ExpiredToken',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerDescribeServer: {
+    lexicon: 1,
+    id: 'com.atproto.server.describeServer',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Describes the server's account creation requirements and capabilities. Implemented by PDS.",
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'availableUserDomains'],
+            properties: {
+              inviteCodeRequired: {
+                type: 'boolean',
+                description:
+                  'If true, an invite code must be supplied to create an account on this instance.',
+              },
+              phoneVerificationRequired: {
+                type: 'boolean',
+                description:
+                  'If true, a phone verification token must be supplied to create an account on this instance.',
+              },
+              availableUserDomains: {
+                type: 'array',
+                description:
+                  'List of domain suffixes that can be used in account handles.',
+                items: {
+                  type: 'string',
+                },
+              },
+              links: {
+                type: 'ref',
+                description: 'URLs of service policy documents.',
+                ref: 'lex:com.atproto.server.describeServer#links',
+              },
+              contact: {
+                type: 'ref',
+                description: 'Contact information',
+                ref: 'lex:com.atproto.server.describeServer#contact',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+            },
+          },
+        },
+      },
+      links: {
+        type: 'object',
+        properties: {
+          privacyPolicy: {
+            type: 'string',
+            format: 'uri',
+          },
+          termsOfService: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      contact: {
+        type: 'object',
+        properties: {
+          email: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerGetAccountInviteCodes: {
+    lexicon: 1,
+    id: 'com.atproto.server.getAccountInviteCodes',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get all invite codes for the current account. Requires auth.',
+        parameters: {
+          type: 'params',
+          properties: {
+            includeUsed: {
+              type: 'boolean',
+              default: true,
+            },
+            createAvailable: {
+              type: 'boolean',
+              default: true,
+              description:
+                "Controls whether any new 'earned' but not 'created' invites should be created.",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['codes'],
+            properties: {
+              codes: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.defs#inviteCode',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'DuplicateCreate',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerGetServiceAuth: {
+    lexicon: 1,
+    id: 'com.atproto.server.getServiceAuth',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a signed token on behalf of the requesting DID for the requested service.',
+        parameters: {
+          type: 'params',
+          required: ['aud'],
+          properties: {
+            aud: {
+              type: 'string',
+              format: 'did',
+              description:
+                'The DID of the service that the token will be used to authenticate with',
+            },
+            exp: {
+              type: 'integer',
+              description:
+                'The time in Unix Epoch seconds that the JWT expires. Defaults to 60 seconds in the future. The service may enforce certain time bounds on tokens depending on the requested scope.',
+            },
+            lxm: {
+              type: 'string',
+              format: 'nsid',
+              description:
+                'Lexicon (XRPC) method to bind the requested token to',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token'],
+            properties: {
+              token: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'BadExpiration',
+            description:
+              'Indicates that the requested expiration date is not a valid. May be in the past or may be reliant on the requested scopes.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerGetSession: {
+    lexicon: 1,
+    id: 'com.atproto.server.getSession',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get information about the current auth session. Requires auth.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'did'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
+              },
+              email: {
+                type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerListAppPasswords: {
+    lexicon: 1,
+    id: 'com.atproto.server.listAppPasswords',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all App Passwords.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['passwords'],
+            properties: {
+              passwords: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.server.listAppPasswords#appPassword',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+        ],
+      },
+      appPassword: {
+        type: 'object',
+        required: ['name', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          privileged: {
+            type: 'boolean',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerRefreshSession: {
+    lexicon: 1,
+    id: 'com.atproto.server.refreshSession',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Refresh an authentication session. Requires auth using the 'refreshJwt' (not the 'accessJwt').",
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accessJwt', 'refreshJwt', 'handle', 'did'],
+            properties: {
+              accessJwt: {
+                type: 'string',
+              },
+              refreshJwt: {
+                type: 'string',
+              },
+              handle: {
+                type: 'string',
+                format: 'handle',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              didDoc: {
+                type: 'unknown',
+              },
+              email: {
+                type: 'string',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  "Hosting status of the account. If not specified, then assume 'active'.",
+                knownValues: ['takendown', 'suspended', 'deactivated'],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountTakedown',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'ExpiredToken',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerRequestAccountDelete: {
+    lexicon: 1,
+    id: 'com.atproto.server.requestAccountDelete',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate a user account deletion via email.',
+      },
+    },
+  },
+  ComAtprotoServerRequestEmailConfirmation: {
+    lexicon: 1,
+    id: 'com.atproto.server.requestEmailConfirmation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request an email with a code to confirm ownership of email.',
+      },
+    },
+  },
+  ComAtprotoServerRequestEmailUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.server.requestEmailUpdate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Request a token in order to update email.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['tokenRequired'],
+            properties: {
+              tokenRequired: {
+                type: 'boolean',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerRequestPasswordReset: {
+    lexicon: 1,
+    id: 'com.atproto.server.requestPasswordReset',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initiate a user account password reset via email.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerReserveSigningKey: {
+    lexicon: 1,
+    id: 'com.atproto.server.reserveSigningKey',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Reserve a repo signing key, for use with account creation. Necessary so that a DID PLC update operation can be constructed during an account migraiton. Public and does not require auth; implemented by PDS. NOTE: this endpoint may change when full account migration is implemented.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID to reserve a key for.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['signingKey'],
+            properties: {
+              signingKey: {
+                type: 'string',
+                description:
+                  'The public key for the reserved signing key, in did:key serialization.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerResetPassword: {
+    lexicon: 1,
+    id: 'com.atproto.server.resetPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Reset a user account password using a token.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['token', 'password'],
+            properties: {
+              token: {
+                type: 'string',
+              },
+              password: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoServerRevokeAppPassword: {
+    lexicon: 1,
+    id: 'com.atproto.server.revokeAppPassword',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Revoke an App Password by name.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoServerUpdateEmail: {
+    lexicon: 1,
+    id: 'com.atproto.server.updateEmail',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: "Update an account's email.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['email'],
+            properties: {
+              email: {
+                type: 'string',
+              },
+              emailAuthFactor: {
+                type: 'boolean',
+              },
+              token: {
+                type: 'string',
+                description:
+                  "Requires a token from com.atproto.sever.requestEmailUpdate if the account's email has been confirmed.",
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ExpiredToken',
+          },
+          {
+            name: 'InvalidToken',
+          },
+          {
+            name: 'TokenRequired',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncDefs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.defs',
+    defs: {
+      hostStatus: {
+        type: 'string',
+        knownValues: ['active', 'idle', 'offline', 'throttled', 'banned'],
+      },
+    },
+  },
+  ComAtprotoSyncGetBlob: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlob',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a blob associated with a given account. Returns the full blob as originally uploaded. Does not require auth; implemented by PDS.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cid'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the account.',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description: 'The CID of the blob to fetch',
+            },
+          },
+        },
+        output: {
+          encoding: '*/*',
+        },
+        errors: [
+          {
+            name: 'BlobNotFound',
+          },
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetBlocks: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getBlocks',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get data blocks from a given repo, by CID. For example, intermediate MST nodes, or records. Does not require auth; implemented by PDS.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'cids'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+            cids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        errors: [
+          {
+            name: 'BlockNotFound',
+          },
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetCheckout: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getCheckout',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'DEPRECATED - please use com.atproto.sync.getRepo instead',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+      },
+    },
+  },
+  ComAtprotoSyncGetHead: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHead',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'DEPRECATED - please use com.atproto.sync.getLatestCommit instead',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['root'],
+            properties: {
+              root: {
+                type: 'string',
+                format: 'cid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'HeadNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetHostStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getHostStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Returns information about a specified upstream host, as consumed by the server. Implemented by relays.',
+        parameters: {
+          type: 'params',
+          required: ['hostname'],
+          properties: {
+            hostname: {
+              type: 'string',
+              description:
+                'Hostname of the host (eg, PDS or relay) being queried.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+              },
+              seq: {
+                type: 'integer',
+                description:
+                  'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
+              },
+              accountCount: {
+                type: 'integer',
+                description:
+                  'Number of accounts on the server which are associated with the upstream host. Note that the upstream may actually have more accounts.',
+              },
+              status: {
+                type: 'ref',
+                ref: 'lex:com.atproto.sync.defs#hostStatus',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'HostNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetLatestCommit: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getLatestCommit',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the current commit CID & revision of the specified repo. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cid', 'rev'],
+            properties: {
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              rev: {
+                type: 'string',
+                format: 'tid',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetRecord: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRecord',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get data blocks needed to prove the existence or non-existence of record in the current version of repo. Does not require auth.',
+        parameters: {
+          type: 'params',
+          required: ['did', 'collection', 'rkey'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+            collection: {
+              type: 'string',
+              format: 'nsid',
+            },
+            rkey: {
+              type: 'string',
+              description: 'Record Key',
+              format: 'record-key',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetRepo: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRepo',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Download a repository export as CAR file. Optionally only a 'diff' since a previous revision. Does not require auth; implemented by PDS.",
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+            since: {
+              type: 'string',
+              format: 'tid',
+              description:
+                "The revision ('rev') of the repo to create a diff from.",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/vnd.ipld.car',
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncGetRepoStatus: {
+    lexicon: 1,
+    id: 'com.atproto.sync.getRepoStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get the hosting status for a repository, on this server. Expected to be implemented by PDS and Relay.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'active'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              active: {
+                type: 'boolean',
+              },
+              status: {
+                type: 'string',
+                description:
+                  'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+                knownValues: [
+                  'takendown',
+                  'suspended',
+                  'deleted',
+                  'deactivated',
+                  'desynchronized',
+                  'throttled',
+                ],
+              },
+              rev: {
+                type: 'string',
+                format: 'tid',
+                description:
+                  'Optional field, the current rev of the repo, if active=true',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncListBlobs: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listBlobs',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List blob CIDs for an account, since some repo revision. Does not require auth; implemented by PDS.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the repo.',
+            },
+            since: {
+              type: 'string',
+              format: 'tid',
+              description: 'Optional revision of the repo to list blobs since.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['cids'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              cids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'cid',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+          {
+            name: 'RepoTakendown',
+          },
+          {
+            name: 'RepoSuspended',
+          },
+          {
+            name: 'RepoDeactivated',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncListHosts: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listHosts',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates upstream hosts (eg, PDS or relay instances) that this service consumes from. Implemented by relays.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 200,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hosts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              hosts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listHosts#host',
+                },
+                description:
+                  'Sort order is not formally specified. Recommended order is by time host was first seen by the server, with oldest first.',
+              },
+            },
+          },
+        },
+      },
+      host: {
+        type: 'object',
+        required: ['hostname'],
+        properties: {
+          hostname: {
+            type: 'string',
+            description: 'hostname of server; not a URL (no scheme)',
+          },
+          seq: {
+            type: 'integer',
+            description:
+              'Recent repo stream event sequence number. May be delayed from actual stream processing (eg, persisted cursor not in-memory cursor).',
+          },
+          accountCount: {
+            type: 'integer',
+          },
+          status: {
+            type: 'ref',
+            ref: 'lex:com.atproto.sync.defs#hostStatus',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncListRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listRepos',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates all the DID, rev, and commit CID for all repos hosted by this service. Does not require auth; implemented by PDS and Relay.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listRepos#repo',
+                },
+              },
+            },
+          },
+        },
+      },
+      repo: {
+        type: 'object',
+        required: ['did', 'head', 'rev'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          head: {
+            type: 'string',
+            format: 'cid',
+            description: 'Current repo commit CID',
+          },
+          rev: {
+            type: 'string',
+            format: 'tid',
+          },
+          active: {
+            type: 'boolean',
+          },
+          status: {
+            type: 'string',
+            description:
+              'If active=false, this optional field indicates a possible reason for why the account is not active. If active=false and no status is supplied, then the host makes no claim for why the repository is no longer being hosted.',
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'desynchronized',
+              'throttled',
+            ],
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncListReposByCollection: {
+    lexicon: 1,
+    id: 'com.atproto.sync.listReposByCollection',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Enumerates all the DIDs which have records with the given collection NSID.',
+        parameters: {
+          type: 'params',
+          required: ['collection'],
+          properties: {
+            collection: {
+              type: 'string',
+              format: 'nsid',
+            },
+            limit: {
+              type: 'integer',
+              description:
+                'Maximum size of response set. Recommend setting a large maximum (1000+) when enumerating large DID lists.',
+              minimum: 1,
+              maximum: 2000,
+              default: 500,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['repos'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              repos: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.sync.listReposByCollection#repo',
+                },
+              },
+            },
+          },
+        },
+      },
+      repo: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncNotifyOfUpdate: {
+    lexicon: 1,
+    id: 'com.atproto.sync.notifyOfUpdate',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Notify a crawling service of a recent update, and that crawling should resume. Intended use is after a gap between repo stream events caused the crawling service to disconnect. Does not require auth; implemented by Relay. DEPRECATED: just use com.atproto.sync.requestCrawl',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+                description:
+                  'Hostname of the current service (usually a PDS) that is notifying of update.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSyncRequestCrawl: {
+    lexicon: 1,
+    id: 'com.atproto.sync.requestCrawl',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request a service to persistently crawl hosted repos. Expected use is new PDS instances declaring their existence to Relays. Does not require auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['hostname'],
+            properties: {
+              hostname: {
+                type: 'string',
+                description:
+                  'Hostname of the current service (eg, PDS) that is requesting to be crawled.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'HostBanned',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSyncSubscribeRepos: {
+    lexicon: 1,
+    id: 'com.atproto.sync.subscribeRepos',
+    defs: {
+      main: {
+        type: 'subscription',
+        description:
+          'Repository event stream, aka Firehose endpoint. Outputs repo commits with diff data, and identity update events, for all repositories on the current server. See the atproto specifications for details around stream sequencing, repo versioning, CAR diff format, and more. Public and does not require auth; implemented by PDS and Relay.',
+        parameters: {
+          type: 'params',
+          properties: {
+            cursor: {
+              type: 'integer',
+              description: 'The last known event seq number to backfill from.',
+            },
+          },
+        },
+        message: {
+          schema: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.sync.subscribeRepos#commit',
+              'lex:com.atproto.sync.subscribeRepos#sync',
+              'lex:com.atproto.sync.subscribeRepos#identity',
+              'lex:com.atproto.sync.subscribeRepos#account',
+              'lex:com.atproto.sync.subscribeRepos#info',
+            ],
+          },
+        },
+        errors: [
+          {
+            name: 'FutureCursor',
+          },
+          {
+            name: 'ConsumerTooSlow',
+            description:
+              'If the consumer of the stream can not keep up with events, and a backlog gets too large, the server will drop the connection.',
+          },
+        ],
+      },
+      commit: {
+        type: 'object',
+        description:
+          'Represents an update of repository state. Note that empty commits are allowed, which include no repo data changes, but an update to rev and signature.',
+        required: [
+          'seq',
+          'rebase',
+          'tooBig',
+          'repo',
+          'commit',
+          'rev',
+          'since',
+          'blocks',
+          'ops',
+          'blobs',
+          'time',
+        ],
+        nullable: ['since'],
+        properties: {
+          seq: {
+            type: 'integer',
+            description: 'The stream sequence number of this message.',
+          },
+          rebase: {
+            type: 'boolean',
+            description: 'DEPRECATED -- unused',
+          },
+          tooBig: {
+            type: 'boolean',
+            description:
+              'DEPRECATED -- replaced by #sync event and data limits. Indicates that this commit contained too many ops, or data size was too large. Consumers will need to make a separate request to get missing data.',
+          },
+          repo: {
+            type: 'string',
+            format: 'did',
+            description:
+              "The repo this event comes from. Note that all other message types name this field 'did'.",
+          },
+          commit: {
+            type: 'cid-link',
+            description: 'Repo commit object CID.',
+          },
+          rev: {
+            type: 'string',
+            format: 'tid',
+            description:
+              'The rev of the emitted commit. Note that this information is also in the commit object included in blocks, unless this is a tooBig event.',
+          },
+          since: {
+            type: 'string',
+            format: 'tid',
+            description:
+              'The rev of the last emitted commit from this repo (if any).',
+          },
+          blocks: {
+            type: 'bytes',
+            description:
+              "CAR file containing relevant blocks, as a diff since the previous repo state. The commit must be included as a block, and the commit block CID must be the first entry in the CAR header 'roots' list.",
+            maxLength: 2000000,
+          },
+          ops: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.sync.subscribeRepos#repoOp',
+              description:
+                'List of repo mutation operations in this commit (eg, records created, updated, or deleted).',
+            },
+            maxLength: 200,
+          },
+          blobs: {
+            type: 'array',
+            items: {
+              type: 'cid-link',
+              description:
+                'DEPRECATED -- will soon always be empty. List of new blobs (by CID) referenced by records in this commit.',
+            },
+          },
+          prevData: {
+            type: 'cid-link',
+            description:
+              "The root CID of the MST tree for the previous commit from this repo (indicated by the 'since' revision field in this message). Corresponds to the 'data' field in the repo commit object. NOTE: this field is effectively required for the 'inductive' version of firehose.",
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp of when this message was originally broadcast.',
+          },
+        },
+      },
+      sync: {
+        type: 'object',
+        description:
+          'Updates the repo to a new state, without necessarily including that state on the firehose. Used to recover from broken commit streams, data loss incidents, or in situations where upstream host does not know recent state of the repository.',
+        required: ['seq', 'did', 'blocks', 'rev', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+            description: 'The stream sequence number of this message.',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description:
+              'The account this repo event corresponds to. Must match that in the commit object.',
+          },
+          blocks: {
+            type: 'bytes',
+            description:
+              "CAR file containing the commit, as a block. The CAR header must include the commit block CID as the first 'root'.",
+            maxLength: 10000,
+          },
+          rev: {
+            type: 'string',
+            description:
+              'The rev of the commit. This value must match that in the commit object.',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Timestamp of when this message was originally broadcast.',
+          },
+        },
+      },
+      identity: {
+        type: 'object',
+        description:
+          "Represents a change to an account's identity. Could be an updated handle, signing key, or pds hosting endpoint. Serves as a prod to all downstream services to refresh their identity cache.",
+        required: ['seq', 'did', 'time'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+          handle: {
+            type: 'string',
+            format: 'handle',
+            description:
+              "The current handle for the account, or 'handle.invalid' if validation fails. This field is optional, might have been validated or passed-through from an upstream source. Semantics and behaviors for PDS vs Relay may evolve in the future; see atproto specs for more details.",
+          },
+        },
+      },
+      account: {
+        type: 'object',
+        description:
+          "Represents a change to an account's status on a host (eg, PDS or Relay). The semantics of this event are that the status is at the host which emitted the event, not necessarily that at the currently active PDS. Eg, a Relay takedown would emit a takedown with active=false, even if the PDS is still active.",
+        required: ['seq', 'did', 'time', 'active'],
+        properties: {
+          seq: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          time: {
+            type: 'string',
+            format: 'datetime',
+          },
+          active: {
+            type: 'boolean',
+            description:
+              'Indicates that the account has a repository which can be fetched from the host that emitted this event.',
+          },
+          status: {
+            type: 'string',
+            description:
+              'If active=false, this optional field indicates a reason for why the account is not active.',
+            knownValues: [
+              'takendown',
+              'suspended',
+              'deleted',
+              'deactivated',
+              'desynchronized',
+              'throttled',
+            ],
+          },
+        },
+      },
+      info: {
+        type: 'object',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            knownValues: ['OutdatedCursor'],
+          },
+          message: {
+            type: 'string',
+          },
+        },
+      },
+      repoOp: {
+        type: 'object',
+        description: 'A repo operation, ie a mutation of a single record.',
+        required: ['action', 'path', 'cid'],
+        nullable: ['cid'],
+        properties: {
+          action: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
+          },
+          path: {
+            type: 'string',
+          },
+          cid: {
+            type: 'cid-link',
+            description:
+              'For creates and updates, the new record CID. For deletions, null.',
+          },
+          prev: {
+            type: 'cid-link',
+            description:
+              'For updates and deletes, the previous record CID (required for inductive firehose). For creations, field should not be defined.',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempAddReservedHandle: {
+    lexicon: 1,
+    id: 'com.atproto.temp.addReservedHandle',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a handle to the set of reserved handles.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle'],
+            properties: {
+              handle: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempCheckHandleAvailability: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkHandleAvailability',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Checks whether the provided handle is available. If the handle is not available, available suggestions will be returned. Optional inputs will be used to generate suggestions.',
+        parameters: {
+          type: 'params',
+          required: ['handle'],
+          properties: {
+            handle: {
+              type: 'string',
+              format: 'handle',
+              description:
+                'Tentative handle. Will be checked for availability or used to build handle suggestions.',
+            },
+            email: {
+              type: 'string',
+              description:
+                'User-provided email. Might be used to build handle suggestions.',
+            },
+            birthDate: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'User-provided birth date. Might be used to build handle suggestions.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['handle', 'result'],
+            properties: {
+              handle: {
+                type: 'string',
+                format: 'handle',
+                description: 'Echo of the input handle.',
+              },
+              result: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.temp.checkHandleAvailability#resultAvailable',
+                  'lex:com.atproto.temp.checkHandleAvailability#resultUnavailable',
+                ],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidEmail',
+            description: 'An invalid email was provided.',
+          },
+        ],
+      },
+      resultAvailable: {
+        type: 'object',
+        description: 'Indicates the provided handle is available.',
+        properties: {},
+      },
+      resultUnavailable: {
+        type: 'object',
+        description:
+          'Indicates the provided handle is unavailable and gives suggestions of available handles.',
+        required: ['suggestions'],
+        properties: {
+          suggestions: {
+            type: 'array',
+            description:
+              'List of suggested handles based on the provided inputs.',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.temp.checkHandleAvailability#suggestion',
+            },
+          },
+        },
+      },
+      suggestion: {
+        type: 'object',
+        required: ['handle', 'method'],
+        properties: {
+          handle: {
+            type: 'string',
+            format: 'handle',
+          },
+          method: {
+            type: 'string',
+            description:
+              'Method used to build this suggestion. Should be considered opaque to clients. Can be used for metrics.',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempCheckSignupQueue: {
+    lexicon: 1,
+    id: 'com.atproto.temp.checkSignupQueue',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Check accounts location in signup queue.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activated'],
+            properties: {
+              activated: {
+                type: 'boolean',
+              },
+              placeInQueue: {
+                type: 'integer',
+              },
+              estimatedTimeMs: {
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempDereferenceScope: {
+    lexicon: 1,
+    id: 'com.atproto.temp.dereferenceScope',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Allows finding the oauth permission scope from a reference',
+        parameters: {
+          type: 'params',
+          required: ['scope'],
+          properties: {
+            scope: {
+              type: 'string',
+              description: "The scope reference (starts with 'ref:')",
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['scope'],
+            properties: {
+              scope: {
+                type: 'string',
+                description: 'The full oauth permission scope',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidScopeReference',
+            description: 'An invalid scope reference was provided.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoTempFetchLabels: {
+    lexicon: 1,
+    id: 'com.atproto.temp.fetchLabels',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'DEPRECATED: use queryLabels or subscribeLabels instead -- Fetch all labels from a labeler created after a certain date.',
+        parameters: {
+          type: 'params',
+          properties: {
+            since: {
+              type: 'integer',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 250,
+              default: 50,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['labels'],
+            properties: {
+              labels: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.label.defs#label',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempRequestPhoneVerification: {
+    lexicon: 1,
+    id: 'com.atproto.temp.requestPhoneVerification',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Request a verification code to be sent to the supplied phone number',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['phoneNumber'],
+            properties: {
+              phoneNumber: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoTempRevokeAccountCredentials: {
+    lexicon: 1,
+    id: 'com.atproto.temp.revokeAccountCredentials',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Revoke sessions, password, and app passwords associated with account. May be resolved by a password reset.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['account'],
+            properties: {
+              account: {
+                type: 'string',
+                format: 'at-identifier',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneCommunicationCreateTemplate: {
     lexicon: 1,
     id: 'tools.ozone.communication.createTemplate',
@@ -13307,6 +15264,88 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationCancelScheduledActions: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.cancelScheduledActions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Cancel all pending scheduled moderation actions for specified subjects',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['subjects'],
+            properties: {
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description:
+                  'Array of DID subjects to cancel scheduled actions for',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional comment describing the reason for cancellation',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.cancelScheduledActions#cancellationResults',
+          },
+        },
+      },
+      cancellationResults: {
+        type: 'object',
+        required: ['succeeded', 'failed'],
+        properties: {
+          succeeded: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+            description:
+              'DIDs for which all pending scheduled actions were successfully cancelled',
+          },
+          failed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.cancelScheduledActions#failedCancellation',
+            },
+            description:
+              'DIDs for which cancellation failed with error details',
+          },
+        },
+      },
+      failedCancellation: {
+        type: 'object',
+        required: ['did', 'error'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          error: {
+            type: 'string',
+          },
+          errorCode: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationDefs: {
     lexicon: 1,
     id: 'tools.ozone.moderation.defs',
@@ -13347,6 +15386,11 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#identityEvent',
               'lex:tools.ozone.moderation.defs#recordEvent',
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
+              'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
+              'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           subject: {
@@ -13376,6 +15420,10 @@ export const schemaDict = {
           },
           subjectHandle: {
             type: 'string',
+          },
+          modTool: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
           },
         },
       },
@@ -13415,6 +15463,11 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#identityEvent',
               'lex:tools.ozone.moderation.defs#recordEvent',
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
+              'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
+              'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
             ],
           },
           subject: {
@@ -13440,6 +15493,10 @@ export const schemaDict = {
           createdAt: {
             type: 'string',
             format: 'datetime',
+          },
+          modTool: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#modTool',
           },
         },
       },
@@ -13557,6 +15614,23 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.moderation.defs#recordsStats',
           },
+          accountStrike: {
+            description:
+              'Strike information for the account (account-level only)',
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#accountStrike',
+          },
+          ageAssuranceState: {
+            type: 'string',
+            description: 'Current age assurance state of the subject.',
+            knownValues: ['pending', 'assured', 'unknown', 'reset', 'blocked'],
+          },
+          ageAssuranceUpdatedBy: {
+            type: 'string',
+            description:
+              'Whether or not the last successful update to age assurance was made by the user or admin.',
+            knownValues: ['admin', 'user'],
+          },
         },
       },
       subjectView: {
@@ -13658,13 +15732,39 @@ export const schemaDict = {
           },
         },
       },
+      accountStrike: {
+        description: 'Strike information for an account',
+        type: 'object',
+        properties: {
+          activeStrikeCount: {
+            description:
+              'Current number of active strikes (excluding expired strikes)',
+            type: 'integer',
+          },
+          totalStrikeCount: {
+            description:
+              'Total number of strikes ever received (including expired strikes)',
+            type: 'integer',
+          },
+          firstStrikeAt: {
+            description: 'Timestamp of the first strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+          lastStrikeAt: {
+            description: 'Timestamp of the most recent strike received',
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
       subjectReviewState: {
         type: 'string',
         knownValues: [
-          'lex:tools.ozone.moderation.defs#reviewOpen',
-          'lex:tools.ozone.moderation.defs#reviewEscalated',
-          'lex:tools.ozone.moderation.defs#reviewClosed',
-          'lex:tools.ozone.moderation.defs#reviewNone',
+          'tools.ozone.moderation.defs#reviewOpen',
+          'tools.ozone.moderation.defs#reviewEscalated',
+          'tools.ozone.moderation.defs#reviewClosed',
+          'tools.ozone.moderation.defs#reviewNone',
         ],
       },
       reviewOpen: {
@@ -13713,6 +15813,31 @@ export const schemaDict = {
             description:
               'Names/Keywords of the policies that drove the decision.',
           },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          targetServices: {
+            type: 'array',
+            items: {
+              type: 'string',
+              knownValues: ['appview', 'pds'],
+            },
+            description:
+              'List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services.',
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
         },
       },
       modEventReverseTakedown: {
@@ -13722,6 +15847,25 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Describe reasoning behind the reversal.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policy infraction for which takedown is being reversed.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Usually set from the last policy infraction's severity.",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity.",
           },
         },
       },
@@ -13811,6 +15955,95 @@ export const schemaDict = {
           },
         },
       },
+      ageAssuranceEvent: {
+        type: 'object',
+        description:
+          'Age assurance info coming directly from users. Only works on DID subjects.',
+        required: ['createdAt', 'status', 'attemptId'],
+        properties: {
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'The date and time of this write operation.',
+          },
+          attemptId: {
+            type: 'string',
+            description:
+              'The unique identifier for this instance of the age assurance flow, in UUID format.',
+          },
+          status: {
+            type: 'string',
+            description: 'The status of the Age Assurance process.',
+            knownValues: ['unknown', 'pending', 'assured'],
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+          countryCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow.',
+          },
+          regionCode: {
+            type: 'string',
+            description:
+              'The ISO 3166-2 region code provided when beginning the Age Assurance flow.',
+          },
+          initIp: {
+            type: 'string',
+            description: 'The IP address used when initiating the AA flow.',
+          },
+          initUa: {
+            type: 'string',
+            description: 'The user agent used when initiating the AA flow.',
+          },
+          completeIp: {
+            type: 'string',
+            description: 'The IP address used when completing the AA flow.',
+          },
+          completeUa: {
+            type: 'string',
+            description: 'The user agent used when completing the AA flow.',
+          },
+        },
+      },
+      ageAssuranceOverrideEvent: {
+        type: 'object',
+        description:
+          'Age assurance status override by moderators. Only works on DID subjects.',
+        required: ['comment', 'status'],
+        properties: {
+          status: {
+            type: 'string',
+            description:
+              'The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.',
+            knownValues: ['assured', 'reset', 'blocked'],
+          },
+          access: {
+            type: 'ref',
+            ref: 'lex:app.bsky.ageassurance.defs#access',
+          },
+          comment: {
+            type: 'string',
+            minLength: 1,
+            description: 'Comment describing the reason for the override.',
+          },
+        },
+      },
+      revokeAccountCredentialsEvent: {
+        type: 'object',
+        description:
+          'Account credentials revocation by moderators. Only works on DID subjects.',
+        required: ['comment'],
+        properties: {
+          comment: {
+            minLength: 1,
+            type: 'string',
+            description: 'Comment describing the reason for the revocation.',
+          },
+        },
+      },
       modEventAcknowledge: {
         type: 'object',
         properties: {
@@ -13896,6 +16129,36 @@ export const schemaDict = {
           comment: {
             type: 'string',
             description: 'Additional comment about the outgoing comm.',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that necessitated the email.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          isDelivered: {
+            type: 'boolean',
+            description:
+              "Indicates whether the email was successfully delivered to the user's inbox.",
           },
         },
       },
@@ -14013,6 +16276,37 @@ export const schemaDict = {
           timestamp: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+      scheduleTakedownEvent: {
+        type: 'object',
+        description: 'Logs a scheduled takedown action for an account.',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      cancelScheduledTakedownEvent: {
+        type: 'object',
+        description:
+          'Logs cancellation of a scheduled takedown action for an account.',
+        properties: {
+          comment: {
+            type: 'string',
           },
         },
       },
@@ -14457,6 +16751,120 @@ export const schemaDict = {
           },
         },
       },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
+      timelineEventPlcCreate: {
+        type: 'token',
+        description:
+          'Moderation event timeline event for a PLC create operation',
+      },
+      timelineEventPlcOperation: {
+        type: 'token',
+        description:
+          'Moderation event timeline event for generic PLC operation',
+      },
+      timelineEventPlcTombstone: {
+        type: 'token',
+        description:
+          'Moderation event timeline event for a PLC tombstone operation',
+      },
+      scheduledActionView: {
+        type: 'object',
+        description: 'View of a scheduled moderation action',
+        required: ['id', 'action', 'did', 'createdBy', 'createdAt', 'status'],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Auto-incrementing row ID',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['takedown'],
+            description: 'Type of action to be executed',
+          },
+          eventData: {
+            type: 'unknown',
+            description:
+              'Serialized event object that will be propagated to the event when performed',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+            description: 'Subject DID for the action',
+          },
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Exact time to execute the action',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Earliest time to execute the action (for randomized scheduling)',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Latest time to execute the action (for randomized scheduling)',
+          },
+          randomizeExecution: {
+            type: 'boolean',
+            description:
+              'Whether execution time should be randomized within the specified range',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this scheduled action',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the scheduled action was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the scheduled action was last updated',
+          },
+          status: {
+            type: 'string',
+            knownValues: ['pending', 'executed', 'cancelled', 'failed'],
+            description: 'Current status of the scheduled action',
+          },
+          lastExecutedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the action was last attempted to be executed',
+          },
+          lastFailureReason: {
+            type: 'string',
+            description: 'Reason for the last execution failure',
+          },
+          executionEventId: {
+            type: 'integer',
+            description:
+              'ID of the moderation event created when action was successfully executed',
+          },
+        },
+      },
     },
   },
   ToolsOzoneModerationEmitEvent: {
@@ -14494,6 +16902,11 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#identityEvent',
                   'lex:tools.ozone.moderation.defs#recordEvent',
                   'lex:tools.ozone.moderation.defs#modEventPriorityScore',
+                  'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
+                  'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+                  'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+                  'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
+                  'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
                 ],
               },
               subject: {
@@ -14514,6 +16927,15 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
+              },
+              externalId: {
+                type: 'string',
+                description:
+                  'An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject.',
+              },
             },
           },
         },
@@ -14528,7 +16950,119 @@ export const schemaDict = {
           {
             name: 'SubjectHasAction',
           },
+          {
+            name: 'DuplicateExternalId',
+            description:
+              'An event with the same external ID already exists for the subject.',
+          },
         ],
+      },
+    },
+  },
+  ToolsOzoneModerationGetAccountTimeline: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.getAccountTimeline',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get timeline of all available events of an account. This includes moderation events, account history and did history.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['timeline'],
+            properties: {
+              timeline: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.getAccountTimeline#timelineItem',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RepoNotFound',
+          },
+        ],
+      },
+      timelineItem: {
+        type: 'object',
+        required: ['day', 'summary'],
+        properties: {
+          day: {
+            type: 'string',
+          },
+          summary: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.getAccountTimeline#timelineItemSummary',
+            },
+          },
+        },
+      },
+      timelineItemSummary: {
+        type: 'object',
+        required: ['eventSubjectType', 'eventType', 'count'],
+        properties: {
+          eventSubjectType: {
+            type: 'string',
+            knownValues: ['account', 'record', 'chat'],
+          },
+          eventType: {
+            type: 'string',
+            knownValues: [
+              'tools.ozone.moderation.defs#modEventTakedown',
+              'tools.ozone.moderation.defs#modEventReverseTakedown',
+              'tools.ozone.moderation.defs#modEventComment',
+              'tools.ozone.moderation.defs#modEventReport',
+              'tools.ozone.moderation.defs#modEventLabel',
+              'tools.ozone.moderation.defs#modEventAcknowledge',
+              'tools.ozone.moderation.defs#modEventEscalate',
+              'tools.ozone.moderation.defs#modEventMute',
+              'tools.ozone.moderation.defs#modEventUnmute',
+              'tools.ozone.moderation.defs#modEventMuteReporter',
+              'tools.ozone.moderation.defs#modEventUnmuteReporter',
+              'tools.ozone.moderation.defs#modEventEmail',
+              'tools.ozone.moderation.defs#modEventResolveAppeal',
+              'tools.ozone.moderation.defs#modEventDivert',
+              'tools.ozone.moderation.defs#modEventTag',
+              'tools.ozone.moderation.defs#accountEvent',
+              'tools.ozone.moderation.defs#identityEvent',
+              'tools.ozone.moderation.defs#recordEvent',
+              'tools.ozone.moderation.defs#modEventPriorityScore',
+              'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+              'tools.ozone.moderation.defs#ageAssuranceEvent',
+              'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'tools.ozone.moderation.defs#timelineEventPlcCreate',
+              'tools.ozone.moderation.defs#timelineEventPlcOperation',
+              'tools.ozone.moderation.defs#timelineEventPlcTombstone',
+              'tools.ozone.hosting.getAccountHistory#accountCreated',
+              'tools.ozone.hosting.getAccountHistory#emailConfirmed',
+              'tools.ozone.hosting.getAccountHistory#passwordUpdated',
+              'tools.ozone.hosting.getAccountHistory#handleUpdated',
+              'tools.ozone.moderation.defs#scheduleTakedownEvent',
+              'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
+            ],
+          },
+          count: {
+            type: 'integer',
+          },
+        },
       },
     },
   },
@@ -14792,6 +17326,87 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationListScheduledActions: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.listScheduledActions',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'List scheduled moderation actions with optional filtering',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['statuses'],
+            properties: {
+              startsAfter: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Filter actions scheduled to execute after this time',
+              },
+              endsBefore: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Filter actions scheduled to execute before this time',
+              },
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description: 'Filter actions for specific DID subjects',
+              },
+              statuses: {
+                type: 'array',
+                minLength: 1,
+                items: {
+                  type: 'string',
+                  knownValues: ['pending', 'executed', 'cancelled', 'failed'],
+                },
+                description: 'Filter actions by status',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actions'],
+            properties: {
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#scheduledActionView',
+                },
+              },
+              cursor: {
+                type: 'string',
+                description: 'Cursor for next page of results',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationQueryEvents: {
     lexicon: 1,
     id: 'tools.ozone.moderation.queryEvents',
@@ -14917,6 +17532,36 @@ export const schemaDict = {
                 description:
                   'If specified, only events where the action policies match any of the given policies are returned',
               },
+            },
+            modTool: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'If specified, only events where the modTool name matches any of the given values are returned',
+            },
+            batchId: {
+              type: 'string',
+              description:
+                'If specified, only events where the batchId matches the given value are returned',
+            },
+            ageAssuranceState: {
+              type: 'string',
+              description:
+                'If specified, only events where the age assurance state matches the given value are returned',
+              knownValues: [
+                'pending',
+                'assured',
+                'unknown',
+                'reset',
+                'blocked',
+              ],
+            },
+            withStrike: {
+              type: 'boolean',
+              description:
+                'If specified, only events where strikeCount value is set are returned.',
             },
             cursor: {
               type: 'string',
@@ -15048,6 +17693,12 @@ export const schemaDict = {
             reviewState: {
               type: 'string',
               description: 'Specify when fetching subjects in a certain state',
+              knownValues: [
+                'tools.ozone.moderation.defs#reviewOpen',
+                'tools.ozone.moderation.defs#reviewClosed',
+                'tools.ozone.moderation.defs#reviewEscalated',
+                'tools.ozone.moderation.defs#reviewNone',
+              ],
             },
             ignoreSubjects: {
               type: 'array',
@@ -15148,6 +17799,24 @@ export const schemaDict = {
               description:
                 'If specified, only subjects that have priority score value above the given value will be returned.',
             },
+            minStrikeCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'If specified, only subjects that belong to an account that has at least this many active strikes will be returned.',
+            },
+            ageAssuranceState: {
+              type: 'string',
+              description:
+                'If specified, only subjects with the given age assurance state will be returned.',
+              knownValues: [
+                'pending',
+                'assured',
+                'unknown',
+                'reset',
+                'blocked',
+              ],
+            },
           },
         },
         output: {
@@ -15167,6 +17836,172 @@ export const schemaDict = {
                 },
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneModerationScheduleAction: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.scheduleAction',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Schedule a moderation action to be executed at a future time',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['action', 'subjects', 'createdBy', 'scheduling'],
+            properties: {
+              action: {
+                type: 'union',
+                refs: ['lex:tools.ozone.moderation.scheduleAction#takedown'],
+              },
+              subjects: {
+                type: 'array',
+                maxLength: 100,
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+                description: 'Array of DID subjects to schedule the action for',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+              scheduling: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.scheduleAction#schedulingConfig',
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
+                description:
+                  'This will be propagated to the moderation event when it is applied',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.scheduleAction#scheduledActionResults',
+          },
+        },
+      },
+      takedown: {
+        type: 'object',
+        description: 'Schedule a takedown action',
+        properties: {
+          comment: {
+            type: 'string',
+          },
+          durationInHours: {
+            type: 'integer',
+            description:
+              'Indicates how long the takedown should be in effect before automatically expiring.',
+          },
+          acknowledgeAccountSubjects: {
+            type: 'boolean',
+            description:
+              'If true, all other reports on content authored by this account will be resolved (acknowledged).',
+          },
+          policies: {
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'string',
+            },
+            description:
+              'Names/Keywords of the policies that drove the decision.',
+          },
+          severityLevel: {
+            type: 'string',
+            description:
+              "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.).",
+          },
+          strikeCount: {
+            type: 'integer',
+            description:
+              'Number of strikes to assign to the user when takedown is applied.',
+          },
+          strikeExpiresAt: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'When the strike should expire. If not provided, the strike never expires.',
+          },
+          emailContent: {
+            type: 'string',
+            description: 'Email content to be sent to the user upon takedown.',
+          },
+          emailSubject: {
+            type: 'string',
+            description:
+              'Subject of the email to be sent to the user upon takedown.',
+          },
+        },
+      },
+      schedulingConfig: {
+        type: 'object',
+        description: 'Configuration for when the action should be executed',
+        properties: {
+          executeAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Exact time to execute the action',
+          },
+          executeAfter: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Earliest time to execute the action (for randomized scheduling)',
+          },
+          executeUntil: {
+            type: 'string',
+            format: 'datetime',
+            description:
+              'Latest time to execute the action (for randomized scheduling)',
+          },
+        },
+      },
+      scheduledActionResults: {
+        type: 'object',
+        required: ['succeeded', 'failed'],
+        properties: {
+          succeeded: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'did',
+            },
+          },
+          failed: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:tools.ozone.moderation.scheduleAction#failedScheduling',
+            },
+          },
+        },
+      },
+      failedScheduling: {
+        type: 'object',
+        required: ['subject', 'error'],
+        properties: {
+          subject: {
+            type: 'string',
+            format: 'did',
+          },
+          error: {
+            type: 'string',
+          },
+          errorCode: {
+            type: 'string',
           },
         },
       },
@@ -15219,6 +18054,666 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ToolsOzoneReportDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.report.defs',
+    defs: {
+      reasonType: {
+        type: 'string',
+        knownValues: [
+          'tools.ozone.report.defs#reasonAppeal',
+          'tools.ozone.report.defs#reasonOther',
+          'tools.ozone.report.defs#reasonViolenceAnimal',
+          'tools.ozone.report.defs#reasonViolenceThreats',
+          'tools.ozone.report.defs#reasonViolenceGraphicContent',
+          'tools.ozone.report.defs#reasonViolenceGlorification',
+          'tools.ozone.report.defs#reasonViolenceExtremistContent',
+          'tools.ozone.report.defs#reasonViolenceTrafficking',
+          'tools.ozone.report.defs#reasonViolenceOther',
+          'tools.ozone.report.defs#reasonSexualAbuseContent',
+          'tools.ozone.report.defs#reasonSexualNCII',
+          'tools.ozone.report.defs#reasonSexualDeepfake',
+          'tools.ozone.report.defs#reasonSexualAnimal',
+          'tools.ozone.report.defs#reasonSexualUnlabeled',
+          'tools.ozone.report.defs#reasonSexualOther',
+          'tools.ozone.report.defs#reasonChildSafetyCSAM',
+          'tools.ozone.report.defs#reasonChildSafetyGroom',
+          'tools.ozone.report.defs#reasonChildSafetyPrivacy',
+          'tools.ozone.report.defs#reasonChildSafetyHarassment',
+          'tools.ozone.report.defs#reasonChildSafetyOther',
+          'tools.ozone.report.defs#reasonHarassmentTroll',
+          'tools.ozone.report.defs#reasonHarassmentTargeted',
+          'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+          'tools.ozone.report.defs#reasonHarassmentDoxxing',
+          'tools.ozone.report.defs#reasonHarassmentOther',
+          'tools.ozone.report.defs#reasonMisleadingBot',
+          'tools.ozone.report.defs#reasonMisleadingImpersonation',
+          'tools.ozone.report.defs#reasonMisleadingSpam',
+          'tools.ozone.report.defs#reasonMisleadingScam',
+          'tools.ozone.report.defs#reasonMisleadingElections',
+          'tools.ozone.report.defs#reasonMisleadingOther',
+          'tools.ozone.report.defs#reasonRuleSiteSecurity',
+          'tools.ozone.report.defs#reasonRuleProhibitedSales',
+          'tools.ozone.report.defs#reasonRuleBanEvasion',
+          'tools.ozone.report.defs#reasonRuleOther',
+          'tools.ozone.report.defs#reasonSelfHarmContent',
+          'tools.ozone.report.defs#reasonSelfHarmED',
+          'tools.ozone.report.defs#reasonSelfHarmStunts',
+          'tools.ozone.report.defs#reasonSelfHarmSubstances',
+          'tools.ozone.report.defs#reasonSelfHarmOther',
+        ],
+      },
+      reasonAppeal: {
+        type: 'token',
+        description: 'Appeal a previously taken moderation action',
+      },
+      reasonOther: {
+        type: 'token',
+        description: 'An issue not included in these options',
+      },
+      reasonViolenceAnimal: {
+        type: 'token',
+        description: 'Animal welfare violations',
+      },
+      reasonViolenceThreats: {
+        type: 'token',
+        description: 'Threats or incitement',
+      },
+      reasonViolenceGraphicContent: {
+        type: 'token',
+        description: 'Graphic violent content',
+      },
+      reasonViolenceGlorification: {
+        type: 'token',
+        description: 'Glorification of violence',
+      },
+      reasonViolenceExtremistContent: {
+        type: 'token',
+        description:
+          "Extremist content. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonViolenceTrafficking: {
+        type: 'token',
+        description: 'Human trafficking',
+      },
+      reasonViolenceOther: {
+        type: 'token',
+        description: 'Other violent content',
+      },
+      reasonSexualAbuseContent: {
+        type: 'token',
+        description: 'Adult sexual abuse content',
+      },
+      reasonSexualNCII: {
+        type: 'token',
+        description: 'Non-consensual intimate imagery',
+      },
+      reasonSexualDeepfake: {
+        type: 'token',
+        description: 'Deepfake adult content',
+      },
+      reasonSexualAnimal: {
+        type: 'token',
+        description: 'Animal sexual abuse',
+      },
+      reasonSexualUnlabeled: {
+        type: 'token',
+        description: 'Unlabelled adult content',
+      },
+      reasonSexualOther: {
+        type: 'token',
+        description: 'Other sexual violence content',
+      },
+      reasonChildSafetyCSAM: {
+        type: 'token',
+        description:
+          "Child sexual abuse material (CSAM). These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonChildSafetyGroom: {
+        type: 'token',
+        description:
+          "Grooming or predatory behavior. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonChildSafetyPrivacy: {
+        type: 'token',
+        description: 'Privacy violation involving a minor',
+      },
+      reasonChildSafetyHarassment: {
+        type: 'token',
+        description: 'Harassment or bullying of minors',
+      },
+      reasonChildSafetyOther: {
+        type: 'token',
+        description:
+          "Other child safety. These reports will be sent only be sent to the application's Moderation Authority.",
+      },
+      reasonHarassmentTroll: {
+        type: 'token',
+        description: 'Trolling',
+      },
+      reasonHarassmentTargeted: {
+        type: 'token',
+        description: 'Targeted harassment',
+      },
+      reasonHarassmentHateSpeech: {
+        type: 'token',
+        description: 'Hate speech',
+      },
+      reasonHarassmentDoxxing: {
+        type: 'token',
+        description: 'Doxxing',
+      },
+      reasonHarassmentOther: {
+        type: 'token',
+        description: 'Other harassing or hateful content',
+      },
+      reasonMisleadingBot: {
+        type: 'token',
+        description: 'Fake account or bot',
+      },
+      reasonMisleadingImpersonation: {
+        type: 'token',
+        description: 'Impersonation',
+      },
+      reasonMisleadingSpam: {
+        type: 'token',
+        description: 'Spam',
+      },
+      reasonMisleadingScam: {
+        type: 'token',
+        description: 'Scam',
+      },
+      reasonMisleadingElections: {
+        type: 'token',
+        description: 'False information about elections',
+      },
+      reasonMisleadingOther: {
+        type: 'token',
+        description: 'Other misleading content',
+      },
+      reasonRuleSiteSecurity: {
+        type: 'token',
+        description: 'Hacking or system attacks',
+      },
+      reasonRuleProhibitedSales: {
+        type: 'token',
+        description: 'Promoting or selling prohibited items or services',
+      },
+      reasonRuleBanEvasion: {
+        type: 'token',
+        description: 'Banned user returning',
+      },
+      reasonRuleOther: {
+        type: 'token',
+        description: 'Other',
+      },
+      reasonSelfHarmContent: {
+        type: 'token',
+        description: 'Content promoting or depicting self-harm',
+      },
+      reasonSelfHarmED: {
+        type: 'token',
+        description: 'Eating disorders',
+      },
+      reasonSelfHarmStunts: {
+        type: 'token',
+        description: 'Dangerous challenges or activities',
+      },
+      reasonSelfHarmSubstances: {
+        type: 'token',
+        description: 'Dangerous substances or drug abuse',
+      },
+      reasonSelfHarmOther: {
+        type: 'token',
+        description: 'Other dangerous content',
+      },
+    },
+  },
+  ToolsOzoneSafelinkAddRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.addRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Add a new URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern', 'action', 'reason'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to apply the rule to',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              action: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#actionType',
+              },
+              reason: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#reasonType',
+              },
+              comment: {
+                type: 'string',
+                description: 'Optional comment about the decision',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'Author DID. Only respected when using admin auth',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidUrl',
+            description: 'The provided URL is invalid',
+          },
+          {
+            name: 'RuleAlreadyExists',
+            description: 'A rule for this URL/domain already exists',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSafelinkDefs: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.defs',
+    defs: {
+      event: {
+        type: 'object',
+        description: 'An event for URL safety decisions',
+        required: [
+          'id',
+          'eventType',
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Auto-incrementing row ID',
+          },
+          eventType: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#eventType',
+          },
+          url: {
+            type: 'string',
+            description: 'The URL that this rule applies to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user who created this rule',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+        },
+      },
+      eventType: {
+        type: 'string',
+        knownValues: ['addRule', 'updateRule', 'removeRule'],
+      },
+      patternType: {
+        type: 'string',
+        knownValues: ['domain', 'url'],
+      },
+      actionType: {
+        type: 'string',
+        knownValues: ['block', 'warn', 'whitelist'],
+      },
+      reasonType: {
+        type: 'string',
+        knownValues: ['csam', 'spam', 'phishing', 'none'],
+      },
+      urlRule: {
+        type: 'object',
+        description: 'Input for creating a URL safety rule',
+        required: [
+          'url',
+          'pattern',
+          'action',
+          'reason',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ],
+        properties: {
+          url: {
+            type: 'string',
+            description: 'The URL or domain to apply the rule to',
+          },
+          pattern: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#patternType',
+          },
+          action: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#actionType',
+          },
+          reason: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#reasonType',
+          },
+          comment: {
+            type: 'string',
+            description: 'Optional comment about the decision',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the user added the rule.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when the rule was created',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Timestamp when the rule was last updated',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkQueryEvents: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.queryEvents',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Query URL safety audit events',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              urls: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific URLs or domains',
+              },
+              patternType: {
+                type: 'string',
+                description: 'Filter by pattern type',
+              },
+              sortDirection: {
+                type: 'string',
+                knownValues: ['asc', 'desc'],
+                default: 'desc',
+                description: 'Sort direction',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events'],
+            properties: {
+              cursor: {
+                type: 'string',
+                description:
+                  'Next cursor for pagination. Only present if there are more results.',
+              },
+              events: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.safelink.defs#event',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkQueryRules: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.queryRules',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Query URL safety rules',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              cursor: {
+                type: 'string',
+                description: 'Cursor for pagination',
+              },
+              limit: {
+                type: 'integer',
+                minimum: 1,
+                maximum: 100,
+                default: 50,
+                description: 'Maximum number of results to return',
+              },
+              urls: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by specific URLs or domains',
+              },
+              patternType: {
+                type: 'string',
+                description: 'Filter by pattern type',
+              },
+              actions: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+                description: 'Filter by action types',
+              },
+              reason: {
+                type: 'string',
+                description: 'Filter by reason type',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description: 'Filter by rule creator',
+              },
+              sortDirection: {
+                type: 'string',
+                knownValues: ['asc', 'desc'],
+                default: 'desc',
+                description: 'Sort direction',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['rules'],
+            properties: {
+              cursor: {
+                type: 'string',
+                description:
+                  'Next cursor for pagination. Only present if there are more results.',
+              },
+              rules: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.safelink.defs#urlRule',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneSafelinkRemoveRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.removeRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove an existing URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to remove the rule for',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              comment: {
+                type: 'string',
+                description:
+                  'Optional comment about why the rule is being removed',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Optional DID of the user. Only respected when using admin auth.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'RuleNotFound',
+            description: 'No active rule found for this URL/domain',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneSafelinkUpdateRule: {
+    lexicon: 1,
+    id: 'tools.ozone.safelink.updateRule',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update an existing URL safety rule',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['url', 'pattern', 'action', 'reason'],
+            properties: {
+              url: {
+                type: 'string',
+                description: 'The URL or domain to update the rule for',
+              },
+              pattern: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#patternType',
+              },
+              action: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#actionType',
+              },
+              reason: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.safelink.defs#reasonType',
+              },
+              comment: {
+                type: 'string',
+                description: 'Optional comment about the update',
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+                description:
+                  'Optional DID to credit as the creator. Only respected for admin_token authentication.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.safelink.defs#event',
+          },
+        },
+        errors: [
+          {
+            name: 'RuleNotFound',
+            description: 'No active rule found for this URL/domain',
+          },
+        ],
       },
     },
   },
@@ -16056,10 +19551,10 @@ export const schemaDict = {
           role: {
             type: 'string',
             knownValues: [
-              'lex:tools.ozone.team.defs#roleAdmin',
-              'lex:tools.ozone.team.defs#roleModerator',
-              'lex:tools.ozone.team.defs#roleTriage',
-              'lex:tools.ozone.team.defs#roleVerifier',
+              'tools.ozone.team.defs#roleAdmin',
+              'tools.ozone.team.defs#roleModerator',
+              'tools.ozone.team.defs#roleTriage',
+              'tools.ozone.team.defs#roleVerifier',
             ],
           },
         },
@@ -16605,6 +20100,182 @@ export function validate(
 }
 
 export const ids = {
+  AppBskyActorDefs: 'app.bsky.actor.defs',
+  AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
+  AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
+  AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
+  AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
+  AppBskyActorProfile: 'app.bsky.actor.profile',
+  AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
+  AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
+  AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
+  AppBskyActorStatus: 'app.bsky.actor.status',
+  AppBskyAgeassuranceBegin: 'app.bsky.ageassurance.begin',
+  AppBskyAgeassuranceDefs: 'app.bsky.ageassurance.defs',
+  AppBskyAgeassuranceGetConfig: 'app.bsky.ageassurance.getConfig',
+  AppBskyAgeassuranceGetState: 'app.bsky.ageassurance.getState',
+  AppBskyBookmarkCreateBookmark: 'app.bsky.bookmark.createBookmark',
+  AppBskyBookmarkDefs: 'app.bsky.bookmark.defs',
+  AppBskyBookmarkDeleteBookmark: 'app.bsky.bookmark.deleteBookmark',
+  AppBskyBookmarkGetBookmarks: 'app.bsky.bookmark.getBookmarks',
+  AppBskyContactDefs: 'app.bsky.contact.defs',
+  AppBskyContactDismissMatch: 'app.bsky.contact.dismissMatch',
+  AppBskyContactGetMatches: 'app.bsky.contact.getMatches',
+  AppBskyContactGetSyncStatus: 'app.bsky.contact.getSyncStatus',
+  AppBskyContactImportContacts: 'app.bsky.contact.importContacts',
+  AppBskyContactRemoveData: 'app.bsky.contact.removeData',
+  AppBskyContactSendNotification: 'app.bsky.contact.sendNotification',
+  AppBskyContactStartPhoneVerification:
+    'app.bsky.contact.startPhoneVerification',
+  AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',
+  AppBskyEmbedDefs: 'app.bsky.embed.defs',
+  AppBskyEmbedExternal: 'app.bsky.embed.external',
+  AppBskyEmbedImages: 'app.bsky.embed.images',
+  AppBskyEmbedRecord: 'app.bsky.embed.record',
+  AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
+  AppBskyEmbedVideo: 'app.bsky.embed.video',
+  AppBskyFeedDefs: 'app.bsky.feed.defs',
+  AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
+  AppBskyFeedGenerator: 'app.bsky.feed.generator',
+  AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
+  AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
+  AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
+  AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
+  AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
+  AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
+  AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
+  AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
+  AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
+  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
+  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
+  AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
+  AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
+  AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
+  AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
+  AppBskyFeedLike: 'app.bsky.feed.like',
+  AppBskyFeedPost: 'app.bsky.feed.post',
+  AppBskyFeedPostgate: 'app.bsky.feed.postgate',
+  AppBskyFeedRepost: 'app.bsky.feed.repost',
+  AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
+  AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',
+  AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
+  AppBskyGraphBlock: 'app.bsky.graph.block',
+  AppBskyGraphDefs: 'app.bsky.graph.defs',
+  AppBskyGraphFollow: 'app.bsky.graph.follow',
+  AppBskyGraphGetActorStarterPacks: 'app.bsky.graph.getActorStarterPacks',
+  AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
+  AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
+  AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
+  AppBskyGraphGetKnownFollowers: 'app.bsky.graph.getKnownFollowers',
+  AppBskyGraphGetList: 'app.bsky.graph.getList',
+  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
+  AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
+  AppBskyGraphGetLists: 'app.bsky.graph.getLists',
+  AppBskyGraphGetListsWithMembership: 'app.bsky.graph.getListsWithMembership',
+  AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
+  AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
+  AppBskyGraphGetStarterPack: 'app.bsky.graph.getStarterPack',
+  AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
+  AppBskyGraphGetStarterPacksWithMembership:
+    'app.bsky.graph.getStarterPacksWithMembership',
+  AppBskyGraphGetSuggestedFollowsByActor:
+    'app.bsky.graph.getSuggestedFollowsByActor',
+  AppBskyGraphList: 'app.bsky.graph.list',
+  AppBskyGraphListblock: 'app.bsky.graph.listblock',
+  AppBskyGraphListitem: 'app.bsky.graph.listitem',
+  AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
+  AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
+  AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
+  AppBskyGraphSearchStarterPacks: 'app.bsky.graph.searchStarterPacks',
+  AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
+  AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
+  AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
+  AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
+  AppBskyGraphVerification: 'app.bsky.graph.verification',
+  AppBskyLabelerDefs: 'app.bsky.labeler.defs',
+  AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
+  AppBskyLabelerService: 'app.bsky.labeler.service',
+  AppBskyNotificationDeclaration: 'app.bsky.notification.declaration',
+  AppBskyNotificationDefs: 'app.bsky.notification.defs',
+  AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
+  AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
+  AppBskyNotificationListActivitySubscriptions:
+    'app.bsky.notification.listActivitySubscriptions',
+  AppBskyNotificationListNotifications:
+    'app.bsky.notification.listNotifications',
+  AppBskyNotificationPutActivitySubscription:
+    'app.bsky.notification.putActivitySubscription',
+  AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
+  AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
+  AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
+  AppBskyNotificationUnregisterPush: 'app.bsky.notification.unregisterPush',
+  AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
+  AppBskyRichtextFacet: 'app.bsky.richtext.facet',
+  AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
+  AppBskyUnspeccedGetAgeAssuranceState:
+    'app.bsky.unspecced.getAgeAssuranceState',
+  AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacks:
+    'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
+  AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton:
+    'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
+  AppBskyUnspeccedGetPopularFeedGenerators:
+    'app.bsky.unspecced.getPopularFeedGenerators',
+  AppBskyUnspeccedGetPostThreadOtherV2:
+    'app.bsky.unspecced.getPostThreadOtherV2',
+  AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
+  AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
+  AppBskyUnspeccedGetSuggestedFeedsSkeleton:
+    'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+  AppBskyUnspeccedGetSuggestedStarterPacks:
+    'app.bsky.unspecced.getSuggestedStarterPacks',
+  AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
+    'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
+  AppBskyUnspeccedGetSuggestedUsers: 'app.bsky.unspecced.getSuggestedUsers',
+  AppBskyUnspeccedGetSuggestedUsersSkeleton:
+    'app.bsky.unspecced.getSuggestedUsersSkeleton',
+  AppBskyUnspeccedGetSuggestionsSkeleton:
+    'app.bsky.unspecced.getSuggestionsSkeleton',
+  AppBskyUnspeccedGetTaggedSuggestions:
+    'app.bsky.unspecced.getTaggedSuggestions',
+  AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
+  AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
+  AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
+  AppBskyUnspeccedInitAgeAssurance: 'app.bsky.unspecced.initAgeAssurance',
+  AppBskyUnspeccedSearchActorsSkeleton:
+    'app.bsky.unspecced.searchActorsSkeleton',
+  AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
+  AppBskyUnspeccedSearchStarterPacksSkeleton:
+    'app.bsky.unspecced.searchStarterPacksSkeleton',
+  AppBskyVideoDefs: 'app.bsky.video.defs',
+  AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
+  AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
+  AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
+  ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
+  ChatBskyActorDefs: 'chat.bsky.actor.defs',
+  ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
+  ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
+  ChatBskyConvoAcceptConvo: 'chat.bsky.convo.acceptConvo',
+  ChatBskyConvoAddReaction: 'chat.bsky.convo.addReaction',
+  ChatBskyConvoDefs: 'chat.bsky.convo.defs',
+  ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
+  ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
+  ChatBskyConvoGetConvoAvailability: 'chat.bsky.convo.getConvoAvailability',
+  ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
+  ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
+  ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',
+  ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',
+  ChatBskyConvoListConvos: 'chat.bsky.convo.listConvos',
+  ChatBskyConvoMuteConvo: 'chat.bsky.convo.muteConvo',
+  ChatBskyConvoRemoveReaction: 'chat.bsky.convo.removeReaction',
+  ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
+  ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
+  ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
+  ChatBskyConvoUpdateAllRead: 'chat.bsky.convo.updateAllRead',
+  ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
+  ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
+  ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
+  ChatBskyModerationUpdateActorAccess: 'chat.bsky.moderation.updateActorAccess',
   ComAtprotoAdminDefs: 'com.atproto.admin.defs',
   ComAtprotoAdminDeleteAccount: 'com.atproto.admin.deleteAccount',
   ComAtprotoAdminDisableAccountInvites:
@@ -16640,6 +20311,7 @@ export const ids = {
   ComAtprotoLabelDefs: 'com.atproto.label.defs',
   ComAtprotoLabelQueryLabels: 'com.atproto.label.queryLabels',
   ComAtprotoLabelSubscribeLabels: 'com.atproto.label.subscribeLabels',
+  ComAtprotoLexiconResolveLexicon: 'com.atproto.lexicon.resolveLexicon',
   ComAtprotoLexiconSchema: 'com.atproto.lexicon.schema',
   ComAtprotoModerationCreateReport: 'com.atproto.moderation.createReport',
   ComAtprotoModerationDefs: 'com.atproto.moderation.defs',
@@ -16703,152 +20375,15 @@ export const ids = {
   ComAtprotoSyncRequestCrawl: 'com.atproto.sync.requestCrawl',
   ComAtprotoSyncSubscribeRepos: 'com.atproto.sync.subscribeRepos',
   ComAtprotoTempAddReservedHandle: 'com.atproto.temp.addReservedHandle',
+  ComAtprotoTempCheckHandleAvailability:
+    'com.atproto.temp.checkHandleAvailability',
   ComAtprotoTempCheckSignupQueue: 'com.atproto.temp.checkSignupQueue',
+  ComAtprotoTempDereferenceScope: 'com.atproto.temp.dereferenceScope',
   ComAtprotoTempFetchLabels: 'com.atproto.temp.fetchLabels',
   ComAtprotoTempRequestPhoneVerification:
     'com.atproto.temp.requestPhoneVerification',
-  AppBskyActorDefs: 'app.bsky.actor.defs',
-  AppBskyActorGetPreferences: 'app.bsky.actor.getPreferences',
-  AppBskyActorGetProfile: 'app.bsky.actor.getProfile',
-  AppBskyActorGetProfiles: 'app.bsky.actor.getProfiles',
-  AppBskyActorGetSuggestions: 'app.bsky.actor.getSuggestions',
-  AppBskyActorProfile: 'app.bsky.actor.profile',
-  AppBskyActorPutPreferences: 'app.bsky.actor.putPreferences',
-  AppBskyActorSearchActors: 'app.bsky.actor.searchActors',
-  AppBskyActorSearchActorsTypeahead: 'app.bsky.actor.searchActorsTypeahead',
-  AppBskyActorStatus: 'app.bsky.actor.status',
-  AppBskyEmbedDefs: 'app.bsky.embed.defs',
-  AppBskyEmbedExternal: 'app.bsky.embed.external',
-  AppBskyEmbedImages: 'app.bsky.embed.images',
-  AppBskyEmbedRecord: 'app.bsky.embed.record',
-  AppBskyEmbedRecordWithMedia: 'app.bsky.embed.recordWithMedia',
-  AppBskyEmbedVideo: 'app.bsky.embed.video',
-  AppBskyFeedDefs: 'app.bsky.feed.defs',
-  AppBskyFeedDescribeFeedGenerator: 'app.bsky.feed.describeFeedGenerator',
-  AppBskyFeedGenerator: 'app.bsky.feed.generator',
-  AppBskyFeedGetActorFeeds: 'app.bsky.feed.getActorFeeds',
-  AppBskyFeedGetActorLikes: 'app.bsky.feed.getActorLikes',
-  AppBskyFeedGetAuthorFeed: 'app.bsky.feed.getAuthorFeed',
-  AppBskyFeedGetFeed: 'app.bsky.feed.getFeed',
-  AppBskyFeedGetFeedGenerator: 'app.bsky.feed.getFeedGenerator',
-  AppBskyFeedGetFeedGenerators: 'app.bsky.feed.getFeedGenerators',
-  AppBskyFeedGetFeedSkeleton: 'app.bsky.feed.getFeedSkeleton',
-  AppBskyFeedGetLikes: 'app.bsky.feed.getLikes',
-  AppBskyFeedGetListFeed: 'app.bsky.feed.getListFeed',
-  AppBskyFeedGetPosts: 'app.bsky.feed.getPosts',
-  AppBskyFeedGetPostThread: 'app.bsky.feed.getPostThread',
-  AppBskyFeedGetQuotes: 'app.bsky.feed.getQuotes',
-  AppBskyFeedGetRepostedBy: 'app.bsky.feed.getRepostedBy',
-  AppBskyFeedGetSuggestedFeeds: 'app.bsky.feed.getSuggestedFeeds',
-  AppBskyFeedGetTimeline: 'app.bsky.feed.getTimeline',
-  AppBskyFeedLike: 'app.bsky.feed.like',
-  AppBskyFeedPost: 'app.bsky.feed.post',
-  AppBskyFeedPostgate: 'app.bsky.feed.postgate',
-  AppBskyFeedRepost: 'app.bsky.feed.repost',
-  AppBskyFeedSearchPosts: 'app.bsky.feed.searchPosts',
-  AppBskyFeedSendInteractions: 'app.bsky.feed.sendInteractions',
-  AppBskyFeedThreadgate: 'app.bsky.feed.threadgate',
-  AppBskyGraphBlock: 'app.bsky.graph.block',
-  AppBskyGraphDefs: 'app.bsky.graph.defs',
-  AppBskyGraphFollow: 'app.bsky.graph.follow',
-  AppBskyGraphGetActorStarterPacks: 'app.bsky.graph.getActorStarterPacks',
-  AppBskyGraphGetBlocks: 'app.bsky.graph.getBlocks',
-  AppBskyGraphGetFollowers: 'app.bsky.graph.getFollowers',
-  AppBskyGraphGetFollows: 'app.bsky.graph.getFollows',
-  AppBskyGraphGetKnownFollowers: 'app.bsky.graph.getKnownFollowers',
-  AppBskyGraphGetList: 'app.bsky.graph.getList',
-  AppBskyGraphGetListBlocks: 'app.bsky.graph.getListBlocks',
-  AppBskyGraphGetListMutes: 'app.bsky.graph.getListMutes',
-  AppBskyGraphGetLists: 'app.bsky.graph.getLists',
-  AppBskyGraphGetMutes: 'app.bsky.graph.getMutes',
-  AppBskyGraphGetRelationships: 'app.bsky.graph.getRelationships',
-  AppBskyGraphGetStarterPack: 'app.bsky.graph.getStarterPack',
-  AppBskyGraphGetStarterPacks: 'app.bsky.graph.getStarterPacks',
-  AppBskyGraphGetSuggestedFollowsByActor:
-    'app.bsky.graph.getSuggestedFollowsByActor',
-  AppBskyGraphList: 'app.bsky.graph.list',
-  AppBskyGraphListblock: 'app.bsky.graph.listblock',
-  AppBskyGraphListitem: 'app.bsky.graph.listitem',
-  AppBskyGraphMuteActor: 'app.bsky.graph.muteActor',
-  AppBskyGraphMuteActorList: 'app.bsky.graph.muteActorList',
-  AppBskyGraphMuteThread: 'app.bsky.graph.muteThread',
-  AppBskyGraphSearchStarterPacks: 'app.bsky.graph.searchStarterPacks',
-  AppBskyGraphStarterpack: 'app.bsky.graph.starterpack',
-  AppBskyGraphUnmuteActor: 'app.bsky.graph.unmuteActor',
-  AppBskyGraphUnmuteActorList: 'app.bsky.graph.unmuteActorList',
-  AppBskyGraphUnmuteThread: 'app.bsky.graph.unmuteThread',
-  AppBskyGraphVerification: 'app.bsky.graph.verification',
-  AppBskyLabelerDefs: 'app.bsky.labeler.defs',
-  AppBskyLabelerGetServices: 'app.bsky.labeler.getServices',
-  AppBskyLabelerService: 'app.bsky.labeler.service',
-  AppBskyNotificationDefs: 'app.bsky.notification.defs',
-  AppBskyNotificationGetPreferences: 'app.bsky.notification.getPreferences',
-  AppBskyNotificationGetUnreadCount: 'app.bsky.notification.getUnreadCount',
-  AppBskyNotificationListNotifications:
-    'app.bsky.notification.listNotifications',
-  AppBskyNotificationPutPreferences: 'app.bsky.notification.putPreferences',
-  AppBskyNotificationPutPreferencesV2: 'app.bsky.notification.putPreferencesV2',
-  AppBskyNotificationRegisterPush: 'app.bsky.notification.registerPush',
-  AppBskyNotificationUpdateSeen: 'app.bsky.notification.updateSeen',
-  AppBskyRichtextFacet: 'app.bsky.richtext.facet',
-  AppBskyUnspeccedDefs: 'app.bsky.unspecced.defs',
-  AppBskyUnspeccedGetConfig: 'app.bsky.unspecced.getConfig',
-  AppBskyUnspeccedGetPopularFeedGenerators:
-    'app.bsky.unspecced.getPopularFeedGenerators',
-  AppBskyUnspeccedGetPostThreadOtherV2:
-    'app.bsky.unspecced.getPostThreadOtherV2',
-  AppBskyUnspeccedGetPostThreadV2: 'app.bsky.unspecced.getPostThreadV2',
-  AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
-  AppBskyUnspeccedGetSuggestedFeedsSkeleton:
-    'app.bsky.unspecced.getSuggestedFeedsSkeleton',
-  AppBskyUnspeccedGetSuggestedStarterPacks:
-    'app.bsky.unspecced.getSuggestedStarterPacks',
-  AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
-    'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
-  AppBskyUnspeccedGetSuggestedUsers: 'app.bsky.unspecced.getSuggestedUsers',
-  AppBskyUnspeccedGetSuggestedUsersSkeleton:
-    'app.bsky.unspecced.getSuggestedUsersSkeleton',
-  AppBskyUnspeccedGetSuggestionsSkeleton:
-    'app.bsky.unspecced.getSuggestionsSkeleton',
-  AppBskyUnspeccedGetTaggedSuggestions:
-    'app.bsky.unspecced.getTaggedSuggestions',
-  AppBskyUnspeccedGetTrendingTopics: 'app.bsky.unspecced.getTrendingTopics',
-  AppBskyUnspeccedGetTrends: 'app.bsky.unspecced.getTrends',
-  AppBskyUnspeccedGetTrendsSkeleton: 'app.bsky.unspecced.getTrendsSkeleton',
-  AppBskyUnspeccedSearchActorsSkeleton:
-    'app.bsky.unspecced.searchActorsSkeleton',
-  AppBskyUnspeccedSearchPostsSkeleton: 'app.bsky.unspecced.searchPostsSkeleton',
-  AppBskyUnspeccedSearchStarterPacksSkeleton:
-    'app.bsky.unspecced.searchStarterPacksSkeleton',
-  AppBskyVideoDefs: 'app.bsky.video.defs',
-  AppBskyVideoGetJobStatus: 'app.bsky.video.getJobStatus',
-  AppBskyVideoGetUploadLimits: 'app.bsky.video.getUploadLimits',
-  AppBskyVideoUploadVideo: 'app.bsky.video.uploadVideo',
-  ChatBskyActorDeclaration: 'chat.bsky.actor.declaration',
-  ChatBskyActorDefs: 'chat.bsky.actor.defs',
-  ChatBskyActorDeleteAccount: 'chat.bsky.actor.deleteAccount',
-  ChatBskyActorExportAccountData: 'chat.bsky.actor.exportAccountData',
-  ChatBskyConvoAcceptConvo: 'chat.bsky.convo.acceptConvo',
-  ChatBskyConvoAddReaction: 'chat.bsky.convo.addReaction',
-  ChatBskyConvoDefs: 'chat.bsky.convo.defs',
-  ChatBskyConvoDeleteMessageForSelf: 'chat.bsky.convo.deleteMessageForSelf',
-  ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
-  ChatBskyConvoGetConvoAvailability: 'chat.bsky.convo.getConvoAvailability',
-  ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
-  ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
-  ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',
-  ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',
-  ChatBskyConvoListConvos: 'chat.bsky.convo.listConvos',
-  ChatBskyConvoMuteConvo: 'chat.bsky.convo.muteConvo',
-  ChatBskyConvoRemoveReaction: 'chat.bsky.convo.removeReaction',
-  ChatBskyConvoSendMessage: 'chat.bsky.convo.sendMessage',
-  ChatBskyConvoSendMessageBatch: 'chat.bsky.convo.sendMessageBatch',
-  ChatBskyConvoUnmuteConvo: 'chat.bsky.convo.unmuteConvo',
-  ChatBskyConvoUpdateAllRead: 'chat.bsky.convo.updateAllRead',
-  ChatBskyConvoUpdateRead: 'chat.bsky.convo.updateRead',
-  ChatBskyModerationGetActorMetadata: 'chat.bsky.moderation.getActorMetadata',
-  ChatBskyModerationGetMessageContext: 'chat.bsky.moderation.getMessageContext',
-  ChatBskyModerationUpdateActorAccess: 'chat.bsky.moderation.updateActorAccess',
+  ComAtprotoTempRevokeAccountCredentials:
+    'com.atproto.temp.revokeAccountCredentials',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',
@@ -16859,8 +20394,12 @@ export const ids = {
   ToolsOzoneCommunicationUpdateTemplate:
     'tools.ozone.communication.updateTemplate',
   ToolsOzoneHostingGetAccountHistory: 'tools.ozone.hosting.getAccountHistory',
+  ToolsOzoneModerationCancelScheduledActions:
+    'tools.ozone.moderation.cancelScheduledActions',
   ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
+  ToolsOzoneModerationGetAccountTimeline:
+    'tools.ozone.moderation.getAccountTimeline',
   ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',
   ToolsOzoneModerationGetRecord: 'tools.ozone.moderation.getRecord',
   ToolsOzoneModerationGetRecords: 'tools.ozone.moderation.getRecords',
@@ -16869,9 +20408,19 @@ export const ids = {
     'tools.ozone.moderation.getReporterStats',
   ToolsOzoneModerationGetRepos: 'tools.ozone.moderation.getRepos',
   ToolsOzoneModerationGetSubjects: 'tools.ozone.moderation.getSubjects',
+  ToolsOzoneModerationListScheduledActions:
+    'tools.ozone.moderation.listScheduledActions',
   ToolsOzoneModerationQueryEvents: 'tools.ozone.moderation.queryEvents',
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
+  ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneReportDefs: 'tools.ozone.report.defs',
+  ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
+  ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
+  ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',
+  ToolsOzoneSafelinkQueryRules: 'tools.ozone.safelink.queryRules',
+  ToolsOzoneSafelinkRemoveRule: 'tools.ozone.safelink.removeRule',
+  ToolsOzoneSafelinkUpdateRule: 'tools.ozone.safelink.updateRule',
   ToolsOzoneServerGetConfig: 'tools.ozone.server.getConfig',
   ToolsOzoneSetAddValues: 'tools.ozone.set.addValues',
   ToolsOzoneSetDefs: 'tools.ozone.set.defs',

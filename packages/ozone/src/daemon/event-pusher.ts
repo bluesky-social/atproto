@@ -81,11 +81,28 @@ export class EventPusher {
     this.poll(this.blobPollState, () => this.pushBlobEvents())
   }
 
-  get takedowns(): RepoPushEventType[] {
-    const takedowns: RepoPushEventType[] = []
-    if (this.pds) takedowns.push('pds_takedown')
-    if (this.appview) takedowns.push('appview_takedown')
-    return takedowns
+  // event pusher may be configured with both appview and pds
+  // but the takedown may particularly want only one of them
+  // unless the target services are specified, we will push to all configured services
+  getTakedownServices(targetServices: Set<string>): RepoPushEventType[] {
+    let configured: RepoPushEventType[] = []
+    if (this.pds) configured.push('pds_takedown')
+    if (this.appview) configured.push('appview_takedown')
+
+    if (!targetServices.size) {
+      return configured
+    }
+
+    if (!targetServices.has('appview')) {
+      configured = configured.filter(
+        (service) => service !== 'appview_takedown',
+      )
+    }
+    if (!targetServices.has('pds')) {
+      configured = configured.filter((service) => service !== 'pds_takedown')
+    }
+
+    return configured
   }
 
   poll(state: PollState, fn: () => Promise<void>) {

@@ -40,8 +40,9 @@ export {
   SecondAuthenticationFactorRequiredError,
 }
 
-export type ResetPasswordRequestData = InitiatePasswordResetInput
-export type ResetPasswordConfirmData = ConfirmResetPasswordInput
+export type ResetPasswordRequestInput = InitiatePasswordResetInput
+export type ResetPasswordConfirmInput = ConfirmResetPasswordInput
+
 export type CreateAccountData = {
   locale: string
   email: string
@@ -170,8 +171,13 @@ export interface AccountStore {
     filter: { sub: Sub } | { deviceId: DeviceId },
   ): Awaitable<DeviceAccount[]>
 
-  resetPasswordRequest(data: ResetPasswordRequestData): Awaitable<void>
-  resetPasswordConfirm(data: ResetPasswordConfirmData): Awaitable<void>
+  resetPasswordRequest(
+    data: ResetPasswordRequestInput,
+  ): Awaitable<null | Account>
+
+  resetPasswordConfirm(
+    data: ResetPasswordConfirmInput,
+  ): Awaitable<null | Account>
 
   /**
    * @throws {HandleUnavailableError} - To indicate that the handle is already taken
