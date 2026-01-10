@@ -643,7 +643,7 @@ msgstr "您現在可以使用新密碼登入了。"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "您將收到一封包含「重設驗證碼」的電子郵件，請在此輸入驗證碼，然後輸入您的新密碼。"
+msgstr "您將收到一封包含「重設代碼」的電子郵件。請在這裡輸入該代碼，然後輸入您的新密碼。"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:121
 msgid "Your account"
