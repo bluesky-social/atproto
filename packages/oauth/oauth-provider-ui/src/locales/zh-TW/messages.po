@@ -465,7 +465,7 @@ msgstr "登入"
 #. placeholder {0}: account.name
 #: src/views/authorize/sign-in/sign-in-picker.tsx:78
 msgid "Sign in as {0}"
-msgstr "以 {0} 身份登入"
+msgstr "以 {0} 身分登入"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:64
 msgid "Sign in as..."
