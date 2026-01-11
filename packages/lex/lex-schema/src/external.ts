@@ -62,7 +62,6 @@ import {
   TypedUnionSchema,
   UnionSchema,
   UnionSchemaValidators,
-  UnknownObjectOutput,
   UnknownObjectSchema,
   UnknownSchema,
   refine,
@@ -181,8 +180,6 @@ export function dict<
 }
 
 // Utility
-export type { UnknownObjectOutput as UnknownObject }
-
 export const unknownObject = /*#__PURE__*/ memoizedOptions(function () {
   return new UnknownObjectSchema()
 })

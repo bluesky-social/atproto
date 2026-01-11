@@ -358,7 +358,7 @@ import * as app from './lexicons/app.js'
 declare const data:
   | app.bsky.feed.post.Main
   | app.bsky.feed.like.Main
-  | l.TypedObject
+  | l.Unknown$TypedObject
 
 // Discriminate by $type without re-validating
 if (app.bsky.feed.post.$isTypeOf(data)) {

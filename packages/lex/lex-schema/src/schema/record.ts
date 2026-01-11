@@ -5,13 +5,13 @@ import {
   NsidString,
   Schema,
   TidString,
+  Unknown$TypedObject,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../core.js'
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
-import { TypedObject } from './typed-union.js'
 
 export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
@@ -39,7 +39,9 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is Exclude<X extends { $type: T } ? X : $Typed<X, T>, TypedObject> {
+  ): value is X extends { $type: T }
+    ? X
+    : $Typed<Exclude<X, Unknown$TypedObject>, T> {
     return value.$type === this.$type
   }
 

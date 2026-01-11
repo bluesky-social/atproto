@@ -828,7 +828,7 @@ export class LexDefBuilder {
         return `l.TypedRef<${typeName}>`
       }),
     )
-    if (!def.closed) types.push('l.TypedObject')
+    if (!def.closed) types.push('l.Unknown$TypedObject')
     return types.join(' | ') || 'never'
   }
 

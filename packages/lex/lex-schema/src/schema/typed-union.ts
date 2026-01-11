@@ -1,8 +1,8 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
   Infer,
-  Restricted,
   Schema,
+  Unknown$TypedObject,
   ValidationResult,
   ValidatorContext,
 } from '../core.js'
@@ -10,25 +10,6 @@ import { lazyProperty } from '../util/lazy-property.js'
 import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
 
 export type TypedRef<T extends { $type?: string }> = TypedRefSchemaOutput<T>
-
-export type TypedObject = { $type: string } & {
-  // In order to prevent places that expect an open union from accepting an
-  // invalid version of the known typed objects, we need to prevent any other
-  // properties from being present.
-  //
-  // For example, if an open union expects:
-  // ```ts
-  // TypedObject | { $type: 'A'; a: number }
-  // ```
-  // we don't want it to accept:
-  // ```ts
-  // { $type: 'A' }
-  // ```
-  // Which would be the case as `{ $type: 'A' }` is a valid
-  // `TypedObject`. By adding an index signature that forbids any
-  // property, we ensure that only valid known typed objects can be used.
-  [K in string]: Restricted<'Unknown property'>
-}
 
 type TypedRefSchemasToUnion<T extends readonly TypedRefSchema[]> = {
   [K in keyof T]: Infer<T[K]>
@@ -39,7 +20,7 @@ export type TypedUnionSchemaOutput<
   Closed extends boolean,
 > = Closed extends true
   ? TypedRefSchemasToUnion<TypedRefs>
-  : TypedRefSchemasToUnion<TypedRefs> | TypedObject
+  : TypedRefSchemasToUnion<TypedRefs> | Unknown$TypedObject
 
 export class TypedUnionSchema<
   TypedRefs extends readonly TypedRefSchema[] = any,

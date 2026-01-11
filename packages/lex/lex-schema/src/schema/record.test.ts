@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
 import { ObjectSchema } from './object.js'
 import { RecordSchema } from './record.js'
 import { StringSchema } from './string.js'
@@ -67,10 +68,10 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
         text: new StringSchema({}),
       }),
     )
+    type Schema = Infer<typeof schema>
 
     it('returns true for matching $type', () => {
       const result = schema.isTypeOf({ $type: 'app.bsky.feed.post' })
@@ -95,6 +96,30 @@ describe('RecordSchema', () => {
     it('returns false for null $type', () => {
       const result = schema.isTypeOf({ $type: null })
       expect(result).toBe(false)
+    })
+
+    it('properly discriminates Unknown$TypeObject', () => {
+      function foo(value: Unknown$TypedObject | Schema) {
+        if (schema.isTypeOf(value)) {
+          value.text
+        } else {
+          // @ts-expect-error
+          value.text
+        }
+      }
+
+      foo({
+        $type: 'app.bsky.feed.post',
+        text: 'aze',
+        // @ts-expect-error
+        unknownProperty: 'should not be allowed !',
+      })
+
+      foo({
+        $type: 'blah' as Unknown$Type,
+        // @ts-expect-error
+        unknownProperty: 'should not be allowed !',
+      })
     })
   })
 

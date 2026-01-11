@@ -5,11 +5,11 @@ import {
   $TypedMaybe,
   Infer,
   Schema,
+  Unknown$TypedObject,
   ValidationResult,
   Validator,
   ValidatorContext,
 } from '../core.js'
-import { TypedObject } from './typed-union.js'
 
 export type TypedObjectSchemaOutput<
   T extends $Type,
@@ -29,10 +29,9 @@ export class TypedObjectSchema<
 
   isTypeOf<X extends Record<string, unknown>>(
     value: X,
-  ): value is Exclude<
-    X extends { $type?: T } ? X : $TypedMaybe<X, T>,
-    TypedObject
-  > {
+  ): value is X extends { $type?: T }
+    ? X
+    : $TypedMaybe<Exclude<X, Unknown$TypedObject>, T> {
     return value.$type === undefined || value.$type === this.$type
   }
 

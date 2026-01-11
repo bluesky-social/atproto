@@ -17,6 +17,7 @@ import {
   RecordSchema,
   Restricted,
   Schema,
+  UnknownObject,
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
@@ -133,8 +134,8 @@ export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
 > & {
   records: ListRecord<Infer<T>>[]
   // @NOTE Because the schema uses "type": "unknown" instead of an open union,
-  // we have to use LexMap instead of TypedObject here.
-  invalid: LexMap[]
+  // we have to use UnknownObject instead of Unknown$TypedObject here.
+  invalid: UnknownObject[]
 }
 export type ListRecord<Value extends LexMap> =
   com.atproto.repo.listRecords.Record & {
