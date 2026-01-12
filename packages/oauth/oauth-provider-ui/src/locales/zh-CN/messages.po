@@ -8,7 +8,7 @@ msgstr ""
 "Language: zh-CN\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-01-09 14:39+0800\n"
+"PO-Revision-Date: 2026-01-12 15:56+0800\n"
 "Last-Translator: auroursa\n"
 "Language-Team: Chinese\n"
 "Plural-Forms: \n"
@@ -19,7 +19,7 @@ msgstr "两步验证"
 
 #: src/components/utils/error-message.tsx:27
 msgid "A second authentication factor is required"
-msgstr "请进行两步验证"
+msgstr "需要进行两步验证"
 
 #: src/components/utils/scope-description.tsx:851
 msgid "A service controlled by <0>{domain}</0>"
@@ -35,11 +35,11 @@ msgstr "已经有验证码了？"
 
 #: src/components/utils/client-name.tsx:46
 msgid "An application on your device"
-msgstr "在你设备上的应用"
+msgstr "设备上的应用"
 
 #: src/components/utils/error-message.tsx:87
 msgid "An unknown error occurred"
-msgstr "未知错误"
+msgstr "发生未知错误"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:113
 msgid "Another account"
@@ -88,7 +88,7 @@ msgstr "介于 {minLength} 到 {maxLength} 个字符之间"
 
 #: src/components/utils/scope-description.tsx:745
 msgid "Blob storage"
-msgstr "Blob 存储"
+msgstr "Blob 存储空间"
 
 #: src/components/utils/scope-description.tsx:836
 msgid "Bluesky App services"
@@ -131,7 +131,7 @@ msgstr "私信"
 #. placeholder {0}: secondFactor.hint
 #: src/views/authorize/sign-in/sign-in-form.tsx:234
 msgid "Check your {0} email for a login code and enter it here."
-msgstr "检查你的电子邮箱 {0}，获取登录验证码并在此输入。"
+msgstr "在这里输入发送到你电子邮箱 {0} 的登录验证码。"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:99
 msgid "Choose a username"
@@ -139,7 +139,7 @@ msgstr "选择用户名"
 
 #: src/components/utils/error-card.tsx:76
 msgid "Code"
-msgstr "代码"
+msgstr "验证码"
 
 #: src/components/utils/description-card.tsx:74
 #: src/components/utils/description-card.tsx:76
@@ -157,11 +157,11 @@ msgstr "确认"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:69
 msgid "Confirm your password to continue"
-msgstr "确认你的密码以继续"
+msgstr "请确认密码以继续"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:225
 msgid "Confirmation code"
-msgstr "确认代码"
+msgstr "验证码"
 
 #: src/components/utils/scope-description.tsx:714
 msgid "Create"
@@ -177,7 +177,7 @@ msgstr "创建账户"
 
 #: src/components/utils/scope-description.tsx:599
 msgid "Create, update, and delete any public record"
-msgstr "创建、更新和删除任何公共记录"
+msgstr "创建、更新及删除任何公共记录"
 
 #: src/components/utils/scope-description.tsx:716
 msgid "Delete"
@@ -254,16 +254,16 @@ msgstr "忘记密码"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:189
 msgid "Forgot?"
-msgstr "忘记？"
+msgstr "忘记了？"
 
 #. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/views/authorize/consent/consent-view.tsx:45
 msgid "Grant access to your <0>{0}</0> account"
-msgstr "授予你访问 <0>{0}</0> 账户的权限"
+msgstr "授予访问你的 <0>{0}</0> 账户"
 
 #: src/components/utils/help-card.tsx:32
 msgid "Having trouble? <0>Contact support</0>"
-msgstr "有任何疑问？<0>联系支持</0>"
+msgstr "遇到问题？<0>联系支持</0>"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Hide"
@@ -276,7 +276,7 @@ msgstr "主页"
 #: src/views/authorize/sign-in/sign-in-picker.tsx:91
 #: src/views/authorize/sign-in/sign-in-form.tsx:146
 msgid "Identifier"
-msgstr "识别符"
+msgstr "账户识别码"
 
 #: src/components/utils/scope-description.tsx:427
 msgid "Identity"
@@ -293,11 +293,11 @@ msgstr "无效"
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:96
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:101
 msgid "Invite code"
-msgstr "无效验证码"
+msgstr "邀请码"
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:55
 msgid "Let's get your password reset!"
-msgstr "开始重置密码吧！"
+msgstr "开始重置你的密码吧！"
 
 #: src/views/authorize/authorize-view.tsx:190
 msgid "Login complete"
@@ -321,7 +321,7 @@ msgstr "显示"
 
 #: src/components/utils/scope-description.tsx:430
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
-msgstr "管理你的 <0>完整身份</0>，包括你的 <1>@用户代码</1>"
+msgstr "管理你的 <0>完整身份</0>，包括你的 <1>@账户代码</1>"
 
 #: src/components/utils/scope-description.tsx:365
 msgid "Manage your profile, posts, likes and follows"
@@ -393,7 +393,7 @@ msgstr "代表你执行操作"
 
 #: src/components/utils/scope-description.tsx:460
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
-msgstr "代表你对 <0>任何服务</0> 执行经过授权的操作"
+msgstr "代表你对 <0>任何服务</0> 执行经授权的操作"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:201
 msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
@@ -512,11 +512,11 @@ msgstr "无法使用此账户代码"
 
 #: src/components/utils/scope-description.tsx:205
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr "此应用请求完全控制你的网络身份，这意味着它可能会永久破坏，甚至窃取你的账户，请仅向你真正信任的应用授予此权限。"
+msgstr "此应用请求获取你网络身份的完整控制权，这意味着其可能会<0>永久破坏</0>，甚至<1>窃取</1>你的账户，请仅向你真正信任的应用授予此权限。"
 
 #: src/components/utils/scope-description.tsx:605
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
-msgstr "此应用请求能够创建、更新和删除存储库中的 <0>任何数据</0>。"
+msgstr "此应用请求在你的存储库中创建、更新和删除 <0>任何数据</0>的权限。"
 
 #: src/components/utils/scope-description.tsx:172
 #: src/components/utils/scope-description.tsx:485
@@ -526,7 +526,7 @@ msgstr "此应用请求必要的权限，以便能代表你执行以下操作：
 
 #: src/components/utils/scope-description.tsx:500
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
-msgstr "ATProto 网络使用一种认证机制，可以在与外部服务交互时唯一标识用户。这通常用于获取或更新与你账户相关的数据，例如动态源或审核内容。"
+msgstr "ATProto 网络使用一种认证机制，可以在与外部服务交互时识别用户的唯一身份。这通常用于获取或更新与你账户相关的数据，例如动态源或审核内容。"
 
 #: src/components/utils/error-message.tsx:69
 msgid "The data you submitted is invalid. Please check the form and try again."
@@ -534,11 +534,11 @@ msgstr "你提交的数据无效，请确认表格并重试。"
 
 #: src/components/utils/error-message.tsx:43
 msgid "The domain name is not allowed"
-msgstr "域名不符合要求"
+msgstr "不允许使用此域名"
 
 #: src/components/utils/error-message.tsx:45
 msgid "The handle contains inappropriate language"
-msgstr "此用户名包含不当言论"
+msgstr "此用户名含有不当言论"
 
 #: src/components/utils/error-message.tsx:50
 msgid "The handle is already in use"
@@ -550,11 +550,11 @@ msgstr "此账户代码无效"
 
 #: src/components/utils/error-message.tsx:35
 msgid "The invite code is not valid"
-msgstr "邀请码无效"
+msgstr "此邀请码无效"
 
 #: src/views/authorize/consent/consent-form.tsx:147
 msgid "This application is requesting the following list of technical permissions, summarized hereafter:"
-msgstr "此应用请求以下技术权限，概述如下："
+msgstr "此应用请求以下技术权限，其摘要如下："
 
 #: src/components/utils/error-message.tsx:77
 msgid "This authorization request has been denied. Please try again."
@@ -611,7 +611,7 @@ msgstr "想要访问你的 <0/> 账户"
 
 #: src/views/authorize/consent/consent-form.tsx:131
 msgid "wants to uniquely identify you through your <0/> account"
-msgstr "想要通过你的 <0/> 账户唯一识别你"
+msgstr "想要通过你的 <0/> 账户识别唯一身份"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:200
 msgid "Warning"
@@ -627,7 +627,7 @@ msgstr "弱"
 
 #: src/components/utils/error-message.tsx:31
 msgid "Wrong identifier or password"
-msgstr "错误的标识符或密码"
+msgstr "错误的账户标识码或密码"
 
 #: src/views/authorize/authorize-view.tsx:191
 msgid "You are being redirected..."
@@ -639,11 +639,11 @@ msgstr "完成账户设置后，你可以将此用户名更改为你控制的任
 
 #: src/views/authorize/reset-password/reset-password-view.tsx:116
 msgid "You can now sign in with your new password."
-msgstr "你现在可以用新密码登录了。"
+msgstr "你现在可以使用新密码登录了。"
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "你将收到一封包含“重置码”的电子邮件，请在此处输入验证码，然后输入你的新密码。"
+msgstr "你将收到一封包含“重置码”的电子邮件，请在此处输入验证码，然后再输入你的新密码。"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:121
 msgid "Your account"
