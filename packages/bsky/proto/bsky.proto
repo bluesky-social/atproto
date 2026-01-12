@@ -1304,7 +1304,7 @@ message GetActorDraftsRequest {
 
 message DraftInfo {
   string key = 1; // stash key
-  google.protobuf.Timestamp saved_at = 2;
+  google.protobuf.Timestamp updated_at = 2;
   bytes payload = 3;
 }
 

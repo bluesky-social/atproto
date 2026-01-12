@@ -1,7 +1,7 @@
 export interface Draft {
   creator: string
   key: string
-  savedAt: string
+  updatedAt: string
   payload: string
 }
 

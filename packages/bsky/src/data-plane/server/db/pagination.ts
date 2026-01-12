@@ -296,11 +296,11 @@ export class IsoSortAtKey extends IsoTimeKey<{
   }
 }
 
-export class IsoSavedAtKey extends IsoTimeKey<{
-  savedAt: string
+export class IsoUpdatedAtKey extends IsoTimeKey<{
+  updatedAt: string
 }> {
-  labelResult(result: { savedAt: string }) {
-    return { primary: result.savedAt }
+  labelResult(result: { updatedAt: string }) {
+    return { primary: result.updatedAt }
   }
 }
 

@@ -433,7 +433,7 @@ const handleDraftOperation = async (
       .values({
         creator: actorDid,
         key,
-        savedAt: now,
+        updatedAt: now,
         payload: payloadString,
       })
       .execute()
@@ -447,7 +447,7 @@ const handleDraftOperation = async (
       .where('creator', '=', actorDid)
       .where('key', '=', key)
       .set({
-        savedAt: now,
+        updatedAt: now,
         payload: payloadString,
       })
       .execute()

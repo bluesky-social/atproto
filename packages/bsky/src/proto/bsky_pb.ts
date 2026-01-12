@@ -9347,9 +9347,9 @@ export class DraftInfo extends Message<DraftInfo> {
   key = "";
 
   /**
-   * @generated from field: google.protobuf.Timestamp saved_at = 2;
+   * @generated from field: google.protobuf.Timestamp updated_at = 2;
    */
-  savedAt?: Timestamp;
+  updatedAt?: Timestamp;
 
   /**
    * @generated from field: bytes payload = 3;
@@ -9365,7 +9365,7 @@ export class DraftInfo extends Message<DraftInfo> {
   static readonly typeName = "bsky.DraftInfo";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "saved_at", kind: "message", T: Timestamp },
+    { no: 2, name: "updated_at", kind: "message", T: Timestamp },
     { no: 3, name: "payload", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
   ]);
 

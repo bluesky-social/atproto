@@ -3,7 +3,7 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Service } from '../../../proto/bsky_connect'
 import { DraftInfo } from '../../../proto/bsky_pb'
 import { Database } from '../db'
-import { IsoSavedAtKey } from '../db/pagination'
+import { IsoUpdatedAtKey } from '../db/pagination'
 
 export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
   async getActorDrafts(req) {
@@ -15,7 +15,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .where('draft.creator', '=', actorDid)
       .selectAll()
 
-    const key = new IsoSavedAtKey(ref('draft.savedAt'))
+    const key = new IsoUpdatedAtKey(ref('draft.updatedAt'))
     builder = key.paginate(builder, {
       cursor,
       limit,
@@ -27,7 +27,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         (d): PlainMessage<DraftInfo> => ({
           key: d.key,
           payload: Buffer.from(d.payload),
-          savedAt: Timestamp.fromDate(new Date(d.savedAt)),
+          updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
         }),
       ),
       cursor: key.packFromResult(res),

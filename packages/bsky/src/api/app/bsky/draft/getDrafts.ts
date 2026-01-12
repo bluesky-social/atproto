@@ -22,8 +22,8 @@ export default function (server: Server, ctx: AppContext) {
           ) as Draft,
           // The date should always be present, but we avoid required fields on protobuf by convention,
           // so requires a fallback value to please TS.
-          savedAt:
-            d.savedAt?.toDate().toISOString() ?? new Date(0).toISOString(),
+          updatedAt:
+            d.updatedAt?.toDate().toISOString() ?? new Date(0).toISOString(),
         }
       })
 

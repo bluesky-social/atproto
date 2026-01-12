@@ -2355,14 +2355,14 @@ export const schemaDict = {
       draftView: {
         description: 'View to present drafts data to users.',
         type: 'object',
-        required: ['draft', 'savedAt'],
+        required: ['draft', 'updatedAt'],
         properties: {
           draft: {
             type: 'ref',
             ref: 'lex:app.bsky.draft.defs#draft',
           },
-          savedAt: {
-            description: 'The last saved time (either creation or update).',
+          updatedAt: {
+            description: 'The last time the draft was updated.',
             type: 'string',
             format: 'datetime',
           },

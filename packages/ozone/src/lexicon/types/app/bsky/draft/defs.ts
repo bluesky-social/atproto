@@ -76,8 +76,8 @@ export function validateDraftPost<V>(v: V) {
 export interface DraftView {
   $type?: 'app.bsky.draft.defs#draftView'
   draft: Draft
-  /** The last saved time (either creation or update). */
-  savedAt: string
+  /** The last time the draft was updated. */
+  updatedAt: string
 }
 
 const hashDraftView = 'draftView'

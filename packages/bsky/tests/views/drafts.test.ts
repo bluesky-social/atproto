@@ -225,7 +225,7 @@ describe('appview drafts views', () => {
       expect(dataBob.drafts).toHaveLength(1)
     })
 
-    it('includes savedAt timestamp', async () => {
+    it('includes updatedAt timestamp', async () => {
       const beforeCreate = new Date()
       await create(alice, makeDraft())
       const afterCreate = new Date()
@@ -233,9 +233,9 @@ describe('appview drafts views', () => {
       const { data } = await get(alice)
       expect(data.drafts).toHaveLength(1)
 
-      const savedAt = new Date(data.drafts[0].savedAt)
-      expect(savedAt.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime())
-      expect(savedAt.getTime()).toBeLessThanOrEqual(afterCreate.getTime())
+      const updatedAt = new Date(data.drafts[0].updatedAt)
+      expect(updatedAt.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime())
+      expect(updatedAt.getTime()).toBeLessThanOrEqual(afterCreate.getTime())
     })
 
     it('paginates drafts in descending order', async () => {
