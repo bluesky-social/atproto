@@ -225,13 +225,17 @@ describe('appview drafts views', () => {
       expect(dataBob.drafts).toHaveLength(1)
     })
 
-    it('includes updatedAt timestamp', async () => {
+    it('includes timestamps', async () => {
       const beforeCreate = new Date()
       await create(alice, makeDraft())
       const afterCreate = new Date()
 
       const { data } = await get(alice)
       expect(data.drafts).toHaveLength(1)
+
+      const createdAt = new Date(data.drafts[0].createdAt)
+      expect(createdAt.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime())
+      expect(createdAt.getTime()).toBeLessThanOrEqual(afterCreate.getTime())
 
       const updatedAt = new Date(data.drafts[0].updatedAt)
       expect(updatedAt.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime())

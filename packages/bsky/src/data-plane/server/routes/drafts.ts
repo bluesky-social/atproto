@@ -27,6 +27,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
         (d): PlainMessage<DraftInfo> => ({
           key: d.key,
           payload: Buffer.from(d.payload),
+          createdAt: Timestamp.fromDate(new Date(d.createdAt)),
           updatedAt: Timestamp.fromDate(new Date(d.updatedAt)),
         }),
       ),

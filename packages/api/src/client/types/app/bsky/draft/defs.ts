@@ -76,7 +76,9 @@ export function validateDraftPost<V>(v: V) {
 export interface DraftView {
   $type?: 'app.bsky.draft.defs#draftView'
   draft: Draft
-  /** The last time the draft was updated. */
+  /** The time the draft was created. */
+  createdAt: string
+  /** The time the draft was last updated. */
   updatedAt: string
 }
 

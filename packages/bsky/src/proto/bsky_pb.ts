@@ -9347,12 +9347,17 @@ export class DraftInfo extends Message<DraftInfo> {
   key = "";
 
   /**
-   * @generated from field: google.protobuf.Timestamp updated_at = 2;
+   * @generated from field: google.protobuf.Timestamp created_at = 2;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 3;
    */
   updatedAt?: Timestamp;
 
   /**
-   * @generated from field: bytes payload = 3;
+   * @generated from field: bytes payload = 4;
    */
   payload = new Uint8Array(0);
 
@@ -9365,8 +9370,9 @@ export class DraftInfo extends Message<DraftInfo> {
   static readonly typeName = "bsky.DraftInfo";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "updated_at", kind: "message", T: Timestamp },
-    { no: 3, name: "payload", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: "created_at", kind: "message", T: Timestamp },
+    { no: 3, name: "updated_at", kind: "message", T: Timestamp },
+    { no: 4, name: "payload", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DraftInfo {

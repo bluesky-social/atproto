@@ -433,6 +433,7 @@ const handleDraftOperation = async (
       .values({
         creator: actorDid,
         key,
+        createdAt: now,
         updatedAt: now,
         payload: payloadString,
       })

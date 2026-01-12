@@ -5,6 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('draft')
     .addColumn('creator', 'varchar', (col) => col.notNull())
     .addColumn('key', 'varchar', (col) => col.notNull())
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .addColumn('payload', 'text', (col) => col.notNull())
     .addPrimaryKeyConstraint('draft_pkey', ['creator', 'key'])
