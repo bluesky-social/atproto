@@ -1,5 +1,14 @@
 # @atproto/api
 
+## 0.18.14
+
+### Patch Changes
+
+- [#4539](https://github.com/bluesky-social/atproto/pull/4539) [`3ffebd0`](https://github.com/bluesky-social/atproto/commit/3ffebd0bf25776308e06e4b083dc2d0e156d9ac0) Thanks [@mozzius](https://github.com/mozzius)! - Add $cashtag support to the Rich Text facet detection
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.12
+
 ## 0.18.13
 
 ### Patch Changes

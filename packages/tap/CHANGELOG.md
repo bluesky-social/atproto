@@ -1,5 +1,17 @@
 # @atproto/tap
 
+## 0.1.3
+
+### Patch Changes
+
+- [#4534](https://github.com/bluesky-social/atproto/pull/4534) [`0193467`](https://github.com/bluesky-social/atproto/commit/0193467463a1a49c0c7f17d129c07b687a1f5057) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make sure the `destroy()` promise resolves, even in case of error
+
+- [#4534](https://github.com/bluesky-social/atproto/pull/4534) [`0193467`](https://github.com/bluesky-social/atproto/commit/0193467463a1a49c0c7f17d129c07b687a1f5057) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `TapChannel` implement `AsyncDisposable`, allowing use with `using` keyword
+
+- Updated dependencies []:
+  - @atproto/common@0.5.8
+  - @atproto/lex@0.0.11
+
 ## 0.1.2
 
 ### Patch Changes
