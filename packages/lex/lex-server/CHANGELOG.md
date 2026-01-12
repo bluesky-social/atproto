@@ -1,5 +1,15 @@
 # @atproto/lex-server
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [[`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e), [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e), [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e), [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e)]:
+  - @atproto/lex-data@0.0.8
+  - @atproto/lex-cbor@0.0.8
+  - @atproto/lex-json@0.0.8
+  - @atproto/lex-schema@0.0.9
+
 ## 0.0.4
 
 ### Patch Changes
