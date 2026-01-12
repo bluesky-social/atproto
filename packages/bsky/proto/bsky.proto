@@ -1291,6 +1291,36 @@ message GetActorBookmarksResponse {
   string cursor = 2;
 }
 
+//
+// Drafts
+//
+
+
+message GetActorDraftsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message DraftInfo {
+  string key = 1; // stash key
+  google.protobuf.Timestamp saved_at = 2;
+  bytes payload = 3;
+}
+
+message GetActorDraftsResponse {
+  repeated DraftInfo drafts = 1;
+  string cursor = 2;
+}
+
+message CountActorDraftsRequest {
+  string actor_did = 1;
+}
+
+message CountActorDraftsResponse {
+  int32 count = 1;
+}
+
 
 // Polo-backed Graph Endpoints
 
@@ -1490,6 +1520,12 @@ service Service {
   rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
+
+  // Drafts
+  // Returns a page of drafts for a user.
+  rpc GetActorDrafts(GetActorDraftsRequest) returns (GetActorDraftsResponse);
+  // Returns how many drafts a user has.
+  rpc CountActorDrafts(CountActorDraftsRequest) returns (CountActorDraftsResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);

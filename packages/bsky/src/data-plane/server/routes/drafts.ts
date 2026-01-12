@@ -1,0 +1,50 @@
+import { PlainMessage, Timestamp } from '@bufbuild/protobuf'
+import { ServiceImpl } from '@connectrpc/connect'
+import { Service } from '../../../proto/bsky_connect'
+import { DraftInfo } from '../../../proto/bsky_pb'
+import { Database } from '../db'
+import { IsoSavedAtKey } from '../db/pagination'
+
+export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
+  async getActorDrafts(req) {
+    const { actorDid, cursor, limit } = req
+    const { ref } = db.db.dynamic
+
+    let builder = db.db
+      .selectFrom('draft')
+      .where('draft.creator', '=', actorDid)
+      .selectAll()
+
+    const key = new IsoSavedAtKey(ref('draft.savedAt'))
+    builder = key.paginate(builder, {
+      cursor,
+      limit,
+    })
+
+    const res = await builder.execute()
+    return {
+      drafts: res.map(
+        (d): PlainMessage<DraftInfo> => ({
+          key: d.key,
+          payload: Buffer.from(d.payload),
+          savedAt: Timestamp.fromDate(new Date(d.savedAt)),
+        }),
+      ),
+      cursor: key.packFromResult(res),
+    }
+  },
+
+  async countActorDrafts(req) {
+    const { actorDid } = req
+
+    const res = await db.db
+      .selectFrom('draft')
+      .select((eb) => eb.fn.count('creator').as('count'))
+      .where('creator', '=', actorDid)
+      .executeTakeFirstOrThrow()
+
+    return {
+      count: Number(res.count),
+    }
+  },
+})

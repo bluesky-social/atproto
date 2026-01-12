@@ -106,6 +106,7 @@ export interface ServerConfigValues {
   proxyPreferCompressed?: boolean
   kws?: KwsConfig
   debugFieldAllowedDids: Set<string>
+  draftsLimit: number
 }
 
 export class ServerConfig {
@@ -322,6 +323,10 @@ export class ServerConfig {
       envList(process.env.BSKY_DEBUG_FIELD_ALLOWED_DIDS),
     )
 
+    const draftsLimit = process.env.BSKY_DRAFTS_LIMIT
+      ? parseInt(process.env.BSKY_DRAFTS_LIMIT || '', 10)
+      : 500
+
     return new ServerConfig({
       version,
       debugMode,
@@ -388,6 +393,7 @@ export class ServerConfig {
       proxyPreferCompressed,
       kws,
       debugFieldAllowedDids,
+      draftsLimit,
       ...stripUndefineds(overrides ?? {}),
     })
   }
@@ -655,6 +661,10 @@ export class ServerConfig {
 
   get debugFieldAllowedDids() {
     return this.cfg.debugFieldAllowedDids
+  }
+
+  get draftsLimit() {
+    return this.cfg.draftsLimit
   }
 }
 
