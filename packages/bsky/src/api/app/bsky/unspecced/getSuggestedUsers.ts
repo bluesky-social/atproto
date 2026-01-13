@@ -168,5 +168,5 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   dids: string[]
-  recId?: number
+  recId?: string
 }
