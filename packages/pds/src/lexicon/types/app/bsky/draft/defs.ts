@@ -18,11 +18,27 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.draft.defs'
 
-/** A stash object used to store drafts in private storage, while we don't support private records. A draft contains an array of draft posts. */
-export interface Draft {
-  $type?: 'app.bsky.draft.defs#draft'
+/** A draft with an identifier, used to store drafts in private storage (stash). */
+export interface DraftWithId {
+  $type?: 'app.bsky.draft.defs#draftWithId'
   /** A TID to be used as a draft identifier. */
   id: string
+  draft: Draft
+}
+
+const hashDraftWithId = 'draftWithId'
+
+export function isDraftWithId<V>(v: V) {
+  return is$typed(v, id, hashDraftWithId)
+}
+
+export function validateDraftWithId<V>(v: V) {
+  return validate<DraftWithId & V>(v, id, hashDraftWithId)
+}
+
+/** A draft containing an array of draft posts. */
+export interface Draft {
+  $type?: 'app.bsky.draft.defs#draft'
   /** Array of draft posts that compose this draft. */
   posts: DraftPost[]
   /** Indicates human language of posts primary text content. */
@@ -77,6 +93,8 @@ export function validateDraftPost<V>(v: V) {
 /** View to present drafts data to users. */
 export interface DraftView {
   $type?: 'app.bsky.draft.defs#draftView'
+  /** A TID to be used as a draft identifier. */
+  id: string
   draft: Draft
   /** The time the draft was created. */
   createdAt: string

@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.stashClient.delete({
         actorDid,
-        namespace: Namespaces.AppBskyDraftDefsDraft,
+        namespace: Namespaces.AppBskyDraftDefsDraftWithId,
         key: id,
       })
     },

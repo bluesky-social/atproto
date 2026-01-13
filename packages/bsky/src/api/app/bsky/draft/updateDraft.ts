@@ -1,6 +1,6 @@
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { Draft } from '../../../../lexicon/types/app/bsky/draft/defs'
+import { DraftWithId } from '../../../../lexicon/types/app/bsky/draft/defs'
 import { Namespaces } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
@@ -8,7 +8,7 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
-      const { draft } = input.body
+      const { draft: draftWithId } = input.body
 
       // NOTE: update drafts does not enforce limits, because if it did, we would not allow updating when the limit is reached,
       // which is not the desired behavior.
@@ -17,9 +17,9 @@ export default function (server: Server, ctx: AppContext) {
 
       await ctx.stashClient.update({
         actorDid,
-        namespace: Namespaces.AppBskyDraftDefsDraft,
-        payload: draft satisfies Draft,
-        key: draft.id,
+        namespace: Namespaces.AppBskyDraftDefsDraftWithId,
+        payload: draftWithId satisfies DraftWithId,
+        key: draftWithId.id,
       })
     },
   })

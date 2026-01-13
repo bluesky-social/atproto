@@ -19,7 +19,7 @@ const id = 'app.bsky.draft.updateDraft'
 export type QueryParams = {}
 
 export interface InputSchema {
-  draft: AppBskyDraftDefs.Draft
+  draft: AppBskyDraftDefs.DraftWithId
 }
 
 export interface CallOptions {

@@ -180,7 +180,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           await handleAgeAssuranceV2EventOperation(db, req, now)
         } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark) {
           await handleBookmarkOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyDraftDefsDraft) {
+        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId) {
           await handleDraftOperation(db, req, now)
         }
       } catch (err) {

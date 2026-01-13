@@ -2,16 +2,27 @@
   "lexicon": 1,
   "id": "app.bsky.draft.defs",
   "defs": {
-    "draft": {
-      "description": "A stash object used to store drafts in private storage, while we don't support private records. A draft contains an array of draft posts.",
+    "draftWithId": {
+      "description": "A draft with an identifier, used to store drafts in private storage (stash).",
       "type": "object",
-      "required": ["id", "posts"],
+      "required": ["id", "draft"],
       "properties": {
         "id": {
           "description": "A TID to be used as a draft identifier.",
           "type": "string",
           "format": "tid"
         },
+        "draft": {
+          "type": "ref",
+          "ref": "#draft"
+        }
+      }
+    },
+    "draft": {
+      "description": "A draft containing an array of draft posts.",
+      "type": "object",
+      "required": ["posts"],
+      "properties": {
         "posts": {
           "description": "Array of draft posts that compose this draft.",
           "type": "array",
@@ -95,8 +106,13 @@
     "draftView": {
       "description": "View to present drafts data to users.",
       "type": "object",
-      "required": ["draft", "createdAt", "updatedAt"],
+      "required": ["id", "draft", "createdAt", "updatedAt"],
       "properties": {
+        "id": {
+          "description": "A TID to be used as a draft identifier.",
+          "type": "string",
+          "format": "tid"
+        },
         "draft": {
           "type": "ref",
           "ref": "#draft"

@@ -1,7 +1,8 @@
+import { TID } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { Draft } from '../../../../lexicon/types/app/bsky/draft/defs'
+import { DraftWithId } from '../../../../lexicon/types/app/bsky/draft/defs'
 import { Namespaces } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
@@ -21,11 +22,17 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const draftId = TID.nextStr()
+      const draftWithId: DraftWithId = {
+        id: draftId,
+        draft,
+      }
+
       await ctx.stashClient.create({
         actorDid,
-        namespace: Namespaces.AppBskyDraftDefsDraft,
-        payload: draft satisfies Draft,
-        key: draft.id,
+        namespace: Namespaces.AppBskyDraftDefsDraftWithId,
+        payload: draftWithId,
+        key: draftId,
       })
     },
   })

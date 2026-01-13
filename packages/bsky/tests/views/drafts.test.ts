@@ -2,7 +2,11 @@ import { AppBskyDraftCreateDraft, AtpAgent } from '@atproto/api'
 import { TID } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { Draft, DraftView } from '../../src/lexicon/types/app/bsky/draft/defs'
+import {
+  Draft,
+  DraftView,
+  DraftWithId,
+} from '../../src/lexicon/types/app/bsky/draft/defs'
 import { OutputSchema as GetDraftsOutputSchema } from '../../src/lexicon/types/app/bsky/draft/getDrafts'
 import { paginateAll } from '../_util'
 
@@ -46,8 +50,7 @@ describe('appview drafts views', () => {
     await network.close()
   })
 
-  const makeDraft = (id?: string): Draft => ({
-    id: id ?? TID.nextStr(),
+  const makeDraft = (): Draft => ({
     posts: [{ text: 'Hello, world!' }],
   })
 
@@ -70,9 +73,9 @@ describe('appview drafts views', () => {
       },
     )
 
-  const update = async (actor: string, draft: Draft) =>
+  const update = async (actor: string, draftWithId: DraftWithId) =>
     agent.app.bsky.draft.updateDraft(
-      { draft },
+      { draft: draftWithId },
       {
         headers: await network.serviceHeaders(
           actor,
@@ -110,7 +113,6 @@ describe('appview drafts views', () => {
 
     it('creates drafts with multiple posts (threads)', async () => {
       const draft: Draft = {
-        id: TID.nextStr(),
         posts: [
           { text: 'First post in thread' },
           { text: 'Second post in thread' },
@@ -142,17 +144,18 @@ describe('appview drafts views', () => {
 
   describe('update', () => {
     it('updates an existing draft', async () => {
-      const draftId = TID.nextStr()
-      const draft1: Draft = { id: draftId, posts: [{ text: 'First version' }] }
-      const draft2: Draft = {
-        id: draftId,
-        posts: [{ text: 'Updated version' }],
-      }
+      const draft1: Draft = { posts: [{ text: 'First version' }] }
 
       await create(alice, draft1)
       const { data: data0 } = await get(alice)
       expect(data0.drafts).toHaveLength(1)
       expect(data0.drafts[0].draft.posts[0].text).toBe('First version')
+
+      const draftId = data0.drafts[0].id
+      const draft2: DraftWithId = {
+        id: draftId,
+        draft: { posts: [{ text: 'Updated version' }] },
+      }
 
       await update(alice, draft2)
       const { data: data1 } = await get(alice)
@@ -161,9 +164,9 @@ describe('appview drafts views', () => {
     })
 
     it('silently ignores updates to non-existing drafts', async () => {
-      const nonExistingDraft: Draft = {
+      const nonExistingDraft: DraftWithId = {
         id: TID.nextStr(),
-        posts: [{ text: 'This draft does not exist' }],
+        draft: { posts: [{ text: 'This draft does not exist' }] },
       }
 
       await update(alice, nonExistingDraft)
@@ -174,36 +177,39 @@ describe('appview drafts views', () => {
 
   describe('deletion', () => {
     it('removes drafts', async () => {
-      const draft1 = makeDraft()
-      const draft2 = makeDraft()
-      const draft3 = makeDraft()
-
-      await create(alice, draft1)
-      await create(alice, draft2)
-      await create(alice, draft3)
+      await create(alice, makeDraft())
+      await create(alice, makeDraft())
+      await create(alice, makeDraft())
 
       const { data: dataBefore } = await get(alice)
       expect(dataBefore.drafts).toHaveLength(3)
 
-      await del(alice, draft1.id)
-      await del(alice, draft3.id)
+      const draft1Id = dataBefore.drafts[0].id
+      const draft2Id = dataBefore.drafts[1].id
+      const draft3Id = dataBefore.drafts[2].id
+
+      await del(alice, draft1Id)
+      await del(alice, draft3Id)
 
       const { data: dataAfter } = await get(alice)
       expect(dataAfter.drafts).toHaveLength(1)
-      expect(dataAfter.drafts[0].draft.id).toBe(draft2.id)
+      expect(dataAfter.drafts[0].id).toBe(draft2Id)
     })
 
     it('is idempotent', async () => {
-      const draft = makeDraft()
-      await create(alice, draft)
+      await create(alice, makeDraft())
 
-      await del(alice, draft.id)
       const { data: data0 } = await get(alice)
-      expect(data0.drafts).toHaveLength(0)
+      expect(data0.drafts).toHaveLength(1)
+      const draftId = data0.drafts[0].id
 
-      await del(alice, draft.id)
+      await del(alice, draftId)
       const { data: data1 } = await get(alice)
       expect(data1.drafts).toHaveLength(0)
+
+      await del(alice, draftId)
+      const { data: data2 } = await get(alice)
+      expect(data2.drafts).toHaveLength(0)
     })
   })
 
@@ -243,11 +249,8 @@ describe('appview drafts views', () => {
     })
 
     it('paginates drafts in descending order', async () => {
-      const drafts: Draft[] = []
       for (let i = 0; i < 7; i++) {
-        const draft = makeDraft()
-        drafts.push(draft)
-        await create(alice, draft)
+        await create(alice, makeDraft())
       }
 
       const results = (out: GetDraftsOutputSchema[]) =>
@@ -270,13 +273,12 @@ describe('appview drafts views', () => {
       const paginated = results(paginatedRes)
 
       // Check items are the same.
-      const sort = (a: DraftView, b: DraftView) =>
-        a.draft.id > b.draft.id ? 1 : -1
+      const sort = (a: DraftView, b: DraftView) => (a.id > b.id ? 1 : -1)
       expect([...paginated].sort(sort)).toEqual([...full].sort(sort))
 
       // Check pagination ordering (most recent first).
-      expect(paginated.at(0)?.draft.id).toBe(drafts.at(-1)?.id)
-      expect(paginated.at(-1)?.draft.id).toBe(drafts.at(0)?.id)
+      expect(paginated.at(0)?.id).toBe(full.at(0)?.id)
+      expect(paginated.at(-1)?.id).toBe(full.at(-1)?.id)
     })
   })
 })

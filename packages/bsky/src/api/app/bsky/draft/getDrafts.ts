@@ -1,7 +1,10 @@
 import { jsonStringToLex } from '@atproto/lexicon'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { Draft, DraftView } from '../../../../lexicon/types/app/bsky/draft/defs'
+import {
+  DraftView,
+  DraftWithId,
+} from '../../../../lexicon/types/app/bsky/draft/defs'
 
 export default function (server: Server, ctx: AppContext) {
   server.app.bsky.draft.getDrafts({
@@ -16,10 +19,12 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const draftViews = drafts.map((d): DraftView => {
+        const draftWithId = jsonStringToLex(
+          Buffer.from(d.payload).toString('utf8'),
+        ) as DraftWithId
         return {
-          draft: jsonStringToLex(
-            Buffer.from(d.payload).toString('utf8'),
-          ) as Draft,
+          id: draftWithId.id,
+          draft: draftWithId.draft,
           // The date should always be present, but we avoid required fields on protobuf by convention,
           // so requires a fallback value to please TS.
           createdAt:

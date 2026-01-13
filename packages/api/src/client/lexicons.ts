@@ -2253,17 +2253,28 @@ export const schemaDict = {
     lexicon: 1,
     id: 'app.bsky.draft.defs',
     defs: {
-      draft: {
+      draftWithId: {
         description:
-          "A stash object used to store drafts in private storage, while we don't support private records. A draft contains an array of draft posts.",
+          'A draft with an identifier, used to store drafts in private storage (stash).',
         type: 'object',
-        required: ['id', 'posts'],
+        required: ['id', 'draft'],
         properties: {
           id: {
             description: 'A TID to be used as a draft identifier.',
             type: 'string',
             format: 'tid',
           },
+          draft: {
+            type: 'ref',
+            ref: 'lex:app.bsky.draft.defs#draft',
+          },
+        },
+      },
+      draft: {
+        description: 'A draft containing an array of draft posts.',
+        type: 'object',
+        required: ['posts'],
+        properties: {
           posts: {
             description: 'Array of draft posts that compose this draft.',
             type: 'array',
@@ -2365,8 +2376,13 @@ export const schemaDict = {
       draftView: {
         description: 'View to present drafts data to users.',
         type: 'object',
-        required: ['draft', 'createdAt', 'updatedAt'],
+        required: ['id', 'draft', 'createdAt', 'updatedAt'],
         properties: {
+          id: {
+            description: 'A TID to be used as a draft identifier.',
+            type: 'string',
+            format: 'tid',
+          },
           draft: {
             type: 'ref',
             ref: 'lex:app.bsky.draft.defs#draft',
@@ -2550,7 +2566,7 @@ export const schemaDict = {
             properties: {
               draft: {
                 type: 'ref',
-                ref: 'lex:app.bsky.draft.defs#draft',
+                ref: 'lex:app.bsky.draft.defs#draftWithId',
               },
             },
           },

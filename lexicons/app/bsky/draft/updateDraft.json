@@ -13,7 +13,7 @@
           "properties": {
             "draft": {
               "type": "ref",
-              "ref": "app.bsky.draft.defs#draft"
+              "ref": "app.bsky.draft.defs#draftWithId"
             }
           }
         }
