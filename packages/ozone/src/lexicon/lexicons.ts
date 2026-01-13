@@ -2274,6 +2274,16 @@ export const schemaDict = {
               ref: 'lex:app.bsky.draft.defs#draftPost',
             },
           },
+          langs: {
+            type: 'array',
+            description:
+              'Indicates human language of posts primary text content.',
+            maxLength: 3,
+            items: {
+              type: 'string',
+              format: 'language',
+            },
+          },
           postgateEmbeddingRules: {
             description:
               'Embedding rules for the postgates to be created when this draft is published.',

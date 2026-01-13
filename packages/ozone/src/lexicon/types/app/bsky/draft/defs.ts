@@ -25,6 +25,8 @@ export interface Draft {
   id: string
   /** Array of draft posts that compose this draft. */
   posts: DraftPost[]
+  /** Indicates human language of posts primary text content. */
+  langs?: string[]
   /** Embedding rules for the postgates to be created when this draft is published. */
   postgateEmbeddingRules?: (
     | $Typed<AppBskyFeedPostgate.DisableRule>
