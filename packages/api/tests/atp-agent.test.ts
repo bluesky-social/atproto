@@ -3802,7 +3802,10 @@ describe('agent', () => {
       })
 
       it('hideFeed adds a feed id', async () => {
-        await agent.updateLiveEventPreferences({ type: 'hideFeed', id: 'feed1' })
+        await agent.updateLiveEventPreferences({
+          type: 'hideFeed',
+          id: 'feed1',
+        })
         const prefs = await agent.getPreferences()
         expect(prefs.liveEventPreferences).toEqual({
           hiddenFeedIds: ['feed1'],
@@ -3811,7 +3814,10 @@ describe('agent', () => {
       })
 
       it('hideFeed adds another feed id', async () => {
-        await agent.updateLiveEventPreferences({ type: 'hideFeed', id: 'feed2' })
+        await agent.updateLiveEventPreferences({
+          type: 'hideFeed',
+          id: 'feed2',
+        })
         const prefs = await agent.getPreferences()
         expect(prefs.liveEventPreferences).toEqual({
           hiddenFeedIds: ['feed1', 'feed2'],
