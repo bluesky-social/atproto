@@ -411,6 +411,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#labelersPref',
             'lex:app.bsky.actor.defs#postInteractionSettingsPref',
             'lex:app.bsky.actor.defs#verificationPrefs',
+            'lex:app.bsky.actor.defs#liveEventPreferences',
           ],
         },
       },
@@ -770,6 +771,25 @@ export const schemaDict = {
           hideBadges: {
             description:
               'Hide the blue check badges for verified accounts and trusted verifiers.',
+            type: 'boolean',
+            default: false,
+          },
+        },
+      },
+      liveEventPreferences: {
+        type: 'object',
+        description: 'Preferences for live events.',
+        properties: {
+          hiddenFeedIds: {
+            description:
+              'A list of feed IDs that the user has hidden from live events.',
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          hideAllFeeds: {
+            description: 'Whether to hide all feeds from live events.',
             type: 'boolean',
             default: false,
           },
