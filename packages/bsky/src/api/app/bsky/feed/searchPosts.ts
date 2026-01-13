@@ -137,6 +137,7 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to conditionally show based on tagging.
     if (isCuratedSearch && tagged) return false
     if (!parsedQuery.author && tagged) return false
+
     return true
   })
   return skeleton

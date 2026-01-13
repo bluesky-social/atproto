@@ -52,13 +52,6 @@ export class FeatureGates {
     }
   }
 
-  destroy() {
-    if (this.ready) {
-      this.ready = false
-      this.client = undefined
-    }
-  }
-
   contextForDid(did: string): Context {
     return { attributes: { did: did } }
   }
