@@ -6,11 +6,11 @@ export type Config = {
   apiKey?: string
 }
 
-interface Attrs {
+type Attrs = {
   did?: string
 }
 
-interface Context {
+type Context = {
   attributes: Attrs
 }
 
@@ -48,13 +48,6 @@ export class FeatureGates {
     } catch (err) {
       featureGatesLogger.error({ err }, 'Failed to initialize GrowthBook')
       this.ready = false
-    }
-  }
-
-  destroy() {
-    if (this.ready) {
-      this.ready = false
-      this.client = undefined
     }
   }
 

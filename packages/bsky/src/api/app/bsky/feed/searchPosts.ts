@@ -126,6 +126,7 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     const tagged = post.tags.has(ctx.cfg.visibilityTagHide)
     if (isCuratedSearch && tagged) return false
     if (!parsedQuery.author && tagged) return false
+
     return true
   })
   return skeleton
