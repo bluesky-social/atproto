@@ -35,7 +35,14 @@ export default function (server: Server, ctx: AppContext) {
       const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
 
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        featureGates: ctx.featureGates.checkGates(
+          [ctx.featureGates.ids.SearchFilteringExploration],
+          ctx.featureGates.contextForDid(viewer ?? ''),
+        ),
+      })
       const results = await searchPosts(
         { ...params, hydrateCtx, isModService },
         ctx,

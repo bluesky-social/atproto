@@ -22,6 +22,7 @@ export enum FeatureGateID {
   _ = '',
   SuggestedUsersFromDiscover = 'disc_onboarding_follow_suggest',
   ThreadsV2ReplyRankingExploration = 'threads_v2_reply_ranking_exploration',
+  SearchFilteringExploration = 'search_filtering_exploration',
 }
 
 /**
@@ -61,6 +62,7 @@ export class FeatureGates {
 
     // TODO: migrate from StatSig to GrowthBook
     if (gate === FeatureGateID.ThreadsV2ReplyRankingExploration) return false
+    if (gate === FeatureGateID.SearchFilteringExploration) return false
 
     return this.client.isOn(gate, ctx)
   }
