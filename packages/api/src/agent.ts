@@ -1380,7 +1380,7 @@ export class Agent extends XrpcClient {
       | { type: 'unhideFeed'; id: string }
       | { type: 'toggleHideAllFeeds' },
   ) {
-    await this.updatePreferences((prefs) => {
+    return this.updatePreferences((prefs) => {
       const pref = prefs.findLast(predicate.isValidLiveEventPreferences) || {
         $type: 'app.bsky.actor.defs#liveEventPreferences',
         hiddenFeedIds: [],
