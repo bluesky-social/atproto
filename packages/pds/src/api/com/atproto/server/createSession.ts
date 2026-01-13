@@ -76,6 +76,13 @@ export default function (server: Server, ctx: AppContext) {
 
           // Check if identifier is an email address
           const isEmail = input.body.identifier.includes('@') && !input.body.identifier.startsWith('did:')
+
+          req.log.info({
+            identifier: input.body.identifier,
+            isEmail,
+            lookupMethod: isEmail ? 'getAccountByEmail' : 'getAccount (handle/DID)'
+          }, 'Determining lookup method')
+
           const account = isEmail
             ? await ctx.accountManager.getAccountByEmail(input.body.identifier, {
                 includeDeactivated: true,
@@ -116,18 +123,44 @@ export default function (server: Server, ctx: AppContext) {
 
         req.log.info({ legalId, purpose }, 'Initiating RemoteLogin petition')
 
-        // Initiate RemoteLogin petition
-        const { petitionId } = await ctx.neuroRemoteLoginManager.initiatePetition(
-          legalId,
-          purpose,
-        )
+        let approval
+        try {
+          // Initiate RemoteLogin petition
+          const { petitionId } = await ctx.neuroRemoteLoginManager.initiatePetition(
+            legalId,
+            purpose,
+          )
 
-        req.log.info({ petitionId, legalId }, 'RemoteLogin petition initiated - waiting for approval')
+          req.log.info({ petitionId, legalId }, 'RemoteLogin petition initiated - waiting for approval')
 
-        // Wait for user approval
-        const approval = await ctx.neuroRemoteLoginManager.waitForApproval(petitionId)
+          // Wait for user approval
+          approval = await ctx.neuroRemoteLoginManager.waitForApproval(petitionId)
 
-        req.log.info({ approved: approval, petitionId }, 'RemoteLogin approved')
+          req.log.info({ approved: approval, petitionId }, 'RemoteLogin approved')
+        } catch (err) {
+          const errorMsg = err instanceof Error ? err.message : String(err)
+          req.log.warn({ error: errorMsg, legalId }, 'RemoteLogin petition failed')
+
+          // Convert petition errors to user-friendly messages
+          if (errorMsg.includes('timeout') || errorMsg.includes('did not respond')) {
+            throw new AuthRequiredError(
+              'Authentication request timed out. Please approve the login request on your device and try again.',
+            )
+          } else if (errorMsg.includes('rejected') || errorMsg.includes('denied')) {
+            throw new AuthRequiredError(
+              'Authentication request was rejected. Please try again.',
+            )
+          } else if (errorMsg.includes('not found')) {
+            throw new AuthRequiredError(
+              'Authentication session not found. Please try again.',
+            )
+          } else {
+            // Generic error for other cases (network issues, API errors, etc.)
+            throw new AuthRequiredError(
+              'Authentication failed. Please check your connection and try again.',
+            )
+          }
+        }
 
         const user = userForRemoteLogin
 
