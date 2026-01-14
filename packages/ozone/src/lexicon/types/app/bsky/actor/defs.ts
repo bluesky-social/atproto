@@ -269,6 +269,7 @@ export type Preferences = (
   | $Typed<LabelersPref>
   | $Typed<PostInteractionSettingsPref>
   | $Typed<VerificationPrefs>
+  | $Typed<LiveEventPreferences>
   | { $type: string }
 )[]
 
@@ -616,6 +617,25 @@ export function isVerificationPrefs<V>(v: V) {
 
 export function validateVerificationPrefs<V>(v: V) {
   return validate<VerificationPrefs & V>(v, id, hashVerificationPrefs)
+}
+
+/** Preferences for live events. */
+export interface LiveEventPreferences {
+  $type?: 'app.bsky.actor.defs#liveEventPreferences'
+  /** A list of feed IDs that the user has hidden from live events. */
+  hiddenFeedIds?: string[]
+  /** Whether to hide all feeds from live events. */
+  hideAllFeeds: boolean
+}
+
+const hashLiveEventPreferences = 'liveEventPreferences'
+
+export function isLiveEventPreferences<V>(v: V) {
+  return is$typed(v, id, hashLiveEventPreferences)
+}
+
+export function validateLiveEventPreferences<V>(v: V) {
+  return validate<LiveEventPreferences & V>(v, id, hashLiveEventPreferences)
 }
 
 /** Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly. */

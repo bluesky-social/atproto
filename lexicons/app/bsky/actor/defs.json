@@ -285,7 +285,8 @@
           "#bskyAppStatePref",
           "#labelersPref",
           "#postInteractionSettingsPref",
-          "#verificationPrefs"
+          "#verificationPrefs",
+          "#liveEventPreferences"
         ]
       }
     },
@@ -601,6 +602,22 @@
       "properties": {
         "hideBadges": {
           "description": "Hide the blue check badges for verified accounts and trusted verifiers.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "liveEventPreferences": {
+      "type": "object",
+      "description": "Preferences for live events.",
+      "properties": {
+        "hiddenFeedIds": {
+          "description": "A list of feed IDs that the user has hidden from live events.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hideAllFeeds": {
+          "description": "Whether to hide all feeds from live events.",
           "type": "boolean",
           "default": false
         }
