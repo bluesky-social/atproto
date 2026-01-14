@@ -474,7 +474,6 @@ message GetActorsRequest {
 }
 
 message ActorInfo {
-  reserved 20; // DO NOT REMOVE — see dataplane repo
   bool exists = 1;
   string handle = 2;
   Record profile = 3;
@@ -496,7 +495,7 @@ message ActorInfo {
   Record status_record = 17;
   string allow_activity_subscriptions_from = 18;
   optional AgeAssuranceStatus age_assurance_status = 19;
-  optional double reserved = 20;
+  reserved 20; // DO NOT REMOVE - see dataplane repo
   Record germ_record = 21;
 }
 
@@ -1301,6 +1300,37 @@ message GetActorBookmarksResponse {
   string cursor = 2;
 }
 
+//
+// Drafts
+//
+
+
+message GetActorDraftsRequest {
+  string actor_did = 1;
+  int32 limit = 2;
+  string cursor = 3;
+}
+
+message DraftInfo {
+  string key = 1; // stash key
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  bytes payload = 4;
+}
+
+message GetActorDraftsResponse {
+  repeated DraftInfo drafts = 1;
+  string cursor = 2;
+}
+
+message CountActorDraftsRequest {
+  string actor_did = 1;
+}
+
+message CountActorDraftsResponse {
+  int32 count = 1;
+}
+
 
 // Polo-backed Graph Endpoints
 
@@ -1501,6 +1531,12 @@ service Service {
   rpc GetBookmarksByActorAndSubjects(GetBookmarksByActorAndSubjectsRequest) returns (GetBookmarksByActorAndSubjectsResponse);
   // Returns the bookmarks created by the actor.
   rpc GetActorBookmarks(GetActorBookmarksRequest) returns (GetActorBookmarksResponse);
+
+  // Drafts
+  // Returns a page of drafts for a user.
+  rpc GetActorDrafts(GetActorDraftsRequest) returns (GetActorDraftsResponse);
+  // Returns how many drafts a user has.
+  rpc CountActorDrafts(CountActorDraftsRequest) returns (CountActorDraftsResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);
