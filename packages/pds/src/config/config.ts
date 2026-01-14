@@ -224,15 +224,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
       }
     : null
 
-  const rateLimitsCfg: ServerConfig['rateLimits'] = env.rateLimitsEnabled
-    ? {
-        enabled: true,
-        bypassKey: env.rateLimitBypassKey,
-        bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
-          ipOrCidr.split('/')[0]?.trim(),
-        ),
-      }
-    : { enabled: false }
+  const rateLimitsCfg: ServerConfig['rateLimits'] =
+    env.rateLimitsEnabled === false
+      ? { enabled: false }
+      : {
+          enabled: true,
+          bypassKey: env.rateLimitBypassKey,
+          bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
+            ipOrCidr.split('/')[0]?.trim(),
+          ),
+        }
 
   const crawlersCfg: ServerConfig['crawlers'] = env.crawlers ?? []
 
