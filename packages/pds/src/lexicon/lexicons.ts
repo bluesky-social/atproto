@@ -2239,6 +2239,19 @@ export const schemaDict = {
             },
           },
         },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+              id: {
+                type: 'string',
+                description: 'The ID of the created draft.',
+              },
+            },
+          },
+        },
         errors: [
           {
             name: 'DraftLimitReached',

@@ -22,6 +22,11 @@ export interface InputSchema {
   draft: AppBskyDraftDefs.Draft
 }
 
+export interface OutputSchema {
+  /** The ID of the created draft. */
+  id: string
+}
+
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
@@ -32,6 +37,7 @@ export interface CallOptions {
 export interface Response {
   success: boolean
   headers: HeadersMap
+  data: OutputSchema
 }
 
 export class DraftLimitReachedError extends XRPCError {

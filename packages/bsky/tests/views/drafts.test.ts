@@ -97,9 +97,14 @@ describe('appview drafts views', () => {
 
   describe('creation', () => {
     it('creates drafts', async () => {
-      await create(alice, makeDraft())
-      await create(alice, makeDraft())
-      await create(alice, makeDraft())
+      const res1 = await create(alice, makeDraft())
+      const res2 = await create(alice, makeDraft())
+      const res3 = await create(alice, makeDraft())
+
+      expect(res1.data.id).toBeDefined()
+      expect(res2.data.id).toBeDefined()
+      expect(res3.data.id).toBeDefined()
+      expect(new Set([res1.data.id, res2.data.id, res3.data.id]).size).toBe(3)
 
       await create(bob, makeDraft())
       await create(bob, makeDraft())

@@ -34,6 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         payload: draftWithId,
         key: draftId,
       })
+
+      return {
+        encoding: 'application/json' as const,
+        body: { id: draftId },
+      }
     },
   })
 }

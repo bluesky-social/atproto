@@ -21,9 +21,20 @@ export interface InputSchema {
   draft: AppBskyDraftDefs.Draft
 }
 
+export interface OutputSchema {
+  /** The ID of the created draft. */
+  id: string
+}
+
 export interface HandlerInput {
   encoding: 'application/json'
   body: InputSchema
+}
+
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
 export interface HandlerError {
@@ -32,4 +43,4 @@ export interface HandlerError {
   error?: 'DraftLimitReached'
 }
 
-export type HandlerOutput = HandlerError | void
+export type HandlerOutput = HandlerError | HandlerSuccess
