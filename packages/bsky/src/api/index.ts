@@ -19,6 +19,10 @@ import removeData from './app/bsky/contact/removeData'
 import sendNotification from './app/bsky/contact/sendNotification'
 import startPhoneVerification from './app/bsky/contact/startPhoneVerification'
 import verifyPhone from './app/bsky/contact/verifyPhone'
+import createDraft from './app/bsky/draft/createDraft'
+import deleteDraft from './app/bsky/draft/deleteDraft'
+import getDrafts from './app/bsky/draft/getDrafts'
+import updateDraft from './app/bsky/draft/updateDraft'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
@@ -105,6 +109,10 @@ export default function (server: Server, ctx: AppContext) {
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
   getBookmarks(server, ctx)
+  createDraft(server, ctx)
+  deleteDraft(server, ctx)
+  getDrafts(server, ctx)
+  updateDraft(server, ctx)
   dismissMatch(server, ctx)
   getMatches(server, ctx)
   getSyncStatus(server, ctx)
