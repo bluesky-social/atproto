@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.18.15
+
+### Patch Changes
+
+- [#4543](https://github.com/bluesky-social/atproto/pull/4543) [`f58029b`](https://github.com/bluesky-social/atproto/commit/f58029ba54305bed361c834a42bd96022b5b3c59) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `liveEventPreferences` to user preferences, add `updateLiveEventPreferences` to API SDK
+
 ## 0.18.14
 
 ### Patch Changes
