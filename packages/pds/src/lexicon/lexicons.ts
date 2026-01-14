@@ -8030,11 +8030,6 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
-              recId: {
-                type: 'integer',
-                description:
-                  'Snowflake for this recommendation, use when submitting recommendation events.',
-              },
             },
           },
         },
@@ -8082,11 +8077,6 @@ export const schemaDict = {
                   type: 'string',
                   format: 'did',
                 },
-              },
-              recId: {
-                type: 'integer',
-                description:
-                  'Snowflake for this recommendation, use when submitting recommendation events.',
               },
             },
           },

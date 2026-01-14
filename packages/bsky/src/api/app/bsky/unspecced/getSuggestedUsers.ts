@@ -145,7 +145,6 @@ const presentation = (
 ) => {
   const { ctx, skeleton, hydration } = input
   return {
-    recId: skeleton.recId,
     actors: mapDefined(skeleton.dids, (did) =>
       ctx.views.profile(did, hydration),
     ),
@@ -168,5 +167,4 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   dids: string[]
-  recId?: number
 }
