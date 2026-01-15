@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.18.16
+
+### Patch Changes
+
+- [#4552](https://github.com/bluesky-social/atproto/pull/4552) [`ccd8964`](https://github.com/bluesky-social/atproto/commit/ccd89643313799f47c2f009c5c9dca48540275f1) Thanks [@mozzius](https://github.com/mozzius)! - Add `draft` lexicons
+
 ## 0.18.15
 
 ### Patch Changes
