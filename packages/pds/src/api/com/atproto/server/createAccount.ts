@@ -163,7 +163,7 @@ const validateInputsForEntrywayPds = async (
   }
 }
 
-const validateInputsForLocalPds = async (
+export const validateInputsForLocalPds = async (
   ctx: AppContext,
   input: CreateAccountInput,
   requester: string | null,
@@ -250,7 +250,7 @@ const validateInputsForLocalPds = async (
   }
 }
 
-const formatDidAndPlcOp = async (
+export const formatDidAndPlcOp = async (
   ctx: AppContext,
   handle: string,
   input: CreateAccountInput,
@@ -279,7 +279,7 @@ const formatDidAndPlcOp = async (
     plcOp: plcCreate.op,
   }
 }
-const validateAtprotoData = (
+export const validateAtprotoData = (
   data: AtprotoData,
   expected: {
     handle: string

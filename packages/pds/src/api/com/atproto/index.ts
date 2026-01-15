@@ -6,10 +6,12 @@ import moderation from './moderation'
 import repo from './repo'
 import serverMethods from './server'
 import sync from './sync'
+import sso from './sso'
 import temp from './temp'
 
 export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)
+  sso(server, ctx)
   identity(server, ctx)
   moderation(server, ctx)
   repo(server, ctx)

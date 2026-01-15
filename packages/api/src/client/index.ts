@@ -171,8 +171,10 @@ import * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 import * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 import * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
 import * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+import * as ComAtprotoAdminCreateIdentityProvider from './types/com/atproto/admin/createIdentityProvider.js'
 import * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 import * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
+import * as ComAtprotoAdminDeleteIdentityProvider from './types/com/atproto/admin/deleteIdentityProvider.js'
 import * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
 import * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes.js'
 import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites.js'
@@ -242,6 +244,9 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSsoGetCallback from './types/com/atproto/sso/getCallback.js'
+import * as ComAtprotoSsoGetRedirect from './types/com/atproto/sso/getRedirect.js'
+import * as ComAtprotoSsoListIdentityProviders from './types/com/atproto/sso/listIdentityProviders.js'
 import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
@@ -483,8 +488,10 @@ export * as ChatBskyConvoUpdateRead from './types/chat/bsky/convo/updateRead.js'
 export * as ChatBskyModerationGetActorMetadata from './types/chat/bsky/moderation/getActorMetadata.js'
 export * as ChatBskyModerationGetMessageContext from './types/chat/bsky/moderation/getMessageContext.js'
 export * as ChatBskyModerationUpdateActorAccess from './types/chat/bsky/moderation/updateActorAccess.js'
+export * as ComAtprotoAdminCreateIdentityProvider from './types/com/atproto/admin/createIdentityProvider.js'
 export * as ComAtprotoAdminDefs from './types/com/atproto/admin/defs.js'
 export * as ComAtprotoAdminDeleteAccount from './types/com/atproto/admin/deleteAccount.js'
+export * as ComAtprotoAdminDeleteIdentityProvider from './types/com/atproto/admin/deleteIdentityProvider.js'
 export * as ComAtprotoAdminDisableAccountInvites from './types/com/atproto/admin/disableAccountInvites.js'
 export * as ComAtprotoAdminDisableInviteCodes from './types/com/atproto/admin/disableInviteCodes.js'
 export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/enableAccountInvites.js'
@@ -554,6 +561,9 @@ export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+export * as ComAtprotoSsoGetCallback from './types/com/atproto/sso/getCallback.js'
+export * as ComAtprotoSsoGetRedirect from './types/com/atproto/sso/getRedirect.js'
+export * as ComAtprotoSsoListIdentityProviders from './types/com/atproto/sso/listIdentityProviders.js'
 export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
@@ -3875,6 +3885,7 @@ export class ComAtprotoNS {
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
+  sso: ComAtprotoSsoNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
 
@@ -3887,6 +3898,7 @@ export class ComAtprotoNS {
     this.moderation = new ComAtprotoModerationNS(client)
     this.repo = new ComAtprotoRepoNS(client)
     this.server = new ComAtprotoServerNS(client)
+    this.sso = new ComAtprotoSsoNS(client)
     this.sync = new ComAtprotoSyncNS(client)
     this.temp = new ComAtprotoTempNS(client)
   }
@@ -3899,12 +3911,35 @@ export class ComAtprotoAdminNS {
     this._client = client
   }
 
+  createIdentityProvider(
+    data?: ComAtprotoAdminCreateIdentityProvider.InputSchema,
+    opts?: ComAtprotoAdminCreateIdentityProvider.CallOptions,
+  ): Promise<ComAtprotoAdminCreateIdentityProvider.Response> {
+    return this._client
+      .call('com.atproto.admin.createIdentityProvider', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminCreateIdentityProvider.toKnownErr(e)
+      })
+  }
+
   deleteAccount(
     data?: ComAtprotoAdminDeleteAccount.InputSchema,
     opts?: ComAtprotoAdminDeleteAccount.CallOptions,
   ): Promise<ComAtprotoAdminDeleteAccount.Response> {
     return this._client.call(
       'com.atproto.admin.deleteAccount',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  deleteIdentityProvider(
+    data?: ComAtprotoAdminDeleteIdentityProvider.InputSchema,
+    opts?: ComAtprotoAdminDeleteIdentityProvider.CallOptions,
+  ): Promise<ComAtprotoAdminDeleteIdentityProvider.Response> {
+    return this._client.call(
+      'com.atproto.admin.deleteIdentityProvider',
       opts?.qp,
       data,
       opts,
@@ -4752,6 +4787,50 @@ export class ComAtprotoServerNS {
       .catch((e) => {
         throw ComAtprotoServerUpdateEmail.toKnownErr(e)
       })
+  }
+}
+
+export class ComAtprotoSsoNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getCallback(
+    params?: ComAtprotoSsoGetCallback.QueryParams,
+    opts?: ComAtprotoSsoGetCallback.CallOptions,
+  ): Promise<ComAtprotoSsoGetCallback.Response> {
+    return this._client.call(
+      'com.atproto.sso.getCallback',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getRedirect(
+    params?: ComAtprotoSsoGetRedirect.QueryParams,
+    opts?: ComAtprotoSsoGetRedirect.CallOptions,
+  ): Promise<ComAtprotoSsoGetRedirect.Response> {
+    return this._client.call(
+      'com.atproto.sso.getRedirect',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  listIdentityProviders(
+    params?: ComAtprotoSsoListIdentityProviders.QueryParams,
+    opts?: ComAtprotoSsoListIdentityProviders.CallOptions,
+  ): Promise<ComAtprotoSsoListIdentityProviders.Response> {
+    return this._client.call(
+      'com.atproto.sso.listIdentityProviders',
+      params,
+      undefined,
+      opts,
+    )
   }
 }
 
