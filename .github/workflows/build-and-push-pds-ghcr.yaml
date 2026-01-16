@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - divy/pds-node-20.20
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}
