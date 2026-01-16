@@ -1,16 +1,25 @@
 import {
+  InferInput,
+  InferOutput,
   Schema,
-  ValidationResult,
+  ValidationContext,
   Validator,
-  ValidatorContext,
+  WrappedValidator,
 } from '../core.js'
 
-export type RefSchemaGetter<V> = () => Validator<V>
+export type RefSchemaGetter<out TValidator extends Validator> = () => TValidator
 
-export class RefSchema<V = any> extends Schema<V> {
-  #getter: RefSchemaGetter<V>
+export class RefSchema<const TValidator extends Validator>
+  extends Schema<
+    InferInput<TValidator>,
+    InferOutput<TValidator>,
+    TValidator['__lex']
+  >
+  implements WrappedValidator<TValidator>
+{
+  #getter: RefSchemaGetter<TValidator>
 
-  constructor(getter: RefSchemaGetter<V>) {
+  constructor(getter: RefSchemaGetter<TValidator>) {
     // @NOTE In order to avoid circular dependency issues, we don't resolve
     // the schema here. Instead, we resolve it lazily when first accessed.
 
@@ -19,32 +28,15 @@ export class RefSchema<V = any> extends Schema<V> {
     this.#getter = getter
   }
 
-  get schema(): Validator<V> {
-    const value = this.#getter.call(null)
-
-    // Prevents a getter from depending on itself recursively, also allows GC to
-    // clean up the getter function.
-    this.#getter = throwAlreadyCalled
-
-    // Disable the getter and cache the resolved schema on the instance
-    Object.defineProperty(this, 'schema', {
-      value,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return value
+  get validator(): TValidator {
+    return this.#getter.call(null)
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<V> {
-    return ctx.validate(input, this.schema)
+  unwrap(): TValidator {
+    return this.validator
   }
-}
 
-function throwAlreadyCalled(): never {
-  throw new Error('RefSchema getter called multiple times')
+  validateInContext(input: unknown, ctx: ValidationContext) {
+    return ctx.validate(input, this.validator)
+  }
 }

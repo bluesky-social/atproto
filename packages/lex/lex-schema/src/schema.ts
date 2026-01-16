@@ -30,6 +30,7 @@ export * from './schema/nullable.js'
 export * from './schema/optional.js'
 export * from './schema/ref.js'
 export * from './schema/union.js'
+export * from './schema/with-default.js'
 
 // Lexicon specific Types
 export * from './schema/params.js'

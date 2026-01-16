@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EnumSchema } from './enum.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('EnumSchema', () => {
   describe('with string values', () => {
@@ -181,7 +182,10 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option', () => {
-    const schema = new EnumSchema(['red', 'green', 'blue'], { default: 'red' })
+    const schema = new WithDefaultSchema(
+      new EnumSchema(['red', 'green', 'blue']),
+      'red',
+    )
 
     it('validates matching values', () => {
       const result = schema.safeParse('green')
@@ -221,7 +225,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option as number', () => {
-    const schema = new EnumSchema([1, 2, 3], { default: 1 })
+    const schema = new WithDefaultSchema(new EnumSchema([1, 2, 3]), 1)
 
     it('uses default when input is undefined', () => {
       const result = schema.safeParse(undefined)
@@ -238,7 +242,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option as boolean', () => {
-    const schema = new EnumSchema([true, false], { default: false })
+    const schema = new WithDefaultSchema(new EnumSchema([true, false]), false)
 
     it('uses default when input is undefined', () => {
       const result = schema.safeParse(undefined)
@@ -258,7 +262,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option as null', () => {
-    const schema = new EnumSchema([null, 'value'], { default: null })
+    const schema = new WithDefaultSchema(new EnumSchema([null, 'value']), null)
 
     it('uses default when input is undefined', () => {
       const result = schema.safeParse(undefined)

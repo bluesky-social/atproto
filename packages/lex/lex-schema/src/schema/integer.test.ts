@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { IntegerSchema } from './integer.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('IntegerSchema', () => {
   describe('basic validation', () => {
-    const schema = new IntegerSchema({})
+    const schema = new IntegerSchema()
 
     it('validates integers', () => {
       const result = schema.safeParse(42)
@@ -82,22 +83,22 @@ describe('IntegerSchema', () => {
   })
 
   describe('default value', () => {
-    const schema = new IntegerSchema({ default: 10 })
+    const schema = new WithDefaultSchema(new IntegerSchema(), 10)
 
     it('uses default when undefined is provided', () => {
       const result = schema.safeParse(undefined)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.value).toBe(10)
-      }
+      expect(result).toMatchObject({
+        success: true,
+        value: 10,
+      })
     })
 
     it('does not use default when explicit value is provided', () => {
       const result = schema.safeParse(20)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.value).toBe(20)
-      }
+      expect(result).toMatchObject({
+        success: true,
+        value: 20,
+      })
     })
 
     it('does not use default when zero is provided', () => {
@@ -255,7 +256,10 @@ describe('IntegerSchema', () => {
   })
 
   describe('combined with default value', () => {
-    const schema = new IntegerSchema({ default: 50, minimum: 10, maximum: 100 })
+    const schema = new WithDefaultSchema(
+      new IntegerSchema({ minimum: 10, maximum: 100 }),
+      50,
+    )
 
     it('uses default when undefined is provided', () => {
       const result = schema.safeParse(undefined)
@@ -302,7 +306,7 @@ describe('IntegerSchema', () => {
     })
 
     it('allows unconstrained schema', () => {
-      const schema = new IntegerSchema({})
+      const schema = new IntegerSchema()
       expect(schema.safeParse(Number.MIN_SAFE_INTEGER).success).toBe(true)
       expect(schema.safeParse(Number.MAX_SAFE_INTEGER).success).toBe(true)
       expect(schema.safeParse(0).success).toBe(true)

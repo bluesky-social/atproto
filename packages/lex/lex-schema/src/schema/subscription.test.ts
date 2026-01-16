@@ -17,11 +17,11 @@ describe('Subscription', () => {
     it('creates a Subscription instance with all parameters', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
-        cursor: new OptionalSchema(new IntegerSchema({})),
+        cursor: new OptionalSchema(new IntegerSchema()),
       })
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
-        data: new StringSchema({}),
+        seq: new IntegerSchema(),
+        data: new StringSchema(),
       })
       const errors = ['ConsumerTooSlow', 'FutureCursor'] as const
 
@@ -37,10 +37,10 @@ describe('Subscription', () => {
     it('creates a Subscription instance without errors', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
-        cursor: new OptionalSchema(new IntegerSchema({})),
+        cursor: new OptionalSchema(new IntegerSchema()),
       })
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -61,7 +61,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('app.bsky.notification.subscribe')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        type: new StringSchema({}),
+        type: new StringSchema(),
       })
 
       const subscription = new Subscription(
@@ -81,7 +81,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -98,7 +98,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -119,7 +119,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -137,7 +137,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -155,7 +155,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -173,7 +173,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
       const errors = ['ConsumerTooSlow'] as const
 
@@ -194,8 +194,8 @@ describe('Subscription', () => {
         ),
       })
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
-        data: new StringSchema({}),
+        seq: new IntegerSchema(),
+        data: new StringSchema(),
       })
       const errors = ['ConsumerTooSlow', 'FutureCursor'] as const
 
@@ -212,8 +212,8 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
-        data: new StringSchema({}),
+        seq: new IntegerSchema(),
+        data: new StringSchema(),
       })
 
       const subscription = new Subscription(
@@ -230,7 +230,7 @@ describe('Subscription', () => {
     it('creates a Subscription with RefSchema message', () => {
       const nsid = asNsidString('app.bsky.feed.subscribe')
       const parameters = new ParamsSchema({})
-      const message = new RefSchema(() => new StringSchema({}))
+      const message = new RefSchema(() => new StringSchema())
 
       const subscription = new Subscription(
         nsid,
@@ -291,10 +291,10 @@ describe('Subscription', () => {
     it('InferSubscriptionParameters correctly infers parameter types', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({
-        cursor: new OptionalSchema(new IntegerSchema({})),
+        cursor: new OptionalSchema(new IntegerSchema()),
       })
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
       })
 
       const subscription = new Subscription(
@@ -318,8 +318,8 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
-        data: new StringSchema({}),
+        seq: new IntegerSchema(),
+        data: new StringSchema(),
       })
 
       const subscription = new Subscription(
@@ -363,9 +363,9 @@ describe('Subscription', () => {
     it('handles subscription with all optional parameters', () => {
       const nsid = asNsidString('app.bsky.feed.subscribe')
       const parameters = new ParamsSchema({
-        cursor: new OptionalSchema(new IntegerSchema({})),
-        includeDeletes: new OptionalSchema(new IntegerSchema({})),
-        includeEdits: new OptionalSchema(new IntegerSchema({})),
+        cursor: new OptionalSchema(new IntegerSchema()),
+        includeDeletes: new OptionalSchema(new IntegerSchema()),
+        includeEdits: new OptionalSchema(new IntegerSchema()),
       })
       const message = new ObjectSchema({})
 
@@ -383,12 +383,12 @@ describe('Subscription', () => {
       const nsid = asNsidString('com.atproto.sync.subscribeRepos')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
         blocks: new ObjectSchema({
           cid: new StringSchema({ format: 'cid' }),
           data: new ObjectSchema({
             uri: new StringSchema({ format: 'at-uri' }),
-            content: new StringSchema({}),
+            content: new StringSchema(),
           }),
         }),
       })
@@ -411,10 +411,10 @@ describe('Subscription', () => {
         cursor: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
       })
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
         labels: new ObjectSchema({
           uri: new StringSchema({ format: 'uri' }),
-          val: new StringSchema({}),
+          val: new StringSchema(),
         }),
       })
 
@@ -446,10 +446,10 @@ describe('Subscription', () => {
     it('creates a notification subscription', () => {
       const nsid = asNsidString('app.bsky.notification.subscribe')
       const parameters = new ParamsSchema({
-        cursor: new OptionalSchema(new StringSchema({})),
+        cursor: new OptionalSchema(new StringSchema()),
       })
       const message = new ObjectSchema({
-        type: new StringSchema({}),
+        type: new StringSchema(),
         uri: new StringSchema({ format: 'at-uri' }),
         cid: new StringSchema({ format: 'cid' }),
       })
@@ -476,7 +476,7 @@ describe('Subscription', () => {
         ),
       })
       const message = new ObjectSchema({
-        seq: new IntegerSchema({}),
+        seq: new IntegerSchema(),
         rebase: new OptionalSchema(
           new IntegerSchema({ minimum: 0, maximum: 1 }),
         ),
@@ -485,7 +485,7 @@ describe('Subscription', () => {
         ),
         repo: new StringSchema({ format: 'did' }),
         commit: new StringSchema({ format: 'cid' }),
-        blocks: new StringSchema({}),
+        blocks: new StringSchema(),
         ops: new ObjectSchema({}),
       })
 
@@ -594,7 +594,7 @@ describe('Subscription', () => {
       const nsid = asNsidString('app.bsky.test')
       const parameters = new ParamsSchema({})
       const message = new ObjectSchema({
-        field: new StringSchema({}),
+        field: new StringSchema(),
       })
 
       const subscription = new Subscription(

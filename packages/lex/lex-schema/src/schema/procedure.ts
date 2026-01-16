@@ -3,11 +3,13 @@ import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
 
 export class Procedure<
-  TNsid extends NsidString = NsidString,
-  TParameters extends ParamsSchema = ParamsSchema,
-  TInputPayload extends Payload = Payload,
-  TOutputPayload extends Payload = Payload,
-  TErrors extends undefined | readonly string[] = undefined | readonly string[],
+  const TNsid extends NsidString = NsidString,
+  const TParameters extends ParamsSchema = ParamsSchema,
+  const TInputPayload extends Payload = Payload,
+  const TOutputPayload extends Payload = Payload,
+  const TErrors extends undefined | readonly string[] =
+    | undefined
+    | readonly string[],
 > {
   readonly type = 'procedure' as const
 

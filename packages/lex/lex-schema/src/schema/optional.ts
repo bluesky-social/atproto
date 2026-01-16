@@ -1,22 +1,32 @@
 import {
+  InferInput,
+  InferOutput,
   Schema,
-  ValidationResult,
+  UnwrapValidator,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
+import { WithDefaultSchema } from './with-default.js'
 
-export class OptionalSchema<V> extends Schema<V | undefined> {
-  constructor(readonly schema: Validator<V>) {
+export class OptionalSchema<TValidator extends Validator> extends Schema<
+  InferInput<TValidator> | undefined,
+  UnwrapValidator<TValidator> extends WithDefaultSchema<infer TValidator>
+    ? InferOutput<TValidator>
+    : InferOutput<TValidator> | undefined
+> {
+  constructor(readonly validator: TValidator) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<V | undefined> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
+    // Optimization: No need to apply child schema defaults in validation mode
+    if (input === undefined && ctx.options.mode === 'validate') {
+      return ctx.success(input)
+    }
+
     // @NOTE The inner schema might apply a default value so we need to run it
-    // first, even if input is undefined.
-    const result = ctx.validate(input, this.schema)
+    // even if input is undefined.
+    const result = ctx.validate(input, this.validator)
 
     if (result.success) {
       return result

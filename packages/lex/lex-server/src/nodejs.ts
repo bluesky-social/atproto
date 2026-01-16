@@ -13,6 +13,7 @@ import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
+import { FetchHandler } from './lex-server.js'
 
 // @ts-expect-error
 Symbol.asyncDispose ??= Symbol.for('Symbol.asyncDispose')
@@ -252,22 +253,18 @@ export type NodeConnectionInfo = {
   remoteAddr: NetAddr | undefined
 }
 
-export interface HandlerFunction {
-  (req: Request, info: NodeConnectionInfo): Response | Promise<Response>
-}
-
 export interface HandlerObject {
-  handle: HandlerFunction
+  fetch: FetchHandler
 }
 
 async function handleRequest(
   req: IncomingMessage,
   res: ServerResponse,
-  handlerFn: HandlerFunction,
+  fetchHandler: FetchHandler,
 ) {
   const request = toRequest(req)
   const info = toConnectionInfo(req)
-  const response = await handlerFn(request, info)
+  const response = await fetchHandler(request, info)
   await sendResponse(req, res, response)
 }
 
@@ -292,13 +289,13 @@ export function toRequestListener<
   Response extends typeof ServerResponse<
     InstanceType<Request>
   > = typeof ServerResponse,
->(handlerFn: HandlerFunction) {
+>(fetchHandler: FetchHandler) {
   return ((
     req: InstanceType<Request>,
     res: InstanceType<Response> & { req: InstanceType<Request> },
     next?: (err?: unknown) => void,
   ): void => {
-    handleRequest(req, res, handlerFn).catch((err) => {
+    handleRequest(req, res, fetchHandler).catch((err) => {
       if (next) next(err)
       else {
         if (!res.headersSent) {
@@ -339,13 +336,13 @@ export function createServer<
     InstanceType<Request>
   > = typeof ServerResponse,
 >(
-  handler: HandlerFunction | HandlerObject,
+  handler: FetchHandler | HandlerObject,
   options: CreateServerOptions<Request, Response> = {},
 ): Server<Request, Response> {
-  const handlerFn =
-    typeof handler === 'function' ? handler : handler.handle.bind(handler)
+  const fetchHandler =
+    typeof handler === 'function' ? handler : handler.fetch.bind(handler)
 
-  const listener = toRequestListener(handlerFn)
+  const listener = toRequestListener(fetchHandler)
   const server = createHttpServer(options, listener)
 
   const terminator = createHttpTerminator({
@@ -391,7 +388,7 @@ export async function serve<
     InstanceType<Request>
   > = typeof ServerResponse,
 >(
-  handler: HandlerFunction | HandlerObject,
+  handler: FetchHandler | HandlerObject,
   options?: StartServerOptions<Request, Response>,
 ): Promise<Server<Request, Response>> {
   const server = createServer(handler, options)

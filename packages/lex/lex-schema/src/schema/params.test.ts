@@ -9,8 +9,8 @@ import { StringSchema } from './string.js'
 describe('ParamsSchema', () => {
   describe('basic validation', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
-      age: new IntegerSchema({}),
+      name: new StringSchema(),
+      age: new IntegerSchema(),
     })
 
     it('validates plain objects with required params', () => {
@@ -59,9 +59,9 @@ describe('ParamsSchema', () => {
 
   describe('optional parameters', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
-      age: new OptionalSchema(new IntegerSchema({})),
-      active: new OptionalSchema(new BooleanSchema({})),
+      name: new StringSchema(),
+      age: new OptionalSchema(new IntegerSchema()),
+      active: new OptionalSchema(new BooleanSchema()),
     })
 
     it('validates with all parameters present', () => {
@@ -99,7 +99,7 @@ describe('ParamsSchema', () => {
 
   describe('additional unspecified parameters', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
+      name: new StringSchema(),
     })
 
     it('accepts string values in additional params', () => {
@@ -172,7 +172,7 @@ describe('ParamsSchema', () => {
   describe('parameter types', () => {
     describe('string parameters', () => {
       const schema = new ParamsSchema({
-        text: new StringSchema({}),
+        text: new StringSchema(),
       })
 
       it('validates string values', () => {
@@ -193,7 +193,7 @@ describe('ParamsSchema', () => {
 
     describe('integer parameters', () => {
       const schema = new ParamsSchema({
-        count: new IntegerSchema({}),
+        count: new IntegerSchema(),
       })
 
       it('validates integer values', () => {
@@ -219,7 +219,7 @@ describe('ParamsSchema', () => {
 
     describe('boolean parameters', () => {
       const schema = new ParamsSchema({
-        flag: new BooleanSchema({}),
+        flag: new BooleanSchema(),
       })
 
       it('validates true', () => {
@@ -240,7 +240,7 @@ describe('ParamsSchema', () => {
 
     describe('array parameters', () => {
       const schema = new ParamsSchema({
-        tags: new ArraySchema(new StringSchema({})),
+        tags: new ArraySchema(new StringSchema()),
       })
 
       it('validates string arrays', () => {
@@ -262,9 +262,9 @@ describe('ParamsSchema', () => {
 
   describe('fromURLSearchParams', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
-      age: new OptionalSchema(new IntegerSchema({})),
-      active: new OptionalSchema(new BooleanSchema({})),
+      name: new StringSchema(),
+      age: new OptionalSchema(new IntegerSchema()),
+      active: new OptionalSchema(new BooleanSchema()),
     })
 
     it('parses string parameters', () => {
@@ -350,9 +350,9 @@ describe('ParamsSchema', () => {
 
   describe('toURLSearchParams', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
-      age: new OptionalSchema(new IntegerSchema({})),
-      active: new OptionalSchema(new BooleanSchema({})),
+      name: new StringSchema(),
+      age: new OptionalSchema(new IntegerSchema()),
+      active: new OptionalSchema(new BooleanSchema()),
     })
 
     it('converts string parameters', () => {
@@ -418,8 +418,7 @@ describe('ParamsSchema', () => {
 
     it('handles undefined input', () => {
       // @ts-expect-error
-      const result = schema.toURLSearchParams(undefined)
-      expect(result.toString()).toBe('')
+      expect(() => schema.toURLSearchParams(undefined)).toThrow()
     })
 
     it('converts negative integers', () => {
@@ -440,9 +439,9 @@ describe('ParamsSchema', () => {
 
   describe('roundtrip conversion', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
-      age: new OptionalSchema(new IntegerSchema({})),
-      active: new OptionalSchema(new BooleanSchema({})),
+      name: new StringSchema(),
+      age: new OptionalSchema(new IntegerSchema()),
+      active: new OptionalSchema(new BooleanSchema()),
     })
 
     it('roundtrips simple params correctly', () => {
@@ -500,7 +499,7 @@ describe('ParamsSchema', () => {
         new IntegerSchema({ minimum: 1, maximum: 100 }),
       ),
       offset: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
-      filters: new OptionalSchema(new ArraySchema(new StringSchema({}))),
+      filters: new OptionalSchema(new ArraySchema(new StringSchema())),
     })
 
     it('validates typical query parameters', () => {
@@ -554,7 +553,7 @@ describe('ParamsSchema', () => {
 
   describe('edge cases', () => {
     const schema = new ParamsSchema({
-      name: new StringSchema({}),
+      name: new StringSchema(),
     })
 
     it('rejects objects with custom prototypes', () => {

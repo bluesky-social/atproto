@@ -61,8 +61,8 @@ describe('Procedure', () => {
     it('creates a procedure with query parameters', () => {
       const nsid = 'com.example.listPosts'
       const parameters = new ParamsSchema({
-        limit: new StringSchema({}),
-        cursor: new StringSchema({}),
+        limit: new StringSchema(),
+        cursor: new StringSchema(),
       })
       const input = new Payload(undefined, undefined)
       const output = new Payload('application/json', undefined)
@@ -76,8 +76,8 @@ describe('Procedure', () => {
       )
 
       expect(procedure.parameters).toBe(parameters)
-      expect(procedure.parameters.validators).toHaveProperty('limit')
-      expect(procedure.parameters.validators).toHaveProperty('cursor')
+      expect(procedure.parameters.shape).toHaveProperty('limit')
+      expect(procedure.parameters.shape).toHaveProperty('cursor')
     })
 
     it('creates a procedure with empty parameters', () => {
@@ -95,7 +95,7 @@ describe('Procedure', () => {
       )
 
       expect(procedure.parameters).toBe(parameters)
-      expect(Object.keys(procedure.parameters.validators)).toHaveLength(0)
+      expect(Object.keys(procedure.parameters.shape)).toHaveLength(0)
     })
   })
 
@@ -104,7 +104,7 @@ describe('Procedure', () => {
       const nsid = 'com.example.createPost'
       const parameters = new ParamsSchema({})
       const inputSchema = new ObjectSchema({
-        text: new StringSchema({}),
+        text: new StringSchema(),
       })
       const input = new Payload('application/json', inputSchema)
       const output = new Payload('application/json', undefined)
@@ -181,8 +181,8 @@ describe('Procedure', () => {
       const parameters = new ParamsSchema({})
       const input = new Payload(undefined, undefined)
       const outputSchema = new ObjectSchema({
-        uri: new StringSchema({}),
-        cid: new StringSchema({}),
+        uri: new StringSchema(),
+        cid: new StringSchema(),
       })
       const output = new Payload('application/json', outputSchema)
 
@@ -303,9 +303,9 @@ describe('Procedure', () => {
     })
 
     it('maintains reference equality for complex properties', () => {
-      const parameters = new ParamsSchema({ test: new StringSchema({}) })
-      const inputSchema = new ObjectSchema({ field: new StringSchema({}) })
-      const outputSchema = new ObjectSchema({ result: new StringSchema({}) })
+      const parameters = new ParamsSchema({ test: new StringSchema() })
+      const inputSchema = new ObjectSchema({ field: new StringSchema() })
+      const outputSchema = new ObjectSchema({ result: new StringSchema() })
       const input = new Payload('application/json', inputSchema)
       const output = new Payload('application/json', outputSchema)
 
@@ -330,15 +330,15 @@ describe('Procedure', () => {
     it('creates a fully-featured procedure', () => {
       const nsid = 'com.example.chat.sendMessage'
       const parameters = new ParamsSchema({
-        conversationId: new StringSchema({}),
+        conversationId: new StringSchema(),
       })
       const inputSchema = new ObjectSchema({
-        text: new StringSchema({}),
-        mentions: new StringSchema({}),
+        text: new StringSchema(),
+        mentions: new StringSchema(),
       })
       const outputSchema = new ObjectSchema({
-        messageId: new StringSchema({}),
-        timestamp: new StringSchema({}),
+        messageId: new StringSchema(),
+        timestamp: new StringSchema(),
       })
       const input = new Payload('application/json', inputSchema)
       const output = new Payload('application/json', outputSchema)
@@ -351,7 +351,7 @@ describe('Procedure', () => {
       const procedure = new Procedure(nsid, parameters, input, output, errors)
 
       expect(procedure.nsid).toBe(nsid)
-      expect(procedure.parameters.validators).toHaveProperty('conversationId')
+      expect(procedure.parameters.shape).toHaveProperty('conversationId')
       expect(procedure.input.encoding).toBe('application/json')
       expect(procedure.input.schema).toBe(inputSchema)
       expect(procedure.output.encoding).toBe('application/json')
@@ -374,7 +374,7 @@ describe('Procedure', () => {
       )
 
       expect(procedure.nsid).toBe(nsid)
-      expect(Object.keys(procedure.parameters.validators)).toHaveLength(0)
+      expect(Object.keys(procedure.parameters.shape)).toHaveLength(0)
       expect(procedure.input.encoding).toBeUndefined()
       expect(procedure.output.encoding).toBeUndefined()
       expect(procedure.errors).toBeUndefined()

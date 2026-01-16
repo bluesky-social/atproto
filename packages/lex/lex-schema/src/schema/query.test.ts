@@ -7,6 +7,7 @@ import { ParamsSchema } from './params.js'
 import { Payload } from './payload.js'
 import { Query } from './query.js'
 import { StringSchema } from './string.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('Query', () => {
   describe('constructor', () => {
@@ -130,13 +131,13 @@ describe('Query', () => {
         limit: new OptionalSchema(
           new IntegerSchema({ minimum: 1, maximum: 100 }),
         ),
-        cursor: new OptionalSchema(new StringSchema({})),
+        cursor: new OptionalSchema(new StringSchema()),
         author: new OptionalSchema(new StringSchema({ format: 'did' })),
       })
       const output = new Payload(
         'application/json',
         new ObjectSchema({
-          cursor: new OptionalSchema(new StringSchema({})),
+          cursor: new OptionalSchema(new StringSchema()),
           posts: new ObjectSchema({}),
         }),
       )
@@ -254,9 +255,9 @@ describe('Query', () => {
     it('handles query with all optional parameters', () => {
       const nsid = asNsidString('app.bsky.feed.search')
       const parameters = new ParamsSchema({
-        q: new OptionalSchema(new StringSchema({})),
-        limit: new OptionalSchema(new IntegerSchema({})),
-        cursor: new OptionalSchema(new StringSchema({})),
+        q: new OptionalSchema(new StringSchema()),
+        limit: new OptionalSchema(new IntegerSchema()),
+        cursor: new OptionalSchema(new StringSchema()),
       })
       const output = new Payload('application/json', undefined)
 
@@ -271,7 +272,7 @@ describe('Query', () => {
       const output = new Payload(
         'application/json',
         new ObjectSchema({
-          cursor: new OptionalSchema(new StringSchema({})),
+          cursor: new OptionalSchema(new StringSchema()),
           feed: new ObjectSchema({
             post: new ObjectSchema({
               uri: new StringSchema({ format: 'at-uri' }),
@@ -293,14 +294,17 @@ describe('Query', () => {
       const parameters = new ParamsSchema({
         feed: new StringSchema({ format: 'at-uri' }),
         limit: new OptionalSchema(
-          new IntegerSchema({ minimum: 1, maximum: 100, default: 50 }),
+          new WithDefaultSchema(
+            new IntegerSchema({ minimum: 1, maximum: 100 }),
+            50,
+          ),
         ),
-        cursor: new OptionalSchema(new StringSchema({})),
+        cursor: new OptionalSchema(new StringSchema()),
       })
       const output = new Payload(
         'application/json',
         new ObjectSchema({
-          cursor: new OptionalSchema(new StringSchema({})),
+          cursor: new OptionalSchema(new StringSchema()),
           feed: new ObjectSchema({}),
         }),
       )
@@ -315,15 +319,18 @@ describe('Query', () => {
       const parameters = new ParamsSchema({
         q: new StringSchema({ minLength: 1, maxLength: 300 }),
         limit: new OptionalSchema(
-          new IntegerSchema({ minimum: 1, maximum: 100, default: 25 }),
+          new WithDefaultSchema(
+            new IntegerSchema({ minimum: 1, maximum: 100 }),
+            25,
+          ),
         ),
-        cursor: new OptionalSchema(new StringSchema({})),
+        cursor: new OptionalSchema(new StringSchema()),
       })
       const output = new Payload(
         'application/json',
         new ObjectSchema({
-          cursor: new OptionalSchema(new StringSchema({})),
-          hitsTotal: new OptionalSchema(new IntegerSchema({})),
+          cursor: new OptionalSchema(new StringSchema()),
+          hitsTotal: new OptionalSchema(new IntegerSchema()),
           posts: new ObjectSchema({}),
         }),
       )

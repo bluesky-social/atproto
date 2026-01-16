@@ -6,7 +6,6 @@ import {
   Infer,
   InferMethodInputBody,
   InferMethodOutputBody,
-  InferMethodParams,
   InferRecordKey,
   LexiconRecordKey,
   Main,
@@ -16,16 +15,22 @@ import {
   Query,
   RecordSchema,
   Restricted,
-  Schema,
   UnknownObject,
+  ValidationOptions,
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import { com } from './lexicons/index.js'
-import { LexRpcResponse, LexRpcResponseBody } from './response.js'
+import { XrpcResponse, XrpcResponseBody } from './response.js'
 import { BinaryBodyInit, CallOptions, Service } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
-import { LexRpcFailure, LexRpcOptions, xrpc, xrpcSafe } from './xrpc.js'
+import {
+  XrpcFailure,
+  XrpcOptions,
+  XrpcRequestParams,
+  xrpc,
+  xrpcSafe,
+} from './xrpc.js'
 
 export type {
   AtIdentifierString,
@@ -33,7 +38,6 @@ export type {
   DidString,
   InferMethodInputBody,
   InferMethodOutputBody,
-  InferMethodParams,
   InferRecordKey,
   LexMap,
   LexValue,
@@ -44,7 +48,7 @@ export type {
   Query,
   RecordSchema,
   Restricted,
-  Schema,
+  ValidationOptions,
 }
 
 export type ClientOptions = {
@@ -212,37 +216,37 @@ export class Client implements Agent {
   }
 
   /**
-   * @throws {LexRpcFailure<M>} when the request fails or the response is an error
+   * @throws {XrpcFailure<M>} when the request fails or the response is an error
    */
   async xrpc<const M extends Query | Procedure>(
-    ns: NonNullable<unknown> extends LexRpcOptions<M>
+    ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Main<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<LexRpcResponse<M>>
+  ): Promise<XrpcResponse<M>>
   async xrpc<const M extends Query | Procedure>(
     ns: Main<M>,
-    options: LexRpcOptions<M>,
-  ): Promise<LexRpcResponse<M>>
+    options: XrpcOptions<M>,
+  ): Promise<XrpcResponse<M>>
   async xrpc<const M extends Query | Procedure>(
     ns: Main<M>,
-    options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
-  ): Promise<LexRpcResponse<M>> {
+    options: XrpcOptions<M> = {} as XrpcOptions<M>,
+  ): Promise<XrpcResponse<M>> {
     return xrpc(this, ns, options)
   }
 
   async xrpcSafe<const M extends Query | Procedure>(
-    ns: NonNullable<unknown> extends LexRpcOptions<M>
+    ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Main<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<LexRpcResponse<M> | LexRpcFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Main<M>,
-    options: LexRpcOptions<M>,
-  ): Promise<LexRpcResponse<M> | LexRpcFailure<M>>
+    options: XrpcOptions<M>,
+  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Main<M>,
-    options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
-  ): Promise<LexRpcResponse<M> | LexRpcFailure<M>> {
+    options: XrpcOptions<M> = {} as XrpcOptions<M>,
+  ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
     return xrpcSafe(this, ns, options)
   }
 
@@ -349,10 +353,10 @@ export class Client implements Agent {
   }
 
   public async call<const T extends Query>(
-    ns: NonNullable<unknown> extends InferMethodParams<T>
+    ns: NonNullable<unknown> extends XrpcRequestParams<T>
       ? Main<T>
       : Restricted<'This query type requires a "params" argument'>,
-  ): Promise<LexRpcResponseBody<T>>
+  ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Action>(
     ns: void extends InferActionInput<T>
       ? Main<T>
@@ -365,16 +369,16 @@ export class Client implements Agent {
       : T extends Procedure
         ? InferMethodInputBody<T, Uint8Array>
         : T extends Query
-          ? InferMethodParams<T>
+          ? XrpcRequestParams<T>
           : never,
     options?: CallOptions,
   ): Promise<
     T extends Action
       ? InferActionOutput<T>
       : T extends Procedure
-        ? LexRpcResponseBody<T>
+        ? XrpcResponseBody<T>
         : T extends Query
-          ? LexRpcResponseBody<T>
+          ? XrpcResponseBody<T>
           : never
   >
   public async call(
@@ -416,7 +420,7 @@ export class Client implements Agent {
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
     const schema: T = getMain(ns)
-    const record = schema.build(input)
+    const record = schema.build(input) as { $type: NsidString } & LexMap
     if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
@@ -463,7 +467,7 @@ export class Client implements Agent {
       options.rkey ?? getLiteralRecordKey(schema),
     )
     const response = await this.getRecord(schema.$type, rkey, options)
-    const value = schema.parse(response.body.value) as Infer<T>
+    const value = schema.validate(response.body.value)
     return { ...response.body, value }
   }
 
@@ -484,7 +488,7 @@ export class Client implements Agent {
     options: PutOptions<T> = {} as PutOptions<T>,
   ): Promise<PutOutput> {
     const schema: T = getMain(ns)
-    const record = schema.build(input)
+    const record = schema.build(input) as { $type: NsidString } & LexMap
     if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
@@ -502,7 +506,7 @@ export class Client implements Agent {
     const invalid: LexMap[] = []
 
     for (const record of body.records) {
-      const parsed = (schema as Schema<Infer<T>>).safeParse(record.value)
+      const parsed = schema.safeValidate(record.value)
       if (parsed.success) {
         records.push({ ...record, value: parsed.value })
       } else {

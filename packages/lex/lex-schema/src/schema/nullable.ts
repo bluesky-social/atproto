@@ -1,23 +1,24 @@
 import {
+  InferInput,
+  InferOutput,
   Schema,
-  ValidationResult,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 
-export class NullableSchema<V> extends Schema<V | null> {
-  constructor(readonly schema: Validator<V>) {
+export class NullableSchema<const TValidator extends Validator> extends Schema<
+  InferInput<TValidator> | null,
+  InferOutput<TValidator> | null
+> {
+  constructor(readonly validator: TValidator) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<V | null> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (input === null) {
       return ctx.success(null)
     }
 
-    return ctx.validate(input, this.schema)
+    return ctx.validate(input, this.validator)
   }
 }

@@ -433,7 +433,10 @@ export class LexDefBuilder {
 
     if (hash === 'main' && validationUtils) {
       this.addUtils({
+        $validate: markPure(`${ref.varName}.validate.bind(${ref.varName})`),
         $assert: markPure(`${ref.varName}.assert.bind(${ref.varName})`),
+        $check: markPure(`${ref.varName}.check.bind(${ref.varName})`),
+        $cast: markPure(`${ref.varName}.cast.bind(${ref.varName})`),
         $ifMatches: markPure(`${ref.varName}.ifMatches.bind(${ref.varName})`),
         $matches: markPure(`${ref.varName}.matches.bind(${ref.varName})`),
         $parse: markPure(`${ref.varName}.parse.bind(${ref.varName})`),
@@ -645,13 +648,24 @@ export class LexDefBuilder {
     return `l.UnknownObject`
   }
 
+  private withDefault(schema: string, defaultValue: unknown) {
+    if (defaultValue === undefined) return schema
+
+    return this.pure(
+      `l.withDefault(${schema}, ${JSON.stringify(defaultValue)})`,
+    )
+  }
+
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
+    const schema = l.boolean()
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
+    }
+
     if (hasConst(def)) return this.compileConstSchema(def)
 
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.BooleanSchemaOptions)[])
-    return this.pure(`l.boolean(${options})`)
+    return this.withDefault(this.pure(`l.boolean()`), def.default)
   }
 
   private async compileBooleanType(def: LexiconBoolean): Promise<string> {
@@ -660,25 +674,29 @@ export class LexDefBuilder {
   }
 
   private async compileIntegerSchema(def: LexiconInteger): Promise<string> {
+    const schema = l.integer(def)
+
     if (hasConst(def)) {
-      const schema: l.IntegerSchema = l.integer(def)
-      schema.assert(def.const)
+      schema.check(def.const)
     }
 
     if (hasEnum(def)) {
-      const schema: l.IntegerSchema = l.integer(def)
-      for (const val of def.enum) schema.assert(val)
+      for (const val of def.enum) schema.check(val)
+    }
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
     const options = stringifyOptions(def, [
-      'default',
       'maximum',
       'minimum',
     ] satisfies (keyof l.IntegerSchemaOptions)[])
-    return this.pure(`l.integer(${options})`)
+
+    return this.withDefault(this.pure(`l.integer(${options})`), def.default)
   }
 
   private async compileIntegerType(def: LexiconInteger): Promise<string> {
@@ -689,26 +707,32 @@ export class LexDefBuilder {
   }
 
   private async compileStringSchema(def: LexiconString): Promise<string> {
+    const schema = l.string(def)
+
     if (hasConst(def)) {
-      const schema: l.StringSchema = l.string(def)
-      schema.assert(def.const)
-    } else if (hasEnum(def)) {
-      const schema: l.StringSchema = l.string(def)
-      for (const val of def.enum) schema.assert(val)
+      schema.check(def.const)
+    }
+
+    if (hasEnum(def)) {
+      for (const val of def.enum) schema.check(val)
+    }
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
     const options = stringifyOptions(def, [
-      'default',
       'format',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',
       'minLength',
     ] satisfies (keyof l.StringSchemaOptions)[])
-    return this.pure(`l.string(${options})`)
+
+    return this.withDefault(this.pure(`l.string(${options})`), def.default)
   }
 
   private async compileStringType(def: LexiconString): Promise<string> {
@@ -825,7 +849,7 @@ export class LexDefBuilder {
     const types = await Promise.all(
       def.refs.map(async (ref) => {
         const { typeName } = await this.refResolver.resolve(ref)
-        return `l.TypedRef<${typeName}>`
+        return `l.$Typed<${typeName}>`
       }),
     )
     if (!def.closed) types.push('l.Unknown$TypedObject')
@@ -839,10 +863,9 @@ export class LexDefBuilder {
       return this.pure(`l.never()`)
     }
 
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.LiteralSchemaOptions<any>)[])
-    return this.pure(`l.literal(${JSON.stringify(def.const)}, ${options})`)
+    const result = this.pure(`l.literal(${JSON.stringify(def.const)})`)
+
+    return this.withDefault(result, def.default)
   }
 
   private async compileConstType<
@@ -861,13 +884,13 @@ export class LexDefBuilder {
     if (def.enum.length === 0) {
       return this.pure(`l.never()`)
     }
-    if (def.enum.length === 1 && def.default === undefined) {
-      return this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
-    }
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.EnumSchemaOptions<any>)[])
-    return this.pure(`l.enum(${JSON.stringify(def.enum)}, ${options})`)
+
+    const result =
+      def.enum.length === 1
+        ? this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
+        : this.pure(`l.enum(${JSON.stringify(def.enum)})`)
+
+    return this.withDefault(result, def.default)
   }
 
   private async compileEnumType<T extends null | number | string>(def: {

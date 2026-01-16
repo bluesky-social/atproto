@@ -1,34 +1,28 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  Infer,
+  InferInput,
+  InferOutput,
   Schema,
   Unknown$TypedObject,
-  ValidationResult,
-  ValidatorContext,
+  ValidationContext,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import { TypedRefSchema, TypedRefSchemaOutput } from './typed-ref.js'
-
-export type TypedRef<T extends { $type?: string }> = TypedRefSchemaOutput<T>
-
-type TypedRefSchemasToUnion<T extends readonly TypedRefSchema[]> = {
-  [K in keyof T]: Infer<T[K]>
-}[number]
-
-export type TypedUnionSchemaOutput<
-  TypedRefs extends readonly TypedRefSchema[],
-  Closed extends boolean,
-> = Closed extends true
-  ? TypedRefSchemasToUnion<TypedRefs>
-  : TypedRefSchemasToUnion<TypedRefs> | Unknown$TypedObject
+import { TypedRefSchema } from './typed-ref.js'
 
 export class TypedUnionSchema<
-  TypedRefs extends readonly TypedRefSchema[] = any,
-  Closed extends boolean = any,
-> extends Schema<TypedUnionSchemaOutput<TypedRefs, Closed>> {
+  const TValidators extends readonly TypedRefSchema[] = [],
+  const TClosed extends boolean = boolean,
+> extends Schema<
+  TClosed extends true
+    ? InferInput<TValidators[number]>
+    : InferInput<TValidators[number]> | Unknown$TypedObject,
+  TClosed extends true
+    ? InferOutput<TValidators[number]>
+    : InferOutput<TValidators[number]> | Unknown$TypedObject
+> {
   constructor(
-    protected readonly refs: TypedRefs,
-    public readonly closed: Closed,
+    protected readonly validators: TValidators,
+    public readonly closed: TClosed,
   ) {
     // @NOTE In order to avoid circular dependency issues, we don't access the
     // refs's schema (or $type) here. Instead, we access them lazily when first
@@ -37,42 +31,37 @@ export class TypedUnionSchema<
     super()
   }
 
-  get refsMap(): Map<unknown, TypedRefs[number]> {
-    const map = new Map<unknown, TypedRefs[number]>()
-    for (const ref of this.refs) map.set(ref.$type, ref)
+  get validatorsMap(): Map<unknown, TValidators[number]> {
+    const map = new Map<unknown, TValidators[number]>()
+    for (const ref of this.validators) map.set(ref.$type, ref)
 
-    return lazyProperty(this, 'refsMap', map)
+    return lazyProperty(this, 'validatorsMap', map)
   }
 
   get $types() {
-    return Array.from(this.refsMap.keys())
+    return Array.from(this.validatorsMap.keys())
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<TypedUnionSchemaOutput<TypedRefs, Closed>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input) || !('$type' in input)) {
       return ctx.issueInvalidType(input, '$typed')
     }
 
     const { $type } = input
 
-    const def = this.refsMap.get($type)
-    if (def) {
-      const result = ctx.validate(input, def)
-      return result as ValidationResult<
-        TypedUnionSchemaOutput<TypedRefs, Closed>
-      >
+    const validator = this.validatorsMap.get($type)
+    if (validator) {
+      return ctx.validate(input, validator)
     }
 
     if (this.closed) {
       return ctx.issueInvalidPropertyValue(input, '$type', this.$types)
     }
+
     if (typeof $type !== 'string') {
       return ctx.issueInvalidPropertyType(input, '$type', 'string')
     }
 
-    return ctx.success(input as TypedUnionSchemaOutput<TypedRefs, Closed>)
+    return ctx.success(input)
   }
 }

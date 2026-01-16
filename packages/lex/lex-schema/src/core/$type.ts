@@ -28,6 +28,13 @@ export type $Typed<V, T extends string = string> = Simplify<
   }
 >
 
+export function $typed<V extends { $type?: unknown }, T extends string>(
+  value: V,
+  $type: T,
+): $Typed<V, T> {
+  return value.$type === $type ? (value as $Typed<V, T>) : { ...value, $type }
+}
+
 export type $TypedMaybe<V, T extends string = string> = Simplify<
   V & {
     $type?: T

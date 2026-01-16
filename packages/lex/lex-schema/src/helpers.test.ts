@@ -479,7 +479,8 @@ describe('InferMethodMessage', () => {
 
       type Message = l.InferMethodMessage<typeof subscription>
 
-      expectType<Message>(undefined as unknown)
+      // @ts-expect-error "unknown" is turned into LexValue
+      expectType<Message>(undefined)
       expectType<Message>({ any: 'value' })
       expectType<Message>(123)
     })

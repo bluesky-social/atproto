@@ -8,8 +8,8 @@ import { StringSchema } from './string.js'
 
 describe('ObjectSchema', () => {
   const schema = new ObjectSchema({
-    name: new StringSchema({}),
-    age: new OptionalSchema(new IntegerSchema({})),
+    name: new StringSchema(),
+    age: new OptionalSchema(new IntegerSchema()),
     gender: new OptionalSchema(
       new NullableSchema(new EnumSchema(['male', 'female'])),
     ),

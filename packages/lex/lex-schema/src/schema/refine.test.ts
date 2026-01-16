@@ -6,7 +6,7 @@ import { StringSchema } from './string.js'
 
 describe('refine', () => {
   describe('basic refinement checks', () => {
-    const schema = refine(new IntegerSchema({}), {
+    const schema = refine(new IntegerSchema(), {
       check: (value) => value > 0,
       message: 'Value must be positive',
     })
@@ -33,7 +33,7 @@ describe('refine', () => {
   })
 
   describe('refinement with type assertions', () => {
-    const schema = refine(new IntegerSchema({}), {
+    const schema = refine(new IntegerSchema(), {
       check: (value): value is 42 => value === 42,
       message: 'Value must be 42',
     })
@@ -50,7 +50,7 @@ describe('refine', () => {
   })
 
   describe('refinement with string schema', () => {
-    const schema = refine(new StringSchema({}), {
+    const schema = refine(new StringSchema(), {
       check: (value) => value.includes('@'),
       message: 'String must contain @ symbol',
     })
@@ -100,7 +100,7 @@ describe('refine', () => {
 
   describe('multiple refinements chained', () => {
     const schema = refine(
-      refine(new IntegerSchema({}), {
+      refine(new IntegerSchema(), {
         check: (value) => value > 0,
         message: 'Value must be positive',
       }),
@@ -135,7 +135,7 @@ describe('refine', () => {
   })
 
   describe('refinement with custom path', () => {
-    const schema = refine(new IntegerSchema({}), {
+    const schema = refine(new IntegerSchema(), {
       check: (value) => value > 0,
       message: 'Value must be positive',
       path: 'customField',
@@ -153,7 +153,7 @@ describe('refine', () => {
   })
 
   describe('refinement with array path', () => {
-    const schema = refine(new IntegerSchema({}), {
+    const schema = refine(new IntegerSchema(), {
       check: (value) => value > 0,
       message: 'Value must be positive',
       path: ['nested', 'field'],
@@ -172,11 +172,11 @@ describe('refine', () => {
 
   describe('refinement on object properties', () => {
     const schema = new ObjectSchema({
-      age: refine(new IntegerSchema({}), {
+      age: refine(new IntegerSchema(), {
         check: (value) => value >= 18,
         message: 'Age must be at least 18',
       }),
-      email: refine(new StringSchema({}), {
+      email: refine(new StringSchema(), {
         check: (value) => value.includes('@'),
         message: 'Email must contain @ symbol',
       }),
@@ -216,7 +216,7 @@ describe('refine', () => {
   })
 
   describe('complex refinement logic', () => {
-    const schema = refine(new StringSchema({}), {
+    const schema = refine(new StringSchema(), {
       check: (value) => {
         const hasLowerCase = /[a-z]/.test(value)
         const hasUpperCase = /[A-Z]/.test(value)
@@ -253,7 +253,7 @@ describe('refine', () => {
   })
 
   describe('refinement with comparison logic', () => {
-    const schema = refine(new IntegerSchema({}), {
+    const schema = refine(new IntegerSchema(), {
       check: (value) => {
         // Check if value is a prime number
         if (value <= 1) return false
@@ -373,7 +373,7 @@ describe('refine', () => {
   })
 
   describe('refinement with regex patterns', () => {
-    const schema = refine(new StringSchema({}), {
+    const schema = refine(new StringSchema(), {
       check: (value) => /^[A-Z][a-zA-Z0-9]*$/.test(value),
       message: 'Must start with uppercase letter',
     })
@@ -405,7 +405,7 @@ describe('refine', () => {
   })
 
   describe('refinement with custom error messages', () => {
-    const schema = refine(new IntegerSchema({}), {
+    const schema = refine(new IntegerSchema(), {
       check: (value) => value >= 1 && value <= 10,
       message: 'Value must be between 1 and 10 (inclusive)',
     })
@@ -428,7 +428,7 @@ describe('refine', () => {
 
   describe('edge cases', () => {
     it('handles refinement that always returns true', () => {
-      const schema = refine(new IntegerSchema({}), {
+      const schema = refine(new IntegerSchema(), {
         check: () => true,
         message: 'This should never fail',
       })
@@ -437,7 +437,7 @@ describe('refine', () => {
     })
 
     it('handles refinement that always returns false', () => {
-      const schema = refine(new IntegerSchema({}), {
+      const schema = refine(new IntegerSchema(), {
         check: () => false,
         message: 'This always fails',
       })
@@ -446,7 +446,7 @@ describe('refine', () => {
     })
 
     it('handles empty string refinement', () => {
-      const schema = refine(new StringSchema({}), {
+      const schema = refine(new StringSchema(), {
         check: (value) => value === '',
         message: 'Value must be empty string',
       })
@@ -458,7 +458,7 @@ describe('refine', () => {
     })
 
     it('handles zero value refinement', () => {
-      const schema = refine(new IntegerSchema({}), {
+      const schema = refine(new IntegerSchema(), {
         check: (value) => value === 0,
         message: 'Value must be zero',
       })
@@ -470,7 +470,7 @@ describe('refine', () => {
     })
 
     it('handles negative value refinement', () => {
-      const schema = refine(new IntegerSchema({}), {
+      const schema = refine(new IntegerSchema(), {
         check: (value) => value < 0,
         message: 'Value must be negative',
       })

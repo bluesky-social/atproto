@@ -10,10 +10,12 @@ export type InferSubscriptionMessage<S extends Subscription> = Infer<
 >
 
 export class Subscription<
-  TNsid extends NsidString = NsidString,
-  TParameters extends ParamsSchema = ParamsSchema,
-  TMessage extends Schema = Schema,
-  TErrors extends undefined | readonly string[] = undefined | readonly string[],
+  const TNsid extends NsidString = NsidString,
+  const TParameters extends ParamsSchema = ParamsSchema,
+  const TMessage extends Schema = Schema,
+  const TErrors extends undefined | readonly string[] =
+    | undefined
+    | readonly string[],
 > {
   readonly type = 'subscription' as const
 

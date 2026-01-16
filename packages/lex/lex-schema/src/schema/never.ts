@@ -1,7 +1,7 @@
-import { Schema, ValidationFailure, ValidatorContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.js'
 
 export class NeverSchema extends Schema<never> {
-  validateInContext(input: unknown, ctx: ValidatorContext): ValidationFailure {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     return ctx.issueInvalidType(input, 'never')
   }
 }

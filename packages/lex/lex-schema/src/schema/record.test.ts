@@ -10,8 +10,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -68,7 +68,7 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        text: new StringSchema({}),
+        text: new StringSchema(),
       }),
     )
     type Schema = Infer<typeof schema>
@@ -128,8 +128,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -142,15 +142,18 @@ describe('RecordSchema', () => {
     it('preserves existing properties', () => {
       const result = schema.build({
         text: 'Hello world',
+        // @ts-expect-error
         extra: 'value',
       })
       expect(result.$type).toBe('app.bsky.feed.post')
       expect(result.text).toBe('Hello world')
+      // @ts-expect-error
       expect(result.extra).toBe('value')
     })
 
     it('overwrites existing $type', () => {
       const result = schema.build({
+        // @ts-expect-error
         $type: 'wrong.type',
         text: 'Hello world',
       })
@@ -163,8 +166,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -199,8 +202,8 @@ describe('RecordSchema', () => {
       'tid',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -235,8 +238,8 @@ describe('RecordSchema', () => {
       'nsid',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -274,8 +277,8 @@ describe('RecordSchema', () => {
         'literal:self',
         'app.bsky.feed.post',
         new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+          $type: new StringSchema(),
+          text: new StringSchema(),
         }),
       )
 
@@ -305,8 +308,8 @@ describe('RecordSchema', () => {
         'literal:customKey',
         'app.bsky.feed.post',
         new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+          $type: new StringSchema(),
+          text: new StringSchema(),
         }),
       )
 
@@ -332,8 +335,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post#main',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -367,7 +370,7 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
+        $type: new StringSchema(),
         text: new StringSchema({ maxLength: 300 }),
         createdAt: new StringSchema({ format: 'datetime' }),
       }),
@@ -406,8 +409,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -471,10 +474,10 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.complex',
         new ObjectSchema({
-          $type: new StringSchema({}),
+          $type: new StringSchema(),
           nested: new ObjectSchema({
             deep: new ObjectSchema({
-              value: new StringSchema({}),
+              value: new StringSchema(),
             }),
           }),
         }),
@@ -497,8 +500,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -518,8 +521,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -535,9 +538,9 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
-        author: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
+        author: new StringSchema(),
       }),
     )
 
@@ -564,7 +567,7 @@ describe('RecordSchema', () => {
       const schema = new RecordSchema(
         'any',
         'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
+        new ObjectSchema({ $type: new StringSchema() }),
       )
       expect(schema.key).toBe('any')
       expect(schema.keySchema).toBeDefined()
@@ -574,7 +577,7 @@ describe('RecordSchema', () => {
       const schema = new RecordSchema(
         'tid',
         'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
+        new ObjectSchema({ $type: new StringSchema() }),
       )
       expect(schema.key).toBe('tid')
       expect(schema.keySchema).toBeDefined()
@@ -584,7 +587,7 @@ describe('RecordSchema', () => {
       const schema = new RecordSchema(
         'nsid',
         'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
+        new ObjectSchema({ $type: new StringSchema() }),
       )
       expect(schema.key).toBe('nsid')
       expect(schema.keySchema).toBeDefined()
@@ -594,7 +597,7 @@ describe('RecordSchema', () => {
       const schema = new RecordSchema(
         'literal:custom',
         'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
+        new ObjectSchema({ $type: new StringSchema() }),
       )
       expect(schema.key).toBe('literal:custom')
       expect(schema.keySchema).toBeDefined()
@@ -606,8 +609,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 
@@ -642,8 +645,8 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post',
         new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+          $type: new StringSchema(),
+          text: new StringSchema(),
         }),
       )
 
@@ -661,8 +664,8 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post',
         new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+          $type: new StringSchema(),
+          text: new StringSchema(),
         }),
       )
 
@@ -678,8 +681,8 @@ describe('RecordSchema', () => {
         'any',
         'app.bsky.feed.post#reply123',
         new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+          $type: new StringSchema(),
+          text: new StringSchema(),
         }),
       )
 
@@ -696,8 +699,8 @@ describe('RecordSchema', () => {
       'any',
       'app.bsky.feed.post',
       new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+        $type: new StringSchema(),
+        text: new StringSchema(),
       }),
     )
 

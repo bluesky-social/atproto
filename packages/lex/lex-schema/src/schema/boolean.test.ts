@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { BooleanSchema } from './boolean.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('BooleanSchema', () => {
   describe('basic validation', () => {
@@ -54,7 +55,7 @@ describe('BooleanSchema', () => {
 
   describe('with default value', () => {
     it('uses default value of true when input is undefined', () => {
-      const schema = new BooleanSchema({ default: true })
+      const schema = new WithDefaultSchema(new BooleanSchema(), true)
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -63,7 +64,7 @@ describe('BooleanSchema', () => {
     })
 
     it('uses default value of false when input is undefined', () => {
-      const schema = new BooleanSchema({ default: false })
+      const schema = new WithDefaultSchema(new BooleanSchema(), false)
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -72,7 +73,7 @@ describe('BooleanSchema', () => {
     })
 
     it('overrides default value with explicit true', () => {
-      const schema = new BooleanSchema({ default: false })
+      const schema = new WithDefaultSchema(new BooleanSchema(), false)
       const result = schema.safeParse(true)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -81,7 +82,7 @@ describe('BooleanSchema', () => {
     })
 
     it('overrides default value with explicit false', () => {
-      const schema = new BooleanSchema({ default: true })
+      const schema = new WithDefaultSchema(new BooleanSchema(), true)
       const result = schema.safeParse(false)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -90,7 +91,7 @@ describe('BooleanSchema', () => {
     })
 
     it('rejects invalid types even with default', () => {
-      const schema = new BooleanSchema({ default: true })
+      const schema = new WithDefaultSchema(new BooleanSchema(), true)
       const result = schema.safeParse('not a boolean')
       expect(result.success).toBe(false)
     })

@@ -5,7 +5,7 @@ import {
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.js'
 
 export type BlobSchemaOptions = BlobRefCheckOptions & {
   /**
@@ -25,21 +25,16 @@ export type BlobSchemaOptions = BlobRefCheckOptions & {
 
 export type { BlobRef, LegacyBlobRef }
 
-export type BlobSchemaOutput<Options> = Options extends { allowLegacy: true }
-  ? BlobRef | LegacyBlobRef
-  : BlobRef
-
-export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
-  BlobSchemaOutput<O>
+export class BlobSchema<
+  const TOptions extends BlobSchemaOptions = { allowLegacy: true },
+> extends Schema<
+  TOptions extends { allowLegacy: true } ? BlobRef | LegacyBlobRef : BlobRef
 > {
-  constructor(readonly options: O) {
+  constructor(readonly options: TOptions) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<BlobSchemaOutput<O>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const blob: null | BlobRef | LegacyBlobRef =
       (input as any)?.$type !== undefined
         ? isBlobRef(input, this.options)
@@ -63,7 +58,7 @@ export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
       return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
     }
 
-    return ctx.success(blob as BlobSchemaOutput<O>)
+    return ctx.success(blob)
   }
 
   matchesMime(mime: string): boolean {

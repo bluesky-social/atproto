@@ -9,9 +9,9 @@ import { StringSchema } from './string.js'
 describe('IntersectionSchema', () => {
   const schema = new IntersectionSchema(
     new ObjectSchema({
-      title: new StringSchema({}),
+      title: new StringSchema(),
     }),
-    new DictSchema(new EnumSchema(['tag1', 'tag2']), new BooleanSchema({})),
+    new DictSchema(new EnumSchema(['tag1', 'tag2']), new BooleanSchema()),
   )
 
   it('validates extra properties with the provided validator', () => {

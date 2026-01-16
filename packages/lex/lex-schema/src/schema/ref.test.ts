@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Schema } from '../core.js'
+import { Schema, Validator } from '../core.js'
 import { IntegerSchema } from './integer.js'
 import { ObjectSchema } from './object.js'
 import { OptionalSchema } from './optional.js'
@@ -9,31 +9,31 @@ import { StringSchema } from './string.js'
 describe('RefSchema', () => {
   describe('basic validation', () => {
     it('validates through a simple string reference', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse('hello')
       expect(result.success).toBe(true)
     })
 
     it('validates through an integer reference', () => {
-      const schema = new RefSchema(() => new IntegerSchema({}))
+      const schema = new RefSchema(() => new IntegerSchema())
       const result = schema.safeParse(42)
       expect(result.success).toBe(true)
     })
 
     it('rejects invalid input through reference', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
     })
 
     it('validates null rejection through reference', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse(null)
       expect(result.success).toBe(false)
     })
 
     it('validates undefined rejection through reference', () => {
-      const schema = new RefSchema(() => new IntegerSchema({}))
+      const schema = new RefSchema(() => new IntegerSchema())
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(false)
     })
@@ -44,7 +44,7 @@ describe('RefSchema', () => {
       let getterCalled = false
       const schema = new RefSchema(() => {
         getterCalled = true
-        return new StringSchema({})
+        return new StringSchema()
       })
       expect(getterCalled).toBe(false)
 
@@ -56,7 +56,7 @@ describe('RefSchema', () => {
       let callCount = 0
       const schema = new RefSchema(() => {
         callCount++
-        return new StringSchema({})
+        return new StringSchema()
       })
 
       schema.safeParse('first')
@@ -67,16 +67,16 @@ describe('RefSchema', () => {
     })
 
     it('throws error if getter is called multiple times', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
 
       // Access schema property to resolve it
-      schema.schema
+      schema.validator
 
       // Try to access the original getter again (which should throw)
       // This is internal behavior, but we're testing the protection mechanism
       expect(() => {
         // Force access to the cached schema property
-        const schemaValue = schema.schema
+        const schemaValue = schema.validator
         // This should work fine as it's now cached
         expect(schemaValue).toBeDefined()
       }).not.toThrow()
@@ -88,8 +88,8 @@ describe('RefSchema', () => {
       const schema = new RefSchema(
         () =>
           new ObjectSchema({
-            name: new StringSchema({}),
-            age: new IntegerSchema({}),
+            name: new StringSchema(),
+            age: new IntegerSchema(),
           }),
       )
       const result = schema.safeParse({
@@ -103,8 +103,8 @@ describe('RefSchema', () => {
       const schema = new RefSchema(
         () =>
           new ObjectSchema({
-            name: new StringSchema({}),
-            age: new IntegerSchema({}),
+            name: new StringSchema(),
+            age: new IntegerSchema(),
           }),
       )
       const result = schema.safeParse({
@@ -118,8 +118,8 @@ describe('RefSchema', () => {
       const schema = new RefSchema(
         () =>
           new ObjectSchema({
-            name: new StringSchema({}),
-            age: new IntegerSchema({}),
+            name: new StringSchema(),
+            age: new IntegerSchema(),
           }),
       )
       const result = schema.safeParse({
@@ -168,7 +168,7 @@ describe('RefSchema', () => {
       schema = new RefSchema(() => {
         // This would normally cause infinite recursion
         // but the getter protection should prevent it
-        return schema.schema
+        return schema.validator
       })
 
       // The first access causes stack overflow before the protection can kick in
@@ -185,13 +185,17 @@ describe('RefSchema', () => {
       type B = { value: number; ref?: A }
 
       const schemaA: Schema<A> = new ObjectSchema({
-        value: new StringSchema({}),
-        ref: new OptionalSchema(new RefSchema<B>((() => schemaB) as any)),
+        value: new StringSchema(),
+        ref: new OptionalSchema(
+          new RefSchema<Validator<B>>((() => schemaB) as any),
+        ),
       })
 
       const schemaB: Schema<B> = new ObjectSchema({
-        value: new IntegerSchema({}),
-        ref: new OptionalSchema(new RefSchema<A>((() => schemaA) as any)),
+        value: new IntegerSchema(),
+        ref: new OptionalSchema(
+          new RefSchema<Validator<A>>((() => schemaA) as any),
+        ),
       })
 
       expect(
@@ -259,43 +263,43 @@ describe('RefSchema', () => {
 
   describe('edge cases', () => {
     it('handles empty string validation', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse('')
       expect(result.success).toBe(true)
     })
 
     it('handles zero validation', () => {
-      const schema = new RefSchema(() => new IntegerSchema({}))
+      const schema = new RefSchema(() => new IntegerSchema())
       const result = schema.safeParse(0)
       expect(result.success).toBe(true)
     })
 
     it('rejects NaN through integer reference', () => {
-      const schema = new RefSchema(() => new IntegerSchema({}))
+      const schema = new RefSchema(() => new IntegerSchema())
       const result = schema.safeParse(NaN)
       expect(result.success).toBe(false)
     })
 
     it('rejects Infinity through integer reference', () => {
-      const schema = new RefSchema(() => new IntegerSchema({}))
+      const schema = new RefSchema(() => new IntegerSchema())
       const result = schema.safeParse(Infinity)
       expect(result.success).toBe(false)
     })
 
     it('rejects arrays when expecting string', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse(['array'])
       expect(result.success).toBe(false)
     })
 
     it('rejects objects when expecting string', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse({ key: 'value' })
       expect(result.success).toBe(false)
     })
 
     it('rejects booleans when expecting string', () => {
-      const schema = new RefSchema(() => new StringSchema({}))
+      const schema = new RefSchema(() => new StringSchema())
       const result = schema.safeParse(true)
       expect(result.success).toBe(false)
     })
@@ -333,17 +337,17 @@ describe('RefSchema', () => {
       const innerSchema = new StringSchema({ minLength: 5 })
       const refSchema = new RefSchema(() => innerSchema)
 
-      const resolved = refSchema.schema
+      const resolved = refSchema.validator
       expect(resolved).toBe(innerSchema)
     })
 
     it('returns same instance on multiple schema property accesses', () => {
-      const innerSchema = new StringSchema({})
+      const innerSchema = new StringSchema()
       const refSchema = new RefSchema(() => innerSchema)
 
-      const first = refSchema.schema
-      const second = refSchema.schema
-      const third = refSchema.schema
+      const first = refSchema.validator
+      const second = refSchema.validator
+      const third = refSchema.validator
 
       expect(first).toBe(second)
       expect(second).toBe(third)
@@ -353,12 +357,12 @@ describe('RefSchema', () => {
       let resolved = false
       const refSchema = new RefSchema(() => {
         resolved = true
-        return new StringSchema({})
+        return new StringSchema()
       })
 
       expect(resolved).toBe(false)
 
-      const schemaValue = refSchema.schema
+      const schemaValue = refSchema.validator
       expect(resolved).toBe(true)
       expect(schemaValue).toBeDefined()
     })

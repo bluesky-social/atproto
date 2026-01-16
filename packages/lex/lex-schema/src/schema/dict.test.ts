@@ -6,7 +6,7 @@ import { IntegerSchema } from './integer.js'
 import { StringSchema } from './string.js'
 
 describe('DictSchema', () => {
-  const schema = new DictSchema(new StringSchema({}), new IntegerSchema({}))
+  const schema = new DictSchema(new StringSchema(), new IntegerSchema())
 
   it('validates plain objects with valid keys and values', () => {
     const result = schema.safeParse({
@@ -61,7 +61,7 @@ describe('DictSchema', () => {
   it('validates with enum key schema', () => {
     const enumKeySchema = new DictSchema(
       new EnumSchema(['tag1', 'tag2', 'tag3']),
-      new BooleanSchema({}),
+      new BooleanSchema(),
     )
 
     const result = enumKeySchema.safeParse({
@@ -75,7 +75,7 @@ describe('DictSchema', () => {
   it('rejects invalid keys with enum key schema', () => {
     const enumKeySchema = new DictSchema(
       new EnumSchema(['tag1', 'tag2']),
-      new BooleanSchema({}),
+      new BooleanSchema(),
     )
 
     const result = enumKeySchema.safeParse({
@@ -87,8 +87,8 @@ describe('DictSchema', () => {
 
   it('validates nested dict schemas', () => {
     const nestedSchema = new DictSchema(
-      new StringSchema({}),
-      new DictSchema(new StringSchema({}), new IntegerSchema({})),
+      new StringSchema(),
+      new DictSchema(new StringSchema(), new IntegerSchema()),
     )
 
     const result = nestedSchema.safeParse({
@@ -101,7 +101,7 @@ describe('DictSchema', () => {
   it('validates with string key schema constraints', () => {
     const constrainedKeySchema = new DictSchema(
       new StringSchema({ minLength: 3, maxLength: 10 }),
-      new IntegerSchema({}),
+      new IntegerSchema(),
     )
 
     const result = constrainedKeySchema.safeParse({
@@ -114,7 +114,7 @@ describe('DictSchema', () => {
   it('rejects keys that do not meet key schema constraints', () => {
     const constrainedKeySchema = new DictSchema(
       new StringSchema({ minLength: 3 }),
-      new IntegerSchema({}),
+      new IntegerSchema(),
     )
 
     const result = constrainedKeySchema.safeParse({
@@ -125,7 +125,7 @@ describe('DictSchema', () => {
 
   it('validates with value schema constraints', () => {
     const constrainedValueSchema = new DictSchema(
-      new StringSchema({}),
+      new StringSchema(),
       new IntegerSchema({ minimum: 0, maximum: 100 }),
     )
 
@@ -138,7 +138,7 @@ describe('DictSchema', () => {
 
   it('rejects values that do not meet value schema constraints', () => {
     const constrainedValueSchema = new DictSchema(
-      new StringSchema({}),
+      new StringSchema(),
       new IntegerSchema({ minimum: 0, maximum: 100 }),
     )
 
@@ -150,8 +150,8 @@ describe('DictSchema', () => {
 
   it('validates dict with string values', () => {
     const stringValueSchema = new DictSchema(
-      new StringSchema({}),
-      new StringSchema({}),
+      new StringSchema(),
+      new StringSchema(),
     )
 
     const result = stringValueSchema.safeParse({
@@ -164,8 +164,8 @@ describe('DictSchema', () => {
 
   it('validates dict with boolean values', () => {
     const booleanValueSchema = new DictSchema(
-      new StringSchema({}),
-      new BooleanSchema({}),
+      new StringSchema(),
+      new BooleanSchema(),
     )
 
     const result = booleanValueSchema.safeParse({

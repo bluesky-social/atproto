@@ -1,37 +1,36 @@
 import {
   $Typed,
-  Infer,
+  $typed,
+  InferInput,
+  InferOutput,
   LexiconRecordKey,
   NsidString,
   Schema,
   TidString,
   Unknown$TypedObject,
-  ValidationResult,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 import { LiteralSchema } from './literal.js'
 import { StringSchema } from './string.js'
 
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
-
-export type RecordSchemaOutput<
-  T extends NsidString,
-  S extends Validator<{ [k: string]: unknown }>,
-> = $Typed<Infer<S>, T>
+  R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
 
 export class RecordSchema<
-  K extends LexiconRecordKey = any,
-  T extends NsidString = any,
-  S extends Validator<{ [k: string]: unknown }> = any,
-> extends Schema<RecordSchemaOutput<T, S>> {
-  keySchema: RecordKeySchema<K>
+  const TKey extends LexiconRecordKey = any,
+  const TType extends NsidString = any,
+  const TShape extends Validator<{ [k: string]: unknown }> = any,
+> extends Schema<
+  $Typed<InferInput<TShape>, TType>,
+  $Typed<InferOutput<TShape>, TType>
+> {
+  keySchema: RecordKeySchema<TKey>
 
   constructor(
-    readonly key: K,
-    readonly $type: T,
-    readonly schema: S,
+    readonly key: TKey,
+    readonly $type: TType,
+    readonly schema: TShape,
   ) {
     super()
     this.keySchema = recordKey(key)
@@ -39,43 +38,38 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is X extends { $type: T }
+  ): value is X extends { $type: TType }
     ? X
-    : $Typed<Exclude<X, Unknown$TypedObject>, T> {
+    : $Typed<Exclude<X, Unknown$TypedObject>, TType> {
     return value.$type === this.$type
   }
 
-  build<X extends Omit<Infer<S>, '$type'>>(
-    input: X,
-  ): $Typed<Omit<X, '$type'>, T> {
-    return input.$type === this.$type
-      ? (input as $Typed<X, T>)
-      : { ...input, $type: this.$type }
+  build(
+    input: Omit<InferInput<this>, '$type'>,
+  ): $Typed<InferOutput<this>, TType> {
+    return this.parse($typed(input, this.$type))
   }
 
   $isTypeOf<X extends { $type?: unknown }>(value: X) {
     return this.isTypeOf<X>(value)
   }
 
-  $build<X extends Omit<Infer<S>, '$type'>>(input: X) {
-    return this.build<X>(input)
+  $build(input: Omit<InferInput<this>, '$type'>) {
+    return this.build(input)
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<RecordSchemaOutput<T, S>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const result = ctx.validate(input, this.schema)
 
     if (!result.success) {
       return result
     }
 
-    if (this.$type !== result.value.$type) {
+    if (result.value.$type !== this.$type) {
       return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
     }
 
-    return result as ValidationResult<RecordSchemaOutput<T, S>>
+    return result
   }
 }
 

@@ -4,10 +4,11 @@ import { IntegerSchema } from './integer.js'
 import { NullableSchema } from './nullable.js'
 import { ObjectSchema } from './object.js'
 import { StringSchema } from './string.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('NullableSchema', () => {
   describe('with StringSchema', () => {
-    const schema = new NullableSchema(new StringSchema({}))
+    const schema = new NullableSchema(new StringSchema())
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -57,7 +58,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with IntegerSchema', () => {
-    const schema = new NullableSchema(new IntegerSchema({}))
+    const schema = new NullableSchema(new IntegerSchema())
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -207,7 +208,9 @@ describe('NullableSchema', () => {
   })
 
   describe('with StringSchema having default value', () => {
-    const schema = new NullableSchema(new StringSchema({ default: 'default' }))
+    const schema = new NullableSchema(
+      new WithDefaultSchema(new StringSchema(), 'default'),
+    )
 
     it('validates null explicitly', () => {
       const result = schema.safeParse(null)
@@ -237,8 +240,8 @@ describe('NullableSchema', () => {
   describe('with ObjectSchema', () => {
     const schema = new NullableSchema(
       new ObjectSchema({
-        name: new StringSchema({}),
-        age: new IntegerSchema({}),
+        name: new StringSchema(),
+        age: new IntegerSchema(),
       }),
     )
 
@@ -277,7 +280,7 @@ describe('NullableSchema', () => {
   })
 
   describe('nested nullable schemas', () => {
-    const schema = new NullableSchema(new NullableSchema(new StringSchema({})))
+    const schema = new NullableSchema(new NullableSchema(new StringSchema()))
 
     it('validates null at outer level', () => {
       const result = schema.safeParse(null)
@@ -331,7 +334,7 @@ describe('NullableSchema', () => {
   })
 
   describe('edge cases', () => {
-    const stringSchema = new NullableSchema(new StringSchema({}))
+    const stringSchema = new NullableSchema(new StringSchema())
 
     it('handles null correctly without coercion', () => {
       const result = stringSchema.safeParse(null)
@@ -366,7 +369,7 @@ describe('NullableSchema', () => {
 
   describe('type preservation', () => {
     it('preserves string type for valid strings', () => {
-      const schema = new NullableSchema(new StringSchema({}))
+      const schema = new NullableSchema(new StringSchema())
       const result = schema.safeParse('test')
       expect(result.success).toBe(true)
       if (result.success) {
@@ -376,7 +379,7 @@ describe('NullableSchema', () => {
     })
 
     it('preserves number type for valid integers', () => {
-      const schema = new NullableSchema(new IntegerSchema({}))
+      const schema = new NullableSchema(new IntegerSchema())
       const result = schema.safeParse(42)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -387,7 +390,7 @@ describe('NullableSchema', () => {
 
     it('preserves object type for valid objects', () => {
       const schema = new NullableSchema(
-        new ObjectSchema({ key: new StringSchema({}) }),
+        new ObjectSchema({ key: new StringSchema() }),
       )
       const input = { key: 'value' }
       const result = schema.safeParse(input)
@@ -399,7 +402,7 @@ describe('NullableSchema', () => {
     })
 
     it('preserves null type exactly', () => {
-      const schema = new NullableSchema(new StringSchema({}))
+      const schema = new NullableSchema(new StringSchema())
       const result = schema.safeParse(null)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -413,7 +416,10 @@ describe('NullableSchema', () => {
   describe('with complex wrapped schemas', () => {
     it('validates nullable enum with default', () => {
       const schema = new NullableSchema(
-        new EnumSchema(['option1', 'option2'], { default: 'option1' }),
+        new WithDefaultSchema(
+          new EnumSchema(['option1', 'option2']),
+          'option1',
+        ),
       )
 
       expect(schema.safeParse(null).success).toBe(true)
@@ -458,7 +464,7 @@ describe('NullableSchema', () => {
     })
 
     it('returns failure for type mismatches', () => {
-      const schema = new NullableSchema(new StringSchema({}))
+      const schema = new NullableSchema(new StringSchema())
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
     })

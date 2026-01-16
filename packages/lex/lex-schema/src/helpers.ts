@@ -1,5 +1,5 @@
-import { LexErrorData } from '@atproto/lex-data'
-import { Infer, Restricted, Schema } from './core.js'
+import { LexErrorData, LexValue } from '@atproto/lex-data'
+import { InferOutput, Restricted, Schema } from './core.js'
 import {
   InferPayload,
   InferPayloadBody,
@@ -29,10 +29,8 @@ export function getMain<T extends object>(ns: Main<T>): T {
  */
 type BinaryData = Restricted<'Binary data'>
 
-export type InferMethodParams<
-  //
-  M extends Procedure | Query | Subscription,
-> = Infer<M['parameters']>
+export type InferMethodParams<M extends Procedure | Query | Subscription> =
+  InferOutput<M['parameters']>
 
 export type InferMethodInput<
   M extends Procedure | Query | Subscription,
@@ -67,7 +65,9 @@ export type InferMethodOutputEncoding<
 export type InferMethodMessage<
   //
   M extends Procedure | Query | Subscription,
-> = M extends { message: Schema } ? Infer<M['message']> : undefined
+> = M extends { message: Schema }
+  ? LexValue & InferOutput<M['message']>
+  : undefined
 
 export const lexErrorData: Schema<LexErrorData> = new ObjectSchema({
   error: new StringSchema({ minLength: 1 }),

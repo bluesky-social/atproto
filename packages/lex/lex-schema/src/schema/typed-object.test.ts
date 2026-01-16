@@ -12,8 +12,8 @@ describe('TypedObjectSchema', () => {
   const schema = new TypedObjectSchema(
     'app.bsky.feed.post#main',
     new ObjectSchema({
-      text: new StringSchema({}),
-      likes: new OptionalSchema(new IntegerSchema({})),
+      text: new StringSchema(),
+      likes: new OptionalSchema(new IntegerSchema()),
     }),
   )
   type Schema = Infer<typeof schema>
@@ -338,7 +338,7 @@ describe('TypedObjectSchema', () => {
     const complexSchema = new TypedObjectSchema(
       'app.bsky.actor.profile#main',
       new ObjectSchema({
-        displayName: new StringSchema({}),
+        displayName: new StringSchema(),
         bio: new OptionalSchema(new StringSchema({ maxLength: 256 })),
         followerCount: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
         verified: new OptionalSchema(
@@ -402,7 +402,7 @@ describe('TypedObjectSchema', () => {
     it('validates with main type', () => {
       const mainSchema = new TypedObjectSchema(
         'app.bsky.feed.post#main',
-        new ObjectSchema({ text: new StringSchema({}) }),
+        new ObjectSchema({ text: new StringSchema() }),
       )
       const result = mainSchema.safeParse({ text: 'Hello' })
       expect(result.success).toBe(true)
@@ -411,7 +411,7 @@ describe('TypedObjectSchema', () => {
     it('validates with custom fragment', () => {
       const fragmentSchema = new TypedObjectSchema(
         'app.bsky.feed.post#reply',
-        new ObjectSchema({ text: new StringSchema({}) }),
+        new ObjectSchema({ text: new StringSchema() }),
       )
       const result = fragmentSchema.safeParse({
         $type: 'app.bsky.feed.post#reply',
@@ -423,7 +423,7 @@ describe('TypedObjectSchema', () => {
     it('distinguishes between different fragments', () => {
       const replySchema = new TypedObjectSchema(
         'app.bsky.feed.post#reply',
-        new ObjectSchema({ text: new StringSchema({}) }),
+        new ObjectSchema({ text: new StringSchema() }),
       )
       const result = replySchema.safeParse({
         $type: 'app.bsky.feed.post#quote',
@@ -435,7 +435,7 @@ describe('TypedObjectSchema', () => {
     it('validates with long NSID', () => {
       const longSchema = new TypedObjectSchema(
         'com.example.app.feature.action.detail#variant',
-        new ObjectSchema({ value: new StringSchema({}) }),
+        new ObjectSchema({ value: new StringSchema() }),
       )
       const result = longSchema.safeParse({
         $type: 'com.example.app.feature.action.detail#variant',
@@ -523,11 +523,11 @@ describe('TypedObjectSchema', () => {
     const fullSchema = new TypedObjectSchema(
       'app.bsky.test#full',
       new ObjectSchema({
-        required: new StringSchema({}),
-        optional: new OptionalSchema(new StringSchema({})),
-        nullable: new NullableSchema(new StringSchema({})),
+        required: new StringSchema(),
+        optional: new OptionalSchema(new StringSchema()),
+        nullable: new NullableSchema(new StringSchema()),
         optionalNullable: new OptionalSchema(
-          new NullableSchema(new StringSchema({})),
+          new NullableSchema(new StringSchema()),
         ),
       }),
     )
@@ -603,8 +603,8 @@ describe('TypedObjectSchema', () => {
 
   describe('comparison with plain ObjectSchema', () => {
     const plainSchema = new ObjectSchema({
-      text: new StringSchema({}),
-      likes: new OptionalSchema(new IntegerSchema({})),
+      text: new StringSchema(),
+      likes: new OptionalSchema(new IntegerSchema()),
     })
 
     it('typed schema accepts same input as plain schema', () => {

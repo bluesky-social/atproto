@@ -11,8 +11,8 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
-          age: new IntegerSchema({}),
+          name: new StringSchema(),
+          age: new IntegerSchema(),
         }),
       )
 
@@ -34,8 +34,8 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
-          age: new IntegerSchema({}),
+          name: new StringSchema(),
+          age: new IntegerSchema(),
         }),
       )
 
@@ -57,7 +57,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
+          name: new StringSchema(),
         }),
       )
 
@@ -75,8 +75,8 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
-          age: new IntegerSchema({}),
+          name: new StringSchema(),
+          age: new IntegerSchema(),
         }),
       )
 
@@ -95,7 +95,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.value',
         new ObjectSchema({
-          value: new StringSchema({}),
+          value: new StringSchema(),
         }),
       )
 
@@ -109,7 +109,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
+          name: new StringSchema(),
         }),
       )
 
@@ -123,7 +123,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
+          name: new StringSchema(),
         }),
       )
 
@@ -139,7 +139,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.post',
         new ObjectSchema({
-          text: new StringSchema({}),
+          text: new StringSchema(),
         }),
       )
 
@@ -152,7 +152,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.like',
         new ObjectSchema({
-          subject: new StringSchema({}),
+          subject: new StringSchema(),
         }),
       )
 
@@ -173,7 +173,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.follow',
         new ObjectSchema({
-          subject: new StringSchema({}),
+          subject: new StringSchema(),
         }),
       )
 
@@ -198,7 +198,7 @@ describe('TypedRefSchema', () => {
         return new TypedObjectSchema(
           'com.example.test',
           new ObjectSchema({
-            value: new StringSchema({}),
+            value: new StringSchema(),
           }),
         )
       })
@@ -217,7 +217,7 @@ describe('TypedRefSchema', () => {
         return new TypedObjectSchema(
           'com.example.test',
           new ObjectSchema({
-            value: new StringSchema({}),
+            value: new StringSchema(),
           }),
         )
       })
@@ -238,7 +238,7 @@ describe('TypedRefSchema', () => {
         return new TypedObjectSchema(
           'com.example.test',
           new ObjectSchema({
-            value: new StringSchema({}),
+            value: new StringSchema(),
           }),
         )
       })
@@ -258,7 +258,7 @@ describe('TypedRefSchema', () => {
         return new TypedObjectSchema(
           'com.example.test',
           new ObjectSchema({
-            value: new StringSchema({}),
+            value: new StringSchema(),
           }),
         )
       })
@@ -278,7 +278,7 @@ describe('TypedRefSchema', () => {
       // @ts-expect-error
       const schema = new TypedRefSchema(() => {
         // This would cause infinite recursion if not protected
-        return schema.schema
+        return schema.validator
       })
 
       expect(() => {
@@ -434,7 +434,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.post',
         new ObjectSchema({
-          text: new StringSchema({}),
+          text: new StringSchema(),
         }),
       )
 
@@ -472,7 +472,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.test',
         new ObjectSchema({
-          value: new StringSchema({}),
+          value: new StringSchema(),
         }),
       )
 
@@ -486,7 +486,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.test',
         new ObjectSchema({
-          value: new StringSchema({}),
+          value: new StringSchema(),
         }),
       )
 
@@ -506,7 +506,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
+          name: new StringSchema(),
         }),
       )
 
@@ -526,7 +526,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.counter',
         new ObjectSchema({
-          count: new IntegerSchema({}),
+          count: new IntegerSchema(),
         }),
       )
 
@@ -543,7 +543,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.text',
         new ObjectSchema({
-          content: new StringSchema({}),
+          content: new StringSchema(),
         }),
       )
 
@@ -560,7 +560,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.number',
         new ObjectSchema({
-          value: new IntegerSchema({}),
+          value: new IntegerSchema(),
         }),
       )
 
@@ -577,7 +577,7 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.number',
         new ObjectSchema({
-          value: new IntegerSchema({}),
+          value: new IntegerSchema(),
         }),
       )
 
@@ -601,7 +601,7 @@ describe('TypedRefSchema', () => {
       )
 
       const innerRef = new TypedRefSchema(() => typedObject)
-      const outerRef = new TypedRefSchema(() => innerRef.schema)
+      const outerRef = new TypedRefSchema(() => innerRef.validator)
 
       const result = outerRef.safeParse({
         $type: 'com.example.user',
@@ -617,14 +617,14 @@ describe('TypedRefSchema', () => {
       const innerTyped = new TypedObjectSchema(
         'com.example.profile',
         new ObjectSchema({
-          bio: new StringSchema({}),
+          bio: new StringSchema(),
         }),
       )
 
       const outerTyped = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
+          name: new StringSchema(),
           profile: new TypedRefSchema(() => innerTyped),
         }),
       )
@@ -651,14 +651,14 @@ describe('TypedRefSchema', () => {
       const innerTyped = new TypedObjectSchema(
         'com.example.profile',
         new ObjectSchema({
-          bio: new StringSchema({}),
+          bio: new StringSchema(),
         }),
       )
 
       const outerTyped = new TypedObjectSchema(
         'com.example.user',
         new ObjectSchema({
-          name: new StringSchema({}),
+          name: new StringSchema(),
           profile: new TypedRefSchema(() => innerTyped),
         }),
       )
@@ -683,13 +683,13 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.test',
         new ObjectSchema({
-          value: new StringSchema({}),
+          value: new StringSchema(),
         }),
       )
 
       const refSchema = new TypedRefSchema(() => typedObject)
 
-      const resolved = refSchema.schema
+      const resolved = refSchema.validator
       expect(resolved).toBe(typedObject)
       expect(resolved.$type).toBe('com.example.test')
     })
@@ -698,15 +698,15 @@ describe('TypedRefSchema', () => {
       const typedObject = new TypedObjectSchema(
         'com.example.test',
         new ObjectSchema({
-          value: new StringSchema({}),
+          value: new StringSchema(),
         }),
       )
 
       const refSchema = new TypedRefSchema(() => typedObject)
 
-      const first = refSchema.schema
-      const second = refSchema.schema
-      const third = refSchema.schema
+      const first = refSchema.validator
+      const second = refSchema.validator
+      const third = refSchema.validator
 
       expect(first).toBe(second)
       expect(second).toBe(third)
@@ -721,14 +721,14 @@ describe('TypedRefSchema', () => {
         return new TypedObjectSchema(
           'com.example.test',
           new ObjectSchema({
-            value: new StringSchema({}),
+            value: new StringSchema(),
           }),
         )
       })
 
       expect(resolved).toBe(false)
 
-      const schemaValue = refSchema.schema
+      const schemaValue = refSchema.validator
       expect(resolved).toBe(true)
       expect(schemaValue).toBeDefined()
       expect(schemaValue.$type).toBe('com.example.test')
@@ -769,7 +769,7 @@ describe('TypedRefSchema', () => {
         new ObjectSchema({
           id: new StringSchema({ format: 'nsid' }),
           count: new IntegerSchema({ minimum: 0 }),
-          flag: new StringSchema({}),
+          flag: new StringSchema(),
         }),
       )
 

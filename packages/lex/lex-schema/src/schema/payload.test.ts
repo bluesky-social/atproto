@@ -15,7 +15,7 @@ describe('Payload', () => {
 
     it('creates payload with encoding and schema', () => {
       const schema = new ObjectSchema({
-        name: new StringSchema({}),
+        name: new StringSchema(),
       })
       const payload = new Payload('application/json', schema)
       expect(payload.encoding).toBe('application/json')
@@ -90,8 +90,8 @@ describe('Payload', () => {
   describe('with schemas', () => {
     it('creates payload with object schema', () => {
       const schema = new ObjectSchema({
-        id: new IntegerSchema({}),
-        name: new StringSchema({}),
+        id: new IntegerSchema(),
+        name: new StringSchema(),
       })
       const payload = new Payload('application/json', schema)
       expect(payload.encoding).toBe('application/json')
@@ -99,14 +99,14 @@ describe('Payload', () => {
     })
 
     it('creates payload with string schema', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       const payload = new Payload('application/json', schema)
       expect(payload.encoding).toBe('application/json')
       expect(payload.schema).toBe(schema)
     })
 
     it('creates payload with integer schema', () => {
-      const schema = new IntegerSchema({})
+      const schema = new IntegerSchema()
       const payload = new Payload('application/json', schema)
       expect(payload.encoding).toBe('application/json')
       expect(payload.schema).toBe(schema)
@@ -122,8 +122,8 @@ describe('Payload', () => {
     it('creates payload with complex nested schema', () => {
       const schema = new ObjectSchema({
         user: new ObjectSchema({
-          id: new IntegerSchema({}),
-          name: new StringSchema({}),
+          id: new IntegerSchema(),
+          name: new StringSchema(),
           email: new StringSchema({ format: 'uri' }),
         }),
         metadata: new ObjectSchema({
@@ -139,7 +139,7 @@ describe('Payload', () => {
 
   describe('validation constraints', () => {
     it('throws error when schema is defined but encoding is undefined', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       expect(() => {
         // @ts-expect-error
         new Payload(undefined, schema)
@@ -152,7 +152,7 @@ describe('Payload', () => {
 
     it('throws error when object schema is defined but encoding is undefined', () => {
       const schema = new ObjectSchema({
-        name: new StringSchema({}),
+        name: new StringSchema(),
       })
       expect(() => {
         // @ts-expect-error
@@ -165,7 +165,7 @@ describe('Payload', () => {
     })
 
     it('throws error when integer schema is defined but encoding is undefined', () => {
-      const schema = new IntegerSchema({})
+      const schema = new IntegerSchema()
       expect(() => {
         // @ts-expect-error
         new Payload(undefined, schema)
@@ -185,7 +185,7 @@ describe('Payload', () => {
     })
 
     it('allows defined encoding with defined schema', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       expect(() => {
         new Payload('application/json', schema)
       }).not.toThrow()
@@ -199,7 +199,7 @@ describe('Payload', () => {
     })
 
     it('has accessible schema property', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       const payload = new Payload('application/json', schema)
       expect(payload.schema).toBe(schema)
     })
@@ -211,7 +211,7 @@ describe('Payload', () => {
     })
 
     it('schema property is immutable in TypeScript', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       const payload = new Payload('application/json', schema)
       // TypeScript enforces readonly at compile time
       expect(payload.schema).toBe(schema)
@@ -223,7 +223,7 @@ describe('Payload', () => {
       const payload = new Payload(
         'application/json',
         new ObjectSchema({
-          success: new StringSchema({}),
+          success: new StringSchema(),
           data: new UnknownSchema(),
         }),
       )
@@ -292,7 +292,7 @@ describe('Payload', () => {
 
     it('creates multiple payloads with same schema reference', () => {
       const sharedSchema = new ObjectSchema({
-        id: new IntegerSchema({}),
+        id: new IntegerSchema(),
       })
       const payload1 = new Payload('application/json', sharedSchema)
       const payload2 = new Payload('application/json', sharedSchema)
@@ -302,8 +302,8 @@ describe('Payload', () => {
     })
 
     it('creates multiple payloads with different schemas', () => {
-      const schema1 = new StringSchema({})
-      const schema2 = new IntegerSchema({})
+      const schema1 = new StringSchema()
+      const schema2 = new IntegerSchema()
       const payload1 = new Payload('application/json', schema1)
       const payload2 = new Payload('application/json', schema2)
 
@@ -316,7 +316,7 @@ describe('Payload', () => {
   describe('type inference scenarios', () => {
     it('works with application/json and object schema', () => {
       const schema = new ObjectSchema({
-        message: new StringSchema({}),
+        message: new StringSchema(),
       })
       const payload = new Payload('application/json', schema)
       expect(payload.encoding).toBe('application/json')

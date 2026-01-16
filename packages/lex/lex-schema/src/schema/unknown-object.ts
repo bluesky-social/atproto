@@ -1,13 +1,10 @@
 import { LexMap, isLexMap } from '@atproto/lex-data'
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.js'
 
 export type UnknownObject = LexMap
 
 export class UnknownObjectSchema extends Schema<UnknownObject> {
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<UnknownObject> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (isLexMap(input)) {
       return ctx.success(input)
     }

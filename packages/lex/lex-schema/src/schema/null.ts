@@ -1,14 +1,7 @@
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.js'
 
 export class NullSchema extends Schema<null> {
-  constructor() {
-    super()
-  }
-
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<null> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (input !== null) {
       return ctx.issueInvalidType(input, 'null')
     }

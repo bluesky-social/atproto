@@ -59,7 +59,7 @@ describe('simple schemas', () => {
   })
 
   describe('l.boolean', () => {
-    const schema = l.boolean({})
+    const schema = l.boolean()
 
     it('validates true', () => {
       expect(schema.matches(true)).toBe(true)
@@ -74,11 +74,11 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.boolean({})).toBe(schema)
+      expect(l.boolean()).toBe(schema)
       expect(l.boolean()).toBe(schema)
 
-      expect(l.boolean({ default: true })).toBe(l.boolean({ default: true }))
-      expect(l.boolean({ default: false })).toBe(l.boolean({ default: false }))
+      expect(l.optional(l.boolean())).toBe(l.optional(l.boolean()))
+      expect(l.nullable(l.boolean())).toBe(l.nullable(l.boolean()))
     })
   })
 

@@ -10,24 +10,24 @@ describe('TypedUnionSchema', () => {
   const personSchema = new TypedObjectSchema(
     'app.bsky.actor.person',
     new ObjectSchema({
-      name: new StringSchema({}),
-      age: new IntegerSchema({}),
+      name: new StringSchema(),
+      age: new IntegerSchema(),
     }),
   )
 
   const postSchema = new TypedObjectSchema(
     'app.bsky.feed.post',
     new ObjectSchema({
-      text: new StringSchema({}),
-      createdAt: new StringSchema({}),
+      text: new StringSchema(),
+      createdAt: new StringSchema(),
     }),
   )
 
   const commentSchema = new TypedObjectSchema(
     'app.bsky.feed.comment',
     new ObjectSchema({
-      text: new StringSchema({}),
-      parentUri: new StringSchema({}),
+      text: new StringSchema(),
+      parentUri: new StringSchema(),
     }),
   )
 
@@ -305,7 +305,7 @@ describe('TypedUnionSchema', () => {
     )
 
     it('returns map of $type to ref schema', () => {
-      const refsMap = schema.refsMap
+      const refsMap = schema.validatorsMap
       expect(refsMap.size).toBe(2)
       expect(refsMap.has('app.bsky.actor.person')).toBe(true)
       expect(refsMap.has('app.bsky.feed.post')).toBe(true)

@@ -274,7 +274,7 @@ const lexiconPermissionSchema = l.intersection(
     type: l.literal('permission'),
     resource: l.string({ minLength: 1 }),
   }),
-  l.paramsSchema,
+  l.dict(l.string(), l.paramSchema),
 )
 
 export type LexiconPermission = l.Infer<typeof lexiconPermissionSchema>

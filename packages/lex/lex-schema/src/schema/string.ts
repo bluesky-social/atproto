@@ -3,14 +3,12 @@ import {
   InferStringFormat,
   Schema,
   StringFormat,
-  ValidationResult,
-  ValidatorContext,
+  ValidationContext,
   assertStringFormat,
 } from '../core.js'
 import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {
-  default?: string
   format?: StringFormat
   minLength?: number
   maxLength?: number
@@ -18,26 +16,18 @@ export type StringSchemaOptions = {
   maxGraphemes?: number
 }
 
-export type StringSchemaOutput<Options> =
-  //
-  Options extends { format: infer F extends StringFormat }
+export class StringSchema<
+  const TOptions extends StringSchemaOptions = StringSchemaOptions,
+> extends Schema<
+  TOptions extends { format: infer F extends StringFormat }
     ? InferStringFormat<F>
     : string
-
-export class StringSchema<
-  const Options extends StringSchemaOptions = any,
-> extends Schema<StringSchemaOutput<Options>> {
-  constructor(readonly options: Options) {
+> {
+  constructor(readonly options?: TOptions) {
     super()
   }
 
-  validateInContext(
-    // @NOTE validation will be applied on the default value as well
-    input: unknown = this.options.default,
-    ctx: ValidatorContext,
-  ): ValidationResult<StringSchemaOutput<Options>> {
-    const { options } = this
-
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const str = coerceToString(input)
     if (str == null) {
       return ctx.issueInvalidType(input, 'string')
@@ -45,14 +35,14 @@ export class StringSchema<
 
     let lazyUtf8Len: number
 
-    const { minLength } = options
+    const minLength = this.options?.minLength
     if (minLength != null) {
       if ((lazyUtf8Len ??= utf8Len(str)) < minLength) {
         return ctx.issueTooSmall(str, 'string', minLength, lazyUtf8Len)
       }
     }
 
-    const { maxLength } = options
+    const maxLength = this.options?.maxLength
     if (maxLength != null) {
       // Optimization: we can avoid computing the UTF-8 length if the maximum
       // possible length, in bytes, of the input JS string is smaller than the
@@ -66,7 +56,7 @@ export class StringSchema<
 
     let lazyGraphLen: number
 
-    const { minGraphemes } = options
+    const minGraphemes = this.options?.minGraphemes
     if (minGraphemes != null) {
       // Optimization: avoid counting graphemes if the length check already fails
       if (str.length < minGraphemes) {
@@ -76,25 +66,26 @@ export class StringSchema<
       }
     }
 
-    const { maxGraphemes } = options
+    const maxGraphemes = this.options?.maxGraphemes
     if (maxGraphemes != null) {
       if ((lazyGraphLen ??= graphemeLen(str)) > maxGraphemes) {
         return ctx.issueTooBig(str, 'grapheme', maxGraphemes, lazyGraphLen)
       }
     }
 
-    if (options.format !== undefined) {
+    const format = this.options?.format
+    if (format != null) {
       try {
         // @TODO optimize to avoid throw cost (requires re-writing utilities
         // from @atproto/syntax)
-        assertStringFormat(str, options.format)
+        assertStringFormat(str, format)
       } catch (err) {
         const message = err instanceof Error ? err.message : undefined
-        return ctx.issueInvalidFormat(str, options.format, message)
+        return ctx.issueInvalidFormat(str, format, message)
       }
     }
 
-    return ctx.success(str as StringSchemaOutput<Options>)
+    return ctx.success(str)
   }
 }
 

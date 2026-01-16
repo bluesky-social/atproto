@@ -3,10 +3,11 @@ import { BooleanSchema } from './boolean.js'
 import { IntegerSchema } from './integer.js'
 import { OptionalSchema } from './optional.js'
 import { StringSchema } from './string.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('OptionalSchema', () => {
   describe('basic validation with string schema', () => {
-    const schema = new OptionalSchema(new StringSchema({}))
+    const schema = new OptionalSchema(new StringSchema())
 
     it('validates defined string values', () => {
       const result = schema.safeParse('hello')
@@ -59,7 +60,7 @@ describe('OptionalSchema', () => {
   })
 
   describe('basic validation with integer schema', () => {
-    const schema = new OptionalSchema(new IntegerSchema({}))
+    const schema = new OptionalSchema(new IntegerSchema())
 
     it('validates defined integer values', () => {
       const result = schema.safeParse(42)
@@ -110,7 +111,7 @@ describe('OptionalSchema', () => {
   })
 
   describe('basic validation with boolean schema', () => {
-    const schema = new OptionalSchema(new BooleanSchema({}))
+    const schema = new OptionalSchema(new BooleanSchema())
 
     it('validates true', () => {
       const result = schema.safeParse(true)
@@ -194,7 +195,9 @@ describe('OptionalSchema', () => {
   })
 
   describe('inner schema with default value', () => {
-    const schema = new OptionalSchema(new StringSchema({ default: 'default' }))
+    const schema = new OptionalSchema(
+      new WithDefaultSchema(new StringSchema(), 'default'),
+    )
 
     it('applies default value when undefined is provided', () => {
       const result = schema.safeParse(undefined)
@@ -223,7 +226,7 @@ describe('OptionalSchema', () => {
 
   describe('inner schema with default value and constraints', () => {
     const schema = new OptionalSchema(
-      new StringSchema({ default: 'default', minLength: 5 }),
+      new WithDefaultSchema(new StringSchema({ minLength: 5 }), 'default'),
     )
 
     it('applies default value when undefined is provided', () => {
@@ -265,7 +268,9 @@ describe('OptionalSchema', () => {
   })
 
   describe('inner schema with integer default', () => {
-    const schema = new OptionalSchema(new IntegerSchema({ default: 42 }))
+    const schema = new OptionalSchema(
+      new WithDefaultSchema(new IntegerSchema(), 42),
+    )
 
     it('applies default value when undefined is provided', () => {
       const result = schema.safeParse(undefined)
@@ -293,7 +298,9 @@ describe('OptionalSchema', () => {
   })
 
   describe('inner schema with boolean default', () => {
-    const schema = new OptionalSchema(new BooleanSchema({ default: true }))
+    const schema = new OptionalSchema(
+      new WithDefaultSchema(new BooleanSchema(), true),
+    )
 
     it('applies default value when undefined is provided', () => {
       const result = schema.safeParse(undefined)
@@ -321,7 +328,7 @@ describe('OptionalSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new OptionalSchema(new StringSchema({}))
+    const schema = new OptionalSchema(new StringSchema())
 
     it('handles very long strings', () => {
       const longString = 'a'.repeat(10000)
@@ -356,7 +363,7 @@ describe('OptionalSchema', () => {
 
   describe('type distinctions', () => {
     it('distinguishes between zero and undefined for integers', () => {
-      const schema = new OptionalSchema(new IntegerSchema({}))
+      const schema = new OptionalSchema(new IntegerSchema())
 
       const zeroResult = schema.safeParse(0)
       expect(zeroResult.success).toBe(true)
@@ -372,7 +379,7 @@ describe('OptionalSchema', () => {
     })
 
     it('distinguishes between false and undefined for booleans', () => {
-      const schema = new OptionalSchema(new BooleanSchema({}))
+      const schema = new OptionalSchema(new BooleanSchema())
 
       const falseResult = schema.safeParse(false)
       expect(falseResult.success).toBe(true)
@@ -388,7 +395,7 @@ describe('OptionalSchema', () => {
     })
 
     it('distinguishes between empty string and undefined for strings', () => {
-      const schema = new OptionalSchema(new StringSchema({}))
+      const schema = new OptionalSchema(new StringSchema())
 
       const emptyResult = schema.safeParse('')
       expect(emptyResult.success).toBe(true)
@@ -405,7 +412,7 @@ describe('OptionalSchema', () => {
   })
 
   describe('nested optional schemas', () => {
-    const schema = new OptionalSchema(new OptionalSchema(new StringSchema({})))
+    const schema = new OptionalSchema(new OptionalSchema(new StringSchema()))
 
     it('validates defined values through nested optionals', () => {
       const result = schema.safeParse('hello')

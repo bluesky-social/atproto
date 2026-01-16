@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { StringSchema } from './string.js'
 import { TokenSchema } from './token.js'
+import { WithDefaultSchema } from './with-default.js'
 
 describe('StringSchema', () => {
   describe('basic validation', () => {
-    const schema = new StringSchema({})
+    const schema = new StringSchema()
 
     it('validates plain strings', () => {
       const result = schema.safeParse('hello world')
@@ -49,7 +50,7 @@ describe('StringSchema', () => {
 
   describe('default values', () => {
     it('uses default value when no input provided', () => {
-      const schema = new StringSchema({ default: 'default value' })
+      const schema = new WithDefaultSchema(new StringSchema(), 'default value')
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -495,7 +496,7 @@ describe('StringSchema', () => {
   })
 
   describe('type coercion', () => {
-    const schema = new StringSchema({})
+    const schema = new StringSchema()
 
     it('coerces Date objects to ISO strings', () => {
       const date = new Date('2023-12-25T12:00:00Z')
@@ -572,13 +573,13 @@ describe('StringSchema', () => {
 
   describe('edge cases', () => {
     it('handles strings with special characters', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       const result = schema.safeParse('hello\nworld\ttab')
       expect(result.success).toBe(true)
     })
 
     it('handles strings with unicode characters', () => {
-      const schema = new StringSchema({})
+      const schema = new StringSchema()
       const result = schema.safeParse('Hello 世界 🌍')
       expect(result.success).toBe(true)
     })

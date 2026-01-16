@@ -2,7 +2,7 @@ import {
   $Type,
   $TypeOf,
   $type,
-  Infer,
+  InferInput,
   LexiconRecordKey,
   NsidString,
   PropertyKey,
@@ -15,7 +15,6 @@ import {
   BlobSchema,
   BlobSchemaOptions,
   BooleanSchema,
-  BooleanSchemaOptions,
   BytesSchema,
   BytesSchemaOptions,
   CidSchema,
@@ -26,12 +25,10 @@ import {
   DiscriminatedUnionSchema,
   DiscriminatedUnionVariants,
   EnumSchema,
-  EnumSchemaOptions,
   IntegerSchema,
   IntegerSchemaOptions,
   IntersectionSchema,
   LiteralSchema,
-  LiteralSchemaOptions,
   NeverSchema,
   NullSchema,
   NullableSchema,
@@ -41,7 +38,7 @@ import {
   ParamsSchema,
   ParamsSchemaShape,
   Payload,
-  PayloadSchema,
+  PayloadShape,
   Permission,
   PermissionOptions,
   PermissionSet,
@@ -57,6 +54,7 @@ import {
   Subscription,
   TokenSchema,
   TypedObjectSchema,
+  TypedObjectValidator,
   TypedRefGetter,
   TypedRefSchema,
   TypedUnionSchema,
@@ -64,6 +62,7 @@ import {
   UnionSchemaValidators,
   UnknownObjectSchema,
   UnknownSchema,
+  WithDefaultSchema,
   refine,
 } from './schema.js'
 import { memoizedOptions, memoizedTransformer } from './util/memoize.js'
@@ -89,31 +88,23 @@ const _null = /*#__PURE__*/ memoizedOptions(function () {
 /*@__NO_SIDE_EFFECTS__*/
 export function literal<const V extends null | string | number | boolean>(
   value: V,
-  options?: LiteralSchemaOptions<V>,
 ) {
-  return new LiteralSchema<V>(value, options)
+  return new LiteralSchema<V>(value)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
 export function _enum<const V extends null | string | number | boolean>(
   value: readonly V[],
-  options?: EnumSchemaOptions<V>,
 ) {
-  return new EnumSchema<V>(value, options)
+  return new EnumSchema<V>(value)
 }
 
 // @NOTE "enum" is a reserved keyword in JS/TS
 export { _enum as enum }
 
-export const boolean = /*#__PURE__*/ memoizedOptions(
-  function (options?: BooleanSchemaOptions) {
-    return new BooleanSchema(options)
-  },
-  (options) => {
-    const keys = Object.keys(options)
-    if (keys.length === 1 && keys[0] === 'default') return options.default!
-  },
-)
+export const boolean = /*#__PURE__*/ memoizedOptions(function () {
+  return new BooleanSchema()
+})
 
 export const integer = /*#__PURE__*/ memoizedOptions(function (
   options?: IntegerSchemaOptions,
@@ -146,24 +137,24 @@ export const string = /*#__PURE__*/ memoizedOptions(function <
 })
 
 /*@__NO_SIDE_EFFECTS__*/
-export function regexp<T extends string = string>(pattern: RegExp) {
-  return new RegexpSchema<T>(pattern)
+export function regexp<TInput extends string = string>(pattern: RegExp) {
+  return new RegexpSchema<TInput>(pattern)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function array<const S extends Validator>(
-  items: S,
+export function array<const TValidator extends Validator>(
+  items: TValidator,
   options?: ArraySchemaOptions,
-): ArraySchema<S>
-export function array<T, const S extends Validator<T> = Validator<T>>(
-  items: S,
-  options?: ArraySchemaOptions,
-): ArraySchema<S>
-export function array<const S extends Validator>(
-  items: S,
+): ArraySchema<TValidator>
+export function array<
+  const TValue,
+  const TValidator extends Validator<TValue> = Validator<TValue>,
+>(items: TValidator, options?: ArraySchemaOptions): ArraySchema<TValidator>
+export function array<const TValidator extends Validator>(
+  items: TValidator,
   options?: ArraySchemaOptions,
 ) {
-  return new ArraySchema<S>(items, options)
+  return new ArraySchema<TValidator>(items, options)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -173,10 +164,10 @@ export function object<const P extends ObjectSchemaShape>(properties: P) {
 
 /*@__NO_SIDE_EFFECTS__*/
 export function dict<
-  const K extends Validator<string>,
-  const V extends Validator,
->(key: K, value: V) {
-  return new DictSchema<K, V>(key, value)
+  const TKey extends Validator<string>,
+  const TValue extends Validator,
+>(key: TKey, value: TValue) {
+  return new DictSchema<TKey, TValue>(key, value)
 }
 
 // Utility
@@ -185,34 +176,51 @@ export const unknownObject = /*#__PURE__*/ memoizedOptions(function () {
 })
 
 /*@__NO_SIDE_EFFECTS__*/
-export function ref<T>(get: RefSchemaGetter<T>) {
-  return new RefSchema<T>(get)
+export function ref<const TValidator extends Validator>(
+  get: RefSchemaGetter<TValidator>,
+): RefSchema<TValidator>
+export function ref<TInput, TOutput extends TInput = TInput>(
+  get: RefSchemaGetter<Validator<TInput, TOutput>>,
+): RefSchema<Validator<TInput, TOutput>>
+export function ref<const TValidator extends Validator>(
+  get: RefSchemaGetter<TValidator>,
+) {
+  return new RefSchema<TValidator>(get)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function custom<T>(
-  assertion: CustomAssertion<T>,
+export function custom<TValue>(
+  assertion: CustomAssertion<TValue>,
   message: string,
   path?: PropertyKey | readonly PropertyKey[],
 ) {
-  return new CustomSchema<T>(assertion, message, path)
+  return new CustomSchema<TValue>(assertion, message, path)
 }
 
 export const nullable = /*#__PURE__*/ memoizedTransformer(function <
-  const S extends Validator,
->(schema: S) {
-  return new NullableSchema<Infer<S>>(schema)
+  const TValidator extends Validator,
+>(validator: TValidator) {
+  return new NullableSchema<TValidator>(validator)
 })
 
 export const optional = /*#__PURE__*/ memoizedTransformer(function <
-  const S extends Validator,
->(schema: S) {
-  return new OptionalSchema<Infer<S>>(schema)
+  const TValidator extends Validator,
+>(validator: TValidator) {
+  return new OptionalSchema<TValidator>(validator)
 })
 
+export function withDefault<const TValidator extends Validator>(
+  validator: TValidator,
+  defaultValue: InferInput<TValidator>,
+) {
+  return new WithDefaultSchema<TValidator>(validator, defaultValue)
+}
+
 /*@__NO_SIDE_EFFECTS__*/
-export function union<const V extends UnionSchemaValidators>(validators: V) {
-  return new UnionSchema<V>(validators)
+export function union<const TValidators extends UnionSchemaValidators>(
+  validators: TValidators,
+) {
+  return new UnionSchema<TValidators>(validators)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -245,10 +253,19 @@ export function token<const N extends NsidString, const H extends string>(
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function typedRef<const V extends { $type?: string }>(
-  get: TypedRefGetter<V>,
-) {
-  return new TypedRefSchema<V>(get)
+export function typedRef<const TValidator extends TypedObjectValidator>(
+  get: TypedRefGetter<TValidator>,
+): TypedRefSchema<TValidator>
+export function typedRef<
+  TInput extends { $type?: string },
+  TOutput extends TInput = TInput,
+>(
+  get: TypedRefGetter<TypedObjectValidator<TInput, TOutput>>,
+): TypedRefSchema<TypedObjectValidator<TInput, TOutput>>
+export function typedRef<const TValidator extends TypedObjectValidator>(
+  get: TypedRefGetter<TValidator>,
+): TypedRefSchema<TValidator> {
+  return new TypedRefSchema<TValidator>(get)
 }
 
 /*@__NO_SIDE_EFFECTS__*/
@@ -274,7 +291,7 @@ export function typedObject<
   const N extends NsidString,
   const H extends string,
   const S extends Validator<{ [k: string]: unknown }>,
->(nsid: N, hash: H, schema: S): TypedObjectSchema<$Type<N, H>, S>
+>(nsid: N, hash: H, validator: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
     ? T extends `${infer N}#${string}`
@@ -286,15 +303,15 @@ export function typedObject<V extends { $type?: $Type }>(
       ? H
       : 'main'
     : never,
-  schema: Validator<Omit<V, '$type'>>,
-): TypedObjectSchema<$TypeOf<V>, Validator<Omit<V, '$type'>>>
+  validator: Validator<Omit<V, '$type'>>,
+): TypedObjectSchema<$TypeOf<V>, Validator<V>>
 /*@__NO_SIDE_EFFECTS__*/
 export function typedObject<
   const N extends NsidString,
   const H extends string,
   const S extends Validator<{ [k: string]: unknown }>,
->(nsid: N, hash: H, schema: S) {
-  return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), schema)
+>(nsid: N, hash: H, validator: S) {
+  return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), validator)
 }
 
 /**
@@ -317,22 +334,22 @@ export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [k: string]: unknown }>,
->(key: K, type: AsNsid<T>, schema: S): RecordSchema<K, T, S>
+>(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
   const V extends { $type: NsidString },
 >(
   key: K,
   type: AsNsid<V['$type']>,
-  schema: Validator<Omit<V, '$type'>>,
+  validator: Validator<Omit<V, '$type'>>,
 ): RecordSchema<K, V['$type'], Validator<Omit<V, '$type'>>>
 /*@__NO_SIDE_EFFECTS__*/
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
   const S extends Validator<{ [k: string]: unknown }>,
->(key: K, type: T, schema: S) {
-  return new RecordSchema<K, T, S>(key, type, schema)
+>(key: K, type: T, validator: S) {
+  return new RecordSchema<K, T, S>(key, type, validator)
 }
 
 export const params = /*#__PURE__*/ memoizedOptions(function <
@@ -344,9 +361,9 @@ export const params = /*#__PURE__*/ memoizedOptions(function <
 /*@__NO_SIDE_EFFECTS__*/
 export function payload<
   const E extends string | undefined = undefined,
-  const S extends PayloadSchema<E> = undefined,
->(encoding: E = undefined as E, schema: S = undefined as S) {
-  return new Payload<E, S>(encoding, schema)
+  const S extends PayloadShape<E> = undefined,
+>(encoding: E = undefined as E, validator: S = undefined as S) {
+  return new Payload<E, S>(encoding, validator)
 }
 
 /*@__NO_SIDE_EFFECTS__*/

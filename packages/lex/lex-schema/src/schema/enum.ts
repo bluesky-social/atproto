@@ -1,27 +1,17 @@
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
-
-export type EnumSchemaOptions<T extends null | string | number | boolean> = {
-  default?: T
-}
+import { Schema, ValidationContext } from '../core.js'
 
 export class EnumSchema<
-  Output extends null | string | number | boolean = any,
-> extends Schema<Output> {
-  constructor(
-    readonly values: readonly Output[],
-    readonly options?: EnumSchemaOptions<Output>,
-  ) {
+  const TValue extends null | string | number | boolean,
+> extends Schema<TValue> {
+  constructor(readonly values: readonly TValue[]) {
     super()
   }
 
-  validateInContext(
-    input: unknown = this.options?.default,
-    ctx: ValidatorContext,
-  ): ValidationResult<Output> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (!(this.values as readonly unknown[]).includes(input)) {
       return ctx.issueInvalidValue(input, this.values)
     }
 
-    return ctx.success(input as Output)
+    return ctx.success(input as TValue)
   }
 }
