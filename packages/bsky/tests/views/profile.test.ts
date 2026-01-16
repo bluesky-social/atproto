@@ -19,6 +19,7 @@ describe('pds profile views', () => {
   let eve: string
   let frank: string
   let noprofile: string
+  let labelerDid: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -27,6 +28,7 @@ describe('pds profile views', () => {
     agent = network.bsky.getClient()
     pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
+    labelerDid = network.bsky.ctx.cfg.labelsFromIssuerDids[0]
     await basicSeed(sc)
 
     await sc.createAccount('eve', {
@@ -550,6 +552,55 @@ describe('pds profile views', () => {
         expect(forSnapshot(data.status)).toBeUndefined()
       })
     })
+
+    describe.only('labeled', () => {
+      beforeAll(async () => {
+        const res = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        await createLabel({
+          src: labelerDid,
+          uri: res.data.uri,
+          cid: '',
+          val: 'spam',
+        })
+        await network.processAll()
+      })
+
+      it('returns labels on statusView', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: {
+              'atproto-accept-labelers': labelerDid,
+              ...(await network.serviceHeaders(
+                bob,
+                ids.AppBskyActorGetProfile,
+              )),
+            },
+          },
+        )
+
+        expect(data.status?.labels).toBeDefined()
+        expect(data.status?.labels?.length).toBe(1)
+      })
+    })
   })
 
   async function updateProfile(did: string, record: Record<string, unknown>) {
@@ -562,5 +613,26 @@ describe('pds profile views', () => {
       },
       { headers: sc.getHeaders(did), encoding: 'application/json' },
     )
+  }
+
+  const createLabel = async (opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  }) => {
+    await network.bsky.db.db
+      .insertInto('label')
+      .values({
+        uri: opts.uri,
+        cid: opts.cid,
+        val: opts.val,
+        cts: new Date().toISOString(),
+        exp: opts.exp ?? null,
+        neg: false,
+        src: opts.src ?? labelerDid,
+      })
+      .execute()
   }
 })
