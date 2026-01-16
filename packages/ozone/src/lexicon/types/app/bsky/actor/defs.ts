@@ -678,6 +678,7 @@ export interface StatusView {
   status: 'app.bsky.actor.status#live' | (string & {})
   record: { [_ in string]: unknown }
   embed?: $Typed<AppBskyEmbedExternal.View> | { $type: string }
+  labels?: ComAtprotoLabelDefs.Label[]
   /** The date when this status will expire. The application might choose to no longer return the status after expiration. */
   expiresAt?: string
   /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
