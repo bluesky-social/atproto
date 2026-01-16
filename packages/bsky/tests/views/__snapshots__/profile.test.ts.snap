@@ -715,6 +715,7 @@ Object {
   "expiresAt": "1970-01-01T00:00:00.000Z",
   "isActive": true,
   "isDisabled": false,
+  "labels": Array [],
   "record": Object {
     "$type": "app.bsky.actor.status",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -748,6 +749,7 @@ Object {
   "expiresAt": "1970-01-01T00:00:00.000Z",
   "isActive": false,
   "isDisabled": false,
+  "labels": Array [],
   "record": Object {
     "$type": "app.bsky.actor.status",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -781,6 +783,7 @@ Object {
   "expiresAt": "1970-01-01T00:00:00.000Z",
   "isActive": true,
   "isDisabled": true,
+  "labels": Array [],
   "record": Object {
     "$type": "app.bsky.actor.status",
     "createdAt": "1970-01-01T00:00:00.000Z",

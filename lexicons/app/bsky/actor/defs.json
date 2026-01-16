@@ -670,6 +670,10 @@
           "description": "An optional embed associated with the status.",
           "refs": ["app.bsky.embed.external#view"]
         },
+        "labels": {
+          "type": "array",
+          "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
+        },
         "expiresAt": {
           "type": "string",
           "description": "The date when this status will expire. The application might choose to no longer return the status after expiration.",
