@@ -1,6 +1,8 @@
 import { Router } from 'express'
+import express from 'express'
 import { sql } from 'kysely'
 import { AppContext } from './context'
+import { createProvisionAccountRoute } from './api/neuro/provisionAccount'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
@@ -47,6 +49,156 @@ Most API routes are under /xrpc/
     }
     res.send({ version })
   })
+
+  // Add JSON body parser for Neuro routes
+  router.use('/neuro/*', express.json())
+
+  // Neuro Quick Login callback endpoint
+  if (ctx.neuroAuthManager) {
+    router.post('/neuro/callback', async function (req, res) {
+      try {
+        const { sessionId, jid, userName, email, eMail, ...otherFields } =
+          req.body
+
+        // Validate required fields
+        if (!sessionId || !jid) {
+          req.log.warn({ body: req.body }, 'Neuro callback missing fields')
+          return res.status(400).json({
+            error: 'Missing required fields',
+            code: 'NEURO_CALLBACK_MISSING_FIELDS',
+            details: 'sessionId and jid are required',
+          })
+        }
+
+        // Basic JID validation
+        if (!jid.includes('@')) {
+          req.log.warn({ jid }, 'Invalid JID format in Neuro callback')
+          return res.status(400).json({
+            error: 'Invalid JID format',
+            code: 'NEURO_CALLBACK_INVALID_JID',
+            details: 'JID must contain @',
+          })
+        }
+
+        // Process callback
+        if (!ctx.neuroAuthManager) {
+          return res.status(503).json({
+            success: false,
+            code: 'NEURO_NOT_CONFIGURED',
+            message: 'Neuro authentication not configured',
+          })
+        }
+
+        ctx.neuroAuthManager.handleCallback({
+          sessionId,
+          jid,
+          userName,
+          email,
+          eMail,
+          ...otherFields,
+        })
+
+        req.log.info(
+          {
+            sessionId: sessionId.substring(0, 8) + '...',
+            hasEmail: !!(email || eMail),
+          },
+          'Neuro callback received',
+        )
+
+        res.status(200).json({ success: true })
+      } catch (err) {
+        req.log.error({ err }, 'Neuro callback error')
+        res.status(500).json({
+          error: err instanceof Error ? err.message : 'Internal server error',
+          code: 'NEURO_CALLBACK_ERROR',
+        })
+      }
+    })
+
+    // Session status endpoint for frontend polling (optional)
+    router.get('/neuro/session/:sessionId/status', async function (req, res) {
+      const { sessionId } = req.params
+      const isPending = ctx.neuroAuthManager?.isSessionPending(sessionId)
+      const isCompleted = ctx.neuroAuthManager?.isSessionCompleted(sessionId)
+
+      res.json({
+        pending: isPending,
+        completed: isCompleted,
+      })
+    })
+  }
+
+  // Neuro RemoteLogin callback endpoint
+  if (ctx.neuroRemoteLoginManager) {
+    router.post('/neuro/remotelogin/callback', async function (req, res) {
+      try {
+        const { PetitionId, Rejected, Token } = req.body
+
+        // Validate required fields
+        if (!PetitionId || typeof Rejected !== 'boolean') {
+          req.log.warn(
+            { body: req.body },
+            'RemoteLogin callback missing fields',
+          )
+          return res.status(400).json({
+            error: 'Missing required fields',
+            code: 'NEURO_REMOTELOGIN_CALLBACK_MISSING_FIELDS',
+            details: 'PetitionId and Rejected are required',
+          })
+        }
+
+        // Token required if not rejected
+        if (!Rejected && !Token) {
+          req.log.warn(
+            { petitionId: PetitionId },
+            'RemoteLogin callback missing Token when not rejected',
+          )
+          return res.status(400).json({
+            error: 'Token required when not rejected',
+            code: 'NEURO_REMOTELOGIN_CALLBACK_MISSING_TOKEN',
+          })
+        }
+
+        // Process callback
+        if (!ctx.neuroRemoteLoginManager) {
+          return res.status(503).json({
+            success: false,
+            code: 'NEURO_REMOTELOGIN_NOT_CONFIGURED',
+            message: 'Neuro RemoteLogin not configured',
+          })
+        }
+
+        ctx.neuroRemoteLoginManager.handleCallback({
+          PetitionId,
+          Rejected,
+          Token,
+        })
+
+        req.log.info(
+          {
+            petitionId: PetitionId.substring(0, 8) + '...',
+            rejected: Rejected,
+          },
+          'RemoteLogin callback processed',
+        )
+
+        res.status(200).json({ success: true })
+      } catch (err) {
+        req.log.error({ err }, 'RemoteLogin callback error')
+        res.status(500).json({
+          error: err instanceof Error ? err.message : 'Internal server error',
+          code: 'NEURO_REMOTELOGIN_CALLBACK_ERROR',
+        })
+      }
+    })
+  }
+
+  // Neuro auto-provision endpoint
+  if (ctx.neuroAuthManager) {
+    const provisionRouter = createProvisionAccountRoute(ctx)
+    router.use(provisionRouter)
+  }
 
   return router
 }

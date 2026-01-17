@@ -1,4 +1,5 @@
 import { envBool, envInt, envList, envStr } from '@atproto/common'
+import { NeuroConfig } from './config'
 
 export function readEnv() {
   return {
@@ -154,6 +155,31 @@ export function readEnv() {
 
     // lexicon resolution
     lexiconDidAuthority: envStr('PDS_LEXICON_AUTHORITY_DID'),
+
+    // neuro
+    neuro: envBool('PDS_NEURO_ENABLED')
+      ? ({
+          enabled: true,
+          domain: envStr('PDS_NEURO_DOMAIN') || 'mateo.lab.tagroot.io',
+          storageBackend:
+            (envStr('PDS_NEURO_STORAGE_BACKEND') as 'database' | 'redis') ||
+            'database',
+          customUiPath: envStr('PDS_NEURO_CUSTOM_UI_PATH'),
+          // RemoteLogin API configuration
+          apiType: (envStr('PDS_NEURO_API_TYPE') as 'quicklogin' | 'remotelogin' | 'both') || 'remotelogin',
+          responseMethod: (envStr('PDS_NEURO_RESPONSE_METHOD') as 'Callback' | 'Poll') || 'Callback',
+          callbackBaseUrl: envStr('PDS_NEURO_CALLBACK_BASE_URL'),
+          pollIntervalMs: envInt('PDS_NEURO_POLL_INTERVAL_MS') || 2000,
+          // Authentication for RemoteLogin API
+          authMethod: (envStr('PDS_NEURO_AUTH_METHOD') as 'basic' | 'bearer' | 'mtls') || 'basic',
+          basicUsername: envStr('PDS_NEURO_BASIC_USERNAME'),
+          basicPassword: envStr('PDS_NEURO_BASIC_PASSWORD'),
+          bearerToken: envStr('PDS_NEURO_BEARER_TOKEN'),
+          // JWT verification
+          verifyJwtSignature: envBool('PDS_NEURO_VERIFY_JWT') ?? false,
+          petitionTimeoutSeconds: envInt('PDS_NEURO_PETITION_TIMEOUT') || 300,
+        } as NeuroConfig)
+      : undefined,
   }
 }
 

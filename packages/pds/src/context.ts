@@ -73,6 +73,8 @@ export type AppContextOptions = {
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
+  neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+  neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -101,6 +103,8 @@ export class AppContext {
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
+  public neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+  public neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -127,6 +131,8 @@ export class AppContext {
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
+    this.neuroAuthManager = opts.neuroAuthManager
+    this.neuroRemoteLoginManager = opts.neuroRemoteLoginManager
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -325,6 +331,44 @@ export class AppContext {
       },
     })
 
+    // Create Neuro Auth Manager if configured
+    let neuroAuthManager:
+      | import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+      | undefined
+    let neuroRemoteLoginManager:
+      | import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
+      | undefined
+    if (cfg.neuro?.enabled) {
+      const { NeuroAuthManager } = await import(
+        './account-manager/helpers/neuro-auth-manager'
+      )
+      neuroAuthManager = new NeuroAuthManager(
+        {
+          domain: cfg.neuro.domain,
+          callbackBaseUrl: cfg.neuro.callbackBaseUrl || cfg.service.publicUrl,
+          storageBackend: cfg.neuro.storageBackend,
+        },
+        cfg.neuro.storageBackend === 'database'
+          ? accountManager.db
+          : redisScratch,
+        fetchLogger,
+      )
+
+      // Create RemoteLogin manager if configured
+      if (cfg.neuro.apiType === 'remotelogin' || cfg.neuro.apiType === 'both') {
+        const { NeuroRemoteLoginManager } = await import(
+          './account-manager/helpers/neuro-remotelogin-manager'
+        )
+        neuroRemoteLoginManager = new NeuroRemoteLoginManager(
+          {
+            ...cfg.neuro,
+            callbackBaseUrl: cfg.neuro.callbackBaseUrl || cfg.service.publicUrl,
+          },
+          fetchLogger,
+        )
+      }
+    }
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -340,6 +384,8 @@ export class AppContext {
             plcRotationKey,
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
+            neuroAuthManager,
+            neuroRemoteLoginManager,
           ),
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
@@ -472,6 +518,8 @@ export class AppContext {
       safeFetch,
       authVerifier,
       oauthProvider,
+      neuroAuthManager,
+      neuroRemoteLoginManager,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
