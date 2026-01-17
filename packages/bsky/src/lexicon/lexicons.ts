@@ -411,6 +411,7 @@ export const schemaDict = {
             'lex:app.bsky.actor.defs#labelersPref',
             'lex:app.bsky.actor.defs#postInteractionSettingsPref',
             'lex:app.bsky.actor.defs#verificationPrefs',
+            'lex:app.bsky.actor.defs#liveEventPreferences',
           ],
         },
       },
@@ -770,6 +771,25 @@ export const schemaDict = {
           hideBadges: {
             description:
               'Hide the blue check badges for verified accounts and trusted verifiers.',
+            type: 'boolean',
+            default: false,
+          },
+        },
+      },
+      liveEventPreferences: {
+        type: 'object',
+        description: 'Preferences for live events.',
+        properties: {
+          hiddenFeedIds: {
+            description:
+              'A list of feed IDs that the user has hidden from live events.',
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+          },
+          hideAllFeeds: {
+            description: 'Whether to hide all feeds from live events.',
             type: 'boolean',
             default: false,
           },
@@ -2215,6 +2235,375 @@ export const schemaDict = {
             name: 'InternalError',
           },
         ],
+      },
+    },
+  },
+  AppBskyDraftCreateDraft: {
+    lexicon: 1,
+    id: 'app.bsky.draft.createDraft',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Inserts a draft using private storage (stash). An upper limit of drafts might be enforced. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['draft'],
+            properties: {
+              draft: {
+                type: 'ref',
+                ref: 'lex:app.bsky.draft.defs#draft',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+              id: {
+                type: 'string',
+                description: 'The ID of the created draft.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'DraftLimitReached',
+            description:
+              'Trying to insert a new draft when the limit was already reached.',
+          },
+        ],
+      },
+    },
+  },
+  AppBskyDraftDefs: {
+    lexicon: 1,
+    id: 'app.bsky.draft.defs',
+    defs: {
+      draftWithId: {
+        description:
+          'A draft with an identifier, used to store drafts in private storage (stash).',
+        type: 'object',
+        required: ['id', 'draft'],
+        properties: {
+          id: {
+            description: 'A TID to be used as a draft identifier.',
+            type: 'string',
+            format: 'tid',
+          },
+          draft: {
+            type: 'ref',
+            ref: 'lex:app.bsky.draft.defs#draft',
+          },
+        },
+      },
+      draft: {
+        description: 'A draft containing an array of draft posts.',
+        type: 'object',
+        required: ['posts'],
+        properties: {
+          posts: {
+            description: 'Array of draft posts that compose this draft.',
+            type: 'array',
+            minLength: 1,
+            maxLength: 100,
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.draft.defs#draftPost',
+            },
+          },
+          langs: {
+            type: 'array',
+            description:
+              'Indicates human language of posts primary text content.',
+            maxLength: 3,
+            items: {
+              type: 'string',
+              format: 'language',
+            },
+          },
+          postgateEmbeddingRules: {
+            description:
+              'Embedding rules for the postgates to be created when this draft is published.',
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'union',
+              refs: ['lex:app.bsky.feed.postgate#disableRule'],
+            },
+          },
+          threadgateAllow: {
+            description:
+              'Allow-rules for the threadgate to be created when this draft is published.',
+            type: 'array',
+            maxLength: 5,
+            items: {
+              type: 'union',
+              refs: [
+                'lex:app.bsky.feed.threadgate#mentionRule',
+                'lex:app.bsky.feed.threadgate#followerRule',
+                'lex:app.bsky.feed.threadgate#followingRule',
+                'lex:app.bsky.feed.threadgate#listRule',
+              ],
+            },
+          },
+        },
+      },
+      draftPost: {
+        description: 'One of the posts that compose a draft.',
+        type: 'object',
+        required: ['text'],
+        properties: {
+          text: {
+            type: 'string',
+            maxLength: 3000,
+            maxGraphemes: 300,
+            description: 'The primary post content.',
+          },
+          labels: {
+            type: 'union',
+            description:
+              'Self-label values for this post. Effectively content warnings.',
+            refs: ['lex:com.atproto.label.defs#selfLabels'],
+          },
+          embedImages: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.draft.defs#draftEmbedImage',
+            },
+            maxLength: 4,
+          },
+          embedVideos: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.draft.defs#draftEmbedVideo',
+            },
+            maxLength: 1,
+          },
+          embedExternals: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.draft.defs#draftEmbedExternal',
+            },
+            maxLength: 1,
+          },
+          embedRecords: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.draft.defs#draftEmbedRecord',
+            },
+            maxLength: 1,
+          },
+        },
+      },
+      draftView: {
+        description: 'View to present drafts data to users.',
+        type: 'object',
+        required: ['id', 'draft', 'createdAt', 'updatedAt'],
+        properties: {
+          id: {
+            description: 'A TID to be used as a draft identifier.',
+            type: 'string',
+            format: 'tid',
+          },
+          draft: {
+            type: 'ref',
+            ref: 'lex:app.bsky.draft.defs#draft',
+          },
+          createdAt: {
+            description: 'The time the draft was created.',
+            type: 'string',
+            format: 'datetime',
+          },
+          updatedAt: {
+            description: 'The time the draft was last updated.',
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      draftEmbedLocalRef: {
+        type: 'object',
+        required: ['path'],
+        properties: {
+          path: {
+            type: 'string',
+            description:
+              'Local, on-device ref to file to be embedded. Embeds are currently device-bound for drafts.',
+            minLength: 1,
+            maxLength: 1024,
+          },
+        },
+      },
+      draftEmbedCaption: {
+        type: 'object',
+        required: ['lang', 'content'],
+        properties: {
+          lang: {
+            type: 'string',
+            format: 'language',
+          },
+          content: {
+            type: 'string',
+            maxLength: 10000,
+          },
+        },
+      },
+      draftEmbedImage: {
+        type: 'object',
+        required: ['localRef'],
+        properties: {
+          localRef: {
+            type: 'ref',
+            ref: 'lex:app.bsky.draft.defs#draftEmbedLocalRef',
+          },
+          alt: {
+            type: 'string',
+            maxGraphemes: 2000,
+          },
+        },
+      },
+      draftEmbedVideo: {
+        type: 'object',
+        required: ['localRef'],
+        properties: {
+          localRef: {
+            type: 'ref',
+            ref: 'lex:app.bsky.draft.defs#draftEmbedLocalRef',
+          },
+          alt: {
+            type: 'string',
+            maxGraphemes: 2000,
+          },
+          captions: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:app.bsky.draft.defs#draftEmbedCaption',
+            },
+            maxLength: 20,
+          },
+        },
+      },
+      draftEmbedExternal: {
+        type: 'object',
+        required: ['uri'],
+        properties: {
+          uri: {
+            type: 'string',
+            format: 'uri',
+          },
+        },
+      },
+      draftEmbedRecord: {
+        type: 'object',
+        required: ['record'],
+        properties: {
+          record: {
+            type: 'ref',
+            ref: 'lex:com.atproto.repo.strongRef',
+          },
+        },
+      },
+    },
+  },
+  AppBskyDraftDeleteDraft: {
+    lexicon: 1,
+    id: 'app.bsky.draft.deleteDraft',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Deletes a draft by ID. Requires authentication.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+              id: {
+                type: 'string',
+                format: 'tid',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyDraftGetDrafts: {
+    lexicon: 1,
+    id: 'app.bsky.draft.getDrafts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Gets views of user drafts. Requires authentication.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['drafts'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              drafts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.draft.defs#draftView',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyDraftUpdateDraft: {
+    lexicon: 1,
+    id: 'app.bsky.draft.updateDraft',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Updates a draft using private storage (stash). If the draft ID points to a non-existing ID, the update will be silently ignored. This is done because updates don't enforce draft limit, so it accepts all writes, but will ignore invalid ones. Requires authentication.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['draft'],
+            properties: {
+              draft: {
+                type: 'ref',
+                ref: 'lex:app.bsky.draft.defs#draftWithId',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -14972,6 +15361,11 @@ export const ids = {
   AppBskyContactStartPhoneVerification:
     'app.bsky.contact.startPhoneVerification',
   AppBskyContactVerifyPhone: 'app.bsky.contact.verifyPhone',
+  AppBskyDraftCreateDraft: 'app.bsky.draft.createDraft',
+  AppBskyDraftDefs: 'app.bsky.draft.defs',
+  AppBskyDraftDeleteDraft: 'app.bsky.draft.deleteDraft',
+  AppBskyDraftGetDrafts: 'app.bsky.draft.getDrafts',
+  AppBskyDraftUpdateDraft: 'app.bsky.draft.updateDraft',
   AppBskyEmbedDefs: 'app.bsky.embed.defs',
   AppBskyEmbedExternal: 'app.bsky.embed.external',
   AppBskyEmbedImages: 'app.bsky.embed.images',

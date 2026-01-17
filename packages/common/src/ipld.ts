@@ -1,13 +1,16 @@
+/* eslint-disable import/no-deprecated */
+
 import { createHash } from 'node:crypto'
 import { Transform } from 'node:stream'
 import { Block, ByteView, encode as encodeBlock } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { cidForLex, decode, encode } from '@atproto/lex-cbor'
 import {
-  CID,
+  type CID,
   Cid,
   DAG_CBOR_MULTICODEC,
   LexValue,
+  asMultiformatsCID,
   // eslint-disable-next-line
   cidForCbor,
   cidForRawHash,
@@ -47,7 +50,9 @@ export async function dataToCborBlock<T>(value: T): Promise<Block<T>> {
 /**
  * @deprecated Use {@link cidForLex} from `@atproto/lex-cbor` instead.
  */
-export const cidForCborLegacy = cidForLex as (data: unknown) => Promise<CID>
+async function cidForCborLegacy(data: unknown): Promise<CID> {
+  return asMultiformatsCID(await cidForLex(data as LexValue))
+}
 export { cidForCborLegacy as cidForCbor }
 
 /**
@@ -84,15 +89,15 @@ export async function verifyCidForBytes(
 /**
  * @deprecated Use {@link cidForRawHash} from `@atproto/lex-cbor` instead.
  */
-export const sha256RawToCid = cidForRawHash as (hash: Uint8Array) => CID
+export function sha256RawToCid(hash: Uint8Array): CID {
+  return asMultiformatsCID(cidForRawHash(hash))
+}
 
 /**
  * @deprecated Use {@link decodeCid} from `@atproto/lex-cbor` instead.
  */
 export function parseCidFromBytes(bytes: Uint8Array): CID {
-  const cid = CID.asCID(decodeCid(bytes, { flavor: 'dasl' }))
-  if (!cid) throw new Error('Failed to parse CID from bytes')
-  return cid
+  return asMultiformatsCID(decodeCid(bytes, { flavor: 'dasl' }))
 }
 
 export class VerifyCidTransform extends Transform {

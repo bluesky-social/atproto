@@ -12,6 +12,7 @@ export enum FeatureGateID {
    * appease TS
    */
   _ = '',
+  SuggestedUsersFromDiscover = 'disc_onboarding_follow_suggest',
   ThreadsV2ReplyRankingExploration = 'threads_v2_reply_ranking_exploration',
   SearchFilteringExploration = 'search_filtering_exploration',
 }

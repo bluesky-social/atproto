@@ -1,5 +1,26 @@
 # @atproto/api
 
+## 0.18.16
+
+### Patch Changes
+
+- [#4552](https://github.com/bluesky-social/atproto/pull/4552) [`ccd8964`](https://github.com/bluesky-social/atproto/commit/ccd89643313799f47c2f009c5c9dca48540275f1) Thanks [@mozzius](https://github.com/mozzius)! - Add `draft` lexicons
+
+## 0.18.15
+
+### Patch Changes
+
+- [#4543](https://github.com/bluesky-social/atproto/pull/4543) [`f58029b`](https://github.com/bluesky-social/atproto/commit/f58029ba54305bed361c834a42bd96022b5b3c59) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `liveEventPreferences` to user preferences, add `updateLiveEventPreferences` to API SDK
+
+## 0.18.14
+
+### Patch Changes
+
+- [#4539](https://github.com/bluesky-social/atproto/pull/4539) [`3ffebd0`](https://github.com/bluesky-social/atproto/commit/3ffebd0bf25776308e06e4b083dc2d0e156d9ac0) Thanks [@mozzius](https://github.com/mozzius)! - Add $cashtag support to the Rich Text facet detection
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.12
+
 ## 0.18.13
 
 ### Patch Changes
