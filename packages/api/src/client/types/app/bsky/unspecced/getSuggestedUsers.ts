@@ -25,8 +25,6 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   actors: AppBskyActorDefs.ProfileView[]
-  /** Snowflake for this recommendation, use when submitting recommendation events. */
-  recId?: number
 }
 
 export interface CallOptions {
