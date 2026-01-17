@@ -300,7 +300,7 @@ async function parseJwt(
     )
   }
 
-  if (payload.lxm != null && typeof payload.lxm !== options.lxm) {
+  if (payload.lxm != null && payload.lxm !== options.lxm) {
     throw new LexServerAuthError(
       'AuthenticationRequired',
       'Invalid JWT lexicon method ("lxm")',
