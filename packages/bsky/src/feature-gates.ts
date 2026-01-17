@@ -1,9 +1,17 @@
-import Statsig, { StatsigUser } from 'statsig-node'
+import { GrowthBookClient } from '@growthbook/growthbook'
 import { featureGatesLogger } from './logger'
 
 export type Config = {
+  apiUrl?: string
   apiKey?: string
-  env?: 'development' | 'staging' | 'production' | string
+}
+
+type Attrs = {
+  did?: string
+}
+
+type Context = {
+  attributes: Attrs
 }
 
 export enum FeatureGateID {
@@ -22,12 +30,9 @@ export enum FeatureGateID {
  */
 export type CheckedFeatureGatesMap = Map<FeatureGateID, boolean>
 
-/**
- * @see https://docs.statsig.com/server/nodejsServerSDK
- */
 export class FeatureGates {
   ready = false
-  private statsig = Statsig
+  client: GrowthBookClient | undefined = undefined
   ids = FeatureGateID
 
   constructor(private config: Config) {}
@@ -35,54 +40,38 @@ export class FeatureGates {
   async start() {
     try {
       if (this.config.apiKey) {
-        /**
-         * Special handling in test mode, see {@link ServerConfig}
-         *
-         * {@link https://docs.statsig.com/server/nodejsServerSDK#local-overrides}
-         */
-        await this.statsig.initialize(this.config.apiKey, {
-          localMode: this.config.env === 'test',
-          environment: {
-            tier: this.config.env || 'development',
-          },
+        this.client = new GrowthBookClient({
+          apiHost: this.config.apiUrl,
+          clientKey: this.config.apiKey,
         })
         this.ready = true
       }
     } catch (err) {
-      featureGatesLogger.error({ err }, 'Failed to initialize StatSig')
+      featureGatesLogger.error({ err }, 'Failed to initialize GrowthBook')
       this.ready = false
     }
   }
 
-  destroy() {
-    if (this.ready) {
-      this.ready = false
-      this.statsig.shutdown()
-    }
+  contextForDid(did: string): Context {
+    return { attributes: { did: did } }
   }
 
-  user({ did }: { did?: string }): StatsigUser | undefined {
-    return did
-      ? {
-          userID: did,
-        }
-      : undefined
-  }
+  check(gate: FeatureGateID, ctx: Context): boolean {
+    if (!this.ready || !this.client) return false
+    if (!ctx.attributes || !ctx.attributes.did) return false
 
-  check(gate: FeatureGateID, user?: StatsigUser): boolean {
-    if (!this.ready) return false
-    if (!user) return false
-    return this.statsig.checkGateSync(user, gate)
+    // TODO: migrate from StatSig to GrowthBook
+    if (gate === FeatureGateID.ThreadsV2ReplyRankingExploration) return false
+    if (gate === FeatureGateID.SearchFilteringExploration) return false
+
+    return this.client.isOn(gate, ctx)
   }
 
   /**
    * Pre-evaluate multiple feature gates for a given user, returning a map of
    * gate ID to boolean result.
    */
-  checkGates(
-    gates: FeatureGateID[],
-    user?: StatsigUser,
-  ): CheckedFeatureGatesMap {
-    return new Map(gates.map((g) => [g, this.check(g, user)]))
+  checkGates(gates: FeatureGateID[], ctx: Context): CheckedFeatureGatesMap {
+    return new Map(gates.map((g) => [g, this.check(g, ctx)]))
   }
 }

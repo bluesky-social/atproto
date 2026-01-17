@@ -7,7 +7,6 @@ import {
   PostSearchQuery,
   parsePostSearchQuery,
 } from '../../../../data-plane/server/util'
-import { FeatureGateID } from '../../../../feature-gates'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
@@ -41,7 +40,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         featureGates: ctx.featureGates.checkGates(
           [ctx.featureGates.ids.SearchFilteringExploration],
-          ctx.featureGates.user({ did: viewer ?? '' }),
+          ctx.featureGates.contextForDid(viewer ?? ''),
         ),
       })
       const results = await searchPosts(
@@ -108,13 +107,6 @@ const hydration = async (
     skeleton.posts.map((uri) => ({ uri })),
     params.hydrateCtx,
     undefined,
-    {
-      processDynamicTagsForView: params.hydrateCtx.featureGates.get(
-        FeatureGateID.SearchFilteringExploration,
-      )
-        ? 'search'
-        : undefined,
-    },
   )
 }
 
@@ -137,20 +129,11 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
     // Cases to never show.
     if (ctx.views.viewerBlockExists(creator, hydration)) return false
 
-    let tagged = false
-    if (
-      params.hydrateCtx.featureGates.get(
-        FeatureGateID.SearchFilteringExploration,
-      )
-    ) {
-      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
-    } else {
-      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
-    }
-
     // Cases to conditionally show based on tagging.
+    const tagged = post.tags.has(ctx.cfg.visibilityTagHide)
     if (isCuratedSearch && tagged) return false
     if (!parsedQuery.author && tagged) return false
+
     return true
   })
   return skeleton

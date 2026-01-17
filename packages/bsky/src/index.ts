@@ -182,8 +182,7 @@ export class BskyAppView {
     })
 
     const featureGates = new FeatureGates({
-      apiKey: config.statsigKey,
-      env: config.statsigEnv,
+      apiKey: config.growthBookKey,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
@@ -254,7 +253,6 @@ export class BskyAppView {
 
   async destroy(): Promise<void> {
     await this.terminator?.terminate()
-    this.ctx.featureGates.destroy()
     await this.ctx.etcd?.close()
   }
 }

@@ -80,8 +80,8 @@ export interface ServerConfigValues {
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
-  statsigKey?: string
-  statsigEnv?: string
+  growthBookUrl?: string
+  growthBookKey?: string
   // threads
   bigThreadUris: Set<string>
   bigThreadDepth?: number
@@ -210,14 +210,11 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    const statsigKey =
+    const growthBookUrl = process.env.BSKY_GROWTHBOOK_URL || undefined
+    const growthBookKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
-        : process.env.BSKY_STATSIG_KEY || undefined
-    const statsigEnv =
-      process.env.NODE_ENV === 'test'
-        ? 'test'
-        : process.env.BSKY_STATSIG_ENV || 'development'
+        : process.env.BSKY_GROWTHBOOK_KEY || undefined
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
     const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
@@ -365,8 +362,8 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
-      statsigKey,
-      statsigEnv,
+      growthBookUrl,
+      growthBookKey,
       clientCheckEmailConfirmed,
       topicsEnabled,
       indexedAtEpoch,
@@ -565,12 +562,12 @@ export class ServerConfig {
     return this.cfg.blobCacheLocation
   }
 
-  get statsigKey() {
-    return this.cfg.statsigKey
+  get growthBookUrl() {
+    return this.cfg.growthBookUrl
   }
 
-  get statsigEnv() {
-    return this.cfg.statsigEnv
+  get growthBookKey() {
+    return this.cfg.growthBookKey
   }
 
   get clientCheckEmailConfirmed() {
