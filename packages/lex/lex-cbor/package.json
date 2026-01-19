@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@atproto/lex-json": "workspace:*",
-    "cborg": "^4.3.0",
+    "cborg": "^4.4.1",
     "vite": "^6.2.0",
     "vitest": "^4.0.16"
   },
