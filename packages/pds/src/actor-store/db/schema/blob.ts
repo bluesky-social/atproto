@@ -3,8 +3,8 @@ export interface Blob {
   mimeType: string
   size: number
   tempKey: string | null
-  width: number | null
-  height: number | null
+  // width: number | null  // @TODO: actually drop these columns from the db
+  // height: number | null
   createdAt: string
   takedownRef: string | null
 }
