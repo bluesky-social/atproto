@@ -34,9 +34,6 @@ function objectEncoder(
   const cid = ifCid(obj)
   if (cid) return cidEncoder(cid)
 
-  // @TODO strip undefined values somehow
-  // https://github.com/rvagg/cborg/issues/154
-
   // Fallback to default object encoder
   return null
 }
