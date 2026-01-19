@@ -64,3 +64,8 @@ export class ObjectSchema<
     return ctx.success(copy ?? input)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function object<const P extends ObjectSchemaShape>(properties: P) {
+  return new ObjectSchema<P>(properties)
+}

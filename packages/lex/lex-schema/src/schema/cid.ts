@@ -1,5 +1,6 @@
 import { CheckCidOptions, Cid, InferCheckedCid, isCid } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 export type { Cid }
 
@@ -20,3 +21,9 @@ export class CidSchema<
     return ctx.success(input)
   }
 }
+
+export const cid = /*#__PURE__*/ memoizedOptions(function <
+  O extends CidSchemaOptions = NonNullable<unknown>,
+>(options: O = {} as O) {
+  return new CidSchema(options)
+})

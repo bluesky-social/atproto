@@ -61,3 +61,11 @@ export class DictSchema<
     return ctx.success(copy ?? input)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function dict<
+  const TKey extends Validator<string>,
+  const TValue extends Validator,
+>(key: TKey, value: TValue) {
+  return new DictSchema<TKey, TValue>(key, value)
+}

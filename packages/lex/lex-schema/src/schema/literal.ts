@@ -15,3 +15,10 @@ export class LiteralSchema<
     return ctx.success(this.value)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function literal<const V extends null | string | number | boolean>(
+  value: V,
+) {
+  return new LiteralSchema<V>(value)
+}

@@ -36,14 +36,14 @@ const io = {
       l.payload(
         'application/json',
         l.object({
-          cid: l.cidLink(),
+          cid: l.cid(),
           bytes: l.bytes(),
         }),
       ),
       l.payload(
         'application/json',
         l.object({
-          cid: l.cidLink(),
+          cid: l.cid(),
           bytes: l.bytes(),
         }),
       ),

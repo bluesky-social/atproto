@@ -6,6 +6,7 @@ import {
   ValidationContext,
   assertStringFormat,
 } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
 
 export type StringSchemaOptions = {
@@ -128,3 +129,9 @@ export function coerceToString(input: unknown): string | null {
       return null
   }
 }
+
+export const string = /*#__PURE__*/ memoizedOptions(function <
+  const O extends StringSchemaOptions = NonNullable<unknown>,
+>(options: StringSchemaOptions & O = {} as O) {
+  return new StringSchema<O>(options)
+})

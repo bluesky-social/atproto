@@ -228,7 +228,7 @@ export class LexiconSchemaBuilder {
       case 'blob':
         return l.blob(def)
       case 'cid-link':
-        return l.cidLink()
+        return l.cid()
       case 'bytes':
         return l.bytes(def)
       case 'unknown':

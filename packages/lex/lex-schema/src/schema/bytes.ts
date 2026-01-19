@@ -1,5 +1,6 @@
 import { asUint8Array, ifUint8Array } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 export type BytesSchemaOptions = {
   minLength?: number
@@ -31,3 +32,9 @@ export class BytesSchema extends Schema<Uint8Array> {
     return ctx.success(bytes)
   }
 }
+
+export const bytes = /*#__PURE__*/ memoizedOptions(function (
+  options?: BytesSchemaOptions,
+) {
+  return new BytesSchema(options)
+})

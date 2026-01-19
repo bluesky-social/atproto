@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { EnumSchema } from './enum.js'
-import { WithDefaultSchema } from './with-default.js'
+import { enumSchema } from './enum.js'
+import { withDefault } from './with-default.js'
 
 describe('EnumSchema', () => {
   describe('with string values', () => {
-    const schema = new EnumSchema(['male', 'female', 'other'])
+    const schema = enumSchema(['male', 'female', 'other'])
 
     it('validates matching string values', () => {
       const result = schema.safeParse('male')
@@ -59,7 +59,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with number values', () => {
-    const schema = new EnumSchema([1, 2, 3])
+    const schema = enumSchema([1, 2, 3])
 
     it('validates matching number values', () => {
       const result = schema.safeParse(1)
@@ -94,7 +94,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with boolean values', () => {
-    const schema = new EnumSchema([true, false])
+    const schema = enumSchema([true, false])
 
     it('validates true', () => {
       const result = schema.safeParse(true)
@@ -118,7 +118,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with single boolean value', () => {
-    const schema = new EnumSchema([true])
+    const schema = enumSchema([true])
 
     it('validates true', () => {
       const result = schema.safeParse(true)
@@ -132,7 +132,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with null value', () => {
-    const schema = new EnumSchema([null, 'value'])
+    const schema = enumSchema([null, 'value'])
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -151,7 +151,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with mixed type values', () => {
-    const schema = new EnumSchema(['string', 123, true, null])
+    const schema = enumSchema(['string', 123, true, null])
 
     it('validates string value', () => {
       const result = schema.safeParse('string')
@@ -182,10 +182,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option', () => {
-    const schema = new WithDefaultSchema(
-      new EnumSchema(['red', 'green', 'blue']),
-      'red',
-    )
+    const schema = withDefault(enumSchema(['red', 'green', 'blue']), 'red')
 
     it('validates matching values', () => {
       const result = schema.safeParse('green')
@@ -225,7 +222,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option as number', () => {
-    const schema = new WithDefaultSchema(new EnumSchema([1, 2, 3]), 1)
+    const schema = withDefault(enumSchema([1, 2, 3]), 1)
 
     it('uses default when input is undefined', () => {
       const result = schema.safeParse(undefined)
@@ -242,7 +239,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option as boolean', () => {
-    const schema = new WithDefaultSchema(new EnumSchema([true, false]), false)
+    const schema = withDefault(enumSchema([true, false]), false)
 
     it('uses default when input is undefined', () => {
       const result = schema.safeParse(undefined)
@@ -262,7 +259,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with default option as null', () => {
-    const schema = new WithDefaultSchema(new EnumSchema([null, 'value']), null)
+    const schema = withDefault(enumSchema([null, 'value']), null)
 
     it('uses default when input is undefined', () => {
       const result = schema.safeParse(undefined)
@@ -282,7 +279,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with single value', () => {
-    const schema = new EnumSchema(['only'])
+    const schema = enumSchema(['only'])
 
     it('validates the single value', () => {
       const result = schema.safeParse('only')
@@ -298,7 +295,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with empty string value', () => {
-    const schema = new EnumSchema(['', 'value'])
+    const schema = enumSchema(['', 'value'])
 
     it('validates empty string', () => {
       const result = schema.safeParse('')
@@ -317,7 +314,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with zero value', () => {
-    const schema = new EnumSchema([0, 1, 2])
+    const schema = enumSchema([0, 1, 2])
 
     it('validates zero', () => {
       const result = schema.safeParse(0)
@@ -336,7 +333,7 @@ describe('EnumSchema', () => {
   })
 
   describe('case sensitivity', () => {
-    const schema = new EnumSchema(['Value', 'VALUE', 'value'])
+    const schema = enumSchema(['Value', 'VALUE', 'value'])
 
     it('validates exact case matches', () => {
       expect(schema.safeParse('Value').success).toBe(true)
@@ -351,7 +348,7 @@ describe('EnumSchema', () => {
   })
 
   describe('with special string values', () => {
-    const schema = new EnumSchema([
+    const schema = enumSchema([
       'with space',
       'with\ttab',
       'with\nnewline',

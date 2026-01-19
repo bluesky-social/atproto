@@ -33,3 +33,10 @@ export class UnionSchema<
     return ctx.failure(ValidationError.fromFailures(failures))
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function union<const TValidators extends UnionSchemaValidators>(
+  validators: TValidators,
+) {
+  return new UnionSchema<TValidators>(validators)
+}

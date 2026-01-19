@@ -15,3 +15,13 @@ export class EnumSchema<
     return ctx.success(input as TValue)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function enumSchema<const V extends null | string | number | boolean>(
+  value: readonly V[],
+) {
+  return new EnumSchema<V>(value)
+}
+
+// @NOTE "enum" is a reserved keyword in JS/TS
+export { enumSchema as enum }

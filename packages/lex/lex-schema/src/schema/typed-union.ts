@@ -65,3 +65,11 @@ export class TypedUnionSchema<
     return ctx.success(input)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function typedUnion<
+  const R extends readonly TypedRefSchema[],
+  const C extends boolean,
+>(refs: R, closed: C) {
+  return new TypedUnionSchema<R, C>(refs, closed)
+}

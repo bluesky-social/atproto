@@ -123,3 +123,14 @@ function buildVariantsMap<Discriminator extends string>(
 
   return variantsMap
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function discriminatedUnion<
+  const Discriminator extends string,
+  const Options extends DiscriminatedUnionVariants<Discriminator>,
+>(discriminator: Discriminator, variants: Options) {
+  return new DiscriminatedUnionSchema<Discriminator, Options>(
+    discriminator,
+    variants,
+  )
+}

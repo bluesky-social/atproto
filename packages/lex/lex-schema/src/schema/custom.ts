@@ -34,3 +34,12 @@ export class CustomSchema<const TValue = unknown> extends Schema<TValue> {
     return ctx.success(input as TValue)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function custom<TValue>(
+  assertion: CustomAssertion<TValue>,
+  message: string,
+  path?: PropertyKey | readonly PropertyKey[],
+) {
+  return new CustomSchema<TValue>(assertion, message, path)
+}

@@ -108,3 +108,41 @@ function recordKey<Key extends LexiconRecordKey>(
 
   throw new Error(`Unsupported record key type: ${key}`)
 }
+
+/**
+ * Ensures that a `$type` used in a record is a valid NSID (i.e. no fragment).
+ */
+type AsNsid<T> = T extends `${string}#${string}` ? never : T
+
+/**
+ * This function offers two overloads:
+ * - One that allows creating a {@link RecordSchema}, and infer the output type
+ *   from the provided arguments, without requiring to specify any of the
+ *   generics. This is useful when you want to define a record without
+ *   explicitly defining its interface. This version does not support circular
+ *   references, as TypeScript cannot infer types in such cases.
+ * - One allows creating a {@link RecordSchema} with an explicitly defined
+ *   interface. This will typically be used by codegen (`lex build`) to generate
+ *   schemas that work even if they contain circular references.
+ */
+export function record<
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
+  const S extends Validator<{ [k: string]: unknown }>,
+>(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
+export function record<
+  const K extends LexiconRecordKey,
+  const V extends { $type: NsidString },
+>(
+  key: K,
+  type: AsNsid<V['$type']>,
+  validator: Validator<Omit<V, '$type'>>,
+): RecordSchema<K, V['$type'], Validator<Omit<V, '$type'>>>
+/*@__NO_SIDE_EFFECTS__*/
+export function record<
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
+  const S extends Validator<{ [k: string]: unknown }>,
+>(key: K, type: T, validator: S) {
+  return new RecordSchema<K, T, S>(key, type, validator)
+}

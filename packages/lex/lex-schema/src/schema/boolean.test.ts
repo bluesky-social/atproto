@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { BooleanSchema } from './boolean.js'
-import { WithDefaultSchema } from './with-default.js'
+import { boolean } from './boolean.js'
+import { withDefault } from './with-default.js'
 
 describe('BooleanSchema', () => {
   describe('basic validation', () => {
-    const schema = new BooleanSchema()
+    const schema = boolean()
 
     it('validates true', () => {
       const result = schema.safeParse(true)
@@ -55,7 +55,7 @@ describe('BooleanSchema', () => {
 
   describe('with default value', () => {
     it('uses default value of true when input is undefined', () => {
-      const schema = new WithDefaultSchema(new BooleanSchema(), true)
+      const schema = withDefault(boolean(), true)
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -64,7 +64,7 @@ describe('BooleanSchema', () => {
     })
 
     it('uses default value of false when input is undefined', () => {
-      const schema = new WithDefaultSchema(new BooleanSchema(), false)
+      const schema = withDefault(boolean(), false)
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -73,7 +73,7 @@ describe('BooleanSchema', () => {
     })
 
     it('overrides default value with explicit true', () => {
-      const schema = new WithDefaultSchema(new BooleanSchema(), false)
+      const schema = withDefault(boolean(), false)
       const result = schema.safeParse(true)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -82,7 +82,7 @@ describe('BooleanSchema', () => {
     })
 
     it('overrides default value with explicit false', () => {
-      const schema = new WithDefaultSchema(new BooleanSchema(), true)
+      const schema = withDefault(boolean(), true)
       const result = schema.safeParse(false)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -91,14 +91,14 @@ describe('BooleanSchema', () => {
     })
 
     it('rejects invalid types even with default', () => {
-      const schema = new WithDefaultSchema(new BooleanSchema(), true)
+      const schema = withDefault(boolean(), true)
       const result = schema.safeParse('not a boolean')
       expect(result.success).toBe(false)
     })
   })
 
   describe('edge cases', () => {
-    const schema = new BooleanSchema()
+    const schema = boolean()
 
     it('rejects Boolean object', () => {
       const result = schema.safeParse(new Boolean(true))

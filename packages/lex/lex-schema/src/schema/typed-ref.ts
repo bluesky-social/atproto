@@ -54,3 +54,19 @@ export class TypedRefSchema<
     return result as ValidationResult<$Typed<InferInput<TValidator>>>
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function typedRef<const TValidator extends TypedObjectValidator>(
+  get: TypedRefGetter<TValidator>,
+): TypedRefSchema<TValidator>
+export function typedRef<
+  TInput extends { $type?: string },
+  TOutput extends TInput = TInput,
+>(
+  get: TypedRefGetter<TypedObjectValidator<TInput, TOutput>>,
+): TypedRefSchema<TypedObjectValidator<TInput, TOutput>>
+export function typedRef<const TValidator extends TypedObjectValidator>(
+  get: TypedRefGetter<TValidator>,
+): TypedRefSchema<TValidator> {
+  return new TypedRefSchema<TValidator>(get)
+}

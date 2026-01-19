@@ -6,6 +6,7 @@ import {
   ValidationContext,
   Validator,
 } from '../core.js'
+import { memoizedTransformer } from '../util/memoize.js'
 import { WithDefaultSchema } from './with-default.js'
 
 export class OptionalSchema<TValidator extends Validator> extends Schema<
@@ -39,3 +40,9 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
     return result
   }
 }
+
+export const optional = /*#__PURE__*/ memoizedTransformer(function <
+  const TValidator extends Validator,
+>(validator: TValidator) {
+  return new OptionalSchema<TValidator>(validator)
+})

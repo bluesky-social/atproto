@@ -19,3 +19,13 @@ export class Query<
     readonly errors: TErrors,
   ) {}
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function query<
+  const N extends NsidString,
+  const P extends ParamsSchema,
+  const O extends Payload,
+  const E extends undefined | readonly string[] = undefined,
+>(nsid: N, parameters: P, output: O, errors: E = undefined as E) {
+  return new Query<N, P, O, E>(nsid, parameters, output, errors)
+}

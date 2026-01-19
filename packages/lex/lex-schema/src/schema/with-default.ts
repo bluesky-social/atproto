@@ -26,3 +26,10 @@ export class WithDefaultSchema<
     return ctx.validate(input, this.validator)
   }
 }
+
+export function withDefault<const TValidator extends Validator>(
+  validator: TValidator,
+  defaultValue: InferInput<TValidator>,
+) {
+  return new WithDefaultSchema<TValidator>(validator, defaultValue)
+}

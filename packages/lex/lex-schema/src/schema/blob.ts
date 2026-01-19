@@ -6,6 +6,7 @@ import {
   isLegacyBlobRef,
 } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 export type BlobSchemaOptions = BlobRefCheckOptions & {
   /**
@@ -78,3 +79,9 @@ function matchesMime(mime: string, accepted: string[]): boolean {
   }
   return false
 }
+
+export const blob = /*#__PURE__*/ memoizedOptions(function <
+  O extends BlobSchemaOptions = NonNullable<unknown>,
+>(options: O = {} as O) {
+  return new BlobSchema(options)
+})

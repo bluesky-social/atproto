@@ -807,7 +807,7 @@ export class LexDefBuilder {
   }
 
   private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {
-    return this.pure(`l.cidLink()`)
+    return this.pure(`l.cid()`)
   }
 
   private async compileCidLinkType(_def: LexiconCid): Promise<string> {

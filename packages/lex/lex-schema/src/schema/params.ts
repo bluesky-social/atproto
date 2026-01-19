@@ -1,5 +1,6 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
+  Infer,
   InferInput,
   InferOutput,
   Schema,
@@ -8,8 +9,23 @@ import {
   WithOptionalProperties,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
-import { Param, ParamScalar, paramSchema } from './_parameters.js'
-import { StringSchema } from './string.js'
+import { memoizedOptions } from '../util/memoize.js'
+import { array } from './array.js'
+import { boolean } from './boolean.js'
+import { dict } from './dict.js'
+import { integer } from './integer.js'
+import { optional } from './optional.js'
+import { StringSchema, string } from './string.js'
+import { union } from './union.js'
+
+export type ParamScalar = Infer<typeof paramScalarSchema>
+const paramScalarSchema = union([boolean(), integer(), string()])
+
+export type Param = Infer<typeof paramSchema>
+export const paramSchema = union([paramScalarSchema, array(paramScalarSchema)])
+
+export type Params = Infer<typeof paramsSchema>
+export const paramsSchema = dict(string(), optional(paramSchema))
 
 export type ParamsSchemaShape = {
   [x: string]: Validator<Param | undefined>
@@ -90,7 +106,7 @@ export class ParamsSchema<
       const validator = this.shapeValidators.get(key)
 
       const coerced: ParamScalar =
-        validator != null && validator instanceof StringSchema
+        validator instanceof StringSchema
           ? value
           : value === 'true'
             ? true
@@ -132,3 +148,9 @@ export class ParamsSchema<
     return urlSearchParams
   }
 }
+
+export const params = /*#__PURE__*/ memoizedOptions(function <
+  const P extends ParamsSchemaShape = NonNullable<unknown>,
+>(properties: P = {} as P) {
+  return new ParamsSchema<P>(properties)
+})

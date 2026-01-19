@@ -1,4 +1,4 @@
-import { Schema, ValidationContext } from '../core.js'
+import { $type, NsidString, Schema, ValidationContext } from '../core.js'
 
 export class TokenSchema<
   const TValue extends string = string,
@@ -35,4 +35,12 @@ export class TokenSchema<
   toString(): string {
     return this.value
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function token<
+  const N extends NsidString,
+  const H extends string = 'main',
+>(nsid: N, hash: H = 'main' as H) {
+  return new TokenSchema($type(nsid, hash))
 }

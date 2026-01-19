@@ -1,5 +1,6 @@
 import { LexValue } from '@atproto/lex-data'
 import { Infer, Schema } from '../core.js'
+import { ObjectSchema, ObjectSchemaShape, object } from './object.js'
 
 export type InferPayload<
   TPayload extends Payload,
@@ -83,4 +84,19 @@ export class Payload<
 
     return encoding === mime
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function payload<
+  const E extends string | undefined = undefined,
+  const S extends PayloadShape<E> = undefined,
+>(encoding: E = undefined as E, validator: S = undefined as S) {
+  return new Payload<E, S>(encoding, validator)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function jsonPayload<const P extends ObjectSchemaShape>(
+  properties: P,
+): Payload<'application/json', ObjectSchema<P>> {
+  return payload('application/json', object(properties))
 }

@@ -40,3 +40,16 @@ export class RefSchema<const TValidator extends Validator>
     return ctx.validate(input, this.validator)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function ref<const TValidator extends Validator>(
+  get: RefSchemaGetter<TValidator>,
+): RefSchema<TValidator>
+export function ref<TInput, TOutput extends TInput = TInput>(
+  get: RefSchemaGetter<Validator<TInput, TOutput>>,
+): RefSchema<Validator<TInput, TOutput>>
+export function ref<const TValidator extends Validator>(
+  get: RefSchemaGetter<TValidator>,
+) {
+  return new RefSchema<TValidator>(get)
+}

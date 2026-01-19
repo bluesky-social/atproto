@@ -47,3 +47,11 @@ export class IntersectionSchema<
     })
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function intersection<
+  const Left extends ObjectSchema,
+  const Right extends DictSchema,
+>(left: Left, right: Right) {
+  return new IntersectionSchema<Left, Right>(left, right)
+}

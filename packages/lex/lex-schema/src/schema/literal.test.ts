@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { LiteralSchema } from './literal.js'
+import { literal } from './literal.js'
 import { WithDefaultSchema } from './with-default.js'
 
 describe('LiteralSchema', () => {
   describe('string literals', () => {
-    const schema = new LiteralSchema('hello')
+    const schema = literal('hello')
 
     it('validates exact string match', () => {
       const result = schema.safeParse('hello')
@@ -61,7 +61,7 @@ describe('LiteralSchema', () => {
   })
 
   describe('empty string literal', () => {
-    const schema = new LiteralSchema('')
+    const schema = literal('')
 
     it('validates empty string', () => {
       const result = schema.safeParse('')
@@ -88,7 +88,7 @@ describe('LiteralSchema', () => {
   })
 
   describe('number literals', () => {
-    const schema = new LiteralSchema(42)
+    const schema = literal(42)
 
     it('validates exact number match', () => {
       const result = schema.safeParse(42)
@@ -125,7 +125,7 @@ describe('LiteralSchema', () => {
   })
 
   describe('zero literal', () => {
-    const schema = new LiteralSchema(0)
+    const schema = literal(0)
 
     it('validates zero', () => {
       const result = schema.safeParse(0)
@@ -157,7 +157,7 @@ describe('LiteralSchema', () => {
   })
 
   describe('negative number literals', () => {
-    const schema = new LiteralSchema(-42)
+    const schema = literal(-42)
 
     it('validates exact negative number match', () => {
       const result = schema.safeParse(-42)
@@ -179,7 +179,7 @@ describe('LiteralSchema', () => {
   })
 
   describe('decimal number literals', () => {
-    const schema = new LiteralSchema(3.14)
+    const schema = literal(3.14)
 
     it('validates exact decimal match', () => {
       const result = schema.safeParse(3.14)
@@ -202,7 +202,7 @@ describe('LiteralSchema', () => {
 
   describe('boolean literals', () => {
     describe('true literal', () => {
-      const schema = new LiteralSchema(true)
+      const schema = literal(true)
 
       it('validates true', () => {
         const result = schema.safeParse(true)
@@ -239,7 +239,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('false literal', () => {
-      const schema = new LiteralSchema(false)
+      const schema = literal(false)
 
       it('validates false', () => {
         const result = schema.safeParse(false)
@@ -272,7 +272,7 @@ describe('LiteralSchema', () => {
   })
 
   describe('null literal', () => {
-    const schema = new LiteralSchema(null)
+    const schema = literal(null)
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -310,7 +310,7 @@ describe('LiteralSchema', () => {
 
   describe('default values', () => {
     describe('string literal with default', () => {
-      const schema = new WithDefaultSchema(new LiteralSchema('hello'), 'hello')
+      const schema = new WithDefaultSchema(literal('hello'), 'hello')
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -335,7 +335,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('number literal with default', () => {
-      const schema = new WithDefaultSchema(new LiteralSchema(42), 42)
+      const schema = new WithDefaultSchema(literal(42), 42)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -352,7 +352,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('boolean literal with default', () => {
-      const schema = new WithDefaultSchema(new LiteralSchema(true), true)
+      const schema = new WithDefaultSchema(literal(true), true)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -369,7 +369,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('null literal with default', () => {
-      const schema = new WithDefaultSchema(new LiteralSchema(null), null)
+      const schema = new WithDefaultSchema(literal(null), null)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -386,7 +386,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('false literal with default', () => {
-      const schema = new WithDefaultSchema(new LiteralSchema(false), false)
+      const schema = new WithDefaultSchema(literal(false), false)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -403,7 +403,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('zero literal with default', () => {
-      const schema = new WithDefaultSchema(new LiteralSchema(0), 0)
+      const schema = new WithDefaultSchema(literal(0), 0)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -422,82 +422,82 @@ describe('LiteralSchema', () => {
 
   describe('edge cases', () => {
     it('handles special string characters', () => {
-      const schema = new LiteralSchema('hello\nworld')
+      const schema = literal('hello\nworld')
       expect(schema.safeParse('hello\nworld').success).toBe(true)
       expect(schema.safeParse('hello world').success).toBe(false)
     })
 
     it('handles unicode characters in strings', () => {
-      const schema = new LiteralSchema('Hello 世界 🌍')
+      const schema = literal('Hello 世界 🌍')
       expect(schema.safeParse('Hello 世界 🌍').success).toBe(true)
       expect(schema.safeParse('Hello world').success).toBe(false)
     })
 
     it('handles emoji literals', () => {
-      const schema = new LiteralSchema('🚀')
+      const schema = literal('🚀')
       expect(schema.safeParse('🚀').success).toBe(true)
       expect(schema.safeParse('🌟').success).toBe(false)
     })
 
     it('handles very long string literals', () => {
       const longString = 'a'.repeat(1000)
-      const schema = new LiteralSchema(longString)
+      const schema = literal(longString)
       expect(schema.safeParse(longString).success).toBe(true)
       expect(schema.safeParse(longString + 'b').success).toBe(false)
     })
 
     it('handles string with whitespace', () => {
-      const schema = new LiteralSchema('  hello  ')
+      const schema = literal('  hello  ')
       expect(schema.safeParse('  hello  ').success).toBe(true)
       expect(schema.safeParse('hello').success).toBe(false)
       expect(schema.safeParse('  hello').success).toBe(false)
     })
 
     it('handles Number.MAX_SAFE_INTEGER', () => {
-      const schema = new LiteralSchema(Number.MAX_SAFE_INTEGER)
+      const schema = literal(Number.MAX_SAFE_INTEGER)
       expect(schema.safeParse(Number.MAX_SAFE_INTEGER).success).toBe(true)
       expect(schema.safeParse(Number.MAX_SAFE_INTEGER - 1).success).toBe(false)
     })
 
     it('handles Number.MIN_SAFE_INTEGER', () => {
-      const schema = new LiteralSchema(Number.MIN_SAFE_INTEGER)
+      const schema = literal(Number.MIN_SAFE_INTEGER)
       expect(schema.safeParse(Number.MIN_SAFE_INTEGER).success).toBe(true)
       expect(schema.safeParse(Number.MIN_SAFE_INTEGER + 1).success).toBe(false)
     })
 
     it('rejects NaN', () => {
-      const schema = new LiteralSchema(42)
+      const schema = literal(42)
       expect(schema.safeParse(NaN).success).toBe(false)
     })
 
     it('rejects Infinity', () => {
-      const schema = new LiteralSchema(42)
+      const schema = literal(42)
       expect(schema.safeParse(Infinity).success).toBe(false)
     })
 
     it('rejects -Infinity', () => {
-      const schema = new LiteralSchema(42)
+      const schema = literal(42)
       expect(schema.safeParse(-Infinity).success).toBe(false)
     })
 
     it('rejects Boolean objects', () => {
-      const schema = new LiteralSchema(true)
+      const schema = literal(true)
       expect(schema.safeParse(new Boolean(true)).success).toBe(false)
     })
 
     it('rejects String objects', () => {
-      const schema = new LiteralSchema('hello')
+      const schema = literal('hello')
       expect(schema.safeParse(new String('hello')).success).toBe(false)
     })
 
     it('rejects Number objects', () => {
-      const schema = new LiteralSchema(42)
+      const schema = literal(42)
       expect(schema.safeParse(new Number(42)).success).toBe(false)
     })
 
     it('distinguishes between -0 and +0', () => {
-      const schemaPositive = new LiteralSchema(0)
-      const schemaNegative = new LiteralSchema(-0)
+      const schemaPositive = literal(0)
+      const schemaNegative = literal(-0)
       // In JavaScript, 0 === -0, so both should validate for both schemas
       expect(schemaPositive.safeParse(0).success).toBe(true)
       expect(schemaPositive.safeParse(-0).success).toBe(true)
@@ -506,7 +506,7 @@ describe('LiteralSchema', () => {
     })
 
     it('handles very small decimal differences', () => {
-      const schema = new LiteralSchema(0.1 + 0.2)
+      const schema = literal(0.1 + 0.2)
       // Note: 0.1 + 0.2 !== 0.3 in JavaScript due to floating point precision
       expect(schema.safeParse(0.1 + 0.2).success).toBe(true)
       expect(schema.safeParse(0.3).success).toBe(false)
@@ -515,13 +515,13 @@ describe('LiteralSchema', () => {
 
   describe('type safety', () => {
     it('accepts exact literal types in TypeScript', () => {
-      const schema = new LiteralSchema('specific' as const)
+      const schema = literal('specific' as const)
       const result = schema.safeParse('specific')
       expect(result.success).toBe(true)
     })
 
     it('preserves literal type in success result', () => {
-      const schema = new LiteralSchema(42)
+      const schema = literal(42)
       const result = schema.safeParse(42)
       expect(result.success).toBe(true)
       if (result.success) {

@@ -26,3 +26,13 @@ export class Subscription<
     readonly errors: TErrors,
   ) {}
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function subscription<
+  const N extends NsidString,
+  const P extends ParamsSchema,
+  const M extends Schema,
+  const E extends undefined | readonly string[] = undefined,
+>(nsid: N, parameters: P, message: M, errors: E = undefined as E) {
+  return new Subscription<N, P, M, E>(nsid, parameters, message, errors)
+}

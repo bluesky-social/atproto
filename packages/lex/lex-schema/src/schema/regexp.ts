@@ -19,3 +19,8 @@ export class RegexpSchema<
     return ctx.success(input as TValue)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function regexp<TInput extends string = string>(pattern: RegExp) {
+  return new RegexpSchema<TInput>(pattern)
+}

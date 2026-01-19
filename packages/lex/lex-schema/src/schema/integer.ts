@@ -1,4 +1,5 @@
 import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 export type IntegerSchemaOptions = {
   minimum?: number
@@ -33,3 +34,9 @@ export class IntegerSchema extends Schema<number> {
 function isInteger(input: unknown): input is number {
   return Number.isSafeInteger(input)
 }
+
+export const integer = /*#__PURE__*/ memoizedOptions(function (
+  options?: IntegerSchemaOptions,
+) {
+  return new IntegerSchema(options)
+})

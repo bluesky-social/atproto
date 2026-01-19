@@ -53,3 +53,19 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
     return ctx.success(copy ?? input)
   }
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function array<const TValidator extends Validator>(
+  items: TValidator,
+  options?: ArraySchemaOptions,
+): ArraySchema<TValidator>
+export function array<
+  const TValue,
+  const TValidator extends Validator<TValue> = Validator<TValue>,
+>(items: TValidator, options?: ArraySchemaOptions): ArraySchema<TValidator>
+export function array<const TValidator extends Validator>(
+  items: TValidator,
+  options?: ArraySchemaOptions,
+) {
+  return new ArraySchema<TValidator>(items, options)
+}
