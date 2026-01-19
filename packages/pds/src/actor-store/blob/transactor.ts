@@ -28,8 +28,6 @@ export type BlobMetadata = {
   size: number
   cid: CID
   mimeType: string
-  width: number | null
-  height: number | null
 }
 
 export class BlobTransactor extends BlobReader {
@@ -75,13 +73,11 @@ export class BlobTransactor extends BlobReader {
       size,
       cid,
       mimeType,
-      width: null,
-      height: null,
     }
   }
 
   async trackUntetheredBlob(metadata: BlobMetadata) {
-    const { tempKey, size, cid, mimeType, width, height } = metadata
+    const { tempKey, size, cid, mimeType } = metadata
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
@@ -98,8 +94,6 @@ export class BlobTransactor extends BlobReader {
         mimeType,
         size,
         tempKey,
-        width,
-        height,
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) =>
