@@ -57,7 +57,7 @@ describe('Query', () => {
 
     it('creates a Query instance with empty parameters', () => {
       const nsid = asNsidString('app.bsky.actor.getProfile')
-      const parameters = params({})
+      const parameters = params()
       const output = payload(
         'application/json',
         object({
@@ -75,7 +75,7 @@ describe('Query', () => {
   describe('properties', () => {
     it('has nsid property', () => {
       const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
 
       const myQuery = query(nsid, parameters, output, undefined)
@@ -99,7 +99,7 @@ describe('Query', () => {
 
     it('has output property', () => {
       const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
 
       const myQuery = query(nsid, parameters, output, undefined)
@@ -110,7 +110,7 @@ describe('Query', () => {
 
     it('has errors property', () => {
       const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
       const errors = ['NotFound', 'RateLimitExceeded'] as const
 
@@ -199,7 +199,7 @@ describe('Query', () => {
   describe('with different error configurations', () => {
     it('creates a Query with a single error', () => {
       const nsid = asNsidString('app.bsky.feed.getPost')
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
       const errors = ['NotFound'] as const
 
@@ -210,7 +210,7 @@ describe('Query', () => {
 
     it('creates a Query with multiple errors', () => {
       const nsid = asNsidString('app.bsky.feed.getPost')
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
       const errors = ['NotFound', 'Unauthorized', 'RateLimitExceeded'] as const
 
@@ -225,7 +225,7 @@ describe('Query', () => {
 
     it('creates a Query with empty errors array', () => {
       const nsid = asNsidString('app.bsky.feed.getPost')
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
       const errors = [] as const
 
@@ -240,7 +240,7 @@ describe('Query', () => {
       const nsid = asNsidString(
         'com.example.very.long.namespace.identifier.method.name',
       )
-      const parameters = params({})
+      const parameters = params()
       const output = payload('application/json', undefined)
 
       const myQuery = query(nsid, parameters, output, undefined)
@@ -264,7 +264,7 @@ describe('Query', () => {
 
     it('handles myQuery with complex nested output schema', () => {
       const nsid = asNsidString('app.bsky.feed.getTimeline')
-      const parameters = params({})
+      const parameters = params()
       const output = payload(
         'application/json',
         object({

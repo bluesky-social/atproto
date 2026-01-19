@@ -9,6 +9,7 @@ import {
   WithOptionalProperties,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
+import { memoizedOptions } from '../util/memoize.js'
 import { array } from './array.js'
 import { boolean } from './boolean.js'
 import { dict } from './dict.js'
@@ -158,9 +159,8 @@ export class ParamsSchema<
   }
 }
 
-/*@__NO_SIDE_EFFECTS__*/
-export function params<
+export const params = /*#__PURE__*/ memoizedOptions(function params<
   const TShape extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: TShape = {} as TShape) {
   return new ParamsSchema<TShape>(properties)
-}
+})

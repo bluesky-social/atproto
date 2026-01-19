@@ -12,14 +12,14 @@ describe('Procedure', () => {
 
       const createPost = procedure(
         'com.example.createPost',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         errors,
       )
 
       expect(createPost.nsid).toBe('com.example.createPost')
-      expect(createPost.parameters).toEqual(params({}))
+      expect(createPost.parameters).toEqual(params())
       expect(createPost.input).toEqual(payload('application/json', undefined))
       expect(createPost.output).toEqual(payload('application/json', undefined))
       expect(createPost.errors).toBe(errors)
@@ -28,14 +28,14 @@ describe('Procedure', () => {
     it('creates a procedure without errors', () => {
       const doSomething = procedure(
         'com.example.doSomething',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         undefined,
       )
 
       expect(doSomething.nsid).toBe('com.example.doSomething')
-      expect(doSomething.parameters).toEqual(params({}))
+      expect(doSomething.parameters).toEqual(params())
       expect(doSomething.input).toEqual(payload('application/json', undefined))
       expect(doSomething.output).toEqual(payload('application/json', undefined))
       expect(doSomething.errors).toBeUndefined()
@@ -44,7 +44,7 @@ describe('Procedure', () => {
     it('creates a procedure with empty errors array', () => {
       const performAction = procedure(
         'com.example.performAction',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         [] as const,
@@ -74,7 +74,7 @@ describe('Procedure', () => {
     it('creates a procedure with empty parameters', () => {
       const myProcedure = procedure(
         'com.example.action',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         undefined,
@@ -92,7 +92,7 @@ describe('Procedure', () => {
 
       const myProcedure = procedure(
         'com.example.createPost',
-        params({}),
+        params(),
         payload('application/json', inputSchema),
         payload('application/json', undefined),
         undefined,
@@ -105,7 +105,7 @@ describe('Procedure', () => {
     it('creates a procedure with text input', () => {
       const myProcedure = procedure(
         'com.example.uploadText',
-        params({}),
+        params(),
         payload('text/plain', undefined),
         payload('application/json', undefined),
         undefined,
@@ -118,7 +118,7 @@ describe('Procedure', () => {
     it('creates a procedure with binary input', () => {
       const myProcedure = procedure(
         'com.example.uploadBlob',
-        params({}),
+        params(),
         payload('application/octet-stream', undefined),
         payload('application/json', undefined),
         undefined,
@@ -130,7 +130,7 @@ describe('Procedure', () => {
     it('creates a procedure with no input', () => {
       const myProcedure = procedure(
         'com.example.action',
-        params({}),
+        params(),
         payload(undefined, undefined),
         payload('application/json', undefined),
         undefined,
@@ -150,7 +150,7 @@ describe('Procedure', () => {
 
       const myProcedure = procedure(
         'com.example.getPost',
-        params({}),
+        params(),
         payload(undefined, undefined),
         payload('application/json', outputSchema),
         undefined,
@@ -163,7 +163,7 @@ describe('Procedure', () => {
     it('creates a procedure with text output', () => {
       const myProcedure = procedure(
         'com.example.export',
-        params({}),
+        params(),
         payload(undefined, undefined),
         payload('text/plain', undefined),
         undefined,
@@ -175,7 +175,7 @@ describe('Procedure', () => {
     it('creates a procedure with binary output', () => {
       const myProcedure = procedure(
         'com.example.download',
-        params({}),
+        params(),
         payload(undefined, undefined),
         payload('application/octet-stream', undefined),
         undefined,
@@ -187,7 +187,7 @@ describe('Procedure', () => {
     it('creates a procedure with no output', () => {
       const myProcedure = procedure(
         'com.example.deletePost',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload(undefined, undefined),
         undefined,
@@ -202,7 +202,7 @@ describe('Procedure', () => {
     it('creates a procedure with single error', () => {
       const myProcedure = procedure(
         'com.example.action',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         ['InvalidRequest'] as const,
@@ -214,7 +214,7 @@ describe('Procedure', () => {
     it('creates a procedure with multiple errors', () => {
       const myProcedure = procedure(
         'com.example.createPost',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         ['InvalidRequest', 'Unauthorized', 'RateLimitExceeded'] as const,
@@ -233,14 +233,14 @@ describe('Procedure', () => {
 
       const myProcedure = procedure(
         'com.example.test',
-        params({}),
+        params(),
         payload('application/json', undefined),
         payload('application/json', undefined),
         errors,
       )
 
       expect(myProcedure.nsid).toBe('com.example.test')
-      expect(myProcedure.parameters).toEqual(params({}))
+      expect(myProcedure.parameters).toEqual(params())
       expect(myProcedure.input).toEqual(payload('application/json', undefined))
       expect(myProcedure.output).toEqual(payload('application/json', undefined))
       expect(myProcedure.errors).toBe(errors)
@@ -308,7 +308,7 @@ describe('Procedure', () => {
     it('creates a minimal procedure', () => {
       const myProcedure = procedure(
         'com.example.ping',
-        params({}),
+        params(),
         payload(undefined, undefined),
         payload(undefined, undefined),
         undefined,

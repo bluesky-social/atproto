@@ -480,7 +480,11 @@ export class LexDefBuilder {
     if (!def) return this.pure(`l.params()`)
 
     const properties = await this.compilePropertiesSchemas(def)
-    return this.pure(`l.params({${properties.join(',')}})`)
+    return this.pure(
+      properties.length === 0
+        ? `l.params()`
+        : `l.params({${properties.join(',')}})`,
+    )
   }
 
   private async compileErrors(defs?: readonly LexiconError[]) {

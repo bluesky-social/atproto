@@ -474,7 +474,7 @@ describe('ParamsSchema', () => {
   })
 
   describe('empty schema', () => {
-    const schema = params({})
+    const schema = params()
 
     it('validates empty object', () => {
       const result = schema.safeParse({})
@@ -575,6 +575,18 @@ describe('ParamsSchema', () => {
         '': 'empty key',
       })
       expect(result.success).toBe(true)
+    })
+  })
+
+  describe('memoized params schema', () => {
+    it('returns the same instance when no shape is provided', () => {
+      expect(params()).toBe(params())
+    })
+
+    it('returns different instances when (identical) shapes are provided', () => {
+      const schemaA = params({ a: string() })
+      const schemaB = params({ a: string() })
+      expect(schemaA).not.toBe(schemaB)
     })
   })
 })
