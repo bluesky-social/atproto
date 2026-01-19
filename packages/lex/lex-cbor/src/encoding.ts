@@ -43,7 +43,7 @@ function undefinedEncoder(): null {
 }
 
 function numberEncoder(num: number): null {
-  if (Number.isInteger(num) && Number.isSafeInteger(num)) return null
+  if (Number.isSafeInteger(num)) return null
 
   throw new Error('Non-integer numbers are not allowed by the AT Data Model')
 }
