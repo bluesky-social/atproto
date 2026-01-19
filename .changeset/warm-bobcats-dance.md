@@ -3,4 +3,4 @@
 '@atproto/lex': patch
 ---
 
-Add new `Unknown$Type` type to represent records and object with an unknown `$type` property (typically from open unions).
+Add new `Unknown$Type` type to represent records an object's unknown `$type` property (typically from open unions).
