@@ -34,18 +34,4 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       cursor: key.packFromResult(res),
     }
   },
-
-  async countActorDrafts(req) {
-    const { actorDid } = req
-
-    const res = await db.db
-      .selectFrom('draft')
-      .select((eb) => eb.fn.count('creator').as('count'))
-      .where('creator', '=', actorDid)
-      .executeTakeFirstOrThrow()
-
-    return {
-      count: Number(res.count),
-    }
-  },
 })

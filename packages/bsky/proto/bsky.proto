@@ -386,6 +386,7 @@ message GetCountsForUsersResponse {
   repeated int32 lists = 5;
   repeated int32 feeds = 6;
   repeated int32 starter_packs = 7;
+  repeated int32 drafts = 8;
 }
 
 message GetStarterPackCountsRequest {
@@ -1323,14 +1324,6 @@ message GetActorDraftsResponse {
   string cursor = 2;
 }
 
-message CountActorDraftsRequest {
-  string actor_did = 1;
-}
-
-message CountActorDraftsResponse {
-  int32 count = 1;
-}
-
 
 // Polo-backed Graph Endpoints
 
@@ -1535,8 +1528,6 @@ service Service {
   // Drafts
   // Returns a page of drafts for a user.
   rpc GetActorDrafts(GetActorDraftsRequest) returns (GetActorDraftsResponse);
-  // Returns how many drafts a user has.
-  rpc CountActorDrafts(CountActorDraftsRequest) returns (CountActorDraftsResponse);
 
   // Identity
   rpc GetIdentityByDid(GetIdentityByDidRequest) returns (GetIdentityByDidResponse);

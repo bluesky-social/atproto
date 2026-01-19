@@ -12,10 +12,12 @@ export default function (server: Server, ctx: AppContext) {
       const actorDid = auth.credentials.iss
       const { draft } = input.body
 
-      const res = await ctx.dataplane.countActorDrafts({
-        actorDid: actorDid,
+      const res = await ctx.dataplane.getCountsForUsers({
+        dids: [actorDid],
       })
-      if (res.count >= ctx.cfg.draftsLimit) {
+
+      const draftsCount = res.drafts[0]
+      if (draftsCount >= ctx.cfg.draftsLimit) {
         throw new InvalidRequestError(
           `Drafts limit reached`,
           'DraftLimitReached',

@@ -3145,6 +3145,11 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   starterPacks: number[] = [];
 
+  /**
+   * @generated from field: repeated int32 drafts = 8;
+   */
+  drafts: number[] = [];
+
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3160,6 +3165,7 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
     { no: 5, name: "lists", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 6, name: "feeds", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 7, name: "starter_packs", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 8, name: "drafts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCountsForUsersResponse {
@@ -9512,80 +9518,6 @@ export class GetActorDraftsResponse extends Message<GetActorDraftsResponse> {
 
   static equals(a: GetActorDraftsResponse | PlainMessage<GetActorDraftsResponse> | undefined, b: GetActorDraftsResponse | PlainMessage<GetActorDraftsResponse> | undefined): boolean {
     return proto3.util.equals(GetActorDraftsResponse, a, b);
-  }
-}
-
-/**
- * @generated from message bsky.CountActorDraftsRequest
- */
-export class CountActorDraftsRequest extends Message<CountActorDraftsRequest> {
-  /**
-   * @generated from field: string actor_did = 1;
-   */
-  actorDid = "";
-
-  constructor(data?: PartialMessage<CountActorDraftsRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.CountActorDraftsRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CountActorDraftsRequest {
-    return new CountActorDraftsRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CountActorDraftsRequest {
-    return new CountActorDraftsRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CountActorDraftsRequest {
-    return new CountActorDraftsRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: CountActorDraftsRequest | PlainMessage<CountActorDraftsRequest> | undefined, b: CountActorDraftsRequest | PlainMessage<CountActorDraftsRequest> | undefined): boolean {
-    return proto3.util.equals(CountActorDraftsRequest, a, b);
-  }
-}
-
-/**
- * @generated from message bsky.CountActorDraftsResponse
- */
-export class CountActorDraftsResponse extends Message<CountActorDraftsResponse> {
-  /**
-   * @generated from field: int32 count = 1;
-   */
-  count = 0;
-
-  constructor(data?: PartialMessage<CountActorDraftsResponse>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "bsky.CountActorDraftsResponse";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CountActorDraftsResponse {
-    return new CountActorDraftsResponse().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CountActorDraftsResponse {
-    return new CountActorDraftsResponse().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CountActorDraftsResponse {
-    return new CountActorDraftsResponse().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: CountActorDraftsResponse | PlainMessage<CountActorDraftsResponse> | undefined, b: CountActorDraftsResponse | PlainMessage<CountActorDraftsResponse> | undefined): boolean {
-    return proto3.util.equals(CountActorDraftsResponse, a, b);
   }
 }
 
