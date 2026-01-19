@@ -17,7 +17,6 @@ import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
-import * as img from '../../image'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { blobStoreLogger as log } from '../../logger'
 import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
@@ -61,11 +60,10 @@ export class BlobTransactor extends BlobReader {
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<BlobMetadata> {
-    const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
+    const [tempKey, size, sha256, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
       sha256Stream(cloneStream(blobStream)),
-      img.maybeGetInfo(cloneStream(blobStream)),
       mimeTypeFromStream(cloneStream(blobStream)),
     ])
 
@@ -77,8 +75,8 @@ export class BlobTransactor extends BlobReader {
       size,
       cid,
       mimeType,
-      width: imgInfo?.width ?? null,
-      height: imgInfo?.height ?? null,
+      width: null,
+      height: null,
     }
   }
 
