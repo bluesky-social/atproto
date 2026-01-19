@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { EnumSchema } from './enum.js'
+import { enumSchema } from './enum.js'
 import { integer } from './integer.js'
 import { nullable } from './nullable.js'
 import { object } from './object.js'
 import { string } from './string.js'
-import { WithDefaultSchema } from './with-default.js'
+import { withDefault } from './with-default.js'
 
 describe('NullableSchema', () => {
   describe('with StringSchema', () => {
@@ -103,7 +103,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with EnumSchema', () => {
-    const schema = nullable(new EnumSchema(['red', 'green', 'blue']))
+    const schema = nullable(enumSchema(['red', 'green', 'blue']))
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -204,7 +204,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with StringSchema having default value', () => {
-    const schema = nullable(new WithDefaultSchema(string(), 'default'))
+    const schema = nullable(withDefault(string(), 'default'))
 
     it('validates null explicitly', () => {
       const result = schema.safeParse(null)
@@ -408,10 +408,7 @@ describe('NullableSchema', () => {
   describe('with complex wrapped schemas', () => {
     it('validates nullable enum with default', () => {
       const schema = nullable(
-        new WithDefaultSchema(
-          new EnumSchema(['option1', 'option2']),
-          'option1',
-        ),
+        withDefault(enumSchema(['option1', 'option2']), 'option1'),
       )
 
       expect(schema.safeParse(null).success).toBe(true)

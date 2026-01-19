@@ -9,7 +9,7 @@ export type CidSchemaOptions = CheckCidOptions
 export class CidSchema<
   const TOptions extends CidSchemaOptions = { flavor: undefined },
 > extends Schema<InferCheckedCid<TOptions>> {
-  constructor(readonly options: TOptions) {
+  constructor(readonly options?: TOptions) {
     super()
   }
 
@@ -24,6 +24,6 @@ export class CidSchema<
 
 export const cid = /*#__PURE__*/ memoizedOptions(function <
   O extends CidSchemaOptions = NonNullable<unknown>,
->(options: O = {} as O) {
+>(options?: O) {
   return new CidSchema(options)
 })

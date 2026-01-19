@@ -4,13 +4,13 @@ import {
   InferPayload,
   InferPayloadBody,
   InferPayloadEncoding,
-  ObjectSchema,
-  OptionalSchema,
   Payload,
   Procedure,
   Query,
-  StringSchema,
   Subscription,
+  object,
+  optional,
+  string,
 } from './schema.js'
 
 export type Main<T> = T | { main: T }
@@ -69,7 +69,7 @@ export type InferMethodMessage<
   ? LexValue & InferOutput<M['message']>
   : undefined
 
-export const lexErrorData: Schema<LexErrorData> = new ObjectSchema({
-  error: new StringSchema({ minLength: 1 }),
-  message: new OptionalSchema(new StringSchema({})),
-})
+export const lexErrorData = object({
+  error: string({ minLength: 1 }),
+  message: optional(string()),
+}) satisfies Schema<LexErrorData>

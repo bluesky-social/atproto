@@ -7,7 +7,7 @@ import { ParamsSchema, params } from './params.js'
 import { Payload, payload } from './payload.js'
 import { Query, query } from './query.js'
 import { string } from './string.js'
-import { WithDefaultSchema } from './with-default.js'
+import { withDefault } from './with-default.js'
 
 describe('Query', () => {
   describe('constructor', () => {
@@ -289,9 +289,7 @@ describe('Query', () => {
       const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
       const parameters = params({
         feed: string({ format: 'at-uri' }),
-        limit: optional(
-          new WithDefaultSchema(integer({ minimum: 1, maximum: 100 }), 50),
-        ),
+        limit: optional(withDefault(integer({ minimum: 1, maximum: 100 }), 50)),
         cursor: optional(string()),
       })
       const output = payload(
@@ -311,9 +309,7 @@ describe('Query', () => {
       const nsid = asNsidString('app.bsky.feed.searchPosts')
       const parameters = params({
         q: string({ minLength: 1, maxLength: 300 }),
-        limit: optional(
-          new WithDefaultSchema(integer({ minimum: 1, maximum: 100 }), 25),
-        ),
+        limit: optional(withDefault(integer({ minimum: 1, maximum: 100 }), 25)),
         cursor: optional(string()),
       })
       const output = payload(

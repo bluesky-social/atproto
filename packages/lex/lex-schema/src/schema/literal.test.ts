@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { literal } from './literal.js'
-import { WithDefaultSchema } from './with-default.js'
+import { withDefault } from './with-default.js'
 
 describe('LiteralSchema', () => {
   describe('string literals', () => {
@@ -310,7 +310,7 @@ describe('LiteralSchema', () => {
 
   describe('default values', () => {
     describe('string literal with default', () => {
-      const schema = new WithDefaultSchema(literal('hello'), 'hello')
+      const schema = withDefault(literal('hello'), 'hello')
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -335,7 +335,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('number literal with default', () => {
-      const schema = new WithDefaultSchema(literal(42), 42)
+      const schema = withDefault(literal(42), 42)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -352,7 +352,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('boolean literal with default', () => {
-      const schema = new WithDefaultSchema(literal(true), true)
+      const schema = withDefault(literal(true), true)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -369,7 +369,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('null literal with default', () => {
-      const schema = new WithDefaultSchema(literal(null), null)
+      const schema = withDefault(literal(null), null)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -386,7 +386,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('false literal with default', () => {
-      const schema = new WithDefaultSchema(literal(false), false)
+      const schema = withDefault(literal(false), false)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)
@@ -403,7 +403,7 @@ describe('LiteralSchema', () => {
     })
 
     describe('zero literal with default', () => {
-      const schema = new WithDefaultSchema(literal(0), 0)
+      const schema = withDefault(literal(0), 0)
 
       it('uses default value when undefined is provided', () => {
         const result = schema.safeParse(undefined)

@@ -27,11 +27,11 @@ export type BlobSchemaOptions = BlobRefCheckOptions & {
 export type { BlobRef, LegacyBlobRef }
 
 export class BlobSchema<
-  const TOptions extends BlobSchemaOptions = { allowLegacy: true },
+  const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
 > extends Schema<
   TOptions extends { allowLegacy: true } ? BlobRef | LegacyBlobRef : BlobRef
 > {
-  constructor(readonly options: TOptions) {
+  constructor(readonly options?: TOptions) {
     super()
   }
 
@@ -41,7 +41,7 @@ export class BlobSchema<
         ? isBlobRef(input, this.options)
           ? input
           : null
-        : this.options.allowLegacy === true && isLegacyBlobRef(input)
+        : this.options?.allowLegacy === true && isLegacyBlobRef(input)
           ? input
           : null
 
@@ -49,12 +49,12 @@ export class BlobSchema<
       return ctx.issueInvalidType(input, 'blob')
     }
 
-    const { accept } = this.options
+    const accept = this.options?.accept
     if (accept && !matchesMime(blob.mimeType, accept)) {
       return ctx.issueInvalidPropertyValue(blob, 'mimeType', accept)
     }
 
-    const { maxSize } = this.options
+    const maxSize = this.options?.maxSize
     if (maxSize != null && 'size' in blob && blob.size > maxSize) {
       return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
     }
@@ -63,7 +63,7 @@ export class BlobSchema<
   }
 
   matchesMime(mime: string): boolean {
-    const { accept } = this.options
+    const accept = this.options?.accept
     if (!accept) return true
     return matchesMime(mime, accept)
   }
@@ -82,6 +82,6 @@ function matchesMime(mime: string, accepted: string[]): boolean {
 
 export const blob = /*#__PURE__*/ memoizedOptions(function <
   O extends BlobSchemaOptions = { allowLegacy?: false },
->(options: O = {} as O) {
+>(options?: O) {
   return new BlobSchema(options)
 })

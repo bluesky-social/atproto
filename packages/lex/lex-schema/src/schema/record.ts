@@ -11,8 +11,8 @@ import {
   ValidationContext,
   Validator,
 } from '../core.js'
-import { LiteralSchema } from './literal.js'
-import { StringSchema } from './string.js'
+import { literal } from './literal.js'
+import { string } from './string.js'
 
 export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
@@ -88,10 +88,10 @@ export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 
-const keySchema = new StringSchema({ minLength: 1 })
-const tidSchema = new StringSchema({ format: 'tid' })
-const nsidSchema = new StringSchema({ format: 'nsid' })
-const selfLiteralSchema = new LiteralSchema('self')
+const keySchema = string({ minLength: 1 })
+const tidSchema = string({ format: 'tid' })
+const nsidSchema = string({ format: 'nsid' })
+const selfLiteralSchema = literal('self')
 
 function recordKey<Key extends LexiconRecordKey>(
   key: Key,
@@ -103,7 +103,7 @@ function recordKey<Key extends LexiconRecordKey>(
   if (key.startsWith('literal:')) {
     const value = key.slice(8) as RecordKeySchemaOutput<Key>
     if (value === 'self') return selfLiteralSchema as any
-    return new LiteralSchema(value)
+    return literal(value)
   }
 
   throw new Error(`Unsupported record key type: ${key}`)

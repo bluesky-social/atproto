@@ -132,6 +132,6 @@ export function coerceToString(input: unknown): string | null {
 
 export const string = /*#__PURE__*/ memoizedOptions(function <
   const O extends StringSchemaOptions = NonNullable<unknown>,
->(options: StringSchemaOptions & O = {} as O) {
+>(options?: StringSchemaOptions & O) {
   return new StringSchema<O>(options)
 })

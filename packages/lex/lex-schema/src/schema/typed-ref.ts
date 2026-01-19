@@ -4,7 +4,6 @@ import {
   InferOutput,
   Schema,
   ValidationContext,
-  ValidationResult,
   Validator,
 } from '../core.js'
 

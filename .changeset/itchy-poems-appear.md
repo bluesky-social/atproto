@@ -2,4 +2,4 @@
 '@atproto/lex-client': patch
 ---
 
-Remove use of `URLSearchParams.size` to build XRPC query string
+Remove dependency on `URLSearchParams.size` to build XRPC query string

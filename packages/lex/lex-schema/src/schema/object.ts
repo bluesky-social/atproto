@@ -71,6 +71,8 @@ export class ObjectSchema<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function object<const P extends ObjectSchemaShape>(properties: P) {
-  return new ObjectSchema<P>(properties)
+export function object<const TShape extends ObjectSchemaShape>(
+  properties: TShape,
+) {
+  return new ObjectSchema<TShape>(properties)
 }
