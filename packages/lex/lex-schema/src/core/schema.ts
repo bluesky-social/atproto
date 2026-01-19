@@ -7,6 +7,7 @@ import {
   Validator,
 } from './validator.js'
 
+type ParseOptions = Omit<ValidationOptions, 'mode'>
 type ValidateOptions = Omit<ValidationOptions, 'mode'>
 
 export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
@@ -74,7 +75,7 @@ export abstract class Schema<
     return this.matches(input) ? input : undefined
   }
 
-  parse(input: unknown, options?: ValidateOptions): InferOutput<this> {
+  parse(input: unknown, options?: ParseOptions): InferOutput<this> {
     const result = this.safeParse(input, options)
     if (result.success) return result.value
     throw result.reason
@@ -82,7 +83,7 @@ export abstract class Schema<
 
   safeParse(
     input: unknown,
-    options?: ValidateOptions,
+    options?: ParseOptions,
   ): ValidationResult<InferOutput<this>> {
     return ValidationContext.validate(input, this, {
       ...options,

@@ -60,9 +60,9 @@ export function refine<const TValidator extends Validator>(
   refinement: RefinementCheck<InferInput<TValidator>>,
 ): TValidator
 export function refine<
-  TInput extends Refinement,
-  const TValidator extends Validator<InferRefinement<TInput>>,
->(schema: TValidator, refinement: TInput): TValidator
+  TRefinement extends Refinement,
+  const TValidator extends Validator<InferRefinement<TRefinement>>,
+>(schema: TValidator, refinement: TRefinement): TValidator
 /*@__NO_SIDE_EFFECTS__*/
 export function refine<const TValidator extends Validator>(
   schema: TValidator,

@@ -13,6 +13,7 @@ export class BytesSchema extends Schema<Uint8Array> {
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
+    // In "parse" mode, coerce different binary formats into Uint8Array
     const bytes =
       ctx.options.mode === 'parse' ? asUint8Array(input) : ifUint8Array(input)
     if (!bytes) {

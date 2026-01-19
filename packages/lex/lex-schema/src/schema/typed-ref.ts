@@ -51,7 +51,7 @@ export class TypedRefSchema<
       return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
     }
 
-    return result as ValidationResult<$Typed<InferInput<TValidator>>>
+    return result
   }
 }
 

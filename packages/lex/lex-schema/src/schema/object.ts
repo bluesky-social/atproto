@@ -56,6 +56,11 @@ export class ObjectSchema<
       }
 
       if (!Object.is(result.value, input[key])) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, key, [result.value])
+        }
+
         copy ??= { ...input }
         copy[key] = result.value
       }

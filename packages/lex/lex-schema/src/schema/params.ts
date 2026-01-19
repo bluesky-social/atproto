@@ -68,6 +68,11 @@ export class ParamsSchema<
       if (!result.success) return result
 
       if (result.value !== input[key]) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, key, [result.value])
+        }
+
         copy ??= { ...input }
         copy[key] = result.value
       }
@@ -90,6 +95,11 @@ export class ParamsSchema<
       }
 
       if (!Object.is(result.value, input[key])) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, key, [result.value])
+        }
+
         // Copy on write
         copy ??= { ...input }
         copy[key] = result.value

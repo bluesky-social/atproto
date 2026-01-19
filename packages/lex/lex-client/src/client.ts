@@ -16,7 +16,6 @@ import {
   RecordSchema,
   Restricted,
   UnknownObject,
-  ValidationOptions,
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
@@ -48,7 +47,6 @@ export type {
   Query,
   RecordSchema,
   Restricted,
-  ValidationOptions,
 }
 
 export type ClientOptions = {
@@ -421,7 +419,6 @@ export class Client implements Agent {
   ): Promise<CreateOutput> {
     const schema: T = getMain(ns)
     const record = schema.build(input) as { $type: NsidString } & LexMap
-    if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
@@ -489,7 +486,6 @@ export class Client implements Agent {
   ): Promise<PutOutput> {
     const schema: T = getMain(ns)
     const record = schema.build(input) as { $type: NsidString } & LexMap
-    if (options.validateRequest) schema.assert(record)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
     return response.body

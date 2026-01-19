@@ -53,6 +53,11 @@ export class DictSchema<
       if (!valueResult.success) return valueResult
 
       if (!Object.is(valueResult.value, input[key])) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, key, [valueResult.value])
+        }
+
         copy ??= { ...input }
         copy[key] = valueResult.value
       }

@@ -44,6 +44,11 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
       if (!result.success) return result
 
       if (result.value !== input[i]) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, i, [result.value])
+        }
+
         // Copy on write (but only if we did not already make a copy)
         copy ??= Array.from(input)
         copy[i] = result.value

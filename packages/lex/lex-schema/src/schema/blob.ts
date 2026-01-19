@@ -81,7 +81,7 @@ function matchesMime(mime: string, accepted: string[]): boolean {
 }
 
 export const blob = /*#__PURE__*/ memoizedOptions(function <
-  O extends BlobSchemaOptions = NonNullable<unknown>,
+  O extends BlobSchemaOptions = { allowLegacy?: false },
 >(options: O = {} as O) {
   return new BlobSchema(options)
 })
