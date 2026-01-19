@@ -1,9 +1,14 @@
+import { Selectable } from 'kysely'
 import { lexicons } from '@atproto/api'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
+import { Verification } from '../db/schema/verification'
 import { CommitCreateEvent, Jetstream } from '../jetstream/service'
 import { verificationLogger } from '../logger'
+import { ModerationServiceCreator } from '../mod-service'
+import { RepoSubject } from '../mod-service/subject'
 import { VerificationService } from '../verification/service'
+import { REVOCATION_TAG } from '../verification/util'
 
 type VerificationRecord = {
   subject: string
@@ -22,8 +27,10 @@ export class VerificationListener {
 
   constructor(
     private db: Database,
+    private modService: ModerationServiceCreator,
     private jetstreamUrl: string,
     private verifierIssuersToIndex?: string[],
+    private tagRevokedVerifications?: boolean,
   ) {}
 
   // When the queue has capacity, this method returns true which means we can continue to handle events
@@ -65,12 +72,48 @@ export class VerificationListener {
     })
   }
 
+  async tagRevocations(verifications: Selectable<Verification>[]) {
+    if (!this.tagRevokedVerifications) return
+
+    for (const verification of verifications) {
+      this.db.transaction(async (dbTxn) => {
+        const modService = this.modService(dbTxn)
+        const subject = new RepoSubject(verification.subject)
+        const status = await modService.getStatus(subject)
+
+        // If tag already exists, no need to proceed further
+        if (status?.tags?.includes(REVOCATION_TAG)) {
+          return
+        }
+
+        // log the tag event which also applies the necessary state changes to moderation subject
+        await modService.logEvent({
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTag',
+            add: [REVOCATION_TAG],
+            remove: [],
+            comment: 'Verification record deletion received via jetstream',
+          },
+          subject,
+          modTool: {
+            name: 'ozone-verification-listener',
+            meta: {
+              isAutomated: true,
+            },
+          },
+          createdBy: verification.revokedBy || verification.subject,
+        })
+      })
+    }
+  }
+
   handleDeletedVerification(uri: string, cursor: number) {
     this.backgroundQueue.add(async () => {
       try {
-        await this.verificationService.markRevoked({
+        const revocations = await this.verificationService.markRevoked({
           uris: [uri],
         })
+        await this.tagRevocations(revocations)
         await this.updateCursor(cursor)
       } catch (err) {
         verificationLogger.error(

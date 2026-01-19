@@ -42,6 +42,7 @@ export const readEnv = (): OzoneEnvironment => {
     verifierDid: envStr('OZONE_VERIFIER_DID'),
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
     verifierIssuersToIndex: envList('OZONE_VERIFIER_ISSUERS_TO_INDEX'),
+    tagRevokedVerifications: envBool('OZONE_TAG_REVOKED_VERIFICATIONS'),
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
   }
 }
@@ -83,5 +84,6 @@ export type OzoneEnvironment = {
   verifierDid?: string
   verifierPassword?: string
   verifierIssuersToIndex?: string[]
+  tagRevokedVerifications?: boolean
   jetstreamUrl?: string
 }

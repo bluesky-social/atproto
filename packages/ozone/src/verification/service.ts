@@ -54,8 +54,9 @@ export class VerificationService {
   }) {
     const now = new Date().toISOString()
     return this.db.transaction(async (tx) => {
+      const results: Selectable<Verification>[] = []
       for (const uri of uris) {
-        return tx.db
+        const updated = await tx.db
           .updateTable('verification')
           .set({
             revokeReason,
@@ -66,8 +67,11 @@ export class VerificationService {
           })
           .where('uri', '=', uri)
           .where('revokedAt', 'is', null)
+          .returningAll()
           .execute()
+        results.push(...updated)
       }
+      return results
     })
   }
 

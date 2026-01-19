@@ -4,6 +4,8 @@ import { AppContext } from '../context'
 import { ModerationService } from '../mod-service'
 import { ParsedLabelers } from '../util'
 
+export const REVOCATION_TAG = 'verification-revoked'
+
 export const getReposForVerifications = async (
   ctx: AppContext,
   labelers: ParsedLabelers,

@@ -116,7 +116,36 @@ Array [
       "invites": Array [],
       "invitesDisabled": false,
       "labels": Array [],
-      "moderation": Object {},
+      "moderation": Object {
+        "subjectStatus": Object {
+          "accountStats": Object {
+            "$type": "tools.ozone.moderation.defs#accountStats",
+          },
+          "ageAssuranceState": "unknown",
+          "createdAt": "1970-01-01T00:00:00.000Z",
+          "hosting": Object {
+            "$type": "tools.ozone.moderation.defs#accountHosting",
+            "status": "unknown",
+          },
+          "id": 1,
+          "priorityScore": 0,
+          "recordsStats": Object {
+            "$type": "tools.ozone.moderation.defs#recordsStats",
+          },
+          "reviewState": "tools.ozone.moderation.defs#reviewNone",
+          "subject": Object {
+            "$type": "com.atproto.admin.defs#repoRef",
+            "did": "user(1)",
+          },
+          "subjectBlobCids": Array [],
+          "subjectRepoHandle": "alice.test",
+          "tags": Array [
+            "verification-revoked",
+          ],
+          "takendown": false,
+          "updatedAt": "1970-01-01T00:00:00.000Z",
+        },
+      },
       "relatedRecords": Array [
         Object {
           "$type": "app.bsky.actor.profile",

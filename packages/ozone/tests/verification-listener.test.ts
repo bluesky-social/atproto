@@ -1,6 +1,7 @@
 import { Sender, WebSocketServer } from 'ws'
 import { AppBskyGraphVerification, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { REVOCATION_TAG } from '../src/verification/util'
 import { forSnapshot } from './_util'
 
 describe('verification-listener', () => {
@@ -24,6 +25,7 @@ describe('verification-listener', () => {
         verifierUrl: 'http://localhost:2583',
         verifierDid: 'did:example:verifier',
         verifierPassword: 'test',
+        tagRevokedVerifications: true,
         jetstreamUrl: `ws://localhost:${jetstreamPort}`,
       },
     })
@@ -91,12 +93,22 @@ describe('verification-listener', () => {
       attempt++
     } while (!hasCursorUpdated && attempt < 20)
     // Give the processor enough time to handle the events
-    const {
-      data: { verifications },
-    } = await adminAgent.tools.ozone.verification.listVerifications({})
+    const modClient = network.ozone.getModClient()
+    const [
+      {
+        data: { verifications },
+      },
+      { subjectStatuses },
+    ] = await Promise.all([
+      adminAgent.tools.ozone.verification.listVerifications({}),
+      modClient.queryStatuses({ subject: sc.dids.alice }),
+    ])
     const cursor = await verificationListener?.getCursor()
 
     expect(forSnapshot(verifications)).toMatchSnapshot()
     expect(cursor).toEqual(123456799)
+    expect(
+      subjectStatuses[0]?.tags?.find((tag) => tag === REVOCATION_TAG),
+    ).toBeDefined()
   })
 })

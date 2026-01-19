@@ -116,8 +116,10 @@ export class DaemonContext {
       cfg.verifier && cfg.jetstreamUrl
         ? new VerificationListener(
             db,
+            modService,
             cfg.jetstreamUrl,
             cfg.verifier?.issuersToIndex,
+            cfg.verifier?.tagRevokedVerifications,
           )
         : undefined
 
