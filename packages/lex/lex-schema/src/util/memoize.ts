@@ -1,13 +1,20 @@
 /*@__NO_SIDE_EFFECTS__*/
 export function memoizedOptions<F extends (...args: any[]) => any>(fn: F): F {
-  let undefinedOptionsValue: ReturnType<F> | undefined
+  let cache: null | { value: ReturnType<F> } = null
 
   return function cached(...args: any[]): ReturnType<F> {
-    // Non-empty options case
-    if (args.length > 0) return fn(...args)
+    // Not using the cache if there are args
+    if (args.length > 0) {
+      return fn(...args)
+    }
 
-    // No options case
-    return (undefinedOptionsValue ??= fn())
+    if (cache != null) {
+      return cache.value
+    }
+
+    const value = fn(...args)
+    cache = { value }
+    return value
   } as F
 }
 
