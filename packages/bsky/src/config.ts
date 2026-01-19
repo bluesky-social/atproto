@@ -1,4 +1,5 @@
 import assert from 'node:assert'
+import { noUndefinedVals } from '@atproto/common'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
@@ -388,7 +389,7 @@ export class ServerConfig {
       proxyPreferCompressed,
       kws,
       debugFieldAllowedDids,
-      ...stripUndefineds(overrides ?? {}),
+      ...noUndefinedVals(overrides ?? {}),
     })
   }
 
@@ -656,18 +657,6 @@ export class ServerConfig {
   get debugFieldAllowedDids() {
     return this.cfg.debugFieldAllowedDids
   }
-}
-
-function stripUndefineds(
-  obj: Record<string, unknown>,
-): Record<string, unknown> {
-  const result = {}
-  Object.entries(obj).forEach(([key, val]) => {
-    if (val !== undefined) {
-      result[key] = val
-    }
-  })
-  return result
 }
 
 function envList(str: string | undefined): string[] {

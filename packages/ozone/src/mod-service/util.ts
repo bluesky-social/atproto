@@ -48,6 +48,9 @@ export const signLabel = async (
   signingKey: Keypair,
 ): Promise<SignedLabel> => {
   const { ver, src, uri, cid, val, neg, cts, exp } = label
+  // @TODO cborEncode now ignores undefined properties, so we might not need to
+  // reformat the label here. We might want to consider this if we ever re-visit
+  // the logic below:
   const reformatted = noUndefinedVals({
     ver: ver ?? 1,
     src,
