@@ -5,6 +5,7 @@ import {
   ValidationContext,
   Validator,
 } from '../core.js'
+import { memoizedTransformer } from '../util/memoize.js'
 
 export type ArraySchemaOptions = {
   minLength?: number
@@ -60,17 +61,19 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
 }
 
 /*@__NO_SIDE_EFFECTS__*/
-export function array<const TValidator extends Validator>(
+function arraySchema<const TValidator extends Validator>(
   items: TValidator,
   options?: ArraySchemaOptions,
 ): ArraySchema<TValidator>
-export function array<
+function arraySchema<
   const TValue,
   const TValidator extends Validator<TValue> = Validator<TValue>,
 >(items: TValidator, options?: ArraySchemaOptions): ArraySchema<TValidator>
-export function array<const TValidator extends Validator>(
+function arraySchema<const TValidator extends Validator>(
   items: TValidator,
   options?: ArraySchemaOptions,
 ) {
   return new ArraySchema<TValidator>(items, options)
 }
+
+export const array = /*#__PURE__*/ memoizedTransformer(arraySchema)
