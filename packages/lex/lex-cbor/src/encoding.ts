@@ -65,6 +65,7 @@ function mapEncoder(map: Map<unknown, unknown>): null {
 
 const encodeOptions: EncodeOptions = {
   float64: true,
+  ignoreUndefinedProperties: true,
   typeEncoders: {
     Map: mapEncoder,
     Object: objectEncoder,
