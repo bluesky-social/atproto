@@ -612,10 +612,48 @@ export class OAuthProvider extends OAuthVerifier {
     ).catch(throwAuthorizationError)
 
     try {
-      const sessions = await this.getSessions(client.id, deviceId, parameters)
+      const sessions = (
+        await this.accountManager.listDeviceAccounts(deviceId)
+      ).map((deviceAccount) => ({
+        account: deviceAccount.account,
 
+        // @TODO Return the session expiration date instead of a boolean to
+        // avoid having to rely on a leeway when "accepting" the request.
+        loginRequired:
+          parameters.prompt === 'login' ||
+          this.checkLoginRequired(deviceAccount),
+        consentRequired: this.checkConsentRequired(
+          parameters,
+          deviceAccount.authorizedClients.get(client.id),
+        ),
+      }))
+
+      // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+
+      // prompt=select_account
+      //
+      // > The Authorization Server SHOULD prompt the End-User to select a user
+      // > account. This enables an End-User who has multiple accounts at the
+      // > Authorization Server to select amongst the multiple accounts that
+      // > they might have current sessions for. If it cannot obtain an account
+      // > selection choice made by the End-User, it MUST return an error,
+      // > typically account_selection_required.
+      if (parameters.prompt === 'select_account' && !sessions.length) {
+        throw new AccountSelectionRequiredError(parameters)
+      }
+
+      // prompt=none
+      //
+      // > The Authorization Server MUST NOT display any authentication or
+      // > consent user interface pages. An error is returned if an End-User is
+      // > not already authenticated or the Client does not have pre-configured
+      // > consent for the requested Claims or does not fulfill other conditions
+      // > for processing the request. The error code will typically be
+      // > login_required, interaction_required, or another code defined in
+      // > Section 3.1.2.6. This can be used as a method to check for existing
+      // > authentication and/or consent.
       if (parameters.prompt === 'none') {
-        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length > 1) {
           throw new AccountSelectionRequiredError(parameters)
         }
@@ -642,9 +680,9 @@ export class OAuthProvider extends OAuthVerifier {
         return { issuer, parameters, redirect: { code } }
       }
 
-      // Automatic SSO when a did was provided
+      // Automatic SSO when a hint was provided that matches a single session
       if (parameters.prompt == null && parameters.login_hint != null) {
-        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
@@ -669,9 +707,15 @@ export class OAuthProvider extends OAuthVerifier {
         sessions: sessions.map((session) => ({
           // Map to avoid leaking other data that might be present in the session
           account: session.account,
-          selected: session.selected,
           loginRequired: session.loginRequired,
           consentRequired: session.consentRequired,
+
+          selected:
+            parameters.prompt == null ||
+            parameters.prompt === 'login' ||
+            parameters.prompt === 'consent'
+              ? matchesHint.call(parameters, session)
+              : false,
         })),
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
@@ -696,48 +740,6 @@ export class OAuthProvider extends OAuthVerifier {
 
       throw AuthorizationError.from(parameters, err)
     }
-  }
-
-  protected async getSessions(
-    clientId: ClientId,
-    deviceId: DeviceId,
-    parameters: OAuthAuthorizationRequestParameters,
-  ): Promise<
-    {
-      account: Account
-
-      selected: boolean
-      loginRequired: boolean
-      consentRequired: boolean
-
-      matchesHint: boolean
-    }[]
-  > {
-    const deviceAccounts =
-      await this.accountManager.listDeviceAccounts(deviceId)
-
-    const hint = parameters.login_hint
-    const matchesHint = (account: Account): boolean =>
-      (!!account.sub && account.sub === hint) ||
-      (!!account.preferred_username && account.preferred_username === hint)
-
-    return deviceAccounts.map((deviceAccount) => ({
-      account: deviceAccount.account,
-
-      selected:
-        parameters.prompt !== 'select_account' &&
-        matchesHint(deviceAccount.account),
-      // @TODO Return the session expiration date instead of a boolean to
-      // avoid having to rely on a leeway when "accepting" the request.
-      loginRequired:
-        parameters.prompt === 'login' || this.checkLoginRequired(deviceAccount),
-      consentRequired: this.checkConsentRequired(
-        parameters,
-        deviceAccount.authorizedClients.get(clientId),
-      ),
-
-      matchesHint: hint == null || matchesHint(deviceAccount.account),
-    }))
   }
 
   public async token(
@@ -1093,4 +1095,14 @@ export class OAuthProvider extends OAuthVerifier {
 
     return tokenPayload
   }
+}
+
+function matchesHint(
+  this: OAuthAuthorizationRequestParameters,
+  { account }: { account: Account },
+): boolean {
+  const hint = this.login_hint
+  if (!hint) return false
+
+  return account.sub === hint || account.preferred_username === hint
 }

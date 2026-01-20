@@ -54,6 +54,14 @@ if (toBase64 === toBase64Ponyfill || fromBase64 === fromBase64Ponyfill) {
   )
 }
 
+export function ifUint8Array(input: unknown): Uint8Array | undefined {
+  if (input instanceof Uint8Array) {
+    return input
+  }
+
+  return undefined
+}
+
 /**
  * Coerces various binary data representations into a Uint8Array.
  *

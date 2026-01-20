@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
-import { Client, LexRpcResponseError } from '@atproto/lex-client'
+import { Client, XrpcResponseError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
@@ -263,7 +263,7 @@ describe(PasswordSession, () => {
     })
 
     assert(result.success === false)
-    assert(result instanceof LexRpcResponseError)
+    assert(result instanceof XrpcResponseError)
     expect(result).toMatchObject({
       success: false,
       status: 401,

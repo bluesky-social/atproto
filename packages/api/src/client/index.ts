@@ -36,6 +36,11 @@ import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.j
 import * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
+import * as AppBskyDraftCreateDraft from './types/app/bsky/draft/createDraft.js'
+import * as AppBskyDraftDefs from './types/app/bsky/draft/defs.js'
+import * as AppBskyDraftDeleteDraft from './types/app/bsky/draft/deleteDraft.js'
+import * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
+import * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -343,6 +348,11 @@ export * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.j
 export * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 export * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 export * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
+export * as AppBskyDraftCreateDraft from './types/app/bsky/draft/createDraft.js'
+export * as AppBskyDraftDefs from './types/app/bsky/draft/defs.js'
+export * as AppBskyDraftDeleteDraft from './types/app/bsky/draft/deleteDraft.js'
+export * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
+export * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -767,6 +777,7 @@ export class AppBskyNS {
   ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
   contact: AppBskyContactNS
+  draft: AppBskyDraftNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -782,6 +793,7 @@ export class AppBskyNS {
     this.ageassurance = new AppBskyAgeassuranceNS(client)
     this.bookmark = new AppBskyBookmarkNS(client)
     this.contact = new AppBskyContactNS(client)
+    this.draft = new AppBskyDraftNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -1236,6 +1248,51 @@ export class AppBskyContactNS {
       .catch((e) => {
         throw AppBskyContactVerifyPhone.toKnownErr(e)
       })
+  }
+}
+
+export class AppBskyDraftNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  createDraft(
+    data?: AppBskyDraftCreateDraft.InputSchema,
+    opts?: AppBskyDraftCreateDraft.CallOptions,
+  ): Promise<AppBskyDraftCreateDraft.Response> {
+    return this._client
+      .call('app.bsky.draft.createDraft', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyDraftCreateDraft.toKnownErr(e)
+      })
+  }
+
+  deleteDraft(
+    data?: AppBskyDraftDeleteDraft.InputSchema,
+    opts?: AppBskyDraftDeleteDraft.CallOptions,
+  ): Promise<AppBskyDraftDeleteDraft.Response> {
+    return this._client.call('app.bsky.draft.deleteDraft', opts?.qp, data, opts)
+  }
+
+  getDrafts(
+    params?: AppBskyDraftGetDrafts.QueryParams,
+    opts?: AppBskyDraftGetDrafts.CallOptions,
+  ): Promise<AppBskyDraftGetDrafts.Response> {
+    return this._client.call(
+      'app.bsky.draft.getDrafts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  updateDraft(
+    data?: AppBskyDraftUpdateDraft.InputSchema,
+    opts?: AppBskyDraftUpdateDraft.CallOptions,
+  ): Promise<AppBskyDraftUpdateDraft.Response> {
+    return this._client.call('app.bsky.draft.updateDraft', opts?.qp, data, opts)
   }
 }
 

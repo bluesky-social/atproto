@@ -1,16 +1,11 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  Infer,
+  InferInput,
+  InferOutput,
   Schema,
-  ValidationResult,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
-
-export type DictSchemaOutput<
-  KeySchema extends Validator<string>,
-  ValueSchema extends Validator,
-> = Record<Infer<KeySchema>, Infer<ValueSchema>>
 
 /**
  * @note There is no dictionary in Lexicon schemas. This is a custom extension
@@ -18,21 +13,24 @@ export type DictSchemaOutput<
  * not code generated from a lexicon schema).
  */
 export class DictSchema<
-  const KeySchema extends Validator<string> = any,
-  const ValueSchema extends Validator = any,
-> extends Schema<DictSchemaOutput<KeySchema, ValueSchema>> {
+  const TKey extends Validator<string> = any,
+  const TValue extends Validator = any,
+> extends Schema<
+  Record<InferInput<TKey>, InferInput<TValue>>,
+  Record<InferInput<TKey>, InferOutput<TValue>>
+> {
   constructor(
-    readonly keySchema: KeySchema,
-    readonly valueSchema: ValueSchema,
+    readonly keySchema: TKey,
+    readonly valueSchema: TValue,
   ) {
     super()
   }
 
   validateInContext(
     input: unknown,
-    ctx: ValidatorContext,
+    ctx: ValidationContext,
     options?: { ignoredKeys?: { has(k: string): boolean } },
-  ): ValidationResult<DictSchemaOutput<KeySchema, ValueSchema>> {
+  ) {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'dict')
     }
@@ -54,14 +52,25 @@ export class DictSchema<
       const valueResult = ctx.validateChild(input, key, this.valueSchema)
       if (!valueResult.success) return valueResult
 
-      if (valueResult.value !== input[key]) {
+      if (!Object.is(valueResult.value, input[key])) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, key, [valueResult.value])
+        }
+
         copy ??= { ...input }
         copy[key] = valueResult.value
       }
     }
 
-    return ctx.success(
-      (copy ?? input) as DictSchemaOutput<KeySchema, ValueSchema>,
-    )
+    return ctx.success(copy ?? input)
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function dict<
+  const TKey extends Validator<string>,
+  const TValue extends Validator,
+>(key: TKey, value: TValue) {
+  return new DictSchema<TKey, TValue>(key, value)
 }

@@ -1,28 +1,31 @@
 import {
+  $Typed,
+  InferInput,
+  InferOutput,
   Schema,
-  ValidationResult,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 
-// Basically a RecordSchema or TypedObjectSchema
-export type TypedRefSchemaValidator<V extends { $type?: string } = any> =
-  V extends { $type?: infer T extends string }
-    ? { $type: T } & Validator<V & { $type?: T }>
-    : never
+export interface TypedObjectValidator<
+  TInput extends { $type?: string } = { $type?: string },
+  TOutput extends TInput = TInput,
+> extends Validator<TInput, TOutput> {
+  $type: NonNullable<TOutput['$type']>
+}
 
-export type TypedRefGetter<V extends { $type?: string } = any> =
-  () => TypedRefSchemaValidator<V>
+export type TypedRefGetter<out TValidator extends TypedObjectValidator> =
+  () => TValidator
 
-export type TypedRefSchemaOutput<V extends { $type?: string } = any> =
-  V extends { $type?: infer T extends string } ? V & { $type: T } : never
-
-export class TypedRefSchema<V extends { $type?: string } = any> extends Schema<
-  TypedRefSchemaOutput<V>
+export class TypedRefSchema<
+  const TValidator extends TypedObjectValidator = TypedObjectValidator,
+> extends Schema<
+  $Typed<InferInput<TValidator>>,
+  $Typed<InferOutput<TValidator>>
 > {
-  #getter: TypedRefGetter<V>
+  #getter: TypedRefGetter<TValidator>
 
-  constructor(getter: TypedRefGetter<V>) {
+  constructor(getter: TypedRefGetter<TValidator>) {
     // @NOTE In order to avoid circular dependency issues, we don't resolve
     // the schema here. Instead, we resolve it lazily when first accessed.
 
@@ -31,43 +34,38 @@ export class TypedRefSchema<V extends { $type?: string } = any> extends Schema<
     this.#getter = getter
   }
 
-  get schema(): TypedRefSchemaValidator<V> {
-    const value = this.#getter.call(null)
-
-    // Prevents a getter from depending on itself recursively, also allows GC to
-    // clean up the getter function.
-    this.#getter = throwAlreadyCalled
-
-    // Cache the resolved schema on the instance
-    Object.defineProperty(this, 'schema', {
-      value,
-      writable: false,
-      enumerable: false,
-      configurable: true,
-    })
-
-    return value
+  get validator(): TValidator {
+    return this.#getter.call(null)
   }
 
-  get $type(): TypedRefSchemaOutput<V>['$type'] {
-    return this.schema.$type
+  get $type(): TValidator['$type'] {
+    return this.validator.$type
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<TypedRefSchemaOutput<V>> {
-    const result = ctx.validate(input, this.schema)
+  validateInContext(input: unknown, ctx: ValidationContext) {
+    const result = ctx.validate(input, this.validator)
     if (!result.success) return result
 
     if (result.value.$type !== this.$type) {
       return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
     }
 
-    return result as ValidationResult<TypedRefSchemaOutput<V>>
+    return result
   }
 }
 
-function throwAlreadyCalled(): never {
-  throw new Error('TypedRefSchema getter called multiple times')
+/*@__NO_SIDE_EFFECTS__*/
+export function typedRef<const TValidator extends TypedObjectValidator>(
+  get: TypedRefGetter<TValidator>,
+): TypedRefSchema<TValidator>
+export function typedRef<
+  TInput extends { $type?: string },
+  TOutput extends TInput = TInput,
+>(
+  get: TypedRefGetter<TypedObjectValidator<TInput, TOutput>>,
+): TypedRefSchema<TypedObjectValidator<TInput, TOutput>>
+export function typedRef<const TValidator extends TypedObjectValidator>(
+  get: TypedRefGetter<TValidator>,
+): TypedRefSchema<TValidator> {
+  return new TypedRefSchema<TValidator>(get)
 }

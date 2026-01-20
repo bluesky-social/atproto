@@ -181,7 +181,7 @@ Handlers receive a context object with the following properties:
 type LexRouterHandlerContext<Method, Credentials> = {
   credentials: Credentials // Result of auth function (undefined if no auth)
   input: InferMethodInput<Method> // Parsed request body (procedures only)
-  params: InferMethodParams<Method> // Validated URL query parameters
+  params: InferMethodParams<Method> // Parsed URL query parameters
   request: Request // Original Web Request object
   connection?: ConnectionInfo // Network connection info
 }

@@ -18,3 +18,11 @@ export class PermissionSet<
     readonly options: PermissionSetOptions = {},
   ) {}
 }
+
+/*@__NO_SIDE_EFFECTS__*/
+export function permissionSet<
+  const N extends NsidString,
+  const P extends readonly Permission[],
+>(nsid: N, permissions: P, options?: PermissionSetOptions) {
+  return new PermissionSet<N, P>(nsid, permissions, options)
+}

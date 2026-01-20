@@ -1,9 +1,3 @@
-// Global schemas
-export * from './schema/_parameters.js'
-
-// Utilities
-export * from './schema/refine.js'
-
 // Concrete Types
 export * from './schema/array.js'
 export * from './schema/blob.js'
@@ -29,7 +23,9 @@ export * from './schema/intersection.js'
 export * from './schema/nullable.js'
 export * from './schema/optional.js'
 export * from './schema/ref.js'
+export * from './schema/refine.js'
 export * from './schema/union.js'
+export * from './schema/with-default.js'
 
 // Lexicon specific Types
 export * from './schema/params.js'

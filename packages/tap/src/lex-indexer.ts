@@ -171,10 +171,12 @@ export class LexIndexer implements TapHandler {
     }
 
     if (action === 'create' || action === 'update') {
-      const match = registered.schema.matches(evt.record)
-      if (!match) {
+      const match = registered.schema.safeValidate(evt.record)
+      if (!match.success) {
         const uriStr: AtUriString = `at://${evt.did}/${evt.collection}/${evt.rkey}`
-        throw new Error(`Record validation failed for ${uriStr}`)
+        throw new Error(`Record validation failed for ${uriStr}`, {
+          cause: match.reason,
+        })
       }
     }
 

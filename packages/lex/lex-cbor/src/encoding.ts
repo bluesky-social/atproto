@@ -34,9 +34,6 @@ function objectEncoder(
   const cid = ifCid(obj)
   if (cid) return cidEncoder(cid)
 
-  // @TODO strip undefined values somehow
-  // https://github.com/rvagg/cborg/issues/154
-
   // Fallback to default object encoder
   return null
 }
@@ -46,7 +43,7 @@ function undefinedEncoder(): null {
 }
 
 function numberEncoder(num: number): null {
-  if (Number.isInteger(num) && Number.isSafeInteger(num)) return null
+  if (Number.isSafeInteger(num)) return null
 
   throw new Error('Non-integer numbers are not allowed by the AT Data Model')
 }
@@ -65,6 +62,7 @@ function mapEncoder(map: Map<unknown, unknown>): null {
 
 const encodeOptions: EncodeOptions = {
   float64: true,
+  ignoreUndefinedProperties: true,
   typeEncoders: {
     Map: mapEncoder,
     Object: objectEncoder,

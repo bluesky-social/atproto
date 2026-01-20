@@ -1,5 +1,17 @@
 # @atproto/lex-data
 
+## 0.0.8
+
+### Patch Changes
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `asMultiformatsCID` utility for improved compatibility between `Cid` interface and legacy use of multiformat's `CID`
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the `Cid` interface stricter to allow for better futur proofing.
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `isCid`, `ifCid` and `asCid` now always return the input value instead a potentially different instance.
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `createCid` utility
+
 ## 0.0.7
 
 ### Patch Changes

@@ -1,25 +1,27 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  Infer,
+  InferInput,
+  InferOutput,
   Schema,
-  ValidationResult,
+  ValidationContext,
   Validator,
-  ValidatorContext,
   WithOptionalProperties,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 
 export type ObjectSchemaShape = Record<string, Validator>
 
-export type ObjectSchemaOutput<Shape extends ObjectSchemaShape> =
-  WithOptionalProperties<{
-    [K in keyof Shape]: Infer<Shape[K]>
-  }>
-
 export class ObjectSchema<
-  const Shape extends ObjectSchemaShape = any,
-> extends Schema<ObjectSchemaOutput<Shape>> {
-  constructor(readonly shape: Shape) {
+  const TShape extends ObjectSchemaShape = any,
+> extends Schema<
+  WithOptionalProperties<{
+    [K in keyof TShape]: InferInput<TShape[K]>
+  }>,
+  WithOptionalProperties<{
+    [K in keyof TShape]: InferOutput<TShape[K]>
+  }>
+> {
+  constructor(readonly shape: TShape) {
     super()
   }
 
@@ -29,10 +31,7 @@ export class ObjectSchema<
     return lazyProperty(this, 'validatorsMap', map)
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<ObjectSchemaOutput<Shape>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -56,14 +55,24 @@ export class ObjectSchema<
         continue
       }
 
-      if (result.value !== input[key]) {
+      if (!Object.is(result.value, input[key])) {
+        if (ctx.options.mode === 'validate') {
+          // In "validate" mode, we can't modify the input, so we issue an error
+          return ctx.issueInvalidPropertyValue(input, key, [result.value])
+        }
+
         copy ??= { ...input }
         copy[key] = result.value
       }
     }
 
-    const output = (copy ?? input) as ObjectSchemaOutput<Shape>
-
-    return ctx.success(output)
+    return ctx.success(copy ?? input)
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function object<const TShape extends ObjectSchemaShape>(
+  properties: TShape,
+) {
+  return new ObjectSchema<TShape>(properties)
 }

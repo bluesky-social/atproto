@@ -1,22 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { IntegerSchema } from './integer.js'
-import { ObjectSchema } from './object.js'
-import { StringSchema } from './string.js'
-import { TypedObjectSchema } from './typed-object.js'
-import { TypedRefSchema } from './typed-ref.js'
+import { integer } from './integer.js'
+import { object } from './object.js'
+import { string } from './string.js'
+import { typedObject } from './typed-object.js'
+import { typedRef } from './typed-ref.js'
 
 describe('TypedRefSchema', () => {
   describe('basic validation', () => {
     it('validates through a typed object reference with explicit $type', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
-          age: new IntegerSchema({}),
+        'main',
+        object({
+          name: string(),
+          age: integer(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.user',
@@ -31,15 +32,16 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates through a typed object with explicit $type', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
-          age: new IntegerSchema({}),
+        'main',
+        object({
+          name: string(),
+          age: integer(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.user',
@@ -54,14 +56,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects input with wrong $type', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
+        'main',
+        object({
+          name: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.wrong',
@@ -72,15 +75,16 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects invalid input through reference', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
-          age: new IntegerSchema({}),
+        'main',
+        object({
+          name: string(),
+          age: integer(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.user',
@@ -92,42 +96,45 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects non-objects through reference', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.value',
-        new ObjectSchema({
-          value: new StringSchema({}),
+        'main',
+        object({
+          value: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse('not an object')
       expect(result.success).toBe(false)
     })
 
     it('rejects null through reference', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
+        'main',
+        object({
+          name: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse(null)
       expect(result.success).toBe(false)
     })
 
     it('rejects undefined through reference', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
+        'main',
+        object({
+          name: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(false)
@@ -136,27 +143,29 @@ describe('TypedRefSchema', () => {
 
   describe('$type property', () => {
     it('exposes the $type from the referenced schema', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.post',
-        new ObjectSchema({
-          text: new StringSchema({}),
+        'main',
+        object({
+          text: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       expect(schema.$type).toBe('com.example.post')
     })
 
     it('validates that output has correct $type', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.like',
-        new ObjectSchema({
-          subject: new StringSchema({}),
+        'main',
+        object({
+          subject: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.like',
@@ -170,14 +179,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('ensures $type matches expected value', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.follow',
-        new ObjectSchema({
-          subject: new StringSchema({}),
+        'main',
+        object({
+          subject: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       // Try to pass wrong $type
       const result = schema.safeParse({
@@ -193,12 +203,13 @@ describe('TypedRefSchema', () => {
     it('does not call getter until first validation', () => {
       let getterCalled = false
 
-      const schema = new TypedRefSchema(() => {
+      const schema = typedRef(() => {
         getterCalled = true
-        return new TypedObjectSchema(
+        return typedObject(
           'com.example.test',
-          new ObjectSchema({
-            value: new StringSchema({}),
+          'main',
+          object({
+            value: string(),
           }),
         )
       })
@@ -212,12 +223,13 @@ describe('TypedRefSchema', () => {
     it('does not call getter until $type is accessed', () => {
       let getterCalled = false
 
-      const schema = new TypedRefSchema(() => {
+      const schema = typedRef(() => {
         getterCalled = true
-        return new TypedObjectSchema(
+        return typedObject(
           'com.example.test',
-          new ObjectSchema({
-            value: new StringSchema({}),
+          'main',
+          object({
+            value: string(),
           }),
         )
       })
@@ -230,55 +242,11 @@ describe('TypedRefSchema', () => {
       expect(type).toBe('com.example.test')
     })
 
-    it('caches the resolved schema', () => {
-      let callCount = 0
-
-      const schema = new TypedRefSchema(() => {
-        callCount++
-        return new TypedObjectSchema(
-          'com.example.test',
-          new ObjectSchema({
-            value: new StringSchema({}),
-          }),
-        )
-      })
-
-      schema.safeParse({ value: 'first' })
-      schema.safeParse({ value: 'second' })
-      schema.safeParse({ value: 'third' })
-
-      expect(callCount).toBe(1)
-    })
-
-    it('caches schema after $type access', () => {
-      let callCount = 0
-
-      const schema = new TypedRefSchema(() => {
-        callCount++
-        return new TypedObjectSchema(
-          'com.example.test',
-          new ObjectSchema({
-            value: new StringSchema({}),
-          }),
-        )
-      })
-
-      // Access $type first
-      schema.$type
-      expect(callCount).toBe(1)
-
-      // Then validate multiple times
-      schema.safeParse({ value: 'test1' })
-      schema.safeParse({ value: 'test2' })
-
-      expect(callCount).toBe(1)
-    })
-
     it('throws error if getter is called recursively', () => {
       // @ts-expect-error
-      const schema = new TypedRefSchema(() => {
+      const schema = typedRef(() => {
         // This would cause infinite recursion if not protected
-        return schema.schema
+        return schema.validator
       })
 
       expect(() => {
@@ -289,14 +257,15 @@ describe('TypedRefSchema', () => {
 
   describe('with constrained schemas', () => {
     it('validates typed object with string constraints', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.post',
-        new ObjectSchema({
-          text: new StringSchema({ minLength: 1, maxLength: 300 }),
+        'main',
+        object({
+          text: string({ minLength: 1, maxLength: 300 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.post',
@@ -307,14 +276,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects typed object violating string constraints', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.post',
-        new ObjectSchema({
-          text: new StringSchema({ minLength: 1, maxLength: 300 }),
+        'main',
+        object({
+          text: string({ minLength: 1, maxLength: 300 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.post',
@@ -325,14 +295,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates typed object with integer constraints', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.rating',
-        new ObjectSchema({
-          score: new IntegerSchema({ minimum: 1, maximum: 5 }),
+        'main',
+        object({
+          score: integer({ minimum: 1, maximum: 5 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.rating',
@@ -343,14 +314,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects typed object violating integer constraints', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.rating',
-        new ObjectSchema({
-          score: new IntegerSchema({ minimum: 1, maximum: 5 }),
+        'main',
+        object({
+          score: integer({ minimum: 1, maximum: 5 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.rating',
@@ -363,14 +335,15 @@ describe('TypedRefSchema', () => {
 
   describe('multiple validations', () => {
     it('validates multiple inputs correctly', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({ minLength: 2 }),
+        'main',
+        object({
+          name: string({ minLength: 2 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result1 = schema.safeParse({
         $type: 'com.example.user',
@@ -392,15 +365,16 @@ describe('TypedRefSchema', () => {
     })
 
     it('handles different types of validation failures', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({ minLength: 2 }),
-          age: new IntegerSchema({ minimum: 0, maximum: 150 }),
+        'main',
+        object({
+          name: string({ minLength: 2 }),
+          age: integer({ minimum: 0, maximum: 150 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result1 = schema.safeParse({
         $type: 'com.example.user',
@@ -431,14 +405,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates same input multiple times consistently', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.post',
-        new ObjectSchema({
-          text: new StringSchema({}),
+        'main',
+        object({
+          text: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const input = { $type: 'com.example.post', text: 'Hello world' }
 
@@ -454,12 +429,13 @@ describe('TypedRefSchema', () => {
 
   describe('edge cases', () => {
     it('handles empty object validation', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.empty',
-        new ObjectSchema({}),
+        'main',
+        object({}),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({ $type: 'com.example.empty' })
       expect(result.success).toBe(true)
@@ -469,28 +445,30 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects arrays', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.test',
-        new ObjectSchema({
-          value: new StringSchema({}),
+        'main',
+        object({
+          value: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse([{ value: 'test' }])
       expect(result.success).toBe(false)
     })
 
     it('rejects primitive values', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.test',
-        new ObjectSchema({
-          value: new StringSchema({}),
+        'main',
+        object({
+          value: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result1 = schema.safeParse('string')
       expect(result1.success).toBe(false)
@@ -503,14 +481,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('handles objects with extra properties', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
+        'main',
+        object({
+          name: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.user',
@@ -523,14 +502,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates with zero values', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.counter',
-        new ObjectSchema({
-          count: new IntegerSchema({}),
+        'main',
+        object({
+          count: integer(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.counter',
@@ -540,14 +520,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates with empty strings', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.text',
-        new ObjectSchema({
-          content: new StringSchema({}),
+        'main',
+        object({
+          content: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.text',
@@ -557,14 +538,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects NaN in integer fields', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.number',
-        new ObjectSchema({
-          value: new IntegerSchema({}),
+        'main',
+        object({
+          value: integer(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.number',
@@ -574,14 +556,15 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects Infinity in integer fields', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.number',
-        new ObjectSchema({
-          value: new IntegerSchema({}),
+        'main',
+        object({
+          value: integer(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.number',
@@ -593,15 +576,16 @@ describe('TypedRefSchema', () => {
 
   describe('nested references', () => {
     it('validates through nested TypedRefSchema', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({ minLength: 2 }),
+        'main',
+        object({
+          name: string({ minLength: 2 }),
         }),
       )
 
-      const innerRef = new TypedRefSchema(() => typedObject)
-      const outerRef = new TypedRefSchema(() => innerRef.schema)
+      const innerRef = typedRef(() => typedObjectSchema)
+      const outerRef = typedRef(() => innerRef.validator)
 
       const result = outerRef.safeParse({
         $type: 'com.example.user',
@@ -614,22 +598,24 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates with objects containing TypedRef fields', () => {
-      const innerTyped = new TypedObjectSchema(
+      const innerTyped = typedObject(
         'com.example.profile',
-        new ObjectSchema({
-          bio: new StringSchema({}),
+        'main',
+        object({
+          bio: string(),
         }),
       )
 
-      const outerTyped = new TypedObjectSchema(
+      const outerTyped = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
-          profile: new TypedRefSchema(() => innerTyped),
+        'main',
+        object({
+          name: string(),
+          profile: typedRef(() => innerTyped),
         }),
       )
 
-      const schema = new TypedRefSchema(() => outerTyped)
+      const schema = typedRef(() => outerTyped)
 
       const result = schema.safeParse({
         $type: 'com.example.user',
@@ -648,22 +634,24 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects nested objects with wrong $type', () => {
-      const innerTyped = new TypedObjectSchema(
+      const innerTyped = typedObject(
         'com.example.profile',
-        new ObjectSchema({
-          bio: new StringSchema({}),
+        'main',
+        object({
+          bio: string(),
         }),
       )
 
-      const outerTyped = new TypedObjectSchema(
+      const outerTyped = typedObject(
         'com.example.user',
-        new ObjectSchema({
-          name: new StringSchema({}),
-          profile: new TypedRefSchema(() => innerTyped),
+        'main',
+        object({
+          name: string(),
+          profile: typedRef(() => innerTyped),
         }),
       )
 
-      const schema = new TypedRefSchema(() => outerTyped)
+      const schema = typedRef(() => outerTyped)
 
       const result = schema.safeParse({
         $type: 'com.example.user',
@@ -680,73 +668,55 @@ describe('TypedRefSchema', () => {
 
   describe('schema property access', () => {
     it('allows direct access to resolved schema', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.test',
-        new ObjectSchema({
-          value: new StringSchema({}),
+        'main',
+        object({
+          value: string(),
         }),
       )
 
-      const refSchema = new TypedRefSchema(() => typedObject)
+      const refSchema = typedRef(() => typedObjectSchema)
 
-      const resolved = refSchema.schema
-      expect(resolved).toBe(typedObject)
+      const resolved = refSchema.validator
+      expect(resolved).toBe(typedObjectSchema)
       expect(resolved.$type).toBe('com.example.test')
     })
 
     it('returns same instance on multiple schema property accesses', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.test',
-        new ObjectSchema({
-          value: new StringSchema({}),
+        'main',
+        object({
+          value: string(),
         }),
       )
 
-      const refSchema = new TypedRefSchema(() => typedObject)
+      const refSchema = typedRef(() => typedObjectSchema)
 
-      const first = refSchema.schema
-      const second = refSchema.schema
-      const third = refSchema.schema
+      const first = refSchema.validator
+      const second = refSchema.validator
+      const third = refSchema.validator
 
       expect(first).toBe(second)
       expect(second).toBe(third)
       expect(first.$type).toBe('com.example.test')
     })
-
-    it('resolves schema before validation', () => {
-      let resolved = false
-
-      const refSchema = new TypedRefSchema(() => {
-        resolved = true
-        return new TypedObjectSchema(
-          'com.example.test',
-          new ObjectSchema({
-            value: new StringSchema({}),
-          }),
-        )
-      })
-
-      expect(resolved).toBe(false)
-
-      const schemaValue = refSchema.schema
-      expect(resolved).toBe(true)
-      expect(schemaValue).toBeDefined()
-      expect(schemaValue.$type).toBe('com.example.test')
-    })
   })
 
   describe('complex object structures', () => {
     it('validates complex nested structure', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.post',
-        new ObjectSchema({
-          text: new StringSchema({ minLength: 1, maxLength: 300 }),
-          createdAt: new StringSchema({ format: 'datetime' }),
-          likeCount: new IntegerSchema({ minimum: 0 }),
+        'main',
+        object({
+          text: string({ minLength: 1, maxLength: 300 }),
+          createdAt: string({ format: 'datetime' }),
+          likeCount: integer({ minimum: 0 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.post',
@@ -764,16 +734,17 @@ describe('TypedRefSchema', () => {
     })
 
     it('validates structure with multiple property types', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.record',
-        new ObjectSchema({
-          id: new StringSchema({ format: 'nsid' }),
-          count: new IntegerSchema({ minimum: 0 }),
-          flag: new StringSchema({}),
+        'main',
+        object({
+          id: string({ format: 'nsid' }),
+          count: integer({ minimum: 0 }),
+          flag: string(),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       const result = schema.safeParse({
         $type: 'com.example.record',
@@ -786,15 +757,16 @@ describe('TypedRefSchema', () => {
     })
 
     it('rejects structure with any invalid property', () => {
-      const typedObject = new TypedObjectSchema(
+      const typedObjectSchema = typedObject(
         'com.example.record',
-        new ObjectSchema({
-          name: new StringSchema({ minLength: 1 }),
-          count: new IntegerSchema({ minimum: 0 }),
+        'main',
+        object({
+          name: string({ minLength: 1 }),
+          count: integer({ minimum: 0 }),
         }),
       )
 
-      const schema = new TypedRefSchema(() => typedObject)
+      const schema = typedRef(() => typedObjectSchema)
 
       // Valid name, invalid count
       const result1 = schema.safeParse({

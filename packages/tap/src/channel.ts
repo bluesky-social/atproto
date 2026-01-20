@@ -1,9 +1,9 @@
 import { ClientOptions } from 'ws'
-import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
+import { Deferrable, createDeferrable } from '@atproto/common'
 import { lexParse } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
-import { formatAdminAuthHeader } from './util'
+import { formatAdminAuthHeader, isCausedBySignal } from './util'
 
 export interface HandlerOpts {
   signal: AbortSignal
@@ -27,7 +27,7 @@ type BufferedAck = {
   defer: Deferrable
 }
 
-export class TapChannel {
+export class TapChannel implements AsyncDisposable {
   private ws: WebSocketKeepAlive
   private handler: TapHandler
 
@@ -107,16 +107,17 @@ export class TapChannel {
   }
 
   async start() {
+    this.abortController.signal.throwIfAborted()
     try {
       for await (const chunk of this.ws) {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      if (isErrnoException(err) && err.name === 'AbortError') {
-        this.destroyDefer.resolve()
-      } else {
+      if (!isCausedBySignal(err, this.abortController.signal)) {
         throw err
       }
+    } finally {
+      this.destroyDefer.resolve()
     }
   }
 
@@ -152,5 +153,9 @@ export class TapChannel {
   async destroy(): Promise<void> {
     this.abortController.abort()
     await this.destroyDefer.complete
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.destroy()
   }
 }

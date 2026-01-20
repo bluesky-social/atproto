@@ -2,4 +2,4 @@
 '@atproto/lex-data': patch
 ---
 
-Expose `createCid` utility
+Add `ifUint8Array` utility function

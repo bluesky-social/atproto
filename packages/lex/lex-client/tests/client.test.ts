@@ -11,6 +11,7 @@ describe('utils', () => {
   describe('TypedObjectSchema', () => {
     it('overrides $type when building an object', () => {
       const _r = app.bsky.actor.defs.adultContentPref.build({
+        // @ts-expect-error
         $type: 'foo',
         enabled: true,
       })
@@ -329,7 +330,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toMatchObject({
-        name: 'LexRpcResponseError',
+        name: 'XrpcResponseError',
         message: 'This is a custom error message from the server',
         payload: {
           encoding: 'application/json',
@@ -422,7 +423,7 @@ describe('Client', () => {
         // @ts-expect-error an "rkey" option is required for feed generator records
         app.bsky.feed.generator,
         {
-          did: 'no-a-did',
+          did,
           displayName: 'Alice Generator',
           createdAt: new Date().toISOString(),
         },
