@@ -1,5 +1,5 @@
 ---
-'@atproto/bsky': patch
+'@atproto/common-web': patch
 ---
 
-Replace `stripUndefineds` with `noUndefinedVals` from `@atproto/common-web`
+Use `noUndefinedVals` from `@atproto/common-web` instead of locally defined `stripUndefineds`
