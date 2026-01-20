@@ -22,7 +22,6 @@ import {
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
-import { FeatureGateID } from '../../../../feature-gates'
 
 export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
