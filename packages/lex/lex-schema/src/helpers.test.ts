@@ -81,7 +81,7 @@ describe('InferMethodInput', () => {
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
-        l.params({}),
+        l.params(),
         l.payload('application/json', l.object({ text: l.string() })),
         l.payload(undefined, undefined),
         undefined,
@@ -103,7 +103,7 @@ describe('InferMethodInput', () => {
     test('without payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
-        l.params({}),
+        l.params(),
         l.payload('*/*', undefined),
         l.payload(undefined, undefined),
         undefined,
@@ -127,7 +127,7 @@ describe('InferMethodInputBody', () => {
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
-        l.params({}),
+        l.params(),
         l.payload('application/json', l.object({ text: l.string() })),
         l.payload(undefined, undefined),
         undefined,
@@ -145,7 +145,7 @@ describe('InferMethodInputBody', () => {
     test('without payload schema', () => {
       const procedure = l.procedure(
         'com.example.upload',
-        l.params({}),
+        l.params(),
         l.payload('*/*', undefined),
         l.payload(undefined, undefined),
         undefined,
@@ -167,7 +167,7 @@ describe('InferMethodInputEncoding', () => {
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
-        l.params({}),
+        l.params(),
         l.payload('application/json', l.object({ text: l.string() })),
         l.payload(undefined, undefined),
         undefined,
@@ -185,7 +185,7 @@ describe('InferMethodInputEncoding', () => {
     test('without payload schema', () => {
       const procedure = l.procedure(
         'com.example.upload',
-        l.params({}),
+        l.params(),
         l.payload('*/*', undefined),
         l.payload(undefined, undefined),
         undefined,
@@ -206,7 +206,7 @@ describe('InferMethodOutput', () => {
     test('with payload schema', () => {
       const query = l.query(
         'com.example.query',
-        l.params({}),
+        l.params(),
         l.payload('application/json', l.object({ items: l.array(l.string()) })),
       )
 
@@ -222,7 +222,7 @@ describe('InferMethodOutput', () => {
     test('without payload schema', () => {
       const query = l.query(
         'com.example.query',
-        l.params({}),
+        l.params(),
         l.payload('*/*', undefined),
       )
 
@@ -240,7 +240,7 @@ describe('InferMethodOutput', () => {
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
-        l.params({}),
+        l.params(),
         l.payload(undefined, undefined),
         l.payload(
           'application/json',
@@ -266,7 +266,7 @@ describe('InferMethodOutput', () => {
     test('without payload schema', () => {
       const procedure = l.procedure(
         'com.example.export',
-        l.params({}),
+        l.params(),
         l.payload(undefined, undefined),
         l.payload('*/*', undefined),
         undefined,
@@ -294,7 +294,7 @@ describe('InferMethodOutputBody', () => {
     test('with payload schema', () => {
       const query = l.query(
         'com.example.query',
-        l.params({}),
+        l.params(),
         l.payload(
           'application/json',
           l.object({
@@ -319,7 +319,7 @@ describe('InferMethodOutputBody', () => {
     test('without payload schema', () => {
       const query = l.query(
         'com.example.query',
-        l.params({}),
+        l.params(),
         l.payload('*/*', undefined),
       )
 
@@ -337,7 +337,7 @@ describe('InferMethodOutputBody', () => {
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.get',
-        l.params({}),
+        l.params(),
         l.payload(undefined, undefined),
         l.payload(
           'application/json',
@@ -358,7 +358,7 @@ describe('InferMethodOutputBody', () => {
     test('without payload schema', () => {
       const procedure = l.procedure(
         'com.example.export',
-        l.params({}),
+        l.params(),
         l.payload(undefined, undefined),
         l.payload('*/*', undefined),
         undefined,
@@ -380,7 +380,7 @@ describe('InferMethodOutputEncoding', () => {
     test('with payload schema', () => {
       const query = l.query(
         'com.example.query',
-        l.params({}),
+        l.params(),
         l.payload('application/json', l.object({ data: l.string() })),
       )
 
@@ -396,7 +396,7 @@ describe('InferMethodOutputEncoding', () => {
     test('without payload schema', () => {
       const query = l.query(
         'com.example.query',
-        l.params({}),
+        l.params(),
         l.payload('*/*', undefined),
       )
 
@@ -413,7 +413,7 @@ describe('InferMethodOutputEncoding', () => {
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
-        l.params({}),
+        l.params(),
         l.payload(undefined, undefined),
         l.payload('application/json', l.object({ id: l.string() })),
         undefined,
@@ -431,7 +431,7 @@ describe('InferMethodOutputEncoding', () => {
     test('without payload schema', () => {
       const procedure = l.procedure(
         'com.example.export',
-        l.params({}),
+        l.params(),
         l.payload(undefined, undefined),
         l.payload('*/*', undefined),
         undefined,
@@ -452,7 +452,7 @@ describe('InferMethodMessage', () => {
     test('with message schema', () => {
       const subscription = l.subscription(
         'com.example.subscribe',
-        l.params({}),
+        l.params(),
         l.object({
           seq: l.integer(),
           event: l.string(),
@@ -473,13 +473,14 @@ describe('InferMethodMessage', () => {
     test('without message schema', () => {
       const subscription = l.subscription(
         'com.example.subscribe',
-        l.params({}),
+        l.params(),
         l.unknown(),
       )
 
       type Message = l.InferMethodMessage<typeof subscription>
 
-      expectType<Message>(undefined as unknown)
+      // @ts-expect-error "unknown" is turned into LexValue
+      expectType<Message>(undefined)
       expectType<Message>({ any: 'value' })
       expectType<Message>(123)
     })

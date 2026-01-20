@@ -1,346 +1,340 @@
 import { describe, expect, it } from 'vitest'
-import { IntegerSchema } from './integer.js'
-import { ObjectSchema } from './object.js'
-import { Payload } from './payload.js'
-import { StringSchema } from './string.js'
-import { UnknownSchema } from './unknown.js'
+import { integer } from './integer.js'
+import { object } from './object.js'
+import { payload } from './payload.js'
+import { string } from './string.js'
+import { unknown } from './unknown.js'
 
 describe('Payload', () => {
   describe('basic construction', () => {
     it('creates payload with encoding and no schema', () => {
-      const payload = new Payload('application/json', undefined)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('application/json', undefined)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload with encoding and schema', () => {
-      const schema = new ObjectSchema({
-        name: new StringSchema({}),
+      const schema = object({
+        name: string(),
       })
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
 
     it('creates payload with undefined encoding and undefined schema', () => {
-      const payload = new Payload(undefined, undefined)
-      expect(payload.encoding).toBeUndefined()
-      expect(payload.schema).toBeUndefined()
+      const def = payload(undefined, undefined)
+      expect(def.encoding).toBeUndefined()
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload with text encoding', () => {
-      const payload = new Payload('text/plain', undefined)
-      expect(payload.encoding).toBe('text/plain')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('text/plain', undefined)
+      expect(def.encoding).toBe('text/plain')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload with text/html encoding', () => {
-      const payload = new Payload('text/html', undefined)
-      expect(payload.encoding).toBe('text/html')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('text/html', undefined)
+      expect(def.encoding).toBe('text/html')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload with application/octet-stream encoding', () => {
-      const payload = new Payload('application/octet-stream', undefined)
-      expect(payload.encoding).toBe('application/octet-stream')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('application/octet-stream', undefined)
+      expect(def.encoding).toBe('application/octet-stream')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload with image encoding', () => {
-      const payload = new Payload('image/png', undefined)
-      expect(payload.encoding).toBe('image/png')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('image/png', undefined)
+      expect(def.encoding).toBe('image/png')
+      expect(def.schema).toBeUndefined()
     })
   })
 
   describe('encoding types', () => {
     it('handles application/json encoding', () => {
-      const payload = new Payload('application/json', undefined)
-      expect(payload.encoding).toBe('application/json')
+      const def = payload('application/json', undefined)
+      expect(def.encoding).toBe('application/json')
     })
 
     it('handles text/* encodings', () => {
-      const textPlain = new Payload('text/plain', undefined)
+      const textPlain = payload('text/plain', undefined)
       expect(textPlain.encoding).toBe('text/plain')
 
-      const textHtml = new Payload('text/html', undefined)
+      const textHtml = payload('text/html', undefined)
       expect(textHtml.encoding).toBe('text/html')
 
-      const textCss = new Payload('text/css', undefined)
+      const textCss = payload('text/css', undefined)
       expect(textCss.encoding).toBe('text/css')
     })
 
     it('handles binary encodings', () => {
-      const octetStream = new Payload('application/octet-stream', undefined)
+      const octetStream = payload('application/octet-stream', undefined)
       expect(octetStream.encoding).toBe('application/octet-stream')
 
-      const imagePng = new Payload('image/png', undefined)
+      const imagePng = payload('image/png', undefined)
       expect(imagePng.encoding).toBe('image/png')
 
-      const imageJpeg = new Payload('image/jpeg', undefined)
+      const imageJpeg = payload('image/jpeg', undefined)
       expect(imageJpeg.encoding).toBe('image/jpeg')
     })
 
     it('handles custom mime types', () => {
-      const payload = new Payload('application/vnd.custom+json', undefined)
-      expect(payload.encoding).toBe('application/vnd.custom+json')
+      const def = payload('application/vnd.custom+json', undefined)
+      expect(def.encoding).toBe('application/vnd.custom+json')
     })
   })
 
   describe('with schemas', () => {
     it('creates payload with object schema', () => {
-      const schema = new ObjectSchema({
-        id: new IntegerSchema({}),
-        name: new StringSchema({}),
+      const schema = object({
+        id: integer(),
+        name: string(),
       })
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
 
     it('creates payload with string schema', () => {
-      const schema = new StringSchema({})
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const schema = string()
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
 
     it('creates payload with integer schema', () => {
-      const schema = new IntegerSchema({})
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const schema = integer()
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
 
     it('creates payload with unknown schema', () => {
-      const schema = new UnknownSchema()
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const schema = unknown()
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
 
     it('creates payload with complex nested schema', () => {
-      const schema = new ObjectSchema({
-        user: new ObjectSchema({
-          id: new IntegerSchema({}),
-          name: new StringSchema({}),
-          email: new StringSchema({ format: 'uri' }),
+      const schema = object({
+        user: object({
+          id: integer(),
+          name: string(),
+          email: string({ format: 'uri' }),
         }),
-        metadata: new ObjectSchema({
-          createdAt: new StringSchema({ format: 'datetime' }),
-          updatedAt: new StringSchema({ format: 'datetime' }),
+        metadata: object({
+          createdAt: string({ format: 'datetime' }),
+          updatedAt: string({ format: 'datetime' }),
         }),
       })
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
   })
 
   describe('validation constraints', () => {
     it('throws error when schema is defined but encoding is undefined', () => {
-      const schema = new StringSchema({})
+      const schema = string()
       expect(() => {
         // @ts-expect-error
-        new Payload(undefined, schema)
+        payload(undefined, schema)
       }).toThrow(TypeError)
       expect(() => {
         // @ts-expect-error
-        new Payload(undefined, schema)
+        payload(undefined, schema)
       }).toThrow('schema cannot be defined when encoding is undefined')
     })
 
     it('throws error when object schema is defined but encoding is undefined', () => {
-      const schema = new ObjectSchema({
-        name: new StringSchema({}),
+      const schema = object({
+        name: string(),
       })
       expect(() => {
         // @ts-expect-error
-        new Payload(undefined, schema)
+        payload(undefined, schema)
       }).toThrow(TypeError)
       expect(() => {
         // @ts-expect-error
-        new Payload(undefined, schema)
+        payload(undefined, schema)
       }).toThrow('schema cannot be defined when encoding is undefined')
     })
 
     it('throws error when integer schema is defined but encoding is undefined', () => {
-      const schema = new IntegerSchema({})
+      const schema = integer()
       expect(() => {
         // @ts-expect-error
-        new Payload(undefined, schema)
+        payload(undefined, schema)
       }).toThrow(TypeError)
     })
 
     it('allows undefined encoding with undefined schema', () => {
       expect(() => {
-        new Payload(undefined, undefined)
+        payload(undefined, undefined)
       }).not.toThrow()
     })
 
     it('allows defined encoding with undefined schema', () => {
       expect(() => {
-        new Payload('application/json', undefined)
+        payload('application/json', undefined)
       }).not.toThrow()
     })
 
     it('allows defined encoding with defined schema', () => {
-      const schema = new StringSchema({})
+      const schema = string()
       expect(() => {
-        new Payload('application/json', schema)
+        payload('application/json', schema)
       }).not.toThrow()
     })
   })
 
   describe('property access', () => {
     it('has accessible encoding property', () => {
-      const payload = new Payload('application/json', undefined)
-      expect(payload.encoding).toBe('application/json')
+      const def = payload('application/json', undefined)
+      expect(def.encoding).toBe('application/json')
     })
 
     it('has accessible schema property', () => {
-      const schema = new StringSchema({})
-      const payload = new Payload('application/json', schema)
-      expect(payload.schema).toBe(schema)
+      const schema = string()
+      const def = payload('application/json', schema)
+      expect(def.schema).toBe(schema)
     })
 
     it('encoding property is immutable in TypeScript', () => {
-      const payload = new Payload('application/json', undefined)
+      const def = payload('application/json', undefined)
       // TypeScript enforces readonly at compile time
-      expect(payload.encoding).toBe('application/json')
+      expect(def.encoding).toBe('application/json')
     })
 
     it('schema property is immutable in TypeScript', () => {
-      const schema = new StringSchema({})
-      const payload = new Payload('application/json', schema)
+      const schema = string()
+      const def = payload('application/json', schema)
       // TypeScript enforces readonly at compile time
-      expect(payload.schema).toBe(schema)
+      expect(def.schema).toBe(schema)
     })
   })
 
   describe('usage scenarios', () => {
     it('creates payload for JSON API response', () => {
-      const payload = new Payload(
+      const def = payload(
         'application/json',
-        new ObjectSchema({
-          success: new StringSchema({}),
-          data: new UnknownSchema(),
+        object({
+          success: string(),
+          data: unknown(),
         }),
       )
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBeDefined()
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBeDefined()
     })
 
     it('creates payload for plain text response', () => {
-      const payload = new Payload('text/plain', undefined)
-      expect(payload.encoding).toBe('text/plain')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('text/plain', undefined)
+      expect(def.encoding).toBe('text/plain')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload for binary data', () => {
-      const payload = new Payload('application/octet-stream', undefined)
-      expect(payload.encoding).toBe('application/octet-stream')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('application/octet-stream', undefined)
+      expect(def.encoding).toBe('application/octet-stream')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload for image upload', () => {
-      const payload = new Payload('image/jpeg', undefined)
-      expect(payload.encoding).toBe('image/jpeg')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('image/jpeg', undefined)
+      expect(def.encoding).toBe('image/jpeg')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload for multipart form data', () => {
-      const payload = new Payload('multipart/form-data', undefined)
-      expect(payload.encoding).toBe('multipart/form-data')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('multipart/form-data', undefined)
+      expect(def.encoding).toBe('multipart/form-data')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates payload for URL encoded form', () => {
-      const payload = new Payload(
-        'application/x-www-form-urlencoded',
-        undefined,
-      )
-      expect(payload.encoding).toBe('application/x-www-form-urlencoded')
-      expect(payload.schema).toBeUndefined()
+      const def = payload('application/x-www-form-urlencoded', undefined)
+      expect(def.encoding).toBe('application/x-www-form-urlencoded')
+      expect(def.schema).toBeUndefined()
     })
 
     it('creates empty payload (no encoding, no schema)', () => {
-      const payload = new Payload(undefined, undefined)
-      expect(payload.encoding).toBeUndefined()
-      expect(payload.schema).toBeUndefined()
+      const def = payload(undefined, undefined)
+      expect(def.encoding).toBeUndefined()
+      expect(def.schema).toBeUndefined()
     })
   })
 
   describe('edge cases', () => {
     it('handles encoding with charset parameter', () => {
-      const payload = new Payload('application/json; charset=utf-8', undefined)
-      expect(payload.encoding).toBe('application/json; charset=utf-8')
+      const def = payload('application/json; charset=utf-8', undefined)
+      expect(def.encoding).toBe('application/json; charset=utf-8')
     })
 
     it('handles encoding with multiple parameters', () => {
-      const payload = new Payload(
-        'multipart/form-data; boundary=something',
-        undefined,
-      )
-      expect(payload.encoding).toBe('multipart/form-data; boundary=something')
+      const def = payload('multipart/form-data; boundary=something', undefined)
+      expect(def.encoding).toBe('multipart/form-data; boundary=something')
     })
 
     it('handles empty string encoding', () => {
-      const payload = new Payload('', undefined)
-      expect(payload.encoding).toBe('')
+      const def = payload('', undefined)
+      expect(def.encoding).toBe('')
     })
 
     it('creates multiple payloads with same schema reference', () => {
-      const sharedSchema = new ObjectSchema({
-        id: new IntegerSchema({}),
+      const sharedSchema = object({
+        id: integer(),
       })
-      const payload1 = new Payload('application/json', sharedSchema)
-      const payload2 = new Payload('application/json', sharedSchema)
+      const def1 = payload('application/json', sharedSchema)
+      const def2 = payload('application/json', sharedSchema)
 
-      expect(payload1.schema).toBe(payload2.schema)
-      expect(payload1.schema).toBe(sharedSchema)
+      expect(def1.schema).toBe(def2.schema)
+      expect(def1.schema).toBe(sharedSchema)
     })
 
     it('creates multiple payloads with different schemas', () => {
-      const schema1 = new StringSchema({})
-      const schema2 = new IntegerSchema({})
-      const payload1 = new Payload('application/json', schema1)
-      const payload2 = new Payload('application/json', schema2)
+      const schema1 = string()
+      const schema2 = integer()
+      const def1 = payload('application/json', schema1)
+      const def2 = payload('application/json', schema2)
 
-      expect(payload1.schema).not.toBe(payload2.schema)
-      expect(payload1.schema).toBe(schema1)
-      expect(payload2.schema).toBe(schema2)
+      expect(def1.schema).not.toBe(def2.schema)
+      expect(def1.schema).toBe(schema1)
+      expect(def2.schema).toBe(schema2)
     })
   })
 
   describe('type inference scenarios', () => {
     it('works with application/json and object schema', () => {
-      const schema = new ObjectSchema({
-        message: new StringSchema({}),
+      const schema = object({
+        message: string(),
       })
-      const payload = new Payload('application/json', schema)
-      expect(payload.encoding).toBe('application/json')
-      expect(payload.schema).toBe(schema)
+      const def = payload('application/json', schema)
+      expect(def.encoding).toBe('application/json')
+      expect(def.schema).toBe(schema)
     })
 
     it('works with text/* encodings expecting string bodies', () => {
-      const payload1 = new Payload('text/plain', undefined)
-      const payload2 = new Payload('text/html', undefined)
-      const payload3 = new Payload('text/csv', undefined)
+      const def1 = payload('text/plain', undefined)
+      const def2 = payload('text/html', undefined)
+      const def3 = payload('text/csv', undefined)
 
-      expect(payload1.encoding).toBe('text/plain')
-      expect(payload2.encoding).toBe('text/html')
-      expect(payload3.encoding).toBe('text/csv')
+      expect(def1.encoding).toBe('text/plain')
+      expect(def2.encoding).toBe('text/html')
+      expect(def3.encoding).toBe('text/csv')
     })
 
     it('works with binary encodings expecting Uint8Array bodies', () => {
-      const payload1 = new Payload('image/png', undefined)
-      const payload2 = new Payload('application/octet-stream', undefined)
-      const payload3 = new Payload('video/mp4', undefined)
+      const def1 = payload('image/png', undefined)
+      const def2 = payload('application/octet-stream', undefined)
+      const def3 = payload('video/mp4', undefined)
 
-      expect(payload1.encoding).toBe('image/png')
-      expect(payload2.encoding).toBe('application/octet-stream')
-      expect(payload3.encoding).toBe('video/mp4')
+      expect(def1.encoding).toBe('image/png')
+      expect(def2.encoding).toBe('application/octet-stream')
+      expect(def3.encoding).toBe('video/mp4')
     })
   })
 })

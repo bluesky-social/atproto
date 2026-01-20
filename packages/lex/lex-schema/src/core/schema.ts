@@ -1,17 +1,38 @@
 import {
+  InferInput,
+  InferOutput,
+  ValidationContext,
   ValidationOptions,
   ValidationResult,
   Validator,
-  ValidatorContext,
 } from './validator.js'
 
-export abstract class Schema<Output = any> implements Validator<Output> {
-  declare readonly ['__lex']: { output: Output }
+type ParseOptions = Omit<ValidationOptions, 'mode'>
+type ValidateOptions = Omit<ValidationOptions, 'mode'>
+
+export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
+  /** @internal The inferred validation type */
+  input: TInput
+
+  /** @internal The inferred parse type */
+  output: TOutput
+}
+
+export abstract class Schema<
+  out TInput = unknown,
+  out TOutput = TInput,
+  out TInternals extends SchemaInternals<TInput, TOutput> = SchemaInternals<
+    TInput,
+    TOutput
+  >,
+> implements Validator<TInternals['input'], TInternals['output']>
+{
+  declare readonly ['__lex']: TInternals
 
   abstract validateInContext(
     input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<Output>
+    ctx: ValidationContext,
+  ): ValidationResult
 
   /**
    * @note use {@link check}() instead of {@link assert}() if you encounter a
@@ -19,8 +40,8 @@ export abstract class Schema<Output = any> implements Validator<Output> {
    * will typically arise in generic contexts, where the narrowed type is not
    * needed.
    */
-  assert(input: unknown): asserts input is Output {
-    const result = this.safeParse(input, { allowTransform: false })
+  assert(input: unknown): asserts input is InferInput<this> {
+    const result = ValidationContext.validate(input, this)
     if (!result.success) throw result.reason
   }
 
@@ -37,45 +58,53 @@ export abstract class Schema<Output = any> implements Validator<Output> {
   /**
    * Casts the input (by validating it) to the output type if it matches the
    * schema, otherwise throws. This is the same as calling {@link parse}() with
-   * `allowTransform: false`.
+   * `mode: "validate"`.
    */
-  cast<I>(input: I): I & Output {
-    return this.parse(input, { allowTransform: false })
+  cast<I>(input: I): I & InferInput<this> {
+    const result = ValidationContext.validate(input, this)
+    if (result.success) return result.value
+    throw result.reason
   }
 
-  matches(input: unknown): input is Output {
-    const result = this.safeParse(input, { allowTransform: false })
+  matches<I>(input: I): input is I & InferInput<this> {
+    const result = ValidationContext.validate(input, this)
     return result.success
   }
 
-  ifMatches<I>(input: I): (I & Output) | undefined {
+  ifMatches<I>(input: I): (I & InferInput<this>) | undefined {
     return this.matches(input) ? input : undefined
   }
 
-  parse<I>(
-    input: I,
-    options: ValidationOptions & { allowTransform: false },
-  ): I & Output
-  parse(input: unknown, options?: ValidationOptions): Output
-  parse(input: unknown, options?: ValidationOptions): Output {
+  parse(input: unknown, options?: ParseOptions): InferOutput<this> {
     const result = this.safeParse(input, options)
-    if (!result.success) throw result.reason
-    return result.value
+    if (result.success) return result.value
+    throw result.reason
   }
 
-  safeParse<I>(
+  safeParse(
+    input: unknown,
+    options?: ParseOptions,
+  ): ValidationResult<InferOutput<this>> {
+    return ValidationContext.validate(input, this, {
+      ...options,
+      mode: 'parse',
+    })
+  }
+
+  validate<I>(input: I, options?: ValidateOptions): I & InferInput<this> {
+    const result = this.safeValidate(input, options)
+    if (result.success) return result.value
+    throw result.reason
+  }
+
+  safeValidate<I>(
     input: I,
-    options: ValidationOptions & { allowTransform: false },
-  ): ValidationResult<I & Output>
-  safeParse(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output>
-  safeParse(
-    input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output> {
-    return ValidatorContext.validate(input, this, options)
+    options?: ValidateOptions,
+  ): ValidationResult<I & InferInput<this>> {
+    return ValidationContext.validate(input, this, {
+      ...options,
+      mode: 'validate',
+    })
   }
 
   // @NOTE The built lexicons namespaces will export utility functions that
@@ -92,26 +121,45 @@ export abstract class Schema<Output = any> implements Validator<Output> {
   // - "app.bsky.feed.post.$parse(...)" // calls a utility function created by "lex build"
   // - "app.bsky.feed.defs.postView.$parse(...)" // uses the alias defined below on the schema instance
 
-  $assert(input: unknown): asserts input is Output {
+  $assert(input: unknown): asserts input is InferInput<this> {
     return this.assert(input)
   }
 
-  $matches(input: unknown): input is Output {
+  $check(input: unknown): void {
+    return this.check(input)
+  }
+
+  $cast<I>(input: I): I & InferInput<this> {
+    return this.cast(input)
+  }
+
+  $matches(input: unknown): input is InferInput<this> {
     return this.matches(input)
   }
 
-  $ifMatches<I>(input: I): (I & Output) | undefined {
+  $ifMatches<I>(input: I): (I & InferInput<this>) | undefined {
     return this.ifMatches(input)
   }
 
-  $parse(input: unknown, options?: ValidationOptions): Output {
+  $parse(input: unknown, options?: ValidateOptions): InferOutput<this> {
     return this.parse(input, options)
   }
 
   $safeParse(
     input: unknown,
-    options?: ValidationOptions,
-  ): ValidationResult<Output> {
+    options?: ValidateOptions,
+  ): ValidationResult<InferOutput<this>> {
     return this.safeParse(input, options)
+  }
+
+  $validate<I>(input: I, options?: ValidateOptions): I & InferInput<this> {
+    return this.validate(input, options)
+  }
+
+  $safeValidate<I>(
+    input: I,
+    options?: ValidateOptions,
+  ): ValidationResult<I & InferInput<this>> {
+    return this.safeValidate(input, options)
   }
 }

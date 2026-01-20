@@ -1,12 +1,11 @@
 import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
 import { lexStringify } from '@atproto/lex-json'
 import {
-  InferMethodInput,
-  InferMethodParams,
+  InferInput,
+  InferPayload,
   Main,
   Params,
-  ParamsSchema,
-  Payload as LexPayload,
+  Payload,
   Procedure,
   Query,
   Restricted,
@@ -15,14 +14,14 @@ import {
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
 import {
-  LexRpcResponseError,
-  LexRpcUnexpectedError,
-  LexRpcUpstreamError,
+  XrpcResponseError,
+  XrpcUnexpectedError,
+  XrpcUpstreamError,
 } from './errors.js'
-import { LexRpcResponse } from './response.js'
+import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
 import {
-  Payload,
+  XrpcPayload,
   buildAtprotoHeaders,
   isAsyncIterable,
   isBlobLike,
@@ -30,106 +29,108 @@ import {
 } from './util.js'
 
 // If all params are optional, allow omitting the params object
-type LexRpcParamsOptions<P extends Params> =
+type XrpcParamsOptions<P extends Params> =
   NonNullable<unknown> extends P ? { params?: P } : { params: P }
 
-type LexRpcRequestPayload<M extends Procedure | Query> = InferMethodInput<
-  M,
-  BinaryBodyInit
->
+export type XrpcRequestParams<M extends Procedure | Query | Subscription> =
+  InferInput<M['parameters']>
 
-type LexRpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
+type XrpcRequestPayload<M extends Procedure | Query> = M extends Procedure
+  ? InferPayload<M['input'], BinaryBodyInit>
+  : undefined
+
+type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
   ? // encoding will be inferred from the schema at runtime if not provided
     { body: B; encoding?: E }
   : { body?: undefined; encoding?: undefined }
 
-export type LexRpcOptions<M extends Procedure | Query = Procedure | Query> =
+export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   CallOptions &
-    LexRpcInputOptions<LexRpcRequestPayload<M>> &
-    LexRpcParamsOptions<InferMethodParams<M>>
+    XrpcInputOptions<XrpcRequestPayload<M>> &
+    XrpcParamsOptions<XrpcRequestParams<M>>
 
-export type LexRpcFailure<M extends Procedure | Query> =
+export type XrpcFailure<M extends Procedure | Query> =
   // The server returned a valid XRPC error response
-  | LexRpcResponseError<M>
+  | XrpcResponseError<M>
   // The response was not a valid XRPC response, or it does not match the schema
-  | LexRpcUpstreamError
+  | XrpcUpstreamError
   // Something went wrong (network error, etc.)
-  | LexRpcUnexpectedError
+  | XrpcUnexpectedError
 
-export type LexRpcResult<M extends Procedure | Query> =
-  | LexRpcResponse<M>
-  | LexRpcFailure<M>
+export type XrpcResult<M extends Procedure | Query> =
+  | XrpcResponse<M>
+  | XrpcFailure<M>
 
 /**
  * Utility method to type cast the error thrown by {@link xrpc} to an
- * {@link LexRpcFailure} matching the provided method. Only use this function
+ * {@link XrpcFailure} matching the provided method. Only use this function
  * inside a catch block right after calling {@link xrpc}, and use the same
  * method type parameter as used in the {@link xrpc} call.
  */
-export function asLexRpcFailure<
-  M extends Procedure | Query = Procedure | Query,
->(err: unknown): LexRpcFailure<M> {
-  if (err instanceof LexRpcResponseError) return err
-  if (err instanceof LexRpcUpstreamError) return err
-  return LexRpcUnexpectedError.from(err)
+export function asXrpcFailure<M extends Procedure | Query = Procedure | Query>(
+  err: unknown,
+): XrpcFailure<M> {
+  if (err instanceof XrpcResponseError) return err
+  if (err instanceof XrpcUpstreamError) return err
+  return XrpcUnexpectedError.from(err)
 }
 
 /**
- * @throws LexRpcFailure<M>
+ * @throws XrpcFailure<M>
  */
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
-  ns: NonNullable<unknown> extends LexRpcOptions<M>
+  ns: NonNullable<unknown> extends XrpcOptions<M>
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
-): Promise<LexRpcResponse<M>>
+): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: LexRpcOptions<M>,
-): Promise<LexRpcResponse<M>>
+  options: XrpcOptions<M>,
+): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
-): Promise<LexRpcResponse<M>> {
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcResponse<M>> {
   try {
     return await lexRpcRequest<M>(agent, ns, options)
   } catch (err) {
-    throw asLexRpcFailure<M>(err)
+    throw asXrpcFailure<M>(err)
   }
 }
 
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
-  ns: NonNullable<unknown> extends LexRpcOptions<M>
+  ns: NonNullable<unknown> extends XrpcOptions<M>
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
-): Promise<LexRpcResult<M>>
+): Promise<XrpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: LexRpcOptions<M>,
-): Promise<LexRpcResult<M>>
+  options: XrpcOptions<M>,
+): Promise<XrpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
-): Promise<LexRpcResult<M>> {
-  return lexRpcRequest<M>(agent, ns, options).catch(asLexRpcFailure<M>)
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcResult<M>> {
+  return lexRpcRequest<M>(agent, ns, options).catch(asXrpcFailure<M>)
 }
 
 async function lexRpcRequest<const M extends Query | Procedure>(
   agent: Agent,
   ns: Main<M>,
-  options: LexRpcOptions<M> = {} as LexRpcOptions<M>,
-): Promise<LexRpcResponse<M>> {
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcResponse<M>> {
   const method = getMain(ns)
   options.signal?.throwIfAborted()
   const url = xrpcRequestUrl(method, options)
   const request = xrpcRequestInit(method, options)
   const response = await agent.fetchHandler(url, request)
-  return LexRpcResponse.fromFetchResponse<M>(method, response, options)
+  return XrpcResponse.fromFetchResponse<M>(method, response, options)
 }
 
 function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
@@ -138,22 +139,11 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
 ) {
   const path = `/xrpc/${method.nsid}`
 
-  const queryString = options.params
-    ? xrpcRequestParams(method.parameters, options.params, options)
-    : undefined
+  const queryString = method.parameters
+    ?.toURLSearchParams(options.params ?? {})
+    .toString()
 
   return queryString ? `${path}?${queryString}` : path
-}
-
-function xrpcRequestParams(
-  schema: ParamsSchema | undefined,
-  params: Params | undefined,
-  options: CallOptions,
-): undefined | string {
-  const urlSearchParams = schema?.toURLSearchParams(
-    options.validateRequest ? schema.parse(params) : (params as any),
-  )
-  return urlSearchParams?.size ? urlSearchParams.toString() : undefined
 }
 
 function xrpcRequestInit<T extends Procedure | Query>(
@@ -215,7 +205,7 @@ function xrpcProcedureInput(
   method: Procedure,
   options: CallOptions & { body?: LexValue | BinaryBodyInit },
   encodingHint?: string,
-): null | Payload<BodyInit> {
+): null | XrpcPayload<BodyInit> {
   const { input } = method
   const { body } = options
 
@@ -261,10 +251,10 @@ function xrpcProcedureInput(
 }
 
 function buildPayload(
-  schema: LexPayload,
+  schema: Payload,
   body: undefined | BodyInit,
   encodingHint?: string,
-): null | Payload<BodyInit> {
+): null | XrpcPayload<BodyInit> {
   if (schema.encoding === undefined) {
     if (body !== undefined) {
       throw new TypeError(
@@ -286,7 +276,7 @@ function buildPayload(
   return { encoding, body }
 }
 
-function buildEncoding(schema: LexPayload, encodingHint?: string): string {
+function buildEncoding(schema: Payload, encodingHint?: string): string {
   // Should never happen (required for type safety)
   if (!schema.encoding) {
     throw new TypeError('Unexpected payload')

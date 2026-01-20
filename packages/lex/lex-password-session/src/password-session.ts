@@ -1,19 +1,19 @@
 import {
   Agent,
-  LexRpcError,
-  LexRpcFailure,
+  XrpcError,
+  XrpcFailure,
   buildAgent,
   xrpcSafe,
 } from '@atproto/lex-client'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
-import { extractLexRpcErrorCode, extractPdsUrl, noop } from './util.js'
+import { extractPdsUrl, extractXrpcErrorCode, noop } from './util.js'
 
-export type RefreshFailure = LexRpcFailure<
+export type RefreshFailure = XrpcFailure<
   typeof com.atproto.server.refreshSession.main
 >
 
-export type DeleteFailure = LexRpcFailure<
+export type DeleteFailure = XrpcFailure<
   typeof com.atproto.server.deleteSession.main
 >
 
@@ -117,7 +117,7 @@ export class PasswordSession implements Agent {
 
   get session() {
     if (this.#sessionData) return this.#sessionData
-    throw new LexRpcError('AuthenticationRequired', 'Logged out')
+    throw new XrpcError('AuthenticationRequired', 'Logged out')
   }
 
   get destroyed(): boolean {
@@ -144,7 +144,7 @@ export class PasswordSession implements Agent {
     const refreshNeeded =
       initialRes.status === 401 ||
       (initialRes.status === 400 &&
-        (await extractLexRpcErrorCode(initialRes)) === 'ExpiredToken')
+        (await extractXrpcErrorCode(initialRes)) === 'ExpiredToken')
 
     if (!refreshNeeded) {
       return initialRes
@@ -261,7 +261,7 @@ export class PasswordSession implements Agent {
 
         // Update the session promise to a rejected state
         this.#sessionData = null
-        throw new LexRpcError('AuthenticationRequired', 'Logged out')
+        throw new XrpcError('AuthenticationRequired', 'Logged out')
       } else {
         // Capture the reason for the failure to re-throw in the outer promise
         reason = result
@@ -294,7 +294,7 @@ export class PasswordSession implements Agent {
    * use-cases.
    *
    * @throws If unable to create a session. In particular, if the server
-   * requires a 2FA token, a {@link LexRpcResponseError} with the
+   * requires a 2FA token, a {@link XrpcResponseError} with the
    * `AuthFactorTokenRequired` error code will be thrown.
    *
    *
@@ -308,7 +308,7 @@ export class PasswordSession implements Agent {
    *     password: 'correct horse battery staple',
    *   })
    * } catch (err) {
-   *   if (err instanceof LexRpcResponseError && err.error === 'AuthFactorTokenRequired') {
+   *   if (err instanceof XrpcResponseError && err.error === 'AuthFactorTokenRequired') {
    *     // Prompt user for 2FA token and re-attempt session creation
    *   }
    * }

@@ -139,7 +139,7 @@ if (result.success) {
 The `login()` method returns a discriminated union:
 
 - On success: `{ success: true, value: PasswordAgent }`
-- On expected errors: `LexRpcResponseError` with `success: false`
+- On expected errors: `XrpcResponseError` with `success: false`
 - On unexpected errors: throws the error
 
 ### Two-Factor Authentication
@@ -329,7 +329,7 @@ type Session = {
 
 ## Error Handling
 
-Login errors are returned as `LexRpcResponseError` objects:
+Login errors are returned as `XrpcResponseError` objects:
 
 ```typescript
 const result = await PasswordAgent.login({

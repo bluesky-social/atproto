@@ -7,27 +7,27 @@ import {
   ResultSuccess,
 } from '@atproto/lex-schema'
 import {
-  LexRpcResponseError,
-  LexRpcUpstreamError,
-  isLexRpcErrorPayload,
+  XrpcResponseError,
+  XrpcUpstreamError,
+  isXrpcErrorPayload,
 } from './errors.js'
-import { Payload } from './util.js'
+import { XrpcPayload } from './util.js'
 
-export type LexRpcResponseBody<M extends Procedure | Query> =
+export type XrpcResponseBody<M extends Procedure | Query> =
   InferMethodOutputBody<M, Uint8Array>
 
-export type LexRpcResponsePayload<M extends Procedure | Query> =
+export type XrpcResponsePayload<M extends Procedure | Query> =
   InferMethodOutputEncoding<M> extends infer E extends string
-    ? Payload<LexRpcResponseBody<M>, E>
+    ? XrpcPayload<XrpcResponseBody<M>, E>
     : null
 
 /**
  * Small container for XRPC response data.
  *
- * @implements {ResultSuccess<LexRpcResponse<M>>} for convenience in result handling contexts.
+ * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
  */
-export class LexRpcResponse<const M extends Procedure | Query>
-  implements ResultSuccess<LexRpcResponse<M>>
+export class XrpcResponse<const M extends Procedure | Query>
+  implements ResultSuccess<XrpcResponse<M>>
 {
   /** @see {@link ResultSuccess.success} */
   readonly success = true as const
@@ -41,7 +41,7 @@ export class LexRpcResponse<const M extends Procedure | Query>
     readonly method: M,
     readonly status: number,
     readonly headers: Headers,
-    readonly payload: LexRpcResponsePayload<M>,
+    readonly payload: XrpcResponsePayload<M>,
   ) {}
 
   /**
@@ -57,21 +57,21 @@ export class LexRpcResponse<const M extends Procedure | Query>
   }
 
   get body() {
-    return this.payload?.body as LexRpcResponseBody<M>
+    return this.payload?.body as XrpcResponseBody<M>
   }
 
   /**
-   * @throws {LexRpcResponseError} in case of (valid) XRPC error responses. Use
-   * {@link LexRpcResponseError.matchesSchema} to narrow the error type based on
+   * @throws {XrpcResponseError} in case of (valid) XRPC error responses. Use
+   * {@link XrpcResponseError.matchesSchema} to narrow the error type based on
    * the method's declared error schema.
-   * @throws {LexRpcUpstreamError} when the response is not a valid XRPC
+   * @throws {XrpcUpstreamError} when the response is not a valid XRPC
    * response, or if the response does not conform to the method's schema.
    */
   static async fromFetchResponse<const M extends Procedure | Query>(
     method: M,
     response: Response,
     options?: { validateResponse?: boolean },
-  ): Promise<LexRpcResponse<M>> {
+  ): Promise<XrpcResponse<M>> {
     // @NOTE The body MUST either be read or canceled to avoid resource leaks.
     // Since nothing should cause an exception before "readPayload" is
     // called, we can safely not use a try/finally here.
@@ -81,8 +81,8 @@ export class LexRpcResponse<const M extends Procedure | Query>
       // Always parse json for error responses
       const payload = await readPayload(response, { parse: true })
 
-      if (response.status >= 400 && isLexRpcErrorPayload(payload)) {
-        throw new LexRpcResponseError(
+      if (response.status >= 400 && isXrpcErrorPayload(payload)) {
+        throw new XrpcResponseError(
           method,
           response.status,
           response.headers,
@@ -91,7 +91,7 @@ export class LexRpcResponse<const M extends Procedure | Query>
       }
 
       if (response.status >= 500) {
-        throw new LexRpcUpstreamError(
+        throw new XrpcUpstreamError(
           'UpstreamFailure',
           `Upstream server encountered an error`,
           response,
@@ -99,7 +99,7 @@ export class LexRpcResponse<const M extends Procedure | Query>
         )
       }
 
-      throw new LexRpcUpstreamError(
+      throw new XrpcUpstreamError(
         'InvalidResponse',
         response.status >= 400
           ? `Upstream server returned an invalid response payload`
@@ -118,7 +118,7 @@ export class LexRpcResponse<const M extends Procedure | Query>
     if (method.output.encoding == null) {
       // Schema expects no payload
       if (payload) {
-        throw new LexRpcUpstreamError(
+        throw new XrpcUpstreamError(
           'InvalidResponse',
           `Expected response with no body, got ${payload.encoding}`,
           response,
@@ -128,7 +128,7 @@ export class LexRpcResponse<const M extends Procedure | Query>
     } else {
       // Schema expects a payload
       if (!payload || !method.output.matchesEncoding(payload.encoding)) {
-        throw new LexRpcUpstreamError(
+        throw new XrpcUpstreamError(
           'InvalidResponse',
           payload
             ? `Expected ${method.output.encoding} response, got ${payload.encoding}`
@@ -140,12 +140,10 @@ export class LexRpcResponse<const M extends Procedure | Query>
 
       // Assert valid response body.
       if (method.output.schema && options?.validateResponse !== false) {
-        const result = method.output.schema.safeParse(payload.body, {
-          allowTransform: false,
-        })
+        const result = method.output.schema.safeParse(payload.body)
 
         if (!result.success) {
-          throw new LexRpcUpstreamError(
+          throw new XrpcUpstreamError(
             'InvalidResponse',
             `Response validation failed: ${result.reason.message}`,
             response,
@@ -156,11 +154,11 @@ export class LexRpcResponse<const M extends Procedure | Query>
       }
     }
 
-    return new LexRpcResponse<M>(
+    return new XrpcResponse<M>(
       method,
       response.status,
       response.headers,
-      payload as LexRpcResponsePayload<M>,
+      payload as XrpcResponsePayload<M>,
     )
   }
 }
@@ -175,7 +173,7 @@ function shouldParse(method: Procedure | Query) {
 async function readPayload(
   response: Response,
   options?: { parse?: boolean },
-): Promise<Payload | null> {
+): Promise<XrpcPayload | null> {
   // @TODO Should we limit the maximum response size here (this could also be
   // done by the FetchHandler)?
 
@@ -214,7 +212,7 @@ async function readPayload(
       // @TODO verify statement above
       return { encoding, body: lexParse(text) }
     } catch (cause) {
-      throw new LexRpcUpstreamError(
+      throw new XrpcUpstreamError(
         'InvalidResponse',
         'Invalid JSON response body',
         response,

@@ -1,13 +1,11 @@
 import { LexMap, isLexMap } from '@atproto/lex-data'
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
-export type UnknownObjectOutput = LexMap
+export type UnknownObject = LexMap
 
-export class UnknownObjectSchema extends Schema<UnknownObjectOutput> {
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<UnknownObjectOutput> {
+export class UnknownObjectSchema extends Schema<UnknownObject> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (isLexMap(input)) {
       return ctx.success(input)
     }
@@ -15,3 +13,7 @@ export class UnknownObjectSchema extends Schema<UnknownObjectOutput> {
     return ctx.issueInvalidType(input, 'unknown')
   }
 }
+
+export const unknownObject = /*#__PURE__*/ memoizedOptions(function () {
+  return new UnknownObjectSchema()
+})

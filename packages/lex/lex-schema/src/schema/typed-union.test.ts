@@ -1,42 +1,42 @@
 import { describe, expect, it } from 'vitest'
-import { IntegerSchema } from './integer.js'
-import { ObjectSchema } from './object.js'
-import { StringSchema } from './string.js'
-import { TypedObjectSchema } from './typed-object.js'
-import { TypedRefSchema } from './typed-ref.js'
-import { TypedUnionSchema } from './typed-union.js'
+import { integer } from './integer.js'
+import { object } from './object.js'
+import { string } from './string.js'
+import { typedObject } from './typed-object.js'
+import { typedRef } from './typed-ref.js'
+import { typedUnion } from './typed-union.js'
 
 describe('TypedUnionSchema', () => {
-  const personSchema = new TypedObjectSchema(
+  const personSchema = typedObject(
     'app.bsky.actor.person',
-    new ObjectSchema({
-      name: new StringSchema({}),
-      age: new IntegerSchema({}),
+    'main',
+    object({
+      name: string(),
+      age: integer(),
     }),
   )
 
-  const postSchema = new TypedObjectSchema(
+  const postSchema = typedObject(
     'app.bsky.feed.post',
-    new ObjectSchema({
-      text: new StringSchema({}),
-      createdAt: new StringSchema({}),
+    'main',
+    object({
+      text: string(),
+      createdAt: string(),
     }),
   )
 
-  const commentSchema = new TypedObjectSchema(
+  const commentSchema = typedObject(
     'app.bsky.feed.comment',
-    new ObjectSchema({
-      text: new StringSchema({}),
-      parentUri: new StringSchema({}),
+    'main',
+    object({
+      text: string(),
+      parentUri: string(),
     }),
   )
 
   describe('closed union', () => {
-    const schema = new TypedUnionSchema(
-      [
-        new TypedRefSchema(() => personSchema),
-        new TypedRefSchema(() => postSchema),
-      ],
+    const schema = typedUnion(
+      [typedRef(() => personSchema), typedRef(() => postSchema)],
       true,
     )
 
@@ -123,11 +123,8 @@ describe('TypedUnionSchema', () => {
   })
 
   describe('open union', () => {
-    const schema = new TypedUnionSchema(
-      [
-        new TypedRefSchema(() => personSchema),
-        new TypedRefSchema(() => postSchema),
-      ],
+    const schema = typedUnion(
+      [typedRef(() => personSchema), typedRef(() => postSchema)],
       false,
     )
 
@@ -208,11 +205,11 @@ describe('TypedUnionSchema', () => {
   })
 
   describe('with three types', () => {
-    const schema = new TypedUnionSchema(
+    const schema = typedUnion(
       [
-        new TypedRefSchema(() => personSchema),
-        new TypedRefSchema(() => postSchema),
-        new TypedRefSchema(() => commentSchema),
+        typedRef(() => personSchema),
+        typedRef(() => postSchema),
+        typedRef(() => commentSchema),
       ],
       true,
     )
@@ -254,10 +251,7 @@ describe('TypedUnionSchema', () => {
   })
 
   describe('with single type', () => {
-    const schema = new TypedUnionSchema(
-      [new TypedRefSchema(() => personSchema)],
-      true,
-    )
+    const schema = typedUnion([typedRef(() => personSchema)], true)
 
     it('validates the single type', () => {
       const result = schema.safeParse({
@@ -279,11 +273,8 @@ describe('TypedUnionSchema', () => {
   })
 
   describe('$types getter', () => {
-    const schema = new TypedUnionSchema(
-      [
-        new TypedRefSchema(() => personSchema),
-        new TypedRefSchema(() => postSchema),
-      ],
+    const schema = typedUnion(
+      [typedRef(() => personSchema), typedRef(() => postSchema)],
       true,
     )
 
@@ -296,16 +287,13 @@ describe('TypedUnionSchema', () => {
   })
 
   describe('refsMap getter', () => {
-    const schema = new TypedUnionSchema(
-      [
-        new TypedRefSchema(() => personSchema),
-        new TypedRefSchema(() => postSchema),
-      ],
+    const schema = typedUnion(
+      [typedRef(() => personSchema), typedRef(() => postSchema)],
       true,
     )
 
     it('returns map of $type to ref schema', () => {
-      const refsMap = schema.refsMap
+      const refsMap = schema.validatorsMap
       expect(refsMap.size).toBe(2)
       expect(refsMap.has('app.bsky.actor.person')).toBe(true)
       expect(refsMap.has('app.bsky.feed.post')).toBe(true)
@@ -313,11 +301,8 @@ describe('TypedUnionSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new TypedUnionSchema(
-      [
-        new TypedRefSchema(() => personSchema),
-        new TypedRefSchema(() => postSchema),
-      ],
+    const schema = typedUnion(
+      [typedRef(() => personSchema), typedRef(() => postSchema)],
       true,
     )
 
@@ -330,10 +315,7 @@ describe('TypedUnionSchema', () => {
     })
 
     it('validates object with $type as empty string in open union', () => {
-      const openSchema = new TypedUnionSchema(
-        [new TypedRefSchema(() => personSchema)],
-        false,
-      )
+      const openSchema = typedUnion([typedRef(() => personSchema)], false)
       const result = openSchema.safeParse({
         $type: '',
         someProperty: 'value',
@@ -361,18 +343,12 @@ describe('TypedUnionSchema', () => {
 
   describe('closed property', () => {
     it('exposes closed property as true', () => {
-      const schema = new TypedUnionSchema(
-        [new TypedRefSchema(() => personSchema)],
-        true,
-      )
+      const schema = typedUnion([typedRef(() => personSchema)], true)
       expect(schema.closed).toBe(true)
     })
 
     it('exposes closed property as false', () => {
-      const schema = new TypedUnionSchema(
-        [new TypedRefSchema(() => personSchema)],
-        false,
-      )
+      const schema = typedUnion([typedRef(() => personSchema)], false)
       expect(schema.closed).toBe(false)
     })
   })
