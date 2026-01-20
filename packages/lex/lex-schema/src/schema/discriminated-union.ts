@@ -1,32 +1,40 @@
 import { isPlainObject } from '@atproto/lex-data'
 import {
-  Infer,
+  InferInput,
+  InferOutput,
   Schema,
+  ValidationContext,
   ValidationResult,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
 
-export type DiscriminatedUnionVariant<Discriminator extends string> =
-  ObjectSchema<Record<Discriminator, EnumSchema | LiteralSchema>>
+export type DiscriminatedUnionVariant<Discriminator extends string = string> =
+  ObjectSchema<Record<Discriminator, EnumSchema<any> | LiteralSchema<any>>>
 
-export type DiscriminatedUnionVariants<Discriminator extends string> =
+export type DiscriminatedUnionVariants<TDiscriminator extends string> =
   readonly [
-    DiscriminatedUnionVariant<Discriminator>,
-    ...DiscriminatedUnionVariant<Discriminator>[],
+    DiscriminatedUnionVariant<TDiscriminator>,
+    ...DiscriminatedUnionVariant<TDiscriminator>[],
   ]
 
-export type DiscriminatedUnionSchemaOutput<
-  Variants extends readonly Validator[],
-> = Variants extends readonly [
-  infer V extends Validator,
-  ...infer Rest extends readonly Validator[],
-]
-  ? Infer<V> | DiscriminatedUnionSchemaOutput<Rest>
-  : never
+type DiscriminatedUnionSchemaInput<TVariants extends readonly Validator[]> =
+  TVariants extends readonly [
+    infer TValidator extends Validator,
+    ...infer TRest extends readonly Validator[],
+  ]
+    ? InferInput<TValidator> | DiscriminatedUnionSchemaInput<TRest>
+    : never
+
+type DiscriminatedUnionSchemaOutput<TVariants extends readonly Validator[]> =
+  TVariants extends readonly [
+    infer TValidator extends Validator,
+    ...infer TRest extends readonly Validator[],
+  ]
+    ? InferOutput<TValidator> | DiscriminatedUnionSchemaOutput<TRest>
+    : never
 
 /**
  * @note There is no discriminated union in Lexicon schemas. This is a custom
@@ -34,14 +42,17 @@ export type DiscriminatedUnionSchemaOutput<
  * lex library programmatically (i.e. not code generated from a lexicon schema).
  */
 export class DiscriminatedUnionSchema<
-  const Discriminator extends string = any,
-  const Variants extends DiscriminatedUnionVariants<Discriminator> = any,
-> extends Schema<DiscriminatedUnionSchemaOutput<Variants>> {
-  readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<Discriminator>>
+  const TDiscriminator extends string,
+  const TVariants extends DiscriminatedUnionVariants<TDiscriminator>,
+> extends Schema<
+  DiscriminatedUnionSchemaInput<TVariants>,
+  DiscriminatedUnionSchemaOutput<TVariants>
+> {
+  readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<TDiscriminator>>
 
   constructor(
-    readonly discriminator: Discriminator,
-    variants: Variants,
+    readonly discriminator: TDiscriminator,
+    readonly variants: TVariants,
   ) {
     super()
 
@@ -51,10 +62,7 @@ export class DiscriminatedUnionSchema<
     this.variantsMap = buildVariantsMap(discriminator, variants)
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<DiscriminatedUnionSchemaOutput<Variants>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -70,7 +78,7 @@ export class DiscriminatedUnionSchema<
     const variant = this.variantsMap.get(discriminatorValue)
     if (variant) {
       return ctx.validate(input, variant) as ValidationResult<
-        DiscriminatedUnionSchemaOutput<Variants>
+        DiscriminatedUnionSchemaInput<TVariants>
       >
     }
 
@@ -114,4 +122,15 @@ function buildVariantsMap<Discriminator extends string>(
   }
 
   return variantsMap
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function discriminatedUnion<
+  const Discriminator extends string,
+  const Options extends DiscriminatedUnionVariants<Discriminator>,
+>(discriminator: Discriminator, variants: Options) {
+  return new DiscriminatedUnionSchema<Discriminator, Options>(
+    discriminator,
+    variants,
+  )
 }

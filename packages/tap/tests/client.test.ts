@@ -1,7 +1,8 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
+import { AddressInfo } from 'node:net'
 import { default as express } from 'express'
-import getPort from 'get-port'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Tap } from '../src/client'
 
 describe('Tap client', () => {
@@ -40,7 +41,6 @@ describe('Tap client', () => {
     }[]
 
     beforeAll(async () => {
-      const port = await getPort()
       const app = express()
       app.use(express.json())
 
@@ -99,8 +99,9 @@ describe('Tap client', () => {
         })
       })
 
-      server = app.listen(port) as http.Server
+      server = app.listen()
       await once(server, 'listening')
+      const { port } = server.address() as AddressInfo
       tap = new Tap(`http://localhost:${port}`, { adminPassword: 'secret' })
     })
 
@@ -172,7 +173,6 @@ describe('Tap client', () => {
     let tap: Tap
 
     beforeAll(async () => {
-      const port = await getPort()
       const app = express()
       app.use(express.json())
 
@@ -184,8 +184,9 @@ describe('Tap client', () => {
         res.status(500).send('Internal Server Error')
       })
 
-      server = app.listen(port) as http.Server
+      server = app.listen()
       await once(server, 'listening')
+      const { port } = server.address() as AddressInfo
       tap = new Tap(`http://localhost:${port}`)
     })
 

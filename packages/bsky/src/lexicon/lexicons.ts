@@ -8420,7 +8420,7 @@ export const schemaDict = {
                 },
               },
               recId: {
-                type: 'integer',
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8473,7 +8473,7 @@ export const schemaDict = {
                 },
               },
               recId: {
-                type: 'integer',
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },

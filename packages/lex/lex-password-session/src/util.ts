@@ -3,7 +3,7 @@ import { l } from '@atproto/lex-schema'
 
 export const noop = () => {}
 
-export async function extractLexRpcErrorCode(
+export async function extractXrpcErrorCode(
   response: Response,
 ): Promise<string | null> {
   const json = await peekJson(response, 10 * 1024) // Avoid reading large bodies

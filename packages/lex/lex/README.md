@@ -304,16 +304,35 @@ try {
 
 > [!NOTE]
 >
-> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$parse()`.
+> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Use `$validate()` for value validation.
 
-#### `$validate(data)` - Get Validation Result
+#### `$validate(data)` - Validate a value against the schema
+
+Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
+
+```typescript
+import * as app from './lexicons/app.js'
+
+const value = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: new Date().toISOString(),
+}
+
+// Throws if no valid
+const result = app.bsky.feed.post.$validate(value)
+
+value === result // true
+```
+
+#### `$safeParse(data)` - Parse a value against a schema and get the resulting value
 
 Returns a detailed validation result object without throwing:
 
 ```typescript
 import * as app from './lexicons/app.js'
 
-const result = app.bsky.feed.post.$validate({
+const result = app.bsky.feed.post.$safeParse({
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
   createdAt: new Date().toISOString(),
@@ -325,10 +344,6 @@ if (result.success) {
   console.error('Validation failed:', result.error)
 }
 ```
-
-> [!NOTE]
->
-> Like `$parse`, the `$validate` method will apply defaults and coercion. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$validate()`.
 
 #### `$build(data)` - Build with Defaults
 
@@ -358,7 +373,7 @@ import * as app from './lexicons/app.js'
 declare const data:
   | app.bsky.feed.post.Main
   | app.bsky.feed.like.Main
-  | l.TypedObject
+  | l.Unknown$TypedObject
 
 // Discriminate by $type without re-validating
 if (app.bsky.feed.post.$isTypeOf(data)) {
@@ -853,7 +868,7 @@ if (result.success) {
   if (result.error === 'Unknown') {
     // Unable to perform the request
     const { reason } = result
-    if (reason instanceof LexRpcResponseError) {
+    if (reason instanceof XrpcResponseError) {
       // The server returned a syntactically valid XRPC error response, but
       // used an error code that is not declared for this method
       reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
@@ -861,7 +876,7 @@ if (result.success) {
       reason.status // number
       reason.headers // Headers
       reason.payload // { body: { error: string, message?: string }; encoding: string }
-    } else if (reason instanceof LexRpcUpstreamError) {
+    } else if (reason instanceof XrpcUpstreamError) {
       // The response was incomplete (e.g. connection dropped), or
       // invalid (e.g. malformed JSON, data does not match schema).
       reason.error // "InvalidResponse"
@@ -874,7 +889,7 @@ if (result.success) {
     }
   } else {
     // A declared error for that method
-    result // LexRpcResponseError<"HandleNotFound">
+    result // XrpcResponseError<"HandleNotFound">
     result.error // "HandleNotFound"
     result.message // string
   }
@@ -883,14 +898,14 @@ if (result.success) {
 
 The `ResponseFailure<M>` type is a union with three possible error types:
 
-1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `LexRpcResponseError<N>` instance:
+1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `XrpcResponseError<N>` instance:
 
    ```typescript
-   // LexRpcResponseError<N>
+   // XrpcResponseError<N>
    type KnownLexRpcResponseFailure<N extends string> = {
      success: false
      name: N
-     error: LexRpcResponseError<N>
+     error: XrpcResponseError<N>
 
      // Additional response details
      status: number
@@ -903,11 +918,11 @@ The `ResponseFailure<M>` type is a union with three possible error types:
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   // LexRpcResponseFailure<'Unexpected', LexRpcResponseError>
+   // LexRpcResponseFailure<'Unexpected', XrpcResponseError>
    type UnknownLexRpcResponseFailure = {
      success: false
      name: 'Unexpected'
-     error: LexRpcResponseError<string>
+     error: XrpcResponseError<string>
    }
    ```
 
@@ -1516,7 +1531,7 @@ await client.call(unfollow, { followUri: uri })
 #### Updating Profile with Retry Logic
 
 ```typescript
-import { Action, LexRpcResponseError } from '@atproto/lex'
+import { Action, XrpcResponseError } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 
@@ -1558,7 +1573,7 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
     } catch (error) {
       // Retry on swap/concurrent modification errors
       if (
-        error instanceof LexRpcResponseError &&
+        error instanceof XrpcResponseError &&
         error.name === 'SwapError' &&
         attempt < maxRetries - 1
       ) {

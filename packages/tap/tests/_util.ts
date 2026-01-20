@@ -1,3 +1,4 @@
+import { WebSocketServer } from 'ws'
 import { HandlerOpts } from '../src/channel'
 import { IdentityEvent, RecordEvent } from '../src/types'
 
@@ -25,7 +26,7 @@ export const createRecordEvent = (
   rkey: 'abc123',
   action: 'create',
   record: { text: 'hello' },
-  cid: 'bafyabc',
+  cid: 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq',
   live: true,
   ...overrides,
 })
@@ -38,3 +39,25 @@ export const createIdentityEvent = (): IdentityEvent => ({
   isActive: true,
   status: 'active',
 })
+
+export async function createWebSocketServer() {
+  return new Promise<WebSocketServer & AsyncDisposable>((resolve, reject) => {
+    const server = new WebSocketServer({ port: 0 }, () => {
+      server.off('error', reject)
+      resolve(
+        Object.defineProperty(server, Symbol.asyncDispose, {
+          value: disposeWebSocketServer,
+        }) as WebSocketServer & AsyncDisposable,
+      )
+    }).once('error', reject)
+  })
+}
+
+async function disposeWebSocketServer(this: WebSocketServer) {
+  return new Promise<void>((resolve, reject) => {
+    this.close((err) => {
+      if (err) reject(err)
+      else resolve()
+    })
+  })
+}

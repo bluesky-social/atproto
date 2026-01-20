@@ -12,47 +12,48 @@ import {
   MeasurableType,
 } from './validation-issue.js'
 
-export type ValidationSuccess<Value = any> = ResultSuccess<Value>
+export type ValidationSuccess<Value = unknown> = ResultSuccess<Value>
 export type ValidationFailure = ResultFailure<ValidationError>
-export type ValidationResult<Value = any> =
+export type ValidationResult<Value = unknown> =
   | ValidationSuccess<Value>
   | ValidationFailure
 
-export type ValidationOptions = {
-  path?: PropertyKey[]
+export type InferInput<V extends Validator> = V['__lex']['input']
+export type InferOutput<V extends Validator> = V['__lex']['output']
 
-  /** @default true */
-  allowTransform?: boolean
-}
+export type { InferInput as Infer }
 
-export type Infer<T extends Validator> = T['__lex']['output']
-
-export interface Validator<Output = any> {
+export interface Validator<TInput = unknown, TOutput = TInput> {
   /**
    * This property is used for type inference purposes and does not actually
    * exist at runtime.
    *
    * @deprecated **INTERNAL API, DO NOT USE**.
    */
-  readonly ['__lex']: { output: Output }
+  readonly ['__lex']: {
+    /** @internal The inferred validation type */
+    input: TInput
+    /** @internal The inferred parse type */
+    output: TOutput
+  }
 
   /**
-   * @internal **INTERNAL API**: use {@link ValidatorContext.validate} instead
+   * @internal **INTERNAL API**: use {@link ValidationContext.validate} instead
    *
    * This method is implemented by subclasses to perform transformation and
    * validation of the input value. Do not call this method directly; as the
-   * {@link ValidatorContext.options.allowTransform} option will **not** be
-   * enforced. See {@link ValidatorContext.validate} for details. When
-   * delegating validation from one validator sub-class implementation to
-   * another schema, {@link ValidatorContext.validate} must be used instead of
-   * calling {@link Validator.validateInContext}. This will allow to stop the
-   * validation process if the value was transformed (by the other schema) but
+   * {@link ValidationContext.options.mode} option will **not** be enforced. See
+   * {@link ValidationContext.validate} for details. When delegating validation
+   * from one validator sub-class implementation to another schema,
+   * {@link ValidationContext.validate} must be used instead of calling
+   * {@link Validator.validateInContext}. This will allow to stop the validation
+   * process if the value was transformed (by the other schema) but
    * transformations are not allowed.
    *
    * By convention, the {@link ValidationResult} must return the original input
    * value if validation was successful and no transformation was applied (i.e.
    * the input already conformed to the schema). If a default value, or any
-   * other transformation was applied, the returned value c&an be different from
+   * other transformation was applied, the returned value can be different from
    * the input.
    *
    * This convention allows the {@link Validator.check check} and
@@ -60,34 +61,64 @@ export interface Validator<Output = any> {
    * exactly matches the schema (without defaults or transformations), by
    * checking if the returned value is strictly equal to the input.
    *
-   * @see {@link ValidatorContext.validate}
+   * @see {@link ValidationContext.validate}
    */
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<Output>
+  validateInContext(input: unknown, ctx: ValidationContext): ValidationResult
 }
 
-export class ValidatorContext {
+export type ValidationOptions = {
   /**
-   * Creates a new validation context and validates the input using the
-   * provided validator.
+   * When set to `"validate"` (default), the result of validation must be
+   * strictly equal to the input value (i.e. no transformation, such as applying
+   * default values, is allowed).
    */
-  static validate<V>(
+  mode?: 'validate' | 'parse'
+
+  /**
+   * The path to the value being validated. This is used to provide more
+   * context in validation issues.
+   */
+  path?: readonly PropertyKey[]
+}
+
+export class ValidationContext {
+  static validate<V extends Validator>(
     input: unknown,
-    validator: Validator<V>,
-    options: ValidationOptions = {},
-  ): ValidationResult<V> {
-    const context = new ValidatorContext(options)
+    validator: V,
+    options: ValidationOptions & {
+      mode: 'parse'
+    },
+  ): ValidationResult<InferOutput<V>>
+  static validate<V extends Validator, I = unknown>(
+    input: I,
+    validator: V,
+    options?: ValidationOptions & {
+      mode?: 'validate'
+    },
+  ): ValidationResult<I & InferInput<V>>
+  static validate<V extends Validator>(
+    input: unknown,
+    validator: V,
+    options?: ValidationOptions,
+  ): ValidationResult<InferOutput<V> | InferInput<V>>
+  static validate<V extends Validator>(
+    input: unknown,
+    validator: V,
+    options?: ValidationOptions,
+  ): ValidationResult<InferOutput<V> | InferInput<V>> {
+    const context = new ValidationContext({
+      path: options?.path ?? [],
+      mode: options?.mode ?? 'validate',
+    })
     return context.validate(input, validator)
   }
 
-  private readonly currentPath: PropertyKey[]
-  private readonly issues: Issue[] = []
+  protected readonly currentPath: PropertyKey[]
+  protected readonly issues: Issue[] = []
 
-  protected constructor(readonly options: ValidationOptions) {
+  constructor(readonly options: Required<ValidationOptions>) {
     // Create a copy because we will be mutating the array during validation.
-    this.currentPath = options?.path != null ? Array.from(options.path) : []
+    this.currentPath = Array.from(options.path)
   }
 
   get path() {
@@ -101,22 +132,27 @@ export class ValidatorContext {
 
   /**
    * This is basically the entry point for validation within a context. Use this
-   * method instead of {@link Validator.validateInContext} directly, because
-   * this method enforces the {@link ValidationOptions.allowTransform} option.
+   * method instead of using {@link Validator.validateInContext} directly,
+   * because this method ensures the proper use of {@link ValidationOptions}.
    */
-  validate<V>(input: unknown, validator: Validator<V>): ValidationResult<V> {
+  validate<V extends Validator>(
+    input: unknown,
+    validator: V,
+  ): ValidationResult<InferInput<V>> {
     // This is the only place where validateInContext should be called.
     const result = validator.validateInContext(input, this)
 
     if (result.success) {
-      if (
-        // Defaults to true
-        this.options?.allowTransform === false &&
-        !Object.is(result.value, input)
-      ) {
+      if (this.issues.length > 0) {
+        // Validator returned a success but issues were added via the context.
+        // This means the overall validation failed.
+        return failure(new ValidationError(Array.from(this.issues)))
+      }
+
+      if (this.options.mode !== 'parse' && !Object.is(result.value, input)) {
         // If the value changed, it means that a default (or some other
         // transformation) was applied, meaning that the original value did
-        // *not* match the (output) schema. When "allowTransform" is false, we
+        // *not* match the (output) schema. When not in "parse" mode, we
         // consider this a failure.
 
         // This check is the reason why Validator.validateInContext should not
@@ -129,22 +165,16 @@ export class ValidatorContext {
         // "failure" method below), resulting in a more complete error report.
         return this.issueInvalidValue(input, [result.value])
       }
-
-      if (this.issues.length > 0) {
-        // Validator returned a success but issues were added via the context.
-        // This means the overall validation failed.
-        return failure(new ValidationError(Array.from(this.issues)))
-      }
     }
 
-    return result as ValidationResult<V>
+    return result as ValidationResult<InferInput<V>>
   }
 
   validateChild<
     I extends object,
     K extends PropertyKey & keyof I,
     V extends Validator,
-  >(input: I, key: K, validator: V): ValidationResult<Infer<V>> {
+  >(input: I, key: K, validator: V): ValidationResult<InferInput<V>> {
     // Instead of creating a new context, we just push/pop the path segment.
     this.currentPath.push(key)
     try {
@@ -223,4 +253,14 @@ export class ValidatorContext {
     const path = this.concatPath(property)
     return this.issue(new IssueInvalidType(path, value, [expected]))
   }
+}
+
+export type UnwrapValidator<T extends Validator> = T extends {
+  unwrap(): infer U extends Validator
+}
+  ? UnwrapValidator<U>
+  : T
+
+export interface WrappedValidator<out Validator> {
+  unwrap(): Validator
 }

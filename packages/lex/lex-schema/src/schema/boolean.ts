@@ -1,18 +1,8 @@
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
-
-export type BooleanSchemaOptions = {
-  default?: boolean
-}
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 export class BooleanSchema extends Schema<boolean> {
-  constructor(readonly options?: BooleanSchemaOptions) {
-    super()
-  }
-
-  validateInContext(
-    input: unknown = this.options?.default,
-    ctx: ValidatorContext,
-  ): ValidationResult<boolean> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (typeof input === 'boolean') {
       return ctx.success(input)
     }
@@ -20,3 +10,7 @@ export class BooleanSchema extends Schema<boolean> {
     return ctx.issueInvalidType(input, 'boolean')
   }
 }
+
+export const boolean = /*#__PURE__*/ memoizedOptions(function () {
+  return new BooleanSchema()
+})

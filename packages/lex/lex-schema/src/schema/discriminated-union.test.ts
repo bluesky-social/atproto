@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { DiscriminatedUnionSchema } from './discriminated-union.js'
-import { EnumSchema } from './enum.js'
-import { IntegerSchema } from './integer.js'
-import { LiteralSchema } from './literal.js'
-import { ObjectSchema } from './object.js'
-import { StringSchema } from './string.js'
+import { discriminatedUnion } from './discriminated-union.js'
+import { enumSchema } from './enum.js'
+import { integer } from './integer.js'
+import { literal } from './literal.js'
+import { object } from './object.js'
+import { string } from './string.js'
 
 describe('DiscriminatedUnionSchema', () => {
   describe('with literal discriminators', () => {
-    const schema = new DiscriminatedUnionSchema('type', [
-      new ObjectSchema({
-        type: new LiteralSchema('cat'),
-        meow: new StringSchema({}),
+    const schema = discriminatedUnion('type', [
+      object({
+        type: literal('cat'),
+        meow: string(),
       }),
-      new ObjectSchema({
-        type: new LiteralSchema('dog'),
-        bark: new StringSchema({}),
+      object({
+        type: literal('dog'),
+        bark: string(),
       }),
     ])
 
@@ -96,14 +96,14 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with enum discriminators', () => {
-    const schema = new DiscriminatedUnionSchema('status', [
-      new ObjectSchema({
-        status: new EnumSchema(['pending', 'processing']),
-        progress: new IntegerSchema({}),
+    const schema = discriminatedUnion('status', [
+      object({
+        status: enumSchema(['pending', 'processing']),
+        progress: integer(),
       }),
-      new ObjectSchema({
-        status: new EnumSchema(['complete', 'failed']),
-        result: new StringSchema({}),
+      object({
+        status: enumSchema(['complete', 'failed']),
+        result: string(),
       }),
     ])
 
@@ -164,14 +164,14 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with mixed literal and enum discriminators', () => {
-    const schema = new DiscriminatedUnionSchema('kind', [
-      new ObjectSchema({
-        kind: new LiteralSchema('simple'),
-        value: new StringSchema({}),
+    const schema = discriminatedUnion('kind', [
+      object({
+        kind: literal('simple'),
+        value: string(),
       }),
-      new ObjectSchema({
-        kind: new EnumSchema(['complex', 'advanced']),
-        value: new IntegerSchema({}),
+      object({
+        kind: enumSchema(['complex', 'advanced']),
+        value: integer(),
       }),
     ])
 
@@ -209,10 +209,10 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with single variant', () => {
-    const schema = new DiscriminatedUnionSchema('type', [
-      new ObjectSchema({
-        type: new LiteralSchema('only'),
-        value: new StringSchema({}),
+    const schema = discriminatedUnion('type', [
+      object({
+        type: literal('only'),
+        value: string(),
       }),
     ])
 
@@ -234,19 +234,19 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with three variants', () => {
-    const schema = new DiscriminatedUnionSchema('shape', [
-      new ObjectSchema({
-        shape: new LiteralSchema('circle'),
-        radius: new IntegerSchema({}),
+    const schema = discriminatedUnion('shape', [
+      object({
+        shape: literal('circle'),
+        radius: integer(),
       }),
-      new ObjectSchema({
-        shape: new LiteralSchema('square'),
-        side: new IntegerSchema({}),
+      object({
+        shape: literal('square'),
+        side: integer(),
       }),
-      new ObjectSchema({
-        shape: new LiteralSchema('rectangle'),
-        width: new IntegerSchema({}),
-        height: new IntegerSchema({}),
+      object({
+        shape: literal('rectangle'),
+        width: integer(),
+        height: integer(),
       }),
     ])
 
@@ -285,14 +285,14 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with number discriminators', () => {
-    const schema = new DiscriminatedUnionSchema('version', [
-      new ObjectSchema({
-        version: new LiteralSchema(1),
-        oldFormat: new StringSchema({}),
+    const schema = discriminatedUnion('version', [
+      object({
+        version: literal(1),
+        oldFormat: string(),
       }),
-      new ObjectSchema({
-        version: new LiteralSchema(2),
-        newFormat: new StringSchema({}),
+      object({
+        version: literal(2),
+        newFormat: string(),
       }),
     ])
 
@@ -330,14 +330,14 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with boolean discriminators', () => {
-    const schema = new DiscriminatedUnionSchema('enabled', [
-      new ObjectSchema({
-        enabled: new LiteralSchema(true),
-        config: new StringSchema({}),
+    const schema = discriminatedUnion('enabled', [
+      object({
+        enabled: literal(true),
+        config: string(),
       }),
-      new ObjectSchema({
-        enabled: new LiteralSchema(false),
-        reason: new StringSchema({}),
+      object({
+        enabled: literal(false),
+        reason: string(),
       }),
     ])
 
@@ -367,14 +367,14 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('with null discriminator', () => {
-    const schema = new DiscriminatedUnionSchema('value', [
-      new ObjectSchema({
-        value: new LiteralSchema(null),
-        empty: new StringSchema({}),
+    const schema = discriminatedUnion('value', [
+      object({
+        value: literal(null),
+        empty: string(),
       }),
-      new ObjectSchema({
-        value: new LiteralSchema('present'),
-        data: new StringSchema({}),
+      object({
+        value: literal('present'),
+        data: string(),
       }),
     ])
 
@@ -406,14 +406,14 @@ describe('DiscriminatedUnionSchema', () => {
   describe('constructor validation', () => {
     it('throws on overlapping literal discriminator values', () => {
       expect(() => {
-        new DiscriminatedUnionSchema('type', [
-          new ObjectSchema({
-            type: new LiteralSchema('duplicate'),
-            a: new StringSchema({}),
+        discriminatedUnion('type', [
+          object({
+            type: literal('duplicate'),
+            a: string(),
           }),
-          new ObjectSchema({
-            type: new LiteralSchema('duplicate'),
-            b: new StringSchema({}),
+          object({
+            type: literal('duplicate'),
+            b: string(),
           }),
         ])
       }).toThrow('Overlapping discriminator value: duplicate')
@@ -421,14 +421,14 @@ describe('DiscriminatedUnionSchema', () => {
 
     it('throws on overlapping enum discriminator values', () => {
       expect(() => {
-        new DiscriminatedUnionSchema('status', [
-          new ObjectSchema({
-            status: new EnumSchema(['active', 'pending']),
-            a: new StringSchema({}),
+        discriminatedUnion('status', [
+          object({
+            status: enumSchema(['active', 'pending']),
+            a: string(),
           }),
-          new ObjectSchema({
-            status: new EnumSchema(['pending', 'complete']),
-            b: new StringSchema({}),
+          object({
+            status: enumSchema(['pending', 'complete']),
+            b: string(),
           }),
         ])
       }).toThrow('Overlapping discriminator value: pending')
@@ -436,14 +436,14 @@ describe('DiscriminatedUnionSchema', () => {
 
     it('throws on overlapping literal and enum discriminator values', () => {
       expect(() => {
-        new DiscriminatedUnionSchema('kind', [
-          new ObjectSchema({
-            kind: new LiteralSchema('test'),
-            a: new StringSchema({}),
+        discriminatedUnion('kind', [
+          object({
+            kind: literal('test'),
+            a: string(),
           }),
-          new ObjectSchema({
-            kind: new EnumSchema(['test', 'other']),
-            b: new StringSchema({}),
+          object({
+            kind: enumSchema(['test', 'other']),
+            b: string(),
           }),
         ])
       }).toThrow('Overlapping discriminator value: test')
@@ -451,14 +451,14 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new DiscriminatedUnionSchema('type', [
-      new ObjectSchema({
-        type: new LiteralSchema('a'),
-        value: new StringSchema({}),
+    const schema = discriminatedUnion('type', [
+      object({
+        type: literal('a'),
+        value: string(),
       }),
-      new ObjectSchema({
-        type: new LiteralSchema('b'),
-        value: new IntegerSchema({}),
+      object({
+        type: literal('b'),
+        value: integer(),
       }),
     ])
 
@@ -490,10 +490,10 @@ describe('DiscriminatedUnionSchema', () => {
     })
 
     it('handles empty string discriminator', () => {
-      const emptySchema = new DiscriminatedUnionSchema('key', [
-        new ObjectSchema({
-          key: new LiteralSchema(''),
-          value: new StringSchema({}),
+      const emptySchema = discriminatedUnion('key', [
+        object({
+          key: literal(''),
+          value: string(),
         }),
       ])
 
@@ -505,10 +505,10 @@ describe('DiscriminatedUnionSchema', () => {
     })
 
     it('handles zero discriminator', () => {
-      const zeroSchema = new DiscriminatedUnionSchema('count', [
-        new ObjectSchema({
-          count: new LiteralSchema(0),
-          value: new StringSchema({}),
+      const zeroSchema = discriminatedUnion('count', [
+        object({
+          count: literal(0),
+          value: string(),
         }),
       ])
 
@@ -520,10 +520,10 @@ describe('DiscriminatedUnionSchema', () => {
     })
 
     it('handles false discriminator', () => {
-      const falseSchema = new DiscriminatedUnionSchema('flag', [
-        new ObjectSchema({
-          flag: new LiteralSchema(false),
-          value: new StringSchema({}),
+      const falseSchema = discriminatedUnion('flag', [
+        object({
+          flag: literal(false),
+          value: string(),
         }),
       ])
 
@@ -544,10 +544,10 @@ describe('DiscriminatedUnionSchema', () => {
     })
 
     it('handles discriminator with special characters', () => {
-      const specialSchema = new DiscriminatedUnionSchema('$type', [
-        new ObjectSchema({
-          $type: new LiteralSchema('test'),
-          value: new StringSchema({}),
+      const specialSchema = discriminatedUnion('$type', [
+        object({
+          $type: literal('test'),
+          value: string(),
         }),
       ])
 
@@ -576,16 +576,16 @@ describe('DiscriminatedUnionSchema', () => {
   })
 
   describe('complex nested structures', () => {
-    const schema = new DiscriminatedUnionSchema('type', [
-      new ObjectSchema({
-        type: new LiteralSchema('user'),
-        name: new StringSchema({}),
-        age: new IntegerSchema({}),
+    const schema = discriminatedUnion('type', [
+      object({
+        type: literal('user'),
+        name: string(),
+        age: integer(),
       }),
-      new ObjectSchema({
-        type: new LiteralSchema('post'),
-        title: new StringSchema({}),
-        content: new StringSchema({}),
+      object({
+        type: literal('post'),
+        title: string(),
+        content: string(),
       }),
     ])
 
@@ -636,17 +636,17 @@ describe('DiscriminatedUnionSchema', () => {
 
   describe('discriminator key variations', () => {
     it('works with different discriminator key names', () => {
-      const kindSchema = new DiscriminatedUnionSchema('kind', [
-        new ObjectSchema({
-          kind: new LiteralSchema('a'),
-          value: new StringSchema({}),
+      const kindSchema = discriminatedUnion('kind', [
+        object({
+          kind: literal('a'),
+          value: string(),
         }),
       ])
 
-      const tagSchema = new DiscriminatedUnionSchema('tag', [
-        new ObjectSchema({
-          tag: new LiteralSchema('a'),
-          value: new StringSchema({}),
+      const tagSchema = discriminatedUnion('tag', [
+        object({
+          tag: literal('a'),
+          value: string(),
         }),
       ])
 
@@ -659,10 +659,10 @@ describe('DiscriminatedUnionSchema', () => {
     })
 
     it('rejects when discriminator key does not match schema', () => {
-      const schema = new DiscriminatedUnionSchema('type', [
-        new ObjectSchema({
-          type: new LiteralSchema('a'),
-          value: new StringSchema({}),
+      const schema = discriminatedUnion('type', [
+        object({
+          type: literal('a'),
+          value: string(),
         }),
       ])
 

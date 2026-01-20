@@ -106,6 +106,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
   return skeletonFn(input)
 }
+
 const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
@@ -168,5 +169,5 @@ type Params = QueryParams & {
 
 type SkeletonState = {
   dids: string[]
-  recId?: number
+  recId?: string
 }

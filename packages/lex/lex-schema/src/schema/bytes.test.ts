@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { BytesSchema } from './bytes.js'
+import { bytes } from './bytes.js'
 
 describe('BytesSchema', () => {
   describe('basic validation', () => {
-    const schema = new BytesSchema({})
+    const schema = bytes({})
 
     it('validates Uint8Array', () => {
       const result = schema.safeParse(new Uint8Array([0, 1, 2, 3]))
@@ -72,7 +72,7 @@ describe('BytesSchema', () => {
   })
 
   describe('minLength constraint', () => {
-    const schema = new BytesSchema({ minLength: 3 })
+    const schema = bytes({ minLength: 3 })
 
     it('validates bytes at minimum length', () => {
       const result = schema.safeParse(new Uint8Array([0, 1, 2]))
@@ -96,7 +96,7 @@ describe('BytesSchema', () => {
   })
 
   describe('maxLength constraint', () => {
-    const schema = new BytesSchema({ maxLength: 5 })
+    const schema = bytes({ maxLength: 5 })
 
     it('validates bytes at maximum length', () => {
       const result = schema.safeParse(new Uint8Array([0, 1, 2, 3, 4]))
@@ -120,7 +120,7 @@ describe('BytesSchema', () => {
   })
 
   describe('minLength and maxLength constraints', () => {
-    const schema = new BytesSchema({ minLength: 2, maxLength: 5 })
+    const schema = bytes({ minLength: 2, maxLength: 5 })
 
     it('validates bytes within range', () => {
       const result = schema.safeParse(new Uint8Array([0, 1, 2]))
@@ -150,37 +150,37 @@ describe('BytesSchema', () => {
 
   describe('edge cases', () => {
     it('validates with minLength of 0', () => {
-      const schema = new BytesSchema({ minLength: 0 })
+      const schema = bytes({ minLength: 0 })
       const result = schema.safeParse(new Uint8Array([]))
       expect(result.success).toBe(true)
     })
 
     it('validates with maxLength of 0', () => {
-      const schema = new BytesSchema({ maxLength: 0 })
+      const schema = bytes({ maxLength: 0 })
       const result = schema.safeParse(new Uint8Array([]))
       expect(result.success).toBe(true)
     })
 
     it('rejects non-empty bytes with maxLength of 0', () => {
-      const schema = new BytesSchema({ maxLength: 0 })
+      const schema = bytes({ maxLength: 0 })
       const result = schema.safeParse(new Uint8Array([0]))
       expect(result.success).toBe(false)
     })
 
     it('validates bytes with all zeros', () => {
-      const schema = new BytesSchema({})
+      const schema = bytes({})
       const result = schema.safeParse(new Uint8Array([0, 0, 0, 0]))
       expect(result.success).toBe(true)
     })
 
     it('validates bytes with all 255s', () => {
-      const schema = new BytesSchema({})
+      const schema = bytes({})
       const result = schema.safeParse(new Uint8Array([255, 255, 255, 255]))
       expect(result.success).toBe(true)
     })
 
     it('validates large byte arrays', () => {
-      const schema = new BytesSchema({})
+      const schema = bytes({})
       const largeArray = new Uint8Array(10000)
       const result = schema.safeParse(largeArray)
       expect(result.success).toBe(true)
@@ -188,7 +188,7 @@ describe('BytesSchema', () => {
   })
 
   describe('TypedArray coercion', () => {
-    const schema = new BytesSchema({})
+    const schema = bytes({})
 
     it('coerces Int8Array to Uint8Array', () => {
       const int8 = new Int8Array([1, 2, 3])
@@ -218,7 +218,7 @@ describe('BytesSchema', () => {
     })
 
     it('validates coerced TypedArray with length constraints', () => {
-      const schema = new BytesSchema({ minLength: 2, maxLength: 10 })
+      const schema = bytes({ minLength: 2, maxLength: 10 })
       const int16 = new Int16Array([1, 2, 3]) // 6 bytes
       const result = schema.safeParse(int16)
       expect(result.success).toBe(true)

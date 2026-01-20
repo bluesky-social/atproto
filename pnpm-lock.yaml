@@ -873,8 +873,8 @@ importers:
         specifier: workspace:*
         version: link:../lex-json
       cborg:
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^4.4.1
+        version: 4.4.1
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
@@ -1967,9 +1967,6 @@ importers:
       pino-http:
         specifier: ^8.2.1
         version: 8.6.1
-      sharp:
-        specifier: ^0.33.5
-        version: 0.33.5
       typed-emitter:
         specifier: ^2.1.0
         version: 2.1.0
@@ -2141,9 +2138,6 @@ importers:
       ws:
         specifier: ^8.12.0
         version: 8.18.3
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
     devDependencies:
       '@types/express':
         specifier: ^4.17.17
@@ -2151,18 +2145,18 @@ importers:
       '@types/ws':
         specifier: ^8.5.4
         version: 8.5.4
+      '@vitest/coverage-v8':
+        specifier: 4.0.16
+        version: 4.0.16(vitest@4.0.16)
       express:
         specifier: ^4.18.2
         version: 4.18.2
-      get-port:
-        specifier: ^6.1.2
-        version: 6.1.2
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/ws-client:
     dependencies:
@@ -10604,8 +10598,8 @@ packages:
     resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
     hasBin: true
 
-  /cborg@4.3.0:
-    resolution: {integrity: sha512-vOXo1pB4mdeBw3LbpoynQlZNw/H3kZVHLtPYlp8kFMreL/2YfT54F70BM1s3iDoCtQ+3C9QmiRF4rfCSSTlhBw==}
+  /cborg@4.4.1:
+    resolution: {integrity: sha512-mJ6KJfhqHQm5A6nVWBsqUdhDUek2apbF7PhhETwZCJIrgX/xVuR0AIGoGbmAIC86WOwCZmRDaGMz2gOtcPntuw==}
     hasBin: true
     dev: true
 
