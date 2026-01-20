@@ -78,9 +78,7 @@ export function buildLexiconResolver(
       throw new LexiconResolutionError(nsid, 'Invalid Lexicon schema record')
     }
 
-    const validationResult = lexiconDocumentSchema.safeParse(verified.record, {
-      allowTransform: false,
-    })
+    const validationResult = lexiconDocumentSchema.safeValidate(verified.record)
     if (!validationResult.success) {
       throw new LexiconResolutionError(nsid, 'Invalid Lexicon document', {
         cause: validationResult.reason,
