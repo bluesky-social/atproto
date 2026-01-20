@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { l } from '@atproto/lex'
 import {
   CreateEvent,
@@ -58,7 +59,9 @@ describe('LexIndexer', () => {
       expect(received).toHaveLength(1)
       expect(received[0].action).toBe('create')
       expect(received[0].record.text).toBe('hello')
-      expect(received[0].cid).toBe('bafyabc')
+      expect(received[0].cid).toBe(
+        'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq',
+      )
     })
 
     it('registers update handler', async () => {

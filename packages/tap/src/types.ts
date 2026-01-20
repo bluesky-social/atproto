@@ -1,21 +1,22 @@
-import { z } from 'zod'
+import { LexMap, LexValue, l } from '@atproto/lex'
+import { DidString, HandleString, NsidString } from '@atproto/syntax'
 
-export const recordEventDataSchema = z.object({
-  did: z.string(),
-  rev: z.string(),
-  collection: z.string(),
-  rkey: z.string(),
-  action: z.enum(['create', 'update', 'delete']),
-  record: z.record(z.string(), z.unknown()).optional(),
-  cid: z.string().optional(),
-  live: z.boolean(),
+export const recordEventDataSchema = l.object({
+  did: l.string({ format: 'did' }),
+  rev: l.string(),
+  collection: l.string({ format: 'nsid' }),
+  rkey: l.string({ format: 'record-key' }),
+  action: l.enum(['create', 'update', 'delete']),
+  record: l.optional(l.unknownObject()),
+  cid: l.optional(l.string({ format: 'cid' })),
+  live: l.boolean(),
 })
 
-export const identityEventDataSchema = z.object({
-  did: z.string(),
-  handle: z.string(),
-  is_active: z.boolean(),
-  status: z.enum([
+export const identityEventDataSchema = l.object({
+  did: l.string({ format: 'did' }),
+  handle: l.string({ format: 'handle' }),
+  is_active: l.boolean(),
+  status: l.enum([
     'active',
     'takendown',
     'suspended',
@@ -24,29 +25,32 @@ export const identityEventDataSchema = z.object({
   ]),
 })
 
-export const recordEventSchema = z.object({
-  id: z.number(),
-  type: z.literal('record'),
+export const recordEventSchema = l.object({
+  id: l.integer(),
+  type: l.literal('record'),
   record: recordEventDataSchema,
 })
 
-export const identityEventSchema = z.object({
-  id: z.number(),
-  type: z.literal('identity'),
+export const identityEventSchema = l.object({
+  id: l.integer(),
+  type: l.literal('identity'),
   identity: identityEventDataSchema,
 })
 
-export const tapEventSchema = z.union([recordEventSchema, identityEventSchema])
+export const tapEventSchema = l.discriminatedUnion('type', [
+  recordEventSchema,
+  identityEventSchema,
+])
 
 export type RecordEvent = {
   id: number
   type: 'record'
   action: 'create' | 'update' | 'delete'
-  did: string
+  did: DidString
   rev: string
-  collection: string
+  collection: NsidString
   rkey: string
-  record?: Record<string, unknown>
+  record?: LexMap
   cid?: string
   live: boolean
 }
@@ -54,8 +58,8 @@ export type RecordEvent = {
 export type IdentityEvent = {
   id: number
   type: 'identity'
-  did: string
-  handle: string
+  did: DidString
+  handle: HandleString
   isActive: boolean
   status: RepoStatus
 }
@@ -69,7 +73,7 @@ export type RepoStatus =
 
 export type TapEvent = IdentityEvent | RecordEvent
 
-export const parseTapEvent = (data: unknown): TapEvent => {
+export const parseTapEvent = (data: LexValue): TapEvent => {
   const parsed = tapEventSchema.parse(data)
   if (parsed.type === 'identity') {
     return {
@@ -96,14 +100,14 @@ export const parseTapEvent = (data: unknown): TapEvent => {
   }
 }
 
-export const repoInfoSchema = z.object({
-  did: z.string(),
-  handle: z.string(),
-  state: z.string(),
-  rev: z.string(),
-  records: z.number(),
-  error: z.string().optional(),
-  retries: z.number().optional(),
+export const repoInfoSchema = l.object({
+  did: l.string(),
+  handle: l.string(),
+  state: l.string(),
+  rev: l.string(),
+  records: l.integer(),
+  error: l.optional(l.string()),
+  retries: l.optional(l.integer()),
 })
 
-export type RepoInfo = z.infer<typeof repoInfoSchema>
+export type RepoInfo = l.Infer<typeof repoInfoSchema>
