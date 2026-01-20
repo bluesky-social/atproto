@@ -17,3 +17,4 @@ test.sqlite
 *.swp
 .claude/
 coverage
+.pnpm-store/
