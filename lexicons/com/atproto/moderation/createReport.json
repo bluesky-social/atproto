@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth. Compatible with and replaced by the tools.ozone.report.createReport NSID.",
+      "description": "Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth. Superceded by tools.ozone.report.createReport.",
       "input": {
         "encoding": "application/json",
         "schema": {
