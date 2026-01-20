@@ -44,6 +44,7 @@ export class FeatureGates {
           apiHost: this.config.apiUrl,
           clientKey: this.config.apiKey,
         })
+        await this.client.init()
         this.ready = true
       }
     } catch (err) {
