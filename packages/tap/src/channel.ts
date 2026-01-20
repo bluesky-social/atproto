@@ -95,12 +95,12 @@ export class TapChannel implements AsyncDisposable {
         await this.sendAck(ack.id)
         ack.defer.resolve()
         this.bufferedAcks = this.bufferedAcks.slice(1)
-      } catch (err) {
-        this.handler.onError(
-          new Error(`failed to send ack for event ${this.bufferedAcks[0]}`, {
-            cause: err,
-          }),
+      } catch (cause) {
+        const error = new Error(
+          `failed to send ack for event ${this.bufferedAcks[0]}`,
+          { cause },
         )
+        this.handler.onError(error)
         return
       }
     }
@@ -129,8 +129,9 @@ export class TapChannel implements AsyncDisposable {
         strict: true,
       })
       evt = parseTapEvent(data)
-    } catch (err) {
-      this.handler.onError(new Error('Failed to parse message', { cause: err }))
+    } catch (cause) {
+      const error = new Error(`Failed to parse message`, { cause })
+      this.handler.onError(error)
       return
     }
 
@@ -141,11 +142,10 @@ export class TapChannel implements AsyncDisposable {
           await this.ackEvent(evt.id)
         },
       })
-    } catch (err) {
+    } catch (cause) {
       // Don't ack on error - let Tap retry
-      this.handler.onError(
-        new Error(`Failed to process event ${evt.id}`, { cause: err }),
-      )
+      const error = new Error(`Failed to process event ${evt.id}`, { cause })
+      this.handler.onError(error)
       return
     }
   }
