@@ -93,10 +93,7 @@ export const parseTapEvent = (data: LexValue): TapEvent => {
       rev: parsed.record.rev,
       collection: parsed.record.collection,
       rkey: parsed.record.rkey,
-      record:
-        parsed.record.record === undefined
-          ? undefined
-          : (parsed.record.record as LexMap),
+      record: parsed.record.record,
       cid: parsed.record.cid,
       live: parsed.record.live,
     }
