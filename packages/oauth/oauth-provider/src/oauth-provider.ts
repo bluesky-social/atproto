@@ -711,7 +711,9 @@ export class OAuthProvider extends OAuthVerifier {
           consentRequired: session.consentRequired,
 
           selected:
-            parameters.prompt == null || parameters.prompt === 'consent'
+            parameters.prompt == null ||
+            parameters.prompt === 'login' ||
+            parameters.prompt === 'consent'
               ? matchesHint.call(parameters, session)
               : false,
         })),
