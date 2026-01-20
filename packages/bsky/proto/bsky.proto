@@ -495,7 +495,8 @@ message ActorInfo {
   Record status_record = 17;
   string allow_activity_subscriptions_from = 18;
   optional AgeAssuranceStatus age_assurance_status = 19;
-  Record germ_record = 20;
+  optional double reserved = 20;
+  Record germ_record = 21;
 }
 
 message AgeAssuranceStatus {

@@ -3886,7 +3886,12 @@ export class ActorInfo extends Message<ActorInfo> {
   ageAssuranceStatus?: AgeAssuranceStatus;
 
   /**
-   * @generated from field: bsky.Record germ_record = 20;
+   * @generated from field: optional double reserved = 20;
+   */
+  reserved?: number;
+
+  /**
+   * @generated from field: bsky.Record germ_record = 21;
    */
   germRecord?: Record;
 
@@ -3917,7 +3922,8 @@ export class ActorInfo extends Message<ActorInfo> {
     { no: 17, name: "status_record", kind: "message", T: Record },
     { no: 18, name: "allow_activity_subscriptions_from", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 19, name: "age_assurance_status", kind: "message", T: AgeAssuranceStatus, opt: true },
-    { no: 20, name: "germ_record", kind: "message", T: Record },
+    { no: 20, name: "reserved", kind: "scalar", T: 1 /* ScalarType.DOUBLE */, opt: true },
+    { no: 21, name: "germ_record", kind: "message", T: Record },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ActorInfo {
