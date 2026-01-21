@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { Jwks, Keyset } from '@atproto/jwk'
+import { Jwks, Keyset, SignedJwt, unsafeDecodeJwt } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -105,6 +105,8 @@ import {
   refreshTokenSchema,
 } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
+import { isDid } from '@atproto/did'
+import { InvalidTokenError } from './oauth-errors.js'
 
 export { AccessTokenMode, Keyset, LexResolver }
 export type {
@@ -186,12 +188,12 @@ type OAuthProviderConfig = {
    */
   store?: Partial<
     AccountStore &
-      ClientStore &
-      DeviceStore &
-      LexiconStore &
-      ReplayStore &
-      RequestStore &
-      TokenStore
+    ClientStore &
+    DeviceStore &
+    LexiconStore &
+    ReplayStore &
+    RequestStore &
+    TokenStore
   >
 
   accountStore?: AccountStore
@@ -612,7 +614,7 @@ export class OAuthProvider extends OAuthVerifier {
     ).catch(throwAuthorizationError)
 
     try {
-      const sessions = (
+      var sessions = (
         await this.accountManager.listDeviceAccounts(deviceId)
       ).map((deviceAccount) => ({
         account: deviceAccount.account,
@@ -699,6 +701,15 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
+      // Automatic SSO when an valid id_token_hint is provided
+      if (parameters.prompt == "consent" && parameters.id_token_hint != null) {
+        // Parse jwt
+        // validate signature against pds issuer or user key
+        var { account, validIdToken } = await this.getAccountForIdToken(issuer,parameters.id_token_hint)
+        await this.accountManager.upsertDeviceAccount(deviceId, account.sub)
+        sessions = [{ account: account, consentRequired: true, loginRequired: false }]
+      }
+
       return {
         issuer,
         client,
@@ -712,9 +723,9 @@ export class OAuthProvider extends OAuthVerifier {
 
           selected:
             parameters.prompt == null ||
-            parameters.prompt === 'login' ||
-            parameters.prompt === 'consent'
-              ? matchesHint.call(parameters, session)
+              parameters.prompt === 'login' ||
+              parameters.prompt === 'consent'
+              ? matchesHint.call(parameters, session) || validIdToken
               : false,
         })),
         permissionSets: await this.lexiconManager
@@ -1095,6 +1106,39 @@ export class OAuthProvider extends OAuthVerifier {
 
     return tokenPayload
   }
+
+
+  // validates the IdToken against the issuer
+  protected async getAccountForIdToken(
+    issuer:string,
+    idToken: SignedJwt
+  ): Promise<{ account: Account, validIdToken: boolean }> {
+    const { payload } = unsafeDecodeJwt(idToken)
+    if (payload.iss && payload.sub) {
+
+      const { account } = await this.accountManager.getAccount(payload.sub)
+
+      if (isDid(payload.iss) && payload.iss == payload.sub) {// Self signed idToken
+         // Self signed not yet supported
+         throw new InvalidTokenError("id_token_hint","Untrusted idToken issuer")
+      } else {
+
+        if ( issuer != payload.iss) {
+          throw new InvalidTokenError("id_token_hint","Untrusted idToken issuer")
+        }
+
+        // iss is not a DID validate against local issuer
+        await this.signer
+          .verifyAccessToken(idToken)
+          .catch((err) => {
+          throw new InvalidTokenError("id_token_hint","Invalid idToken signature")
+          })
+
+        return { account: account, validIdToken: true }
+      }
+    }
+    throw new InvalidTokenError("id_token_hint","Invalid idToken")
+  }
 }
 
 function matchesHint(
@@ -1106,3 +1150,4 @@ function matchesHint(
 
   return account.sub === hint || account.preferred_username === hint
 }
+
