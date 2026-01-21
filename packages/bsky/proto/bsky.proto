@@ -121,6 +121,14 @@ message GetNotificationDeclarationRecordsResponse {
   repeated Record records = 1;
 }
 
+message GetGermDeclarationRecordsRequest {
+  repeated string uris = 1;
+}
+
+message GetGermDeclarationRecordsResponse {
+  repeated Record records = 1;
+}
+
 message GetStatusRecordsRequest {
   repeated string uris = 1;
 }
@@ -488,6 +496,8 @@ message ActorInfo {
   Record status_record = 17;
   string allow_activity_subscriptions_from = 18;
   optional AgeAssuranceStatus age_assurance_status = 19;
+  optional double reserved = 20;
+  Record germ_record = 21;
 }
 
 message AgeAssuranceStatus {
@@ -1365,6 +1375,7 @@ service Service {
   rpc GetProfileRecords(GetProfileRecordsRequest) returns (GetProfileRecordsResponse);
   rpc GetActorChatDeclarationRecords(GetActorChatDeclarationRecordsRequest) returns (GetActorChatDeclarationRecordsResponse);
   rpc GetNotificationDeclarationRecords(GetNotificationDeclarationRecordsRequest) returns (GetNotificationDeclarationRecordsResponse);
+  rpc GetGermDeclarationRecords(GetGermDeclarationRecordsRequest) returns (GetGermDeclarationRecordsResponse);
   rpc GetStatusRecords(GetStatusRecordsRequest) returns (GetStatusRecordsResponse);
   rpc GetRepostRecords(GetRepostRecordsRequest) returns (GetRepostRecordsResponse);
   rpc GetThreadGateRecords(GetThreadGateRecordsRequest) returns (GetThreadGateRecordsResponse);
