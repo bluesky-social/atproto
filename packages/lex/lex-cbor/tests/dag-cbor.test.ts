@@ -220,7 +220,7 @@ describe('dag-cbor', () => {
 
     same(s1, s2)
 
-    const verify = (/** @type {{ data: Uint8Array }} */ s) => {
+    const verify = (s: { data: Uint8Array }) => {
       same(typeof s, 'object')
       same(Object.keys(s), ['data'])
       assert(s.data instanceof Uint8Array)
