@@ -1,8 +1,4 @@
-import {
-  ensureValidCidString,
-  isLanguageString,
-  validateCidString,
-} from '@atproto/lex-data'
+import { isLanguageString, validateCidString } from '@atproto/lex-data'
 import {
   AtIdentifierString,
   AtUriString,
@@ -12,14 +8,6 @@ import {
   NsidString,
   RecordKeyString,
   TidString,
-  ensureValidAtIdentifier,
-  ensureValidAtUri,
-  ensureValidDatetime,
-  ensureValidDid,
-  ensureValidHandle,
-  ensureValidNsid,
-  ensureValidRecordKey,
-  ensureValidTid,
   isValidAtIdentifier,
   isValidAtUri,
   isValidDatetime,
@@ -29,13 +17,7 @@ import {
   isValidRecordKey,
   isValidTid,
 } from '@atproto/syntax'
-import {
-  AssertFn,
-  CastFn,
-  CheckFn,
-  createAssertFunction,
-  createCastFunction,
-} from '../util/assertion-util.js'
+import { CheckFn } from '../util/assertion-util.js'
 
 // Format utilities missing from @atproto/syntax
 export type CidString = string
@@ -64,49 +46,6 @@ export type {
 } from '@atproto/syntax'
 
 // Export utilities for formats missing from @atproto/syntax
-
-export const assertAtIdentifierString: AssertFn<AtIdentifierString> =
-  ensureValidAtIdentifier
-export const assertAtUriString: AssertFn<AtUriString> = ensureValidAtUri
-export const assertCidString: AssertFn<CidString> = ensureValidCidString
-export const assertDatetimeString: AssertFn<DatetimeString> =
-  ensureValidDatetime
-export const assertDidString: AssertFn<DidString> = ensureValidDid
-export const assertHandleString: AssertFn<HandleString> = ensureValidHandle
-export const assertLanguageString: AssertFn<LanguageString> =
-  /*#__PURE__*/ createAssertFunction<LanguageString>(
-    isLanguageString,
-    'Invalid BCP 47 string',
-  )
-export const assertNsidString: AssertFn<NsidString> = ensureValidNsid
-export const assertRecordKeyString: AssertFn<RecordKeyString> =
-  ensureValidRecordKey
-export const assertTidString: AssertFn<TidString> = ensureValidTid
-export const assertUriString: AssertFn<UriString> =
-  /*#__PURE__*/ createAssertFunction<UriString>(isUriString, 'Invalid URI')
-
-export const asAtIdentifierString: CastFn<AtIdentifierString> =
-  /*#__PURE__*/ createCastFunction(assertAtIdentifierString)
-export const asAtUriString: CastFn<AtUriString> =
-  /*#__PURE__*/ createCastFunction(assertAtUriString)
-export const asCidString: CastFn<CidString> =
-  /*#__PURE__*/ createCastFunction(assertCidString)
-export const asDatetimeString: CastFn<DatetimeString> =
-  /*#__PURE__*/ createCastFunction(assertCidString)
-export const asDidString: CastFn<DidString> =
-  /*#__PURE__*/ createCastFunction(assertDidString)
-export const asHandleString: CastFn<HandleString> =
-  /*#__PURE__*/ createCastFunction(assertHandleString)
-export const asLanguageString: CastFn<LanguageString> =
-  /*#__PURE__*/ createCastFunction(assertLanguageString)
-export const asNsidString: CastFn<NsidString> =
-  /*#__PURE__*/ createCastFunction(assertNsidString)
-export const asRecordKeyString: CastFn<RecordKeyString> =
-  /*#__PURE__*/ createCastFunction(assertRecordKeyString)
-export const asTidString: CastFn<TidString> =
-  /*#__PURE__*/ createCastFunction(assertTidString)
-export const asUriString: CastFn<UriString> =
-  /*#__PURE__*/ createCastFunction(assertUriString)
 
 export { isLanguageString }
 export const isAtIdentifierString: CheckFn<AtIdentifierString> =
