@@ -1,23 +1,23 @@
 export type UriString = `${string}:${string}`
 
-const URI_MAX_LENGTH = 8192
+const URI_MAX_BYTE_LENGTH = 8192
 const URI_REGEX = /^\w+:(?:\/\/)?[^\s/][^\s]*$/
 
 export function ensureValidUri<I extends string>(
   input: I,
 ): asserts input is I & UriString {
   if (!URI_REGEX.test(input)) {
-    throw new InvalidUriError('URI syntax not valid (regex)')
+    throw new InvalidUriError('Invalid URI syntax')
   }
-  if (!utf8MaxLengthCheck(input, URI_MAX_LENGTH)) {
+  if (!utf8MaxLengthCheck(input, URI_MAX_BYTE_LENGTH)) {
     throw new InvalidUriError(
-      `URI must be at most ${URI_MAX_LENGTH} characters`,
+      `URI exceeds maximum length of ${URI_MAX_BYTE_LENGTH} bytes`,
     )
   }
 }
 
 export function isValidUri<I extends string>(input: I): input is I & UriString {
-  return URI_REGEX.test(input) && utf8MaxLengthCheck(input, URI_MAX_LENGTH)
+  return URI_REGEX.test(input) && utf8MaxLengthCheck(input, URI_MAX_BYTE_LENGTH)
 }
 
 export class InvalidUriError extends Error {}

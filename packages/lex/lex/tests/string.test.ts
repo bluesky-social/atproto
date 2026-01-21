@@ -297,7 +297,9 @@ describe('com.example.uri', () => {
         $type: 'com.example.uri',
         uri: 'not a uri',
       }),
-    ).toThrow('Invalid uri format (Invalid URI) at $.uri (got "not a uri")')
+    ).toThrow(
+      'Invalid uri format (Invalid URI syntax) at $.uri (got "not a uri")',
+    )
   })
 })
 describe('com.example.atUri', () => {
