@@ -60,8 +60,10 @@ export class NSID {
   }
 }
 
-export function ensureValidNsid(nsid: string): asserts nsid is NsidString {
-  const result = validateNsid(nsid)
+export function ensureValidNsid<I extends string>(
+  input: I,
+): asserts input is I & NsidString {
+  const result = validateNsid(input)
   if (!result.success) throw new InvalidNsidError(result.message)
 }
 
@@ -71,10 +73,12 @@ export function parseNsid(nsid: string): string[] {
   return result.value
 }
 
-export function isValidNsid(nsid: string): nsid is NsidString {
+export function isValidNsid<I extends string>(
+  input: I,
+): input is I & NsidString {
   // Since the regex version is more performant for valid NSIDs, we use it when
   // we don't care about error details.
-  return validateNsidRegex(nsid).success
+  return validateNsidRegex(input).success
 }
 
 type ValidateResult<T> =

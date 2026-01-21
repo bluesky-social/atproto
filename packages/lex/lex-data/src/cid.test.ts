@@ -14,6 +14,7 @@ import {
   decodeCid,
   ensureValidCidString,
   isCid,
+  isCidForBytes,
   parseCid,
   parseCidSafe,
 } from './cid.js'
@@ -27,13 +28,13 @@ const cborCid = parseCid(cborCidStr, { flavor: 'cbor' })
 const rawCidStr = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
 const rawCid = parseCid(rawCidStr, { flavor: 'raw' })
 
-const rawCidCustom: Cid = createCustomCid(
+const rawCidLike: Cid = createCustomCid(
   1,
   RAW_MULTICODEC,
   SHA256_MULTIHASH,
   rawCid.multihash.digest,
 )
-const rawCidCustomBytes = new BytesCid(rawCid.bytes)
+const rawBytesCid = new BytesCid(rawCid.bytes)
 
 describe(isCid, () => {
   describe('non-strict mode', () => {
@@ -43,8 +44,8 @@ describe(isCid, () => {
     })
 
     it('returns true for custom compatible CID implementations', () => {
-      expect(isCid(rawCidCustom)).toBe(true)
-      expect(isCid(rawCidCustomBytes)).toBe(true)
+      expect(isCid(rawCidLike)).toBe(true)
+      expect(isCid(rawBytesCid)).toBe(true)
     })
 
     it('returns true for CID v0 and v1', async () => {
@@ -118,50 +119,125 @@ describe(isCid, () => {
 
   describe('alternative cid implementations', () => {
     it('accepts compatible CID implementations', () => {
-      expect(isCid(rawCidCustom)).toBe(true)
+      expect(isCid(rawCidLike)).toBe(true)
     })
 
     it('rejects non-matching version', () => {
-      expect(isCid({ ...rawCidCustom, version: 0 })).toBe(false)
+      expect(isCid({ ...rawCidLike, version: 0 })).toBe(false)
     })
 
     it('rejects non-matching code', () => {
-      expect(isCid({ ...rawCidCustom, code: 0 })).toBe(false)
+      expect(isCid({ ...rawCidLike, code: -1 })).toBe(false)
+      expect(isCid({ ...rawCidLike, code: 0 })).toBe(false)
+      expect(isCid({ ...rawCidLike, code: 256 })).toBe(false)
     })
 
-    it('rejects non-matching multihash code', () => {
+    it('rejects invalid bytes property', () => {
+      expect(isCid({ ...rawCidLike, bytes: undefined })).toBe(false)
+      expect(isCid({ ...rawCidLike, bytes: 12 })).toBe(false)
+      expect(isCid({ ...rawCidLike, bytes: {} })).toBe(false)
+      expect(isCid({ ...rawCidLike, bytes: [] })).toBe(false)
+
       expect(
         isCid({
-          ...rawCidCustom,
-          multihash: { ...rawCidCustom.multihash, code: 0 },
+          ...rawCidLike,
+          bytes: rawCidLike.bytes.subarray(0, rawCidLike.bytes.length - 1),
         }),
       ).toBe(false)
+
+      const bytes = new Uint8Array(rawCidLike.bytes.length)
+
+      bytes.set(rawCidLike.bytes)
+      expect(isCid({ ...rawCidLike, bytes })).toBe(true)
+
+      bytes[0] = bytes[0] ^ 0xff
+      expect(isCid({ ...rawCidLike, bytes })).toBe(false)
+      bytes.set(rawCidLike.bytes)
+
+      bytes[3] = bytes[3] ^ 0xff
+      expect(isCid({ ...rawCidLike, bytes })).toBe(false)
+      bytes.set(rawCidLike.bytes)
+
+      bytes[6] = bytes[6] ^ 0xff
+      expect(isCid({ ...rawCidLike, bytes })).toBe(false)
+      bytes.set(rawCidLike.bytes)
     })
 
-    it('rejects non-matching multihash digest', () => {
-      const differentDigest = new Uint8Array(32)
-      differentDigest[0] = 1
-      expect(
-        isCid({
-          ...rawCidCustom,
-          multihash: { ...rawCidCustom.multihash, digest: differentDigest },
-        }),
-      ).toBe(false)
+    describe('multihash property', () => {
+      it('rejects non-matching object', () => {
+        expect(isCid({ ...rawCidLike, multihash: undefined })).toBe(false)
+        expect(isCid({ ...rawCidLike, multihash: 12 })).toBe(false)
+        expect(isCid({ ...rawCidLike, multihash: {} })).toBe(false)
+        expect(isCid({ ...rawCidLike, multihash: [] })).toBe(false)
+      })
+
+      it('rejects non-matching code', () => {
+        expect(
+          isCid({
+            ...rawCidLike,
+            multihash: { ...rawCidLike.multihash, code: -1 },
+          }),
+        ).toBe(false)
+        expect(
+          isCid({
+            ...rawCidLike,
+            multihash: { ...rawCidLike.multihash, code: 0 },
+          }),
+        ).toBe(false)
+        expect(
+          isCid({
+            ...rawCidLike,
+            multihash: { ...rawCidLike.multihash, code: 256 },
+          }),
+        ).toBe(false)
+      })
+
+      it('rejects non Uint8Array digest', () => {
+        expect(
+          isCid({
+            ...rawCidLike,
+            multihash: { ...rawCidLike.multihash, digest: new Array(32) },
+          }),
+        ).toBe(false)
+      })
+
+      it('rejects non Uint8Array digest', () => {
+        expect(
+          isCid({
+            ...rawCidLike,
+            multihash: { ...rawCidLike.multihash, digest: new Array(32) },
+          }),
+        ).toBe(false)
+      })
+
+      it('rejects non-matching digest', () => {
+        const differentDigest = new Uint8Array(32)
+        differentDigest[0] = 1
+        expect(
+          isCid({
+            ...rawCidLike,
+            multihash: { ...rawCidLike.multihash, digest: differentDigest },
+          }),
+        ).toBe(false)
+      })
     })
 
-    it('rejects objects without equals method', () => {
-      expect(isCid({ ...rawCidCustom, equals: undefined })).toBe(false)
-    })
+    describe('equals() method', () => {
+      it('rejects objects without equals method', () => {
+        expect(isCid({ ...rawCidLike, equals: undefined })).toBe(false)
+        expect(isCid({ ...rawCidLike, equals: () => false })).toBe(false)
+      })
 
-    it('rejects object with throwing equals method', () => {
-      expect(
-        isCid({
-          ...rawCidCustom,
-          equals: () => {
-            throw new Error('fail')
-          },
-        }),
-      ).toBe(false)
+      it('rejects object with throwing equals method', () => {
+        expect(
+          isCid({
+            ...rawCidLike,
+            equals: () => {
+              throw new Error('fail')
+            },
+          }),
+        ).toBe(false)
+      })
     })
   })
 })
@@ -183,6 +259,37 @@ describe(parseCid, () => {
 
   it('throws for invalid CIDs', () => {
     expect(() => parseCid(invalidCidStr)).toThrow()
+  })
+})
+
+describe(isCidForBytes, () => {
+  describe('raw', () => {
+    it('returns true for valid raw CID bytes', async () => {
+      for (const hasher of [sha256, sha512]) {
+        const data = new TextEncoder().encode('hello world')
+        const digest = await hasher.digest(data)
+        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        expect(await isCidForBytes(cid, data)).toBe(true)
+
+        data[0] = data[0] ^ 0xff
+        expect(await isCidForBytes(cid, data)).toBe(false)
+      }
+    })
+  })
+
+  describe('cbor', () => {
+    it('returns true for valid cbor CID bytes', async () => {
+      for (const hasher of [sha256, sha512]) {
+        // @NOTE this is not valid CBOR, but sufficient for testing the hash
+        const data = new TextEncoder().encode('hello world')
+        const digest = await hasher.digest(data)
+        const cid = CID.createV1(DAG_CBOR_MULTICODEC, digest)
+        expect(await isCidForBytes(cid, data)).toBe(true)
+
+        data[0] = data[0] ^ 0xff
+        expect(await isCidForBytes(cid, data)).toBe(false)
+      }
+    })
   })
 })
 
@@ -230,7 +337,7 @@ describe(cidForRawHash, () => {
 
 describe(asMultiformatsCID, () => {
   it('converts compatible CID to multiformats CID', () => {
-    for (const cid of [cborCid, rawCid, rawCidCustom, rawCidCustomBytes]) {
+    for (const cid of [cborCid, rawCid, rawCidLike, rawBytesCid]) {
       expect(asMultiformatsCID(cid)).toBeInstanceOf(CID)
       expect(asMultiformatsCID(cid)).toMatchObject({
         version: cid.version,

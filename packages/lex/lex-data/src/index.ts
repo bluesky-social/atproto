@@ -1,6 +1,5 @@
 export * from './blob.js'
 export * from './cid.js'
-export * from './language.js'
 export * from './lex-equals.js'
 export * from './lex-error.js'
 export * from './lex.js'

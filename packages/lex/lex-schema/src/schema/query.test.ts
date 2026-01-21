@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { asNsidString } from '../core.js'
 import { integer } from './integer.js'
 import { ObjectSchema, object } from './object.js'
 import { optional } from './optional.js'
@@ -12,7 +11,7 @@ import { withDefault } from './with-default.js'
 describe('Query', () => {
   describe('constructor', () => {
     it('creates a Query instance with all parameters', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params({
         feed: string({ format: 'at-uri' }),
         limit: optional(integer({ minimum: 1, maximum: 100 })),
@@ -35,7 +34,7 @@ describe('Query', () => {
     })
 
     it('creates a Query instance without errors', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params({
         feed: string({ format: 'at-uri' }),
       })
@@ -56,7 +55,7 @@ describe('Query', () => {
     })
 
     it('creates a Query instance with empty parameters', () => {
-      const nsid = asNsidString('app.bsky.actor.getProfile')
+      const nsid = 'app.bsky.actor.getProfile'
       const parameters = params()
       const output = payload(
         'application/json',
@@ -74,7 +73,7 @@ describe('Query', () => {
 
   describe('properties', () => {
     it('has nsid property', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params()
       const output = payload('application/json', undefined)
 
@@ -85,7 +84,7 @@ describe('Query', () => {
     })
 
     it('has parameters property', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params({
         feed: string({ format: 'at-uri' }),
       })
@@ -98,7 +97,7 @@ describe('Query', () => {
     })
 
     it('has output property', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params()
       const output = payload('application/json', undefined)
 
@@ -109,7 +108,7 @@ describe('Query', () => {
     })
 
     it('has errors property', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params()
       const output = payload('application/json', undefined)
       const errors = ['NotFound', 'RateLimitExceeded'] as const
@@ -123,7 +122,7 @@ describe('Query', () => {
 
   describe('with complex parameters', () => {
     it('creates a Query with multiple parameter types', () => {
-      const nsid = asNsidString('app.bsky.feed.searchPosts')
+      const nsid = 'app.bsky.feed.searchPosts'
       const parameters = params({
         q: string({ minLength: 1 }),
         limit: optional(integer({ minimum: 1, maximum: 100 })),
@@ -149,7 +148,7 @@ describe('Query', () => {
 
   describe('with various output payloads', () => {
     it('creates a Query with undefined output payload', () => {
-      const nsid = asNsidString('app.bsky.actor.getProfile')
+      const nsid = 'app.bsky.actor.getProfile'
       const parameters = params({
         actor: string({ format: 'at-identifier' }),
       })
@@ -163,7 +162,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with JSON payload', () => {
-      const nsid = asNsidString('app.bsky.actor.getProfile')
+      const nsid = 'app.bsky.actor.getProfile'
       const parameters = params({
         actor: string({ format: 'at-identifier' }),
       })
@@ -183,7 +182,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with text payload', () => {
-      const nsid = asNsidString('app.bsky.feed.getPost')
+      const nsid = 'app.bsky.feed.getPost'
       const parameters = params({
         uri: string({ format: 'at-uri' }),
       })
@@ -198,7 +197,7 @@ describe('Query', () => {
 
   describe('with different error configurations', () => {
     it('creates a Query with a single error', () => {
-      const nsid = asNsidString('app.bsky.feed.getPost')
+      const nsid = 'app.bsky.feed.getPost'
       const parameters = params()
       const output = payload('application/json', undefined)
       const errors = ['NotFound'] as const
@@ -209,7 +208,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with multiple errors', () => {
-      const nsid = asNsidString('app.bsky.feed.getPost')
+      const nsid = 'app.bsky.feed.getPost'
       const parameters = params()
       const output = payload('application/json', undefined)
       const errors = ['NotFound', 'Unauthorized', 'RateLimitExceeded'] as const
@@ -224,7 +223,7 @@ describe('Query', () => {
     })
 
     it('creates a Query with empty errors array', () => {
-      const nsid = asNsidString('app.bsky.feed.getPost')
+      const nsid = 'app.bsky.feed.getPost'
       const parameters = params()
       const output = payload('application/json', undefined)
       const errors = [] as const
@@ -237,9 +236,7 @@ describe('Query', () => {
 
   describe('edge cases', () => {
     it('handles very long NSID', () => {
-      const nsid = asNsidString(
-        'com.example.very.long.namespace.identifier.method.name',
-      )
+      const nsid = 'com.example.very.long.namespace.identifier.method.name'
       const parameters = params()
       const output = payload('application/json', undefined)
 
@@ -249,7 +246,7 @@ describe('Query', () => {
     })
 
     it('handles myQuery with all optional parameters', () => {
-      const nsid = asNsidString('app.bsky.feed.search')
+      const nsid = 'app.bsky.feed.search'
       const parameters = params({
         q: optional(string()),
         limit: optional(integer()),
@@ -263,7 +260,7 @@ describe('Query', () => {
     })
 
     it('handles myQuery with complex nested output schema', () => {
-      const nsid = asNsidString('app.bsky.feed.getTimeline')
+      const nsid = 'app.bsky.feed.getTimeline'
       const parameters = params()
       const output = payload(
         'application/json',
@@ -286,7 +283,7 @@ describe('Query', () => {
 
   describe('real-world myQuery examples', () => {
     it('creates a getFeedSkeleton myQuery', () => {
-      const nsid = asNsidString('app.bsky.feed.getFeedSkeleton')
+      const nsid = 'app.bsky.feed.getFeedSkeleton'
       const parameters = params({
         feed: string({ format: 'at-uri' }),
         limit: optional(withDefault(integer({ minimum: 1, maximum: 100 }), 50)),
@@ -306,7 +303,7 @@ describe('Query', () => {
     })
 
     it('creates a searchPosts myQuery', () => {
-      const nsid = asNsidString('app.bsky.feed.searchPosts')
+      const nsid = 'app.bsky.feed.searchPosts'
       const parameters = params({
         q: string({ minLength: 1, maxLength: 300 }),
         limit: optional(withDefault(integer({ minimum: 1, maximum: 100 }), 25)),
@@ -329,7 +326,7 @@ describe('Query', () => {
     })
 
     it('creates a getProfile myQuery', () => {
-      const nsid = asNsidString('app.bsky.actor.getProfile')
+      const nsid = 'app.bsky.actor.getProfile'
       const parameters = params({
         actor: string({ format: 'at-identifier' }),
       })
