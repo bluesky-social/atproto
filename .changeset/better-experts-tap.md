@@ -2,4 +2,4 @@
 '@atproto/lex-schema': patch
 ---
 
-Remove `asX` string format casting utilities
+Remove `asX` and `assertX` string format assertion utilities
