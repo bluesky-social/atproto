@@ -1,4 +1,7 @@
-import { isLanguageString, validateCidString } from '@atproto/lex-data'
+import {
+  isLanguageString as isValidLanguage,
+  validateCidString,
+} from '@atproto/lex-data'
 import {
   AtIdentifierString,
   AtUriString,
@@ -8,7 +11,7 @@ import {
   NsidString,
   RecordKeyString,
   TidString,
-  isValidAtIdentifier,
+  isValidAtIdentifier as isValidAtId,
   isValidAtUri,
   isValidDatetime,
   isValidDid,
@@ -19,10 +22,11 @@ import {
 } from '@atproto/syntax'
 import { CheckFn } from '../util/assertion-util.js'
 
-// Format utilities missing from @atproto/syntax
-export type CidString = string
-export type LanguageString = string
-export type UriString = `${string}:${string}`
+// Implement formats missing from @atproto/syntax
+
+type CidString = string
+type LanguageString = string
+type UriString = `${string}:${string}`
 
 /*@__NO_SIDE_EFFECTS__*/
 export function isUriString<T extends string>(
@@ -31,77 +35,59 @@ export function isUriString<T extends string>(
   return /^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)
 }
 
-// Re-export utility typed as assertion functions so that TypeScript can
-// infer the narrowed type after calling them.
+// Expose all string formats and their type guards
 
-export type {
-  AtIdentifierString,
-  AtUriString,
-  DatetimeString,
-  DidString,
-  HandleString,
-  NsidString,
-  RecordKeyString,
-  TidString,
-} from '@atproto/syntax'
+export type { AtIdentifierString }
+export const isAtIdentifierString: CheckFn<AtIdentifierString> = isValidAtId
 
-// Export utilities for formats missing from @atproto/syntax
-
-export { isLanguageString }
-export const isAtIdentifierString: CheckFn<AtIdentifierString> =
-  isValidAtIdentifier
+export type { AtUriString }
 export const isAtUriString: CheckFn<AtUriString> = isValidAtUri
-export const isCidString: CheckFn<CidString> = <I extends string>(
-  input: I,
-): input is I & CidString => validateCidString(input)
+
+export type { CidString }
+export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
+
+export type { DatetimeString }
 export const isDatetimeString: CheckFn<DatetimeString> = isValidDatetime
+
+export type { DidString }
 export const isDidString: CheckFn<DidString> = isValidDid
+
+export type { HandleString }
 export const isHandleString: CheckFn<HandleString> = isValidHandle
+
+export type { LanguageString }
+export const isLanguageString = isValidLanguage as CheckFn<LanguageString>
+
+export type { NsidString }
 export const isNsidString: CheckFn<NsidString> = isValidNsid
+
+export type { RecordKeyString }
 export const isRecordKeyString: CheckFn<RecordKeyString> = isValidRecordKey
+
+export type { TidString }
 export const isTidString: CheckFn<TidString> = isValidTid
 
-// String formatting types and utilities
+// String format registry (maps format names to their types and type guards)
 
-export const STRING_FORMATS = Object.freeze([
-  'datetime',
-  'uri',
-  'at-uri',
-  'did',
-  'handle',
-  'at-identifier',
-  'nsid',
-  'cid',
-  'language',
-  'tid',
-  'record-key',
-] as const)
+type StringFormats = {
+  'at-identifier': AtIdentifierString
+  'at-uri': AtUriString
+  cid: CidString
+  datetime: DatetimeString
+  did: DidString
+  handle: HandleString
+  language: LanguageString
+  nsid: NsidString
+  'record-key': RecordKeyString
+  tid: TidString
+  uri: UriString
+}
 
-export type StringFormat = (typeof STRING_FORMATS)[number]
+export type StringFormat = Extract<keyof StringFormats, string>
 
-export type InferStringFormat<F> =
-  //
-  F extends 'datetime'
-    ? DatetimeString
-    : F extends 'uri'
-      ? UriString
-      : F extends 'at-uri'
-        ? AtUriString
-        : F extends 'did'
-          ? DidString
-          : F extends 'handle'
-            ? HandleString
-            : F extends 'at-identifier'
-              ? AtIdentifierString
-              : F extends 'nsid'
-                ? NsidString
-                : // LanguageString | CidString | TidString | RecordKeyString
-                  string
-
-const checkers = /*#__PURE__*/ Object.freeze<
-  Record<StringFormat, (str: string) => boolean>
->({
-  // @ts-expect-error
+const stringFormatVerifiers: {
+  readonly [K in StringFormat]: CheckFn<StringFormats[K]>
+} = /*#__PURE__*/ Object.freeze({
   __proto__: null,
 
   'at-identifier': isAtIdentifierString,
@@ -117,14 +103,22 @@ const checkers = /*#__PURE__*/ Object.freeze<
   uri: isUriString,
 })
 
+export type InferStringFormat<F extends StringFormat> = F extends StringFormat
+  ? StringFormats[F]
+  : never
+
 /*@__NO_SIDE_EFFECTS__*/
-export function checkStringFormat<I extends string, F extends StringFormat>(
+export function verifyStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
 ): input is I & InferStringFormat<F> {
-  const checkFn = checkers[format]
+  const formatVerifier = stringFormatVerifiers[format]
   // Fool-proof
-  if (!checkFn) throw new TypeError(`Unknown string format: ${format}`)
+  if (!formatVerifier) throw new TypeError(`Unknown string format: ${format}`)
 
-  return checkFn(input)
+  return formatVerifier(input)
 }
+
+export const STRING_FORMATS = /*#__PURE__*/ Object.freeze(
+  /*#__PURE__*/ Object.keys(stringFormatVerifiers),
+) as readonly StringFormat[]

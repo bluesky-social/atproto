@@ -4,7 +4,7 @@ import {
   Schema,
   StringFormat,
   ValidationContext,
-  checkStringFormat,
+  verifyStringFormat,
 } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
@@ -75,7 +75,7 @@ export class StringSchema<
     }
 
     const format = this.options?.format
-    if (format != null && !checkStringFormat(str, format)) {
+    if (format != null && !verifyStringFormat(str, format)) {
       // @TODO It'd be nice if we could get a validation error message
       const message = undefined
       return ctx.issueInvalidFormat(str, format, message)
