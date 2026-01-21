@@ -22,20 +22,7 @@ import {
 } from '@atproto/syntax'
 import { CheckFn } from '../util/assertion-util.js'
 
-// Implement formats missing from @atproto/syntax
-
-type CidString = string
-type LanguageString = string
-type UriString = `${string}:${string}`
-
-/*@__NO_SIDE_EFFECTS__*/
-export function isUriString<T extends string>(
-  input: T,
-): input is T & UriString {
-  return /^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)
-}
-
-// Expose all string formats and their type guards
+// Expose all individual string format types and type guards
 
 export type { AtIdentifierString }
 export const isAtIdentifierString: CheckFn<AtIdentifierString> = isValidAtId
@@ -43,7 +30,7 @@ export const isAtIdentifierString: CheckFn<AtIdentifierString> = isValidAtId
 export type { AtUriString }
 export const isAtUriString: CheckFn<AtUriString> = isValidAtUri
 
-export type { CidString }
+export type CidString = string
 export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
 
 export type { DatetimeString }
@@ -55,7 +42,7 @@ export const isDidString: CheckFn<DidString> = isValidDid
 export type { HandleString }
 export const isHandleString: CheckFn<HandleString> = isValidHandle
 
-export type { LanguageString }
+export type LanguageString = string
 export const isLanguageString = isValidLanguage as CheckFn<LanguageString>
 
 export type { NsidString }
@@ -66,6 +53,10 @@ export const isRecordKeyString: CheckFn<RecordKeyString> = isValidRecordKey
 
 export type { TidString }
 export const isTidString: CheckFn<TidString> = isValidTid
+
+export type UriString = `${string}:${string}`
+export const isUriString = ((v) =>
+  /^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(v)) as CheckFn<UriString>
 
 // String format registry (maps format names to their types and type guards)
 
@@ -111,7 +102,7 @@ export type InferStringFormat<F extends StringFormat> = F extends StringFormat
 export function verifyStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
-): input is I & InferStringFormat<F> {
+): input is I & StringFormats[F] {
   const formatVerifier = stringFormatVerifiers[format]
   // Fool-proof
   if (!formatVerifier) throw new TypeError(`Unknown string format: ${format}`)
