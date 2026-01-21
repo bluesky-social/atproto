@@ -1,16 +1,15 @@
 import {
   DecodeOptions,
   EncodeOptions,
+  TagDecoder,
   Token,
   Type,
   decode as cborgDecode,
   decodeFirst as cborgDecodeFirst,
   encode as cborgEncode,
 } from 'cborg'
+import { OptionalTypeEncoder } from 'cborg/lib/encode'
 import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
-
-// @NOTE This was inspired by @ipld/dag-cbor implementation, but adapted to
-// match the AT Data Model constraints. Floats, in particular, are not allowed.
 
 // @NOTE "cborg" version 4 is required to support multi-decoding via the
 // "decodeFirst" function. However, that version only exposes ES modules.
@@ -19,10 +18,10 @@ import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
 
 const CID_CBOR_TAG = 42
 
-export const encodeOptions: EncodeOptions = /*#__PURE__*/ Object.freeze({
+export const encodeOptions = Object.freeze<EncodeOptions>({
   float64: true,
   ignoreUndefinedProperties: true,
-  typeEncoders: Object.freeze({
+  typeEncoders: Object.freeze<{ [typeName: string]: OptionalTypeEncoder }>({
     Map: (map: Map<unknown, unknown>): null => {
       for (const key of map.keys()) {
         if (typeof key !== 'string') {
@@ -31,14 +30,11 @@ export const encodeOptions: EncodeOptions = /*#__PURE__*/ Object.freeze({
           )
         }
       }
-      // @NOTE Map will be encoded as CBOR "map", which will be decoded as object.
+
+      // @NOTE Maps will be encoded as CBOR "map", which will be decoded as object.
       return null
     },
-    Object: (
-      obj: object,
-      _typ: string,
-      _options: EncodeOptions,
-    ): Token[] | null => {
+    Object: (obj: object): Token[] | null => {
       const cid = ifCid(obj)
       if (cid) {
         const bytes = new Uint8Array(cid.bytes.byteLength + 1)
@@ -62,7 +58,7 @@ export const encodeOptions: EncodeOptions = /*#__PURE__*/ Object.freeze({
   }),
 })
 
-export const decodeOptions: DecodeOptions = /*#__PURE__*/ Object.freeze({
+export const decodeOptions = /*#__PURE__*/ Object.freeze<DecodeOptions>({
   allowIndefinite: false,
   coerceUndefinedToNull: true,
   allowNaN: false,
@@ -71,16 +67,17 @@ export const decodeOptions: DecodeOptions = /*#__PURE__*/ Object.freeze({
   strict: true,
   useMaps: false,
   rejectDuplicateMapKeys: true,
-  tags: /*#__PURE__*/ Object.freeze(
+  tags: /*#__PURE__*/ Object.freeze<TagDecoder[]>(
     /*#__PURE__*/ Object.assign([], {
       [CID_CBOR_TAG]: (bytes: Uint8Array): Cid => {
         if (bytes[0] !== 0) {
           throw new Error('Invalid CID for CBOR tag 42; expected leading 0x00')
         }
-        return decodeCid(bytes.subarray(1)) // ignore leading 0x00
+        const cibBytes = bytes.subarray(1) // ignore leading 0x00
+        return decodeCid(cibBytes)
       },
     }),
-  ),
+  ) as TagDecoder[],
 })
 
 export function encode<T extends LexValue = LexValue>(data: T): Uint8Array {
