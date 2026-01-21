@@ -2,7 +2,7 @@
 
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
-import { utf8Len, validateLanguage } from '@atproto/common-web'
+import { validateLanguage } from '@atproto/common-web'
 import {
   ensureValidAtUri,
   ensureValidDid,
@@ -10,6 +10,7 @@ import {
   ensureValidRecordKey,
   isValidNsid,
   isValidTid,
+  isValidUri,
 } from '@atproto/syntax'
 import { ValidationError, ValidationResult } from '../types'
 
@@ -30,19 +31,13 @@ export function datetime(path: string, value: string): ValidationResult {
 }
 
 export function uri(path: string, value: string): ValidationResult {
-  const isUri = value.match(/^\w+:(?:\/\/)?[^\s/][^\s]*$/) !== null
-  if (!isUri) {
+  if (!isValidUri(value)) {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a uri`),
+      error: new ValidationError(`${path} must be a valid uri`),
     }
   }
-  if (utf8Len(value) > 8192) {
-    return {
-      success: false,
-      error: new ValidationError(`${path} URI must be 8 KBytes or less`),
-    }
-  }
+
   return { success: true, value }
 }
 

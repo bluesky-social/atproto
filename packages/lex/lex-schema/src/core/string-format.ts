@@ -8,6 +8,7 @@ import {
   NsidString,
   RecordKeyString,
   TidString,
+  UriString,
   ensureValidAtIdentifier,
   ensureValidAtUri,
   ensureValidDatetime,
@@ -16,6 +17,8 @@ import {
   ensureValidNsid,
   ensureValidRecordKey,
   ensureValidTid,
+  ensureValidUri,
+  isValidUri,
 } from '@atproto/syntax'
 import {
   AssertFn,
@@ -29,14 +32,6 @@ import {
 // Format utilities missing from @atproto/syntax
 export type CidString = string
 export type LanguageString = string
-export type UriString = `${string}:${string}`
-
-/*@__NO_SIDE_EFFECTS__*/
-export function isUriString<T extends string>(
-  input: T,
-): input is T & UriString {
-  return /^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(input)
-}
 
 // Re-export utility typed as assertion functions so that TypeScript can
 // infer the narrowed type after calling them.
@@ -50,6 +45,7 @@ export type {
   NsidString,
   RecordKeyString,
   TidString,
+  UriString,
 } from '@atproto/syntax'
 
 // Export utilities for formats missing from @atproto/syntax
@@ -71,8 +67,7 @@ export const assertNsidString: AssertFn<NsidString> = ensureValidNsid
 export const assertRecordKeyString: AssertFn<RecordKeyString> =
   ensureValidRecordKey
 export const assertTidString: AssertFn<TidString> = ensureValidTid
-export const assertUriString: AssertFn<UriString> =
-  createAssertFunction<UriString>(isUriString, 'Invalid URI')
+export const assertUriString: AssertFn<UriString> = ensureValidUri
 
 export const asAtIdentifierString: CastFn<AtIdentifierString> =
   /*#__PURE__*/ createCastFunction(assertAtIdentifierString)
@@ -116,6 +111,7 @@ export const isRecordKeyString: CheckFn<RecordKeyString> =
   /*#__PURE__*/ createCheckFunction(assertRecordKeyString)
 export const isTidString: CheckFn<TidString> =
   /*#__PURE__*/ createCheckFunction(assertTidString)
+export const isUriString: CheckFn<UriString> = isValidUri
 
 // String formatting types and utilities
 
