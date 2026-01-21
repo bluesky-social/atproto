@@ -14,19 +14,29 @@
 
 export type DidString<M extends string = string> = `did:${M}:${string}`
 
-export function ensureValidDid(did: string): asserts did is DidString {
-  if (!did.startsWith('did:')) {
+export function ensureValidDid<I extends string>(
+  input: I,
+): asserts input is I & DidString {
+  if (!input.startsWith('did:')) {
     throw new InvalidDidError('DID requires "did:" prefix')
   }
 
+  if (input.length > 2048) {
+    throw new InvalidDidError('DID is too long (2048 chars max)')
+  }
+
+  if (input.endsWith(':') || input.endsWith('%')) {
+    throw new InvalidDidError('DID can not end with ":" or "%"')
+  }
+
   // check that all chars are boring ASCII
-  if (!/^[a-zA-Z0-9._:%-]*$/.test(did)) {
+  if (!/^[a-zA-Z0-9._:%-]*$/.test(input)) {
     throw new InvalidDidError(
       'Disallowed characters in DID (ASCII letters, digits, and a couple other characters only)',
     )
   }
 
-  const { length, 1: method } = did.split(':')
+  const { length, 1: method } = input.split(':')
   if (length < 3) {
     throw new InvalidDidError(
       'DID requires prefix, method, and method-specific content',
@@ -36,26 +46,26 @@ export function ensureValidDid(did: string): asserts did is DidString {
   if (!/^[a-z]+$/.test(method)) {
     throw new InvalidDidError('DID method must be lower-case letters')
   }
+}
 
-  if (did.endsWith(':') || did.endsWith('%')) {
-    throw new InvalidDidError('DID can not end with ":" or "%"')
+const DID_REGEX = /^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/
+
+export function ensureValidDidRegex<I extends string>(
+  input: I,
+): asserts input is I & DidString {
+  // simple regex to enforce most constraints via just regex and length.
+  // hand wrote this regex based on above constraints
+  if (!DID_REGEX.test(input)) {
+    throw new InvalidDidError("DID didn't validate via regex")
   }
 
-  if (did.length > 2 * 1024) {
+  if (input.length > 2048) {
     throw new InvalidDidError('DID is too long (2048 chars max)')
   }
 }
 
-export function ensureValidDidRegex(did: string): asserts did is DidString {
-  // simple regex to enforce most constraints via just regex and length.
-  // hand wrote this regex based on above constraints
-  if (!/^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/.test(did)) {
-    throw new InvalidDidError("DID didn't validate via regex")
-  }
-
-  if (did.length > 2 * 1024) {
-    throw new InvalidDidError('DID is too long (2048 chars max)')
-  }
+export function isValidDid<I extends string>(input: I): input is I & DidString {
+  return input.length <= 2048 && DID_REGEX.test(input)
 }
 
 export class InvalidDidError extends Error {}
