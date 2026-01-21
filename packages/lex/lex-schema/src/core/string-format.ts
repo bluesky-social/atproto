@@ -1,7 +1,4 @@
-import {
-  isLanguageString as isValidLanguage,
-  validateCidString,
-} from '@atproto/lex-data'
+import { validateCidString, validateLanguage } from '@atproto/lex-data'
 import {
   AtIdentifierString,
   AtUriString,
@@ -43,7 +40,7 @@ export type { HandleString }
 export const isHandleString: CheckFn<HandleString> = isValidHandle
 
 export type LanguageString = string
-export const isLanguageString = isValidLanguage as CheckFn<LanguageString>
+export const isLanguageString = validateLanguage as CheckFn<LanguageString>
 
 export type { NsidString }
 export const isNsidString: CheckFn<NsidString> = isValidNsid

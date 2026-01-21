@@ -1,28 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import { isLanguageString, parseLanguageString } from './language'
+import { parseLanguageString, validateLanguage } from './language'
 
 describe('string', () => {
   describe('languages', () => {
     it('validates BCP 47', () => {
       // valid
-      expect(isLanguageString('de')).toEqual(true)
-      expect(isLanguageString('de-CH')).toEqual(true)
-      expect(isLanguageString('de-DE-1901')).toEqual(true)
-      expect(isLanguageString('es-419')).toEqual(true)
-      expect(isLanguageString('sl-IT-nedis')).toEqual(true)
-      expect(isLanguageString('mn-Cyrl-MN')).toEqual(true)
-      expect(isLanguageString('x-fr-CH')).toEqual(true)
+      expect(validateLanguage('de')).toEqual(true)
+      expect(validateLanguage('de-CH')).toEqual(true)
+      expect(validateLanguage('de-DE-1901')).toEqual(true)
+      expect(validateLanguage('es-419')).toEqual(true)
+      expect(validateLanguage('sl-IT-nedis')).toEqual(true)
+      expect(validateLanguage('mn-Cyrl-MN')).toEqual(true)
+      expect(validateLanguage('x-fr-CH')).toEqual(true)
       expect(
-        isLanguageString('en-GB-boont-r-extended-sequence-x-private'),
+        validateLanguage('en-GB-boont-r-extended-sequence-x-private'),
       ).toEqual(true)
-      expect(isLanguageString('sr-Cyrl')).toEqual(true)
-      expect(isLanguageString('hy-Latn-IT-arevela')).toEqual(true)
-      expect(isLanguageString('i-klingon')).toEqual(true)
+      expect(validateLanguage('sr-Cyrl')).toEqual(true)
+      expect(validateLanguage('hy-Latn-IT-arevela')).toEqual(true)
+      expect(validateLanguage('i-klingon')).toEqual(true)
       // invalid
-      expect(isLanguageString('')).toEqual(false)
-      expect(isLanguageString('x')).toEqual(false)
-      expect(isLanguageString('de-CH-')).toEqual(false)
-      expect(isLanguageString('i-bad-grandfathered')).toEqual(false)
+      expect(validateLanguage('')).toEqual(false)
+      expect(validateLanguage('x')).toEqual(false)
+      expect(validateLanguage('de-CH-')).toEqual(false)
+      expect(validateLanguage('i-bad-grandfathered')).toEqual(false)
     })
 
     it('parses BCP 47', () => {

@@ -2,10 +2,10 @@ import {
   LanguageTag,
   fromBase64,
   graphemeLen,
-  isLanguageString,
   parseLanguageString,
   toBase64,
   utf8Len,
+  validateLanguage as validateLanguageInternal,
 } from '@atproto/lex-data'
 
 /**
@@ -35,7 +35,7 @@ export { parseLanguageLegacy as parseLanguage }
 /**
  * @deprecated Use {@link isLanguageString} from `@atproto/lex-data` instead.
  */
-export const validateLanguage = isLanguageString
+export const validateLanguage = validateLanguageInternal
 
 /**
  * @deprecated Use {@link toBase64} from `@atproto/lex-data` instead.
