@@ -1,5 +1,5 @@
 ---
-"@atproto/lexicon": patch
+"@atproto/syntax": patch
 ---
 
-validate 'uri' string length
+Enforce length limit on `uri` string format
