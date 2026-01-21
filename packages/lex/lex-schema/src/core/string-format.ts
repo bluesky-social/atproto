@@ -96,7 +96,7 @@ export type InferStringFormat<F extends StringFormat> = F extends StringFormat
   : never
 
 /*@__NO_SIDE_EFFECTS__*/
-export function verifyStringFormat<I extends string, F extends StringFormat>(
+export function isStringFormat<I extends string, F extends StringFormat>(
   input: I,
   format: F,
 ): input is I & StringFormats[F] {
@@ -105,6 +105,33 @@ export function verifyStringFormat<I extends string, F extends StringFormat>(
   if (!formatVerifier) throw new TypeError(`Unknown string format: ${format}`)
 
   return formatVerifier(input)
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function assertStringFormat<I extends string, F extends StringFormat>(
+  input: I,
+  format: F,
+): asserts input is I & StringFormats[F] {
+  if (!isStringFormat(input, format)) {
+    throw new TypeError(`Invalid string format (${format}): ${input}`)
+  }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function asStringFormat<I extends string, F extends StringFormat>(
+  input: I,
+  format: F,
+): I & StringFormats[F] {
+  assertStringFormat(input, format)
+  return input
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function ifStringFormat<I extends string, F extends StringFormat>(
+  input: I,
+  format: F,
+): undefined | (I & StringFormats[F]) {
+  return isStringFormat(input, format) ? input : undefined
 }
 
 export const STRING_FORMATS = /*#__PURE__*/ Object.freeze(
