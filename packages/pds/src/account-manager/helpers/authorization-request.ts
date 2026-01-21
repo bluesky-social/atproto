@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { Insertable, Selectable } from 'kysely'
 import {
   Code,
@@ -24,7 +25,7 @@ export const rowToRequestData = (
 export const rowToFoundRequestResult = (
   row: Selectable<AuthorizationRequest>,
 ): FoundRequestResult => ({
-  id: row.id,
+  requestId: row.id,
   data: rowToRequestData(row),
 })
 
@@ -52,15 +53,18 @@ export const readQB = (db: AccountDb, id: RequestId) =>
 export const updateQB = (
   db: AccountDb,
   id: RequestId,
-  { code, sub, deviceId, expiresAt }: UpdateRequestData,
-) =>
-  db.db
+  { code, sub, deviceId, expiresAt, parameters, ...rest }: UpdateRequestData,
+) => {
+  assert(!Object.keys(rest).length, 'Unexpected fields in UpdateRequestData')
+  return db.db
     .updateTable('authorization_request')
     .if(code !== undefined, (qb) => qb.set({ code }))
     .if(sub !== undefined, (qb) => qb.set({ did: sub }))
     .if(deviceId !== undefined, (qb) => qb.set({ deviceId }))
     .if(expiresAt != null, (qb) => qb.set({ expiresAt: toDateISO(expiresAt!) }))
+    .if(parameters != null, (qb) => qb.set({ parameters: toJson(parameters!) }))
     .where('id', '=', id)
+}
 
 export const removeOldExpiredQB = (db: AccountDb, delay = 600e3) =>
   // We allow some delay for the expiration time so that expired requests
@@ -73,10 +77,10 @@ export const removeOldExpiredQB = (db: AccountDb, delay = 600e3) =>
 export const removeByIdQB = (db: AccountDb, id: RequestId) =>
   db.db.deleteFrom('authorization_request').where('id', '=', id)
 
-export const findByCodeQB = (db: AccountDb, code: Code) =>
+export const consumeByCodeQB = (db: AccountDb, code: Code) =>
   db.db
-    .selectFrom('authorization_request')
+    .deleteFrom('authorization_request')
     // uses "authorization_request_code_idx" partial index (hence the null check)
     .where('code', '=', code)
     .where('code', 'is not', null)
-    .selectAll()
+    .returningAll()

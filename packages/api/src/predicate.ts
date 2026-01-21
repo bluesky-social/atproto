@@ -29,6 +29,9 @@ export const isValidMutedWordsPref = asPredicate(
 export const isValidPersonalDetailsPref = asPredicate(
   AppBskyActorDefs.validatePersonalDetailsPref,
 )
+export const isValidDeclaredAgePref = asPredicate(
+  AppBskyActorDefs.validateDeclaredAgePref,
+)
 export const isValidPostInteractionSettingsPref = asPredicate(
   AppBskyActorDefs.validatePostInteractionSettingsPref,
 )
@@ -43,4 +46,7 @@ export const isValidThreadViewPref = asPredicate(
 )
 export const isValidVerificationPrefs = asPredicate(
   AppBskyActorDefs.validateVerificationPrefs,
+)
+export const isValidLiveEventPreferences = asPredicate(
+  AppBskyActorDefs.validateLiveEventPreferences,
 )

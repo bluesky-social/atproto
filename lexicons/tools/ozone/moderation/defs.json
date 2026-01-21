@@ -35,7 +35,12 @@
             "#accountEvent",
             "#identityEvent",
             "#recordEvent",
-            "#modEventPriorityScore"
+            "#modEventPriorityScore",
+            "#ageAssuranceEvent",
+            "#ageAssuranceOverrideEvent",
+            "#revokeAccountCredentialsEvent",
+            "#scheduleTakedownEvent",
+            "#cancelScheduledTakedownEvent"
           ]
         },
         "subject": {
@@ -50,7 +55,8 @@
         "createdBy": { "type": "string", "format": "did" },
         "createdAt": { "type": "string", "format": "datetime" },
         "creatorHandle": { "type": "string" },
-        "subjectHandle": { "type": "string" }
+        "subjectHandle": { "type": "string" },
+        "modTool": { "type": "ref", "ref": "#modTool" }
       }
     },
     "modEventViewDetail": {
@@ -86,7 +92,12 @@
             "#accountEvent",
             "#identityEvent",
             "#recordEvent",
-            "#modEventPriorityScore"
+            "#modEventPriorityScore",
+            "#ageAssuranceEvent",
+            "#ageAssuranceOverrideEvent",
+            "#revokeAccountCredentialsEvent",
+            "#scheduleTakedownEvent",
+            "#cancelScheduledTakedownEvent"
           ]
         },
         "subject": {
@@ -103,7 +114,8 @@
           "items": { "type": "ref", "ref": "#blobView" }
         },
         "createdBy": { "type": "string", "format": "did" },
-        "createdAt": { "type": "string", "format": "datetime" }
+        "createdAt": { "type": "string", "format": "datetime" },
+        "modTool": { "type": "ref", "ref": "#modTool" }
       }
     },
     "subjectStatusView": {
@@ -115,7 +127,8 @@
           "type": "union",
           "refs": [
             "com.atproto.admin.defs#repoRef",
-            "com.atproto.repo.strongRef"
+            "com.atproto.repo.strongRef",
+            "chat.bsky.convo.defs#messageRef"
           ]
         },
         "hosting": {
@@ -200,6 +213,21 @@
           "description": "Statistics related to the record subjects authored by the subject's account",
           "type": "ref",
           "ref": "#recordsStats"
+        },
+        "accountStrike": {
+          "description": "Strike information for the account (account-level only)",
+          "type": "ref",
+          "ref": "#accountStrike"
+        },
+        "ageAssuranceState": {
+          "type": "string",
+          "description": "Current age assurance state of the subject.",
+          "knownValues": ["pending", "assured", "unknown", "reset", "blocked"]
+        },
+        "ageAssuranceUpdatedBy": {
+          "type": "string",
+          "description": "Whether or not the last successful update to age assurance was made by the user or admin.",
+          "knownValues": ["admin", "user"]
         }
       }
     },
@@ -297,13 +325,37 @@
         }
       }
     },
+    "accountStrike": {
+      "description": "Strike information for an account",
+      "type": "object",
+      "properties": {
+        "activeStrikeCount": {
+          "description": "Current number of active strikes (excluding expired strikes)",
+          "type": "integer"
+        },
+        "totalStrikeCount": {
+          "description": "Total number of strikes ever received (including expired strikes)",
+          "type": "integer"
+        },
+        "firstStrikeAt": {
+          "description": "Timestamp of the first strike received",
+          "type": "string",
+          "format": "datetime"
+        },
+        "lastStrikeAt": {
+          "description": "Timestamp of the most recent strike received",
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
     "subjectReviewState": {
       "type": "string",
       "knownValues": [
-        "#reviewOpen",
-        "#reviewEscalated",
-        "#reviewClosed",
-        "#reviewNone"
+        "tools.ozone.moderation.defs#reviewOpen",
+        "tools.ozone.moderation.defs#reviewEscalated",
+        "tools.ozone.moderation.defs#reviewClosed",
+        "tools.ozone.moderation.defs#reviewNone"
       ]
     },
     "reviewOpen": {
@@ -342,6 +394,24 @@
           "maxLength": 5,
           "items": { "type": "string" },
           "description": "Names/Keywords of the policies that drove the decision."
+        },
+        "severityLevel": {
+          "type": "string",
+          "description": "Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.)."
+        },
+        "targetServices": {
+          "type": "array",
+          "items": { "type": "string", "knownValues": ["appview", "pds"] },
+          "description": "List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services."
+        },
+        "strikeCount": {
+          "type": "integer",
+          "description": "Number of strikes to assign to the user for this violation."
+        },
+        "strikeExpiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the strike should expire. If not provided, the strike never expires."
         }
       }
     },
@@ -352,6 +422,20 @@
         "comment": {
           "type": "string",
           "description": "Describe reasoning behind the reversal."
+        },
+        "policies": {
+          "type": "array",
+          "maxLength": 5,
+          "items": { "type": "string" },
+          "description": "Names/Keywords of the policy infraction for which takedown is being reversed."
+        },
+        "severityLevel": {
+          "type": "string",
+          "description": "Severity level of the violation. Usually set from the last policy infraction's severity."
+        },
+        "strikeCount": {
+          "type": "integer",
+          "description": "Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity."
         }
       }
     },
@@ -433,6 +517,88 @@
         }
       }
     },
+    "ageAssuranceEvent": {
+      "type": "object",
+      "description": "Age assurance info coming directly from users. Only works on DID subjects.",
+      "required": ["createdAt", "status", "attemptId"],
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "The date and time of this write operation."
+        },
+        "attemptId": {
+          "type": "string",
+          "description": "The unique identifier for this instance of the age assurance flow, in UUID format."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the Age Assurance process.",
+          "knownValues": ["unknown", "pending", "assured"]
+        },
+        "access": {
+          "type": "ref",
+          "ref": "app.bsky.ageassurance.defs#access"
+        },
+        "countryCode": {
+          "type": "string",
+          "description": "The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow."
+        },
+        "regionCode": {
+          "type": "string",
+          "description": "The ISO 3166-2 region code provided when beginning the Age Assurance flow."
+        },
+        "initIp": {
+          "type": "string",
+          "description": "The IP address used when initiating the AA flow."
+        },
+        "initUa": {
+          "type": "string",
+          "description": "The user agent used when initiating the AA flow."
+        },
+        "completeIp": {
+          "type": "string",
+          "description": "The IP address used when completing the AA flow."
+        },
+        "completeUa": {
+          "type": "string",
+          "description": "The user agent used when completing the AA flow."
+        }
+      }
+    },
+    "ageAssuranceOverrideEvent": {
+      "type": "object",
+      "description": "Age assurance status override by moderators. Only works on DID subjects.",
+      "required": ["comment", "status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state.",
+          "knownValues": ["assured", "reset", "blocked"]
+        },
+        "access": {
+          "type": "ref",
+          "ref": "app.bsky.ageassurance.defs#access"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Comment describing the reason for the override."
+        }
+      }
+    },
+    "revokeAccountCredentialsEvent": {
+      "type": "object",
+      "description": "Account credentials revocation by moderators. Only works on DID subjects.",
+      "required": ["comment"],
+      "properties": {
+        "comment": {
+          "minLength": 1,
+          "type": "string",
+          "description": "Comment describing the reason for the revocation."
+        }
+      }
+    },
     "modEventAcknowledge": {
       "type": "object",
       "properties": {
@@ -508,6 +674,29 @@
         "comment": {
           "type": "string",
           "description": "Additional comment about the outgoing comm."
+        },
+        "policies": {
+          "type": "array",
+          "maxLength": 5,
+          "items": { "type": "string" },
+          "description": "Names/Keywords of the policies that necessitated the email."
+        },
+        "severityLevel": {
+          "type": "string",
+          "description": "Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense"
+        },
+        "strikeCount": {
+          "type": "integer",
+          "description": "Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense."
+        },
+        "strikeExpiresAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the strike should expire. If not provided, the strike never expires."
+        },
+        "isDelivered": {
+          "type": "boolean",
+          "description": "Indicates whether the email was successfully delivered to the user's inbox."
         }
       }
     },
@@ -593,6 +782,23 @@
         },
         "cid": { "type": "string", "format": "cid" },
         "timestamp": { "type": "string", "format": "datetime" }
+      }
+    },
+    "scheduleTakedownEvent": {
+      "type": "object",
+      "description": "Logs a scheduled takedown action for an account.",
+      "properties": {
+        "comment": { "type": "string" },
+        "executeAt": { "type": "string", "format": "datetime" },
+        "executeAfter": { "type": "string", "format": "datetime" },
+        "executeUntil": { "type": "string", "format": "datetime" }
+      }
+    },
+    "cancelScheduledTakedownEvent": {
+      "type": "object",
+      "description": "Logs cancellation of a scheduled takedown action for an account.",
+      "properties": {
+        "comment": { "type": "string" }
       }
     },
     "repoView": {
@@ -891,6 +1097,110 @@
         "labeledRecordCount": {
           "type": "integer",
           "description": "The total number of records labeled as a result of the user's reports."
+        }
+      }
+    },
+    "modTool": {
+      "type": "object",
+      "description": "Moderation tool information for tracing the source of the action",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name/identifier of the source (e.g., 'automod', 'ozone/workspace')"
+        },
+        "meta": {
+          "type": "unknown",
+          "description": "Additional arbitrary metadata about the source"
+        }
+      }
+    },
+    "timelineEventPlcCreate": {
+      "type": "token",
+      "description": "Moderation event timeline event for a PLC create operation"
+    },
+    "timelineEventPlcOperation": {
+      "type": "token",
+      "description": "Moderation event timeline event for generic PLC operation"
+    },
+    "timelineEventPlcTombstone": {
+      "type": "token",
+      "description": "Moderation event timeline event for a PLC tombstone operation"
+    },
+    "scheduledActionView": {
+      "type": "object",
+      "description": "View of a scheduled moderation action",
+      "required": ["id", "action", "did", "createdBy", "createdAt", "status"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Auto-incrementing row ID"
+        },
+        "action": {
+          "type": "string",
+          "knownValues": ["takedown"],
+          "description": "Type of action to be executed"
+        },
+        "eventData": {
+          "type": "unknown",
+          "description": "Serialized event object that will be propagated to the event when performed"
+        },
+        "did": {
+          "type": "string",
+          "format": "did",
+          "description": "Subject DID for the action"
+        },
+        "executeAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Exact time to execute the action"
+        },
+        "executeAfter": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Earliest time to execute the action (for randomized scheduling)"
+        },
+        "executeUntil": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Latest time to execute the action (for randomized scheduling)"
+        },
+        "randomizeExecution": {
+          "type": "boolean",
+          "description": "Whether execution time should be randomized within the specified range"
+        },
+        "createdBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the user who created this scheduled action"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the scheduled action was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the scheduled action was last updated"
+        },
+        "status": {
+          "type": "string",
+          "knownValues": ["pending", "executed", "cancelled", "failed"],
+          "description": "Current status of the scheduled action"
+        },
+        "lastExecutedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the action was last attempted to be executed"
+        },
+        "lastFailureReason": {
+          "type": "string",
+          "description": "Reason for the last execution failure"
+        },
+        "executionEventId": {
+          "type": "integer",
+          "description": "ID of the moderation event created when action was successfully executed"
         }
       }
     }

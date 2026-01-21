@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import { dataToCborBlock, streamToBytes, wait } from '@atproto/common'
@@ -54,5 +56,52 @@ describe('car', () => {
       }
     }
     await expect(iterate).rejects.toThrow('Oops!')
+  })
+
+  it('verifies CIDs', async () => {
+    const block0 = await dataToCborBlock({ block: 0 })
+    const block1 = await dataToCborBlock({ block: 1 })
+    const block2 = await dataToCborBlock({ block: 2 })
+    const block3 = await dataToCborBlock({ block: 3 })
+    const badBlock = await dataToCborBlock({ block: 'bad' })
+    const blockIter = async function* () {
+      yield block0
+      yield block1
+      yield block2
+      yield { cid: block3.cid, bytes: badBlock.bytes }
+    }
+    const flush = async function (iter: AsyncIterable<unknown>) {
+      for await (const _ of iter) {
+        // no-op
+      }
+    }
+    const badCar = await readCarStream(writeCarStream(block0.cid, blockIter()))
+    await expect(flush(badCar.blocks)).rejects.toThrow(
+      'Not a valid CID for bytes',
+    )
+  })
+
+  it('skips CID verification', async () => {
+    const block0 = await dataToCborBlock({ block: 0 })
+    const block1 = await dataToCborBlock({ block: 1 })
+    const block2 = await dataToCborBlock({ block: 2 })
+    const block3 = await dataToCborBlock({ block: 3 })
+    const badBlock = await dataToCborBlock({ block: 'bad' })
+    const blockIter = async function* () {
+      yield block0
+      yield block1
+      yield block2
+      yield { cid: block3.cid, bytes: badBlock.bytes }
+    }
+    const flush = async function (iter: AsyncIterable<unknown>) {
+      for await (const _ of iter) {
+        // no-op
+      }
+    }
+    const badCar = await readCarStream(
+      writeCarStream(block0.cid, blockIter()),
+      { skipCidVerification: true },
+    )
+    await expect(flush(badCar.blocks)).resolves.toBeUndefined()
   })
 })

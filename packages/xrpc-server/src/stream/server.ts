@@ -1,8 +1,8 @@
 import { IncomingMessage } from 'node:http'
 import { ServerOptions, WebSocket, WebSocketServer } from 'ws'
+import { CloseCode, DisconnectError } from '@atproto/ws-client'
 import { ErrorFrame, Frame } from './frames'
 import { logger } from './logger'
-import { CloseCode, DisconnectError } from './types'
 
 export class XrpcStreamServer {
   wss: WebSocketServer

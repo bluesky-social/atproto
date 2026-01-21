@@ -1,12 +1,35 @@
 export const noUndefinedVals = <T>(
   obj: Record<string, T | undefined>,
 ): Record<string, T> => {
-  Object.keys(obj).forEach((k) => {
+  for (const k of Object.keys(obj)) {
     if (obj[k] === undefined) {
       delete obj[k]
     }
-  })
+  }
   return obj as Record<string, T>
+}
+
+export function aggregateErrors(
+  errors: unknown[],
+  message?: string,
+): Error | AggregateError {
+  if (errors.length === 1) {
+    return errors[0] instanceof Error
+      ? errors[0]
+      : new Error(message ?? stringifyError(errors[0]), { cause: errors[0] })
+  } else {
+    return new AggregateError(
+      errors,
+      message ?? `Multiple errors: ${errors.map(stringifyError).join('\n')}`,
+    )
+  }
+}
+
+function stringifyError(reason: unknown): string {
+  if (reason instanceof Error) {
+    return reason.message
+  }
+  return String(reason)
 }
 
 /**

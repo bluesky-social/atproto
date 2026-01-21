@@ -21,11 +21,13 @@ import * as Block from './plugins/block'
 import * as ChatDeclaration from './plugins/chat-declaration'
 import * as FeedGenerator from './plugins/feed-generator'
 import * as Follow from './plugins/follow'
+import * as GermDeclaration from './plugins/germ-declaration'
 import * as Labeler from './plugins/labeler'
 import * as Like from './plugins/like'
 import * as List from './plugins/list'
 import * as ListBlock from './plugins/list-block'
 import * as ListItem from './plugins/list-item'
+import * as NotifDeclaration from './plugins/notif-declaration'
 import * as Post from './plugins/post'
 import * as Postgate from './plugins/post-gate'
 import * as Profile from './plugins/profile'
@@ -52,7 +54,9 @@ export class IndexingService {
     feedGenerator: FeedGenerator.PluginType
     starterPack: StarterPack.PluginType
     labeler: Labeler.PluginType
+    notifDeclaration: NotifDeclaration.PluginType
     chatDeclaration: ChatDeclaration.PluginType
+    germDeclaration: GermDeclaration.PluginType
     verification: Verification.PluginType
     status: Status.PluginType
   }
@@ -77,7 +81,9 @@ export class IndexingService {
       feedGenerator: FeedGenerator.makePlugin(this.db, this.background),
       starterPack: StarterPack.makePlugin(this.db, this.background),
       labeler: Labeler.makePlugin(this.db, this.background),
+      notifDeclaration: NotifDeclaration.makePlugin(this.db, this.background),
       chatDeclaration: ChatDeclaration.makePlugin(this.db, this.background),
+      germDeclaration: GermDeclaration.makePlugin(this.db, this.background),
       verification: Verification.makePlugin(this.db, this.background),
       status: Status.makePlugin(this.db, this.background),
     }

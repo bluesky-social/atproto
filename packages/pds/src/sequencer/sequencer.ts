@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import EventEmitter from 'node:events'
 import TypedEmitter from 'typed-emitter'
 import { SECOND, cborDecode, wait } from '@atproto/common'
@@ -160,11 +162,11 @@ export class Sequencer extends (EventEmitter as new () => SequencerEmitter) {
   }
 
   async sequenceEvt(evt: RepoSeqInsert): Promise<number> {
-    const res = await this.db.executeWithRetry(
-      this.db.db.insertInto('repo_seq').values(evt).returningAll(),
+    const [{ seq }] = await this.db.executeWithRetry(
+      this.db.db.insertInto('repo_seq').values(evt).returning('seq'),
     )
     this.crawlers.notifyOfUpdate()
-    return res[0].seq
+    return seq
   }
 
   async sequenceCommit(

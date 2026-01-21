@@ -2,10 +2,10 @@
 
 import { HOUR } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
+import { isAppealReport } from '../api/util'
 import { Database } from '../db'
 import { DatabaseSchema } from '../db/schema'
 import { jsonb } from '../db/types'
-import { REASONAPPEAL } from '../lexicon/types/com/atproto/moderation/defs'
 import {
   REVIEWCLOSED,
   REVIEWESCALATED,
@@ -122,6 +122,11 @@ const getSubjectStatusForModerationEvent = ({
     case 'tools.ozone.moderation.defs#modEventResolveAppeal':
       return {
         appealed: false,
+      }
+    case 'tools.ozone.moderation.defs#ageAssuranceEvent':
+    case 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent':
+      return {
+        reviewState: defaultReviewState,
       }
     default:
       return {}
@@ -253,6 +258,15 @@ export const moderationSubjectStatusQueryBuilder = (db: DatabaseSchema) => {
       'account_record_status_stats.processedCount',
       'account_record_status_stats.takendownCount',
     ])
+    .leftJoin('account_strike', (join) =>
+      join.onRef('moderation_subject_status.did', '=', 'account_strike.did'),
+    )
+    .select([
+      'account_strike.activeStrikeCount as strikeCount',
+      'account_strike.totalStrikeCount',
+      'account_strike.firstStrikeAt',
+      'account_strike.lastStrikeAt',
+    ])
 }
 
 // Based on a given moderation action event, this function will update the moderation status of the subject
@@ -311,6 +325,9 @@ export const adjustModerationSubjectStatus = async (
         // @TODO: should we try to update this based on status property of account event?
         // For now we're the only one emitting takedowns so i don't think it makes too much of a difference
         takendown: currentStatus ? currentStatus.takendown : false,
+        ageAssuranceState: currentStatus
+          ? currentStatus.ageAssuranceState
+          : 'unknown',
         createdAt: now,
         updatedAt: now,
       })
@@ -333,7 +350,8 @@ export const adjustModerationSubjectStatus = async (
 
   const isAppealEvent =
     action === 'tools.ozone.moderation.defs#modEventReport' &&
-    meta?.reportType === REASONAPPEAL
+    meta?.reportType &&
+    isAppealReport(`${meta.reportType}`)
 
   const subjectStatus = getSubjectStatusForModerationEvent({
     currentStatus,
@@ -366,6 +384,7 @@ export const adjustModerationSubjectStatus = async (
     // that shouldn't mean we want to review the subject
     reviewState: REVIEWNONE,
     recordCid: subjectCid || null,
+    ageAssuranceState: currentStatus?.ageAssuranceState || 'unknown',
   }
   const newStatus = {
     ...defaultData,
@@ -424,6 +443,30 @@ export const adjustModerationSubjectStatus = async (
     }
     newStatus.tags = jsonb([...new Set(tags)]) as unknown as string[]
     subjectStatus.tags = newStatus.tags
+  }
+
+  if (action === 'tools.ozone.moderation.defs#ageAssuranceEvent') {
+    // Only when the last update was made by an admin AND state was set to reset user event can override final state
+    if (
+      currentStatus?.ageAssuranceUpdatedBy !== 'admin' ||
+      currentStatus?.ageAssuranceState === 'reset'
+    ) {
+      if (typeof meta?.status === 'string') {
+        newStatus.ageAssuranceState = meta.status
+        subjectStatus.ageAssuranceState = meta.status
+        newStatus.ageAssuranceUpdatedBy = 'user'
+        subjectStatus.ageAssuranceUpdatedBy = 'user'
+      }
+    }
+  }
+
+  if (action === 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent') {
+    if (typeof meta?.status === 'string') {
+      newStatus.ageAssuranceState = meta.status
+      subjectStatus.ageAssuranceState = meta.status
+      newStatus.ageAssuranceUpdatedBy = 'admin'
+      subjectStatus.ageAssuranceUpdatedBy = 'admin'
+    }
   }
 
   if (blobCids?.length) {

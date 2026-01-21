@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { request } from 'undici'
 import { cidForCbor, verifyCidForBytes } from '@atproto/common'

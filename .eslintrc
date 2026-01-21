@@ -63,11 +63,15 @@
       "env": { "commonjs": true }
     },
     {
+      "files": ["vite.config.js", "vite.config.cjs", "vite.config.mjs"],
+      "env": { "node": true }
+    },
+    {
       "files": ["jest.setup.js"],
       "env": { "jest": true }
     },
     {
-      "files": "*.js",
+      "files": ["*.js", "*.cjs"],
       "rules": {
         "@typescript-eslint/no-var-requires": "off"
       }
@@ -90,6 +94,7 @@
       "typescript": {
         "project": [
           "tsconfig.json",
+          "packages/lex/*/tsconfig.json",
           "packages/oauth/*/tsconfig.json",
           "packages/oauth/*/tsconfig.src.json",
           "packages/internal/*/tsconfig.json",

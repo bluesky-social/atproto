@@ -11,9 +11,10 @@ type ToDpopJwkValue<V extends { dpopKey: Key }> = Omit<V, 'dpopKey'> & {
  * Utility function that allows to simplify the store interface by exposing a
  * JWK (JSON) instead of a Key instance.
  */
-export function toDpopKeyStore<K extends string, V extends { dpopKey: Key }>(
-  store: SimpleStore<K, ToDpopJwkValue<V>>,
-): SimpleStore<K, V> {
+export function toDpopKeyStore<
+  K extends string,
+  V extends { dpopKey: Key; dpopJwk?: never },
+>(store: SimpleStore<K, ToDpopJwkValue<V>>): SimpleStore<K, V> {
   return {
     async set(sub: K, { dpopKey, ...data }: V) {
       const dpopJwk = dpopKey.privateJwk

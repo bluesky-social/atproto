@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
 import { CID } from 'multiformats/cid'
@@ -49,20 +50,20 @@ const LEXICONS: LexiconDoc[] = [
 describe('Ipld vals', () => {
   let s: http.Server
   const server = xrpcServer.createServer(LEXICONS)
-  server.method(
-    'io.example.ipld',
-    (ctx: { input?: xrpcServer.HandlerInput }) => {
-      const asCid = CID.asCID(ctx.input?.body.cid)
-      if (!(asCid instanceof CID)) {
-        throw new Error('expected cid')
-      }
-      const bytes = ctx.input?.body.bytes
-      if (!(bytes instanceof Uint8Array)) {
-        throw new Error('expected bytes')
-      }
-      return { encoding: 'application/json', body: ctx.input?.body }
-    },
-  )
+  server.method('io.example.ipld', (ctx) => {
+    assert(ctx.input?.body, 'expected input body')
+    assert(typeof ctx.input.body === 'object', 'expected input body')
+
+    const asCid = CID.asCID(ctx.input.body['cid'])
+    if (!(asCid instanceof CID)) {
+      throw new Error('expected cid')
+    }
+    const bytes = ctx.input.body['bytes']
+    if (!(bytes instanceof Uint8Array)) {
+      throw new Error('expected bytes')
+    }
+    return { encoding: 'application/json', body: ctx.input.body }
+  })
 
   let client: XrpcClient
   beforeAll(async () => {

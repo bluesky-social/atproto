@@ -3,10 +3,16 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import stream from 'node:stream'
 import { CID } from 'multiformats/cid'
-import { fileExists, isErrnoException, rmIfExists } from '@atproto/common'
+import {
+  aggregateErrors,
+  chunkArray,
+  fileExists,
+  isErrnoException,
+  rmIfExists,
+} from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
-import { httpLogger as log } from './logger'
+import { blobStoreLogger as log } from './logger'
 
 export class DiskBlobStore implements BlobStore {
   constructor(
@@ -137,7 +143,18 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async deleteMany(cids: CID[]): Promise<void> {
-    await Promise.all(cids.map((cid) => this.delete(cid)))
+    const errors: unknown[] = []
+    for (const chunk of chunkArray(cids, 500)) {
+      await Promise.all(
+        chunk.map((cid) =>
+          this.delete(cid).catch((err) => {
+            log.error({ err, cid: cid.toString() }, 'error deleting blob')
+            errors.push(err)
+          }),
+        ),
+      )
+    }
+    if (errors.length) throw aggregateErrors(errors)
   }
 
   async deleteAll(): Promise<void> {

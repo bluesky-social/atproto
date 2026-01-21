@@ -1,7 +1,13 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
+import {
+  PostSearchQuery,
+  parsePostSearchQuery,
+} from '../../../../data-plane/server/util'
+import { FeatureGateID } from '../../../../feature-gates'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'
@@ -21,16 +27,27 @@ export default function (server: Server, ctx: AppContext) {
   const searchPosts = createPipeline(
     skeleton,
     hydration,
-    noBlocks,
+    noBlocksOrTagged,
     presentation,
   )
   server.app.bsky.feed.searchPosts({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss
+      const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
+
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
-      const results = await searchPosts({ ...params, hydrateCtx }, ctx)
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        featureGates: ctx.featureGates.checkGates(
+          [ctx.featureGates.ids.SearchFilteringExploration],
+          ctx.featureGates.user({ did: viewer ?? '' }),
+        ),
+      })
+      const results = await searchPosts(
+        { ...params, hydrateCtx, isModService },
+        ctx,
+      )
       return {
         encoding: 'application/json',
         body: results,
@@ -42,6 +59,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   const { ctx, params } = inputs
+  const parsedQuery = parsePostSearchQuery(params.q, {
+    author: params.author,
+  })
 
   if (ctx.searchAgent) {
     // @NOTE cursors won't change on appview swap
@@ -64,6 +84,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     return {
       posts: res.posts.map(({ uri }) => uri),
       cursor: parseString(res.cursor),
+      parsedQuery,
     }
   }
 
@@ -75,6 +96,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
   return {
     posts: res.uris,
     cursor: parseString(res.cursor),
+    parsedQuery,
   }
 }
 
@@ -85,14 +107,51 @@ const hydration = async (
   return ctx.hydrator.hydratePosts(
     skeleton.posts.map((uri) => ({ uri })),
     params.hydrateCtx,
+    undefined,
+    {
+      processDynamicTagsForView: params.hydrateCtx.featureGates.get(
+        FeatureGateID.SearchFilteringExploration,
+      )
+        ? 'search'
+        : undefined,
+    },
   )
 }
 
-const noBlocks = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
-  const { ctx, skeleton, hydration } = inputs
+const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
+  const { ctx, params, skeleton, hydration } = inputs
+  const { parsedQuery } = skeleton
+
   skeleton.posts = skeleton.posts.filter((uri) => {
+    const post = hydration.posts?.get(uri)
+    if (!post) return
+
     const creator = creatorFromUri(uri)
-    return !ctx.views.viewerBlockExists(creator, hydration)
+    const isCuratedSearch = params.sort === 'top'
+    const isPostByViewer = creator === params.hydrateCtx.viewer
+
+    // Cases to always show.
+    if (isPostByViewer) return true
+    if (params.isModService) return true
+
+    // Cases to never show.
+    if (ctx.views.viewerBlockExists(creator, hydration)) return false
+
+    let tagged = false
+    if (
+      params.hydrateCtx.featureGates.get(
+        FeatureGateID.SearchFilteringExploration,
+      )
+    ) {
+      tagged = post.tags.has(ctx.cfg.visibilityTagHide)
+    } else {
+      tagged = [...ctx.cfg.searchTagsHide].some((t) => post.tags.has(t))
+    }
+
+    // Cases to conditionally show based on tagging.
+    if (isCuratedSearch && tagged) return false
+    if (!parsedQuery.author && tagged) return false
+    return true
   })
   return skeleton
 }
@@ -101,9 +160,12 @@ const presentation = (
   inputs: PresentationFnInput<Context, Params, Skeleton>,
 ) => {
   const { ctx, skeleton, hydration } = inputs
-  const posts = mapDefined(skeleton.posts, (uri) =>
-    ctx.views.post(uri, hydration),
-  )
+  const posts = mapDefined(skeleton.posts, (uri) => {
+    const post = hydration.posts?.get(uri)
+    if (!post) return
+
+    return ctx.views.post(uri, hydration)
+  })
   return {
     posts,
     cursor: skeleton.cursor,
@@ -112,16 +174,21 @@ const presentation = (
 }
 
 type Context = {
+  cfg: ServerConfig
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
   searchAgent?: AtpAgent
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = QueryParams & {
+  hydrateCtx: HydrateCtx
+  isModService: boolean
+}
 
 type Skeleton = {
   posts: string[]
   hitsTotal?: number
   cursor?: string
+  parsedQuery: PostSearchQuery
 }

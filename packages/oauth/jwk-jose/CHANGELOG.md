@@ -1,5 +1,40 @@
 # @atproto/jwk-jose
 
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies [[`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815), [`fefe70126`](https://github.com/bluesky-social/atproto/commit/fefe70126d0ea82507ac750f669b3478290f186b), [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815), [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815), [`f560cf226`](https://github.com/bluesky-social/atproto/commit/f560cf2266715666ce5852ab095fcfb3876ae815)]:
+  - @atproto/jwk@0.6.0
+
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [[`8a88e2c15`](https://github.com/bluesky-social/atproto/commit/8a88e2c15451f5e8239400eeb277ad31d178b8e6), [`8a88e2c15`](https://github.com/bluesky-social/atproto/commit/8a88e2c15451f5e8239400eeb277ad31d178b8e6)]:
+  - @atproto/jwk@0.5.0
+
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee)]:
+  - @atproto/jwk@0.4.0
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`349b59175`](https://github.com/bluesky-social/atproto/commit/349b59175e82ceb9500ae7c6a9a0b9b6aec9d1b6)]:
+  - @atproto/jwk@0.3.0
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`3fa2ee3b6`](https://github.com/bluesky-social/atproto/commit/3fa2ee3b6a382709b10921da53e69a901bccbb05)]:
+  - @atproto/jwk@0.2.0
+
 ## 0.1.6
 
 ### Patch Changes

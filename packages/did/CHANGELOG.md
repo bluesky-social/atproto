@@ -1,5 +1,45 @@
 # @atproto/did
 
+## 0.2.4
+
+### Patch Changes
+
+- [#4501](https://github.com/bluesky-social/atproto/pull/4501) [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose new `AtprotoDidDocument` type
+
+## 0.2.3
+
+### Patch Changes
+
+- [#4383](https://github.com/bluesky-social/atproto/pull/4383) [`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `AtprotoData` type
+
+- [#4384](https://github.com/bluesky-social/atproto/pull/4384) [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `matchesIdentifier` and `extractAtprotoData` utilities.
+
+## 0.2.2
+
+### Patch Changes
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `extractPdsUrl` utility
+
+## 0.2.1
+
+### Patch Changes
+
+- [#4216](https://github.com/bluesky-social/atproto/pull/4216) [`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor typing improvements
+
+## 0.2.0
+
+### Minor Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Enforce proper formatting of relative uris fragments
+
+### Patch Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `AtprotoAudience` type and validation function
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Small performance improvement
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Small performance improvement
+
 ## 0.1.5
 
 ### Patch Changes

@@ -36,16 +36,18 @@ export function sendAuthorizePageFactory(customization: Customization) {
     const script = declareHydrationData<HydrationData['authorization-page']>({
       __customizationData: customizationData,
       __authorizeData: {
-        requestUri: data.uri,
+        requestUri: data.requestUri,
 
         clientId: data.client.id,
         clientMetadata: data.client.metadata,
         clientTrusted: data.client.info.isTrusted,
+        clientFirstParty: data.client.info.isFirstParty,
 
-        scopeDetails: data.scopeDetails,
-
+        scope: data.parameters.scope,
         uiLocales: data.parameters.ui_locales,
         loginHint: data.parameters.login_hint,
+        promptMode: data.parameters.prompt,
+        permissionSets: Object.fromEntries(data.permissionSets),
       },
       __sessions: data.sessions,
     })
@@ -53,6 +55,9 @@ export function sendAuthorizePageFactory(customization: Customization) {
     return sendWebPage(res, {
       meta: [{ name: 'robots', content: 'noindex' }],
       body: html`<div id="root"></div>`,
+      bodyAttrs: {
+        class: 'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
+      },
       csp,
       coep,
       scripts: [script, ...scripts],

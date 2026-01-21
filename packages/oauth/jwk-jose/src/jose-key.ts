@@ -20,21 +20,28 @@ import {
   JwtPayload,
   JwtVerifyError,
   Key,
-  RequiredKey,
   SignedJwt,
   VerifyOptions,
   VerifyResult,
-  jwkValidator,
+  isPrivateJwk,
+  jwkSchema,
   jwtHeaderSchema,
   jwtPayloadSchema,
 } from '@atproto/jwk'
-import { either } from './util'
+import { RequiredKey, either } from './util.js'
 
 const { JOSEError } = errors
 
-export type Importable = string | KeyLike | Jwk
-
-export type { GenerateKeyPairOptions, GenerateKeyPairResult }
+export {
+  type GenerateKeyPairOptions,
+  type GenerateKeyPairResult,
+  type Jwk,
+  type JwtHeader,
+  type JwtPayload,
+  type KeyLike,
+  type SignedJwt,
+  type VerifyOptions,
+}
 
 export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
   /**
@@ -157,16 +164,16 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     allowedAlgos: string[] = ['ES256'],
     kid?: string,
     options?: Omit<GenerateKeyPairOptions, 'extractable'>,
-  ) {
+  ): Promise<JoseKey> {
     const kp = await this.generateKeyPair(allowedAlgos, {
       ...options,
       extractable: true,
     })
-    return this.fromImportable(kp.privateKey, kid)
+    return this.fromKeyLike(kp.privateKey, kid)
   }
 
   static async fromImportable(
-    input: Importable,
+    input: string | KeyLike | Jwk,
     kid?: string,
   ): Promise<JoseKey> {
     if (typeof input === 'string') {
@@ -233,8 +240,16 @@ export class JoseKey<J extends Jwk = Jwk> extends Key<J> {
     if (!jwk || typeof jwk !== 'object') throw new JwkError('Invalid JWK')
 
     const kid = either(jwk.kid, inputKid)
-    const use = jwk.use || 'sig'
 
-    return new JoseKey(jwkValidator.parse({ ...jwk, kid, use }))
+    // Backwards compatibility with old behavior
+    if (jwk.use != null && isPrivateJwk(jwk)) {
+      console.warn(
+        'Deprecation warning: Private JWK with a "use" property will be rejected in the future. Please remove replace "use" with (valid) "key_ops".',
+      )
+      jwk.key_ops ??= jwk.use === 'sig' ? ['sign'] : ['encrypt']
+      delete jwk.use
+    }
+
+    return new JoseKey<Jwk>(jwkSchema.parse({ ...jwk, kid }))
   }
 }

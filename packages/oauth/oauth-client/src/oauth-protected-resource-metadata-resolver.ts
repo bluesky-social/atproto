@@ -27,7 +27,7 @@ export type OAuthProtectedResourceMetadataResolverConfig = {
 }
 
 /**
- * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc9728.html}
  */
 export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
   string,
@@ -82,7 +82,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
 
     const response = await this.fetch(request)
 
-    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-3.2
+    // https://www.rfc-editor.org/rfc/rfc9728.html#section-3.2
     if (response.status !== 200) {
       await cancelBody(response, 'log')
       throw await FetchResponseError.from(
@@ -107,7 +107,7 @@ export class OAuthProtectedResourceMetadataResolver extends CachedGetter<
       await response.json(),
     )
 
-    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-3.3
+    // https://www.rfc-editor.org/rfc/rfc9728.html#section-3.3
     if (metadata.resource !== origin) {
       throw new TypeError(`Invalid issuer ${metadata.resource}`)
     }

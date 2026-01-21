@@ -1,7 +1,12 @@
 import { sql } from 'kysely'
-import { AppBskyActorDefs, AtpAgent } from '@atproto/api'
+import {
+  AppBskyActorDefs,
+  AtpAgent,
+  ComAtprotoRepoGetRecord,
+} from '@atproto/api'
 import { chunkArray, dedupeStrs } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
+import { IdResolver } from '@atproto/identity'
 import { BlobRef } from '@atproto/lexicon'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
 import { Database } from '../db'
@@ -24,6 +29,8 @@ import {
   RepoView,
   SubjectStatusView,
   isAccountEvent,
+  isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isIdentityEvent,
   isModEventAcknowledge,
   isModEventComment,
@@ -34,9 +41,11 @@ import {
   isModEventMuteReporter,
   isModEventPriorityScore,
   isModEventReport,
+  isModEventReverseTakedown,
   isModEventTag,
   isModEventTakedown,
   isRecordEvent,
+  isScheduleTakedownEvent,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { Un$Typed, asPredicate } from '../lexicon/util'
 import { dbLogger, httpLogger } from '../logger'
@@ -47,7 +56,7 @@ import {
   ModerationEventRowWithHandle,
   ModerationSubjectStatusRowWithHandle,
 } from './types'
-import { formatLabel, signLabel } from './util'
+import { formatLabel, getPdsAgentForRepo, signLabel } from './util'
 
 const isValidSelfLabels = asPredicate(validateSelfLabels)
 
@@ -72,6 +81,8 @@ export class ModerationViews {
     private signingKeyId: number,
     private appviewAgent: AtpAgent,
     private appviewAuth: (method: string) => Promise<AuthHeaders>,
+    public idResolver: IdResolver,
+    public devMode?: boolean,
   ) {}
 
   async getAccoutInfosByDid(dids: string[]): Promise<Map<string, AccountView>> {
@@ -134,6 +145,12 @@ export class ModerationViews {
       createdAt: row.createdAt,
       subjectHandle: row.subjectHandle ?? undefined,
       creatorHandle: row.creatorHandle ?? undefined,
+      modTool: row.modTool
+        ? {
+            name: row.modTool.name,
+            meta: row.modTool.meta,
+          }
+        : undefined,
     }
 
     const { event } = eventView
@@ -162,11 +179,29 @@ export class ModerationViews {
     }
 
     if (
-      isModEventTakedown(event) &&
-      typeof meta.policies === 'string' &&
-      meta.policies.length > 0
+      isModEventTakedown(event) ||
+      isModEventEmail(event) ||
+      isModEventReverseTakedown(event)
     ) {
-      event.policies = meta.policies.split(',')
+      if (typeof meta.policies === 'string' && meta.policies.length > 0) {
+        event.policies = meta.policies.split(',')
+      }
+
+      event.strikeCount = ifNumber(row.strikeCount)
+      event.severityLevel = ifString(row.severityLevel)
+
+      if (isModEventTakedown(event) || isModEventEmail(event)) {
+        event.strikeExpiresAt = ifString(row.strikeExpiresAt)
+      }
+    }
+
+    if (isModEventTakedown(event)) {
+      if (
+        typeof meta.targetServices === 'string' &&
+        meta.targetServices.length > 0
+      ) {
+        event.targetServices = meta.targetServices.split(',')
+      }
     }
 
     if (isModEventLabel(event)) {
@@ -203,6 +238,7 @@ export class ModerationViews {
     if (isModEventEmail(event)) {
       event.content = ifString(meta.content)!
       event.subjectLine = ifString(meta.subjectLine)!
+      event.isDelivered = ifBoolean(meta.isDelivered)
     }
 
     if (isModEventComment(event) && meta.sticky) {
@@ -231,6 +267,28 @@ export class ModerationViews {
       event.op = ifString(meta.op)!
       event.cid = ifString(meta.cid)!
       event.timestamp = ifString(meta.timestamp)!
+    }
+
+    if (isAgeAssuranceEvent(event)) {
+      event.status = ifString(meta.status)!
+      event.access = ifString(meta.access)!
+      event.createdAt = ifString(meta.createdAt)!
+      event.attemptId = ifString(meta.attemptId)!
+      event.initIp = ifString(meta.initIp)
+      event.initUa = ifString(meta.initUa)
+      event.completeIp = ifString(meta.completeIp)
+      event.completeUa = ifString(meta.completeUa)
+    }
+
+    if (isAgeAssuranceOverrideEvent(event)) {
+      event.status = ifString(meta.status)!
+      event.access = ifString(meta.access)!
+    }
+
+    if (isScheduleTakedownEvent(event)) {
+      event.executeAt = ifString(meta.executeAt)
+      event.executeAfter = ifString(meta.executeAfter)
+      event.executeUntil = ifString(meta.executeUntil)
     }
 
     return eventView
@@ -294,28 +352,56 @@ export class ModerationViews {
     return results
   }
 
+  async fetchRecord(
+    params: ComAtprotoRepoGetRecord.QueryParams,
+    appviewAuth: AuthHeaders,
+  ) {
+    try {
+      const record = await this.appviewAgent.com.atproto.repo.getRecord(
+        params,
+        appviewAuth,
+      )
+      return record
+    } catch (err) {
+      if (err instanceof ComAtprotoRepoGetRecord.RecordNotFoundError) {
+        // If pds fetch fails, just return null regardless of the error
+        try {
+          const { agent: pdsAgent } = await getPdsAgentForRepo(
+            this.idResolver,
+            params.repo,
+            this.devMode,
+          )
+          if (!pdsAgent) {
+            return null
+          }
+
+          const record = await pdsAgent.com.atproto.repo.getRecord(params)
+          return record
+        } catch (error) {
+          return null
+        }
+      }
+
+      return null
+    }
+  }
+
   async fetchRecords(
     subjects: RecordSubject[],
   ): Promise<Map<string, RecordInfo>> {
-    const auth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
-    if (!auth) return new Map()
+    const appviewAuth = await this.appviewAuth(ids.ComAtprotoRepoGetRecord)
+    if (!appviewAuth) return new Map()
+
     const fetched = await Promise.all(
       subjects.map(async (subject) => {
         const uri = new AtUri(subject.uri)
-        try {
-          const record = await this.appviewAgent.api.com.atproto.repo.getRecord(
-            {
-              repo: uri.hostname,
-              collection: uri.collection,
-              rkey: uri.rkey,
-              cid: subject.cid,
-            },
-            auth,
-          )
-          return record
-        } catch {
-          return null
+        const params = {
+          repo: uri.hostname,
+          collection: uri.collection,
+          rkey: uri.rkey,
+          cid: subject.cid,
         }
+        return this.fetchRecord(params, appviewAuth)
       }),
     )
     return fetched.reduce((acc, cur) => {
@@ -514,8 +600,8 @@ export class ModerationViews {
           'moderation_subject_status.blobCids',
         )} @> ${JSON.stringify(blobs.map((blob) => blob.ref.toString()))}`,
       )
-      .selectAll()
       .executeTakeFirst()
+
     const statusByCid = (modStatusResults?.blobCids || [])?.reduce(
       (acc, cur) => Object.assign(acc, { [cur]: modStatusResults }),
       {},
@@ -528,6 +614,7 @@ export class ModerationViews {
       const subjectStatus = statusByCid[cid]
         ? this.formatSubjectStatus(statusByCid[cid])
         : undefined
+
       return {
         cid,
         mimeType: blob.mimeType,
@@ -646,6 +733,8 @@ export class ModerationViews {
       subjectBlobCids: status.blobCids || [],
       tags: status.tags || [],
       priorityScore: status.priorityScore,
+      ageAssuranceState: status.ageAssuranceState ?? undefined,
+      ageAssuranceUpdatedBy: status.ageAssuranceUpdatedBy ?? undefined,
       subject: subjectFromStatusRow(
         status,
       ).lex() as SubjectStatusView['subject'],
@@ -678,6 +767,17 @@ export class ModerationViews {
         processedCount: status.processedCount ?? undefined,
         takendownCount: status.takendownCount ?? undefined,
       },
+
+      accountStrike:
+        status.strikeCount !== null || status.totalStrikeCount !== null
+          ? {
+              $type: 'tools.ozone.moderation.defs#accountStrike',
+              activeStrikeCount: status.strikeCount ?? undefined,
+              totalStrikeCount: status.totalStrikeCount ?? undefined,
+              firstStrikeAt: status.firstStrikeAt ?? undefined,
+              lastStrikeAt: status.lastStrikeAt ?? undefined,
+            }
+          : undefined,
     }
 
     if (status.recordPath !== '') {

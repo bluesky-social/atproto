@@ -33,17 +33,18 @@ import * as predicate from './predicate'
 import { SessionManager } from './session-manager'
 import {
   AtpAgentGlobalOpts,
+  AtprotoProxy,
   AtprotoServiceType,
   BskyFeedViewPreference,
   BskyInterestsPreference,
   BskyPreferences,
   BskyThreadViewPreference,
+  asAtprotoProxy,
+  asDid,
+  isDid,
 } from './types'
 import {
-  Did,
-  asDid,
   getSavedFeedType,
-  isDid,
   sanitizeMutedWordValue,
   savedFeedsToUriArrays,
   validateNux,
@@ -60,7 +61,6 @@ const FEED_VIEW_PREF_DEFAULTS = {
 
 const THREAD_VIEW_PREF_DEFAULTS = {
   sort: 'hotness',
-  prioritizeFollowedUsers: true,
 }
 
 export type { FetchHandler }
@@ -187,12 +187,11 @@ export class Agent extends XrpcClient {
 
   //#region ATPROTO proxy configuration utilities
 
-  proxy?: `${Did}#${AtprotoServiceType}`
+  proxy?: AtprotoProxy
 
-  configureProxy(value: `${Did}#${AtprotoServiceType}` | null) {
+  configureProxy(value: AtprotoProxy | null) {
     if (value === null) this.proxy = undefined
-    else if (isDid(value)) this.proxy = value
-    else throw new TypeError('Invalid proxy DID')
+    else this.proxy = asAtprotoProxy(value)
   }
 
   /** @deprecated use {@link configureProxy} instead */
@@ -385,12 +384,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async like(uri: string, cid: string) {
+  async like(uri: string, cid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.feed.like.create(
       { repo: this.accountDid },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }
@@ -405,12 +405,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async repost(uri: string, cid: string) {
+  async repost(uri: string, cid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.feed.repost.create(
       { repo: this.accountDid },
       {
         subject: { uri, cid },
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }
@@ -425,12 +426,13 @@ export class Agent extends XrpcClient {
     })
   }
 
-  async follow(subjectDid: string) {
+  async follow(subjectDid: string, via?: { uri: string; cid: string }) {
     return this.app.bsky.graph.follow.create(
       { repo: this.accountDid },
       {
         subject: subjectDid,
         createdAt: new Date().toISOString(),
+        via,
       },
     )
   }
@@ -585,6 +587,10 @@ export class Agent extends XrpcClient {
       verificationPrefs: {
         hideBadges: false,
       },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -617,6 +623,9 @@ export class Agent extends XrpcClient {
         if (pref.birthDate) {
           prefs.birthDate = new Date(pref.birthDate)
         }
+      } else if (predicate.isValidDeclaredAgePref(pref)) {
+        const { $type: _, ...declaredAgePref } = pref
+        prefs.declaredAge = declaredAgePref
       } else if (predicate.isValidFeedViewPref(pref)) {
         // feed view preferences
         const { $type: _, feed, ...v } = pref
@@ -652,6 +661,11 @@ export class Agent extends XrpcClient {
       } else if (predicate.isValidVerificationPrefs(pref)) {
         prefs.verificationPrefs = {
           hideBadges: pref.hideBadges,
+        }
+      } else if (predicate.isValidLiveEventPreferences(pref)) {
+        prefs.liveEventPreferences = {
+          hiddenFeedIds: pref.hiddenFeedIds || [],
+          hideAllFeeds: pref.hideAllFeeds ?? false,
         }
       }
     }
@@ -1356,6 +1370,41 @@ export class Agent extends XrpcClient {
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isVerificationPrefs(p))
+        .concat(pref)
+    })
+  }
+
+  async updateLiveEventPreferences(
+    action:
+      | { type: 'hideFeed'; id: string }
+      | { type: 'unhideFeed'; id: string }
+      | { type: 'toggleHideAllFeeds' },
+  ) {
+    return this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidLiveEventPreferences) || {
+        $type: 'app.bsky.actor.defs#liveEventPreferences',
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      }
+
+      const hiddenFeedIds = new Set(pref.hiddenFeedIds || [])
+
+      switch (action.type) {
+        case 'hideFeed':
+          hiddenFeedIds.add(action.id)
+          break
+        case 'unhideFeed':
+          hiddenFeedIds.delete(action.id)
+          break
+        case 'toggleHideAllFeeds':
+          pref.hideAllFeeds = !pref.hideAllFeeds
+          break
+      }
+
+      pref.hiddenFeedIds = [...hiddenFeedIds]
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isLiveEventPreferences(p))
         .concat(pref)
     })
   }

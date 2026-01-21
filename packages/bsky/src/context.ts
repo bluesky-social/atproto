@@ -12,7 +12,10 @@ import { CourierClient } from './courier'
 import { DataPlaneClient, HostList } from './data-plane/client'
 import { FeatureGates } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
+import { KwsClient } from './kws'
 import { httpLogger as log } from './logger'
+import { RolodexClient } from './rolodex'
+import { StashClient } from './stash'
 import {
   ParsedLabelers,
   defaultLabelerHeader,
@@ -35,10 +38,13 @@ export class AppContext {
       signingKey: Keypair
       idResolver: IdResolver
       bsyncClient: BsyncClient
+      stashClient: StashClient
       courierClient: CourierClient | undefined
+      rolodexClient: RolodexClient | undefined
       authVerifier: AuthVerifier
       featureGates: FeatureGates
       blobDispatcher: Dispatcher
+      kwsClient: KwsClient | undefined
     },
   ) {}
 
@@ -94,8 +100,16 @@ export class AppContext {
     return this.opts.bsyncClient
   }
 
+  get stashClient(): StashClient {
+    return this.opts.stashClient
+  }
+
   get courierClient(): CourierClient | undefined {
     return this.opts.courierClient
+  }
+
+  get rolodexClient(): RolodexClient | undefined {
+    return this.opts.rolodexClient
   }
 
   get authVerifier(): AuthVerifier {
@@ -108,6 +122,10 @@ export class AppContext {
 
   get blobDispatcher(): Dispatcher {
     return this.opts.blobDispatcher
+  }
+
+  get kwsClient(): KwsClient | undefined {
+    return this.opts.kwsClient
   }
 
   reqLabelers(req: express.Request): ParsedLabelers {

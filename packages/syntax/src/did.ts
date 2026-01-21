@@ -11,7 +11,10 @@
 //   - in current atproto, only allowing did:plc and did:web. But not *forcing* this at lexicon layer
 //   - hard length limit of 8KBytes
 //   - not going to validate "percent encoding" here
-export const ensureValidDid = (did: string): void => {
+
+export type DidString<M extends string = string> = `did:${M}:${string}`
+
+export function ensureValidDid(did: string): asserts did is DidString {
   if (!did.startsWith('did:')) {
     throw new InvalidDidError('DID requires "did:" prefix')
   }
@@ -43,7 +46,7 @@ export const ensureValidDid = (did: string): void => {
   }
 }
 
-export const ensureValidDidRegex = (did: string): void => {
+export function ensureValidDidRegex(did: string): asserts did is DidString {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
   if (!/^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/.test(did)) {

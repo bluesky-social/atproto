@@ -3,7 +3,10 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { REFERENCELIST } from '../../../../lexicon/types/app/bsky/graph/defs'
+import {
+  CURATELIST,
+  MODLIST,
+} from '../../../../lexicon/types/app/bsky/graph/defs'
 import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getLists'
 import {
   HydrationFnInput,
@@ -19,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
   const getLists = createPipeline(
     skeleton,
     hydration,
-    noReferenceLists,
+    filterPurposes,
     presentation,
   )
   server.app.bsky.graph.getLists({
@@ -70,13 +73,23 @@ const hydration = async (
   return ctx.hydrator.hydrateLists(listUris, params.hydrateCtx)
 }
 
-const noReferenceLists = (
+const filterPurposes = (
   input: RulesFnInput<Context, Params, SkeletonState>,
 ) => {
-  const { skeleton, hydration } = input
+  const { skeleton, hydration, params } = input
+  const purposes = params.purposes || ['modlist', 'curatelist']
+
+  const acceptedPurposes = new Set()
+  if (purposes.includes('modlist')) acceptedPurposes.add(MODLIST)
+  if (purposes.includes(MODLIST)) acceptedPurposes.add(MODLIST)
+  if (purposes.includes('curatelist')) acceptedPurposes.add(CURATELIST)
+  if (purposes.includes(CURATELIST)) acceptedPurposes.add(CURATELIST)
+
+  // @NOTE: While we don't support filtering on the dataplane, this might result in empty pages.
+  // Despite the empty pages, the pagination still can enumerate all items for the specified filters.
   skeleton.listUris = skeleton.listUris.filter((uri) => {
     const list = hydration.lists?.get(uri)
-    return list?.record.purpose !== REFERENCELIST
+    return acceptedPurposes.has(list?.record.purpose)
   })
   return skeleton
 }

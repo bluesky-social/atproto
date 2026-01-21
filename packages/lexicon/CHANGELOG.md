@@ -1,5 +1,59 @@
 # @atproto/lexicon
 
+## 0.6.0
+
+### Minor Changes
+
+- [#4416](https://github.com/bluesky-social/atproto/pull/4416) [`d551b0e`](https://github.com/bluesky-social/atproto/commit/d551b0e3527714c111c3ec6e4c90ad7f46369fab) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Align lexicon document validation with the spec
+
+### Patch Changes
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f)]:
+  - @atproto/common-web@0.4.7
+
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/common-web@0.4.4
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099)]:
+  - @atproto/common-web@0.4.3
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `permission-set` in lexicon documents
+
+### Patch Changes
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/syntax@0.4.1
+
+## 0.4.14
+
+### Patch Changes
+
+- [#4122](https://github.com/bluesky-social/atproto/pull/4122) [`2104d9033`](https://github.com/bluesky-social/atproto/commit/2104d9033e2e1a3a7b821c1f0c5c8ffac5832d59) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Allow unknown fields in lexicon documents
+
+## 0.4.13
+
+### Patch Changes
+
+- [#4069](https://github.com/bluesky-social/atproto/pull/4069) [`331a356ce`](https://github.com/bluesky-social/atproto/commit/331a356ce27ff1d0b24747b0c16f3b54b07a0a12) Thanks [@devinivy](https://github.com/devinivy)! - Lexicon document validation compatible with published lexicons.
+
+## 0.4.12
+
+### Patch Changes
+
+- [#3999](https://github.com/bluesky-social/atproto/pull/3999) [`8ef976d38`](https://github.com/bluesky-social/atproto/commit/8ef976d3852df4bfa376e515e131cc0810a42f20) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve return type of `assertValidXrpcParams`
+
 ## 0.4.11
 
 ### Patch Changes

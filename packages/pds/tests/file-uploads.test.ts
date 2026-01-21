@@ -73,7 +73,7 @@ describe('file uploads', () => {
 
   it('uploads files', async () => {
     smallFile = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
-    const res = await agent.api.com.atproto.repo.uploadBlob(smallFile, {
+    const res = await agent.com.atproto.repo.uploadBlob(smallFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
@@ -88,8 +88,6 @@ describe('file uploads', () => {
     expect(found?.mimeType).toBe('image/jpeg')
     expect(found?.size).toBe(smallFile.length)
     expect(found?.tempKey).toBeDefined()
-    expect(found?.width).toBe(87)
-    expect(found?.height).toBe(150)
     const hasKey = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
     expect(hasKey).toBeTruthy()
   })
@@ -112,7 +110,7 @@ describe('file uploads', () => {
   })
 
   it('can fetch the file after being referenced', async () => {
-    const { headers, data } = await agent.api.com.atproto.sync.getBlob({
+    const { headers, data } = await agent.com.atproto.sync.getBlob({
       did: alice,
       cid: smallBlob.ref.toString(),
     })
@@ -129,7 +127,7 @@ describe('file uploads', () => {
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
     largeFile = await fs.readFile('../dev-env/assets/hd-key.jpg')
-    const res = await agent.api.com.atproto.repo.uploadBlob(largeFile, {
+    const res = await agent.com.atproto.repo.uploadBlob(largeFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
@@ -158,27 +156,21 @@ describe('file uploads', () => {
 
   it('permits duplicate uploads of the same file', async () => {
     const file = await fs.readFile('../dev-env/assets/key-landscape-small.jpg')
-    const { data: uploadA } = await agent.api.com.atproto.repo.uploadBlob(
-      file,
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'image/jpeg',
-      } as any,
-    )
-    const { data: uploadB } = await agent.api.com.atproto.repo.uploadBlob(
-      file,
-      {
-        headers: sc.getHeaders(bob),
-        encoding: 'image/jpeg',
-      } as any,
-    )
+    const { data: uploadA } = await agent.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
+      encoding: 'image/jpeg',
+    } as any)
+    const { data: uploadB } = await agent.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(bob),
+      encoding: 'image/jpeg',
+    } as any)
     expect(uploadA).toEqual(uploadB)
 
     await sc.updateProfile(alice, {
       displayName: 'Alice',
       avatar: uploadA.blob,
     })
-    const profileA = await agent.api.app.bsky.actor.profile.get({
+    const profileA = await agent.app.bsky.actor.profile.get({
       repo: alice,
       rkey: 'self',
     })
@@ -188,14 +180,14 @@ describe('file uploads', () => {
       displayName: 'Bob',
       avatar: uploadB.blob,
     })
-    const profileB = await agent.api.app.bsky.actor.profile.get({
+    const profileB = await agent.app.bsky.actor.profile.get({
       repo: bob,
       rkey: 'self',
     })
     // @ts-expect-error "cid" is not documented as "com.atproto.repo.uploadBlob" output
     expect((profileB.value as any).avatar.cid).toEqual(uploadA.cid)
     const { data: uploadAfterPermanent } =
-      await agent.api.com.atproto.repo.uploadBlob(file, {
+      await agent.com.atproto.repo.uploadBlob(file, {
         headers: sc.getHeaders(alice),
         encoding: 'image/jpeg',
       } as any)
@@ -209,7 +201,7 @@ describe('file uploads', () => {
   })
 
   it('supports compression during upload', async () => {
-    const { data: uploaded } = await agent.api.com.atproto.repo.uploadBlob(
+    const { data: uploaded } = await agent.com.atproto.repo.uploadBlob(
       gzipSync(smallFile),
       {
         encoding: 'image/jpeg',
@@ -224,7 +216,7 @@ describe('file uploads', () => {
 
   it('corrects a bad mimetype', async () => {
     const file = await fs.readFile('../dev-env/assets/key-landscape-large.jpg')
-    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+    const res = await agent.com.atproto.repo.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'video/mp4',
     } as any)
@@ -236,13 +228,11 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/jpeg')
-    expect(found?.width).toBe(1280)
-    expect(found?.height).toBe(742)
   })
 
   it('handles pngs', async () => {
     const file = await fs.readFile('../dev-env/assets/at.png')
-    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+    const res = await agent.com.atproto.repo.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'image/png',
     })
@@ -254,13 +244,11 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/png')
-    expect(found?.width).toBe(554)
-    expect(found?.height).toBe(532)
   })
 
   it('handles unknown mimetypes', async () => {
     const file = await randomBytes(20000)
-    const res = await agent.api.com.atproto.repo.uploadBlob(file, {
+    const res = await agent.com.atproto.repo.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'test/fake',
     } as any)
@@ -272,5 +260,37 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('test/fake')
+  })
+
+  it('handles text', async () => {
+    const file = 'hello world!'
+    const res = await agent.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
+      encoding: 'text/plain',
+    } as any)
+
+    const found = await aliceDb.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('text/plain')
+  })
+
+  it('handles json', async () => {
+    const file = '{"hello":"world"}'
+    const res = await agent.com.atproto.repo.uploadBlob(file, {
+      headers: sc.getHeaders(alice),
+      encoding: 'application/json',
+    } as any)
+
+    const found = await aliceDb.db
+      .selectFrom('blob')
+      .selectAll()
+      .where('cid', '=', res.data.blob.ref.toString())
+      .executeTakeFirst()
+
+    expect(found?.mimeType).toBe('application/json')
   })
 })

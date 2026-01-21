@@ -1,11 +1,12 @@
+import { extractPdsUrl } from '@atproto/did'
 import {
   OAuthAuthorizationServerMetadata,
   oauthIssuerIdentifierSchema,
 } from '@atproto/oauth-types'
 import {
+  IdentityInfo,
   IdentityResolver,
   ResolveIdentityOptions,
-  ResolvedIdentity,
 } from '@atproto-labs/identity-resolver'
 import {
   GetCachedOptions,
@@ -31,7 +32,7 @@ export class OAuthResolver {
     input: string,
     options?: ResolveOAuthOptions,
   ): Promise<{
-    identity?: ResolvedIdentity
+    identityInfo?: IdentityInfo
     metadata: OAuthAuthorizationServerMetadata
   }> {
     // Allow using an entryway, or PDS url, directly as login input (e.g.
@@ -81,22 +82,25 @@ export class OAuthResolver {
     input: string,
     options?: ResolveOAuthOptions,
   ): Promise<{
-    identity: ResolvedIdentity
+    identityInfo: IdentityInfo
     metadata: OAuthAuthorizationServerMetadata
+    pds: URL
   }> {
-    const identity = await this.resolveIdentity(input, options)
+    const identityInfo = await this.resolveIdentity(input, options)
 
     options?.signal?.throwIfAborted()
 
-    const metadata = await this.getResourceServerMetadata(identity.pds, options)
+    const pds = extractPdsUrl(identityInfo.didDoc)
 
-    return { identity, metadata }
+    const metadata = await this.getResourceServerMetadata(pds, options)
+
+    return { identityInfo, metadata, pds }
   }
 
   public async resolveIdentity(
     input: string,
     options?: ResolveIdentityOptions,
-  ): Promise<ResolvedIdentity> {
+  ): Promise<IdentityInfo> {
     try {
       return await this.identityResolver.resolve(input, options)
     } catch (cause) {
@@ -149,7 +153,7 @@ export class OAuthResolver {
         options,
       )
 
-      // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+      // https://www.rfc-editor.org/rfc/rfc9728.html#section-4
       if (asMetadata.protected_resources) {
         if (!asMetadata.protected_resources.includes(rsMetadata.resource)) {
           throw new OAuthResolverError(

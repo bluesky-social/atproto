@@ -6,6 +6,7 @@ import { type LexiconDoc, parseLexiconDoc } from '@atproto/lexicon'
 import { type FileDiff, type GeneratedAPI } from './types'
 
 export function readAllLexicons(paths: string[]): LexiconDoc[] {
+  paths = [...paths].sort() // incoming path order may have come from locale-dependent shell globs
   const docs: LexiconDoc[] = []
   for (const path of paths) {
     if (!path.endsWith('.json') || !fs.statSync(path).isFile()) {

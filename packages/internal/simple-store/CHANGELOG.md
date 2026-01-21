@@ -1,5 +1,13 @@
 # @atproto-labs/simple-store
 
+## 0.3.0
+
+### Minor Changes
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `Key` type to be anything (except nullable values)
+
+- [#4108](https://github.com/bluesky-social/atproto/pull/4108) [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `Getter` function's option argument to `GetterOptions`
+
 ## 0.2.0
 
 ### Minor Changes

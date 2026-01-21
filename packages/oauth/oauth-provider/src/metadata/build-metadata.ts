@@ -2,13 +2,12 @@ import { Keyset } from '@atproto/jwk'
 import {
   OAuthAuthorizationServerMetadata,
   OAuthIssuerIdentifier,
-  oauthAuthorizationServerMetadataSchema,
+  oauthAuthorizationServerMetadataValidator,
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
 import { VERIFY_ALGOS } from '../lib/util/crypto.js'
 
 export type CustomMetadata = {
-  scopes_supported?: string[]
   authorization_details_types_supported?: string[]
   protected_resources?: string[]
 }
@@ -16,19 +15,26 @@ export type CustomMetadata = {
 /**
  * @see {@link https://datatracker.ietf.org/doc/html/rfc8414#section-2}
  * @see {@link https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata}
+ * @see {@link https://openid.net/specs/openid-connect-prompt-create-1_0.html}
  */
 export function buildMetadata(
   issuer: OAuthIssuerIdentifier,
   keyset: Keyset,
   customMetadata?: CustomMetadata,
 ): OAuthAuthorizationServerMetadata {
-  return oauthAuthorizationServerMetadataSchema.parse({
+  return oauthAuthorizationServerMetadataValidator.parse({
     issuer,
 
     scopes_supported: [
       'atproto',
-      //
-      ...(customMetadata?.scopes_supported ?? []),
+
+      // These serve as hint that this server supports the transitional scopes.
+      // This is not a specced behavior.
+      'transition:email',
+      'transition:generic',
+      'transition:chat.bsky',
+
+      // Other atproto scopes can't be enumerated as they are dynamic.
     ],
     subject_types_supported: [
       //
@@ -79,6 +85,15 @@ export function buildMetadata(
       // 'wap', LoL
     ],
 
+    // https://openid.net/specs/openid-connect-prompt-create-1_0.html
+    prompt_values_supported: [
+      'none',
+      'login',
+      'consent',
+      'select_account',
+      'create',
+    ],
+
     // https://datatracker.ietf.org/doc/html/rfc9207
     authorization_response_iss_parameter_supported: true,
 
@@ -101,8 +116,8 @@ export function buildMetadata(
 
     revocation_endpoint: new URL('/oauth/revoke', issuer).href,
 
-    introspection_endpoint: new URL('/oauth/introspect', issuer).href,
-
+    // @TODO Should we implement these endpoints?
+    // introspection_endpoint: new URL('/oauth/introspect', issuer).href,
     // end_session_endpoint: new URL('/oauth/logout', issuer).href,
 
     // https://datatracker.ietf.org/doc/html/rfc9126#section-5
@@ -117,10 +132,10 @@ export function buildMetadata(
     authorization_details_types_supported:
       customMetadata?.authorization_details_types_supported,
 
-    // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-resource-metadata-05#section-4
+    // https://www.rfc-editor.org/rfc/rfc9728.html#section-4
     protected_resources: customMetadata?.protected_resources,
 
-    // https://drafts.aaronpk.com/draft-parecki-oauth-client-id-metadata-document/draft-parecki-oauth-client-id-metadata-document.html
+    // https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html
     client_id_metadata_document_supported: true,
   })
 }

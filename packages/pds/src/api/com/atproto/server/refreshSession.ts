@@ -9,7 +9,7 @@ import { didDocForSession } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.server.refreshSession({
-    auth: ctx.authVerifier.refresh,
+    auth: ctx.authVerifier.refresh(),
     handler: async ({ auth, req }) => {
       const did = auth.credentials.did
       const user = await ctx.accountManager.getAccount(did, {
@@ -50,11 +50,14 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
+          accessJwt: rotated.accessJwt,
+          refreshJwt: rotated.refreshJwt,
+
           did: user.did,
           didDoc,
           handle: user.handle ?? INVALID_HANDLE,
-          accessJwt: rotated.accessJwt,
-          refreshJwt: rotated.refreshJwt,
+          email: user.email ?? undefined,
+          emailConfirmed: !!user.emailConfirmedAt,
           active,
           status,
         },

@@ -160,6 +160,19 @@ export default function (server: Server, ctx: AppContext) {
     },
   })
 
+  server.com.atproto.temp.revokeAccountCredentials({
+    auth: ctx.authVerifier.moderator,
+    handler: async (request) => {
+      if (!ctx.pdsAgent) {
+        throw new Error('PDS not configured')
+      }
+      await ctx.pdsAgent.com.atproto.temp.revokeAccountCredentials(
+        request.input.body,
+        await ctx.pdsAuth(ids.ComAtprotoTempRevokeAccountCredentials),
+      )
+    },
+  })
+
   server.tools.ozone.hosting.getAccountHistory({
     auth: ctx.authVerifier.moderator,
     handler: async (request) => {

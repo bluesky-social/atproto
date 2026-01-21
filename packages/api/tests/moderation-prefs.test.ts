@@ -79,7 +79,6 @@ describe('agent', () => {
         },
       },
       threadViewPrefs: {
-        prioritizeFollowedUsers: true,
         sort: 'hotness',
       },
       bskyAppState: {
@@ -93,6 +92,10 @@ describe('agent', () => {
       },
       verificationPrefs: {
         hideBadges: false,
+      },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
       },
     })
   })
@@ -137,7 +140,6 @@ describe('agent', () => {
       },
       threadViewPrefs: {
         sort: 'hotness',
-        prioritizeFollowedUsers: true,
       },
       bskyAppState: {
         activeProgressGuide: undefined,
@@ -150,6 +152,10 @@ describe('agent', () => {
       },
       verificationPrefs: {
         hideBadges: false,
+      },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
       },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
@@ -179,7 +185,6 @@ describe('agent', () => {
       },
       threadViewPrefs: {
         sort: 'hotness',
-        prioritizeFollowedUsers: true,
       },
       bskyAppState: {
         activeProgressGuide: undefined,
@@ -192,6 +197,10 @@ describe('agent', () => {
       },
       verificationPrefs: {
         hideBadges: false,
+      },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -243,7 +252,6 @@ describe('agent', () => {
       },
       threadViewPrefs: {
         sort: 'hotness',
-        prioritizeFollowedUsers: true,
       },
       bskyAppState: {
         activeProgressGuide: undefined,
@@ -256,6 +264,10 @@ describe('agent', () => {
       },
       verificationPrefs: {
         hideBadges: false,
+      },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
       },
     })
   })

@@ -13,6 +13,7 @@ import type * as ComAtprotoAdminDefs from '../../../com/atproto/admin/defs.js'
 import type * as ComAtprotoRepoStrongRef from '../../../com/atproto/repo/strongRef.js'
 import type * as ChatBskyConvoDefs from '../../../chat/bsky/convo/defs.js'
 import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
+import type * as AppBskyAgeassuranceDefs from '../../../app/bsky/ageassurance/defs.js'
 import type * as ComAtprotoServerDefs from '../../../com/atproto/server/defs.js'
 import type * as ComAtprotoLabelDefs from '../../../com/atproto/label/defs.js'
 
@@ -43,6 +44,11 @@ export interface ModEventView {
     | $Typed<IdentityEvent>
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
+    | $Typed<AgeAssuranceEvent>
+    | $Typed<AgeAssuranceOverrideEvent>
+    | $Typed<RevokeAccountCredentialsEvent>
+    | $Typed<ScheduleTakedownEvent>
+    | $Typed<CancelScheduledTakedownEvent>
     | { $type: string }
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
@@ -54,6 +60,7 @@ export interface ModEventView {
   createdAt: string
   creatorHandle?: string
   subjectHandle?: string
+  modTool?: ModTool
 }
 
 const hashModEventView = 'modEventView'
@@ -89,6 +96,11 @@ export interface ModEventViewDetail {
     | $Typed<IdentityEvent>
     | $Typed<RecordEvent>
     | $Typed<ModEventPriorityScore>
+    | $Typed<AgeAssuranceEvent>
+    | $Typed<AgeAssuranceOverrideEvent>
+    | $Typed<RevokeAccountCredentialsEvent>
+    | $Typed<ScheduleTakedownEvent>
+    | $Typed<CancelScheduledTakedownEvent>
     | { $type: string }
   subject:
     | $Typed<RepoView>
@@ -99,6 +111,7 @@ export interface ModEventViewDetail {
   subjectBlobs: BlobView[]
   createdBy: string
   createdAt: string
+  modTool?: ModTool
 }
 
 const hashModEventViewDetail = 'modEventViewDetail'
@@ -117,6 +130,7 @@ export interface SubjectStatusView {
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>
+    | $Typed<ChatBskyConvoDefs.MessageRef>
     | { $type: string }
   hosting?: $Typed<AccountHosting> | $Typed<RecordHosting> | { $type: string }
   subjectBlobCids?: string[]
@@ -144,6 +158,17 @@ export interface SubjectStatusView {
   tags?: string[]
   accountStats?: AccountStats
   recordsStats?: RecordsStats
+  accountStrike?: AccountStrike
+  /** Current age assurance state of the subject. */
+  ageAssuranceState?:
+    | 'pending'
+    | 'assured'
+    | 'unknown'
+    | 'reset'
+    | 'blocked'
+    | (string & {})
+  /** Whether or not the last successful update to age assurance was made by the user or admin. */
+  ageAssuranceUpdatedBy?: 'admin' | 'user' | (string & {})
 }
 
 const hashSubjectStatusView = 'subjectStatusView'
@@ -233,11 +258,34 @@ export function validateRecordsStats<V>(v: V) {
   return validate<RecordsStats & V>(v, id, hashRecordsStats)
 }
 
+/** Strike information for an account */
+export interface AccountStrike {
+  $type?: 'tools.ozone.moderation.defs#accountStrike'
+  /** Current number of active strikes (excluding expired strikes) */
+  activeStrikeCount?: number
+  /** Total number of strikes ever received (including expired strikes) */
+  totalStrikeCount?: number
+  /** Timestamp of the first strike received */
+  firstStrikeAt?: string
+  /** Timestamp of the most recent strike received */
+  lastStrikeAt?: string
+}
+
+const hashAccountStrike = 'accountStrike'
+
+export function isAccountStrike<V>(v: V) {
+  return is$typed(v, id, hashAccountStrike)
+}
+
+export function validateAccountStrike<V>(v: V) {
+  return validate<AccountStrike & V>(v, id, hashAccountStrike)
+}
+
 export type SubjectReviewState =
-  | 'lex:tools.ozone.moderation.defs#reviewOpen'
-  | 'lex:tools.ozone.moderation.defs#reviewEscalated'
-  | 'lex:tools.ozone.moderation.defs#reviewClosed'
-  | 'lex:tools.ozone.moderation.defs#reviewNone'
+  | 'tools.ozone.moderation.defs#reviewOpen'
+  | 'tools.ozone.moderation.defs#reviewEscalated'
+  | 'tools.ozone.moderation.defs#reviewClosed'
+  | 'tools.ozone.moderation.defs#reviewNone'
   | (string & {})
 
 /** Moderator review status of a subject: Open. Indicates that the subject needs to be reviewed by a moderator */
@@ -259,6 +307,14 @@ export interface ModEventTakedown {
   acknowledgeAccountSubjects?: boolean
   /** Names/Keywords of the policies that drove the decision. */
   policies?: string[]
+  /** Severity level of the violation (e.g., 'sev-0', 'sev-1', 'sev-2', etc.). */
+  severityLevel?: string
+  /** List of services where the takedown should be applied. If empty or not provided, takedown is applied on all configured services. */
+  targetServices?: ('appview' | 'pds' | (string & {}))[]
+  /** Number of strikes to assign to the user for this violation. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
 }
 
 const hashModEventTakedown = 'modEventTakedown'
@@ -276,6 +332,12 @@ export interface ModEventReverseTakedown {
   $type?: 'tools.ozone.moderation.defs#modEventReverseTakedown'
   /** Describe reasoning behind the reversal. */
   comment?: string
+  /** Names/Keywords of the policy infraction for which takedown is being reversed. */
+  policies?: string[]
+  /** Severity level of the violation. Usually set from the last policy infraction's severity. */
+  severityLevel?: string
+  /** Number of strikes to subtract from the user's strike count. Usually set from the last policy infraction's severity. */
+  strikeCount?: number
 }
 
 const hashModEventReverseTakedown = 'modEventReverseTakedown'
@@ -381,6 +443,85 @@ export function isModEventPriorityScore<V>(v: V) {
 
 export function validateModEventPriorityScore<V>(v: V) {
   return validate<ModEventPriorityScore & V>(v, id, hashModEventPriorityScore)
+}
+
+/** Age assurance info coming directly from users. Only works on DID subjects. */
+export interface AgeAssuranceEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssuranceEvent'
+  /** The date and time of this write operation. */
+  createdAt: string
+  /** The unique identifier for this instance of the age assurance flow, in UUID format. */
+  attemptId: string
+  /** The status of the Age Assurance process. */
+  status: 'unknown' | 'pending' | 'assured' | (string & {})
+  access?: AppBskyAgeassuranceDefs.Access
+  /** The ISO 3166-1 alpha-2 country code provided when beginning the Age Assurance flow. */
+  countryCode?: string
+  /** The ISO 3166-2 region code provided when beginning the Age Assurance flow. */
+  regionCode?: string
+  /** The IP address used when initiating the AA flow. */
+  initIp?: string
+  /** The user agent used when initiating the AA flow. */
+  initUa?: string
+  /** The IP address used when completing the AA flow. */
+  completeIp?: string
+  /** The user agent used when completing the AA flow. */
+  completeUa?: string
+}
+
+const hashAgeAssuranceEvent = 'ageAssuranceEvent'
+
+export function isAgeAssuranceEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceEvent)
+}
+
+export function validateAgeAssuranceEvent<V>(v: V) {
+  return validate<AgeAssuranceEvent & V>(v, id, hashAgeAssuranceEvent)
+}
+
+/** Age assurance status override by moderators. Only works on DID subjects. */
+export interface AgeAssuranceOverrideEvent {
+  $type?: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
+  /** The status to be set for the user decided by a moderator, overriding whatever value the user had previously. Use reset to default to original state. */
+  status: 'assured' | 'reset' | 'blocked' | (string & {})
+  access?: AppBskyAgeassuranceDefs.Access
+  /** Comment describing the reason for the override. */
+  comment: string
+}
+
+const hashAgeAssuranceOverrideEvent = 'ageAssuranceOverrideEvent'
+
+export function isAgeAssuranceOverrideEvent<V>(v: V) {
+  return is$typed(v, id, hashAgeAssuranceOverrideEvent)
+}
+
+export function validateAgeAssuranceOverrideEvent<V>(v: V) {
+  return validate<AgeAssuranceOverrideEvent & V>(
+    v,
+    id,
+    hashAgeAssuranceOverrideEvent,
+  )
+}
+
+/** Account credentials revocation by moderators. Only works on DID subjects. */
+export interface RevokeAccountCredentialsEvent {
+  $type?: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
+  /** Comment describing the reason for the revocation. */
+  comment: string
+}
+
+const hashRevokeAccountCredentialsEvent = 'revokeAccountCredentialsEvent'
+
+export function isRevokeAccountCredentialsEvent<V>(v: V) {
+  return is$typed(v, id, hashRevokeAccountCredentialsEvent)
+}
+
+export function validateRevokeAccountCredentialsEvent<V>(v: V) {
+  return validate<RevokeAccountCredentialsEvent & V>(
+    v,
+    id,
+    hashRevokeAccountCredentialsEvent,
+  )
 }
 
 export interface ModEventAcknowledge {
@@ -494,6 +635,16 @@ export interface ModEventEmail {
   content?: string
   /** Additional comment about the outgoing comm. */
   comment?: string
+  /** Names/Keywords of the policies that necessitated the email. */
+  policies?: string[]
+  /** Severity level of the violation. Normally 'sev-1' that adds strike on repeat offense */
+  severityLevel?: string
+  /** Number of strikes to assign to the user for this violation. Normally 0 as an indicator of a warning and only added as a strike on a repeat offense. */
+  strikeCount?: number
+  /** When the strike should expire. If not provided, the strike never expires. */
+  strikeExpiresAt?: string
+  /** Indicates whether the email was successfully delivered to the user's inbox. */
+  isDelivered?: boolean
 }
 
 const hashModEventEmail = 'modEventEmail'
@@ -607,6 +758,45 @@ export function isRecordEvent<V>(v: V) {
 
 export function validateRecordEvent<V>(v: V) {
   return validate<RecordEvent & V>(v, id, hashRecordEvent)
+}
+
+/** Logs a scheduled takedown action for an account. */
+export interface ScheduleTakedownEvent {
+  $type?: 'tools.ozone.moderation.defs#scheduleTakedownEvent'
+  comment?: string
+  executeAt?: string
+  executeAfter?: string
+  executeUntil?: string
+}
+
+const hashScheduleTakedownEvent = 'scheduleTakedownEvent'
+
+export function isScheduleTakedownEvent<V>(v: V) {
+  return is$typed(v, id, hashScheduleTakedownEvent)
+}
+
+export function validateScheduleTakedownEvent<V>(v: V) {
+  return validate<ScheduleTakedownEvent & V>(v, id, hashScheduleTakedownEvent)
+}
+
+/** Logs cancellation of a scheduled takedown action for an account. */
+export interface CancelScheduledTakedownEvent {
+  $type?: 'tools.ozone.moderation.defs#cancelScheduledTakedownEvent'
+  comment?: string
+}
+
+const hashCancelScheduledTakedownEvent = 'cancelScheduledTakedownEvent'
+
+export function isCancelScheduledTakedownEvent<V>(v: V) {
+  return is$typed(v, id, hashCancelScheduledTakedownEvent)
+}
+
+export function validateCancelScheduledTakedownEvent<V>(v: V) {
+  return validate<CancelScheduledTakedownEvent & V>(
+    v,
+    id,
+    hashCancelScheduledTakedownEvent,
+  )
 }
 
 export interface RepoView {
@@ -891,4 +1081,75 @@ export function isReporterStats<V>(v: V) {
 
 export function validateReporterStats<V>(v: V) {
   return validate<ReporterStats & V>(v, id, hashReporterStats)
+}
+
+/** Moderation tool information for tracing the source of the action */
+export interface ModTool {
+  $type?: 'tools.ozone.moderation.defs#modTool'
+  /** Name/identifier of the source (e.g., 'automod', 'ozone/workspace') */
+  name: string
+  /** Additional arbitrary metadata about the source */
+  meta?: { [_ in string]: unknown }
+}
+
+const hashModTool = 'modTool'
+
+export function isModTool<V>(v: V) {
+  return is$typed(v, id, hashModTool)
+}
+
+export function validateModTool<V>(v: V) {
+  return validate<ModTool & V>(v, id, hashModTool)
+}
+
+/** Moderation event timeline event for a PLC create operation */
+export const TIMELINEEVENTPLCCREATE = `${id}#timelineEventPlcCreate`
+/** Moderation event timeline event for generic PLC operation */
+export const TIMELINEEVENTPLCOPERATION = `${id}#timelineEventPlcOperation`
+/** Moderation event timeline event for a PLC tombstone operation */
+export const TIMELINEEVENTPLCTOMBSTONE = `${id}#timelineEventPlcTombstone`
+
+/** View of a scheduled moderation action */
+export interface ScheduledActionView {
+  $type?: 'tools.ozone.moderation.defs#scheduledActionView'
+  /** Auto-incrementing row ID */
+  id: number
+  /** Type of action to be executed */
+  action: 'takedown' | (string & {})
+  /** Serialized event object that will be propagated to the event when performed */
+  eventData?: { [_ in string]: unknown }
+  /** Subject DID for the action */
+  did: string
+  /** Exact time to execute the action */
+  executeAt?: string
+  /** Earliest time to execute the action (for randomized scheduling) */
+  executeAfter?: string
+  /** Latest time to execute the action (for randomized scheduling) */
+  executeUntil?: string
+  /** Whether execution time should be randomized within the specified range */
+  randomizeExecution?: boolean
+  /** DID of the user who created this scheduled action */
+  createdBy: string
+  /** When the scheduled action was created */
+  createdAt: string
+  /** When the scheduled action was last updated */
+  updatedAt?: string
+  /** Current status of the scheduled action */
+  status: 'pending' | 'executed' | 'cancelled' | 'failed' | (string & {})
+  /** When the action was last attempted to be executed */
+  lastExecutedAt?: string
+  /** Reason for the last execution failure */
+  lastFailureReason?: string
+  /** ID of the moderation event created when action was successfully executed */
+  executionEventId?: number
+}
+
+const hashScheduledActionView = 'scheduledActionView'
+
+export function isScheduledActionView<V>(v: V) {
+  return is$typed(v, id, hashScheduledActionView)
+}
+
+export function validateScheduledActionView<V>(v: V) {
+  return validate<ScheduledActionView & V>(v, id, hashScheduledActionView)
 }

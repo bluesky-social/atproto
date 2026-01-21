@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { cborDecode, check } from '@atproto/common'
 import { RepoRecord } from '@atproto/lexicon'
@@ -13,7 +15,7 @@ export const getAndParseRecord = async (
   if (!bytes) {
     throw new MissingBlockError(cid, 'record')
   }
-  const record = await cborToLexRecord(bytes)
+  const record = cborToLexRecord(bytes)
   return { record, bytes }
 }
 

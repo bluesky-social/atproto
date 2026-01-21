@@ -1,5 +1,5 @@
 import { Trans, useLingui } from '@lingui/react/macro'
-import { useCallback, useRef, useState } from 'react'
+import { ReactNode, useCallback, useRef, useState } from 'react'
 import { Button } from '../../../components/forms/button.tsx'
 import { Fieldset } from '../../../components/forms/fieldset.tsx'
 import {
@@ -34,6 +34,7 @@ export type SignInFormProps = Override<
     rememberDefault?: boolean
 
     onBack?: () => void
+    backLabel?: ReactNode
     onForgotPassword?: (emailHint?: string) => void
     onSubmit: (
       credentials: SignInFormOutput,
@@ -49,6 +50,7 @@ export function SignInForm({
 
   onSubmit,
   onBack,
+  backLabel,
   onForgotPassword,
 
   // FormCardAsync
@@ -127,12 +129,18 @@ export function SignInForm({
       ref={mergeRefs([ref, formRef])}
       onLoading={setLoading}
       onCancel={onBack}
-      cancelLabel={t`Back`}
+      cancelLabel={backLabel ?? t`Back`}
       append={children}
       invalid={
         invalid || !username || !password || (secondFactor != null && !otp)
       }
-      submitLabel={secondFactor ? t`Confirm` : t`Sign in`}
+      submitLabel={
+        secondFactor ? (
+          <Trans context="verb">Confirm</Trans>
+        ) : (
+          <Trans context="verb">Sign in</Trans>
+        )
+      }
       onSubmit={doSubmit}
     >
       <Fieldset disabled={loading} label={<Trans>Identifier</Trans>}>
@@ -150,7 +158,7 @@ export function SignInForm({
           required
           readOnly={usernameReadonly}
           disabled={usernameReadonly}
-          autoFocus
+          autoFocus={!usernameReadonly}
           value={username}
           onChange={(event) => {
             resetState()
@@ -184,20 +192,16 @@ export function SignInForm({
           }
           enterKeyHint={secondFactor ? 'next' : 'done'}
           disabled={loading}
+          autoFocus={usernameReadonly}
           required
         />
       </Fieldset>
 
-      <Admonition role="status">
-        <p className="text-md text-primary pb-1 font-bold">
-          <Trans>Warning</Trans>
-        </p>
-        <p className="text-sm">
-          <Trans>
-            Please verify the domain name of the website before entering your
-            password. Never enter your password on a domain you do not trust.
-          </Trans>
-        </p>
+      <Admonition role="alert" title={<Trans>Warning</Trans>}>
+        <Trans>
+          Please verify the domain name of the website before entering your
+          password. Never enter your password on a domain you do not trust.
+        </Trans>
       </Admonition>
 
       <InputCheckbox

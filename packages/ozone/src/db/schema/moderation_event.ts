@@ -23,6 +23,9 @@ export interface ModerationEvent {
     | 'tools.ozone.moderation.defs#identityEvent'
     | 'tools.ozone.moderation.defs#recordEvent'
     | 'tools.ozone.moderation.defs#modEventPriorityScore'
+    | 'tools.ozone.moderation.defs#ageAssuranceEvent'
+    | 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent'
+    | 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent'
   subjectType:
     | 'com.atproto.admin.defs#repoRef'
     | 'com.atproto.repo.strongRef'
@@ -43,6 +46,11 @@ export interface ModerationEvent {
   addedTags: string[] | null
   removedTags: string[] | null
   legacyRefId: number | null
+  modTool: { name: string; meta?: { [_ in string]: unknown } } | null
+  externalId: string | null
+  severityLevel: string | null
+  strikeCount: number | null
+  strikeExpiresAt: string | null
 }
 
 export type PartialDB = {

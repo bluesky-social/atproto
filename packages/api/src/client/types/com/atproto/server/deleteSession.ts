@@ -15,8 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.server.deleteSession'
 
-export interface QueryParams {}
-
+export type QueryParams = {}
 export type InputSchema = undefined
 
 export interface CallOptions {
@@ -30,6 +29,23 @@ export interface Response {
   headers: HeadersMap
 }
 
+export class InvalidTokenError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class ExpiredTokenError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidToken') return new InvalidTokenError(e)
+    if (e.error === 'ExpiredToken') return new ExpiredTokenError(e)
+  }
+
   return e
 }

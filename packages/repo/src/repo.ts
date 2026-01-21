@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { TID, dataToCborBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
@@ -148,9 +150,8 @@ export class Repo extends ReadableRepo {
         data.getCoveringProof(util.formatDataKey(op.collection, op.rkey)),
       ),
     )
-    const relevantBlocks = proofs.reduce((acc, cur) => {
-      return acc.addMap(cur)
-    }, new BlockMap())
+    const relevantBlocks = new BlockMap()
+    for (const proof of proofs) relevantBlocks.addMap(proof)
 
     const addedLeaves = leaves.getMany(diff.newLeafCids.toList())
     if (addedLeaves.missing.length > 0) {

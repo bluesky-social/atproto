@@ -12,26 +12,24 @@ import { IdResolver } from '@atproto/identity'
 import {
   AccessTokenMode,
   JoseKey,
+  LexResolver,
   OAuthProvider,
   OAuthVerifier,
 } from '@atproto/oauth-provider'
 import { BlobStore } from '@atproto/repo'
 import {
-  RateLimiter,
-  RateLimiterCreator,
-  RateLimiterOpts,
   createServiceAuthHeaders,
   createServiceJwt,
 } from '@atproto/xrpc-server'
 import {
   Fetch,
   isUnicastIp,
-  loggedFetch,
   safeFetchWrap,
   unicastLookup,
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
+import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
@@ -46,7 +44,7 @@ import { Crawlers } from './crawlers'
 import { DidSqliteCache } from './did-cache'
 import { DiskBlobStore } from './disk-blobstore'
 import { ImageUrlBuilder } from './image/image-url-builder'
-import { fetchLogger } from './logger'
+import { fetchLogger, lexiconResolverLogger, oauthLogger } from './logger'
 import { ServerMailer } from './mailer'
 import { ModerationMailer } from './mailer/moderation'
 import { LocalViewer, LocalViewerCreator } from './read-after-write/viewer'
@@ -66,7 +64,6 @@ export type AppContextOptions = {
   sequencer: Sequencer
   backgroundQueue: BackgroundQueue
   redisScratch?: Redis
-  ratelimitCreator?: RateLimiterCreator
   crawlers: Crawlers
   bskyAppView?: BskyAppView
   moderationAgent?: AtpAgent
@@ -94,7 +91,6 @@ export class AppContext {
   public sequencer: Sequencer
   public backgroundQueue: BackgroundQueue
   public redisScratch?: Redis
-  public ratelimitCreator?: RateLimiterCreator
   public crawlers: Crawlers
   public bskyAppView?: BskyAppView
   public moderationAgent: AtpAgent | undefined
@@ -121,7 +117,6 @@ export class AppContext {
     this.sequencer = opts.sequencer
     this.backgroundQueue = opts.backgroundQueue
     this.redisScratch = opts.redisScratch
-    this.ratelimitCreator = opts.ratelimitCreator
     this.crawlers = opts.crawlers
     this.bskyAppView = opts.bskyAppView
     this.moderationAgent = opts.moderationAgent
@@ -201,30 +196,6 @@ export class AppContext {
     const redisScratch = cfg.redis
       ? getRedisClient(cfg.redis.address, cfg.redis.password)
       : undefined
-
-    let ratelimitCreator: RateLimiterCreator | undefined = undefined
-    if (cfg.rateLimits.enabled) {
-      const bypassSecret = cfg.rateLimits.bypassKey
-      const bypassIps = cfg.rateLimits.bypassIps
-      if (cfg.rateLimits.mode === 'redis') {
-        if (!redisScratch) {
-          throw new Error('Redis not set up for ratelimiting mode: `redis`')
-        }
-        ratelimitCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.redis(redisScratch, {
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      } else {
-        ratelimitCreator = (opts: RateLimiterOpts) =>
-          RateLimiter.memory({
-            bypassSecret,
-            bypassIps,
-            ...opts,
-          })
-      }
-    }
 
     const bskyAppView = cfg.bskyAppView
       ? new BskyAppView(cfg.bskyAppView)
@@ -319,23 +290,39 @@ export class AppContext {
           })
         : proxyAgentBase
 
-    // A fetch() function that protects against SSRF attacks, large responses &
-    // known bad domains. This function can safely be used to fetch user
-    // provided URLs (unless "disableSsrfProtection" is true, of course).
-    const safeFetch = loggedFetch({
-      fetch: safeFetchWrap({
-        // Using globalThis.fetch allows safeFetchWrap to use keep-alive. See
-        // unicastFetchWrap().
-        fetch: globalThis.fetch,
-        allowIpHost: false,
-        responseMaxSize: cfg.fetch.maxResponseSize,
-        ssrfProtection: !cfg.fetch.disableSsrfProtection,
-      }),
-      logRequest: ({ method, url }) => {
-        fetchLogger.debug({ method, uri: url }, 'fetch')
+    /**
+     * A fetch() function that protects against SSRF attacks, large responses &
+     * known bad domains. This function can safely be used to fetch user
+     * provided URLs (unless "disableSsrfProtection" is true, of course).
+     *
+     * @note **DO NOT** wrap `safeFetch` with any logging or other transforms as
+     * this might prevent the use of explicit `redirect: "follow"` init from
+     * working. See {@link safeFetchWrap}.
+     */
+    const safeFetch = safeFetchWrap({
+      allowIpHost: false,
+      allowImplicitRedirect: false,
+      responseMaxSize: cfg.fetch.maxResponseSize,
+      ssrfProtection: !cfg.fetch.disableSsrfProtection,
+
+      // @NOTE Since we are using NodeJS <= 20, unicastFetchWrap would normally
+      // *not* be using a keep-alive agent if it we are providing a fetch
+      // function that is different from `globalThis.fetch`. However, since the
+      // fetch function below is indeed calling `globalThis.fetch` without
+      // altering any argument, we can safely force the use of the keep-alive
+      // agent. This would not be the case if we used "loggedFetch" as that
+      // function does wrap the input & init arguments into a Request object,
+      // which, on NodeJS<=20, results in init.dispatcher *not* being used.
+      dangerouslyForceKeepAliveAgent: true,
+      fetch: function (input, init) {
+        const method =
+          init?.method ?? (input instanceof Request ? input.method : 'GET')
+        const uri = input instanceof Request ? input.url : String(input)
+
+        fetchLogger.info({ method, uri }, 'fetch')
+
+        return globalThis.fetch.call(this, input, init)
       },
-      logResponse: false,
-      logError: false,
     })
 
     const oauthProvider = cfg.oauth.provider
@@ -361,20 +348,64 @@ export class AppContext {
           hcaptcha: cfg.oauth.provider.hcaptcha,
           branding: cfg.oauth.provider.branding,
           safeFetch,
+          lexResolver: new LexResolver({
+            fetch: safeFetch,
+            plcDirectoryUrl: cfg.identity.plcUrl,
+            hooks: {
+              onResolveAuthority: ({ nsid }) => {
+                lexiconResolverLogger.debug(
+                  { nsid: nsid.toString() },
+                  'Resolving lexicon DID authority',
+                )
+                // Override the lexicon did resolution to point to a custom PDS
+                return cfg.lexicon.didAuthority
+              },
+              onResolveAuthorityResult({ nsid, did }) {
+                lexiconResolverLogger.info(
+                  { nsid: nsid.toString(), did },
+                  'Resolved lexicon DID',
+                )
+              },
+              onResolveAuthorityError({ nsid, err }) {
+                lexiconResolverLogger.error(
+                  { nsid: nsid.toString(), err },
+                  'Lexicon DID resolution error',
+                )
+              },
+              onFetchResult({ uri, cid }) {
+                lexiconResolverLogger.info(
+                  { uri: uri.toString(), cid: cid.toString() },
+                  'Fetched lexicon',
+                )
+              },
+              onFetchError({ err, uri }) {
+                lexiconResolverLogger.error(
+                  { uri: uri.toString(), err },
+                  'Lexicon fetch error',
+                )
+              },
+            },
+          }),
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
-            scopes_supported: [
-              'transition:email',
-              'transition:generic',
-              'transition:chat.bsky',
-            ],
           },
           // If the PDS is both an authorization server & resource server (no
-          // entryway), there is no need to use JWTs as access tokens. Instead,
-          // the PDS can use tokenId as access tokens. This allows the PDS to
-          // always use up-to-date token data from the token store.
-          accessTokenMode: AccessTokenMode.light,
+          // entryway), we can afford to check the token validity on every
+          // request. This allows revoked tokens to be rejected immediately.
+          // This also allows JWT to be shorter since some claims (notably the
+          // "scope" claim) do not need to be included in the token.
+          accessTokenMode: AccessTokenMode.stateful,
+
+          getClientInfo(clientId) {
+            return {
+              isTrusted: cfg.oauth.provider?.trustedClients?.includes(clientId),
+            }
+          },
         })
+      : undefined
+
+    const scopeRefGetter = entrywayAgent
+      ? new ScopeReferenceGetter(entrywayAgent, redisScratch)
       : undefined
 
     const oauthVerifier: OAuthVerifier =
@@ -384,6 +415,22 @@ export class AppContext {
         keyset: [await JoseKey.fromKeyLike(jwtPublicKey!, undefined, 'ES256K')],
         dpopSecret: secrets.dpopSecret,
         redis: redisScratch,
+        onDecodeToken: async ({ payload, dpopProof }) => {
+          // @TODO drop this once oauth provider no longer accepts DPoP proof with
+          // query or fragment in "htu" claim.
+          if (dpopProof?.htu.match(/[?#]/)) {
+            oauthLogger.info(
+              { htu: dpopProof.htu, client_id: payload.client_id },
+              'DPoP proof "htu" contains query or fragment',
+            )
+          }
+
+          if (scopeRefGetter) {
+            payload.scope = await scopeRefGetter.dereference(payload.scope)
+          }
+
+          return payload
+        },
       })
 
     const authVerifier = new AuthVerifier(
@@ -415,7 +462,6 @@ export class AppContext {
       sequencer,
       backgroundQueue,
       redisScratch,
-      ratelimitCreator,
       crawlers,
       bskyAppView,
       moderationAgent,

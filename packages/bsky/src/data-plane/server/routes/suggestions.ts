@@ -55,7 +55,7 @@ const getFollowSuggestionsGlobal = async (
   const rest = suggestions.filter((row) => row.order !== 1 && row.order !== 2)
   const limited = firstTwo.concat(shuffle(rest)).slice(0, input.limit)
 
-  // if the result set ends up getting larger, consider using a seed included in the cursor for for the randomized shuffle
+  // if the result set ends up getting larger, consider using a seed included in the cursor for the randomized shuffle
   const cursor =
     limited.length > 0
       ? limited

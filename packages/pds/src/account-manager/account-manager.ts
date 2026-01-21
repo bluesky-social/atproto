@@ -4,7 +4,7 @@ import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
 import { isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../auth-verifier'
+import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
 import {
@@ -172,6 +172,10 @@ export class AccountManager {
     deactivated?: boolean
     refreshJwt?: string
   }) {
+    if (password && password.length > scrypt.NEW_PASSWORD_MAX_LENGTH) {
+      throw new InvalidRequestError('Password too long')
+    }
+
     const passwordScrypt = password
       ? await scrypt.genSaltAndHash(password)
       : undefined
@@ -539,6 +543,8 @@ export class AccountManager {
       opts.token,
     )
     await this.updateAccountPassword({ did, password: opts.password })
+
+    return did
   }
 
   async updateAccountPassword(opts: { did: string; password: string }) {

@@ -2,6 +2,7 @@ import { DAY, MINUTE } from '@atproto/common'
 import { INVALID_HANDLE } from '@atproto/syntax'
 import { AuthRequiredError } from '@atproto/xrpc-server'
 import { formatAccountStatus } from '../../../../account-manager/account-manager'
+import { OLD_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { resultPassthru } from '../../../proxy'
@@ -31,6 +32,12 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      if (input.body.password.length > OLD_PASSWORD_MAX_LENGTH) {
+        throw new AuthRequiredError(
+          'Password too long. Consider resetting your password.',
+        )
+      }
+
       const { user, isSoftDeleted, appPassword } =
         await ctx.accountManager.login(input.body)
 
@@ -51,13 +58,14 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
+          accessJwt,
+          refreshJwt,
+
           did: user.did,
           didDoc,
           handle: user.handle ?? INVALID_HANDLE,
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
-          accessJwt,
-          refreshJwt,
           active,
           status,
         },

@@ -1,7 +1,6 @@
 import * as http from 'node:http'
 import { AddressInfo } from 'node:net'
-import getPort from 'get-port'
-import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
+import { WebSocket, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
 import { LexiconDoc } from '@atproto/lexicon'
 import { ErrorFrame, Frame, MessageFrame, Subscription, byFrame } from '../src'
@@ -28,12 +27,13 @@ const LEXICONS: LexiconDoc[] = [
           },
         },
         message: {
-          schema: {
-            type: 'object',
-            required: ['count'],
-            properties: { count: { type: 'integer' } },
-          },
+          schema: { type: 'union', refs: ['#countdownStatus'] },
         },
+      },
+      countdownStatus: {
+        type: 'object',
+        required: ['count'],
+        properties: { count: { type: 'integer' } },
       },
     },
   },
@@ -75,6 +75,30 @@ const LEXICONS: LexiconDoc[] = [
     defs: {
       main: {
         type: 'subscription',
+        message: {
+          schema: { type: 'union', refs: ['#auth'] },
+        },
+      },
+      auth: {
+        type: 'object',
+        properties: {
+          credentials: { type: 'ref', ref: '#credentials' },
+          artifacts: { type: 'ref', ref: '#artifacts' },
+        },
+      },
+      credentials: {
+        type: 'object',
+        required: ['username'],
+        properties: {
+          username: { type: 'string' },
+        },
+      },
+      artifacts: {
+        type: 'object',
+        required: ['original'],
+        properties: {
+          original: { type: 'string' },
+        },
       },
     },
   },
@@ -90,7 +114,7 @@ describe('Subscriptions', () => {
     const countdown = Number(params.countdown ?? 0)
     for (let i = countdown; i >= 0; i--) {
       await wait(0)
-      yield { count: i }
+      yield { $type: '#countdownStatus', count: i }
     }
   })
 
@@ -111,7 +135,7 @@ describe('Subscriptions', () => {
   server.streamMethod('io.example.streamAuth', {
     auth: createBasicAuth({ username: 'admin', password: 'password' }),
     handler: async function* ({ auth }) {
-      yield auth
+      yield { ...auth, $type: 'io.example.streamAuth#auth' }
     },
   })
 
@@ -136,12 +160,12 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({ count: 5 }),
-      new MessageFrame({ count: 4 }),
-      new MessageFrame({ count: 3 }),
-      new MessageFrame({ count: 2 }),
-      new MessageFrame({ count: 1 }),
-      new MessageFrame({ count: 0 }),
+      new MessageFrame({ count: 5 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 4 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 3 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 2 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 1 }, { type: '#countdownStatus' }),
+      new MessageFrame({ count: 0 }, { type: '#countdownStatus' }),
     ])
   })
 
@@ -183,14 +207,19 @@ describe('Subscriptions', () => {
     }
 
     expect(frames).toEqual([
-      new MessageFrame({
-        credentials: {
-          username: 'admin',
+      new MessageFrame(
+        {
+          credentials: {
+            username: 'admin',
+          },
+          artifacts: {
+            original: 'YWRtaW46cGFzc3dvcmQ=',
+          },
         },
-        artifacts: {
-          original: 'YWRtaW46cGFzc3dvcmQ=',
+        {
+          type: '#auth',
         },
-      }),
+      ),
     ])
   })
 
@@ -267,10 +296,10 @@ describe('Subscriptions', () => {
       }
 
       expect(messages).toEqual([
-        { count: 5 },
-        { count: 3 },
-        { count: 1 },
-        { count: 0 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 5 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 3 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 1 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 0 },
       ])
     })
 
@@ -339,67 +368,12 @@ describe('Subscriptions', () => {
 
       expect(error).toEqual(new Error('Oops!'))
       expect(messages).toEqual([
-        { count: 10 },
-        { count: 9 },
-        { count: 8 },
-        { count: 7 },
-        { count: 6 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 10 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 9 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 8 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 7 },
+        { $type: 'io.example.streamOne#countdownStatus', count: 6 },
       ])
     })
-  })
-
-  it('uses a heartbeat to reconnect if a connection is dropped', async () => {
-    // we run a server that, on first connection, pauses for longer than the heartbeat interval (doesn't return "pong"s)
-    // on second connection, it returns a message frame and then closes
-    const port = await getPort()
-    const server = new WebSocketServer({ port })
-    let firstConnection = true
-    let firstWasClosed = false
-    server.on('connection', async (socket) => {
-      if (firstConnection === true) {
-        firstConnection = false
-        socket.pause()
-        await wait(600)
-        // shouldn't send this message because the socket would be closed
-        const frame = new ErrorFrame({
-          error: 'AuthenticationRequired',
-          message: 'Authentication Required',
-        })
-        socket.send(frame.toBytes(), { binary: true }, (err) => {
-          if (err) throw err
-          socket.close(xrpcServer.CloseCode.Normal)
-        })
-        socket.on('close', () => {
-          firstWasClosed = true
-        })
-      } else {
-        const frame = new MessageFrame({ count: 1 })
-        socket.send(frame.toBytes(), { binary: true }, (err) => {
-          if (err) throw err
-          socket.close(xrpcServer.CloseCode.Normal)
-        })
-      }
-    })
-
-    const subscription = new Subscription({
-      service: `ws://localhost:${port}`,
-      method: '',
-      heartbeatIntervalMs: 500,
-      validate: (obj) => {
-        return lex.assertValidXrpcMessage<{ count: number }>(
-          'io.example.streamOne',
-          obj,
-        )
-      },
-    })
-
-    const messages: { count: number }[] = []
-    for await (const msg of subscription) {
-      messages.push(msg)
-    }
-
-    expect(messages).toEqual([{ count: 1 }])
-    expect(firstWasClosed).toBe(true)
-    server.close()
   })
 })

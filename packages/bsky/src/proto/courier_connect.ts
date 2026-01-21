@@ -3,27 +3,20 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import {
-  PingRequest,
-  PingResponse,
-  PushNotificationsRequest,
-  PushNotificationsResponse,
-  RegisterDeviceTokenRequest,
-  RegisterDeviceTokenResponse,
-} from './courier_pb'
-import { MethodKind } from '@bufbuild/protobuf'
+import { PingRequest, PingResponse, PushNotificationsRequest, PushNotificationsResponse, RegisterDeviceTokenRequest, RegisterDeviceTokenResponse, SetAgeRestrictedRequest, SetAgeRestrictedResponse, UnregisterDeviceTokenRequest, UnregisterDeviceTokenResponse } from "./courier_pb";
+import { MethodKind } from "@bufbuild/protobuf";
 
 /**
  * @generated from service courier.Service
  */
 export const Service = {
-  typeName: 'courier.Service',
+  typeName: "courier.Service",
   methods: {
     /**
      * @generated from rpc courier.Service.Ping
      */
     ping: {
-      name: 'Ping',
+      name: "Ping",
       I: PingRequest,
       O: PingResponse,
       kind: MethodKind.Unary,
@@ -32,7 +25,7 @@ export const Service = {
      * @generated from rpc courier.Service.PushNotifications
      */
     pushNotifications: {
-      name: 'PushNotifications',
+      name: "PushNotifications",
       I: PushNotificationsRequest,
       O: PushNotificationsResponse,
       kind: MethodKind.Unary,
@@ -41,10 +34,29 @@ export const Service = {
      * @generated from rpc courier.Service.RegisterDeviceToken
      */
     registerDeviceToken: {
-      name: 'RegisterDeviceToken',
+      name: "RegisterDeviceToken",
       I: RegisterDeviceTokenRequest,
       O: RegisterDeviceTokenResponse,
       kind: MethodKind.Unary,
     },
-  },
-} as const
+    /**
+     * @generated from rpc courier.Service.UnregisterDeviceToken
+     */
+    unregisterDeviceToken: {
+      name: "UnregisterDeviceToken",
+      I: UnregisterDeviceTokenRequest,
+      O: UnregisterDeviceTokenResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc courier.Service.SetAgeRestricted
+     */
+    setAgeRestricted: {
+      name: "SetAgeRestricted",
+      I: SetAgeRestrictedRequest,
+      O: SetAgeRestrictedResponse,
+      kind: MethodKind.Unary,
+    },
+  }
+} as const;
+

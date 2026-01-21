@@ -18,13 +18,15 @@ import {
   HandleUnavailableError,
   InvalidInviteCodeError,
   InvalidRequestError,
+  LexiconData,
+  LexiconStore,
   NewTokenData,
   RefreshToken,
   RequestData,
   RequestId,
   RequestStore,
-  ResetPasswordConfirmData,
-  ResetPasswordRequestData,
+  ResetPasswordConfirmInput,
+  ResetPasswordRequestInput,
   SignUpData,
   Sub,
   TokenData,
@@ -52,6 +54,7 @@ import * as accountDeviceHelper from './helpers/account-device'
 import * as authRequestHelper from './helpers/authorization-request'
 import * as authorizedClientHelper from './helpers/authorized-client'
 import * as deviceHelper from './helpers/device'
+import * as lexiconHelper from './helpers/lexicon'
 import * as tokenHelper from './helpers/token'
 import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
 
@@ -62,7 +65,7 @@ import * as usedRefreshTokenHelper from './helpers/used-refresh-token'
  * @note The use of this class assumes that there is no entryway.
  */
 export class OAuthStore
-  implements AccountStore, RequestStore, DeviceStore, TokenStore
+  implements AccountStore, RequestStore, DeviceStore, LexiconStore, TokenStore
 {
   constructor(
     private readonly accountManager: AccountManager,
@@ -120,7 +123,7 @@ export class OAuthStore
     password,
   }: SignUpData): Promise<Account> {
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
-    // @NOTE Password strength already enforced by the OAuthProvider
+    // @NOTE Password strength & length already enforced by the OAuthProvider
 
     await Promise.all([
       this.verifyEmailAvailability(email),
@@ -328,13 +331,13 @@ export class OAuthStore
   async resetPasswordRequest({
     locale: _locale,
     email,
-  }: ResetPasswordRequestData): Promise<void> {
+  }: ResetPasswordRequestInput): Promise<Account | null> {
     const account = await this.accountManager.getAccountByEmail(email, {
       includeDeactivated: true,
       includeTakenDown: true,
     })
 
-    if (!account?.email || !account?.handle) return
+    if (!account?.email || !account?.handle) return null
 
     const { handle } = account
     const token = await this.accountManager.createEmailToken(
@@ -347,14 +350,24 @@ export class OAuthStore
       { handle, token },
       { to: account.email },
     )
+
+    return this.buildAccount(account)
   }
 
-  async resetPasswordConfirm(data: ResetPasswordConfirmData): Promise<void> {
+  async resetPasswordConfirm(
+    data: ResetPasswordConfirmInput,
+  ): Promise<Account | null> {
     try {
-      await this.accountManager.resetPassword(data)
+      const did = await this.accountManager.resetPassword(data)
+      const account = await this.accountManager.getAccount(did, {
+        includeDeactivated: true,
+        includeTakenDown: true,
+      })
+
+      return account ? this.buildAccount(account) : null
     } catch (err) {
       if (err instanceof XrpcInvalidRequestError) {
-        throw new InvalidRequestError(err.message, err)
+        return null
       }
 
       throw err
@@ -428,9 +441,9 @@ export class OAuthStore
     await this.db.executeWithRetry(authRequestHelper.removeByIdQB(this.db, id))
   }
 
-  async findRequestByCode(code: Code): Promise<FoundRequestResult | null> {
+  async consumeRequestCode(code: Code): Promise<FoundRequestResult | null> {
     const row = await authRequestHelper
-      .findByCodeQB(this.db, code)
+      .consumeByCodeQB(this.db, code)
       .executeTakeFirst()
     return row ? authRequestHelper.rowToFoundRequestResult(row) : null
   }
@@ -460,6 +473,20 @@ export class OAuthStore
   async deleteDevice(deviceId: DeviceId): Promise<void> {
     // Will cascade to device_account (device_account_device_id_fk)
     await this.db.executeWithRetry(deviceHelper.removeQB(this.db, deviceId))
+  }
+
+  // LexiconStore
+
+  async findLexicon(nsid: string): Promise<LexiconData | null> {
+    return lexiconHelper.find(this.db, nsid)
+  }
+
+  async storeLexicon(nsid: string, data: LexiconData): Promise<void> {
+    return lexiconHelper.upsert(this.db, nsid, data)
+  }
+
+  async deleteLexicon(nsid: string): Promise<void> {
+    return lexiconHelper.remove(this.db, nsid)
   }
 
   // TokenStore

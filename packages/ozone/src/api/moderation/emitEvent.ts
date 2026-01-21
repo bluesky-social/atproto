@@ -3,8 +3,11 @@ import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
+import { ids } from '../../lexicon/lexicons'
 import {
   ModEventTag,
+  isAgeAssuranceEvent,
+  isAgeAssuranceOverrideEvent,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -14,15 +17,17 @@ import {
   isModEventTag,
   isModEventTakedown,
   isModEventUnmuteReporter,
+  isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
+import { httpLogger } from '../../logger'
 import { subjectFromInput } from '../../mod-service/subject'
-import { ProtectedTagSettingKey } from '../../setting/constants'
 import { SettingService } from '../../setting/service'
-import { ProtectedTagSetting } from '../../setting/types'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
+import { getEventType } from '../util'
+import { assertProtectedTagAction, getProtectedTags } from './util'
 
 const handleModerationEvent = async ({
   ctx,
@@ -41,7 +46,7 @@ const handleModerationEvent = async ({
   const db = ctx.db
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
-  const { event } = input.body
+  const { event, externalId } = input.body
   const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
@@ -51,7 +56,41 @@ const handleModerationEvent = async ({
     input.body.subjectBlobCids,
   )
 
-  // apply access rules
+  if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
+    throw new InvalidRequestError('Invalid subject type')
+  }
+
+  if (isAgeAssuranceOverrideEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new AuthRequiredError(
+        'Must be a full moderator to override age assurance',
+      )
+    }
+  }
+
+  if (isRevokeAccountCredentialsEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+
+    if (!auth.credentials.isAdmin) {
+      throw new AuthRequiredError(
+        'Must be an admin to revoke account credentials',
+      )
+    }
+
+    if (!ctx.pdsAgent) {
+      throw new InvalidRequestError('PDS not configured')
+    }
+
+    await ctx.pdsAgent.com.atproto.temp.revokeAccountCredentials(
+      { account: subject.did },
+      await ctx.pdsAuth(ids.ComAtprotoTempRevokeAccountCredentials),
+    )
+  }
 
   // if less than moderator access then can only take ack and escalation actions
   if (isTakedownEvent || isReverseTakedownEvent) {
@@ -83,7 +122,9 @@ const handleModerationEvent = async ({
     ])
   }
 
-  if (isTakedownEvent || isReverseTakedownEvent) {
+  const isTakedownOrReverseTakedownEvent =
+    isTakedownEvent || isReverseTakedownEvent
+  if (isTakedownOrReverseTakedownEvent || isLabelEvent) {
     const status = await moderationService.getStatus(subject)
 
     if (status?.takendown && isTakedownEvent) {
@@ -101,7 +142,14 @@ const handleModerationEvent = async ({
       )
 
       if (protectedTags) {
-        assertProtectedTagAction(protectedTags, status.tags, createdBy, auth)
+        assertProtectedTagAction({
+          protectedTags,
+          subjectTags: status.tags,
+          actionAuthor: createdBy,
+          isAdmin: auth.credentials.isAdmin,
+          isModerator: auth.credentials.isModerator,
+          isTriage: auth.credentials.isTriage,
+        })
       }
     }
 
@@ -118,13 +166,20 @@ const handleModerationEvent = async ({
       throw new InvalidRequestError('Email can only be sent to a repo subject')
     }
     const { content, subjectLine } = event
-    await retryHttp(() =>
-      ctx.modService(db).sendEmail({
-        subject: subjectLine,
-        content,
-        recipientDid: subject.did,
-      }),
-    )
+    // on error, don't fail the whole event. instead, log the event data with isDelivered false
+    try {
+      await retryHttp(() =>
+        ctx.modService(db).sendEmail({
+          subject: subjectLine,
+          content,
+          recipientDid: subject.did,
+        }),
+      )
+      event.isDelivered = true
+    } catch (err) {
+      event.isDelivered = false
+      httpLogger.error({ err, event }, 'failed to send mod event email')
+    }
   }
 
   if (isModEventDivert(event) && subject.isRecord()) {
@@ -147,13 +202,34 @@ const handleModerationEvent = async ({
     await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
   }
 
+  if (isModEventReport(event)) {
+    await ctx.moderationServiceProfile().validateReasonType(event.reportType)
+  }
+
   const moderationEvent = await db.transaction(async (dbTxn) => {
     const moderationTxn = ctx.modService(dbTxn)
+
+    if (externalId) {
+      const existingEvent = await moderationTxn.getEventByExternalId(
+        getEventType(event.$type),
+        externalId,
+        subject,
+      )
+
+      if (existingEvent) {
+        throw new InvalidRequestError(
+          `An event with the same external ID already exists for the subject.`,
+          'DuplicateExternalId',
+        )
+      }
+    }
 
     const result = await moderationTxn.logEvent({
       event,
       subject,
       createdBy,
+      modTool: input.body.modTool,
+      externalId,
     })
 
     const tagService = new TagService(
@@ -171,7 +247,16 @@ const handleModerationEvent = async ({
     if (subject.isRepo()) {
       if (isTakedownEvent) {
         const isSuspend = !!result.event.durationInHours
-        await moderationTxn.takedownRepo(subject, result.event.id, isSuspend)
+        await moderationTxn.takedownRepo(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+          isSuspend,
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRepo(subject)
       }
@@ -179,7 +264,15 @@ const handleModerationEvent = async ({
 
     if (subject.isRecord()) {
       if (isTakedownEvent) {
-        await moderationTxn.takedownRecord(subject, result.event.id)
+        await moderationTxn.takedownRecord(
+          subject,
+          result.event.id,
+          new Set(
+            result.event.meta?.targetServices
+              ? `${result.event.meta.targetServices}`.split(',')
+              : undefined,
+          ),
+        )
       } else if (isReverseTakedownEvent) {
         await moderationTxn.reverseTakedownRecord(subject)
       }
@@ -222,99 +315,46 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.moderation.emitEvent({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
-      const moderationEvent = await handleModerationEvent({
-        input,
-        auth,
-        ctx,
-      })
-
-      // On divert events, we need to automatically take down the blobs
-      if (isModEventDivert(input.body.event)) {
-        await handleModerationEvent({
+      try {
+        const moderationEvent = await handleModerationEvent({
+          input,
           auth,
           ctx,
-          input: {
-            ...input,
-            body: {
-              ...input.body,
-              event: {
-                ...input.body.event,
-                $type: 'tools.ozone.moderation.defs#modEventTakedown',
-                comment:
-                  '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
+        })
+
+        // On divert events, we need to automatically take down the blobs
+        if (isModEventDivert(input.body.event)) {
+          await handleModerationEvent({
+            auth,
+            ctx,
+            input: {
+              ...input,
+              body: {
+                ...input.body,
+                event: {
+                  ...input.body.event,
+                  $type: 'tools.ozone.moderation.defs#modEventTakedown',
+                  comment:
+                    '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
+                },
+                modTool: input.body.modTool,
               },
             },
-          },
-        })
-      }
+          })
+        }
 
-      return {
-        encoding: 'application/json',
-        body: moderationEvent,
+        return {
+          encoding: 'application/json',
+          body: moderationEvent,
+        }
+      } catch (err) {
+        httpLogger.error(
+          { err, body: input.body },
+          'failed to emit moderation event',
+        )
+        throw err
       }
     },
-  })
-}
-
-const assertProtectedTagAction = (
-  protectedTags: ProtectedTagSetting,
-  subjectTags: string[],
-  actionAuthor: string,
-  auth: ModeratorOutput | AdminTokenOutput,
-) => {
-  subjectTags.forEach((tag) => {
-    if (!Object.hasOwn(protectedTags, tag)) return
-    if (
-      protectedTags[tag]['moderators'] &&
-      !protectedTags[tag]['moderators'].includes(actionAuthor)
-    ) {
-      throw new InvalidRequestError(
-        `Not allowed to action on protected tag: ${tag}`,
-      )
-    }
-
-    if (protectedTags[tag]['roles']) {
-      if (auth.credentials.isAdmin) {
-        if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleAdmin',
-          )
-        ) {
-          return
-        }
-        throw new InvalidRequestError(
-          `Not allowed to action on protected tag: ${tag}`,
-        )
-      }
-
-      if (auth.credentials.isModerator) {
-        if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleModerator',
-          )
-        ) {
-          return
-        }
-
-        throw new InvalidRequestError(
-          `Not allowed to action on protected tag: ${tag}`,
-        )
-      }
-
-      if (auth.credentials.isTriage) {
-        if (
-          protectedTags[tag]['roles'].includes(
-            'tools.ozone.team.defs#roleTriage',
-          )
-        ) {
-          return
-        }
-
-        throw new InvalidRequestError(
-          `Not allowed to action on protected tag: ${tag}`,
-        )
-      }
-    }
   })
 }
 
@@ -366,25 +406,6 @@ const assertTagAuth = async (
       }
     }
   }
-}
-
-const getProtectedTags = async (
-  settingService: SettingService,
-  serviceDid: string,
-) => {
-  const protectedTagSetting = await settingService.query({
-    keys: [ProtectedTagSettingKey],
-    scope: 'instance',
-    did: serviceDid,
-    limit: 1,
-  })
-
-  // if no protected tags are configured, then no need to do further check
-  if (!protectedTagSetting.options.length) {
-    return
-  }
-
-  return protectedTagSetting.options[0].value as ProtectedTagSetting
 }
 
 const validateLabels = (labels: string[]) => {

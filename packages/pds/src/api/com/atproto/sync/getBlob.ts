@@ -1,23 +1,23 @@
 import { CID } from 'multiformats/cid'
 import { BlobNotFoundError } from '@atproto/repo'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../../../auth-verifier'
+import { AuthScope } from '../../../../auth-scope'
+import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.sync.getBlob({
-    auth: ctx.authVerifier.optionalAccessOrAdminToken({
+    auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       additional: [AuthScope.Takendown],
+      authorize: () => {
+        // always allow
+      },
     }),
     handler: async ({ params, res, auth }) => {
       const { did } = params
-      await assertRepoAvailability(
-        ctx,
-        did,
-        ctx.authVerifier.isUserOrAdmin(auth, did),
-      )
+      await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
       const cid = CID.parse(params.cid)
       const found = await ctx.actorStore.read(params.did, async (store) => {

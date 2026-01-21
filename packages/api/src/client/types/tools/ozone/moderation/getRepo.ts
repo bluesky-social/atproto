@@ -16,10 +16,9 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.getRepo'
 
-export interface QueryParams {
+export type QueryParams = {
   did: string
 }
-
 export type InputSchema = undefined
 export type OutputSchema = ToolsOzoneModerationDefs.RepoViewDetail
 

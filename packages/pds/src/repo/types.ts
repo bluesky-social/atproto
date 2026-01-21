@@ -1,3 +1,5 @@
+/* eslint-disable import/no-deprecated */
+
 import { CID } from 'multiformats/cid'
 import { RepoRecord } from '@atproto/lexicon'
 import { BlockMap, CommitData, WriteOpAction } from '@atproto/repo'

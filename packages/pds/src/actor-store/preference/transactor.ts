@@ -1,17 +1,16 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { AuthScope } from '../../auth-verifier'
 import {
   AccountPreference,
   PreferenceReader,
   prefMatchNamespace,
 } from './reader'
-import { prefInScope } from './util'
+import { PrefAllowedOptions, isReadOnlyPref, prefAllowed } from './util'
 
 export class PreferenceTransactor extends PreferenceReader {
   async putPreferences(
     values: AccountPreference[],
     namespace: string,
-    scope: AuthScope,
+    opts: PrefAllowedOptions,
   ): Promise<void> {
     this.db.assertTransaction()
     if (!values.every((value) => prefMatchNamespace(namespace, value.$type))) {
@@ -19,10 +18,10 @@ export class PreferenceTransactor extends PreferenceReader {
         `Some preferences are not in the ${namespace} namespace`,
       )
     }
-    const notInScope = values.filter((val) => !prefInScope(scope, val.$type))
-    if (notInScope.length > 0) {
+    const forbiddenPrefs = values.filter((val) => !prefAllowed(val.$type, opts))
+    if (forbiddenPrefs.length > 0) {
       throw new InvalidRequestError(
-        `Do not have authorization to set preferences: ${notInScope.join(', ')}`,
+        `Do not have authorization to set preferences: ${forbiddenPrefs.map((p) => p.$type).join(', ')}`,
       )
     }
     // get all current prefs for user and prep new pref rows
@@ -30,15 +29,17 @@ export class PreferenceTransactor extends PreferenceReader {
       .selectFrom('account_pref')
       .select(['id', 'name'])
       .execute()
-    const putPrefs = values.map((value) => {
-      return {
-        name: value.$type,
-        valueJson: JSON.stringify(value),
-      }
-    })
+    const putPrefs = values
+      .filter((value) => !isReadOnlyPref(value.$type))
+      .map((value) => {
+        return {
+          name: value.$type,
+          valueJson: JSON.stringify(value),
+        }
+      })
     const allPrefIdsInNamespace = allPrefs
       .filter((pref) => prefMatchNamespace(namespace, pref.name))
-      .filter((pref) => prefInScope(scope, pref.name))
+      .filter((pref) => prefAllowed(pref.name, opts))
       .map((pref) => pref.id)
     // replace all prefs in given namespace
     if (allPrefIdsInNamespace.length) {

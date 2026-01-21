@@ -61,7 +61,7 @@ const hydration = async (input: {
   return ctx.hydrator.hydrateProfilesDetailed(
     [skeleton.did],
     params.hydrateCtx.copy({
-      includeActorTakedowns: true,
+      overrideIncludeTakedownsForActor: true,
     }),
   )
 }

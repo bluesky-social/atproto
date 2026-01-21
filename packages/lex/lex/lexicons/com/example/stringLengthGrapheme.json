@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.example.stringLengthGrapheme",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "string": {
+            "type": "string",
+            "minGraphemes": 2,
+            "maxGraphemes": 4
+          }
+        }
+      }
+    }
+  }
+}

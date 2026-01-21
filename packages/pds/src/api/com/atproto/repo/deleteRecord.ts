@@ -11,9 +11,19 @@ import {
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.repo.deleteRecord({
-    auth: ctx.authVerifier.accessStandard({
-      checkTakedown: true,
-      checkDeactivated: true,
+    auth: ctx.authVerifier.authorization({
+      // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
+      // performed during auth. However, since this method's "repo" parameter
+      // can be a handle, we will need to fetch the account again to ensure that
+      // the handle matches the DID from the request's credentials. In order to
+      // avoid fetching the account twice (during auth, and then again in the
+      // controller), the checks are disabled here:
+
+      // checkTakedown: true,
+      // checkDeactivated: true,
+      authorize: () => {
+        // Performed in the handler as it requires the request body
+      },
     }),
     rateLimit: [
       {
@@ -29,18 +39,24 @@ export default function (server: Server, ctx: AppContext) {
     ],
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, swapCommit, swapRecord } = input.body
-      const account = await ctx.accountManager.getAccount(repo, {
-        includeDeactivated: true,
+
+      const account = await ctx.authVerifier.findAccount(repo, {
+        checkDeactivated: true,
+        checkTakedown: true,
       })
 
-      if (!account) {
-        throw new InvalidRequestError(`Could not find repo: ${repo}`)
-      } else if (account.deactivatedAt) {
-        throw new InvalidRequestError('Account is deactivated')
-      }
       const did = account.did
       if (did !== auth.credentials.did) {
         throw new AuthRequiredError()
+      }
+
+      // We can't compute permissions based on the request payload ("input") in
+      // the 'auth' phase, so we do it here.
+      if (auth.credentials.type === 'oauth') {
+        auth.credentials.permissions.assertRepo({
+          action: 'delete',
+          collection,
+        })
       }
 
       const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined

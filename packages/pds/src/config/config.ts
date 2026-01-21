@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
+import { ensureValidDid } from '@atproto/syntax'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -25,6 +26,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     termsOfServiceUrl: env.termsOfServiceUrl,
     contactEmailAddress: env.contactEmailAddress,
     acceptingImports: env.acceptingImports ?? true,
+    maxImportSize: env.maxImportSize,
     blobUploadLimit: env.blobUploadLimit ?? 5 * 1024 * 1024, // 5mb
     devMode: env.devMode ?? false,
   }
@@ -225,7 +227,6 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const rateLimitsCfg: ServerConfig['rateLimits'] = env.rateLimitsEnabled
     ? {
         enabled: true,
-        mode: redisCfg !== null ? 'redis' : 'memory',
         bypassKey: env.rateLimitBypassKey,
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
@@ -256,7 +257,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   const oauthCfg: ServerConfig['oauth'] = entrywayCfg
     ? {
         issuer: entrywayCfg.url,
-        provider: false,
+        provider: undefined,
       }
     : {
         issuer: serviceCfg.publicUrl,
@@ -316,8 +317,16 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
                 f.href != null && f.href !== '',
             ),
           },
+          trustedClients: env.trustedOAuthClients,
         },
       }
+
+  const lexiconCfg: LexiconResolverConfig = {}
+
+  if (env.lexiconDidAuthority != null) {
+    ensureValidDid(env.lexiconDidAuthority)
+    lexiconCfg.didAuthority = env.lexiconDidAuthority
+  }
 
   return {
     service: serviceCfg,
@@ -337,6 +346,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     rateLimits: rateLimitsCfg,
     crawlers: crawlersCfg,
     fetch: fetchCfg,
+    lexicon: lexiconCfg,
     proxy: proxyCfg,
     oauth: oauthCfg,
   }
@@ -362,6 +372,7 @@ export type ServerConfig = {
   fetch: FetchConfig
   proxy: ProxyConfig
   oauth: OAuthConfig
+  lexicon: LexiconResolverConfig
 }
 
 export type ServiceConfig = {
@@ -373,6 +384,7 @@ export type ServiceConfig = {
   privacyPolicyUrl?: string
   termsOfServiceUrl?: string
   acceptingImports: boolean
+  maxImportSize?: number
   blobUploadLimit: number
   contactEmailAddress?: string
   devMode: boolean
@@ -453,12 +465,15 @@ export type ProxyConfig = {
 
 export type OAuthConfig = {
   issuer: string
-  provider:
-    | false
-    | {
-        hcaptcha?: HcaptchaConfig
-        branding: BrandingInput
-      }
+  provider?: {
+    hcaptcha?: HcaptchaConfig
+    branding: BrandingInput
+    trustedClients?: string[]
+  }
+}
+
+export type LexiconResolverConfig = {
+  didAuthority?: `did:${string}:${string}`
 }
 
 export type InvitesConfig =
@@ -489,7 +504,6 @@ export type RedisScratchConfig = {
 export type RateLimitsConfig =
   | {
       enabled: true
-      mode: 'memory' | 'redis'
       bypassKey?: string
       bypassIps?: string[]
     }

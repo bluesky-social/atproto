@@ -1,7 +1,9 @@
 import { AtprotoDid } from '@atproto/did'
-import { OAuthAuthorizationServerMetadata } from '@atproto/oauth-types'
+import {
+  AtprotoOAuthScope,
+  OAuthAuthorizationServerMetadata,
+} from '@atproto/oauth-types'
 import { Fetch, bindFetch } from '@atproto-labs/fetch'
-import { AtprotoScope } from './atproto-token-response.js'
 import { TokenInvalidError } from './errors/token-invalid-error.js'
 import { TokenRevokedError } from './errors/token-revoked-error.js'
 import { dpopFetchWrapper } from './fetch-dpop.js'
@@ -12,10 +14,11 @@ const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
   | undefined
 
+export type { AtprotoDid, AtprotoOAuthScope }
 export type TokenInfo = {
   expiresAt?: Date
   expired?: boolean
-  scope: AtprotoScope
+  scope: AtprotoOAuthScope
   iss: string
   aud: string
   sub: AtprotoDid
@@ -32,7 +35,6 @@ export class OAuthSession {
   ) {
     this.dpopFetch = dpopFetchWrapper<void>({
       fetch: bindFetch(fetch),
-      iss: server.clientMetadata.client_id,
       key: server.dpopKey,
       supportedAlgs: server.serverMetadata.dpop_signing_alg_values_supported,
       sha256: async (v) => server.runtime.sha256(v),
@@ -99,7 +101,7 @@ export class OAuthSession {
     // This will try and refresh the token if it is known to be expired
     const tokenSet = await this.getTokenSet('auto')
 
-    const initialUrl = new URL(pathname, tokenSet.aud)
+    const initialUrl = new URL(pathname, tokenSet.aud satisfies string)
     const initialAuth = `${tokenSet.token_type} ${tokenSet.access_token}`
 
     const headers = new Headers(init?.headers)

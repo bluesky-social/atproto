@@ -12,7 +12,9 @@ export default function (server: Server, ctx: AppContext) {
     })
   } else {
     server.com.atproto.server.deleteSession({
-      auth: ctx.authVerifier.refreshExpired,
+      auth: ctx.authVerifier.refresh({
+        allowExpired: true,
+      }),
       handler: async ({ auth }) => {
         await ctx.accountManager.revokeRefreshToken(auth.credentials.tokenId)
       },

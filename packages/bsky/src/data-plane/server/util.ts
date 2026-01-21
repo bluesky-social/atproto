@@ -153,3 +153,54 @@ export const violatesThreadGate = async (
 
   return true
 }
+
+// @NOTE: This type is not complete with all supported options.
+// Only the ones that we needed to apply custom logic on are currently present.
+export type PostSearchQuery = {
+  q: string
+  author: string | undefined
+}
+
+export const parsePostSearchQuery = (
+  qParam: string,
+  params?: {
+    author?: string
+  },
+): PostSearchQuery => {
+  // Accept individual params, but give preference to options embedded in `q`.
+  let author = params?.author
+
+  const parts: string[] = []
+  let curr = ''
+  let quoted = false
+  for (const c of qParam) {
+    if (c === ' ' && !quoted) {
+      curr.trim() && parts.push(curr)
+      curr = ''
+      continue
+    }
+
+    if (c === '"') {
+      quoted = !quoted
+    }
+    curr += c
+  }
+  curr.trim() && parts.push(curr)
+
+  const qParts: string[] = []
+  for (const p of parts) {
+    const tokens = p.split(':')
+    if (tokens[0] === 'did') {
+      author = p
+    } else if (tokens[0] === 'author' || tokens[0] === 'from') {
+      author = tokens[1]
+    } else {
+      qParts.push(p)
+    }
+  }
+
+  return {
+    q: qParts.join(' '),
+    author,
+  }
+}

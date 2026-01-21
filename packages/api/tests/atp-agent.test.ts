@@ -269,7 +269,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -285,6 +284,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -318,7 +321,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -334,6 +336,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -367,7 +373,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -383,6 +388,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -416,7 +425,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -432,6 +440,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -469,7 +481,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -485,6 +496,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -525,7 +540,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -541,6 +555,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -581,7 +599,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -597,6 +614,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -637,7 +658,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -653,6 +673,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -693,7 +717,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -709,6 +732,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -749,7 +776,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -765,6 +791,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -811,7 +841,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -827,6 +856,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -867,7 +900,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -883,6 +915,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -912,6 +948,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -923,7 +964,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -939,6 +979,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -968,6 +1012,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -979,7 +1028,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -995,6 +1043,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1024,6 +1076,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1035,7 +1092,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1051,6 +1107,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1080,6 +1140,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1098,7 +1163,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'hotness',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1114,6 +1178,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1143,6 +1211,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1161,7 +1234,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'random',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1177,6 +1249,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1206,6 +1282,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1224,7 +1305,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'oldest',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1240,6 +1320,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1269,6 +1353,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1287,7 +1376,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'oldest',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: ['foo', 'bar'],
@@ -1303,6 +1391,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
     })
@@ -1394,6 +1486,12 @@ describe('agent', () => {
             birthDate: '2021-09-11T18:05:42.556Z',
           },
           {
+            $type: 'app.bsky.actor.defs#declaredAgePref',
+            isOverAge13: false,
+            isOverAge16: false,
+            isOverAge18: false,
+          },
+          {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
             hideReplies: false,
@@ -1414,12 +1512,10 @@ describe('agent', () => {
           {
             $type: 'app.bsky.actor.defs#threadViewPref',
             sort: 'oldest',
-            prioritizeFollowedUsers: true,
           },
           {
             $type: 'app.bsky.actor.defs#threadViewPref',
             sort: 'newest',
-            prioritizeFollowedUsers: false,
           },
           {
             $type: 'app.bsky.actor.defs#bskyAppStatePref',
@@ -1466,6 +1562,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1477,7 +1578,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1493,6 +1593,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1531,6 +1635,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1542,7 +1651,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1558,6 +1666,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1597,6 +1709,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1608,7 +1725,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1624,6 +1740,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1659,6 +1779,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1670,7 +1795,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1686,6 +1810,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1721,6 +1849,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2021-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1732,7 +1865,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1748,6 +1880,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1783,6 +1919,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: true,
@@ -1794,7 +1935,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'newest',
-          prioritizeFollowedUsers: false,
         },
         interests: {
           tags: [],
@@ -1811,6 +1951,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setFeedViewPrefs('home', {
@@ -1822,7 +1966,6 @@ describe('agent', () => {
       })
       await agent.setThreadViewPrefs({
         sort: 'oldest',
-        prioritizeFollowedUsers: true,
       })
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
       await agent.bskyAppQueueNudges('three')
@@ -1857,6 +2000,11 @@ describe('agent', () => {
           hiddenPosts: [],
         },
         birthDate: new Date('2023-09-11T18:05:42.556Z'),
+        declaredAge: {
+          isOverAge13: false,
+          isOverAge16: false,
+          isOverAge18: false,
+        },
         feedViewPrefs: {
           home: {
             hideReplies: false,
@@ -1868,7 +2016,6 @@ describe('agent', () => {
         },
         threadViewPrefs: {
           sort: 'oldest',
-          prioritizeFollowedUsers: true,
         },
         interests: {
           tags: [],
@@ -1884,6 +2031,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1936,7 +2087,12 @@ describe('agent', () => {
             $type: 'app.bsky.actor.defs#personalDetailsPref',
             birthDate: '2023-09-11T18:05:42.556Z',
           },
-
+          {
+            $type: 'app.bsky.actor.defs#declaredAgePref',
+            isOverAge13: false,
+            isOverAge16: false,
+            isOverAge18: false,
+          },
           {
             $type: 'app.bsky.actor.defs#feedViewPref',
             feed: 'home',
@@ -1949,7 +2105,6 @@ describe('agent', () => {
           {
             $type: 'app.bsky.actor.defs#threadViewPref',
             sort: 'oldest',
-            prioritizeFollowedUsers: true,
           },
         ].sort(byType),
       )
@@ -2988,7 +3143,7 @@ describe('agent', () => {
 
         describe(`getSavedFeedType`, () => {
           it(`works`, () => {
-            expect(getSavedFeedType('foo')).toBe('unknown')
+            expect(getSavedFeedType('at://foo.com')).toBe('unknown')
             expect(getSavedFeedType(feedUri())).toBe('feed')
             expect(getSavedFeedType(listUri())).toBe('list')
             expect(
@@ -2998,16 +3153,28 @@ describe('agent', () => {
         })
 
         describe(`validateSavedFeed`, () => {
-          it(`throws if invalid TID`, () => {
+          it(`throws if missing id`, () => {
             // really only checks length at time of writing
             expect(() =>
               validateSavedFeed({
-                id: 'a',
+                id: '',
                 type: 'feed',
                 value: feedUri(),
                 pinned: false,
               }),
             ).toThrow()
+          })
+
+          it(`does not throw if a UUID is used as id`, () => {
+            // really only checks length at time of writing
+            expect(() =>
+              validateSavedFeed({
+                id: '497dcba3-ecbf-4587-a2dd-5eb0665e6880',
+                type: 'feed',
+                value: feedUri(),
+                pinned: false,
+              }),
+            ).not.toThrow()
           })
 
           it(`throws if mismatched types`, () => {
@@ -3610,6 +3777,82 @@ describe('agent', () => {
         await agent.setVerificationPrefs(next)
         const prefs = await agent.getPreferences()
         expect(prefs.verificationPrefs).toEqual(next)
+      })
+    })
+
+    describe('updateLiveEventPreferences', () => {
+      let agent: AtpAgent
+
+      beforeAll(async () => {
+        agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'live-event-prefs.test',
+          email: 'live-event-prefs@test.com',
+          password: 'password',
+        })
+      })
+
+      it('default state', async () => {
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('hideFeed adds a feed id', async () => {
+        await agent.updateLiveEventPreferences({
+          type: 'hideFeed',
+          id: 'feed1',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed1'],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('hideFeed adds another feed id', async () => {
+        await agent.updateLiveEventPreferences({
+          type: 'hideFeed',
+          id: 'feed2',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed1', 'feed2'],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('unhideFeed removes a feed id', async () => {
+        await agent.updateLiveEventPreferences({
+          type: 'unhideFeed',
+          id: 'feed1',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed2'],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('toggleHideAllFeeds toggles the flag', async () => {
+        await agent.updateLiveEventPreferences({ type: 'toggleHideAllFeeds' })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed2'],
+          hideAllFeeds: true,
+        })
+      })
+
+      it('toggleHideAllFeeds toggles back', async () => {
+        await agent.updateLiveEventPreferences({ type: 'toggleHideAllFeeds' })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed2'],
+          hideAllFeeds: false,
+        })
       })
     })
 

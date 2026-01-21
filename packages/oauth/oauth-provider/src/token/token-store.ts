@@ -19,15 +19,27 @@ export type TokenInfo = {
   currentRefreshToken: null | RefreshToken
 }
 
-export type NewTokenData = Pick<
-  TokenData,
-  'clientAuth' | 'expiresAt' | 'updatedAt'
->
+export type NewTokenData = {
+  clientAuth: TokenData['clientAuth']
+  expiresAt: TokenData['expiresAt']
+  updatedAt: TokenData['updatedAt']
+  scope: NonNullable<TokenData['scope']>
+}
 
+export type CreateTokenData = TokenData & {
+  scope: NonNullable<TokenData['scope']>
+}
+
+/**
+ * @param data historically, {@link TokenData.scope} was not present in
+ * {@link TokenData}, causing it to be "nullable" when returned from
+ * {@link TokenStore.readToken}. We use {@link CreateTokenData} here to allow
+ * the store implementation to expect its presence.
+ */
 export interface TokenStore {
   createToken(
     tokenId: TokenId,
-    data: TokenData,
+    data: CreateTokenData,
     refreshToken?: RefreshToken,
   ): Awaitable<void>
 

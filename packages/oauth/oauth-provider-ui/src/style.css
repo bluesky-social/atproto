@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+/* Styles applies on be <body> tag by the oauth provider */
+@source inline("bg-white");
+@source inline("text-slate-900");
+@source inline("dark:bg-slate-900");
+@source inline("dark:text-slate-100");
+
 :root {
   --branding-color-primary: 131 56 236;
   --branding-color-primary-contrast: 255 255 255;

@@ -16,7 +16,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'tools.ozone.moderation.queryStatuses'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Number of queues being used by moderators. Subjects will be split among all queues. */
   queueCount?: number
   /** Index of the queue to fetch subjects from. Works only when queueCount value is specified. */
@@ -52,7 +52,12 @@ export interface QueryParams {
   /** When set to true, only muted subjects and reporters will be returned. */
   onlyMuted?: boolean
   /** Specify when fetching subjects in a certain state */
-  reviewState?: string
+  reviewState?:
+    | 'tools.ozone.moderation.defs#reviewOpen'
+    | 'tools.ozone.moderation.defs#reviewClosed'
+    | 'tools.ozone.moderation.defs#reviewEscalated'
+    | 'tools.ozone.moderation.defs#reviewNone'
+    | (string & {})
   ignoreSubjects?: string[]
   /** Get all subject statuses that were reviewed by a specific moderator */
   lastReviewedBy?: string
@@ -83,8 +88,17 @@ export interface QueryParams {
   minTakendownRecordsCount?: number
   /** If specified, only subjects that have priority score value above the given value will be returned. */
   minPriorityScore?: number
+  /** If specified, only subjects that belong to an account that has at least this many active strikes will be returned. */
+  minStrikeCount?: number
+  /** If specified, only subjects with the given age assurance state will be returned. */
+  ageAssuranceState?:
+    | 'pending'
+    | 'assured'
+    | 'unknown'
+    | 'reset'
+    | 'blocked'
+    | (string & {})
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

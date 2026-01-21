@@ -1,5 +1,99 @@
 # @atproto/common
 
+## 0.5.8
+
+### Patch Changes
+
+- Updated dependencies [[`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e), [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e), [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e), [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e)]:
+  - @atproto/lex-data@0.0.8
+  - @atproto/common-web@0.4.12
+  - @atproto/lex-cbor@0.0.8
+
+## 0.5.7
+
+### Patch Changes
+
+- Updated dependencies [[`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe), [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe)]:
+  - @atproto/lex-data@0.0.7
+  - @atproto/lex-cbor@0.0.7
+  - @atproto/common-web@0.4.11
+
+## 0.5.6
+
+### Patch Changes
+
+- Updated dependencies [[`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98), [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98), [`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98)]:
+  - @atproto/lex-data@0.0.6
+  - @atproto/common-web@0.4.10
+  - @atproto/lex-cbor@0.0.6
+
+## 0.5.5
+
+### Patch Changes
+
+- Updated dependencies [[`9af7a2d`](https://github.com/bluesky-social/atproto/commit/9af7a2d12240e91248610ce4fe7d93387733c59c), [`9af7a2d`](https://github.com/bluesky-social/atproto/commit/9af7a2d12240e91248610ce4fe7d93387733c59c)]:
+  - @atproto/lex-data@0.0.5
+  - @atproto/common-web@0.4.9
+  - @atproto/lex-cbor@0.0.5
+
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [[`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece), [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece), [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece), [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece), [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece), [`e6b6107`](https://github.com/bluesky-social/atproto/commit/e6b6107e028fee964972274b71f5da1329a7bece)]:
+  - @atproto/lex-data@0.0.4
+  - @atproto/lex-cbor@0.0.4
+  - @atproto/common-web@0.4.8
+
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [[`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f), [`693784c`](https://github.com/bluesky-social/atproto/commit/693784c3a0dee4b6a29aa1e018fce682dcae148f), [`7e1d458`](https://github.com/bluesky-social/atproto/commit/7e1d45877bca0f615e7b1313cfcc66823b3de758)]:
+  - @atproto/lex-data@0.0.3
+  - @atproto/common-web@0.4.7
+  - @atproto/lex-cbor@0.0.3
+
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [[`1d445af`](https://github.com/bluesky-social/atproto/commit/1d445af2a7fc27eca5a45869b29266e6a2a7f3ba), [`1d445af`](https://github.com/bluesky-social/atproto/commit/1d445af2a7fc27eca5a45869b29266e6a2a7f3ba), [`688f9d6`](https://github.com/bluesky-social/atproto/commit/688f9d67597ba96d6e9c4a4aec4d394d42f4cbf4)]:
+  - @atproto/lex-data@0.0.2
+  - @atproto/lex-cbor@0.0.2
+  - @atproto/common-web@0.4.6
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`46550d6`](https://github.com/bluesky-social/atproto/commit/46550d6c1ffb298f57d54eb1904067b2df5a40af)]:
+  - @atproto/lex-cbor@0.0.1
+  - @atproto/lex-data@0.0.1
+  - @atproto/common-web@0.4.5
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `utf8ToB64Url` and `b64UrlToUtf8` utilities
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `sha256ToCid` utility
+
+### Patch Changes
+
+- [#4366](https://github.com/bluesky-social/atproto/pull/4366) [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate "ipld" functions (use `@atproto/lex-data`, `@atproto/lex-json` and `@atproto/lex-cbor` instead)
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto/common-web@0.4.4
+
+## 0.4.12
+
+### Patch Changes
+
+- Updated dependencies [[`055a413fb`](https://github.com/bluesky-social/atproto/commit/055a413fba4fab510ec899377154f1204ab12099)]:
+  - @atproto/common-web@0.4.3
+
 ## 0.4.11
 
 ### Patch Changes

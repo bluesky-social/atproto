@@ -15,7 +15,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'com.atproto.sync.listBlobs'
 
-export interface QueryParams {
+export type QueryParams = {
   /** The DID of the repo. */
   did: string
   /** Optional revision of the repo to list blobs since. */
@@ -23,7 +23,6 @@ export interface QueryParams {
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

@@ -234,7 +234,15 @@ export class AuthVerifier {
         )
       })
 
-    const { sub, aud, scope } = res.payload
+    const { sub, aud, scope, cnf } = res.payload
+    if (typeof cnf !== 'undefined') {
+      // Proof-of-Possession (PoP) tokens are not allowed here
+      // https://www.rfc-editor.org/rfc/rfc7800.html
+      throw new AuthRequiredError(
+        'Malformed token: DPoP not supported',
+        'InvalidToken',
+      )
+    }
     if (typeof sub !== 'string' || !sub.startsWith('did:')) {
       throw new AuthRequiredError('Malformed token', 'InvalidToken')
     } else if (
@@ -388,12 +396,17 @@ export class AuthVerifier {
     const canPerformTakedown =
       (creds.credentials.type === 'role' && creds.credentials.admin) ||
       creds.credentials.type === 'mod_service'
+    const isModService =
+      creds.credentials.type === 'mod_service' ||
+      (creds.credentials.type === 'standard' &&
+        this.isModService(creds.credentials.iss))
 
     return {
       viewer,
       includeTakedowns: includeTakedownsAnd3pBlocks,
       include3pBlocks: includeTakedownsAnd3pBlocks,
       canPerformTakedown,
+      isModService,
     }
   }
 }

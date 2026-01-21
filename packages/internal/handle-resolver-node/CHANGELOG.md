@@ -1,5 +1,67 @@
 # @atproto-labs/handle-resolver-node
 
+## 0.1.24
+
+### Patch Changes
+
+- Updated dependencies [[`2f78893`](https://github.com/bluesky-social/atproto/commit/2f78893ace3bbf14d4bac36837820ddb46658c98)]:
+  - @atproto/did@0.2.4
+  - @atproto-labs/handle-resolver@0.3.5
+
+## 0.1.23
+
+### Patch Changes
+
+- Updated dependencies [[`8012627`](https://github.com/bluesky-social/atproto/commit/8012627a1226cb2f1c753385ad2497b6b43ffd2e), [`d396de0`](https://github.com/bluesky-social/atproto/commit/d396de016d1d55d08cfad1dabd3ffd9eaeea76ea)]:
+  - @atproto/did@0.2.3
+  - @atproto-labs/handle-resolver@0.3.4
+
+## 0.1.22
+
+### Patch Changes
+
+- Updated dependencies [[`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7), [`261968fd6`](https://github.com/bluesky-social/atproto/commit/261968fd65014ded613e2bf085d61a7864b8fba7)]:
+  - @atproto-labs/handle-resolver@0.3.3
+  - @atproto/did@0.2.2
+
+## 0.1.21
+
+### Patch Changes
+
+- Updated dependencies [[`8ff5ec4ca`](https://github.com/bluesky-social/atproto/commit/8ff5ec4caa9a1f5c1e453a416ba2af22d1ee4f58)]:
+  - @atproto-labs/fetch-node@0.2.0
+
+## 0.1.20
+
+### Patch Changes
+
+- Updated dependencies [[`09439d7d6`](https://github.com/bluesky-social/atproto/commit/09439d7d688294ad1a0c78a74b901ba2f7c5f4c3)]:
+  - @atproto/did@0.2.1
+  - @atproto-labs/handle-resolver@0.3.2
+
+## 0.1.19
+
+### Patch Changes
+
+- Updated dependencies [[`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d), [`f9dc9aa4c`](https://github.com/bluesky-social/atproto/commit/f9dc9aa4c9eaf2f82d140fbf011a9015e7f1a00d)]:
+  - @atproto/did@0.2.0
+  - @atproto-labs/fetch-node@0.1.10
+  - @atproto-labs/handle-resolver@0.3.1
+
+## 0.1.18
+
+### Patch Changes
+
+- Updated dependencies [[`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47), [`9dac8b0c6`](https://github.com/bluesky-social/atproto/commit/9dac8b0c600520ecb0066ac104787b27668dea47)]:
+  - @atproto-labs/handle-resolver@0.3.0
+
+## 0.1.17
+
+### Patch Changes
+
+- Updated dependencies [[`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee), [`90b4775fc`](https://github.com/bluesky-social/atproto/commit/90b4775fc9c6959171bc12b961ce9421cc14d6ee)]:
+  - @atproto-labs/handle-resolver@0.2.0
+
 ## 0.1.16
 
 ### Patch Changes

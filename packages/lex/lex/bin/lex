@@ -1,0 +1,163 @@
+#!/usr/bin/env node
+
+/* eslint-env node */
+/* eslint-disable @typescript-eslint/no-var-requires */
+
+// This file is referenced by the "bin" field in package.json. Because of that,
+// we need this file to exist on disk even before the project is built, so it is
+// written in plain JS. This allows package managers to properly link the CLI
+// command when the monorepo is being setup (during initial "pnpm install").
+
+const yargs = require('yargs')
+const { hideBin } = require('yargs/helpers')
+const { build } = require('@atproto/lex-builder')
+const { install } = require('@atproto/lex-installer')
+
+yargs(hideBin(process.argv))
+  .strict()
+  .command(
+    ['build', 'b'],
+    'Generate TypeScript lexicon schema files from JSON lexicon definitions',
+    (yargs) => {
+      return yargs.strict().options({
+        lexicons: {
+          type: 'string',
+          demandOption: true,
+          default: './lexicons',
+          describe: 'directory containing lexicon JSON files',
+        },
+        out: {
+          type: 'string',
+          demandOption: true,
+          default: './src/lexicons',
+          describe: 'output directory for generated TS files',
+        },
+        clear: {
+          type: 'boolean',
+          default: false,
+          describe: 'clear output directory before generating files',
+        },
+        override: {
+          type: 'boolean',
+          default: false,
+          describe: 'override existing files (has no effect with --clear)',
+        },
+        pretty: {
+          type: 'boolean',
+          default: true,
+          describe: 'run prettier on generated files',
+        },
+        'ignore-errors': {
+          type: 'boolean',
+          default: false,
+          describe: 'how to handle errors when processing input files',
+        },
+        'pure-annotations': {
+          type: 'boolean',
+          default: false,
+          describe:
+            'adds `/*#__PURE__*/` annotations for tree-shaking tools. Set this to true if you are using generated lexicons in a library.',
+        },
+        exclude: {
+          array: true,
+          type: 'string',
+          describe:
+            'list of strings or regex patterns to exclude lexicon documents by their IDs',
+        },
+        include: {
+          array: true,
+          type: 'string',
+          describe:
+            'list of strings or regex patterns to include lexicon documents by their IDs',
+        },
+        lib: {
+          type: 'string',
+          default: '@atproto/lex',
+          describe:
+            'package name of the library to import the lex schema utility "l" from',
+        },
+        allowLegacyBlobs: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'generate schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)',
+        },
+        importExt: {
+          type: 'string',
+          default: '.js',
+          describe:
+            'file extension to use for import statements in generated files (e.g. ".ts", ".mts", ".cts"). Use --import-ext "" to generate extension-less imports.',
+        },
+        fileExt: {
+          type: 'string',
+          default: '.ts',
+          describe:
+            'file extension to use for generated files (e.g. ".ts", ".mts", ".cts")',
+        },
+        indexFile: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'generate an "index.<fileExt>" file that exports all root-level namespaces',
+        },
+        ignoreInvalidLexicons: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'skip over invalid lexicon files instead of exiting with an error',
+        },
+      })
+    },
+    async (argv) => {
+      await build(argv)
+    },
+  )
+  .command(
+    ['install [nsid..]', 'i [nsid..]'],
+    'Fetch and install lexicon documents',
+    (yargs) => {
+      return yargs.strict().options({
+        manifest: {
+          type: 'string',
+          default: './lexicons.json',
+          describe: 'path to lexicons.json manifest file',
+        },
+        save: {
+          alias: 's',
+          type: 'boolean',
+          default: true,
+          describe:
+            'Updates lexicons.json with installed lexicons (use --no-save to disable)',
+        },
+        update: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'update all installed lexicons to their latest versions by re-resolving and re-installing them',
+        },
+        ci: {
+          type: 'boolean',
+          default: false,
+          describe:
+            'error if the installed lexicons do not match the CIDs in the lexicons.json manifest',
+        },
+        lexicons: {
+          type: 'string',
+          demandOption: true,
+          default: './lexicons',
+          describe: 'directory containing lexicon JSON files',
+        },
+      })
+    },
+    async (argv) => {
+      await install({
+        add: argv.nsid,
+        save: argv.save,
+        ci: argv.ci,
+        update: argv.update,
+        lexicons: argv.lexicons,
+        manifest: argv.manifest,
+      })
+    },
+  )
+  .parseAsync()

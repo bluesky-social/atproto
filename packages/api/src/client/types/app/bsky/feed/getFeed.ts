@@ -16,12 +16,11 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.feed.getFeed'
 
-export interface QueryParams {
+export type QueryParams = {
   feed: string
   limit?: number
   cursor?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {

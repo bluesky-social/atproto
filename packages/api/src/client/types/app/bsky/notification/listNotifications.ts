@@ -17,7 +17,7 @@ const is$typed = _is$typed,
   validate = _validate
 const id = 'app.bsky.notification.listNotifications'
 
-export interface QueryParams {
+export type QueryParams = {
   /** Notification reasons to include in response. */
   reasons?: string[]
   limit?: number
@@ -25,7 +25,6 @@ export interface QueryParams {
   cursor?: string
   seenAt?: string
 }
-
 export type InputSchema = undefined
 
 export interface OutputSchema {
@@ -55,7 +54,7 @@ export interface Notification {
   uri: string
   cid: string
   author: AppBskyActorDefs.ProfileView
-  /** Expected values are 'like', 'repost', 'follow', 'mention', 'reply', 'quote', 'starterpack-joined', 'verified', and 'unverified'. */
+  /** The reason why this notification was delivered - e.g. your post was liked, or you received a new follower. */
   reason:
     | 'like'
     | 'repost'
@@ -66,6 +65,10 @@ export interface Notification {
     | 'starterpack-joined'
     | 'verified'
     | 'unverified'
+    | 'like-via-repost'
+    | 'repost-via-repost'
+    | 'subscribed-post'
+    | 'contact-match'
     | (string & {})
   reasonSubject?: string
   record: { [_ in string]: unknown }

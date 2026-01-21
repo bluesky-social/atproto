@@ -1,6 +1,8 @@
+/* eslint-disable import/no-deprecated */
+
 import assert from 'node:assert'
 import { z } from 'zod'
-import { cborEncode, noUndefinedVals, schema } from '@atproto/common'
+import { cborEncode, schema } from '@atproto/common'
 import { BlockMap, blocksToCarFile } from '@atproto/repo'
 import { AccountStatus } from '../account-manager/account-manager'
 import { CommitDataWithOps, SyncEvtData } from '../repo'
@@ -31,7 +33,7 @@ export const formatSeqCommit = async (
   return {
     did,
     eventType: 'append' as const,
-    event: cborEncode(noUndefinedVals(evt)),
+    event: cborEncode(evt),
     sequencedAt: new Date().toISOString(),
   }
 }

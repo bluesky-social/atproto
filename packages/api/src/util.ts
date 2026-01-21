@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { TID } from '@atproto/common-web'
 import { AtUri } from '@atproto/syntax'
 import { AppBskyActorDefs } from './client'
 import { Nux } from './client/types/app/bsky/actor/defs'
@@ -61,7 +60,9 @@ export function getSavedFeedType(
 }
 
 export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
-  new TID(savedFeed.id)
+  if (!savedFeed.id) {
+    throw new Error('Saved feed must have an `id` - use a TID')
+  }
 
   if (['feed', 'list'].includes(savedFeed.type)) {
     const uri = new AtUri(savedFeed.value)
@@ -79,21 +80,6 @@ export function validateSavedFeed(savedFeed: AppBskyActorDefs.SavedFeed) {
       )
     }
   }
-}
-
-export type Did = `did:${string}`
-
-// @TODO use tools from @atproto/did
-export const isDid = (str: unknown): str is Did =>
-  typeof str === 'string' &&
-  str.startsWith('did:') &&
-  str.includes(':', 4) &&
-  str.length > 8 &&
-  str.length <= 2048
-
-export const asDid = (value: string): Did => {
-  if (isDid(value)) return value
-  throw new TypeError(`Invalid DID: ${value}`)
 }
 
 export const nuxSchema = z

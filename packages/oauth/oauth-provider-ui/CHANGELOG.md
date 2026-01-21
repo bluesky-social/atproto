@@ -1,5 +1,71 @@
 # @atproto/oauth-provider-ui
 
+## 0.4.1
+
+## 0.4.0
+
+### Minor Changes
+
+- [#4461](https://github.com/bluesky-social/atproto/pull/4461) [`5d8e7a6`](https://github.com/bluesky-social/atproto/commit/5d8e7a6588fc9e57e15d83d47bb45103205e3e41) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Support selecting view based on prompt parameter
+
+## 0.3.6
+
+### Patch Changes
+
+- [#4382](https://github.com/bluesky-social/atproto/pull/4382) [`be8e6c1`](https://github.com/bluesky-social/atproto/commit/be8e6c1f25814202b98e2616a217599a6c46e0db) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `toScopes()` utility on `IncludeScope`
+
+## 0.3.5
+
+## 0.3.4
+
+### Patch Changes
+
+- [#4301](https://github.com/bluesky-social/atproto/pull/4301) [`f496fa2c4`](https://github.com/bluesky-social/atproto/commit/f496fa2c4d9316229523454c691c75c269aba21e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Set dark background on authorization page's `<body>` in dark mode
+
+## 0.3.3
+
+## 0.3.2
+
+## 0.3.1
+
+### Patch Changes
+
+- [#4186](https://github.com/bluesky-social/atproto/pull/4186) [`d570db43d`](https://github.com/bluesky-social/atproto/commit/d570db43d6df2044dbaa5813cac469b3e73ba219) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add Japanese translation on OAuth Provider UI
+
+## 0.3.0
+
+### Minor Changes
+
+- [`f4cb3e4d0`](https://github.com/bluesky-social/atproto/commit/f4cb3e4d0ac45e567fa14f79b99a84621fa89a56) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Adapt to UI to support permission set.
+
+## 0.2.1
+
+## 0.2.0
+
+### Minor Changes
+
+- [#3806](https://github.com/bluesky-social/atproto/pull/3806) [`1899b1fc1`](https://github.com/bluesky-social/atproto/commit/1899b1fc16bc5cd7bb930ec697898766c3a05add) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Display detailed description of requested permissions
+
+## 0.1.11
+
+## 0.1.10
+
+## 0.1.9
+
+## 0.1.8
+
+## 0.1.7
+
+### Patch Changes
+
+- [#3916](https://github.com/bluesky-social/atproto/pull/3916) [`71b9dcda9`](https://github.com/bluesky-social/atproto/commit/71b9dcda9611ab3662ccb2c4e175579396f16b3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Show sign-in screen instead of welcome screen when user already signed-in
+
+## 0.1.6
+
+### Patch Changes
+
+- [`d1e3e68dd`](https://github.com/bluesky-social/atproto/commit/d1e3e68dd9eb7bed13d9023bc0e4ce3c448eabf5) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve auto completion of sing-in & reset password flows
+
 ## 0.1.5
 
 ### Patch Changes

@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
   const listNotifications = createPipeline(
     skeleton,
     hydration,
-    noBlockOrMutesOrNeedsReview,
+    noBlockOrMutesOrNeedsFiltering,
     presentation,
   )
   server.app.bsky.notification.listNotifications({
@@ -161,7 +161,7 @@ const hydration = async (
   return ctx.hydrator.hydrateNotifications(skeleton.notifs, params.hydrateCtx)
 }
 
-const noBlockOrMutesOrNeedsReview = (
+const noBlockOrMutesOrNeedsFiltering = (
   input: RulesFnInput<Context, Params, SkeletonState>,
 ) => {
   const { skeleton, hydration, ctx, params } = input
@@ -192,6 +192,26 @@ const noBlockOrMutesOrNeedsReview = (
           : false
         if (isHiddenByThreadgate) {
           return false
+        }
+      }
+    }
+    // Filter out notifications from users that have thread hide tags and are from people they
+    // are not following
+    if (
+      item.reason === 'reply' ||
+      item.reason === 'quote' ||
+      item.reason === 'mention'
+    ) {
+      const post = hydration.posts?.get(item.uri)
+      if (post) {
+        for (const [tag] of post.tags.entries()) {
+          if (ctx.cfg.threadTagsHide.has(tag)) {
+            if (!hydration.profileViewers?.get(did)?.following) {
+              return false
+            } else {
+              break
+            }
+          }
         }
       }
     }

@@ -2,19 +2,26 @@ import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
 import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
-import { Notification } from '../proto/bsky_pb'
+import {
+  Bookmark,
+  BookmarkInfo,
+  Notification,
+  RecordRef,
+} from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
+  ActivitySubscriptionStates,
   ActorHydrator,
   Actors,
-  KnownFollowers,
+  KnownFollowersStates,
   ProfileAggs,
   ProfileViewerState,
   ProfileViewerStates,
@@ -25,6 +32,7 @@ import {
   FeedGens,
   FeedHydrator,
   FeedItem,
+  type GetPostsHydrationOptions,
   Likes,
   Post,
   PostAggs,
@@ -42,6 +50,8 @@ import {
   GraphHydrator,
   ListAggs,
   ListItems,
+  ListMembershipState,
+  ListMembershipStates,
   ListViewerStates,
   Lists,
   RelationshipPair,
@@ -70,8 +80,10 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
-  includeActorTakedowns = this.vals.includeActorTakedowns
+  overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
+  includeDebugField = this.vals.includeDebugField
+  featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -87,8 +99,10 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
-  includeActorTakedowns?: boolean
+  overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
+  includeDebugField?: boolean
+  featureGates?: CheckedFeatureGatesMap
 }
 
 export type HydrationState = {
@@ -108,6 +122,7 @@ export type HydrationState = {
   postgates?: Postgates
   lists?: Lists
   listAggs?: ListAggs
+  listMemberships?: ListMembershipStates
   listViewers?: ListViewerStates
   listItems?: ListItems
   likes?: Likes
@@ -121,9 +136,11 @@ export type HydrationState = {
   labelers?: Labelers
   labelerViewers?: LabelerViewerStates
   labelerAggs?: LabelerAggs
-  knownFollowers?: KnownFollowers
+  knownFollowers?: KnownFollowersStates
+  activitySubscriptions?: ActivitySubscriptionStates
   bidirectionalBlocks?: BidirectionalBlocks
   verifications?: Verifications
+  bookmarks?: Bookmarks
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
@@ -142,17 +159,31 @@ export type FollowBlocks = HydrationMap<FollowBlock>
 
 export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
 
+// actor DID -> stash key -> bookmark
+export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
+
+/**
+ * Additional config passed from `ServerConfig` to the `Hydrator` instance.
+ * Values within this config object may be passed to other sub-hydrators.
+ */
+export type HydratorConfig = {
+  debugFieldAllowedDids: Set<string>
+}
+
 export class Hydrator {
   actor: ActorHydrator
   feed: FeedHydrator
   graph: GraphHydrator
   label: LabelHydrator
   serviceLabelers: Set<string>
+  config: HydratorConfig
 
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
+    config: HydratorConfig,
   ) {
+    this.config = config
     this.actor = new ActorHydrator(dataplane)
     this.feed = new FeedHydrator(dataplane)
     this.graph = new GraphHydrator(dataplane)
@@ -175,12 +206,12 @@ export class Hydrator {
       viewer,
     )
     const listUris: string[] = []
-    profileViewers?.forEach((item) => {
+    profileViewers.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
     })
     const listState = await this.hydrateListsBasic(listUris, ctx)
     // if a list no longer exists or is not a mod list, then remove from viewer state
-    profileViewers?.forEach((item) => {
+    profileViewers.forEach((item) => {
       removeNonModListsFromProfileViewer(item, listState)
     })
 
@@ -197,7 +228,12 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
+    /**
+     * Special case here, we want to include takedowns in special cases, like
+     * `getProfile`, since we throw client-facing errors later in the pipeline.
+     */
+    const includeTakedowns =
+      ctx.includeTakedowns || ctx.overrideIncludeTakedownsForActor
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, {
         includeTakedowns,
@@ -239,14 +275,26 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    let knownFollowers: KnownFollowers = new HydrationMap()
-
+    let knownFollowers: KnownFollowersStates = new HydrationMap()
     try {
       knownFollowers = await this.actor.getKnownFollowers(dids, ctx.viewer)
     } catch (err) {
       hydrationLogger.error(
         { err },
         'Failed to get known followers for profiles',
+      )
+    }
+
+    let activitySubscriptions: ActivitySubscriptionStates = new HydrationMap()
+    try {
+      activitySubscriptions = await this.actor.getActivitySubscriptions(
+        dids,
+        ctx.viewer,
+      )
+    } catch (err) {
+      hydrationLogger.error(
+        { err },
+        'Failed to get activity subscriptions state for profiles',
       )
     }
 
@@ -281,6 +329,7 @@ export class Hydrator {
     return mergeManyStates(state, starterPackState, {
       profileAggs,
       knownFollowers,
+      activitySubscriptions,
       ctx,
       bidirectionalBlocks,
     })
@@ -348,6 +397,45 @@ export class Hydrator {
     return mergeStates(profileState, { listItems, ctx })
   }
 
+  async hydrateListsMembership(
+    uris: string[],
+    did: string,
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const [
+      actorsHydrationState,
+      listsHydrationState,
+      { listitemUris: listItemUris },
+    ] = await Promise.all([
+      this.hydrateProfiles([did], ctx),
+      this.hydrateLists(uris, ctx),
+      this.dataplane.getListMembership({
+        actorDid: did,
+        listUris: uris,
+      }),
+    ])
+
+    // mapping uri -> did -> { actorListItemUri }
+    const listMemberships = new HydrationMap(
+      uris.map((uri, i) => {
+        const listItemUri = listItemUris[i]
+        return [
+          uri,
+          new HydrationMap<ListMembershipState>([
+            listItemUri
+              ? [did, { actorListItemUri: listItemUri }]
+              : [did, null],
+          ]),
+        ]
+      }),
+    )
+
+    return mergeManyStates(actorsHydrationState, listsHydrationState, {
+      listMemberships,
+      ctx,
+    })
+  }
+
   // app.bsky.feed.defs#postView
   // - post
   //   - profile
@@ -365,6 +453,7 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
     state: HydrationState = {},
+    options: Pick<GetPostsHydrationOptions, 'processDynamicTagsForView'> = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
 
@@ -381,6 +470,10 @@ export class Hydrator {
       uris,
       ctx.includeTakedowns,
       state.posts,
+      ctx.viewer,
+      {
+        processDynamicTagsForView: options.processDynamicTagsForView,
+      },
     )
     addPostsToHydrationState(postsLayer0)
 
@@ -652,7 +745,13 @@ export class Hydrator {
     refs: ItemRef[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const postsState = await this.hydratePosts(refs, ctx)
+    const postsState = await this.hydratePosts(refs, ctx, undefined, {
+      processDynamicTagsForView: ctx.featureGates.get(
+        FeatureGateID.ThreadsV2ReplyRankingExploration,
+      )
+        ? 'thread'
+        : undefined,
+    })
 
     const { posts } = postsState
     const postsList = posts ? Array.from(posts.entries()) : []
@@ -933,6 +1032,46 @@ export class Hydrator {
     })
   }
 
+  async hydrateBookmarks(
+    bookmarkInfos: BookmarkInfo[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
+    const viewer = ctx.viewer
+    if (!viewer) return {}
+    const bookmarksRes = await this.dataplane.getBookmarksByActorAndSubjects({
+      actorDid: viewer,
+      uris: bookmarkInfos.map((b) => b.subject),
+    })
+
+    type BookmarkWithRef = Bookmark & { ref: RecordRef }
+    const bookmarks: BookmarkWithRef[] = bookmarksRes.bookmarks.filter(
+      (bookmark): bookmark is BookmarkWithRef => !!bookmark.ref?.key,
+    )
+    // mapping DID -> stash key -> bookmark
+    const bookmarksMap = new HydrationMap([
+      [
+        viewer,
+        new HydrationMap<Bookmark>(
+          bookmarks.map((bookmark) => {
+            const {
+              ref: { key },
+            } = bookmark
+            return [key, bookmark]
+          }),
+        ),
+      ],
+    ])
+
+    // @NOTE: The `createBookmark` endpoint limits bookmarks to be of posts,
+    // so we can assume currently all subjects are posts.
+    const postsState = await this.hydratePosts(
+      bookmarks.map((bookmark) => ({ uri: bookmark.subjectUri })),
+      ctx,
+    )
+
+    return mergeStates(postsState, { bookmarks: bookmarksMap })
+  }
+
   // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
   async hydrateFollows(
     uris: string[],
@@ -1130,6 +1269,20 @@ export class Hydrator {
           uri,
         ) ?? undefined
       )
+    } else if (collection === ids.ComGermnetworkDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getGermDeclarations([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
+    } else if (collection === ids.AppBskyNotificationDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (
+          await this.actor.getNotificationDeclarations([uri], includeTakedowns)
+        ).get(uri) ?? undefined
+      )
     } else if (collection === ids.AppBskyActorStatus) {
       if (parsed.rkey !== 'self') return
       return (
@@ -1170,11 +1323,15 @@ export class Hydrator {
       dids: availableDids,
       redact: vals.labelers.redact,
     }
+    const includeDebugField =
+      !!vals.viewer && this.config.debugFieldAllowedDids.has(vals.viewer)
     return new HydrateCtx({
       labelers: availableLabelers,
       viewer: vals.viewer,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
+      includeDebugField,
+      featureGates: vals.featureGates,
     })
   }
 
@@ -1182,7 +1339,7 @@ export class Hydrator {
     const uri = new AtUri(uriStr)
     const [did] = await this.actor.getDids([uri.host])
     if (!did) return uriStr
-    uri.host = did
+    uri.hostname = did
     return uri.toString()
   }
 }
@@ -1334,6 +1491,10 @@ export const mergeStates = (
     postgates: mergeMaps(stateA.postgates, stateB.postgates),
     lists: mergeMaps(stateA.lists, stateB.lists),
     listAggs: mergeMaps(stateA.listAggs, stateB.listAggs),
+    listMemberships: mergeNestedMaps(
+      stateA.listMemberships,
+      stateB.listMemberships,
+    ),
     listViewers: mergeMaps(stateA.listViewers, stateB.listViewers),
     listItems: mergeMaps(stateA.listItems, stateB.listItems),
     likes: mergeMaps(stateA.likes, stateB.likes),
@@ -1348,11 +1509,16 @@ export const mergeStates = (
     labelerAggs: mergeMaps(stateA.labelerAggs, stateB.labelerAggs),
     labelerViewers: mergeMaps(stateA.labelerViewers, stateB.labelerViewers),
     knownFollowers: mergeMaps(stateA.knownFollowers, stateB.knownFollowers),
+    activitySubscriptions: mergeMaps(
+      stateA.activitySubscriptions,
+      stateB.activitySubscriptions,
+    ),
     bidirectionalBlocks: mergeNestedMaps(
       stateA.bidirectionalBlocks,
       stateB.bidirectionalBlocks,
     ),
     verifications: mergeMaps(stateA.verifications, stateB.verifications),
+    bookmarks: mergeNestedMaps(stateA.bookmarks, stateB.bookmarks),
   }
 }
 

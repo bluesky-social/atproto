@@ -1,5 +1,7 @@
 export const INVALID_HANDLE = 'handle.invalid'
 
+export type HandleString = `${string}.${string}`
+
 // Currently these are registration-time restrictions, not protocol-level
 // restrictions. We have a couple accounts in the wild that we need to clean up
 // before hard-disallow.
@@ -37,7 +39,9 @@ export const DISALLOWED_TLDS = [
 //  - does not validate whether domain or TLD exists, or is a reserved or
 //    special TLD (eg, .onion or .local)
 //  - does not validate punycode
-export const ensureValidHandle = (handle: string): void => {
+export function ensureValidHandle(
+  handle: string,
+): asserts handle is HandleString {
   // check that all chars are boring ASCII
   if (!/^[a-zA-Z0-9.-]*$/.test(handle)) {
     throw new InvalidHandleError(
@@ -74,44 +78,41 @@ export const ensureValidHandle = (handle: string): void => {
 }
 
 // simple regex translation of above constraints
-export const ensureValidHandleRegex = (handle: string): void => {
-  if (
-    !/^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/.test(
-      handle,
-    )
-  ) {
-    throw new InvalidHandleError("Handle didn't validate via regex")
-  }
+const HANDLE_REGEX =
+  /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
+
+export function ensureValidHandleRegex(
+  handle: string,
+): asserts handle is HandleString {
   if (handle.length > 253) {
     throw new InvalidHandleError('Handle is too long (253 chars max)')
   }
+  if (!HANDLE_REGEX.test(handle)) {
+    throw new InvalidHandleError("Handle didn't validate via regex")
+  }
 }
 
-export const normalizeHandle = (handle: string): string => {
+export function normalizeHandle(handle: string): string {
   return handle.toLowerCase()
 }
 
-export const normalizeAndEnsureValidHandle = (handle: string): string => {
+export function normalizeAndEnsureValidHandle(handle: string): HandleString {
   const normalized = normalizeHandle(handle)
   ensureValidHandle(normalized)
   return normalized
 }
 
-export const isValidHandle = (handle: string): boolean => {
-  try {
-    ensureValidHandle(handle)
-  } catch (err) {
-    if (err instanceof InvalidHandleError) {
-      return false
-    }
-    throw err
-  }
-
-  return true
+export function isValidHandle(handle: string): handle is HandleString {
+  return handle.length <= 253 && HANDLE_REGEX.test(handle)
 }
 
-export const isValidTld = (handle: string): boolean => {
-  return !DISALLOWED_TLDS.some((domain) => handle.endsWith(domain))
+export function isValidTld(handle: string): boolean {
+  for (const tld of DISALLOWED_TLDS) {
+    if (handle.endsWith(tld)) {
+      return false
+    }
+  }
+  return true
 }
 
 export class InvalidHandleError extends Error {}
