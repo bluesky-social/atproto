@@ -8,6 +8,7 @@ import {
   NsidString,
   RecordKeyString,
   TidString,
+  UriString,
   isValidAtIdentifier as isValidAtId,
   isValidAtUri,
   isValidDatetime,
@@ -16,6 +17,7 @@ import {
   isValidNsid,
   isValidRecordKey,
   isValidTid,
+  isValidUri,
 } from '@atproto/syntax'
 import { CheckFn } from '../util/assertion-util.js'
 
@@ -51,9 +53,8 @@ export const isRecordKeyString: CheckFn<RecordKeyString> = isValidRecordKey
 export type { TidString }
 export const isTidString: CheckFn<TidString> = isValidTid
 
-export type UriString = `${string}:${string}`
-export const isUriString = ((v) =>
-  /^\w+:(?:\/\/)?[^\s/][^\s]*$/.test(v)) as CheckFn<UriString>
+export type { UriString }
+export const isUriString: CheckFn<UriString> = isValidUri
 
 // String format registry (maps format names to their types and type guards)
 
