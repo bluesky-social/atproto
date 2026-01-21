@@ -39,20 +39,20 @@ export const DISALLOWED_TLDS = [
 //  - does not validate whether domain or TLD exists, or is a reserved or
 //    special TLD (eg, .onion or .local)
 //  - does not validate punycode
-export function ensureValidHandle(
-  handle: string,
-): asserts handle is HandleString {
+export function ensureValidHandle<I extends string>(
+  input: I,
+): asserts input is I & HandleString {
   // check that all chars are boring ASCII
-  if (!/^[a-zA-Z0-9.-]*$/.test(handle)) {
+  if (!/^[a-zA-Z0-9.-]*$/.test(input)) {
     throw new InvalidHandleError(
       'Disallowed characters in handle (ASCII letters, digits, dashes, periods only)',
     )
   }
 
-  if (handle.length > 253) {
+  if (input.length > 253) {
     throw new InvalidHandleError('Handle is too long (253 chars max)')
   }
-  const labels = handle.split('.')
+  const labels = input.split('.')
   if (labels.length < 2) {
     throw new InvalidHandleError('Handle domain needs at least two parts')
   }
@@ -81,13 +81,13 @@ export function ensureValidHandle(
 const HANDLE_REGEX =
   /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/
 
-export function ensureValidHandleRegex(
-  handle: string,
-): asserts handle is HandleString {
-  if (handle.length > 253) {
+export function ensureValidHandleRegex<I extends string>(
+  input: I,
+): asserts input is I & HandleString {
+  if (input.length > 253) {
     throw new InvalidHandleError('Handle is too long (253 chars max)')
   }
-  if (!HANDLE_REGEX.test(handle)) {
+  if (!HANDLE_REGEX.test(input)) {
     throw new InvalidHandleError("Handle didn't validate via regex")
   }
 }
@@ -102,8 +102,10 @@ export function normalizeAndEnsureValidHandle(handle: string): HandleString {
   return normalized
 }
 
-export function isValidHandle(handle: string): handle is HandleString {
-  return handle.length <= 253 && HANDLE_REGEX.test(handle)
+export function isValidHandle<I extends string>(
+  input: I,
+): input is I & HandleString {
+  return input.length <= 253 && HANDLE_REGEX.test(input)
 }
 
 export function isValidTld(handle: string): boolean {

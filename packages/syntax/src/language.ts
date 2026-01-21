@@ -34,6 +34,6 @@ export function parseLanguageString(input: string): LanguageTag | null {
  *
  * @see {@link https://www.rfc-editor.org/rfc/rfc5646.html#section-2.1}
  */
-export function isLanguageString(input: string): boolean {
+export function isValidLanguage(input: string): boolean {
   return BCP47_REGEXP.test(input)
 }
