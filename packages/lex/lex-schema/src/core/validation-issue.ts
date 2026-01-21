@@ -44,7 +44,7 @@ export class IssueInvalidFormat extends Issue {
   }
 
   toString() {
-    return `Invalid ${this.formatDescription} format${this.message ? ` (${this.message})` : ''}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+    return `Invalid ${this.formatDescription}${this.message ? ` (${this.message})` : ''}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
   }
 
   toJSON() {

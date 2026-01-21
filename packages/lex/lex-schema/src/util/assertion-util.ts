@@ -23,18 +23,6 @@ export function createAssertFunction<T extends string>(
 export function createCastFunction<T>(assertFn: AssertFn<T>): CastFn<T> {
   return <I extends string>(input: I) => {
     assertFn(input)
-    return input as I & T
-  }
-}
-
-/*@__NO_SIDE_EFFECTS__ */
-export function createCheckFunction<T>(assertFn: AssertFn<T>): CheckFn<T> {
-  return <I extends string>(input: I): input is I & T => {
-    try {
-      assertFn(input)
-      return true
-    } catch {
-      return false
-    }
+    return input
   }
 }

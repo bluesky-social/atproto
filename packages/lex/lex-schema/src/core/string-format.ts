@@ -1,4 +1,8 @@
-import { ensureValidCidString, isLanguageString } from '@atproto/lex-data'
+import {
+  ensureValidCidString,
+  isLanguageString,
+  validateCidString,
+} from '@atproto/lex-data'
 import {
   AtIdentifierString,
   AtUriString,
@@ -16,6 +20,14 @@ import {
   ensureValidNsid,
   ensureValidRecordKey,
   ensureValidTid,
+  isValidAtIdentifier,
+  isValidAtUri,
+  isValidDatetime,
+  isValidDid,
+  isValidHandle,
+  isValidNsid,
+  isValidRecordKey,
+  isValidTid,
 } from '@atproto/syntax'
 import {
   AssertFn,
@@ -23,7 +35,6 @@ import {
   CheckFn,
   createAssertFunction,
   createCastFunction,
-  createCheckFunction,
 } from '../util/assertion-util.js'
 
 // Format utilities missing from @atproto/syntax
@@ -63,7 +74,7 @@ export const assertDatetimeString: AssertFn<DatetimeString> =
 export const assertDidString: AssertFn<DidString> = ensureValidDid
 export const assertHandleString: AssertFn<HandleString> = ensureValidHandle
 export const assertLanguageString: AssertFn<LanguageString> =
-  createAssertFunction<LanguageString>(
+  /*#__PURE__*/ createAssertFunction<LanguageString>(
     isLanguageString,
     'Invalid BCP 47 string',
   )
@@ -72,50 +83,44 @@ export const assertRecordKeyString: AssertFn<RecordKeyString> =
   ensureValidRecordKey
 export const assertTidString: AssertFn<TidString> = ensureValidTid
 export const assertUriString: AssertFn<UriString> =
-  createAssertFunction<UriString>(isUriString, 'Invalid URI')
+  /*#__PURE__*/ createAssertFunction<UriString>(isUriString, 'Invalid URI')
 
 export const asAtIdentifierString: CastFn<AtIdentifierString> =
   /*#__PURE__*/ createCastFunction(assertAtIdentifierString)
 export const asAtUriString: CastFn<AtUriString> =
-  /*#__PURE__*/ createCastFunction(ensureValidAtUri)
+  /*#__PURE__*/ createCastFunction(assertAtUriString)
 export const asCidString: CastFn<CidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidCidString)
+  /*#__PURE__*/ createCastFunction(assertCidString)
 export const asDatetimeString: CastFn<DatetimeString> =
-  /*#__PURE__*/ createCastFunction(ensureValidDatetime)
+  /*#__PURE__*/ createCastFunction(assertCidString)
 export const asDidString: CastFn<DidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidDid)
+  /*#__PURE__*/ createCastFunction(assertDidString)
 export const asHandleString: CastFn<HandleString> =
-  /*#__PURE__*/ createCastFunction(ensureValidHandle)
+  /*#__PURE__*/ createCastFunction(assertHandleString)
 export const asLanguageString: CastFn<LanguageString> =
   /*#__PURE__*/ createCastFunction(assertLanguageString)
 export const asNsidString: CastFn<NsidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidNsid)
+  /*#__PURE__*/ createCastFunction(assertNsidString)
 export const asRecordKeyString: CastFn<RecordKeyString> =
-  /*#__PURE__*/ createCastFunction(ensureValidRecordKey)
+  /*#__PURE__*/ createCastFunction(assertRecordKeyString)
 export const asTidString: CastFn<TidString> =
-  /*#__PURE__*/ createCastFunction(ensureValidTid)
+  /*#__PURE__*/ createCastFunction(assertTidString)
 export const asUriString: CastFn<UriString> =
   /*#__PURE__*/ createCastFunction(assertUriString)
 
 export { isLanguageString }
 export const isAtIdentifierString: CheckFn<AtIdentifierString> =
-  /*#__PURE__*/ createCheckFunction(assertAtIdentifierString)
-export const isAtUriString: CheckFn<AtUriString> =
-  /*#__PURE__*/ createCheckFunction(assertAtIdentifierString)
-export const isCidString: CheckFn<CidString> =
-  /*#__PURE__*/ createCheckFunction(assertCidString)
-export const isDatetimeString: CheckFn<DatetimeString> =
-  /*#__PURE__*/ createCheckFunction(assertDatetimeString)
-export const isDidString: CheckFn<DidString> =
-  /*#__PURE__*/ createCheckFunction(assertDidString)
-export const isHandleString: CheckFn<HandleString> =
-  /*#__PURE__*/ createCheckFunction(assertHandleString)
-export const isNsidString: CheckFn<NsidString> =
-  /*#__PURE__*/ createCheckFunction(assertNsidString)
-export const isRecordKeyString: CheckFn<RecordKeyString> =
-  /*#__PURE__*/ createCheckFunction(assertRecordKeyString)
-export const isTidString: CheckFn<TidString> =
-  /*#__PURE__*/ createCheckFunction(assertTidString)
+  isValidAtIdentifier
+export const isAtUriString: CheckFn<AtUriString> = isValidAtUri
+export const isCidString: CheckFn<CidString> = <I extends string>(
+  input: I,
+): input is I & CidString => validateCidString(input)
+export const isDatetimeString: CheckFn<DatetimeString> = isValidDatetime
+export const isDidString: CheckFn<DidString> = isValidDid
+export const isHandleString: CheckFn<HandleString> = isValidHandle
+export const isNsidString: CheckFn<NsidString> = isValidNsid
+export const isRecordKeyString: CheckFn<RecordKeyString> = isValidRecordKey
+export const isTidString: CheckFn<TidString> = isValidTid
 
 // String formatting types and utilities
 
@@ -154,27 +159,33 @@ export type InferStringFormat<F> =
                 : // LanguageString | CidString | TidString | RecordKeyString
                   string
 
-const formatters = /*#__PURE__*/ new Map<StringFormat, (str: string) => void>([
-  ['at-identifier', assertAtIdentifierString],
-  ['at-uri', assertAtUriString],
-  ['cid', assertCidString],
-  ['datetime', assertDatetimeString],
-  ['did', assertDidString],
-  ['handle', assertHandleString],
-  ['language', assertLanguageString],
-  ['nsid', assertNsidString],
-  ['record-key', assertRecordKeyString],
-  ['tid', assertTidString],
-  ['uri', assertUriString],
-] as const)
+const checkers = /*#__PURE__*/ Object.freeze<
+  Record<StringFormat, (str: string) => boolean>
+>({
+  // @ts-expect-error
+  __proto__: null,
+
+  'at-identifier': isAtIdentifierString,
+  'at-uri': isAtUriString,
+  cid: isCidString,
+  datetime: isDatetimeString,
+  did: isDidString,
+  handle: isHandleString,
+  language: isLanguageString,
+  nsid: isNsidString,
+  'record-key': isRecordKeyString,
+  tid: isTidString,
+  uri: isUriString,
+})
 
 /*@__NO_SIDE_EFFECTS__*/
-export function assertStringFormat<F extends StringFormat>(
-  input: string,
+export function checkStringFormat<I extends string, F extends StringFormat>(
+  input: I,
   format: F,
-): asserts input is InferStringFormat<F> {
-  const assertFn = formatters.get(format)
-  if (assertFn) assertFn(input)
+): input is I & InferStringFormat<F> {
+  const checkFn = checkers[format]
   // Fool-proof
-  else throw new Error(`Unknown string format: ${format}`)
+  if (!checkFn) throw new TypeError(`Unknown string format: ${format}`)
+
+  return checkFn(input)
 }
