@@ -97,4 +97,96 @@ describe('Record resolution', () => {
       }),
     ).rejects.toThrow('Malformed record proof')
   })
+
+  it('does not resolve record with missing signing key.', async () => {
+    const post = await sc.post(sc.dids.alice, 'post5')
+    await network.pds.ctx.plcClient.updateData(
+      sc.dids.alice,
+      network.pds.ctx.plcRotationKey,
+      (doc) => {
+        doc.verificationMethods = {
+          not_atproto: doc.verificationMethods.atproto,
+        }
+        return doc
+      },
+    )
+    await expect(
+      resolveRecord(post.ref.uri, {
+        forceRefresh: true,
+      }),
+    ).rejects.toThrow('Incomplete DID identity data: missing signing key')
+    // reset alice's key
+    await network.pds.ctx.plcClient.updateData(
+      sc.dids.alice,
+      network.pds.ctx.plcRotationKey,
+      (doc) => {
+        doc.verificationMethods = {
+          atproto: doc.verificationMethods.not_atproto,
+        }
+        return doc
+      },
+    )
+  })
+
+  it('does not resolve record with missing pds.', async () => {
+    const post = await sc.post(sc.dids.alice, 'post6')
+    await network.pds.ctx.plcClient.updateData(
+      sc.dids.alice,
+      network.pds.ctx.plcRotationKey,
+      (doc) => {
+        doc.services = {
+          not_atproto_pds: doc.services.atproto_pds,
+        }
+        return doc
+      },
+    )
+    await expect(
+      resolveRecord(post.ref.uri, {
+        forceRefresh: true,
+      }),
+    ).rejects.toThrow('Incomplete DID identity data: missing pds')
+    // reset alice's pds
+    await network.pds.ctx.plcClient.updateData(
+      sc.dids.alice,
+      network.pds.ctx.plcRotationKey,
+      (doc) => {
+        doc.services = {
+          atproto_pds: doc.services.not_atproto_pds,
+        }
+        return doc
+      },
+    )
+  })
+
+  it('resolves record despite missing at:// handle.', async () => {
+    const post = await sc.post(sc.dids.alice, 'post7')
+    await network.pds.ctx.plcClient.updateData(
+      sc.dids.alice,
+      network.pds.ctx.plcRotationKey,
+      (doc) => {
+        doc.alsoKnownAs = doc.alsoKnownAs.map((aka) =>
+          aka.replace('at://', 'notat://'),
+        )
+        return doc
+      },
+    )
+    const result = await resolveRecord(post.ref.uriStr, {
+      forceRefresh: true,
+    })
+    expect(result.commit.did).toEqual(sc.dids.alice)
+    expect(result.cid.toString()).toEqual(post.ref.cidStr)
+    expect(result.uri.toString()).toEqual(post.ref.uriStr)
+    expect(result.record.text).toEqual('post7')
+    // reset alice's handle
+    await network.pds.ctx.plcClient.updateData(
+      sc.dids.alice,
+      network.pds.ctx.plcRotationKey,
+      (doc) => {
+        doc.alsoKnownAs = doc.alsoKnownAs.map((aka) =>
+          aka.replace('notat://', 'at://'),
+        )
+        return doc
+      },
+    )
+  })
 })
