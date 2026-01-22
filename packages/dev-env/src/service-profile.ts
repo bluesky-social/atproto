@@ -1,4 +1,5 @@
 import { AtpAgent } from '@atproto/api'
+import { DidString, isDidString } from '@atproto/lex'
 import { TestPds } from './pds'
 
 export type ServiceUserDetails = {
@@ -20,8 +21,12 @@ export class ServiceProfile {
     protected userDetails: ServiceUserDetails,
   ) {}
 
-  get did() {
-    return this.agent.assertDid
+  get did(): DidString {
+    const { assertDid } = this.agent
+    if (!isDidString(assertDid)) {
+      throw new Error('Agent is not authenticated')
+    }
+    return assertDid
   }
 
   async migrateTo(newPds: TestPds, options: ServiceMigrationOptions = {}) {

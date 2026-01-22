@@ -134,7 +134,6 @@ export class LexiconResolutionError extends Error {
 
 async function getDidAuthority(nsid: NSID, options: ResolveLexiconOptions) {
   if (options.didAuthority) {
-    l.assertDidString(options.didAuthority)
     return options.didAuthority
   }
   const did = await resolveLexiconDidAuthority(nsid)

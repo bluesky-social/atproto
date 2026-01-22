@@ -1311,7 +1311,9 @@ export class Hydrator {
     }
   }
 
-  async createContext(vals: HydrateCtxVals) {
+  async createContext<V extends HydrateCtxVals>(
+    vals: V,
+  ): Promise<HydrateCtx & { viewer: V['viewer'] }> {
     // ensures we're only apply labelers that exist and are not taken down
     const labelers = vals.labelers.dids
     const nonServiceLabelers = labelers.filter(

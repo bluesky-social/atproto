@@ -37,14 +37,13 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { headers: resultHeaders, ...result } =
-        await getSuggestedFollowsByActor(
-          { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
-          ctx,
-        )
-      const responseHeaders = noUndefinedVals({
-        'content-language': resultHeaders?.['content-language'],
-      })
+      const { contentLanguage, ...result } = await getSuggestedFollowsByActor(
+        { ...params, hydrateCtx, headers },
+        ctx,
+      )
+      const responseHeaders = contentLanguage
+        ? { 'content-language': contentLanguage }
+        : undefined
       return {
         encoding: 'application/json',
         body: result,
@@ -66,20 +65,22 @@ const skeleton = async (
     throw new InvalidRequestError('Actor not found')
   }
 
-  if (ctx.suggestionsAgent) {
-    const res =
-      await ctx.suggestionsAgent.api.app.bsky.unspecced.getSuggestionsSkeleton(
-        {
+  if (ctx.suggestionsClient) {
+    const res = await ctx.suggestionsClient.xrpc(
+      app.bsky.unspecced.getSuggestionsSkeleton,
+      {
+        params: {
           viewer: params.hydrateCtx.viewer ?? undefined,
           relativeToDid,
         },
-        { headers: params.headers },
-      )
+        headers: params.headers,
+      },
+    )
     return {
-      isFallback: !res.data.relativeToDid,
-      suggestedDids: res.data.actors.map((a) => a.did),
-      recId: res.data.recId,
-      headers: res.headers,
+      isFallback: !res.body.relativeToDid,
+      suggestedDids: res.body.actors.map((a) => a.did),
+      recId: res.body.recId,
+      contentLanguage: res.headers.get('content-language') ?? undefined,
     }
   } else {
     const { dids } = await ctx.hydrator.dataplane.getFollowSuggestions({
@@ -88,7 +89,7 @@ const skeleton = async (
     })
     return {
       isFallback: true,
-      suggestedDids: dids,
+      suggestedDids: dids as DidString[],
     }
   }
 }
@@ -117,7 +118,7 @@ const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, hydration, skeleton } = input
-  const { suggestedDids, headers } = skeleton
+  const { suggestedDids, contentLanguage } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
     ctx.views.profile(did, hydration),
   )
@@ -125,7 +126,7 @@ const presentation = (
     isFallback: skeleton.isFallback,
     suggestions,
     recId: skeleton.recId,
-    headers,
+    contentLanguage,
   }
 }
 
@@ -145,5 +146,5 @@ type SkeletonState = {
   isFallback: boolean
   suggestedDids: DidString[]
   recId?: number
-  headers?: HeadersMap
+  contentLanguage?: string
 }

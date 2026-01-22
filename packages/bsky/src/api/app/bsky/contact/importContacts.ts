@@ -18,7 +18,6 @@ import { ImportContactsMatch } from '../../../../proto/rolodex_pb'
 import { RolodexClient } from '../../../../rolodex'
 import { Views } from '../../../../views'
 import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
-type InputSchema = app.bsky.contact.importContacts.InputBody
 
 export default function (server: Server, ctx: AppContext) {
   const importContacts = createPipeline(
@@ -39,10 +38,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await importContacts(
-        { ...input.body, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await importContacts({ ...input.body, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -53,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const skeleton = async (
-  input: SkeletonFnInput<Context, Params>,
+  input: SkeletonFnInput<Context, Input>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actor = params.hydrateCtx.viewer
@@ -71,17 +67,17 @@ const skeleton = async (
 }
 
 const hydration = async (
-  input: HydrationFnInput<Context, Params, SkeletonState>,
+  input: HydrationFnInput<Context, Input, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
   const { matches } = skeleton
-  const subjects = matches.map((m) => m.subject)
+  const subjects = matches.map((m) => m.subject as DidString)
   return ctx.hydrator.hydrateProfiles(subjects, params.hydrateCtx)
 }
 
 const presentation = (input: {
   ctx: Context
-  params: Params
+  params: Input
   skeleton: SkeletonState
   hydration: HydrationState
 }) => {
@@ -113,7 +109,7 @@ type Context = {
   views: Views
 }
 
-type Params = InputSchema & {
+type Input = app.bsky.contact.importContacts.InputBody & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 

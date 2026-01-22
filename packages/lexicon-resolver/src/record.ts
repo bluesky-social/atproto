@@ -146,11 +146,10 @@ async function getDidFromUri(
   }
 
   const resolved = await idResolver.handle.resolve(uri.host)
-  if (!resolved) {
+  if (!resolved || !l.isDidString(resolved)) {
     throw new RecordResolutionError('Could not resolve handle found in AT-URI')
   }
 
-  l.assertDidString(resolved)
   return resolved
 }
 

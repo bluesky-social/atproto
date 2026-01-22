@@ -234,7 +234,7 @@ class SelfThreadTracker {
     })
   }
 
-  ok(uri: string, loop = new Set<string>()) {
+  ok(uri: AtUriString, loop = new Set<AtUriString>()) {
     // if we've already checked this uri, pull from the cache
     if (this.cache.has(uri)) {
       return this.cache.get(uri) ?? false
@@ -252,7 +252,7 @@ class SelfThreadTracker {
     return result
   }
 
-  private _ok(uri: string, loop: Set<string>): boolean {
+  private _ok(uri: AtUriString, loop: Set<AtUriString>): boolean {
     // must be in the feed to be in a self-thread
     if (!this.feedUris.has(uri)) {
       return false
