@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
   server.app.bsky.unspecced.getTrendingTopics({
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const viewer = auth.credentials.iss ?? null
+      const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const headers = noUndefinedVals({
