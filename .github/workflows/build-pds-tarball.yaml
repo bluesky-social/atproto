@@ -28,7 +28,7 @@ jobs:
   build-tarball:
     runs-on: ubuntu-latest
     outputs:
-      tarball_url: ${{ steps.release.outputs.tarball_url }}
+      tarball_url: ${{ steps.tarball.outputs.tarball_url }}
       version: ${{ steps.version.outputs.version }}
       short_sha: ${{ steps.version.outputs.short_sha }}
 
@@ -103,9 +103,6 @@ jobs:
           echo "| Version | ${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Commit | ${{ steps.version.outputs.short_sha }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Tarball | [${{ steps.pack.outputs.tarball_name }}](${{ steps.tarball.outputs.tarball_url }}) |" >> $GITHUB_STEP_SUMMARY
-
-    outputs:
-      tarball_url: ${{ steps.tarball.outputs.tarball_url }}
 
   trigger-pds:
     needs: build-tarball
