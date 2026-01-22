@@ -10,6 +10,7 @@ import {
   ensureValidRecordKey,
   isValidNsid,
   isValidTid,
+  isValidUri,
 } from '@atproto/syntax'
 import { ValidationError, ValidationResult } from '../types'
 
@@ -30,8 +31,7 @@ export function datetime(path: string, value: string): ValidationResult {
 }
 
 export function uri(path: string, value: string): ValidationResult {
-  const isUri = value.match(/^\w+:(?:\/\/)?[^\s/][^\s]*$/) !== null
-  if (!isUri) {
+  if (!isValidUri(value)) {
     return {
       success: false,
       error: new ValidationError(`${path} must be a uri`),

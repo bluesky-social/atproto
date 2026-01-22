@@ -1101,6 +1101,80 @@ export class GetNotificationDeclarationRecordsResponse extends Message<GetNotifi
 }
 
 /**
+ * @generated from message bsky.GetGermDeclarationRecordsRequest
+ */
+export class GetGermDeclarationRecordsRequest extends Message<GetGermDeclarationRecordsRequest> {
+  /**
+   * @generated from field: repeated string uris = 1;
+   */
+  uris: string[] = [];
+
+  constructor(data?: PartialMessage<GetGermDeclarationRecordsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetGermDeclarationRecordsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "uris", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetGermDeclarationRecordsRequest {
+    return new GetGermDeclarationRecordsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsRequest {
+    return new GetGermDeclarationRecordsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsRequest {
+    return new GetGermDeclarationRecordsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetGermDeclarationRecordsRequest | PlainMessage<GetGermDeclarationRecordsRequest> | undefined, b: GetGermDeclarationRecordsRequest | PlainMessage<GetGermDeclarationRecordsRequest> | undefined): boolean {
+    return proto3.util.equals(GetGermDeclarationRecordsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetGermDeclarationRecordsResponse
+ */
+export class GetGermDeclarationRecordsResponse extends Message<GetGermDeclarationRecordsResponse> {
+  /**
+   * @generated from field: repeated bsky.Record records = 1;
+   */
+  records: Record[] = [];
+
+  constructor(data?: PartialMessage<GetGermDeclarationRecordsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetGermDeclarationRecordsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "records", kind: "message", T: Record, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetGermDeclarationRecordsResponse {
+    return new GetGermDeclarationRecordsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsResponse {
+    return new GetGermDeclarationRecordsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetGermDeclarationRecordsResponse {
+    return new GetGermDeclarationRecordsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetGermDeclarationRecordsResponse | PlainMessage<GetGermDeclarationRecordsResponse> | undefined, b: GetGermDeclarationRecordsResponse | PlainMessage<GetGermDeclarationRecordsResponse> | undefined): boolean {
+    return proto3.util.equals(GetGermDeclarationRecordsResponse, a, b);
+  }
+}
+
+/**
  * @generated from message bsky.GetStatusRecordsRequest
  */
 export class GetStatusRecordsRequest extends Message<GetStatusRecordsRequest> {
@@ -3811,6 +3885,16 @@ export class ActorInfo extends Message<ActorInfo> {
    */
   ageAssuranceStatus?: AgeAssuranceStatus;
 
+  /**
+   * @generated from field: optional double reserved = 20;
+   */
+  reserved?: number;
+
+  /**
+   * @generated from field: bsky.Record germ_record = 21;
+   */
+  germRecord?: Record;
+
   constructor(data?: PartialMessage<ActorInfo>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3838,6 +3922,8 @@ export class ActorInfo extends Message<ActorInfo> {
     { no: 17, name: "status_record", kind: "message", T: Record },
     { no: 18, name: "allow_activity_subscriptions_from", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 19, name: "age_assurance_status", kind: "message", T: AgeAssuranceStatus, opt: true },
+    { no: 20, name: "reserved", kind: "scalar", T: 1 /* ScalarType.DOUBLE */, opt: true },
+    { no: 21, name: "germ_record", kind: "message", T: Record },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ActorInfo {

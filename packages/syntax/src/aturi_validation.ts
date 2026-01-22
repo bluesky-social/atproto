@@ -22,7 +22,9 @@ export type AtUriString =
 //      - rkey must have at least one char
 //      - regardless of path component, a fragment can follow  as "#" and then a JSON pointer (RFC-6901)
 
-export function ensureValidAtUri(input: string): asserts input is AtUriString {
+export function ensureValidAtUri<I extends string>(
+  input: I,
+): asserts input is I & AtUriString {
   const fragmentIndex = input.indexOf('#')
   if (fragmentIndex !== -1) {
     if (input.charCodeAt(fragmentIndex + 1) !== 47) {
@@ -105,12 +107,14 @@ export function ensureValidAtUri(input: string): asserts input is AtUriString {
   }
 }
 
-export function ensureValidAtUriRegex(uri: string): asserts uri is AtUriString {
+export function ensureValidAtUriRegex<I extends string>(
+  input: I,
+): asserts input is I & AtUriString {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints. whew!
   const aturiRegex =
     /^at:\/\/(?<authority>[a-zA-Z0-9._:%-]+)(\/(?<collection>[a-zA-Z0-9-.]+)(\/(?<rkey>[a-zA-Z0-9._~:@!$&%')(*+,;=-]+))?)?(#(?<fragment>\/[a-zA-Z0-9._~:@!$&%')(*+,;=\-[\]/\\]*))?$/
-  const rm = uri.match(aturiRegex)
+  const rm = input.match(aturiRegex)
   if (!rm || !rm.groups) {
     throw new Error("ATURI didn't validate via regex")
   }
@@ -130,7 +134,19 @@ export function ensureValidAtUriRegex(uri: string): asserts uri is AtUriString {
     throw new Error('ATURI collection path segment must be a valid NSID')
   }
 
-  if (uri.length > 8 * 1024) {
+  if (input.length > 8 * 1024) {
     throw new Error('ATURI is far too long')
   }
+}
+
+export function isValidAtUri<I extends string>(
+  input: I,
+): input is I & AtUriString {
+  try {
+    ensureValidAtUriRegex(input)
+  } catch {
+    return false
+  }
+
+  return true
 }

@@ -454,6 +454,9 @@ importers:
       '@atproto/lex-json':
         specifier: workspace:*
         version: link:../lex/lex-json
+      '@atproto/syntax':
+        specifier: workspace:*
+        version: link:../syntax
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -873,8 +876,8 @@ importers:
         specifier: workspace:*
         version: link:../lex-json
       cborg:
-        specifier: ^4.4.1
-        version: 4.4.1
+        specifier: ^4.5.8
+        version: 4.5.8
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
@@ -909,9 +912,6 @@ importers:
 
   packages/lex/lex-data:
     dependencies:
-      '@atproto/syntax':
-        specifier: workspace:*
-        version: link:../../syntax
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -2113,13 +2113,17 @@ importers:
         version: 5.8.2
 
   packages/syntax:
+    dependencies:
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
     devDependencies:
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/tap:
     dependencies:
@@ -10598,8 +10602,8 @@ packages:
     resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
     hasBin: true
 
-  /cborg@4.4.1:
-    resolution: {integrity: sha512-mJ6KJfhqHQm5A6nVWBsqUdhDUek2apbF7PhhETwZCJIrgX/xVuR0AIGoGbmAIC86WOwCZmRDaGMz2gOtcPntuw==}
+  /cborg@4.5.8:
+    resolution: {integrity: sha512-6/viltD51JklRhq4L7jC3zgy6gryuG5xfZ3kzpE+PravtyeQLeQmCYLREhQH7pWENg5pY4Yu/XCd6a7dKScVlw==}
     hasBin: true
     dev: true
 

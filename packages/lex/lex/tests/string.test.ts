@@ -273,9 +273,7 @@ describe('com.example.datetime', () => {
         $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
-    ).toThrow(
-      'Invalid datetime format (datetime did not parse as ISO 8601) at $.datetime (got "bad date")',
-    )
+    ).toThrow('Invalid datetime at $.datetime (got "bad date")')
   })
 })
 describe('com.example.uri', () => {
@@ -297,7 +295,7 @@ describe('com.example.uri', () => {
         $type: 'com.example.uri',
         uri: 'not a uri',
       }),
-    ).toThrow('Invalid uri format (Invalid URI) at $.uri (got "not a uri")')
+    ).toThrow('Invalid uri at $.uri (got "not a uri")')
   })
 })
 describe('com.example.atUri', () => {
@@ -311,9 +309,7 @@ describe('com.example.atUri', () => {
         $type: 'com.example.atUri',
         atUri: 'http://not-atproto.com',
       }),
-    ).toThrow(
-      'Invalid at-uri format (ATURI must start with "at://") at $.atUri (got "http://not-atproto.com")',
-    )
+    ).toThrow('Invalid at-uri at $.atUri (got "http://not-atproto.com")')
   })
 })
 describe('com.example.did', () => {
@@ -332,17 +328,13 @@ describe('com.example.did', () => {
         $type: 'com.example.did',
         did: 'bad did',
       }),
-    ).toThrow(
-      'Invalid DID format (DID requires "did:" prefix) at $.did (got "bad did")',
-    )
+    ).toThrow('Invalid DID at $.did (got "bad did")')
     expect(() =>
       com.example.did.$parse({
         $type: 'com.example.did',
         did: 'did:short',
       }),
-    ).toThrow(
-      'Invalid DID format (DID requires prefix, method, and method-specific content) at $.did (got "did:short")',
-    )
+    ).toThrow('Invalid DID at $.did (got "did:short")')
   })
 })
 describe('com.example.handle', () => {
@@ -361,17 +353,13 @@ describe('com.example.handle', () => {
         $type: 'com.example.handle',
         handle: 'bad handle',
       }),
-    ).toThrow(
-      'Invalid handle format (Disallowed characters in handle (ASCII letters, digits, dashes, periods only)) at $.handle (got "bad handle")',
-    )
+    ).toThrow('Invalid handle at $.handle (got "bad handle")')
     expect(() =>
       com.example.handle.$parse({
         $type: 'com.example.handle',
         handle: '-bad-.test',
       }),
-    ).toThrow(
-      'Invalid handle format (Handle parts can not start or end with hyphens) at $.handle (got "-bad-.test")',
-    )
+    ).toThrow('Invalid handle at $.handle (got "-bad-.test")')
   })
 })
 describe('com.example.atIdentifier', () => {
@@ -390,17 +378,13 @@ describe('com.example.atIdentifier', () => {
         $type: 'com.example.atIdentifier',
         atIdentifier: 'bad id',
       }),
-    ).toThrow(
-      'Invalid AT identifier format (Invalid DID or handle) at $.atIdentifier (got "bad id")',
-    )
+    ).toThrow('Invalid AT identifier at $.atIdentifier (got "bad id")')
     expect(() =>
       com.example.atIdentifier.$parse({
         $type: 'com.example.atIdentifier',
         atIdentifier: '-bad-.test',
       }),
-    ).toThrow(
-      'Invalid AT identifier format (Invalid DID or handle) at $.atIdentifier (got "-bad-.test")',
-    )
+    ).toThrow('Invalid AT identifier at $.atIdentifier (got "-bad-.test")')
   })
 })
 describe('com.example.nsid', () => {
@@ -419,17 +403,13 @@ describe('com.example.nsid', () => {
         $type: 'com.example.nsid',
         nsid: 'bad nsid',
       }),
-    ).toThrow(
-      'Invalid NSID format (Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)) at $.nsid (got "bad nsid")',
-    )
+    ).toThrow('Invalid NSID at $.nsid (got "bad nsid")')
     expect(() =>
       com.example.nsid.$parse({
         $type: 'com.example.nsid',
         nsid: 'com.bad-.foo',
       }),
-    ).toThrow(
-      'Invalid NSID format (NSID parts can not start or end with hyphen) at $.nsid (got "com.bad-.foo")',
-    )
+    ).toThrow('Invalid NSID at $.nsid (got "com.bad-.foo")')
   })
 })
 describe('com.example.cid', () => {
@@ -444,7 +424,7 @@ describe('com.example.cid', () => {
         cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
       }),
     ).toThrow(
-      'Invalid CID string format (Invalid CID string) at $.cid (got "abapsdofiuwrpoiasdfuaspdfoiu")',
+      'Invalid CID string at $.cid (got "abapsdofiuwrpoiasdfuaspdfoiu")',
     )
   })
 })
@@ -459,8 +439,6 @@ describe('com.example.language', () => {
         $type: 'com.example.language',
         language: 'not-a-language-',
       }),
-    ).toThrow(
-      'Invalid language format (Invalid BCP 47 string) at $.language (got "not-a-language-")',
-    )
+    ).toThrow('Invalid language at $.language (got "not-a-language-")')
   })
 })
