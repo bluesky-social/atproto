@@ -8,7 +8,7 @@ import {
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getOnboardingSuggestedStarterPacks'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -37,11 +37,10 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getOnboardingSuggestedStarterPacks(
+      const result = await getOnboardingSuggestedStarterPacks(
         {
           ...params,
-          viewer: viewer ?? undefined,
-          hydrateCtx: hydrateCtx.copy({ viewer }),
+          hydrateCtx,
           headers,
         },
         ctx,
@@ -61,7 +60,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
       await ctx.topicsAgent.app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton(
         {
           limit: params.limit,
-          viewer: params.viewer,
+          viewer: params.hydrateCtx.viewer ?? undefined,
         },
         {
           headers: params.headers,
@@ -90,8 +89,9 @@ const hydration = async (
   }
   dids = dedupeStrs(dids)
   const pairs: Map<string, string[]> = new Map()
-  if (params.viewer) {
-    pairs.set(params.viewer, dids)
+  const viewer = params.hydrateCtx.viewer
+  if (viewer) {
+    pairs.set(viewer, dids)
   }
   const [starterPacksState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateStarterPacks(skeleton.starterPacks, params.hydrateCtx),
@@ -103,12 +103,12 @@ const hydration = async (
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, params, hydration } = input
-
-  if (!params.viewer) {
+  const viewer = params.hydrateCtx.viewer
+  if (!viewer) {
     return skeleton
   }
 
-  const blocks = hydration.bidirectionalBlocks?.get(params.viewer)
+  const blocks = hydration.bidirectionalBlocks?.get(viewer)
   const filteredSkeleton: SkeletonState = {
     starterPacks: skeleton.starterPacks.filter((uri) => {
       let aturi: AtUri | undefined
