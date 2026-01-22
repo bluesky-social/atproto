@@ -27,6 +27,8 @@ env:
 jobs:
   build-tarball:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       tarball_url: ${{ steps.tarball.outputs.tarball_url }}
       version: ${{ steps.version.outputs.version }}
