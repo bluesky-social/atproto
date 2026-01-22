@@ -16,6 +16,8 @@ const is$typed = _is$typed,
 const id = 'app.bsky.unspecced.getTrendingTopics'
 
 export type QueryParams = {
+  /** DID of the account making the request (not included for public/unauthenticated queries). Used to boost followed accounts in ranking. */
+  viewer?: string
   limit: number
 }
 export type InputSchema = undefined
