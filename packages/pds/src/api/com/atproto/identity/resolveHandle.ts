@@ -1,4 +1,4 @@
-import { asDidString } from '@atproto/lex'
+import { isDidString } from '@atproto/lex'
 import { DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -32,7 +32,7 @@ export default function (server: Server, ctx: AppContext) {
       : await ctx.idResolver.handle
           .resolve(handle)
           .then(
-            (v) => (v ? asDidString(v) : throwInvalidRequestError()),
+            (v) => (v && isDidString(v) ? v : throwInvalidRequestError()),
             throwInvalidRequestError,
           )
 

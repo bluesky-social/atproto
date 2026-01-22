@@ -1,5 +1,5 @@
 import express from 'express'
-import { l } from '@atproto/lex'
+import { LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
 import {
   HandlerPipeThrough,
@@ -26,18 +26,18 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
 }
 
 export const pipethroughReadAfterWrite = async <
-  M extends l.Query | l.Procedure,
+  M extends { output: l.Payload<`application/json`, l.Schema<LexValue>> },
 >(
   ctx: AppContext,
   reqCtx: { req: express.Request; auth: { credentials: { did: string } } },
-  ns: M | { main: M },
+  ns: l.Main<M>,
   munge: MungeFn<l.InferMethodOutputBody<M>>,
 ): Promise<
   HandlerResponse<l.InferMethodOutputBody<M>> | HandlerPipeThrough
 > => {
   const { req, auth } = reqCtx
   const requester = auth.credentials.did
-  const { schema } = ('main' in ns ? ns.main : ns).output
+  const method = l.getMain(ns)
 
   const streamRes = await pipethrough(ctx, req, { iss: requester })
 
@@ -63,7 +63,9 @@ export const pipethroughReadAfterWrite = async <
 
       const lex = lexParse(buffer.toString('utf8'))
 
-      const parsedRes = schema ? schema.parse(lex) : lex
+      const parsedRes = method.output.schema.validate(
+        lex,
+      ) as l.InferMethodOutputBody<M, never>
 
       const localViewer = ctx.localViewer(store)
 

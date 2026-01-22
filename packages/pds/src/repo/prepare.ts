@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { RecordSchema, l } from '@atproto/lex'
+import { RecordSchema } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
   BlobRef,
@@ -55,6 +55,7 @@ const knownSchemas = new Map<string, RecordSchema>(
     app.bsky.notification.declaration.main,
     chat.bsky.actor.declaration.main,
     com.atproto.lexicon.schema.main,
+    com.germnetwork.declaration.main,
   ].map((schema: RecordSchema) => [schema.$type, schema]),
 )
 
@@ -204,21 +205,21 @@ export const prepareDelete = (opts: {
 
 export const createWriteToOp = (write: PreparedCreate): RecordCreateOp => ({
   action: WriteOpAction.Create,
-  collection: l.asNsidString(write.uri.collection),
+  collection: write.uri.collection,
   rkey: write.uri.rkey,
   record: write.record,
 })
 
 export const updateWriteToOp = (write: PreparedUpdate): RecordUpdateOp => ({
   action: WriteOpAction.Update,
-  collection: l.asNsidString(write.uri.collection),
+  collection: write.uri.collection,
   rkey: write.uri.rkey,
   record: write.record,
 })
 
 export const deleteWriteToOp = (write: PreparedDelete): RecordDeleteOp => ({
   action: WriteOpAction.Delete,
-  collection: l.asNsidString(write.uri.collection),
+  collection: write.uri.collection,
   rkey: write.uri.rkey,
 })
 
