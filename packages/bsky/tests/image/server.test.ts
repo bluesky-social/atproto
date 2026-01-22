@@ -41,7 +41,7 @@ describe('image processing server', () => {
     const info = await getInfo(Readable.from([bytes]))
 
     expect(info).toEqual({
-      height: 11600,
+      height: 1160,
       width: 2000,
       size: 368506,
       mime: 'image/jpeg',
