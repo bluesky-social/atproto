@@ -180,6 +180,8 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
           await handleAgeAssuranceV2EventOperation(db, req, now)
         } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark) {
           await handleBookmarkOperation(db, req, now)
+        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId) {
+          await handleDraftOperation(db, req, now)
         }
       } catch (err) {
         httpLogger.warn({ err, namespace }, 'mock bsync put operation failed')
@@ -413,5 +415,50 @@ const handleBookmarkOperation = async (
         await updateAgg(bookmark.subjectUri, dbTxn)
       }
     })
+  }
+}
+
+const handleDraftOperation = async (
+  db: Database,
+  req: PutOperationRequest,
+  now: string,
+) => {
+  const { actorDid, key, method, payload } = req
+
+  if (method === Method.CREATE) {
+    const payloadString = Buffer.from(payload).toString('utf8')
+
+    await db.db
+      .insertInto('draft')
+      .values({
+        creator: actorDid,
+        key,
+        createdAt: now,
+        updatedAt: now,
+        payload: payloadString,
+      })
+      .execute()
+  }
+
+  if (method === Method.UPDATE) {
+    const payloadString = Buffer.from(payload).toString('utf8')
+
+    await db.db
+      .updateTable('draft')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .set({
+        updatedAt: now,
+        payload: payloadString,
+      })
+      .execute()
+  }
+
+  if (method === Method.DELETE) {
+    await db.db
+      .deleteFrom('draft')
+      .where('creator', '=', actorDid)
+      .where('key', '=', key)
+      .execute()
   }
 }
