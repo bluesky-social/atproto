@@ -36,7 +36,8 @@ export type Post = RecordInfo<PostRecord> & {
     tags?: string[]
   }
 }
-export type Posts = HydrationMap<Post>
+
+export type Posts = HydrationMap<Post, AtUriString>
 
 export type PostViewerState = {
   like?: AtUriString
@@ -112,17 +113,15 @@ export class FeedHydrator {
   constructor(public dataplane: DataPlaneClient) {}
 
   async getPosts(
-    uris: string[],
+    uris: AtUriString[],
     includeTakedowns = false,
-    given = new HydrationMap<Post>(),
+    given: Posts = new HydrationMap<Post, AtUriString>(),
     viewer?: string | null,
     options: GetPostsHydrationOptions = {},
   ): Promise<Posts> {
     const [have, need] = split(uris, (uri) => given.has(uri))
-    const base = have.reduce(
-      (acc, uri) => acc.set(uri, given.get(uri) ?? null),
-      new HydrationMap<Post>(),
-    )
+    const base = new HydrationMap<Post, AtUriString>()
+    for (const uri of have) base.set(uri, given.get(uri) ?? null)
     if (!need.length) return base
     const res = await this.dataplane.getPostRecords(
       options.processDynamicTagsForView

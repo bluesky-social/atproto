@@ -7,7 +7,6 @@ import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.graph.list.$type
 type IndexedList = Selectable<DatabaseSchemaType['list']>
 
 const insertFn = async (
@@ -63,14 +62,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<app.bsky.graph.list.Main, IndexedList>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.list.main,
     insertFn,
     findDuplicate,
     deleteFn,

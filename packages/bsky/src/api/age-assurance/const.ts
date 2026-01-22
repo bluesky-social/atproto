@@ -8,7 +8,7 @@ import { app } from '../../lexicons/index.js'
  *
  * NOTE: all regions MUST have a default rule as the last rule.
  */
-export const AGE_ASSURANCE_CONFIG: app.bsky.ageassurance.defs.Config = {
+export const AGE_ASSURANCE_CONFIG = app.bsky.ageassurance.defs.config.$build({
   regions: [
     {
       countryCode: 'GB',
@@ -159,4 +159,4 @@ export const AGE_ASSURANCE_CONFIG: app.bsky.ageassurance.defs.Config = {
       ],
     },
   ],
-}
+})

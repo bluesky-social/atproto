@@ -1,4 +1,5 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -7,7 +8,6 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getStarterPacks.Params
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
@@ -75,8 +75,10 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getStarterPacks.Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { uris: string[] }
+type SkeletonState = {
+  uris: AtUriString[]
+}

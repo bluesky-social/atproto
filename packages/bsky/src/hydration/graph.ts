@@ -18,15 +18,15 @@ export type ListItem = RecordInfo<ListItemRecord>
 export type ListItems = HydrationMap<ListItem>
 
 export type ListViewerState = {
-  viewerMuted?: string
+  viewerMuted?: string // @TODO AtUriString ?
   viewerListBlockUri?: AtUriString
-  viewerInList?: string
+  viewerInList?: string // @TODO AtUriString ?
 }
 
 export type ListViewerStates = HydrationMap<ListViewerState>
 
 export type ListMembershipState = {
-  actorListItemUri?: string
+  actorListItemUri?: AtUriString
 }
 // list uri => actor did => state
 export type ListMembershipStates = HydrationMap<
@@ -97,8 +97,8 @@ export class Blocks {
 
 // No "blocking" vs. "blocked" directionality: only suitable for bidirectional block checks
 export type BlockEntry = {
-  blockUri: string | undefined
-  blockListUri: string | undefined
+  blockUri: AtUriString | undefined
+  blockListUri: AtUriString | undefined
 }
 
 export class GraphHydrator {
@@ -175,8 +175,12 @@ export class GraphHydrator {
       const pair = deduped[i]
       const block = res.blocks[i]
       blocks.set(pair.a, pair.b, {
-        blockUri: block.blockedBy || block.blocking || undefined,
-        blockListUri: block.blockedByList || block.blockingByList || undefined,
+        blockUri: (block.blockedBy || block.blocking || undefined) as
+          | AtUriString
+          | undefined,
+        blockListUri: (block.blockedByList ||
+          block.blockingByList ||
+          undefined) as AtUriString | undefined,
       })
     }
     return blocks

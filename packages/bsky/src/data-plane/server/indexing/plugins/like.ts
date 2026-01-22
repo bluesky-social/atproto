@@ -9,8 +9,6 @@ import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.feed.like.$type
-
 type Notif = Insertable<Notification>
 type IndexedLike = Selectable<DatabaseSchemaType['like']>
 
@@ -134,14 +132,10 @@ const updateAggregates = async (db: DatabaseSchema, like: IndexedLike) => {
   await likeCountQb.execute()
 }
 
-export type PluginType = RecordProcessor<app.bsky.feed.like.Main, IndexedLike>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.like.main,
     insertFn,
     findDuplicate,
     deleteFn,

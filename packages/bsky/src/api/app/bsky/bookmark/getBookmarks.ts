@@ -3,7 +3,6 @@ import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.bookmark.getBookmarks.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -87,7 +86,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.bookmark.getBookmarks.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 

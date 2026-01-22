@@ -1,12 +1,18 @@
 import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
-import { l } from '@atproto/lex-schema'
+import {
+  Procedure,
+  Query,
+  ResultFailure,
+  lexErrorData,
+} from '@atproto/lex-schema'
 import { XrpcPayload } from './util.js'
+
+export const RETRYABLE_HTTP_STATUS_CODES = new Set([
+  408, 425, 429, 500, 502, 503, 504, 522, 524,
+])
 
 export { LexError }
 export type { LexErrorCode, LexErrorData }
-
-export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> =
-  XrpcPayload<LexErrorData<N>, 'application/json'>
 
 export class XrpcError<
   N extends LexErrorCode = LexErrorCode,
@@ -20,7 +26,14 @@ export class XrpcError<
   ) {
     super(error, message, options)
   }
+
+  shouldRetry(): boolean {
+    return false
+  }
 }
+
+export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> =
+  XrpcPayload<LexErrorData<N>, 'application/json'>
 
 /**
  * All unsuccessful responses should follow a standard error response
@@ -40,16 +53,15 @@ export function isXrpcErrorPayload(
   return (
     payload !== null &&
     payload.encoding === 'application/json' &&
-    l.lexErrorData.matches(payload.body)
+    lexErrorData.matches(payload.body)
   )
 }
 
 /**
  * Interface representing a failed XRPC request result.
  */
-type LexRpcFailureResult<N extends LexErrorCode, E> = l.ResultFailure<E> & {
+type LexRpcFailureResult<N extends LexErrorCode, E> = ResultFailure<E> & {
   readonly error: N
-  shouldRetry(): boolean
   matchesSchema(): boolean
 }
 
@@ -58,7 +70,7 @@ type LexRpcFailureResult<N extends LexErrorCode, E> = l.ResultFailure<E> & {
  * That is, a non-2xx response with a valid XRPC error payload.
  */
 export class XrpcResponseError<
-    M extends l.Procedure | l.Query = l.Procedure | l.Query,
+    M extends Procedure | Query = Procedure | Query,
     N extends LexErrorCode = LexErrorCode,
   >
   extends XrpcError<N>
@@ -87,19 +99,16 @@ export class XrpcResponseError<
     return this.payload.body
   }
 
+  override shouldRetry(): boolean {
+    return RETRYABLE_HTTP_STATUS_CODES.has(this.status)
+  }
+
   matchesSchema(): this is M extends {
     errors: readonly (infer E extends string)[]
   }
     ? XrpcResponseError<M, E>
     : never {
     return this.method.errors?.includes(this.error) ?? false
-  }
-
-  shouldRetry(): boolean {
-    // Do not retry client errors
-    if (this.status < 500) return false
-
-    return true
   }
 
   toJSON() {
@@ -153,13 +162,12 @@ export class XrpcUpstreamError<
     return this
   }
 
-  matchesSchema(): false {
-    return false
+  override shouldRetry(): boolean {
+    return RETRYABLE_HTTP_STATUS_CODES.has(this.response.status)
   }
 
-  shouldRetry(): boolean {
-    // Do not retry client errors
-    return this.response.status >= 500
+  matchesSchema(): false {
+    return false
   }
 
   toResponse(): Response {
@@ -183,12 +191,12 @@ export class XrpcUnexpectedError
     return this.cause
   }
 
-  matchesSchema(): false {
-    return false
+  override shouldRetry(): boolean {
+    return true
   }
 
-  shouldRetry(): boolean {
-    return true
+  matchesSchema(): false {
+    return false
   }
 
   toResponse(): Response {
@@ -204,4 +212,36 @@ export class XrpcUnexpectedError
     if (cause instanceof XrpcUnexpectedError) return cause
     return new XrpcUnexpectedError(message, { cause })
   }
+}
+
+export type XrpcFailure<M extends Procedure | Query> =
+  // The server returned a valid XRPC error response
+  | XrpcResponseError<M>
+  // The response was not a valid XRPC response, or it does not match the schema
+  | XrpcUpstreamError
+  // Something went wrong (network error, etc.)
+  | XrpcUnexpectedError
+
+export function isXrpcFailure<M extends Procedure | Query = Procedure | Query>(
+  result: unknown,
+): result is XrpcFailure<M> {
+  return (
+    result instanceof XrpcResponseError ||
+    result instanceof XrpcUpstreamError ||
+    result instanceof XrpcUnexpectedError
+  )
+}
+
+/**
+ * Utility method to type cast the error thrown by {@link xrpc} to an
+ * {@link XrpcFailure} matching the provided method. Only use this function
+ * inside a catch block right after calling {@link xrpc}, and use the same
+ * method type parameter as used in the {@link xrpc} call.
+ */
+export function asXrpcFailure<M extends Procedure | Query = Procedure | Query>(
+  err: unknown,
+): XrpcFailure<M> {
+  if (err instanceof XrpcResponseError) return err
+  if (err instanceof XrpcUpstreamError) return err
+  return XrpcUnexpectedError.from(err)
 }

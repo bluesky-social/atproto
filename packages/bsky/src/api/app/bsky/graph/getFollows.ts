@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString, DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -7,7 +8,6 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getFollowers.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -43,7 +43,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
   if (!subjectDid) {
@@ -59,7 +61,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   })
   return {
     subjectDid,
-    followUris: follows.map((f) => f.uri),
+    followUris: follows.map((f) => f.uri as AtUriString),
     cursor: cursor || undefined,
   }
 }
@@ -108,7 +110,8 @@ const presentation = (
 ) => {
   const { ctx, hydration, skeleton, params } = input
   const { subjectDid, followUris, cursor } = skeleton
-  const isNoHosted = (did: string) => ctx.views.actorIsNoHosted(did, hydration)
+  const isNoHosted = (did: DidString) =>
+    ctx.views.actorIsNoHosted(did, hydration)
 
   const subject = ctx.views.profile(subjectDid, hydration)
   if (
@@ -135,12 +138,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getFollowers.Params & {
   hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {
-  subjectDid: string
-  followUris: string[]
+  subjectDid: DidString
+  followUris: AtUriString[]
   cursor?: string
 }

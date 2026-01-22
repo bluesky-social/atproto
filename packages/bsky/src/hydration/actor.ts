@@ -161,10 +161,9 @@ export class ActorHydrator {
     )
   }
 
-  async getDidsDefined(handleOrDids: string[]): Promise<string[]> {
+  async getDidsDefined(handleOrDids: string[]): Promise<DidString[]> {
     const res = await this.getDids(handleOrDids)
-    // @ts-ignore
-    return res.filter((did) => did !== undefined)
+    return res.filter((v) => v != null)
   }
 
   async getActors(

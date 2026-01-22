@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -10,7 +11,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getActorLikes.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -67,7 +67,9 @@ const skeleton = async (inputs: {
     cursor,
   })
 
-  const items = likesRes.likes.map((l) => ({ post: { uri: l.subject } }))
+  const items = likesRes.likes.map((l) => ({
+    post: { uri: l.subject as AtUriString },
+  }))
 
   return {
     items,
@@ -118,7 +120,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getActorLikes.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   items: FeedItem[]

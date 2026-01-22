@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -8,7 +9,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getRepostedBy.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -56,7 +56,7 @@ const skeleton = async (inputs: {
     limit: params.limit,
   })
   return {
-    reposts: res.uris,
+    reposts: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
   }
 }
@@ -111,9 +111,9 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getRepostedBy.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  reposts: string[]
+  reposts: AtUriString[]
   cursor?: string
 }

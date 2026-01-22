@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -12,7 +13,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getAuthorFeed.Params
 import { createPipeline } from '../../../../pipeline'
 import { FeedType } from '../../../../proto/bsky_pb'
 import { safePinnedPost, uriToDid } from '../../../../util/uris'
@@ -98,9 +98,9 @@ export const skeleton = async (inputs: {
   })
 
   let items: FeedItem[] = res.items.map((item) => ({
-    post: { uri: item.uri, cid: item.cid || undefined },
+    post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
     repost: item.repost
-      ? { uri: item.repost, cid: item.repostCid || undefined }
+      ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
       : undefined,
   }))
 
@@ -208,14 +208,14 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.feed.getAuthorFeed.Params & {
   hydrateCtx: HydrateCtx
 }
 
 type Skeleton = {
   actor: Actor
   items: FeedItem[]
-  filter: QueryParams['filter']
+  filter: app.bsky.feed.getAuthorFeed.Params['filter']
   cursor?: string
 }
 

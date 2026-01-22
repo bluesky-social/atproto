@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -8,7 +9,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getQuotes.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -55,7 +55,7 @@ const skeleton = async (inputs: {
     limit: params.limit,
   })
   return {
-    uris: quotesRes.uris,
+    uris: quotesRes.uris as AtUriString[],
     cursor: parseString(quotesRes.cursor),
   }
 }
@@ -64,7 +64,7 @@ const hydration = async (inputs: {
   ctx: Context
   params: Params
   skeleton: Skeleton
-}) => {
+}): Promise<HydrationState> => {
   const { ctx, params, skeleton } = inputs
   return await ctx.hydrator.hydratePosts(
     skeleton.uris.map((uri) => ({ uri })),
@@ -112,9 +112,9 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getQuotes.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  uris: string[]
+  uris: AtUriString[]
   cursor?: string
 }

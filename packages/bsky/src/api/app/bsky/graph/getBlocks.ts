@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getBlocks.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -35,7 +35,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   if (clearlyBadCursor(params.cursor)) {
     return { blockedDids: [] }
@@ -79,11 +81,11 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getBlocks.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  blockedDids: string[]
+  blockedDids: DidString[]
   cursor?: string
 }

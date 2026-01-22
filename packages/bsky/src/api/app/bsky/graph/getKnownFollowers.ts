@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getKnownFollowers.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -45,7 +45,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const [subjectDid] = await ctx.hydrator.actor.getDidsDefined([params.actor])
   if (!subjectDid) {
@@ -60,7 +62,9 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     targetDids: [subjectDid],
   })
   const result = res.results.at(0)
-  const knownFollowers = result ? result.dids.slice(0, params.limit) : []
+  const knownFollowers = result
+    ? (result.dids.slice(0, params.limit) as DidString[])
+    : []
 
   return {
     subjectDid,
@@ -108,12 +112,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getKnownFollowers.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  subjectDid: string
-  knownFollowers: string[]
+  subjectDid: DidString
+  knownFollowers: DidString[]
   cursor?: string
 }

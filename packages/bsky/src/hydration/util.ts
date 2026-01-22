@@ -5,8 +5,11 @@ import { AtUri, AtUriString } from '@atproto/syntax'
 import { app, chat, com } from '../lexicons/index.js'
 import { Record } from '../proto/bsky_pb'
 
-export class HydrationMap<T> extends Map<string, T | null> implements Merges {
-  merge(map: HydrationMap<T>): this {
+export class HydrationMap<T, K extends string = string>
+  extends Map<K, T | null>
+  implements Merges
+{
+  merge(map: HydrationMap<T, K>): this {
     map.forEach((val, key) => {
       this.set(key, val)
     })
@@ -50,8 +53,10 @@ export const mergeNestedMaps = <V, M extends HydrationMap<HydrationMap<V>>>(
   return mapA
 }
 
-export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
-  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
+export const mergeManyMaps = <T, K extends string = string>(
+  ...maps: HydrationMap<T, K>[]
+) => {
+  return maps.reduce(mergeMaps, undefined as HydrationMap<T, K> | undefined)
 }
 
 export type ItemRef = { uri: AtUriString; cid?: string }
@@ -140,8 +145,10 @@ export const parseCid = (cidStr: string | undefined): Cid | undefined => {
   }
 }
 
-export const urisByCollection = (uris: string[]): Map<string, string[]> => {
-  const result = new Map<string, string[]>()
+export const urisByCollection = <T extends string>(
+  uris: T[],
+): Map<string, T[]> => {
+  const result = new Map<string, T[]>()
   for (const uri of uris) {
     const collection = new AtUri(uri).collection
     const items = result.get(collection) ?? []

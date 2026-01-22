@@ -1,11 +1,11 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getActorStarterPacks.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -57,7 +57,7 @@ const skeleton = async (
     limit: params.limit,
   })
   return {
-    starterPackUris: starterPacks.uris,
+    starterPackUris: starterPacks.uris as AtUriString[],
     cursor: parseString(starterPacks.cursor),
   }
 }
@@ -91,9 +91,11 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.graph.getActorStarterPacks.Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type SkeletonState = {
-  starterPackUris: string[]
+  starterPackUris: AtUriString[]
   cursor?: string
 }

@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getListBlocks.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -53,7 +53,7 @@ const skeleton = async (
       cursor: params.cursor,
       limit: params.limit,
     })
-  return { listUris, cursor: cursor || undefined }
+  return { listUris: listUris as AtUriString[], cursor: cursor || undefined }
 }
 
 const hydration = async (
@@ -77,11 +77,11 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getListBlocks.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  listUris: string[]
+  listUris: AtUriString[]
   cursor?: string
 }

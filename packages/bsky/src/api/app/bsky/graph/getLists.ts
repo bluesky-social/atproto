@@ -14,7 +14,6 @@ import {
 } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
-type QueryParams = app.bsky.graph.getLists.Params
 
 const CURATELIST = app.bsky.graph.defs.curatelist.value
 const MODLIST = app.bsky.graph.defs.modlist.value
@@ -114,7 +113,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getLists.Params & {
   hydrateCtx: HydrateCtx
 }
 

@@ -7,7 +7,6 @@ import { DatabaseSchema } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
-const lexId = app.bsky.notification.declaration.$type
 
 const insertFn = async (
   _db: DatabaseSchema,
@@ -40,14 +39,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<unknown, unknown>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.notification.declaration.main,
     insertFn,
     findDuplicate,
     deleteFn,

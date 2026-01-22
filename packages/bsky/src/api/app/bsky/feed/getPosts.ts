@@ -1,4 +1,5 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -7,7 +8,6 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getPosts.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: { params: Params }) => {
+const skeleton = async (inputs: { params: Params }): Promise<Skeleton> => {
   return { posts: dedupeStrs(inputs.params.uris) }
 }
 
@@ -88,8 +88,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getPosts.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  posts: string[]
+  posts: AtUriString[]
 }

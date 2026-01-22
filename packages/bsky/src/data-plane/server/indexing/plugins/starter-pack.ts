@@ -7,7 +7,6 @@ import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.graph.starterpack.$type
 type IndexedStarterPack = Selectable<DatabaseSchemaType['starter_pack']>
 
 const insertFn = async (
@@ -57,17 +56,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<
-  app.bsky.graph.starterpack.Main,
-  IndexedStarterPack
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.starterpack.main,
     insertFn,
     findDuplicate,
     deleteFn,

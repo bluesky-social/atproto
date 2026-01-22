@@ -9,7 +9,6 @@ import { Notification } from '../../db/tables/notification'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.feed.repost.$type
 type Notif = Insertable<Notification>
 type IndexedRepost = Selectable<DatabaseSchemaType['repost']>
 
@@ -158,17 +157,10 @@ const updateAggregates = async (db: DatabaseSchema, repost: IndexedRepost) => {
   await repostCountQb.execute()
 }
 
-export type PluginType = RecordProcessor<
-  app.bsky.feed.repost.Main,
-  IndexedRepost
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.repost.main,
     insertFn,
     findDuplicate,
     deleteFn,

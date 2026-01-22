@@ -1,5 +1,5 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { Client } from '@atproto/lex'
+import { Client, DidString, isDidString } from '@atproto/lex'
 import { Headers as HeadersMap, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -83,7 +83,7 @@ const skeleton = async (input: {
       cursor: params.cursor,
       limit: params.limit,
     })
-    let dids = suggestions.dids
+    let dids = suggestions.dids.filter(isDidString)
     if (viewer !== null) {
       const follows = await ctx.dataplane.getActorFollowsActors({
         actorDid: viewer,
@@ -150,7 +150,7 @@ type Params = app.bsky.actor.getSuggestions.Params & {
 }
 
 type Skeleton = {
-  dids: string[]
+  dids: DidString[]
   cursor?: string
   recId?: number
   resHeaders?: Headers

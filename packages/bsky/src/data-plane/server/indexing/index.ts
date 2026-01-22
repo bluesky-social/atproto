@@ -2,8 +2,8 @@ import { Selectable, sql } from 'kysely'
 import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
 import { IdResolver, getPds } from '@atproto/identity'
+import { l } from '@atproto/lex'
 import { Cid, parseCid } from '@atproto/lex-data'
-import { ValidationError } from '@atproto/lexicon'
 import {
   VerifiedRepo,
   WriteOpAction,
@@ -36,7 +36,6 @@ import * as StarterPack from './plugins/starter-pack'
 import * as Status from './plugins/status'
 import * as Threadgate from './plugins/thread-gate'
 import * as Verification from './plugins/verification'
-import { RecordProcessor } from './processor'
 
 export class IndexingService {
   records: {
@@ -194,7 +193,7 @@ export class IndexingService {
           if (op.op === 'delete') {
             await this.deleteRecord(uri)
           } else {
-            const parsed = await getAndParseRecord(blocks, cid)
+            const parsed = getAndParseRecord(blocks, cid)
             await this.indexRecord(
               uri,
               cid,
@@ -204,7 +203,7 @@ export class IndexingService {
             )
           }
         } catch (err) {
-          if (err instanceof ValidationError) {
+          if (err instanceof l.ValidationError) {
             subLogger.warn(
               { did, commit, uri: uri.toString(), cid: cid.toString() },
               'skipping indexing of invalid record',
@@ -258,10 +257,11 @@ export class IndexingService {
   }
 
   findIndexerForCollection(collection: string) {
-    const indexers = Object.values(
-      this.records as Record<string, RecordProcessor<unknown, unknown>>,
-    )
-    return indexers.find((indexer) => indexer.collection === collection)
+    for (const indexer of Object.values(this.records)) {
+      if (indexer.collection === collection) {
+        return indexer
+      }
+    }
   }
 
   async updateActorStatus(did: string, active: boolean, status: string = '') {

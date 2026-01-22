@@ -9,7 +9,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getLikes.Params
 import { RulesFnInput, createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -130,7 +129,7 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getLikes.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   authorDid: string

@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString, DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -8,7 +9,6 @@ import {
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getList.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -71,7 +71,7 @@ const hydration = async (
   const [listState, profileState] = await Promise.all([
     ctx.hydrator.hydrateLists([listUri], params.hydrateCtx),
     ctx.hydrator.hydrateProfiles(
-      listitems.map(({ did }) => did),
+      listitems.map(({ did }) => did as DidString),
       params.hydrateCtx,
     ),
   ])
@@ -101,7 +101,7 @@ const presentation = (
   const { listUri, listitems, cursor } = skeleton
   const list = ctx.views.list(listUri, hydration)
   const items = mapDefined(listitems, ({ uri, did }) =>
-    ctx.views.listItemView(uri, did, hydration),
+    ctx.views.listItemView(uri as AtUriString, did as DidString, hydration),
   )
   if (!list) {
     throw new InvalidRequestError('List not found')
@@ -139,12 +139,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getList.Params & {
   hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {
-  listUri: string
+  listUri: AtUriString
   listitems: ListItemInfo[]
   cursor?: string
 }

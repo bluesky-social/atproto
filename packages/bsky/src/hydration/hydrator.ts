@@ -3,11 +3,7 @@ import { mapDefined } from '@atproto/common'
 import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
-import { ids } from '../lexicon/lexicons'
-import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
-import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embed/recordWithMedia'
-import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
+import { app, chat, com } from '../lexicons/index.js'
 import { hydrationLogger } from '../logger'
 import {
   Bookmark,
@@ -17,6 +13,12 @@ import {
 } from '../proto/bsky_pb'
 import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
+import {
+  ProfileRecord,
+  isListRule,
+  isRecordEmbed,
+  isRecordWithMedia,
+} from '../views/types.js'
 import {
   ActivitySubscriptionStates,
   ActorHydrator,
@@ -196,7 +198,7 @@ export class Hydrator {
   //   - list basic
   // Note: builds on the naive profile viewer hydrator and removes references to lists that have been deleted
   async hydrateProfileViewers(
-    dids: string[],
+    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const viewer = ctx.viewer
@@ -205,7 +207,7 @@ export class Hydrator {
       dids,
       viewer,
     )
-    const listUris: string[] = []
+    const listUris: AtUriString[] = []
     profileViewers.forEach((item) => {
       listUris.push(...listUrisFromProfileViewer(item))
     })
@@ -225,7 +227,7 @@ export class Hydrator {
   // - profile
   //   - list basic
   async hydrateProfiles(
-    dids: string[],
+    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     /**
@@ -257,7 +259,7 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateProfilesBasic(
-    dids: string[],
+    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     return this.hydrateProfiles(dids, ctx)
@@ -272,7 +274,7 @@ export class Hydrator {
   //       - list basic
   //     - labels
   async hydrateProfilesDetailed(
-    dids: string[],
+    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     let knownFollowers: KnownFollowersStates = new HydrationMap()
@@ -316,7 +318,7 @@ export class Hydrator {
       this.actor.getProfileAggregates(dids),
       this.hydrateBidirectionalBlocks(subjectsToKnownFollowersMap, ctx),
     ])
-    const starterPackUriSet = new Set<string>()
+    const starterPackUriSet = new Set<AtUriString>()
     state.actors?.forEach((actor) => {
       if (actor?.profile?.joinedViaStarterPack) {
         starterPackUriSet.add(actor?.profile?.joinedViaStarterPack?.uri)
@@ -338,7 +340,10 @@ export class Hydrator {
   // app.bsky.graph.defs#listView
   // - list
   //   - profile basic
-  async hydrateLists(uris: string[], ctx: HydrateCtx): Promise<HydrationState> {
+  async hydrateLists(
+    uris: AtUriString[],
+    ctx: HydrateCtx,
+  ): Promise<HydrationState> {
     const [listsState, profilesState] = await Promise.all([
       this.hydrateListsBasic(uris, ctx, {
         skipAuthors: true, // handled via author profile hydration
@@ -351,7 +356,7 @@ export class Hydrator {
   // app.bsky.graph.defs#listViewBasic
   // - list basic
   async hydrateListsBasic(
-    uris: string[],
+    uris: AtUriString[],
     ctx: HydrateCtx,
     opts?: { skipAuthors: boolean },
   ): Promise<HydrationState> {
@@ -383,11 +388,11 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateListItems(
-    uris: string[],
+    uris: AtUriString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const listItems = await this.graph.getListItems(uris)
-    const dids: string[] = []
+    const dids: DidString[] = []
     listItems.forEach((item) => {
       if (item) {
         dids.push(item.record.subject)
@@ -398,8 +403,8 @@ export class Hydrator {
   }
 
   async hydrateListsMembership(
-    uris: string[],
-    did: string,
+    uris: AtUriString[],
+    did: DidString,
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [
@@ -421,9 +426,9 @@ export class Hydrator {
         const listItemUri = listItemUris[i]
         return [
           uri,
-          new HydrationMap<ListMembershipState>([
+          new HydrationMap<ListMembershipState, DidString>([
             listItemUri
-              ? [did, { actorListItemUri: listItemUri }]
+              ? [did, { actorListItemUri: listItemUri as AtUriString }]
               : [did, null],
           ]),
         ]
@@ -450,17 +455,17 @@ export class Hydrator {
   //     - profile
   //       - list basic
   async hydratePosts(
-    refs: ItemRef[],
+    refs: { uri: AtUriString }[],
     ctx: HydrateCtx,
     state: HydrationState = {},
     options: Pick<GetPostsHydrationOptions, 'processDynamicTagsForView'> = {},
   ): Promise<HydrationState> {
     const uris = refs.map((ref) => ref.uri)
 
-    state.posts ??= new HydrationMap<Post>()
+    state.posts ??= new HydrationMap()
     const addPostsToHydrationState = (posts: Posts) => {
       posts.forEach((post, uri) => {
-        state.posts ??= new HydrationMap<Post>()
+        state.posts ??= new HydrationMap()
         state.posts.set(uri, post)
       })
     }
@@ -478,13 +483,13 @@ export class Hydrator {
     addPostsToHydrationState(postsLayer0)
 
     const additionalRootUris = rootUrisFromPosts(postsLayer0) // supports computing threadgates
-    const threadRootUris = new Set<string>()
+    const threadRootUris = new Set<AtUriString>()
     for (const [uri, post] of postsLayer0) {
       if (post) {
         threadRootUris.add(rootUriFromPost(post) ?? uri)
       }
     }
-    const postUrisWithThreadgates = new Set<string>()
+    const postUrisWithThreadgates = new Set<AtUriString>()
     for (const uri of threadRootUris) {
       const post = postsLayer0.get(uri)
       /*
@@ -504,7 +509,7 @@ export class Hydrator {
     const urisLayer1 = nestedRecordUrisFromPosts(postsLayer0)
     const urisLayer1ByCollection = urisByCollection(urisLayer1)
     const embedPostUrisLayer1 =
-      urisLayer1ByCollection.get(ids.AppBskyFeedPost) ?? []
+      urisLayer1ByCollection.get(app.bsky.feed.post.$type) ?? []
     const postsLayer1 = await this.feed.getPosts(
       [...embedPostUrisLayer1, ...additionalRootUris],
       ctx.includeTakedowns,
@@ -519,7 +524,7 @@ export class Hydrator {
     )
     const urisLayer2ByCollection = urisByCollection(urisLayer2)
     const embedPostUrisLayer2 =
-      urisLayer2ByCollection.get(ids.AppBskyFeedPost) ?? []
+      urisLayer2ByCollection.get(app.bsky.feed.post.$type) ?? []
 
     const [postsLayer2, threadgates] = await Promise.all([
       this.feed.getPosts(
@@ -532,22 +537,22 @@ export class Hydrator {
     addPostsToHydrationState(postsLayer2)
 
     // collect list/feedgen embeds, lists in threadgates, post record hydration
-    const threadgateListUris = getListUrisFromThreadgates(threadgates)
+    const threadgateListUris = [...getListUrisFromThreadgates(threadgates)]
     const nestedListUris = [
-      ...(urisLayer1ByCollection.get(ids.AppBskyGraphList) ?? []),
-      ...(urisLayer2ByCollection.get(ids.AppBskyGraphList) ?? []),
+      ...(urisLayer1ByCollection.get(app.bsky.graph.list.$type) ?? []),
+      ...(urisLayer2ByCollection.get(app.bsky.graph.list.$type) ?? []),
     ]
     const nestedFeedGenUris = [
-      ...(urisLayer1ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
-      ...(urisLayer2ByCollection.get(ids.AppBskyFeedGenerator) ?? []),
+      ...(urisLayer1ByCollection.get(app.bsky.feed.generator.$type) ?? []),
+      ...(urisLayer2ByCollection.get(app.bsky.feed.generator.$type) ?? []),
     ]
     const nestedLabelerDids = [
-      ...(urisLayer1ByCollection.get(ids.AppBskyLabelerService) ?? []),
-      ...(urisLayer2ByCollection.get(ids.AppBskyLabelerService) ?? []),
+      ...(urisLayer1ByCollection.get(app.bsky.labeler.service.$type) ?? []),
+      ...(urisLayer2ByCollection.get(app.bsky.labeler.service.$type) ?? []),
     ].map(didFromUri)
     const nestedStarterPackUris = [
-      ...(urisLayer1ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
-      ...(urisLayer2ByCollection.get(ids.AppBskyGraphStarterpack) ?? []),
+      ...(urisLayer1ByCollection.get(app.bsky.graph.starterpack.$type) ?? []),
+      ...(urisLayer2ByCollection.get(app.bsky.graph.starterpack.$type) ?? []),
     ]
     const posts =
       mergeManyMaps(postsLayer0, postsLayer1, postsLayer2) ?? postsLayer0
@@ -690,8 +695,8 @@ export class Hydrator {
       items.map((item) => item.post.uri),
       ctx.includeTakedowns,
     )
-    const rootUris: string[] = []
-    const parentUris: string[] = []
+    const rootUris: AtUriString[] = []
+    const parentUris: AtUriString[] = []
     const postAndReplyRefs: ItemRef[] = []
     posts.forEach((post, uri) => {
       if (!post) return
@@ -707,7 +712,7 @@ export class Hydrator {
       [...rootUris, ...parentUris],
       ctx.includeTakedowns,
     )
-    const replyParentAuthors: string[] = []
+    const replyParentAuthors: DidString[] = []
     parentUris.forEach((uri) => {
       const parent = replies.get(uri)
       if (!parent?.record.reply) return
@@ -753,23 +758,19 @@ export class Hydrator {
         : undefined,
     })
 
-    const { posts } = postsState
-    const postsList = posts ? Array.from(posts.entries()) : []
+    const threadRefs: ThreadRef[] = []
 
-    const isDefined = (
-      entry: [string, Post | null],
-    ): entry is [string, Post] => {
-      const [, post] = entry
-      return !!post
+    if (postsState.posts) {
+      for (const [uri, post] of postsState.posts.entries()) {
+        if (post) {
+          threadRefs.push({
+            uri,
+            cid: post.cid,
+            threadRoot: post.record.reply?.root.uri ?? uri,
+          })
+        }
+      }
     }
-
-    const threadRefs: ThreadRef[] = postsList
-      .filter(isDefined)
-      .map(([uri, post]) => ({
-        uri,
-        cid: post.cid,
-        threadRoot: post.record.reply?.root.uri ?? uri,
-      }))
 
     const threadContexts = await this.feed.getThreadContexts(threadRefs)
 
@@ -781,7 +782,7 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateFeedGens(
-    uris: string[], // @TODO any way to get refs here?
+    uris: AtUriString[], // @TODO any way to get refs here?
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [feedgens, feedgenAggs, feedgenViewers, profileState, labels] =
@@ -815,7 +816,7 @@ export class Hydrator {
   //     - list basic
   //  - labels
   async hydrateStarterPacksBasic(
-    uris: string[],
+    uris: AtUriString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [starterPacks, starterPackAggs, profileState, labels] =
@@ -849,13 +850,13 @@ export class Hydrator {
   //      - list basic
   //  - labels
   async hydrateStarterPacks(
-    uris: string[],
+    uris: AtUriString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const starterPackState = await this.hydrateStarterPacksBasic(uris, ctx)
     // gather feed and list uris
-    const feedUriSet = new Set<string>()
-    const listUriSet = new Set<string>()
+    const feedUriSet = new Set<AtUriString>()
+    const listUriSet = new Set<AtUriString>()
     starterPackState.starterPacks?.forEach((sp) => {
       sp?.record.feeds?.forEach((feed) => feedUriSet.add(feed.uri))
       if (sp?.record.list) {
@@ -893,7 +894,7 @@ export class Hydrator {
     )
     // sample top list items per starter pack based on their follows
     const listMemberAggs = await this.actor.getProfileAggregates(listMemberDids)
-    const listItemUris: string[] = []
+    const listItemUris: AtUriString[] = []
     uris.forEach((uri) => {
       const sp = starterPackState.starterPacks?.get(uri)
       const agg = starterPackState.starterPackAggs?.get(uri)
@@ -914,7 +915,7 @@ export class Hydrator {
           return score2 - score1
         })
         .slice(0, 12)
-        .map((li) => li.uri)
+        .map((li) => li.uri as AtUriString)
       listItemUris.push(...agg.listItemSampleUris)
     })
     // hydrate sampled list items
@@ -933,7 +934,7 @@ export class Hydrator {
   //     - list basic
   async hydrateLikes(
     authorDid: string,
-    uris: string[],
+    uris: AtUriString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [likes, profileState] = await Promise.all([
@@ -964,7 +965,7 @@ export class Hydrator {
   // - repost
   //   - profile
   //     - list basic
-  async hydrateReposts(uris: string[], ctx: HydrateCtx) {
+  async hydrateReposts(uris: AtUriString[], ctx: HydrateCtx) {
     const [reposts, profileState] = await Promise.all([
       this.feed.getReposts(uris, ctx.includeTakedowns),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
@@ -980,13 +981,14 @@ export class Hydrator {
     notifs: Notification[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const uris = notifs.map((notif) => notif.uri)
+    const uris = notifs.map((notif) => notif.uri as AtUriString)
     const collections = urisByCollection(uris)
-    const postUris = collections.get(ids.AppBskyFeedPost) ?? []
-    const likeUris = collections.get(ids.AppBskyFeedLike) ?? []
-    const repostUris = collections.get(ids.AppBskyFeedRepost) ?? []
-    const followUris = collections.get(ids.AppBskyGraphFollow) ?? []
-    const verificationUris = collections.get(ids.AppBskyGraphVerification) ?? []
+    const postUris = collections.get(app.bsky.feed.post.$type) ?? []
+    const likeUris = collections.get(app.bsky.feed.like.$type) ?? []
+    const repostUris = collections.get(app.bsky.feed.repost.$type) ?? []
+    const followUris = collections.get(app.bsky.graph.follow.$type) ?? []
+    const verificationUris =
+      collections.get(app.bsky.graph.verification.$type) ?? []
     const [
       posts,
       likes,
@@ -1007,7 +1009,7 @@ export class Hydrator {
     const viewerRootPostUris = new Set<string>()
     for (const notif of notifs) {
       if (notif.reason === 'reply') {
-        const post = posts.get(notif.uri)
+        const post = posts.get(notif.uri as AtUriString)
         if (post) {
           const rootUri = post.record.reply?.root.uri
           if (rootUri && didFromUri(rootUri) === ctx.viewer) {
@@ -1065,7 +1067,9 @@ export class Hydrator {
     // @NOTE: The `createBookmark` endpoint limits bookmarks to be of posts,
     // so we can assume currently all subjects are posts.
     const postsState = await this.hydratePosts(
-      bookmarks.map((bookmark) => ({ uri: bookmark.subjectUri })),
+      bookmarks.map((bookmark) => ({
+        uri: bookmark.subjectUri as AtUriString,
+      })),
       ctx,
     )
 
@@ -1074,7 +1078,7 @@ export class Hydrator {
 
   // provides partial hydration state within getFollows / getFollowers, mainly for applying rules
   async hydrateFollows(
-    uris: string[],
+    uris: AtUriString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const follows = await this.graph.getFollows(uris)
@@ -1111,7 +1115,7 @@ export class Hydrator {
     }
 
     const blocks = await this.graph.getBidirectionalBlocks(pairs)
-    const listUrisSet = new Set<string>()
+    const listUrisSet = new Set<AtUriString>()
     for (const [source, targets] of didMap) {
       for (const target of targets) {
         const block = blocks.get(source, target)
@@ -1172,7 +1176,7 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateLabelers(
-    dids: string[],
+    dids: DidString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const [labelers, labelerAggs, labelerViewers, profileState] =
@@ -1195,102 +1199,102 @@ export class Hydrator {
 
   // ad-hoc record hydration
   // in com.atproto.repo.getRecord
-  async getRecord(uri: string, includeTakedowns = false) {
+  async getRecord(uri: AtUriString, includeTakedowns = false) {
     const parsed = new AtUri(uri)
     const collection = parsed.collection
-    if (collection === ids.AppBskyFeedPost) {
+    if (collection === app.bsky.feed.post.$type) {
       return (
         (await this.feed.getPosts([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyFeedRepost) {
+    } else if (collection === app.bsky.feed.repost.$type) {
       return (
         (await this.feed.getReposts([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyFeedLike) {
+    } else if (collection === app.bsky.feed.like.$type) {
       return (
         (await this.feed.getLikes([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyGraphFollow) {
+    } else if (collection === app.bsky.graph.follow.$type) {
       return (
         (await this.graph.getFollows([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyGraphList) {
+    } else if (collection === app.bsky.graph.list.$type) {
       return (
         (await this.graph.getLists([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyGraphListitem) {
+    } else if (collection === app.bsky.graph.listitem.$type) {
       return (
         (await this.graph.getListItems([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyGraphBlock) {
+    } else if (collection === app.bsky.graph.block.$type) {
       return (
         (await this.graph.getBlocks([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyGraphStarterpack) {
+    } else if (collection === app.bsky.graph.starterpack.$type) {
       return (
         (await this.graph.getStarterPacks([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyFeedGenerator) {
+    } else if (collection === app.bsky.feed.generator.$type) {
       return (
         (await this.feed.getFeedGens([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyFeedThreadgate) {
+    } else if (collection === app.bsky.feed.threadgate.$type) {
       return (
         (await this.feed.getThreadgateRecords([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )
-    } else if (collection === ids.AppBskyFeedPostgate) {
+    } else if (collection === app.bsky.feed.postgate.$type) {
       return (
         (await this.feed.getPostgateRecords([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )
-    } else if (collection === ids.AppBskyLabelerService) {
+    } else if (collection === app.bsky.labeler.service.$type) {
       if (parsed.rkey !== 'self') return
       const did = parsed.hostname
       return (
         (await this.label.getLabelers([did], includeTakedowns)).get(did) ??
         undefined
       )
-    } else if (collection === ids.ChatBskyActorDeclaration) {
+    } else if (collection === chat.bsky.actor.declaration.$type) {
       if (parsed.rkey !== 'self') return
       return (
         (await this.actor.getChatDeclarations([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )
-    } else if (collection === ids.ComGermnetworkDeclaration) {
+    } else if (collection === com.germnetwork.declaration.$type) {
       if (parsed.rkey !== 'self') return
       return (
         (await this.actor.getGermDeclarations([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )
-    } else if (collection === ids.AppBskyNotificationDeclaration) {
+    } else if (collection === app.bsky.notification.declaration.$type) {
       if (parsed.rkey !== 'self') return
       return (
         (
           await this.actor.getNotificationDeclarations([uri], includeTakedowns)
         ).get(uri) ?? undefined
       )
-    } else if (collection === ids.AppBskyActorStatus) {
+    } else if (collection === app.bsky.actor.status.$type) {
       if (parsed.rkey !== 'self') return
       return (
         (await this.actor.getStatus([uri], includeTakedowns)).get(uri) ??
         undefined
       )
-    } else if (collection === ids.AppBskyActorProfile) {
-      const did = parsed.hostname
+    } else if (collection === app.bsky.actor.profile.$type) {
+      const did = parsed.did
       const actor = (
         await this.actor.getActors([did], { includeTakedowns })
       ).get(did)
@@ -1350,8 +1354,10 @@ const serviceRefToDid = (serviceRef: string) => {
   return (idx !== -1 ? serviceRef.slice(0, idx) : serviceRef) as DidString
 }
 
-const listUrisFromProfileViewer = (item: ProfileViewerState | null) => {
-  const listUris: string[] = []
+const listUrisFromProfileViewer = (
+  item: ProfileViewerState | null,
+): AtUriString[] => {
+  const listUris: AtUriString[] = []
   if (item?.mutedByList) {
     listUris.push(item.mutedByList)
   }
@@ -1389,17 +1395,17 @@ const isModList = (
   return list?.record.purpose === 'app.bsky.graph.defs#modlist'
 }
 
-const labelSubjectsForDid = (dids: string[]) => {
+const labelSubjectsForDid = (dids: DidString[]) => {
   return [
     ...dids,
     ...dids.map((did) =>
-      AtUri.make(did, ids.AppBskyActorProfile, 'self').toString(),
+      AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
     ),
   ]
 }
 
-const rootUrisFromPosts = (posts: Posts): string[] => {
-  const uris: string[] = []
+const rootUrisFromPosts = (posts: Posts): AtUriString[] => {
+  const uris: AtUriString[] = []
   for (const item of posts.values()) {
     const rootUri = item && rootUriFromPost(item)
     if (rootUri) {
@@ -1409,15 +1415,15 @@ const rootUrisFromPosts = (posts: Posts): string[] => {
   return uris
 }
 
-const rootUriFromPost = (post: Post): string | undefined => {
+const rootUriFromPost = (post: Post): AtUriString | undefined => {
   return post.record.reply?.root.uri
 }
 
 const nestedRecordUrisFromPosts = (
   posts: Posts,
-  fromUris?: string[],
-): string[] => {
-  const uris: string[] = []
+  fromUris?: AtUriString[],
+): AtUriString[] => {
+  const uris: AtUriString[] = []
   const postUris = fromUris ?? posts.keys()
   for (const uri of postUris) {
     const item = posts.get(uri)
@@ -1428,26 +1434,29 @@ const nestedRecordUrisFromPosts = (
   return uris
 }
 
-const nestedRecordUris = (post: Post['record']): string[] => {
-  const uris: string[] = []
+const nestedRecordUris = (post: Post['record']): AtUriString[] => {
+  const uris: AtUriString[] = []
   if (!post?.embed) return uris
-  if (isEmbedRecord(post.embed)) {
+  if (isRecordEmbed(post.embed)) {
     uris.push(post.embed.record.uri)
-  } else if (isEmbedRecordWithMedia(post.embed)) {
+  } else if (isRecordWithMedia(post.embed)) {
     uris.push(post.embed.record.record.uri)
   }
   return uris
 }
 
-const getListUrisFromThreadgates = (gates: Threadgates) => {
-  const uris: string[] = []
+function* getListUrisFromThreadgates(
+  gates: Threadgates,
+): Generator<AtUriString, void, unknown> {
   for (const gate of gates.values()) {
-    const listRules = gate?.record.allow?.filter(isThreadgateListRule) ?? []
-    for (const rule of listRules) {
-      uris.push(rule.list)
+    if (gate?.record.allow) {
+      for (const rule of gate.record.allow) {
+        if (isListRule(rule)) {
+          yield rule.list
+        }
+      }
     }
   }
-  return uris
 }
 
 const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {
@@ -1538,6 +1547,6 @@ const actionTakedownLabels = <T>(
   }
 }
 
-const uriToRef = (uri: string): ItemRef => {
+const uriToRef = (uri: AtUriString): ItemRef => {
   return { uri }
 }

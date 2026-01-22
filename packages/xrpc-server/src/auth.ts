@@ -1,6 +1,7 @@
 import * as common from '@atproto/common'
 import { MINUTE } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
+import { DidString, isDidString } from '@atproto/lex-schema'
 import { AuthRequiredError } from './errors'
 
 type ServiceJwtParams = {
@@ -17,7 +18,7 @@ type ServiceJwtHeaders = {
 } & Record<string, unknown>
 
 type ServiceJwtPayload = {
-  iss: string
+  iss: DidString | `${DidString}#${string}`
   aud: string
   exp: number
   lxm?: string
@@ -72,7 +73,10 @@ export const verifyJwt = async (
   jwtStr: string,
   ownDid: string | null, // null indicates to skip the audience check
   lxm: string | null, // null indicates to skip the lxm check
-  getSigningKey: (iss: string, forceRefresh: boolean) => Promise<string>,
+  getSigningKey: (
+    iss: DidString | `${DidString}#${string}`,
+    forceRefresh: boolean,
+  ) => Promise<string>,
   verifySignatureWithKey: VerifySignatureWithKeyFn = cryptoVerifySignatureWithKey,
 ): Promise<ServiceJwtPayload> => {
   const parts = jwtStr.split('.')
@@ -119,6 +123,9 @@ export const verifyJwt = async (
         : `missing jwt lexicon method ("lxm"). must match: ${lxm}`,
       'BadJwtLexiconMethod',
     )
+  }
+  if (!payload.iss || !isDidStringOrService(payload.iss)) {
+    throw new AuthRequiredError('jwt iss is not a valid did', 'BadJwtIss')
   }
 
   const msgBytes = Buffer.from(parts.slice(0, 2).join('.'), 'utf8')
@@ -206,4 +213,16 @@ const parsePayload = (b64: string): ServiceJwtPayload => {
     throw new AuthRequiredError('poorly formatted jwt', 'BadJwt')
   }
   return payload
+}
+
+function isDidStringOrService(
+  value: string,
+): value is DidString | `${DidString}#${string}` {
+  const hashIdx = value.indexOf('#')
+  if (hashIdx === -1) {
+    return isDidString(value)
+  } else {
+    const didPart = value.slice(0, hashIdx)
+    return isDidString(didPart) && !value.includes('#', hashIdx + 1)
+  }
 }

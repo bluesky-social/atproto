@@ -1,5 +1,6 @@
-import AtpAgent, { AtUri } from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
+import { Client } from '@atproto/lex'
+import { AtUri, AtUriString } from '@atproto/syntax'
 import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -52,21 +53,21 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (ctx.topicsAgent) {
-    const res =
-      await ctx.topicsAgent.app.bsky.unspecced.getSuggestedStarterPacksSkeleton(
-        {
-          limit: params.limit,
-          viewer: params.hydrateCtx.viewer ?? undefined,
-        },
-        {
-          headers: params.headers,
-        },
-      )
-
-    return res.data
+  if (ctx.topicsClient) {
+    return ctx.topicsClient.call(
+      app.bsky.unspecced.getSuggestedStarterPacksSkeleton,
+      {
+        limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+      },
+      {
+        headers: params.headers,
+      },
+    )
   } else {
     throw new InternalServerError('Topics agent not available')
   }
@@ -138,7 +139,7 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
 }
 
 type Params = app.bsky.unspecced.getTrendingTopics.Params & {
@@ -147,5 +148,5 @@ type Params = app.bsky.unspecced.getTrendingTopics.Params & {
 }
 
 type SkeletonState = {
-  starterPacks: string[]
+  starterPacks: AtUriString[]
 }

@@ -1,3 +1,4 @@
+import { DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -100,4 +101,4 @@ type Params = app.bsky.actor.getProfile.Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { did: string }
+type SkeletonState = { did: DidString }

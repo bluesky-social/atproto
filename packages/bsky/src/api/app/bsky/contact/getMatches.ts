@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -7,7 +8,6 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.contact.getMatches.Params
 import {
   HydrationFnInput,
   SkeletonFnInput,
@@ -19,6 +19,7 @@ import { assertRolodexOrThrowUnimplemented, callRolodexClient } from './util'
 
 export default function (server: Server, ctx: AppContext) {
   const getMatches = createPipeline(skeleton, hydration, noBlocks, presentation)
+
   server.add(app.bsky.contact.getMatches, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
@@ -58,7 +59,7 @@ const skeleton = async (
   )
   return {
     actor,
-    subjects,
+    subjects: subjects as DidString[],
     cursor: cursor || undefined,
   }
 }
@@ -102,12 +103,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.contact.getMatches.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
   actor: string
-  subjects: string[]
+  subjects: DidString[]
   cursor?: string
 }

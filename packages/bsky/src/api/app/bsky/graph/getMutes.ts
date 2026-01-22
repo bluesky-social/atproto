@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getMutes.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -35,7 +35,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   if (clearlyBadCursor(params.cursor)) {
     return { mutedDids: [] }
@@ -46,7 +48,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     limit: params.limit,
   })
   return {
-    mutedDids: dids,
+    mutedDids: dids as DidString[],
     cursor: cursor || undefined,
   }
 }
@@ -75,11 +77,11 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getMutes.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  mutedDids: string[]
+  mutedDids: DidString[]
   cursor?: string
 }

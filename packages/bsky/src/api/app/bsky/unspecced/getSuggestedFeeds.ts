@@ -1,6 +1,6 @@
-import AtpAgent from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError, Server } from '@atproto/xrpc-server'
+import { AtUriString, Client } from '@atproto/lex'
+import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
@@ -43,23 +43,24 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (ctx.topicsAgent) {
-    const res =
-      await ctx.topicsAgent.app.bsky.unspecced.getSuggestedFeedsSkeleton(
-        {
-          limit: params.limit,
-          viewer: params.hydrateCtx.viewer ?? undefined,
-        },
-        {
-          headers: params.headers,
-        },
-      )
-
-    return res.data
+  if (ctx.topicsClient) {
+    return ctx.topicsClient.call(
+      app.bsky.unspecced.getSuggestedFeedsSkeleton,
+      {
+        limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+      },
+      {
+        headers: params.headers,
+      },
+    )
   } else {
-    throw new InternalServerError('Topics agent not available')
+    // Use 501 instead of 500 as these are not considered retry-able by clients
+    throw new MethodNotImplementedError('Topics agent not available')
   }
 }
 
@@ -85,14 +86,14 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
 }
 
-type Params = app.bsky.unspecced.getTrendingTopics.Params & {
-  hydrateCtx: HydrateCtx & { viewer: string | null }
+type Params = app.bsky.unspecced.getSuggestedFeeds.Params & {
+  hydrateCtx: HydrateCtx
   headers: Record<string, string>
 }
 
 type SkeletonState = {
-  feeds: string[]
+  feeds: AtUriString[]
 }

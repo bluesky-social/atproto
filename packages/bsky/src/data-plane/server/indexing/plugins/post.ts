@@ -54,8 +54,6 @@ type IndexedPost = {
   threadgate?: app.bsky.feed.threadgate.Main
 }
 
-const lexId = app.bsky.feed.post.$type
-
 const REPLY_NOTIF_DEPTH = 5
 
 const insertFn = async (
@@ -488,14 +486,10 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
   await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }
 
-export type PluginType = RecordProcessor<app.bsky.feed.post.Main, IndexedPost>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.post.main,
     insertFn,
     findDuplicate,
     deleteFn,

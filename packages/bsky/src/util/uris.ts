@@ -1,4 +1,4 @@
-import { AtUri, DidString } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { StrongRef, parseStrongRef } from '../views/types.js'
 
 /**
@@ -26,7 +26,7 @@ export function postUriToPostgateUri(postUri: string) {
 }
 
 export function uriToDid(uri: string) {
-  return new AtUri(uri).hostname as DidString
+  return new AtUri(uri).did
 }
 
 // @TODO temp fix for proliferation of invalid pinned post values

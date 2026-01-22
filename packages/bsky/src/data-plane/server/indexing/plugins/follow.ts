@@ -8,7 +8,6 @@ import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { countAll, excluded } from '../../db/util'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.graph.follow.$type
 type IndexedFollow = Selectable<DatabaseSchemaType['follow']>
 
 const insertFn = async (
@@ -114,17 +113,10 @@ const updateAggregates = async (db: DatabaseSchema, follow: IndexedFollow) => {
   await Promise.all([followersCountQb.execute(), followsCountQb.execute()])
 }
 
-export type PluginType = RecordProcessor<
-  app.bsky.graph.follow.Main,
-  IndexedFollow
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.follow.main,
     insertFn,
     findDuplicate,
     deleteFn,

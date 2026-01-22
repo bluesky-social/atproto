@@ -7,7 +7,6 @@ import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.graph.verification.$type
 type IndexedVerification = Selectable<DatabaseSchemaType['verification']>
 
 const insertFn = async (
@@ -96,17 +95,10 @@ const notifsForDelete = (
   }
 }
 
-export type PluginType = RecordProcessor<
-  app.bsky.graph.verification.Main,
-  IndexedVerification
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.verification.main,
     insertFn,
     findDuplicate,
     deleteFn,

@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -9,7 +10,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getActorFeeds.Params
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
@@ -55,7 +55,7 @@ const skeleton = async (inputs: {
     limit: params.limit,
   })
   return {
-    feedUris: feedsRes.uris,
+    feedUris: feedsRes.uris as AtUriString[],
     cursor: parseString(feedsRes.cursor),
   }
 }
@@ -93,9 +93,9 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getActorFeeds.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  feedUris: string[]
+  feedUris: AtUriString[]
   cursor?: string
 }

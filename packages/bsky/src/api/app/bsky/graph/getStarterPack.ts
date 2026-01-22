@@ -1,8 +1,8 @@
+import { AtUriString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getStarterPack.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -71,10 +71,10 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getStarterPack.Params & {
   hydrateCtx: HydrateCtx
 }
 
 type SkeletonState = {
-  uri: string
+  uri: AtUriString
 }

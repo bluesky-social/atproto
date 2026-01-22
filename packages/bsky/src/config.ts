@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
+import { isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
@@ -563,7 +564,7 @@ export class ServerConfig {
   }
 
   get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
+    return this.cfg.labelsFromIssuerDids?.filter(isDidString) ?? []
   }
 
   get blobCacheLocation() {

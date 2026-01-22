@@ -1,4 +1,4 @@
-import { UriString } from '@atproto/lex'
+import { UriString, isUriString } from '@atproto/lex'
 import { Options } from './util'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
@@ -11,7 +11,14 @@ export type ImagePreset =
 const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)@(.+?)$/
 
 export class ImageUriBuilder {
-  constructor(public endpoint: UriString) {}
+  public endpoint: UriString
+
+  constructor(endpoint: string) {
+    if (!isUriString(endpoint)) {
+      throw new Error('ImageUriBuilder endpoint must be a valid UriString')
+    }
+    this.endpoint = endpoint
+  }
 
   static presets: ImagePreset[] = [
     'avatar',
@@ -32,7 +39,7 @@ export class ImageUriBuilder {
       cid,
     })
 
-    return `${this.endpoint}${path}`
+    return `${this.endpoint}${path}` as UriString
   }
 
   static getPath(opts: { preset: ImagePreset } & BlobLocation) {

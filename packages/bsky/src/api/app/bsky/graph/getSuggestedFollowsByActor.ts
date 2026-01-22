@@ -1,11 +1,13 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { HeadersMap } from '@atproto/xrpc'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Client, DidString } from '@atproto/lex'
+import {
+  Headers as HeadersMap,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.getSuggestedFollowsByActor.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -55,7 +57,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const [relativeToDid] = await ctx.hydrator.actor.getDids([params.actor])
   if (!relativeToDid) {
@@ -128,18 +132,18 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  suggestionsAgent: AtpAgent | undefined
+  suggestionsClient: Client | undefined
   featureGates: AppContext['featureGates']
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getSuggestedFollowsByActor.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
   headers: HeadersMap
 }
 
 type SkeletonState = {
   isFallback: boolean
-  suggestedDids: string[]
+  suggestedDids: DidString[]
   recId?: number
   headers?: HeadersMap
 }

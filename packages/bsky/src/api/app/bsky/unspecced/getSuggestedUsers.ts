@@ -1,6 +1,6 @@
-import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError, Server } from '@atproto/xrpc-server'
+import { Client, DidString } from '@atproto/lex'
+import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { FeatureGates } from '../../../../feature-gates'
 import {
@@ -56,44 +56,44 @@ export default function (server: Server, ctx: AppContext) {
 // TODO: rename to `skeleton` once we can fully migrate to Discover
 const skeletonFromDiscover = async (
   input: SkeletonFnInput<Context, Params>,
-) => {
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (!ctx.suggestionsAgent)
-    throw new InternalServerError('Suggestions agent not available')
+  if (!ctx.suggestionsClient) {
+    throw new MethodNotImplementedError('Suggestions agent not available')
+  }
 
-  const res =
-    await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        category: params.category,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-
-  return res.data
+  return ctx.suggestionsClient.call(
+    app.bsky.unspecced.getSuggestedUsersSkeleton,
+    {
+      limit: params.limit,
+      category: params.category,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+    },
+  )
 }
 
-const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
+const skeletonFromTopics = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (!ctx.topicsAgent)
-    throw new InternalServerError('Topics agent not available')
+  if (!ctx.topicsClient) {
+    throw new MethodNotImplementedError('Topics agent not available')
+  }
 
-  const res =
-    await ctx.topicsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        category: params.category,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-
-  return res.data
+  return ctx.topicsClient.call(
+    app.bsky.unspecced.getSuggestedUsersSkeleton,
+    {
+      limit: params.limit,
+      category: params.category,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+    },
+  )
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
@@ -156,18 +156,18 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
-  suggestionsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
+  suggestionsClient: Client | undefined
   featureGates: FeatureGates
 }
 
-type Params = app.bsky.unspecced.getTrendingTopics.Params & {
+type Params = app.bsky.unspecced.getSuggestedUsers.Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
   category?: string
 }
 
 type SkeletonState = {
-  dids: string[]
+  dids: DidString[]
   recId?: string
 }

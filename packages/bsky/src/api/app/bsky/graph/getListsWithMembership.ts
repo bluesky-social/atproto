@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString, DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
@@ -13,7 +14,6 @@ import {
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
-type QueryParams = app.bsky.graph.getListsWithMembership.Params
 const CURATELIST = app.bsky.graph.defs.curatelist.value
 const MODLIST = app.bsky.graph.defs.modlist.value
 
@@ -63,7 +63,11 @@ const skeleton = async (
     cursor: params.cursor,
     limit: params.limit,
   })
-  return { actorDid, listUris, cursor: cursor || undefined }
+  return {
+    actorDid,
+    listUris: listUris as AtUriString[],
+    cursor: cursor || undefined,
+  }
 }
 
 const hydration = async (
@@ -127,12 +131,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getListsWithMembership.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  actorDid: string
-  listUris: string[]
+  actorDid: DidString
+  listUris: AtUriString[]
   cursor?: string
 }

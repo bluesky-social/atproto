@@ -19,17 +19,12 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
+import { XrpcFailure } from './errors.js'
 import { com } from './lexicons/index.js'
 import { XrpcResponse, XrpcResponseBody } from './response.js'
 import { BinaryBodyInit, CallOptions, Service } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
-import {
-  XrpcFailure,
-  XrpcOptions,
-  XrpcRequestParams,
-  xrpc,
-  xrpcSafe,
-} from './xrpc.js'
+import { XrpcOptions, XrpcRequestParams, xrpc, xrpcSafe } from './xrpc.js'
 
 export type {
   AtIdentifierString,

@@ -6,7 +6,6 @@ import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = app.bsky.actor.profile.$type
 type IndexedProfile = DatabaseSchemaType['profile']
 
 const insertFn = async (
@@ -73,17 +72,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<
-  app.bsky.actor.profile.Main,
-  IndexedProfile
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.actor.profile.main,
     insertFn,
     findDuplicate,
     deleteFn,

@@ -11,7 +11,6 @@ import {
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getListFeed.Params
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -139,7 +138,7 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getListFeed.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
   items: FeedItem[]

@@ -1,12 +1,11 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { AtUriString, Client } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.graph.searchStarterPacks.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -45,19 +44,23 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const { q } = params
 
-  if (ctx.searchAgent) {
+  if (ctx.searchClient) {
     // @NOTE cursors won't change on appview swap
-    const { data: res } =
-      await ctx.searchAgent.app.bsky.unspecced.searchStarterPacksSkeleton({
+    const res = await ctx.searchClient.call(
+      app.bsky.unspecced.searchStarterPacksSkeleton,
+      {
         q,
         cursor: params.cursor,
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
-      })
+      },
+    )
     return {
       uris: res.starterPacks.map(({ uri }) => uri),
       cursor: parseString(res.cursor),
@@ -70,7 +73,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     cursor: params.cursor,
   })
   return {
-    uris: res.uris,
+    uris: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
   }
 }
@@ -108,12 +111,14 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchClient?: Client
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.graph.searchStarterPacks.Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type Skeleton = {
-  uris: string[]
+  uris: AtUriString[]
   cursor?: string
 }

@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -7,7 +8,6 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.feed.getFeedGenerators.Params
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
@@ -72,8 +72,10 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getFeedGenerators.Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type Skeleton = {
-  feedUris: string[]
+  feedUris: AtUriString[]
 }
