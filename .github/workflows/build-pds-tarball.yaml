@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+      - develop
+    tags:
+      - 'v*.*.*'
     paths:
       - 'packages/pds/**'
       - 'packages/common/**'
@@ -14,6 +17,15 @@ on:
       - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'stage'
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
       skip_pds_trigger:
         description: 'Skip triggering PDS build'
         required: false
@@ -33,10 +45,28 @@ jobs:
       tarball_url: ${{ steps.tarball.outputs.tarball_url }}
       version: ${{ steps.version.outputs.version }}
       short_sha: ${{ steps.version.outputs.short_sha }}
+      environment: ${{ steps.config.outputs.environment }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Determine environment
+        id: config
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            ENV="prod"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            ENV="stage"
+          elif [[ "${{ github.ref_name }}" == "develop" ]]; then
+            ENV="dev"
+          else
+            ENV="dev"
+          fi
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "Environment: $ENV"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -56,7 +86,6 @@ jobs:
           PDS_VERSION=$(node -p "require('./packages/pds/package.json').version")
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "version=$PDS_VERSION" >> $GITHUB_OUTPUT
-          echo "tag=pds-build-$SHORT_SHA" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -69,9 +98,10 @@ jobs:
         run: |
           cd packages/pds
           pnpm pack --pack-destination /tmp/
-          # Rename to include version and commit SHA for uniqueness
+          # Rename to include environment and commit SHA for uniqueness
           ORIG_TARBALL=$(ls /tmp/atproto-pds-*.tgz | head -1)
-          TARBALL_NAME="atproto-pds-${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}.tgz"
+          ENV="${{ steps.config.outputs.environment }}"
+          TARBALL_NAME="atproto-pds-${ENV}-${{ steps.version.outputs.short_sha }}.tgz"
           mv "$ORIG_TARBALL" "/tmp/$TARBALL_NAME"
           echo "tarball_path=/tmp/$TARBALL_NAME" >> $GITHUB_OUTPUT
           echo "tarball_name=$TARBALL_NAME" >> $GITHUB_OUTPUT
@@ -80,22 +110,23 @@ jobs:
         id: release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: pds-build-${{ steps.version.outputs.short_sha }}
-          name: PDS Build ${{ steps.version.outputs.short_sha }}
+          tag_name: pds-${{ steps.config.outputs.environment }}-${{ steps.version.outputs.short_sha }}
+          name: PDS ${{ steps.config.outputs.environment }} Build ${{ steps.version.outputs.short_sha }}
           body: |
             Automated PDS tarball build from commit ${{ github.sha }}
 
+            Environment: ${{ steps.config.outputs.environment }}
             PDS Version: ${{ steps.version.outputs.version }}
             Commit: ${{ steps.version.outputs.short_sha }}
           files: ${{ steps.pack.outputs.tarball_path }}
-          prerelease: true
+          prerelease: ${{ steps.config.outputs.environment != 'prod' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get tarball URL
         id: tarball
         run: |
-          TARBALL_URL="https://github.com/${{ github.repository }}/releases/download/pds-build-${{ steps.version.outputs.short_sha }}/${{ steps.pack.outputs.tarball_name }}"
+          TARBALL_URL="https://github.com/${{ github.repository }}/releases/download/pds-${{ steps.config.outputs.environment }}-${{ steps.version.outputs.short_sha }}/${{ steps.pack.outputs.tarball_name }}"
           echo "tarball_url=$TARBALL_URL" >> $GITHUB_OUTPUT
 
       - name: Build Summary
@@ -104,6 +135,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | **${{ steps.config.outputs.environment }}** |" >> $GITHUB_STEP_SUMMARY
           echo "| Version | ${{ steps.version.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Commit | ${{ steps.version.outputs.short_sha }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Tarball | [${{ steps.pack.outputs.tarball_name }}](${{ steps.tarball.outputs.tarball_url }}) |" >> $GITHUB_STEP_SUMMARY
@@ -119,18 +151,21 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
           repository: w-social-eu/pds
-          event-type: atproto-updated
+          event-type: atproto-updated-${{ needs.build-tarball.outputs.environment }}
           client-payload: |
             {
               "atproto_sha": "${{ github.sha }}",
               "atproto_short_sha": "${{ needs.build-tarball.outputs.short_sha }}",
               "tarball_url": "${{ needs.build-tarball.outputs.tarball_url }}",
-              "pds_version": "${{ needs.build-tarball.outputs.version }}"
+              "pds_version": "${{ needs.build-tarball.outputs.version }}",
+              "environment": "${{ needs.build-tarball.outputs.environment }}"
             }
 
       - name: Trigger Summary
         run: |
           echo "## PDS Build Triggered" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Triggered PDS repo with tarball URL:" >> $GITHUB_STEP_SUMMARY
-          echo "\`${{ needs.build-tarball.outputs.tarball_url }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | **${{ needs.build-tarball.outputs.environment }}** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tarball | \`${{ needs.build-tarball.outputs.tarball_url }}\` |" >> $GITHUB_STEP_SUMMARY
