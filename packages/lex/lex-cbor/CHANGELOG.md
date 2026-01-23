@@ -1,5 +1,18 @@
 # @atproto/lex-cbor
 
+## 0.0.9
+
+### Patch Changes
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Simplify encoding logic of `number`
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `cborg` dependency, fixing encoding of strings with invalid surrogate pairs, and ignoring `undefined` object properties.
+
+- [#4572](https://github.com/bluesky-social/atproto/pull/4572) [`ecf5921`](https://github.com/bluesky-social/atproto/commit/ecf59214d59d9d2530c197c0679d26e76c6a60ef) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Perf improvements: update `cborg` dependency to version 4.5.8
+
+- Updated dependencies [[`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/lex-data@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes

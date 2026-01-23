@@ -1,5 +1,20 @@
 # @atproto/api
 
+## 0.18.17
+
+### Patch Changes
+
+- [#4565](https://github.com/bluesky-social/atproto/pull/4565) [`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3) Thanks [@cuducos](https://github.com/cuducos)! - Re-add `recId` to suggested users (now, as string)
+
+- [#4547](https://github.com/bluesky-social/atproto/pull/4547) [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c) Thanks [@cuducos](https://github.com/cuducos)! - Removes `recId` from suggested users — we need it as a string, so we're gonna re-add it as string (instead of integer) later.
+
+- [#4415](https://github.com/bluesky-social/atproto/pull/4415) [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114) Thanks [@bnewbold](https://github.com/bnewbold)! - support for Germ Networks chat declaration records
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/common-web@0.4.13
+  - @atproto/lexicon@0.6.1
+
 ## 0.18.16
 
 ### Patch Changes

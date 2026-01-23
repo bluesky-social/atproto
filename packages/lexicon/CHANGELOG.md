@@ -1,5 +1,15 @@
 # @atproto/lexicon
 
+## 0.6.1
+
+### Patch Changes
+
+- [#4571](https://github.com/bluesky-social/atproto/pull/4571) [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Refactor uri validation to use `@atproto/syntax`
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/common-web@0.4.13
+
 ## 0.6.0
 
 ### Minor Changes
