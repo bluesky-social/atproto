@@ -31,8 +31,12 @@ export default function (server: Server, ctx: AppContext) {
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
       })
-      const { ...result } = await getTrendingTopics(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
+      const result = await getTrendingTopics(
+        {
+          ...params,
+          hydrateCtx,
+          headers,
+        },
         ctx,
       )
       return {
@@ -49,7 +53,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendingTopics(
       {
         limit: params.limit,
-        viewer: params.viewer,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       },
       {
         headers: params.headers,
@@ -87,8 +91,8 @@ type Context = {
   topicsAgent: AtpAgent | undefined
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string | null }
+type Params = Omit<QueryParams, 'viewer'> & {
+  hydrateCtx: HydrateCtx
   headers: Record<string, string>
 }
 

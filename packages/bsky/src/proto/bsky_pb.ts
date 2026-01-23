@@ -3145,6 +3145,11 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
    */
   starterPacks: number[] = [];
 
+  /**
+   * @generated from field: repeated int32 drafts = 8;
+   */
+  drafts: number[] = [];
+
   constructor(data?: PartialMessage<GetCountsForUsersResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -3160,6 +3165,7 @@ export class GetCountsForUsersResponse extends Message<GetCountsForUsersResponse
     { no: 5, name: "lists", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 6, name: "feeds", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
     { no: 7, name: "starter_packs", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
+    { no: 8, name: "drafts", kind: "scalar", T: 5 /* ScalarType.INT32 */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCountsForUsersResponse {
@@ -3886,11 +3892,6 @@ export class ActorInfo extends Message<ActorInfo> {
   ageAssuranceStatus?: AgeAssuranceStatus;
 
   /**
-   * @generated from field: optional double reserved = 20;
-   */
-  reserved?: number;
-
-  /**
    * @generated from field: bsky.Record germ_record = 21;
    */
   germRecord?: Record;
@@ -3922,7 +3923,6 @@ export class ActorInfo extends Message<ActorInfo> {
     { no: 17, name: "status_record", kind: "message", T: Record },
     { no: 18, name: "allow_activity_subscriptions_from", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 19, name: "age_assurance_status", kind: "message", T: AgeAssuranceStatus, opt: true },
-    { no: 20, name: "reserved", kind: "scalar", T: 1 /* ScalarType.DOUBLE */, opt: true },
     { no: 21, name: "germ_record", kind: "message", T: Record },
   ]);
 
@@ -9369,6 +9369,155 @@ export class GetActorBookmarksResponse extends Message<GetActorBookmarksResponse
 
   static equals(a: GetActorBookmarksResponse | PlainMessage<GetActorBookmarksResponse> | undefined, b: GetActorBookmarksResponse | PlainMessage<GetActorBookmarksResponse> | undefined): boolean {
     return proto3.util.equals(GetActorBookmarksResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorDraftsRequest
+ */
+export class GetActorDraftsRequest extends Message<GetActorDraftsRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: int32 limit = 2;
+   */
+  limit = 0;
+
+  /**
+   * @generated from field: string cursor = 3;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetActorDraftsRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetActorDraftsRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 3, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetActorDraftsRequest {
+    return new GetActorDraftsRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetActorDraftsRequest {
+    return new GetActorDraftsRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetActorDraftsRequest {
+    return new GetActorDraftsRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetActorDraftsRequest | PlainMessage<GetActorDraftsRequest> | undefined, b: GetActorDraftsRequest | PlainMessage<GetActorDraftsRequest> | undefined): boolean {
+    return proto3.util.equals(GetActorDraftsRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.DraftInfo
+ */
+export class DraftInfo extends Message<DraftInfo> {
+  /**
+   * stash key
+   *
+   * @generated from field: string key = 1;
+   */
+  key = "";
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 2;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp updated_at = 3;
+   */
+  updatedAt?: Timestamp;
+
+  /**
+   * @generated from field: bytes payload = 4;
+   */
+  payload = new Uint8Array(0);
+
+  constructor(data?: PartialMessage<DraftInfo>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.DraftInfo";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "created_at", kind: "message", T: Timestamp },
+    { no: 3, name: "updated_at", kind: "message", T: Timestamp },
+    { no: 4, name: "payload", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DraftInfo {
+    return new DraftInfo().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DraftInfo {
+    return new DraftInfo().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DraftInfo {
+    return new DraftInfo().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DraftInfo | PlainMessage<DraftInfo> | undefined, b: DraftInfo | PlainMessage<DraftInfo> | undefined): boolean {
+    return proto3.util.equals(DraftInfo, a, b);
+  }
+}
+
+/**
+ * @generated from message bsky.GetActorDraftsResponse
+ */
+export class GetActorDraftsResponse extends Message<GetActorDraftsResponse> {
+  /**
+   * @generated from field: repeated bsky.DraftInfo drafts = 1;
+   */
+  drafts: DraftInfo[] = [];
+
+  /**
+   * @generated from field: string cursor = 2;
+   */
+  cursor = "";
+
+  constructor(data?: PartialMessage<GetActorDraftsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsky.GetActorDraftsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "drafts", kind: "message", T: DraftInfo, repeated: true },
+    { no: 2, name: "cursor", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetActorDraftsResponse {
+    return new GetActorDraftsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetActorDraftsResponse {
+    return new GetActorDraftsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetActorDraftsResponse {
+    return new GetActorDraftsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetActorDraftsResponse | PlainMessage<GetActorDraftsResponse> | undefined, b: GetActorDraftsResponse | PlainMessage<GetActorDraftsResponse> | undefined): boolean {
+    return proto3.util.equals(GetActorDraftsResponse, a, b);
   }
 }
 
