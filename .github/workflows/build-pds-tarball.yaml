@@ -69,10 +69,11 @@ jobs:
         run: |
           cd packages/pds
           pnpm pack --pack-destination /tmp/
-          # pnpm pack creates atproto-pds-{version}.tgz
-          TARBALL_PATH=$(ls /tmp/atproto-pds-*.tgz | head -1)
-          TARBALL_NAME=$(basename "$TARBALL_PATH")
-          echo "tarball_path=$TARBALL_PATH" >> $GITHUB_OUTPUT
+          # Rename to include version and commit SHA for uniqueness
+          ORIG_TARBALL=$(ls /tmp/atproto-pds-*.tgz | head -1)
+          TARBALL_NAME="atproto-pds-${{ steps.version.outputs.version }}-${{ steps.version.outputs.short_sha }}.tgz"
+          mv "$ORIG_TARBALL" "/tmp/$TARBALL_NAME"
+          echo "tarball_path=/tmp/$TARBALL_NAME" >> $GITHUB_OUTPUT
           echo "tarball_name=$TARBALL_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
