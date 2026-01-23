@@ -23,7 +23,7 @@ export type Config = {
 
 type UserContext = Omit<GrowthBookUserContext, 'attributes'> & {
   attributes?: {
-    did: string | null
+    did?: string | null
   }
 }
 
@@ -116,9 +116,8 @@ export class FeatureGates {
 
   userContext({
     did,
-  }: Exclude<Partial<UserContext['attributes']>, undefined>): UserContext {
-    if (!did) return {}
-    return { attributes: { did } }
+  }: Exclude<UserContext['attributes'], undefined>): UserContext {
+    return { attributes: { did: did ?? null } }
   }
 
   check(gate: FeatureGateID, ctx: UserContext): boolean {
