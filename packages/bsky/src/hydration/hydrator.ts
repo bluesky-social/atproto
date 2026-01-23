@@ -747,7 +747,7 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const postsState = await this.hydratePosts(refs, ctx, undefined, {
       processDynamicTagsForView: ctx.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       )
         ? 'thread'
         : undefined,

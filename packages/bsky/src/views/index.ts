@@ -1417,7 +1417,7 @@ export class Views {
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
       state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       ),
     )
 
@@ -1790,7 +1790,7 @@ export class Views {
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
       state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       ),
     )
   }
@@ -1988,7 +1988,7 @@ export class Views {
     let hiddenByTag = false
     if (
       state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       )
     ) {
       hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
