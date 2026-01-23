@@ -4,6 +4,18 @@ import {
 } from '@growthbook/growthbook'
 import { featureGatesLogger } from './logger'
 
+/**
+ * We want this to be sufficiently high that we don't time out under
+ * normal conditions, but not so high that it takes too long to boot
+ * the server.
+ */
+const FETCH_TIMEOUT = 3e3 // 3 seconds
+
+/**
+ * StatSig used to default to every 10s, but I think 1m is fine
+ */
+const REFETCH_INTERVAL = 60e3 // 1 minute
+
 export type Config = {
   apiUrl?: string
   apiKey?: string
@@ -35,6 +47,7 @@ export class FeatureGates {
   ready = false
   client: GrowthBookClient | undefined = undefined
   ids = FeatureGateID
+  refreshInterval: NodeJS.Timeout | undefined = undefined
 
   constructor(private config: Config) {}
 
@@ -45,12 +58,55 @@ export class FeatureGates {
           apiHost: this.config.apiUrl,
           clientKey: this.config.apiKey,
         })
-        await this.client.init()
+
+        const { source, error } = await this.client.init({
+          timeout: FETCH_TIMEOUT,
+        })
+
+        /**
+         * This does not necessarily mean that the client completely failed,
+         * since it could just be that the request timed out. It may succeed
+         * after the timeout, or later during refreshes.
+         *
+         * @see https://docs.growthbook.io/lib/node#error-handling
+         */
+        if (error) {
+          featureGatesLogger.error(
+            { err: error, source },
+            'Client failed to initialize normally',
+          )
+        }
+
+        /**
+         * Set up periodic refresh of feature definitions
+         *
+         * @see https://docs.growthbook.io/lib/node#refreshing-features
+         */
+        this.refreshInterval = setInterval(async () => {
+          try {
+            await this.client?.refreshFeatures({
+              timeout: FETCH_TIMEOUT,
+            })
+          } catch (err) {
+            featureGatesLogger.error({ err }, 'Failed to refresh features')
+          }
+        }, REFETCH_INTERVAL)
+
+        /* Ready or not, here we come */
         this.ready = true
       }
     } catch (err) {
-      featureGatesLogger.error({ err }, 'Failed to initialize GrowthBook')
+      featureGatesLogger.error({ err }, 'Client initialization failed')
       this.ready = false
+    }
+  }
+
+  destroy() {
+    if (this.ready) {
+      this.ready = false
+      if (this.refreshInterval) {
+        clearInterval(this.refreshInterval)
+      }
     }
   }
 
