@@ -1,5 +1,14 @@
 # @atproto/lex-json
 
+## 0.0.9
+
+### Patch Changes
+
+- [#4532](https://github.com/bluesky-social/atproto/pull/4532) [`aaedafc`](https://github.com/bluesky-social/atproto/commit/aaedafc6baef106b85e0954d8474cec21c00c1c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor change to validation of integers in lex data
+
+- Updated dependencies [[`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/lex-data@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes
