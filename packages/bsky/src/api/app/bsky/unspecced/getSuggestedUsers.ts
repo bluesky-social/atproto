@@ -99,7 +99,7 @@ const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const useDiscover = input.ctx.featureGates.check(
-    input.ctx.featureGates.ids.SuggestedUsersFromDiscover,
+    input.ctx.featureGates.ids.SuggestedUsersDiscoverAgentEnable,
     input.ctx.featureGates.contextForDid(input.params.hydrateCtx.viewer ?? ''),
   )
   const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics

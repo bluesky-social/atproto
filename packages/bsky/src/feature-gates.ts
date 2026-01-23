@@ -20,9 +20,9 @@ export enum FeatureGateID {
    * appease TS
    */
   _ = '',
-  SuggestedUsersFromDiscover = 'disc_onboarding_follow_suggest',
-  ThreadsV2ReplyRankingExploration = 'threads_v2_reply_ranking_exploration',
-  SearchFilteringExploration = 'search_filtering_exploration',
+  SuggestedUsersDiscoverAgentEnable = 'suggested_users:discover_agent:enable',
+  ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
+  SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
 }
 
 /**
@@ -60,11 +60,6 @@ export class FeatureGates {
   check(gate: FeatureGateID, ctx: Context): boolean {
     if (!this.ready || !this.client) return false
     if (!ctx.attributes || !ctx.attributes.did) return false
-
-    // TODO: migrate from StatSig to GrowthBook (remove these two lines)
-    if (gate === FeatureGateID.ThreadsV2ReplyRankingExploration) return false
-    if (gate === FeatureGateID.SearchFilteringExploration) return false
-
     return this.client.isOn(gate, ctx)
   }
 
