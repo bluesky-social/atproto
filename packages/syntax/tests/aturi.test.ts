@@ -1,8 +1,9 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
-import { AtUri, ensureValidAtUri, ensureValidAtUriRegex } from '../src/index'
+import { describe, expect, it } from 'vitest'
+import { AtUri, ensureValidAtUri, ensureValidAtUriRegex } from '../src'
 
-describe('At Uris', () => {
+describe(AtUri, () => {
   it('parses valid at uris', () => {
     //                 input   host    path    query   hash
     type AtUriTest = [string, string, string, string, string]

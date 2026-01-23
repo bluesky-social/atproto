@@ -12,10 +12,10 @@ declare global {
 /* Validates datetime string against atproto Lexicon 'datetime' format.
  * Syntax is described at: https://atproto.com/specs/lexicon#datetime
  */
-export function ensureValidDatetime(
-  dtStr: string,
-): asserts dtStr is DatetimeString {
-  const date = new Date(dtStr)
+export function ensureValidDatetime<I extends string>(
+  input: I,
+): asserts input is I & DatetimeString {
+  const date = new Date(input)
   // must parse as ISO 8601; this also verifies semantics like month is not 13 or 00
   if (isNaN(date.getTime())) {
     throw new InvalidDatetimeError('datetime did not parse as ISO 8601')
@@ -26,34 +26,33 @@ export function ensureValidDatetime(
   // regex and other checks for RFC-3339
   if (
     !/^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-6][0-9](.[0-9]{1,20})?(Z|([+-][0-2][0-9]:[0-5][0-9]))$/.test(
-      dtStr,
+      input,
     )
   ) {
     throw new InvalidDatetimeError("datetime didn't validate via regex")
   }
-  if (dtStr.length > 64) {
+  if (input.length > 64) {
     throw new InvalidDatetimeError('datetime is too long (64 chars max)')
   }
-  if (dtStr.endsWith('-00:00')) {
+  if (input.endsWith('-00:00')) {
     throw new InvalidDatetimeError(
       'datetime can not use "-00:00" for UTC timezone',
     )
   }
-  if (dtStr.startsWith('000')) {
+  if (input.startsWith('000')) {
     throw new InvalidDatetimeError('datetime so close to year zero not allowed')
   }
 }
 
 /* Same logic as ensureValidDatetime(), but returns a boolean instead of throwing an exception.
  */
-export function isValidDatetime(dtStr: string): dtStr is DatetimeString {
+export function isValidDatetime<I extends string>(
+  input: I,
+): input is I & DatetimeString {
   try {
-    ensureValidDatetime(dtStr)
+    ensureValidDatetime(input)
   } catch (err) {
-    if (err instanceof InvalidDatetimeError) {
-      return false
-    }
-    throw err
+    return false
   }
 
   return true
