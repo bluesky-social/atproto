@@ -1,4 +1,7 @@
-import { GrowthBookClient } from '@growthbook/growthbook'
+import {
+  GrowthBookClient,
+  type UserContext as GrowthBookUserContext,
+} from '@growthbook/growthbook'
 import { featureGatesLogger } from './logger'
 
 export type Config = {
@@ -6,12 +9,10 @@ export type Config = {
   apiKey?: string
 }
 
-type Attrs = {
-  did?: string
-}
-
-type Context = {
-  attributes: Attrs
+type UserContext = Omit<GrowthBookUserContext, 'attributes'> & {
+  attributes?: {
+    did: string | null
+  }
 }
 
 export enum FeatureGateID {
@@ -53,11 +54,14 @@ export class FeatureGates {
     }
   }
 
-  contextForDid(did: string): Context {
-    return { attributes: { did: did } }
+  userContext({
+    did,
+  }: Exclude<Partial<UserContext['attributes']>, undefined>): UserContext {
+    if (!did) return {}
+    return { attributes: { did } }
   }
 
-  check(gate: FeatureGateID, ctx: Context): boolean {
+  check(gate: FeatureGateID, ctx: UserContext): boolean {
     if (!this.ready || !this.client) return false
     if (!ctx.attributes || !ctx.attributes.did) return false
     return this.client.isOn(gate, ctx)
@@ -67,7 +71,7 @@ export class FeatureGates {
    * Pre-evaluate multiple feature gates for a given user, returning a map of
    * gate ID to boolean result.
    */
-  checkGates(gates: FeatureGateID[], ctx: Context): CheckedFeatureGatesMap {
+  checkGates(gates: FeatureGateID[], ctx: UserContext): CheckedFeatureGatesMap {
     return new Map(gates.map((g) => [g, this.check(g, ctx)]))
   }
 }

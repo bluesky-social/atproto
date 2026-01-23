@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         include3pBlocks,
         featureGates: ctx.featureGates.checkGates(
           [ctx.featureGates.ids.ThreadsReplyRankingExplorationEnable],
-          ctx.featureGates.contextForDid(viewer ?? ''),
+          ctx.featureGates.userContext({did:viewer}),
         ),
       })
 
