@@ -17,8 +17,8 @@ const FETCH_TIMEOUT = 3e3 // 3 seconds
 const REFETCH_INTERVAL = 60e3 // 1 minute
 
 export type Config = {
-  apiUrl?: string
-  apiKey?: string
+  apiHost?: string
+  clientKey?: string
 }
 
 type UserContext = Omit<GrowthBookUserContext, 'attributes'> & {
@@ -53,10 +53,10 @@ export class FeatureGates {
 
   async start() {
     try {
-      if (this.config.apiKey) {
+      if (this.config.apiHost && this.config.clientKey) {
         this.client = new GrowthBookClient({
-          apiHost: this.config.apiUrl,
-          clientKey: this.config.apiKey,
+          apiHost: this.config.apiHost,
+          clientKey: this.config.clientKey,
         })
 
         const { source, error } = await this.client.init({
@@ -94,6 +94,10 @@ export class FeatureGates {
 
         /* Ready or not, here we come */
         this.ready = true
+      } else {
+        featureGatesLogger.error(
+          'Missing required config for FeatureGates client',
+        )
       }
     } catch (err) {
       featureGatesLogger.error({ err }, 'Client initialization failed')

@@ -41,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         featureGates: ctx.featureGates.checkGates(
           [ctx.featureGates.ids.SearchFilteringExplorationEnable],
-          ctx.featureGates.userContext({did: viewer}),
+          ctx.featureGates.userContext({ did: viewer }),
         ),
       })
       const results = await searchPosts(

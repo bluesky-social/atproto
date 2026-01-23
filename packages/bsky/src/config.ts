@@ -81,8 +81,8 @@ export interface ServerConfigValues {
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
-  growthBookUrl?: string
-  growthBookKey?: string
+  growthBookApiHost?: string
+  growthBookClientKey?: string
   // threads
   bigThreadUris: Set<string>
   bigThreadDepth?: number
@@ -212,11 +212,12 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    const growthBookUrl = process.env.BSKY_GROWTHBOOK_URL || undefined
-    const growthBookKey =
+
+    const growthBookApiHost = process.env.BSKY_GROWTHBOOK_API_HOST || undefined
+    const growthBookClientKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
-        : process.env.BSKY_GROWTHBOOK_KEY || undefined
+        : process.env.BSKY_GROWTHBOOK_CLIENT_KEY || undefined
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
     const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
@@ -368,8 +369,8 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
-      growthBookUrl,
-      growthBookKey,
+      growthBookApiHost,
+      growthBookClientKey,
       clientCheckEmailConfirmed,
       topicsEnabled,
       indexedAtEpoch,
@@ -569,12 +570,12 @@ export class ServerConfig {
     return this.cfg.blobCacheLocation
   }
 
-  get growthBookUrl() {
-    return this.cfg.growthBookUrl
+  get growthBookApiHost() {
+    return this.cfg.growthBookApiHost
   }
 
-  get growthBookKey() {
-    return this.cfg.growthBookKey
+  get growthBookClientKey() {
+    return this.cfg.growthBookClientKey
   }
 
   get clientCheckEmailConfirmed() {
