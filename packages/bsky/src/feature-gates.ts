@@ -123,7 +123,6 @@ export class FeatureGates {
 
   check(gate: FeatureGateID, ctx: UserContext): boolean {
     if (!this.ready || !this.client) return false
-    if (!ctx.attributes || !ctx.attributes.did) return false
     return this.client.isOn(gate, ctx)
   }
 
