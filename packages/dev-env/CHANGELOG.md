@@ -1,5 +1,18 @@
 # @atproto/dev-env
 
+## 0.3.205
+
+### Patch Changes
+
+- Updated dependencies [[`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114), [`e6e43f3`](https://github.com/bluesky-social/atproto/commit/e6e43f3ad3594e7cb24e2f3effe5ef4b1696c8ff), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`ce356cd`](https://github.com/bluesky-social/atproto/commit/ce356cde55c9ff46758d0a6f39397d6710509b40), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`3fbec80`](https://github.com/bluesky-social/atproto/commit/3fbec803ed188cef9baa998ac3e66ccb8c0f1e5c), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b)]:
+  - @atproto/api@0.18.17
+  - @atproto/bsky@0.0.211
+  - @atproto/syntax@0.4.3
+  - @atproto/common-web@0.4.13
+  - @atproto/lexicon@0.6.1
+  - @atproto/pds@0.4.205
+  - @atproto/xrpc-server@0.10.10
+
 ## 0.3.204
 
 ### Patch Changes

@@ -1,5 +1,28 @@
 # @atproto/bsky
 
+## 0.0.211
+
+### Patch Changes
+
+- [#4565](https://github.com/bluesky-social/atproto/pull/4565) [`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3) Thanks [@cuducos](https://github.com/cuducos)! - Re-add `recId` to suggested users (now, as string)
+
+- [#4547](https://github.com/bluesky-social/atproto/pull/4547) [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c) Thanks [@cuducos](https://github.com/cuducos)! - Removes `recId` from suggested users — we need it as a string, so we're gonna re-add it as string (instead of integer) later.
+
+- [#4415](https://github.com/bluesky-social/atproto/pull/4415) [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114) Thanks [@bnewbold](https://github.com/bnewbold)! - support for Germ Networks chat declaration records
+
+- [#4526](https://github.com/bluesky-social/atproto/pull/4526) [`e6e43f3`](https://github.com/bluesky-social/atproto/commit/e6e43f3ad3594e7cb24e2f3effe5ef4b1696c8ff) Thanks [@cuducos](https://github.com/cuducos)! - Swaps StatSig for GrowthBook in AppView
+
+- [#4576](https://github.com/bluesky-social/atproto/pull/4576) [`ce356cd`](https://github.com/bluesky-social/atproto/commit/ce356cde55c9ff46758d0a6f39397d6710509b40) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use requester DID to accurately perform personalized suggestions
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of `noUndefinedVals` utility
+
+- Updated dependencies [[`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/api@0.18.17
+  - @atproto/syntax@0.4.3
+  - @atproto/lexicon@0.6.1
+  - @atproto/common@0.5.9
+  - @atproto/xrpc-server@0.10.10
+
 ## 0.0.210
 
 ### Patch Changes
