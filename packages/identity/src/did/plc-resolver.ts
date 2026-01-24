@@ -4,6 +4,7 @@ import { timed } from './util'
 
 export class DidPlcResolver extends BaseResolver {
   constructor(
+    public fetch: typeof globalThis.fetch,
     public plcUrl: string,
     public timeout: number,
     public cache?: DidCache,
@@ -14,7 +15,7 @@ export class DidPlcResolver extends BaseResolver {
   async resolveNoCheck(did: string): Promise<unknown> {
     return timed(this.timeout, async (signal) => {
       const url = new URL(`/${encodeURIComponent(did)}`, this.plcUrl)
-      const res = await fetch(url, {
+      const res = await this.fetch(url, {
         redirect: 'error',
         headers: { accept: 'application/did+ld+json,application/json' },
         signal,

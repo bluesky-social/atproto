@@ -7,6 +7,7 @@ export const DOC_PATH = '/.well-known/did.json'
 
 export class DidWebResolver extends BaseResolver {
   constructor(
+    public fetch: typeof globalThis.fetch,
     public timeout: number,
     public cache?: DidCache,
   ) {
@@ -33,7 +34,7 @@ export class DidWebResolver extends BaseResolver {
     }
 
     return timed(this.timeout, async (signal) => {
-      const res = await fetch(url, {
+      const res = await this.fetch(url, {
         signal,
         redirect: 'error',
         headers: { accept: 'application/did+ld+json,application/json' },
