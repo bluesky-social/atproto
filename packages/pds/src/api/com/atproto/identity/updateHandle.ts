@@ -81,6 +81,8 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
+      await ctx.didCache.clearEntry(account.did)
+
       try {
         await ctx.sequencer.sequenceIdentityEvt(requester, handle)
       } catch (err) {
