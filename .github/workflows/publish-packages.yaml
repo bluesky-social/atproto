@@ -1,0 +1,76 @@
+name: Publish Packages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/api/**'
+      - 'packages/lexicon/**'
+      - 'packages/syntax/**'
+      - 'packages/xrpc/**'
+      - 'packages/common-web/**'
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Version tag (e.g., dev, beta, alpha). Leave empty for stable.'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (build but do not publish)'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  publish:
+    name: Build & Publish
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@sokaa'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Set version tag (manual trigger)
+        if: github.event_name == 'workflow_dispatch' && inputs.version_tag != ''
+        run: |
+          cd packages/api
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          NEW_VERSION="${CURRENT_VERSION}-${{ inputs.version_tag }}.$(date +%Y%m%d%H%M%S)"
+          pnpm version $NEW_VERSION --no-git-tag-version
+          echo "Publishing version: $NEW_VERSION"
+
+      - name: Publish to GitHub Packages
+        if: inputs.dry_run != 'true'
+        run: |
+          pnpm --filter @sokaa/atproto-custom-api publish --no-git-checks --access restricted
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dry run summary
+        if: inputs.dry_run == 'true'
+        run: |
+          echo "🏃 Dry run complete. Package was built but not published."
+          echo "Package: @sokaa/atproto-custom-api"
+          cd packages/api && echo "Version: $(node -p "require('./package.json').version")"
