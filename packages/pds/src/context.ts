@@ -386,6 +386,7 @@ export class AppContext {
               },
             },
           }),
+          idResolver: idResolver,
           metadata: {
             protected_resources: [new URL(cfg.oauth.issuer).origin],
           },

@@ -1,6 +1,12 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { Jwks, Keyset, SignedJwt, unsafeDecodeJwt } from '@atproto/jwk'
+import { Jwks, Keyset, SignedJwt, unsafeDecodeJwt, Jwk, jwkSchema, JwkError } from '@atproto/jwk'
+import { parseMultikey, ParsedMultikey } from '@atproto/crypto'
+import { JoseKey } from '@atproto/jwk-jose'
+import { secp256k1 as k256 } from '@noble/curves/secp256k1'
+import { p256 } from '@noble/curves/p256'
+import { IdResolver } from '@atproto/identity'
+import { getSigningKey } from '@atproto/common'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
 import {
@@ -165,6 +171,11 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
+ * A IdResolver to use for validating idTokens.
+ */
+  idResolver: IdResolver
+
+  /**
    * A custom fetch function that can be used to fetch the client metadata from
    * the internet. By default, the fetch function is a safeFetchWrap() function
    * that protects against SSRF attacks, large responses & known bad domains. If
@@ -252,6 +263,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly lexiconManager: LexiconManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
+  protected readonly idResolver: IdResolver
 
   public constructor({
     // OAuthProviderConfig
@@ -264,6 +276,7 @@ export class OAuthProvider extends OAuthVerifier {
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
     lexResolver = new LexResolver({ fetch: safeFetch }),
+    idResolver = new IdResolver({}),
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -342,7 +355,8 @@ export class OAuthProvider extends OAuthVerifier {
       this.hooks,
       this.accessTokenMode,
       tokenMaxAge,
-    )
+    ),
+      this.idResolver = idResolver
   }
 
   get jwks() {
@@ -705,7 +719,7 @@ export class OAuthProvider extends OAuthVerifier {
       if (parameters.prompt == "consent" && parameters.id_token_hint != null) {
         // Parse jwt
         // validate signature against pds issuer or user key
-        var { account, validIdToken } = await this.getAccountForIdToken(issuer,parameters.id_token_hint)
+        var { account, validIdToken } = await this.getAccountForIdToken(parameters.id_token_hint)
         await this.accountManager.upsertDeviceAccount(deviceId, account.sub)
         sessions = [{ account: account, consentRequired: true, loginRequired: false }]
       }
@@ -1110,7 +1124,6 @@ export class OAuthProvider extends OAuthVerifier {
 
   // validates the IdToken against the issuer
   protected async getAccountForIdToken(
-    issuer:string,
     idToken: SignedJwt
   ): Promise<{ account: Account, validIdToken: boolean }> {
     const { payload } = unsafeDecodeJwt(idToken)
@@ -1118,26 +1131,24 @@ export class OAuthProvider extends OAuthVerifier {
 
       const { account } = await this.accountManager.getAccount(payload.sub)
 
-      if (isDid(payload.iss) && payload.iss == payload.sub) {// Self signed idToken
-         // Self signed not yet supported
-         throw new InvalidTokenError("id_token_hint","Untrusted idToken issuer")
-      } else {
-
-        if ( issuer != payload.iss) {
-          throw new InvalidTokenError("id_token_hint","Untrusted idToken issuer")
+      if (isDid(payload.iss) && payload.iss == payload.sub) {// IdTokend needs to be signed with users signing key
+        try {
+          const didDoc = await this.idResolver.did.resolve(payload.iss)
+          const publicMultibaseKey = didDoc ? getSigningKey(didDoc) : undefined
+          const parsedMultikey = publicMultibaseKey ? parseMultikey(publicMultibaseKey.publicKeyMultibase) : undefined
+          const key = parsedMultikey ? fromMultikey(parsedMultikey) : undefined
+          if (key) {
+            await key.verifyJwt(idToken)
+            return { account: account, validIdToken: true }
+          }
+        } catch (e) {
+          throw new InvalidTokenError("id_token_hint", "invalid signature")
         }
-
-        // iss is not a DID validate against local issuer
-        await this.signer
-          .verifyAccessToken(idToken)
-          .catch((err) => {
-          throw new InvalidTokenError("id_token_hint","Invalid idToken signature")
-          })
-
-        return { account: account, validIdToken: true }
+      } else {
+        throw new InvalidTokenError("id_token_hint", "untrusted issuer")
       }
     }
-    throw new InvalidTokenError("id_token_hint","Invalid idToken")
+    throw new InvalidTokenError("id_token_hint", "invalid idToken")
   }
 }
 
@@ -1149,5 +1160,27 @@ function matchesHint(
   if (!hint) return false
 
   return account.sub === hint || account.preferred_username === hint
+}
+
+
+// convert multikey to josekey this probably should land somewehere in @atproto/crypto or @atproto/jwk-jose
+function fromMultikey(
+  multiKey: ParsedMultikey
+): JoseKey {
+  switch (multiKey.jwtAlg) {
+    case "ES256K": {
+      const point = k256.ProjectivePoint.fromHex(Buffer.from(multiKey.keyBytes.buffer).toString("hex"))
+      const x = Buffer.from(point.x.toString(16), "hex").toString("base64url")
+      const y = Buffer.from(point.y.toString(16), "hex").toString("base64url")
+      return new JoseKey<Jwk>(jwkSchema.parse({ "kty": "EC", "crv": "secp256k1", "x": x, "y": y }))
+    }
+    case "P256": {
+      const point = p256.ProjectivePoint.fromHex(Buffer.from(multiKey.keyBytes.buffer).toString("hex"))
+      const x = Buffer.from(point.x.toString(16), "hex").toString("base64url")
+      const y = Buffer.from(point.y.toString(16), "hex").toString("base64url")
+      return new JoseKey<Jwk>(jwkSchema.parse({ "kty": "EC", "crv": "P-256", "x": x, "y": y }))
+    }
+    default: throw new JwkError("unsupported alg")
+  }
 }
 
