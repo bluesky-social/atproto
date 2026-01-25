@@ -1,6 +1,6 @@
 // packages/dev-env/custom/run-pds-plc.ts
-import '../src/env' // Import env first to respect LOG_ENABLED
-import { TestNetworkNoAppView } from '../src'
+import '../env' // Import env first to respect LOG_ENABLED
+import { TestNetworkNoAppView } from '..'
 
 async function main() {
   console.log('🚀 Starting PDS + PLC servers...\n')
