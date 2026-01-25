@@ -721,6 +721,9 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
     devDependencies:
+      '@types/mime':
+        specifier: ^3.0.0
+        version: 3.0.1
       rollup:
         specifier: ^4.10.0
         version: 4.34.9
