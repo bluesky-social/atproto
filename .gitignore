@@ -18,3 +18,15 @@ test.sqlite
 .claude/
 coverage
 .pnpm-store/
+
+# TypeScript build output in src/
+packages/**/src/**/*.js
+packages/**/src/**/*.js.map
+packages/**/src/**/*.d.ts
+packages/**/src/**/*.d.ts.map
+
+# Keep config files
+!**/*.config.js
+!**/babel.config.js
+!**/jest.config.js
+!**/metro.config.js
