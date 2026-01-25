@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { Jwks, Keyset, SignedJwt, unsafeDecodeJwt, Jwk, jwkSchema, JwkError } from '@atproto/jwk'
+import { Jwks, Keyset, SignedJwt, unsafeDecodeJwt, Jwk, jwkSchema, JwkError, VerifyResult } from '@atproto/jwk'
 import { parseMultikey, ParsedMultikey } from '@atproto/crypto'
 import { JoseKey } from '@atproto/jwk-jose'
 import { secp256k1 as k256 } from '@noble/curves/secp256k1'
@@ -8,7 +8,7 @@ import { p256 } from '@noble/curves/p256'
 import { IdResolver } from '@atproto/identity'
 import { getSigningKey } from '@atproto/common'
 import { LexResolver } from '@atproto/lex-resolver'
-import type { Account } from '@atproto/oauth-provider-api'
+import type { Account,Session } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
@@ -113,6 +113,7 @@ import {
 import { isPARResponseError } from './types/par-response-error.js'
 import { isDid } from '@atproto/did'
 import { InvalidTokenError } from './oauth-errors.js'
+import { ApiTokenPayload } from './signer/api-token-payload.js'
 
 export { AccessTokenMode, Keyset, LexResolver }
 export type {
@@ -628,21 +629,25 @@ export class OAuthProvider extends OAuthVerifier {
     ).catch(throwAuthorizationError)
 
     try {
-      var sessions = (
+      var sessions  = (
         await this.accountManager.listDeviceAccounts(deviceId)
-      ).map((deviceAccount) => ({
-        account: deviceAccount.account,
-
-        // @TODO Return the session expiration date instead of a boolean to
-        // avoid having to rely on a leeway when "accepting" the request.
-        loginRequired:
-          parameters.prompt === 'login' ||
-          this.checkLoginRequired(deviceAccount),
-        consentRequired: this.checkConsentRequired(
-          parameters,
-          deviceAccount.authorizedClients.get(client.id),
-        ),
-      }))
+      ).map((deviceAccount) => {
+        const session:Session = {
+          account: deviceAccount.account,
+          // @TODO Return the session expiration date instead of a boolean to
+          // avoid having to rely on a leeway when "accepting" the request.
+          loginRequired:
+            parameters.prompt === 'login' ||
+            this.checkLoginRequired(deviceAccount),
+          consentRequired: this.checkConsentRequired(
+            parameters,
+            deviceAccount.authorizedClients.get(client.id),
+          ),
+          ephemeralToken:undefined,
+          selected: false,
+        }
+        return session
+    })
 
       // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 
@@ -717,11 +722,17 @@ export class OAuthProvider extends OAuthVerifier {
 
       // Automatic SSO when an valid id_token_hint is provided
       if (parameters.prompt == "consent" && parameters.id_token_hint != null) {
-        // Parse jwt
-        // validate signature against pds issuer or user key
-        var { account, validIdToken } = await this.getAccountForIdToken(parameters.id_token_hint)
-        await this.accountManager.upsertDeviceAccount(deviceId, account.sub)
-        sessions = [{ account: account, consentRequired: true, loginRequired: false }]
+        // Parse JWT and verify signature against users signing key
+        var { account, validIdToken,verifyResult } = await this.getAccountForIdToken(parameters.id_token_hint)
+        // IdToken is valid create session
+        if ( verifyResult.payload.sub) {
+          const payload: ApiTokenPayload = {iss:"",sub:verifyResult.payload.sub,"deviceId":deviceId,"requestUri":requestUri}
+          const ephemeralToken = await this.signer.createEphemeralToken(payload) as string
+          const session = { selected:true, account: account, consentRequired: true, loginRequired: false,ephemeralToken: ephemeralToken }
+          sessions = [session]
+        } else {
+           throw new InvalidTokenError("id_token_hint", "invalid idToken")
+        }
       }
 
       return {
@@ -741,6 +752,7 @@ export class OAuthProvider extends OAuthVerifier {
               parameters.prompt === 'consent'
               ? matchesHint.call(parameters, session) || validIdToken
               : false,
+          ephemeralToken: session.ephemeralToken
         })),
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
@@ -1125,7 +1137,7 @@ export class OAuthProvider extends OAuthVerifier {
   // validates the IdToken against the issuer
   protected async getAccountForIdToken(
     idToken: SignedJwt
-  ): Promise<{ account: Account, validIdToken: boolean }> {
+  ): Promise<{ account: Account, validIdToken: boolean,verifyResult:VerifyResult  }> {
     const { payload } = unsafeDecodeJwt(idToken)
     if (payload.iss && payload.sub) {
 
@@ -1138,8 +1150,8 @@ export class OAuthProvider extends OAuthVerifier {
           const parsedMultikey = publicMultibaseKey ? parseMultikey(publicMultibaseKey.publicKeyMultibase) : undefined
           const key = parsedMultikey ? fromMultikey(parsedMultikey) : undefined
           if (key) {
-            await key.verifyJwt(idToken)
-            return { account: account, validIdToken: true }
+            const verifyResult = await key.verifyJwt(idToken)
+            return { account: account, validIdToken: true,verifyResult: verifyResult }
           }
         } catch (e) {
           throw new InvalidTokenError("id_token_hint", "invalid signature")
