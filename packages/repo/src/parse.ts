@@ -5,10 +5,10 @@ import { BlockMap } from './block-map'
 import { MissingBlockError, UnexpectedObjectError } from './error'
 import { cborToLexRecord } from './util'
 
-export const getAndParseRecord = (
+export const getAndParseRecord = async (
   blocks: BlockMap,
   cid: Cid,
-): { record: LexMap; bytes: Uint8Array } => {
+): Promise<{ record: LexMap; bytes: Uint8Array }> => {
   const bytes = blocks.get(cid)
   if (!bytes) {
     throw new MissingBlockError(cid, 'record')
