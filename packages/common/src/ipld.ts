@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { createHash } from 'node:crypto'
 import { Transform } from 'node:stream'
 import { Block, ByteView, encode as encodeBlock } from 'multiformats/block'

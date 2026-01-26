@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { base32 } from 'multiformats/bases/base32'
 import { CID } from 'multiformats/cid'
 import { create as createDigest } from 'multiformats/hashes/digest'

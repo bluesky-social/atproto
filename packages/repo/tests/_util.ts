@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import fs from 'node:fs'
 import { CID } from 'multiformats'
 import { TID, dataToCborBlock } from '@atproto/common'
