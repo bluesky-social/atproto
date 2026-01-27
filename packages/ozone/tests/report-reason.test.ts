@@ -82,7 +82,10 @@ describe('report reason', () => {
           },
           {
             encoding: 'application/json',
-            headers: sc.getHeaders(sc.dids.alice),
+            headers: {
+              ...sc.getHeaders(sc.dids.alice),
+              'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
+            },
           },
         ),
       ])

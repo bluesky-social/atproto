@@ -593,7 +593,6 @@ const defaultService = (
         serviceInfo: ctx.cfg.modService,
       }
     case ids.ComAtprotoModerationCreateReport:
-    case ids.ToolsOzoneReportCreateReport:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.reportService,
