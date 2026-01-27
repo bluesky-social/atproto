@@ -31,6 +31,7 @@ import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
+import { QuickLoginSessionStore } from './api/io/trustanchor/quicklogin/store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
   AuthVerifier,
@@ -75,6 +76,7 @@ export type AppContextOptions = {
   oauthProvider?: OAuthProvider
   neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
   neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
+  quickloginStore: QuickLoginSessionStore
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -104,6 +106,7 @@ export class AppContext {
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+  public quickloginStore: QuickLoginSessionStore
   public neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -131,6 +134,7 @@ export class AppContext {
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
+    this.quickloginStore = opts.quickloginStore
     this.neuroAuthManager = opts.neuroAuthManager
     this.neuroRemoteLoginManager = opts.neuroRemoteLoginManager
     this.plcRotationKey = opts.plcRotationKey
@@ -495,6 +499,9 @@ export class AppContext {
       },
     )
 
+    // Create QuickLogin session store
+    const quickloginStore = new QuickLoginSessionStore()
+
     return new AppContext({
       actorStore,
       blobstore,
@@ -520,6 +527,7 @@ export class AppContext {
       oauthProvider,
       neuroAuthManager,
       neuroRemoteLoginManager,
+      quickloginStore,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),
