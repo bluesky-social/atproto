@@ -4,8 +4,10 @@ import {
   InferPayload,
   InferPayloadBody,
   InferPayloadEncoding,
-  ParamsSchema,
   Payload,
+  Procedure,
+  Query,
+  Subscription,
   object,
   optional,
   string,
@@ -27,41 +29,50 @@ export function getMain<T extends object>(ns: Main<T>): T {
  */
 type BinaryData = Restricted<'Binary data'>
 
-export type InferMethodParams<M extends { parameters: ParamsSchema }> =
+export type InferMethodParams<M extends Procedure | Query | Subscription> =
   InferOutput<M['parameters']>
 
 export type InferMethodInput<
-  M extends { input?: Payload },
+  M extends Procedure | Query | Subscription,
   B = BinaryData,
 > = M extends { input: Payload } ? InferPayload<M['input'], B> : undefined
 
 export type InferMethodInputBody<
-  M extends { input?: Payload },
+  M extends Procedure | Query | Subscription,
   B = BinaryData,
 > = M extends { input: Payload } ? InferPayloadBody<M['input'], B> : undefined
 
-export type InferMethodInputEncoding<M extends { input?: Payload }> =
-  M extends { input: Payload } ? InferPayloadEncoding<M['input']> : undefined
+export type InferMethodInputEncoding<
+  M extends Procedure | Query | Subscription,
+> = M extends { input: Payload } ? InferPayloadEncoding<M['input']> : undefined
 
 export type InferMethodOutput<
-  M extends { output?: Payload },
+  M extends Procedure | Query | Subscription,
   B = BinaryData,
 > = M extends { output: Payload } ? InferPayload<M['output'], B> : undefined
 
 export type InferMethodOutputBody<
-  M extends { output?: Payload },
+  M extends Procedure | Query | Subscription,
   B = BinaryData,
 > = M extends { output: Payload } ? InferPayloadBody<M['output'], B> : undefined
 
-export type InferMethodOutputEncoding<M extends { output?: Payload }> =
-  M extends { output: Payload } ? InferPayloadEncoding<M['output']> : undefined
+export type InferMethodOutputEncoding<
+  M extends Procedure | Query | Subscription,
+> = M extends { output: Payload }
+  ? InferPayloadEncoding<M['output']>
+  : undefined
 
 export type InferMethodMessage<
   //
-  M extends { message?: Schema },
+  M extends Procedure | Query | Subscription,
 > = M extends { message: Schema }
   ? LexValue & InferOutput<M['message']>
   : undefined
+
+export type InferMethodError<
+  //
+  M extends Procedure | Query | Subscription,
+> = M extends { errors: readonly (infer E extends string)[] } ? E : never
 
 export const lexErrorData = object({
   error: string({ minLength: 1 }),

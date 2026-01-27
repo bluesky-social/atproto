@@ -5,7 +5,6 @@ import {
   InvalidRequestError,
   Server,
   ServerTimer,
-  UpstreamFailureError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -207,7 +206,7 @@ const skeletonFromFeedGen = async (
   const resHeaders: HeadersMap = {}
 
   // @TODO currently passthrough auth headers from pds
-  const result = await client.xrpcSafe(app.bsky.feed.getFeedSkeleton, {
+  const result = await client.xrpc(app.bsky.feed.getFeedSkeleton, {
     headers,
     params: {
       feed: params.feed,
@@ -216,16 +215,6 @@ const skeletonFromFeedGen = async (
       cursor: params.cursor,
     },
   })
-
-  if (!result.success) {
-    if (result.matchesSchema()) {
-      throw new InvalidRequestError(result.message, result.error)
-    }
-
-    throw new UpstreamFailureError(result.message, result.error, {
-      cause: result.error,
-    })
-  }
 
   const skeleton: app.bsky.feed.getFeedSkeleton.OutputBody = result.body
 

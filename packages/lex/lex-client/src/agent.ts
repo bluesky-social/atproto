@@ -29,7 +29,8 @@ export type AgentConfig = {
   service: string | URL
 
   /**
-   * Optional headers to include with every request made by this agent.
+   * Optional headers to include with every request made by this agent, unless
+   * overridden by the request-specific headers provided to the fetch handler.
    */
   headers?: HeadersInit
 
@@ -67,13 +68,13 @@ export function buildAgent(options: Agent | AgentOptions): Agent {
 
     async fetchHandler(path, init) {
       const headers =
-        config.headers && init.headers
+        config.headers != null && init.headers != null
           ? mergeHeaders(config.headers, init.headers)
           : config.headers || init.headers
 
       return fetch(
         new URL(path, service),
-        headers ? { ...init, headers } : init,
+        headers !== init.headers ? { ...init, headers } : init,
       )
     },
   }
@@ -83,9 +84,17 @@ function mergeHeaders(
   defaultHeaders: HeadersInit,
   requestHeaders: HeadersInit,
 ): Headers {
-  const merged = new Headers(defaultHeaders)
-  for (const [key, value] of new Headers(requestHeaders)) {
-    merged.set(key, value)
+  // We don't want to alter the original Headers objects, so we create a new one
+  const result = new Headers(defaultHeaders)
+
+  const overrides =
+    requestHeaders instanceof Headers
+      ? requestHeaders
+      : new Headers(requestHeaders)
+
+  for (const [key, value] of overrides.entries()) {
+    result.set(key, value)
   }
-  return merged
+
+  return result
 }

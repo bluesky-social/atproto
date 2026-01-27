@@ -1,6 +1,6 @@
 import Redis from 'ioredis'
 import { DAY, backoffMs, retry } from '@atproto/common'
-import { Client, asXrpcFailure } from '@atproto/lex'
+import { Client, XrpcError } from '@atproto/lex'
 import { InvalidTokenError, OAuthScope } from '@atproto/oauth-provider'
 import { UpstreamFailureError } from '@atproto/xrpc-server'
 import { CachedGetter, GetterOptions } from '@atproto-labs/simple-store'
@@ -31,7 +31,9 @@ export class ScopeReferenceGetter extends CachedGetter<
           maxRetries: 3,
           getWaitMs: (n) => backoffMs(n, 250, 2000),
           retryable: (err) =>
-            !options?.signal?.aborted && asXrpcFailure(err).shouldRetry(),
+            !options?.signal?.aborted &&
+            err instanceof XrpcError &&
+            err.shouldRetry(),
         })
       },
       redis
@@ -88,7 +90,7 @@ export class ScopeReferenceGetter extends CachedGetter<
 }
 
 function handleDereferenceError(cause: unknown): never {
-  if (asXrpcFailure(cause).error === 'InvalidScopeReference') {
+  if (cause instanceof XrpcError && cause.error === 'InvalidScopeReference') {
     // The scope reference cannot be found on the server.
     // Consider the session as invalid, allowing entryway to
     // re-build the scope as the user re-authenticates. This

@@ -19,7 +19,7 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure } from './errors.js'
+import { XrpcError } from './errors.js'
 import { com } from './lexicons/index.js'
 import { XrpcResponse, XrpcResponseBody } from './response.js'
 import { BinaryBodyInit, CallOptions, Service } from './types.js'
@@ -209,7 +209,7 @@ export class Client implements Agent {
   }
 
   /**
-   * @throws {XrpcFailure<M>} when the request fails or the response is an error
+   * @throws {XrpcError<M>} when the request fails or the response is an error
    */
   async xrpc<const M extends Query | Procedure>(
     ns: NonNullable<unknown> extends XrpcOptions<M>
@@ -231,15 +231,15 @@ export class Client implements Agent {
     ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Main<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcError<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Main<M>,
     options: XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcError<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
+  ): Promise<XrpcResponse<M> | XrpcError<M>> {
     return xrpcSafe(this, ns, options)
   }
 

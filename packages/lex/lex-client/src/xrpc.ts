@@ -45,9 +45,6 @@ export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
     XrpcInputOptions<XrpcRequestPayload<M>> &
     XrpcParamsOptions<XrpcRequestParams<M>>
 
-/**
- * @throws XrpcFailure<M>
- */
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: NonNullable<unknown> extends XrpcOptions<M>
@@ -92,7 +89,12 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
-  return xrpc<M>(agent, ns, options).catch(asXrpcFailure<M>)
+  const method: M = getMain(ns)
+  try {
+    return await xrpc(agent, method, options)
+  } catch (cause) {
+    return asXrpcFailure(method, cause)
+  }
 }
 
 function xrpcRequestUrl<M extends Procedure | Query | Subscription>(

@@ -1,10 +1,4 @@
-import {
-  Agent,
-  XrpcError,
-  XrpcFailure,
-  buildAgent,
-  xrpcSafe,
-} from '@atproto/lex-client'
+import { Agent, XrpcFailure, buildAgent, xrpcSafe } from '@atproto/lex-client'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
 import { extractPdsUrl, extractXrpcErrorCode, noop } from './util.js'
@@ -117,7 +111,7 @@ export class PasswordSession implements Agent {
 
   get session() {
     if (this.#sessionData) return this.#sessionData
-    throw new XrpcError('AuthenticationRequired', 'Logged out')
+    throw new Error('Logged out')
   }
 
   get destroyed(): boolean {
@@ -261,7 +255,7 @@ export class PasswordSession implements Agent {
 
         // Update the session promise to a rejected state
         this.#sessionData = null
-        throw new XrpcError('AuthenticationRequired', 'Logged out')
+        throw new Error('Logged out')
       } else {
         // Capture the reason for the failure to re-throw in the outer promise
         reason = result

@@ -199,7 +199,17 @@ export class Server {
             l.InferMethodMessage<M>
           >
         : never,
-  ): void {}
+  ): void {
+    // if ((error) instanceof XrpcError) {
+    //   // return error.toResponse()
+    //   if (error.matchesSchema()) {
+    //     throw new InvalidRequestError(error.message, error.error)
+    //   }
+    //   throw new UpstreamFailureError(error.message, error.error, {
+    //     cause: error.error,
+    //   })
+    // }
+  }
 
   method<A extends Auth = Auth>(
     nsid: string,
