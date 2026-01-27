@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
-import { isDidString } from '@atproto/lex'
+import { DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
-  did: string
+  did: DidString
   domains: string[]
 }[]
 
@@ -681,6 +681,7 @@ function isLiveNowConfig(data: any): data is LiveNowConfig {
         typeof item === 'object' &&
         item !== null &&
         typeof item.did === 'string' &&
+        isDidString(item.did) &&
         Array.isArray(item.domains) &&
         item.domains.every((domain: any) => typeof domain === 'string'),
     )

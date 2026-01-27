@@ -1,7 +1,7 @@
 import * as util from 'node:util'
 import { UriString } from '@atproto/lex'
 import { BlobRef } from '@atproto/lex-data'
-import { DidString } from '@atproto/syntax'
+import { AtUriString, DidString } from '@atproto/syntax'
 import {
   GateRecord,
   PostRecord,
@@ -60,7 +60,7 @@ type ParsedThreadGate = {
   allowMentions?: boolean
   allowFollower?: boolean
   allowFollowing?: boolean
-  allowListUris?: string[]
+  allowListUris?: AtUriString[]
 }
 
 export const cidFromBlobJson = (json: BlobRef): string => {

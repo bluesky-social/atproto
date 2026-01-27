@@ -89,7 +89,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const creator = didFromUri(skeleton.listUri)
   const blocks = hydration.bidirectionalBlocks?.get(creator)
   skeleton.listitems = skeleton.listitems.filter(({ did }) => {
-    return !blocks?.get(did)
+    return !blocks?.get(did as DidString)
   })
   return skeleton
 }
@@ -126,10 +126,10 @@ const maybeGetBlocksForReferenceAndCurateList = async (input: {
   ) {
     return
   }
-  const pairs: Map<string, string[]> = new Map()
+  const pairs: Map<DidString, DidString[]> = new Map()
   pairs.set(
     creator,
-    listitems.map(({ did }) => did),
+    listitems.map(({ did }) => did as DidString),
   )
   return await ctx.hydrator.hydrateBidirectionalBlocks(pairs, params.hydrateCtx)
 }

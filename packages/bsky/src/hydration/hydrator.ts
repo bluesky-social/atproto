@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
-import { AtUri, AtUriString, DidString } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
 import { app, chat, com } from '../lexicons/index.js'
@@ -146,7 +146,7 @@ export type HydrationState = {
 }
 
 export type PostBlock = { embed: boolean; parent: boolean; root: boolean }
-export type PostBlocks = HydrationMap<PostBlock>
+export type PostBlocks = HydrationMap<PostBlock, AtUriString>
 type PostBlockPairs = {
   embed?: RelationshipPair
   parent?: RelationshipPair
@@ -154,15 +154,18 @@ type PostBlockPairs = {
 }
 
 export type LikeBlock = boolean
-export type LikeBlocks = HydrationMap<LikeBlock>
+export type LikeBlocks = HydrationMap<LikeBlock, AtUriString>
 
 export type FollowBlock = boolean
-export type FollowBlocks = HydrationMap<FollowBlock>
+export type FollowBlocks = HydrationMap<FollowBlock, AtUriString>
 
-export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
+export type BidirectionalBlocks = HydrationMap<
+  HydrationMap<boolean, DidString>,
+  DidString
+>
 
 // actor DID -> stash key -> bookmark
-export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
+export type Bookmarks = HydrationMap<HydrationMap<Bookmark, string>, DidString>
 
 /**
  * Additional config passed from `ServerConfig` to the `Hydrator` instance.
@@ -300,15 +303,13 @@ export class Hydrator {
       )
     }
 
-    const subjectsToKnownFollowersMap = Array.from(
-      knownFollowers.keys(),
-    ).reduce((acc, did) => {
+    const subjectsToKnownFollowersMap = new Map<DidString, DidString[]>()
+
+    for (const did of knownFollowers.keys()) {
       const known = knownFollowers.get(did)
-      if (known) {
-        acc.set(did, known.followers)
-      }
-      return acc
-    }, new Map<string, string[]>())
+      if (known) subjectsToKnownFollowersMap.set(did, known.followers)
+    }
+
     const allKnownFollowerDids = Array.from(knownFollowers.values())
       .filter(Boolean)
       .flatMap((f) => f!.followers)
@@ -566,7 +567,7 @@ export class Hydrator {
       ...ref,
       threadRoot: posts.get(ref.uri)?.record.reply?.root.uri ?? ref.uri,
     }))
-    const postUrisWithPostgates = new Set<string>()
+    const postUrisWithPostgates = new Set<AtUriString>()
     for (const [uri, post] of posts) {
       if (post && post.hasPostGate) {
         postUrisWithPostgates.add(uri)
@@ -625,8 +626,8 @@ export class Hydrator {
     posts: Posts,
     ctx: HydrateCtx,
   ): Promise<PostBlocks> {
-    const postBlocks = new HydrationMap<PostBlock>()
-    const postBlocksPairs = new Map<string, PostBlockPairs>()
+    const postBlocks: PostBlocks = new HydrationMap()
+    const postBlocksPairs = new Map<AtUriString, PostBlockPairs>()
     const relationships: RelationshipPair[] = []
     for (const [uri, item] of posts) {
       if (!item) continue
@@ -878,13 +879,13 @@ export class Hydrator {
       listUris.map((uri, i) => [uri, listsMembers[i]]),
     )
     const listMemberDids = listsMembers.flatMap((lm) =>
-      lm.listitems.map((li) => li.did),
+      lm.listitems.map((li) => li.did as DidString),
     )
     const listCreatorMemberPairs = [...listMembersByList.entries()].flatMap(
       ([listUri, members]) => {
         const creator = didFromUri(listUri)
         return members.listitems.map(
-          (li): RelationshipPair => [creator, li.did],
+          (li): RelationshipPair => [creator, li.did as DidString],
         )
       },
     )
@@ -906,12 +907,15 @@ export class Hydrator {
       agg.listItemSampleUris = [
         ...members.listitems.filter(
           (li) =>
-            ctx.viewer === creator || !isBlocked(blocks, [creator, li.did]),
+            ctx.viewer === creator ||
+            !isBlocked(blocks, [creator, li.did as DidString]),
         ),
       ]
         .sort((li1, li2) => {
-          const score1 = listMemberAggs.get(li1.did)?.followers ?? 0
-          const score2 = listMemberAggs.get(li2.did)?.followers ?? 0
+          const score1 =
+            listMemberAggs.get(li1.did as DidString)?.followers ?? 0
+          const score2 =
+            listMemberAggs.get(li2.did as DidString)?.followers ?? 0
           return score2 - score1
         })
         .slice(0, 12)
@@ -933,7 +937,7 @@ export class Hydrator {
   //   - profile
   //     - list basic
   async hydrateLikes(
-    authorDid: string,
+    authorDid: DidString,
     uris: AtUriString[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
@@ -949,7 +953,7 @@ export class Hydrator {
       }
     }
     const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs), ctx)
-    const likeBlocks = new HydrationMap<LikeBlock>()
+    const likeBlocks = new HydrationMap<LikeBlock, AtUriString>()
     for (const [uri, like] of likes) {
       if (like) {
         likeBlocks.set(uri, isBlocked(blocks, [authorDid, didFromUri(uri)]))
@@ -1006,7 +1010,7 @@ export class Hydrator {
       this.label.getLabelsForSubjects(uris, ctx.labelers),
       this.hydrateProfiles(uris.map(didFromUri), ctx),
     ])
-    const viewerRootPostUris = new Set<string>()
+    const viewerRootPostUris = new Set<AtUriString>()
     for (const notif of notifs) {
       if (notif.reason === 'reply') {
         const post = posts.get(notif.uri as AtUriString)
@@ -1049,20 +1053,19 @@ export class Hydrator {
     const bookmarks: BookmarkWithRef[] = bookmarksRes.bookmarks.filter(
       (bookmark): bookmark is BookmarkWithRef => !!bookmark.ref?.key,
     )
+
     // mapping DID -> stash key -> bookmark
-    const bookmarksMap = new HydrationMap([
-      [
-        viewer,
-        new HydrationMap<Bookmark>(
-          bookmarks.map((bookmark) => {
-            const {
-              ref: { key },
-            } = bookmark
-            return [key, bookmark]
-          }),
-        ),
-      ],
-    ])
+    const bookmarksMap = new HydrationMap<
+      HydrationMap<Bookmark, string>,
+      DidString
+    >()
+
+    bookmarksMap.set(
+      viewer,
+      new HydrationMap(
+        bookmarks.map((bookmark) => [bookmark.ref.key, bookmark]),
+      ),
+    )
 
     // @NOTE: The `createBookmark` endpoint limits bookmarks to be of posts,
     // so we can assume currently all subjects are posts.
@@ -1089,7 +1092,7 @@ export class Hydrator {
       }
     }
     const blocks = await this.hydrateBidirectionalBlocks(pairsToMap(pairs), ctx)
-    const followBlocks = new HydrationMap<FollowBlock>()
+    const followBlocks: FollowBlocks = new HydrationMap()
     for (const [uri, follow] of follows) {
       if (follow) {
         followBlocks.set(
@@ -1104,7 +1107,7 @@ export class Hydrator {
   }
 
   async hydrateBidirectionalBlocks(
-    didMap: Map<string, string[]>, // DID -> DID[]
+    didMap: Map<DidString, DidString[]>, // DID -> DID[]
     ctx: HydrateCtx,
   ): Promise<BidirectionalBlocks> {
     const pairs: RelationshipPair[] = []
@@ -1137,11 +1140,10 @@ export class Hydrator {
       }
     }
 
-    const result: BidirectionalBlocks = new HydrationMap<
-      HydrationMap<boolean>
-    >()
+    const result: BidirectionalBlocks = new HydrationMap()
+
     for (const [source, targets] of didMap) {
-      const didBlocks = new HydrationMap<boolean>()
+      const didBlocks = new HydrationMap<boolean, DidString>()
       for (const target of targets) {
         const block = blocks.get(source, target)
 
@@ -1261,7 +1263,7 @@ export class Hydrator {
       )
     } else if (collection === app.bsky.labeler.service.$type) {
       if (parsed.rkey !== 'self') return
-      const did = parsed.hostname
+      const { did } = parsed
       return (
         (await this.label.getLabelers([did], includeTakedowns)).get(did) ??
         undefined
@@ -1389,7 +1391,7 @@ const removeNonModListsFromProfileViewer = (
 }
 
 const isModList = (
-  listUri: string | undefined,
+  listUri: AtUriString | undefined,
   state: HydrationState,
 ): boolean => {
   if (!listUri) return false
@@ -1465,12 +1467,12 @@ const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {
   return blocks.get(a)?.get(b) ?? false
 }
 
-const pairsToMap = (pairs: RelationshipPair[]): Map<string, string[]> => {
-  const map = new Map<string, string[]>()
+const pairsToMap = <K extends string>(pairs: [a: K, b: K][]): Map<K, K[]> => {
+  const map = new Map<K, K[]>()
   for (const [a, b] of pairs) {
-    const list = map.get(a) ?? []
-    list.push(b)
-    map.set(a, list)
+    const list = map.get(a)
+    if (list) list.push(b)
+    else map.set(a, [b])
   }
   return map
 }
@@ -1537,9 +1539,9 @@ export const mergeManyStates = (...states: HydrationState[]) => {
   return states.reduce(mergeStates, {} as HydrationState)
 }
 
-const actionTakedownLabels = <T>(
-  keys: string[],
-  hydrationMap: HydrationMap<T>,
+const actionTakedownLabels = (
+  keys: UriString[],
+  hydrationMap: HydrationMap<unknown, UriString>,
   labels: Labels,
 ) => {
   for (const key of keys) {

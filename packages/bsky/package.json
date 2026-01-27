@@ -38,6 +38,7 @@
     "@atproto/identity": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",

@@ -1,10 +1,10 @@
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { Code, DataPlaneClient, isDataplaneError } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.unspecced.getPostThreadV2.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -51,7 +51,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const anchor = await ctx.hydrator.resolveUri(params.anchor)
   try {
@@ -62,7 +64,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     })
     return {
       anchor,
-      uris: res.uris,
+      uris: res.uris as AtUriString[],
     }
   } catch (err) {
     if (isDataplaneError(err, Code.NotFound)) {
@@ -114,11 +116,13 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.unspecced.getPostThreadV2.Params & {
+  hydrateCtx: HydrateCtx
+}
 
 type Skeleton = {
-  anchor: string
-  uris: string[]
+  anchor: AtUriString
+  uris: AtUriString[]
 }
 
 const calculateAbove = (ctx: Context, params: Params) => {

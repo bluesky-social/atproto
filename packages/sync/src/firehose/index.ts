@@ -285,7 +285,7 @@ const formatCommitOps = async (
       blocks: car.blocks,
       rev: evt.rev,
       uri,
-      did: uri.host,
+      did: uri.did,
       collection: uri.collection,
       rkey: uri.rkey,
     }

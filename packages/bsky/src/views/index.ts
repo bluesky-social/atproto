@@ -229,7 +229,7 @@ export class Views {
   }
 
   viewerSeesNeedsReview(
-    { did, uri }: { did?: string; uri?: string },
+    { did, uri }: { did?: DidString; uri?: AtUriString },
     state: HydrationState,
   ): boolean {
     const { labels, profileViewers, ctx } = state
@@ -1027,7 +1027,7 @@ export class Views {
     uri: AtUriString,
     state: HydrationState,
   ): Un$Typed<ReplyRef> | undefined {
-    const postRecord = state.posts?.get(uri.toString())?.record
+    const postRecord = state.posts?.get(uri)?.record
     if (!postRecord?.reply) return
     let root = this.maybePost(postRecord.reply.root.uri, state)
     let parent = this.maybePost(postRecord.reply.parent.uri, state)
@@ -1199,7 +1199,7 @@ export class Views {
   }
 
   threadParent(
-    childUri: string,
+    childUri: AtUriString,
     rootUri: string,
     state: HydrationState,
     height: number,
@@ -1443,9 +1443,9 @@ export class Views {
       above,
       depth,
     }: {
-      childUri: string
-      opDid: string
-      rootUri: string
+      childUri: AtUriString
+      opDid: DidString
+      rootUri: AtUriString
       above: number
       depth: number
     },
@@ -2318,7 +2318,7 @@ export class Views {
     if (post?.violatesThreadGate) {
       return true
     }
-    const rootUriStr: string = post?.record.reply?.root.uri ?? uri
+    const rootUriStr = post?.record.reply?.root.uri ?? uri
     const gate = state.threadgates?.get(
       postUriToThreadgateUri(rootUriStr),
     )?.record
@@ -2408,17 +2408,17 @@ export class Views {
       | null
 
     if (uri.collection === 'app.bsky.feed.post') {
-      recordInfo = state.posts?.get(notif.uri)
+      recordInfo = state.posts?.get(notif.uri as AtUriString)
     } else if (uri.collection === 'app.bsky.feed.like') {
-      recordInfo = state.likes?.get(notif.uri)
+      recordInfo = state.likes?.get(notif.uri as AtUriString)
     } else if (uri.collection === 'app.bsky.feed.repost') {
-      recordInfo = state.reposts?.get(notif.uri)
+      recordInfo = state.reposts?.get(notif.uri as AtUriString)
     } else if (uri.collection === 'app.bsky.graph.follow') {
-      recordInfo = state.follows?.get(notif.uri)
+      recordInfo = state.follows?.get(notif.uri as AtUriString)
     } else if (uri.collection === 'app.bsky.graph.verification') {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.
-      recordInfo = state.verifications?.get(notif.uri) ?? {
+      recordInfo = state.verifications?.get(notif.uri as AtUriString) ?? {
         record: notificationDeletedRecord,
         cid: notificationDeletedRecordCid,
       }
@@ -2437,7 +2437,7 @@ export class Views {
     }
     if (!recordInfo) return
 
-    const labels = state.labels?.getBySubject(notif.uri) ?? []
+    const labels = state.labels?.getBySubject(notif.uri as AtUriString) ?? []
     const selfLabels = this.selfLabels({
       uri: parseString<AtUriString>(notif.uri),
       cid: recordInfo.cid,

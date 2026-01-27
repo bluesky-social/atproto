@@ -1,4 +1,4 @@
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, parseToAtprotoDocument } from '@atproto/identity'
 import {
   AgentConfig,
   Cid,

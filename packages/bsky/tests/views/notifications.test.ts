@@ -1071,7 +1071,7 @@ describe('notification views', () => {
           .where(
             'namespace',
             '=',
-            Namespaces.AppBskyNotificationDefsPreferences,
+            Namespaces.AppBskyNotificationDefsPreferences.$type,
           )
           .where('key', '=', 'self')
           .executeTakeFirst()
@@ -1171,7 +1171,7 @@ describe('notification views', () => {
           .where(
             'namespace',
             '=',
-            Namespaces.AppBskyNotificationDefsPreferences,
+            Namespaces.AppBskyNotificationDefsPreferences.$type,
           )
           .where('key', '=', 'self')
           .executeTakeFirstOrThrow()
@@ -1184,7 +1184,7 @@ describe('notification views', () => {
           updatedAt: expect.any(String),
         })
         expect(JSON.parse(dbResult.payload)).toStrictEqual({
-          $type: Namespaces.AppBskyNotificationDefsPreferences,
+          $type: Namespaces.AppBskyNotificationDefsPreferences.$type,
           ...expected,
         })
       }

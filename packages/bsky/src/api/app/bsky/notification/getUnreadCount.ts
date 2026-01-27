@@ -1,8 +1,8 @@
+import { DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
-type QueryParams = app.bsky.notification.getUnreadCount.Params
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -67,15 +67,15 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
-  viewer: string
+type Params = app.bsky.notification.getUnreadCount.Params & {
+  viewer: DidString
 }
 
 type SkeletonState = {
   count: number
 }
 
-const getPriority = async (ctx: Context, did: string) => {
+const getPriority = async (ctx: Context, did: DidString) => {
   const actors = await ctx.hydrator.actor.getActors([did], {
     skipCacheForDids: [did],
   })

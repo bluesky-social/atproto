@@ -1,8 +1,7 @@
 import { Selectable, sql } from 'kysely'
-import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
 import { IdResolver, getPds } from '@atproto/identity'
-import { l } from '@atproto/lex'
+import { Client, XrpcResponseError, l } from '@atproto/lex'
 import { Cid, parseCid } from '@atproto/lex-data'
 import {
   VerifiedRepo,
@@ -11,7 +10,8 @@ import {
   readCarWithRoot,
   verifyRepo,
 } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString } from '@atproto/syntax'
+import { com } from '../../../lexicons'
 import { subLogger } from '../../../logger'
 import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
@@ -167,17 +167,17 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit?: string) {
+  async indexRepo(did: DidString, commit?: string) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
       did,
       true,
     )
-    const { api } = new AtpAgent({ service: pds })
+    const client = new Client({ service: pds })
 
-    const { data: car } = await retryXrpc(() =>
-      api.com.atproto.sync.getRepo({ did }),
+    const car = await retryXrpc(() =>
+      client.call(com.atproto.sync.getRepo, { did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
     const verifiedRepo = await verifyRepo(blocks, root, did, signingKey)
@@ -193,7 +193,7 @@ export class IndexingService {
           if (op.op === 'delete') {
             await this.deleteRecord(uri)
           } else {
-            const parsed = getAndParseRecord(blocks, cid)
+            const parsed = await getAndParseRecord(blocks, cid)
             await this.indexRecord(
               uri,
               cid,
@@ -264,7 +264,11 @@ export class IndexingService {
     }
   }
 
-  async updateActorStatus(did: string, active: boolean, status: string = '') {
+  async updateActorStatus(
+    did: DidString,
+    active: boolean,
+    status: string = '',
+  ) {
     let upstreamStatus: string | null
     if (active) {
       upstreamStatus = null
@@ -280,7 +284,7 @@ export class IndexingService {
       .execute()
   }
 
-  async deleteActor(did: string) {
+  async deleteActor(did: DidString) {
     this.db.assertNotTransaction()
     const actorIsHosted = await this.getActorIsHosted(did)
     if (actorIsHosted === false) {
@@ -293,23 +297,25 @@ export class IndexingService {
     }
   }
 
-  private async getActorIsHosted(did: string) {
+  private async getActorIsHosted(did: DidString) {
     const doc = await this.idResolver.did.resolve(did, true)
     const pds = doc && getPds(doc)
     if (!pds) return false
-    const { api } = new AtpAgent({ service: pds })
+    const client = new Client({ service: pds })
     try {
-      await retryXrpc(() => api.com.atproto.sync.getLatestCommit({ did }))
+      await retryXrpc(() =>
+        client.call(com.atproto.sync.getLatestCommit, { did }),
+      )
       return true
     } catch (err) {
-      if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {
+      if (err instanceof XrpcResponseError && err.error === 'RepoNotFound') {
         return false
       }
       return null
     }
   }
 
-  async unindexActor(did: string) {
+  async unindexActor(did: DidString) {
     this.db.assertNotTransaction()
     // per-record-type indexes
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()

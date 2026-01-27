@@ -1,7 +1,7 @@
 import { DidDocument } from '@atproto/identity'
 import { Cid, LexMap } from '@atproto/lex'
 import { BlockMap } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString } from '@atproto/syntax'
 
 export type Event = CommitEvt | SyncEvt | IdentityEvt | AccountEvt
 
@@ -12,7 +12,7 @@ export type CommitMeta = {
   blocks: BlockMap
   rev: string
   uri: AtUri
-  did: string
+  did: DidString
   collection: string
   rkey: string
 }
@@ -39,7 +39,7 @@ export type SyncEvt = {
   seq: number
   time: string
   event: 'sync'
-  did: string
+  did: DidString
   cid: Cid
   rev: string
   blocks: BlockMap
@@ -49,7 +49,7 @@ export type IdentityEvt = {
   seq: number
   time: string
   event: 'identity'
-  did: string
+  did: DidString
   handle?: string
   didDocument?: DidDocument
 }
@@ -58,7 +58,7 @@ export type AccountEvt = {
   seq: number
   time: string
   event: 'account'
-  did: string
+  did: DidString
   active: boolean
   status?: AccountStatus
 }

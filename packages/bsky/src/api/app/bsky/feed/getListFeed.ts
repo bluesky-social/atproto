@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { AtUriString } from '@atproto/syntax'
+import { AtUriString, DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -125,7 +125,7 @@ const getBlocks = async (input: {
   params: Params
 }) => {
   const { ctx, skeleton, params } = input
-  const pairs: Map<string, string[]> = new Map()
+  const pairs: Map<DidString, DidString[]> = new Map()
   pairs.set(
     uriToDid(params.list),
     skeleton.items.map((item) => uriToDid(item.post.uri)),

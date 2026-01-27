@@ -26,7 +26,9 @@ export const getLocalLag = (local: LocalRecords): number | undefined => {
 }
 
 export const pipethroughReadAfterWrite = async <
-  M extends { output: l.Payload<`application/json`, l.Schema<LexValue>> },
+  M extends (l.Query | l.Procedure) & {
+    output: l.Payload<`application/json`, l.Schema<LexValue>>
+  },
 >(
   ctx: AppContext,
   reqCtx: { req: express.Request; auth: { credentials: { did: string } } },

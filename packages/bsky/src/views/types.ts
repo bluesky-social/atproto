@@ -87,6 +87,7 @@ export type FeedViewPost = app.bsky.feed.defs.FeedViewPost
 export type ReasonPin = app.bsky.feed.defs.ReasonPin
 export type ReasonRepost = app.bsky.feed.defs.ReasonRepost
 export type ReplyRef = app.bsky.feed.defs.ReplyRef
+export type PostReplyRef = app.bsky.feed.post.ReplyRef
 export type ThreadViewPost = app.bsky.feed.defs.ThreadViewPost
 export type ThreadgateView = app.bsky.feed.defs.ThreadgateView
 export type BlockedPost = app.bsky.feed.defs.BlockedPost

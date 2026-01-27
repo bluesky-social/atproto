@@ -5,14 +5,11 @@ import { AtUri, AtUriString } from '@atproto/syntax'
 import { app, chat, com } from '../lexicons/index.js'
 import { Record } from '../proto/bsky_pb'
 
-export class HydrationMap<T, K extends string = string>
-  extends Map<K, T | null>
-  implements Merges
-{
+export class HydrationMap<T, K> extends Map<K, T | null> implements Merges {
   merge(map: HydrationMap<T, K>): this {
-    map.forEach((val, key) => {
+    for (const [key, val] of map) {
       this.set(key, val)
-    })
+    }
     return this
   }
 }
@@ -29,24 +26,29 @@ export type RecordInfo<T extends { $type: string }> = {
   takedownRef: string | undefined
 }
 
-export const mergeMaps = <V, M extends HydrationMap<V>>(
-  mapA?: M,
-  mapB?: M,
-): M | undefined => {
+export const mergeMaps = <V extends HydrationMap<unknown, unknown>>(
+  mapA?: V,
+  mapB?: V,
+): V | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
   return mapA.merge(mapB)
 }
 
-export const mergeNestedMaps = <V, M extends HydrationMap<HydrationMap<V>>>(
-  mapA?: M,
-  mapB?: M,
-): M | undefined => {
+export const mergeNestedMaps = <
+  V extends HydrationMap<unknown, unknown>,
+  K extends string,
+>(
+  mapA?: HydrationMap<V, K>,
+  mapB?: HydrationMap<V, K>,
+): HydrationMap<V, K> | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
 
   for (const [key, map] of mapB) {
-    const merged = mergeMaps(mapA.get(key) ?? undefined, map ?? undefined)
+    const merged = mergeMaps(mapA.get(key) ?? undefined, map ?? undefined) as
+      | V
+      | undefined
     mapA.set(key, merged ?? null)
   }
 

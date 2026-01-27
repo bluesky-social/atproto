@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { parseString } from '../../../../hydration/util'
@@ -23,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         }
       }
 
-      let uris: string[]
+      let uris: AtUriString[]
       let cursor: string | undefined
 
       const query = params.query?.trim() ?? ''
@@ -32,14 +33,14 @@ export default function (server: Server, ctx: AppContext) {
           query,
           limit: params.limit,
         })
-        uris = res.uris
+        uris = res.uris as AtUriString[]
       } else {
         const res = await ctx.dataplane.getSuggestedFeeds({
           actorDid: viewer ?? undefined,
           limit: params.limit,
           cursor: params.cursor,
         })
-        uris = res.uris
+        uris = res.uris as AtUriString[]
         cursor = parseString(res.cursor)
       }
 

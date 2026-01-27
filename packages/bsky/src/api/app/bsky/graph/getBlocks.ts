@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { DidString } from '@atproto/syntax'
+import { AtUriString, DidString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
@@ -42,11 +42,14 @@ const skeleton = async (
   if (clearlyBadCursor(params.cursor)) {
     return { blockedDids: [] }
   }
-  const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
+  const { blockUris, cursor } = (await ctx.hydrator.dataplane.getBlocks({
     actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
-  })
+  })) as {
+    blockUris: AtUriString[]
+    cursor?: string
+  }
   const blocks = await ctx.hydrator.graph.getBlocks(blockUris)
   const blockedDids = mapDefined(
     blockUris,

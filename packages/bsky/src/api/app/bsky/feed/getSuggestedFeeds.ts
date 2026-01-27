@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { parseString } from '../../../../hydration/util'
@@ -18,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
         limit: params.limit,
         cursor: params.cursor,
       })
-      const uris = suggestedRes.uris
+      const uris = suggestedRes.uris as AtUriString[]
       const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
       const hydration = await ctx.hydrator.hydrateFeedGens(uris, hydrateCtx)
       const feedViews = mapDefined(uris, (uri) =>

@@ -1,5 +1,9 @@
 import { mapDefined } from '@atproto/common'
-import { normalizeDatetimeAlways } from '@atproto/syntax'
+import {
+  AtUriString,
+  DidString,
+  normalizeDatetimeAlways,
+} from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -59,7 +63,7 @@ const skeleton = async (inputs: {
   })
   return {
     authorDid,
-    likes: likesRes.uris,
+    likes: likesRes.uris as AtUriString[],
     cursor: parseString(likesRes.cursor),
   }
 }
@@ -132,8 +136,8 @@ type Context = {
 type Params = app.bsky.feed.getLikes.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  authorDid: string
-  likes: string[]
+  authorDid: DidString
+  likes: AtUriString[]
   cursor?: string
 }
 

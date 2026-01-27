@@ -165,18 +165,20 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       try {
         if (
           namespace ===
-          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type
         ) {
           await handleSubjectActivitySubscriptionOperation(db, req, now)
         } else if (
-          namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
+          namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent.$type
         ) {
           await handleAgeAssuranceEventOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyAgeassuranceDefsEvent) {
+        } else if (
+          namespace === Namespaces.AppBskyAgeassuranceDefsEvent.$type
+        ) {
           await handleAgeAssuranceV2EventOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark) {
+        } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark.$type) {
           await handleBookmarkOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId) {
+        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId.$type) {
           await handleDraftOperation(db, req, now)
         }
       } catch (err) {

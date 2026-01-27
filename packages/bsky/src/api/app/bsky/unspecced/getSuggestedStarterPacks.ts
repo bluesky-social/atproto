@@ -1,6 +1,6 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client } from '@atproto/lex'
-import { AtUri, AtUriString } from '@atproto/syntax'
+import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
@@ -77,7 +77,7 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  let dids: string[] = []
+  let dids: DidString[] = []
   for (const uri of skeleton.starterPacks) {
     let aturi: AtUri | undefined
     try {
@@ -85,10 +85,10 @@ const hydration = async (
     } catch {
       continue
     }
-    dids.push(aturi.hostname)
+    dids.push(aturi.did)
   }
   dids = dedupeStrs(dids)
-  const pairs: Map<string, string[]> = new Map()
+  const pairs: Map<DidString, DidString[]> = new Map()
   const viewer = params.hydrateCtx.viewer
   if (viewer) {
     pairs.set(viewer, dids)
@@ -117,7 +117,7 @@ const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
       } catch {
         return false
       }
-      return !blocks?.get(aturi.hostname)
+      return !blocks?.get(aturi.did)
     }),
   }
 

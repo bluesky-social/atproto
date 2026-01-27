@@ -1,4 +1,5 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -59,9 +60,9 @@ export const skeleton = async (inputs: {
   })
   return {
     items: res.items.map((item) => ({
-      post: { uri: item.uri, cid: item.cid || undefined },
+      post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
       repost: item.repost
-        ? { uri: item.repost, cid: item.repostCid || undefined }
+        ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
         : undefined,
     })),
     cursor: parseString(res.cursor),

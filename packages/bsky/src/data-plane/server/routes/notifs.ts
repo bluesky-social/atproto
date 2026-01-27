@@ -2,13 +2,8 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { jsonStringToLex } from '@atproto/lexicon'
-import {
-  ChatPreference,
-  FilterablePreference,
-  Preference,
-  Preferences,
-} from '../../../lexicon/types/app/bsky/notification/defs'
+import { lexParse } from '@atproto/lex-json'
+import { app } from '../../../lexicons/index.js'
 import { Service } from '../../../proto/bsky_connect'
 import {
   ChatNotificationInclude,
@@ -179,7 +174,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .selectFrom('private_data')
       .selectAll()
       .where('actorDid', 'in', dids)
-      .where('namespace', '=', Namespaces.AppBskyNotificationDefsPreferences)
+      .where(
+        'namespace',
+        '=',
+        Namespaces.AppBskyNotificationDefsPreferences.$type,
+      )
       .where('key', '=', 'self')
       .execute()
 
@@ -189,7 +188,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       if (!row) {
         return {}
       }
-      const p = jsonStringToLex(row.payload) as Preferences
+      const p = lexParse<app.bsky.notification.defs.Preferences>(row.payload)
       return notificationPreferencesLexToProtobuf(p, row.payload)
     })
 
@@ -198,11 +197,11 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 })
 
 export const notificationPreferencesLexToProtobuf = (
-  p: Preferences,
+  p: app.bsky.notification.defs.Preferences,
   json: string,
 ): NotificationPreferences => {
   const lexChatPreferenceToProtobuf = (
-    p: ChatPreference,
+    p: app.bsky.notification.defs.ChatPreference,
   ): ChatNotificationPreference =>
     new ChatNotificationPreference({
       include:
@@ -213,7 +212,7 @@ export const notificationPreferencesLexToProtobuf = (
     })
 
   const lexFilterablePreferenceToProtobuf = (
-    p: FilterablePreference,
+    p: app.bsky.notification.defs.FilterablePreference,
   ): FilterableNotificationPreference =>
     new FilterableNotificationPreference({
       include:
@@ -224,7 +223,9 @@ export const notificationPreferencesLexToProtobuf = (
       push: { enabled: p.push ?? true },
     })
 
-  const lexPreferenceToProtobuf = (p: Preference): NotificationPreference =>
+  const lexPreferenceToProtobuf = (
+    p: app.bsky.notification.defs.Preference,
+  ): NotificationPreference =>
     new NotificationPreference({
       list: { enabled: p.list ?? true },
       push: { enabled: p.push ?? true },

@@ -10,9 +10,10 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           checkEmailConfirmed: ctx.cfg.clientCheckEmailConfirmed,
+          // @ts-expect-error un-specced field
           topicsEnabled: ctx.cfg.topicsEnabled,
           liveNow: ctx.cfg.liveNowConfig,
-        },
+        } satisfies app.bsky.unspecced.getConfig.OutputBody,
       }
     },
   })

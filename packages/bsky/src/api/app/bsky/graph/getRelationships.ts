@@ -1,4 +1,5 @@
-import { Server } from '@atproto/xrpc-server'
+import { isDidString } from '@atproto/lex'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
 
@@ -6,6 +7,12 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.graph.getRelationships, {
     handler: async ({ params }) => {
       const { actor, others = [] } = params
+
+      // @TODO Should this be validated at the schema level?
+      if (!isDidString(actor) || !others.every(isDidString)) {
+        throw new InvalidRequestError('Invalid DID format')
+      }
+
       if (others.length < 1) {
         return {
           encoding: 'application/json',
@@ -15,6 +22,7 @@ export default function (server: Server, ctx: AppContext) {
           },
         }
       }
+
       const res = await ctx.hydrator.actor.getProfileViewerStatesNaive(
         others,
         actor,
@@ -22,8 +30,7 @@ export default function (server: Server, ctx: AppContext) {
       const relationships = others.map((did) => {
         const subject = res.get(did)
         return subject
-          ? {
-              $type: 'app.bsky.graph.defs#relationship',
+          ? app.bsky.graph.defs.relationship.$build({
               did,
               following: subject.following,
               followedBy: subject.followedBy,
@@ -31,12 +38,11 @@ export default function (server: Server, ctx: AppContext) {
               blockedBy: subject.blockedBy,
               blockingByList: subject.blockingByList,
               blockedByList: subject.blockedByList,
-            }
-          : {
-              $type: 'app.bsky.graph.defs#notFoundActor',
+            })
+          : app.bsky.graph.defs.notFoundActor.$build({
               actor: did,
               notFound: true,
-            }
+            })
       })
       return {
         encoding: 'application/json',
@@ -44,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
           actor,
           relationships,
         },
-      }
+      } satisfies app.bsky.graph.getRelationships.Output
     },
   })
 }
