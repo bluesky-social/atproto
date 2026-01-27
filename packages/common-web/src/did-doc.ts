@@ -171,6 +171,7 @@ const verificationMethod = z.object({
   id: z.string(),
   type: z.string(),
   controller: z.string(),
+  publicKeyJwk: z.record(z.string(), z.unknown()).optional(),
   publicKeyMultibase: z.string().optional(),
 })
 
@@ -180,10 +181,21 @@ const service = z.object({
   serviceEndpoint: z.union([z.string(), z.record(z.unknown())]),
 })
 
+/**
+ * @deprecated Use `DidDocument` from `@atproto/did` instead as it applies
+ * stricter (and more spec-compliant) validation.
+ */
 export const didDocument = z.object({
+  '@context': z
+    .union([
+      z.literal('https://www.w3.org/ns/did/v1'),
+      z.array(z.string().url()),
+    ])
+    .optional(),
   id: z.string(),
   alsoKnownAs: z.array(z.string()).optional(),
   verificationMethod: z.array(verificationMethod).optional(),
+  authentication: z.array(z.union([z.string(), verificationMethod])).optional(),
   service: z.array(service).optional(),
 })
 

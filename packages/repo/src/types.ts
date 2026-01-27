@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats'
 import { z } from 'zod'
 import { schema as common } from '@atproto/common'

@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'

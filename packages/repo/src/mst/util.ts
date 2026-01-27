@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats'
 import * as uint8arrays from 'uint8arrays'
 import { cidForCbor } from '@atproto/common'

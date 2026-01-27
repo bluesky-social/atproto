@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats/cid'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
 import { describe, expect, it } from 'vitest'
