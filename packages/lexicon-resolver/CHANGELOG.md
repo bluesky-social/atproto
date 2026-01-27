@@ -1,5 +1,11 @@
 # @atproto/lexicon-resolver
 
+## 0.2.6
+
+### Patch Changes
+
+- [#4577](https://github.com/bluesky-social/atproto/pull/4577) [`78e8ec2`](https://github.com/bluesky-social/atproto/commit/78e8ec25df860f6d383f3a0e38a2c3a5670bfe01) Thanks [@devinivy](https://github.com/devinivy)! - Do not require at:// handle for lexicon resolution
+
 ## 0.2.5
 
 ### Patch Changes
