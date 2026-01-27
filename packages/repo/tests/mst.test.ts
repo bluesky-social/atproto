@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { Cid, parseCid } from '@atproto/lex-data'
 import { DataAdd, DataDelete, DataDiff, DataUpdate } from '../src/data-diff'
 import { MST } from '../src/mst'
@@ -24,7 +25,8 @@ describe('Merkle Search Tree', () => {
     }
     for (const entry of shuffled) {
       const got = await mst.get(entry[0])
-      expect(entry[1].equals(got)).toBeTruthy()
+      assert(got !== null)
+      expect(entry[1].equals(got)).toBe(true)
     }
 
     const totalSize = await mst.leafCount()
@@ -44,7 +46,8 @@ describe('Merkle Search Tree', () => {
 
     for (const entry of edited) {
       const got = await editedMst.get(entry[0])
-      expect(entry[1].equals(got)).toBeTruthy()
+      assert(got !== null)
+      expect(entry[1].equals(got)).toBe(true)
     }
 
     const totalSize = await editedMst.leafCount()
@@ -68,7 +71,8 @@ describe('Merkle Search Tree', () => {
     }
     for (const entry of theRest) {
       const got = await deletedMst.get(entry[0])
-      expect(entry[1].equals(got)).toBeTruthy()
+      assert(got !== null)
+      expect(entry[1].equals(got)).toBe(true)
     }
   })
 

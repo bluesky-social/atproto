@@ -1,7 +1,8 @@
+import assert from 'node:assert'
 import { TID } from '@atproto/common'
 import { Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { Client, asNsidString, asRecordKeyString } from '@atproto/lex'
+import { Client, isNsidString, isRecordKeyString } from '@atproto/lex'
 import { cidForLex } from '@atproto/lex-cbor'
 import { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
@@ -186,7 +187,8 @@ describe('repo sync', () => {
   })
 
   it('sync a proof of non-existence', async () => {
-    const collection = asNsidString(Object.keys(repoData)[0])
+    const collection = Object.keys(repoData)[0]
+    assert(isNsidString(collection))
     const rkey = TID.nextStr() // rkey that doesn't exist
     const car = await client.call(com.atproto.sync.getRecord, {
       did,
@@ -285,8 +287,10 @@ describe('repo sync', () => {
     })
 
     it('does not sync a record proof unauthed', async () => {
-      const collection = asNsidString(Object.keys(repoData)[0])
-      const rkey = asRecordKeyString(Object.keys(repoData[collection])[0])
+      const collection = Object.keys(repoData)[0]
+      assert(isNsidString(collection))
+      const rkey = Object.keys(repoData[collection])[0]
+      assert(isRecordKeyString(rkey))
       const tryGetRecord = client.call(com.atproto.sync.getRecord, {
         did,
         collection,
