@@ -216,6 +216,9 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as IoTrustanchorQuickloginCallback from './types/io/trustanchor/quicklogin/callback.js'
+import * as IoTrustanchorQuickloginInit from './types/io/trustanchor/quicklogin/init.js'
+import * as IoTrustanchorQuickloginStatus from './types/io/trustanchor/quicklogin/status.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -379,6 +382,7 @@ export class Server {
   app: AppNS
   chat: ChatNS
   com: ComNS
+  io: IoNS
   tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
@@ -386,6 +390,7 @@ export class Server {
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
     this.com = new ComNS(this)
+    this.io = new IoNS(this)
     this.tools = new ToolsNS(this)
   }
 }
@@ -3150,6 +3155,70 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.revokeAccountCredentials' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class IoNS {
+  _server: Server
+  trustanchor: IoTrustanchorNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.trustanchor = new IoTrustanchorNS(server)
+  }
+}
+
+export class IoTrustanchorNS {
+  _server: Server
+  quicklogin: IoTrustanchorQuickloginNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.quicklogin = new IoTrustanchorQuickloginNS(server)
+  }
+}
+
+export class IoTrustanchorQuickloginNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  callback<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorQuickloginCallback.QueryParams,
+      IoTrustanchorQuickloginCallback.HandlerInput,
+      IoTrustanchorQuickloginCallback.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.quicklogin.callback' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  init<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorQuickloginInit.QueryParams,
+      IoTrustanchorQuickloginInit.HandlerInput,
+      IoTrustanchorQuickloginInit.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.quicklogin.init' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  status<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorQuickloginStatus.QueryParams,
+      IoTrustanchorQuickloginStatus.HandlerInput,
+      IoTrustanchorQuickloginStatus.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.quicklogin.status' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
