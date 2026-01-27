@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import { LexiconDocument, lexiconDocumentSchema } from './lexicon-document.js'
@@ -160,7 +161,7 @@ describe('LexiconSchemaBuilder', () => {
 
     expect(schema.safeParse(value)).toMatchObject({
       success: false,
-      error: {
+      reason: {
         issues: [
           {
             code: 'invalid_value',
@@ -172,7 +173,7 @@ describe('LexiconSchemaBuilder', () => {
     })
   })
 
-  it('does not apply defaults when allowTransform is false', () => {
+  it('does not apply defaults when validating', () => {
     const schema = getSchema(
       'com.example.kitchenSink#object',
       l.TypedObjectSchema,
@@ -186,7 +187,7 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.safeParse(value, { allowTransform: false })).toStrictEqual({
+    expect(schema.safeValidate(value)).toStrictEqual({
       success: true,
       value: {
         object: { boolean: true },
@@ -231,7 +232,7 @@ describe('LexiconSchemaBuilder', () => {
 
     expect(schema.safeParse(value)).toMatchObject({
       success: false,
-      error: { issues: [{ code: 'required_key', key: 'array' }] },
+      reason: { issues: [{ code: 'required_key', key: 'array' }] },
     })
   })
 

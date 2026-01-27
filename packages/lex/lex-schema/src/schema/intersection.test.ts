@@ -1,16 +1,17 @@
-import { BooleanSchema } from './boolean.js'
-import { DictSchema } from './dict.js'
-import { EnumSchema } from './enum.js'
-import { IntersectionSchema } from './intersection.js'
-import { ObjectSchema } from './object.js'
-import { StringSchema } from './string.js'
+import { describe, expect, it } from 'vitest'
+import { boolean } from './boolean.js'
+import { dict } from './dict.js'
+import { enumSchema } from './enum.js'
+import { intersection } from './intersection.js'
+import { object } from './object.js'
+import { string } from './string.js'
 
 describe('IntersectionSchema', () => {
-  const schema = new IntersectionSchema(
-    new ObjectSchema({
-      title: new StringSchema({}),
+  const schema = intersection(
+    object({
+      title: string(),
     }),
-    new DictSchema(new EnumSchema(['tag1', 'tag2']), new BooleanSchema({})),
+    dict(enumSchema(['tag1', 'tag2']), boolean()),
   )
 
   it('validates extra properties with the provided validator', () => {

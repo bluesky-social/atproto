@@ -121,6 +121,7 @@ export interface ProfileAssociated {
   labeler?: boolean
   chat?: ProfileAssociatedChat
   activitySubscription?: ProfileAssociatedActivitySubscription
+  germ?: ProfileAssociatedGerm
 }
 
 const hashProfileAssociated = 'profileAssociated'
@@ -146,6 +147,22 @@ export function isProfileAssociatedChat<V>(v: V) {
 
 export function validateProfileAssociatedChat<V>(v: V) {
   return validate<ProfileAssociatedChat & V>(v, id, hashProfileAssociatedChat)
+}
+
+export interface ProfileAssociatedGerm {
+  $type?: 'app.bsky.actor.defs#profileAssociatedGerm'
+  messageMeUrl: string
+  showButtonTo: 'usersIFollow' | 'everyone' | (string & {})
+}
+
+const hashProfileAssociatedGerm = 'profileAssociatedGerm'
+
+export function isProfileAssociatedGerm<V>(v: V) {
+  return is$typed(v, id, hashProfileAssociatedGerm)
+}
+
+export function validateProfileAssociatedGerm<V>(v: V) {
+  return validate<ProfileAssociatedGerm & V>(v, id, hashProfileAssociatedGerm)
 }
 
 export interface ProfileAssociatedActivitySubscription {
@@ -269,6 +286,7 @@ export type Preferences = (
   | $Typed<LabelersPref>
   | $Typed<PostInteractionSettingsPref>
   | $Typed<VerificationPrefs>
+  | $Typed<LiveEventPreferences>
   | { $type: string }
 )[]
 
@@ -618,6 +636,25 @@ export function validateVerificationPrefs<V>(v: V) {
   return validate<VerificationPrefs & V>(v, id, hashVerificationPrefs)
 }
 
+/** Preferences for live events. */
+export interface LiveEventPreferences {
+  $type?: 'app.bsky.actor.defs#liveEventPreferences'
+  /** A list of feed IDs that the user has hidden from live events. */
+  hiddenFeedIds?: string[]
+  /** Whether to hide all feeds from live events. */
+  hideAllFeeds: boolean
+}
+
+const hashLiveEventPreferences = 'liveEventPreferences'
+
+export function isLiveEventPreferences<V>(v: V) {
+  return is$typed(v, id, hashLiveEventPreferences)
+}
+
+export function validateLiveEventPreferences<V>(v: V) {
+  return validate<LiveEventPreferences & V>(v, id, hashLiveEventPreferences)
+}
+
 /** Default post interaction settings for the account. These values should be applied as default values when creating new posts. These refs should mirror the threadgate and postgate records exactly. */
 export interface PostInteractionSettingsPref {
   $type?: 'app.bsky.actor.defs#postInteractionSettingsPref'
@@ -652,6 +689,8 @@ export function validatePostInteractionSettingsPref<V>(v: V) {
 
 export interface StatusView {
   $type?: 'app.bsky.actor.defs#statusView'
+  uri?: string
+  cid?: string
   /** The status for the account. */
   status: 'app.bsky.actor.status#live' | (string & {})
   record: { [_ in string]: unknown }
@@ -660,6 +699,8 @@ export interface StatusView {
   expiresAt?: string
   /** True if the status is not expired, false if it is expired. Only present if expiration was set. */
   isActive?: boolean
+  /** True if the user's go-live access has been disabled by a moderator, false otherwise. */
+  isDisabled?: boolean
 }
 
 const hashStatusView = 'statusView'

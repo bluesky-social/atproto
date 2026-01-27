@@ -1,14 +1,12 @@
-import { BooleanSchema } from './boolean.js'
-import { IntegerSchema } from './integer.js'
-import { ObjectSchema } from './object.js'
-import { StringSchema } from './string.js'
-import { UnionSchema } from './union.js'
+import { describe, expect, it } from 'vitest'
+import { boolean } from './boolean.js'
+import { integer } from './integer.js'
+import { object } from './object.js'
+import { string } from './string.js'
+import { union } from './union.js'
 
 describe('UnionSchema', () => {
-  const stringOrNumber = new UnionSchema([
-    new StringSchema({}),
-    new IntegerSchema({}),
-  ])
+  const stringOrNumber = union([string(), integer()])
 
   it('validates string input', () => {
     const result = stringOrNumber.safeParse('hello')
@@ -46,14 +44,14 @@ describe('UnionSchema', () => {
   })
 
   describe('with object types', () => {
-    const schema = new UnionSchema([
-      new ObjectSchema({
-        type: new StringSchema({}),
-        name: new StringSchema({}),
+    const schema = union([
+      object({
+        type: string(),
+        name: string(),
       }),
-      new ObjectSchema({
-        type: new StringSchema({}),
-        age: new IntegerSchema({}),
+      object({
+        type: string(),
+        age: integer(),
       }),
     ])
 
@@ -90,11 +88,7 @@ describe('UnionSchema', () => {
   })
 
   describe('with three types', () => {
-    const schema = new UnionSchema([
-      new StringSchema({}),
-      new IntegerSchema({}),
-      new BooleanSchema({}),
-    ])
+    const schema = union([string(), integer(), boolean()])
 
     it('validates string input', () => {
       const result = schema.safeParse('text')
@@ -123,10 +117,7 @@ describe('UnionSchema', () => {
   })
 
   describe('with constrained types', () => {
-    const schema = new UnionSchema([
-      new StringSchema({ minLength: 5 }),
-      new IntegerSchema({ minimum: 100 }),
-    ])
+    const schema = union([string({ minLength: 5 }), integer({ minimum: 100 })])
 
     it('validates string meeting constraint', () => {
       const result = schema.safeParse('hello')
@@ -156,13 +147,13 @@ describe('UnionSchema', () => {
 
   describe('edge cases', () => {
     it('validates with single type in union', () => {
-      const schema = new UnionSchema([new StringSchema({})])
+      const schema = union([string()])
       const result = schema.safeParse('test')
       expect(result.success).toBe(true)
     })
 
     it('rejects when single type in union does not match', () => {
-      const schema = new UnionSchema([new StringSchema({})])
+      const schema = union([string()])
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
     })

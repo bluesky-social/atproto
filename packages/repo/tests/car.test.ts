@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
 import { dataToCborBlock, streamToBytes, wait } from '@atproto/common'

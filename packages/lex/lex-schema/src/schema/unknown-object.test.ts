@@ -1,8 +1,9 @@
-import { UnknownObjectSchema } from './unknown-object.js'
+import { describe, expect, it } from 'vitest'
+import { unknownObject } from './unknown-object.js'
 
 describe('UnknownObjectSchema', () => {
   describe('basic validation', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('accepts empty plain objects', () => {
       const result = schema.safeParse({})
@@ -105,7 +106,7 @@ describe('UnknownObjectSchema', () => {
   })
 
   describe('rejects non-plain-objects', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('rejects strings', () => {
       const result = schema.safeParse('not an object')
@@ -207,7 +208,7 @@ describe('UnknownObjectSchema', () => {
   })
 
   describe('rejects invalid value types', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('rejects objects with floating point numbers', () => {
       const result = schema.safeParse({ value: 3.14 })
@@ -287,7 +288,7 @@ describe('UnknownObjectSchema', () => {
   })
 
   describe('rejects invalid nested values', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('rejects deeply nested invalid values', () => {
       const result = schema.safeParse({
@@ -334,7 +335,7 @@ describe('UnknownObjectSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('accepts objects with numeric string keys', () => {
       const obj = { '0': 'zero', '1': 'one', '2': 'two' }
@@ -499,7 +500,7 @@ describe('UnknownObjectSchema', () => {
   })
 
   describe('large objects', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('accepts objects with many keys', () => {
       const obj: Record<string, number> = {}
@@ -537,7 +538,7 @@ describe('UnknownObjectSchema', () => {
   })
 
   describe('preservation of input', () => {
-    const schema = new UnknownObjectSchema()
+    const schema = unknownObject()
 
     it('preserves the original object reference', () => {
       const input = { key: 'value', count: 42 }

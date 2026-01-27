@@ -1,8 +1,9 @@
-import { NeverSchema } from './never.js'
+import { describe, expect, it } from 'vitest'
+import { never } from './never.js'
 
 describe('NeverSchema', () => {
   describe('basic validation', () => {
-    const schema = new NeverSchema()
+    const schema = never()
 
     it('rejects strings', () => {
       const result = schema.safeParse('string')
@@ -56,7 +57,7 @@ describe('NeverSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new NeverSchema()
+    const schema = never()
 
     it('rejects BigInt', () => {
       const result = schema.safeParse(BigInt(123))
@@ -113,7 +114,7 @@ describe('NeverSchema', () => {
   })
 
   describe('complex data types', () => {
-    const schema = new NeverSchema()
+    const schema = never()
 
     it('rejects class instances', () => {
       class TestClass {
@@ -149,7 +150,7 @@ describe('NeverSchema', () => {
   })
 
   describe('special number values', () => {
-    const schema = new NeverSchema()
+    const schema = never()
 
     it('rejects NaN', () => {
       const result = schema.safeParse(NaN)

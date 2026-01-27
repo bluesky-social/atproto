@@ -19,10 +19,12 @@ Promise.all([
       'com.atproto.repo.putRecord',
       'com.atproto.repo.listRecords',
       'com.atproto.repo.uploadBlob',
+      'com.atproto.sync.getBlob',
     ],
     lib: '@atproto/lex-schema',
     pretty: true,
     pureAnnotations: true,
+    indexFile: true,
   }),
 
   // For tests
@@ -34,9 +36,12 @@ Promise.all([
       'app.bsky.*',
       'com.atproto.repo.createRecord',
       'com.atproto.repo.getRecord',
+      'com.atproto.repo.uploadBlob',
+      'com.atproto.sync.getBlob',
     ],
     lib: '@atproto/lex-schema',
     pretty: true,
+    indexFile: true,
   }),
 ]).catch((err) => {
   console.error('Error building lexicon schemas:', err)

@@ -1,18 +1,18 @@
 import { DidString } from '@atproto/lex-schema'
 
-export interface Agent {
-  did?: DidString
+export type FetchHandler = (
+  /**
+   * The URL (pathname + query parameters) to make the request to, without the
+   * origin. The origin (protocol, hostname, and port) must be added by this
+   * {@link FetchHandler}, typically based on authentication or other factors.
+   */
+  path: string,
+  init: RequestInit,
+) => Promise<Response>
 
-  fetchHandler: (
-    this: Agent,
-    /**
-     * The URL (pathname + query parameters) to make the request to, without the
-     * origin. The origin (protocol, hostname, and port) must be added by this
-     * {@link FetchHandler}, typically based on authentication or other factors.
-     */
-    path: string,
-    init: RequestInit,
-  ) => Promise<Response>
+export interface Agent {
+  readonly did?: DidString
+  fetchHandler: FetchHandler
 }
 
 export type AgentConfig = {
@@ -39,8 +39,12 @@ export type AgentConfig = {
 
 export type AgentOptions = AgentConfig | string | URL
 
-export function buildAgent(options: AgentOptions): Agent {
-  const config: AgentConfig =
+export function buildAgent(options: Agent | AgentOptions): Agent {
+  if (typeof options === 'object' && 'fetchHandler' in options) {
+    return options
+  }
+
+  const config: Agent | AgentConfig =
     typeof options === 'string' || options instanceof URL
       ? { did: undefined, service: options }
       : options

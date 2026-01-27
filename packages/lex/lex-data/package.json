@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-data",
-  "version": "0.0.3",
+  "version": "0.0.9",
   "license": "MIT",
   "description": "Core utilities for AT Lexicons",
   "keywords": [
@@ -28,14 +28,13 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     }
   },
   "dependencies": {
-    "@atproto/syntax": "workspace:*",
     "multiformats": "^9.9.0",
     "tslib": "^2.8.1",
     "uint8arrays": "3.0.0",
@@ -43,10 +42,10 @@
   },
   "devDependencies": {
     "core-js": "^3",
-    "jest": "^28.1.2"
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "jest"
+    "test": "vitest run"
   }
 }

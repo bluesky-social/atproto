@@ -1,6 +1,8 @@
-const RESERVED_WORDS = new Set([
-  // JavaScript keywords
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar
+/**
+ * JavaScript keywords
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar}
+ */
+const JS_KEYWORDS = new Set([
   'abstract',
   'arguments',
   'as',
@@ -73,62 +75,76 @@ const RESERVED_WORDS = new Set([
   'while',
   'with',
   'yield',
-  // Constructors and globals
-  'Array',
-  'Boolean',
-  'Buffer',
-  'Date',
-  'Error',
-  'Function',
-  'Infinity',
-  'JSON',
-  'Map',
-  'Math',
-  'NaN',
-  'Number',
-  'Object',
-  'Set',
-  'String',
-  'Symbol',
-  'console',
-  'document',
-  'global',
+])
+
+export function isJsKeyword(word: string) {
+  return JS_KEYWORDS.has(word)
+}
+
+// Only important to list var/type names that are likely to be used in the
+// generated code files.
+const GLOBAL_IDENTIFIERS = new Set([
+  // import { l } from "@atproto/lex-schema"
+  'l',
+  // JS Globals
+  'self',
   'globalThis',
-  'window',
-  // Test globals
-  'afterAll',
-  'afterEach',
-  'assert',
-  'beforeAll',
-  'beforeEach',
-  'describe',
-  'expect',
-  'it',
-  'test',
-  // CommonJS globals
+  // ESM
+  'import',
+  // CommonJS
   '__dirname',
   '__filename',
   'require',
   'module',
   'exports',
-  // TypeScript
-  'Record',
+  // TS Primitives
   'any',
+  'bigint',
+  'boolean',
   'declare',
   'never',
+  'null',
   'number',
   'object',
   'string',
   'symbol',
+  'undefined',
   'unknown',
-  // Future reserved words
-  'constructor',
-  'meta',
+  'void',
+  // TS Utility types
+  'Record',
+  'Partial',
+  'Readonly',
+  'Pick',
+  'Omit',
+  'Exclude',
+  'Extract',
+  'InstanceType',
+  'ReturnType',
+  'Required',
+  'ThisType',
+  'Uppercase',
+  'Lowercase',
+  'Capitalize',
+  'Uncapitalize',
 ])
-export function isReservedWord(word: string) {
-  return RESERVED_WORDS.has(word)
+
+export function isGlobalIdentifier(word: string) {
+  return GLOBAL_IDENTIFIERS.has(word)
 }
 
-export function isSafeIdentifier(name: string) {
-  return !isReservedWord(name) && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
+export function isSafeLocalIdentifier(name: string) {
+  return !isGlobalIdentifier(name) && isValidJsIdentifier(name)
+}
+
+export function isValidJsIdentifier(name: string) {
+  return (
+    name.length > 0 &&
+    !isJsKeyword(name) &&
+    /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
+  )
+}
+
+export function asNamespaceExport(name: string) {
+  return isValidJsIdentifier(name) ? name : JSON.stringify(name)
 }

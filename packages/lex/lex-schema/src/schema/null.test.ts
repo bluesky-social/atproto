@@ -1,8 +1,9 @@
-import { NullSchema } from './null.js'
+import { describe, expect, it } from 'vitest'
+import { nullSchema } from './null.js'
 
 describe('NullSchema', () => {
   describe('basic validation', () => {
-    const schema = new NullSchema()
+    const schema = nullSchema()
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -49,7 +50,7 @@ describe('NullSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new NullSchema()
+    const schema = nullSchema()
 
     it('rejects falsy values', () => {
       const result = schema.safeParse(0)

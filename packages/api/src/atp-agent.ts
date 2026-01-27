@@ -13,6 +13,7 @@ import {
   ComAtprotoServerCreateSession,
   ComAtprotoServerGetSession,
   ComAtprotoServerNS,
+  ComAtprotoServerRefreshSession,
 } from './client'
 import { schemas } from './client/lexicons'
 import { SessionManager } from './session-manager'
@@ -222,11 +223,9 @@ export class CredentialSession implements SessionManager {
     if (!this.session?.refreshJwt) {
       return initialRes
     }
-    const isExpiredToken = await isErrorResponse(
-      initialRes,
-      [400],
-      ['ExpiredToken'],
-    )
+    const isExpiredToken =
+      initialRes.status === 401 ||
+      (await isErrorResponse(initialRes, [400], ['ExpiredToken']))
 
     if (!isExpiredToken) {
       return initialRes
@@ -276,6 +275,10 @@ export class CredentialSession implements SessionManager {
     data: ComAtprotoServerCreateAccount.InputSchema,
     opts?: ComAtprotoServerCreateAccount.CallOptions,
   ): Promise<ComAtprotoServerCreateAccount.Response> {
+    // Clear any existing session
+    this.session = undefined
+    this.refreshSessionPromise = undefined
+
     try {
       const res = await this.server.createAccount(data, opts)
       this.session = {
@@ -304,6 +307,10 @@ export class CredentialSession implements SessionManager {
   async login(
     opts: AtpAgentLoginOpts,
   ): Promise<ComAtprotoServerCreateSession.Response> {
+    // Clear any existing session
+    this.session = undefined
+    this.refreshSessionPromise = undefined
+
     try {
       const res = await this.server.createSession({
         identifier: opts.identifier,
@@ -311,6 +318,11 @@ export class CredentialSession implements SessionManager {
         authFactorToken: opts.authFactorToken,
         allowTakendown: opts.allowTakendown,
       })
+
+      if (this.session) {
+        throw new Error('Concurrent login detected')
+      }
+
       this.session = {
         accessJwt: res.data.accessJwt,
         refreshJwt: res.data.refreshJwt,
@@ -351,42 +363,95 @@ export class CredentialSession implements SessionManager {
 
   /**
    * Resume a pre-existing session with this agent.
+   *
+   * @note that a rejected promise from this method indicates a failure to
+   * refresh the session after resuming it but does not indicate a failure to
+   * set the session itself. In case of rejection, check the presence of
+   * {@link CredentialSession.session} after calling this method to ensure the
+   * session was set.
    */
   async resumeSession(
     session: AtpSessionData,
-  ): Promise<ComAtprotoServerGetSession.Response> {
+  ): Promise<
+    | ComAtprotoServerGetSession.Response
+    | ComAtprotoServerRefreshSession.Response
+  > {
+    // Protect against multiple calls to resumeSession that would trigger a
+    // refresh for the same session simultaneously.
+    // Ideally, this check would be based on a session identifier, but since
+    // we don't have one, we will just check the refresh token.
+    if (session.refreshJwt === this.session?.refreshJwt) {
+      // Protect against refreshes in progress
+      await this.refreshSessionPromise
+
+      // Another concurrent operation may have replaced the session while we
+      // were waiting for the refresh to complete.
+      if (session.did !== this.session?.did) {
+        throw new Error('DID mismatch on resumeSession')
+      }
+
+      return this.server.getSession(undefined, {
+        headers: { authorization: `Bearer ${this.session.accessJwt}` },
+      })
+    }
+
+    // Set the current session, then force a refresh, replacing any pending
+    // refresh operation.
     this.session = session
+    this.refreshSessionPromise = undefined
+
+    const promise = this._refreshSessionInner()
+
+    // Discard any concurrent refresh, replacing it with this one.
+    this.refreshSessionPromise = promise
+      .then(
+        (): void => {},
+        (): void => {},
+      )
+      .finally(() => {
+        this.refreshSessionPromise = undefined
+      })
+
+    return promise
+  }
+
+  /**
+   * Internal helper to refresh sessions
+   * - Wraps the actual implementation in a promise-guard to ensure only
+   *   one refresh is attempted at a time.
+   */
+  async refreshSession(): Promise<void> {
+    if (!this.session) return
+
+    // Do not refresh if we already have a refresh in progress
+    return (this.refreshSessionPromise ||= this._refreshSessionInner()
+      .then(
+        (): void => {},
+        (): void => {},
+      )
+      .finally(() => {
+        this.refreshSessionPromise = undefined
+      }))
+  }
+
+  /**
+   * Internal helper to refresh sessions (actual behavior)
+   */
+  private async _refreshSessionInner(): Promise<ComAtprotoServerRefreshSession.Response> {
+    const { session } = this
+
+    // Should never happen
+    if (!session) throw new Error('No session to refresh')
 
     try {
-      const res = await this.server
-        .getSession(undefined, {
-          headers: { authorization: `Bearer ${session.accessJwt}` },
-        })
-        .catch(async (err) => {
-          if (
-            err instanceof XRPCError &&
-            ['ExpiredToken', 'InvalidToken'].includes(err.error) &&
-            session.refreshJwt
-          ) {
-            try {
-              const res = await this.server.refreshSession(undefined, {
-                headers: { authorization: `Bearer ${session.refreshJwt}` },
-              })
+      const res = await this.server.refreshSession(undefined, {
+        headers: { authorization: `Bearer ${session.refreshJwt}` },
+      })
 
-              session.accessJwt = res.data.accessJwt
-              session.refreshJwt = res.data.refreshJwt
+      const { data } = res
 
-              return this.server.getSession(undefined, {
-                headers: { authorization: `Bearer ${session.accessJwt}` },
-              })
-            } catch {
-              // Noop, we'll throw the original error
-            }
-          }
-          throw err
-        })
-
-      if (res.data.did !== session.did) {
+      // Something is very wrong if the DID changes during a refresh
+      if (data.did !== session.did) {
         throw new XRPCError(
           ResponseType.InvalidRequest,
           'Invalid session',
@@ -394,18 +459,46 @@ export class CredentialSession implements SessionManager {
         )
       }
 
-      session.email = res.data.email
-      session.handle = res.data.handle
-      session.emailConfirmed = res.data.emailConfirmed
-      session.emailAuthFactor = res.data.emailAuthFactor
-      session.active = res.data.active ?? true
-      session.status = res.data.status
+      // Historically, refreshSession did not return all the fields from
+      // getSession. In particular, email, emailConfirmed and emailAuthFactor
+      // were missing. Similarly, some servers might not return the didDoc in
+      // refreshSession. We fetch them via getSession if missing, allowing to
+      // ensure that we are always talking with the right PDS.
+      if (data.emailConfirmed == null || data.didDoc == null) {
+        try {
+          const res = await this.server.getSession(undefined, {
+            headers: { authorization: `Bearer ${data.accessJwt}` },
+          })
+
+          // Fool proofing (should always match)
+          if (res.data.did === data.did) {
+            Object.assign(data, res.data)
+          }
+        } catch {
+          // Noop, we'll keep the current values we have
+        }
+      }
 
       // protect against concurrent session updates
-      if (this.session === session) {
-        this._updateApiEndpoint(res.data.didDoc)
-        this.persistSession?.('update', session)
+      if (this.session !== session) {
+        return Promise.reject(new Error('Concurrent session update detected'))
       }
+
+      // succeeded, update the session
+      this.session = {
+        did: data.did,
+        accessJwt: data.accessJwt,
+        refreshJwt: data.refreshJwt,
+        handle: data.handle ?? session.handle,
+        email: data.email ?? session.email,
+        emailConfirmed: data.emailConfirmed ?? session.emailConfirmed,
+        emailAuthFactor: data.emailAuthFactor ?? session.emailAuthFactor,
+        active: data.active ?? session.active ?? true,
+        status: data.status ?? session.status,
+      }
+
+      this._updateApiEndpoint(res.data.didDoc)
+      this.persistSession?.('update', this.session)
 
       return res
     } catch (err) {
@@ -413,8 +506,11 @@ export class CredentialSession implements SessionManager {
       if (this.session === session) {
         if (
           err instanceof XRPCError &&
-          ['ExpiredToken', 'InvalidToken'].includes(err.error)
+          (err.status === 401 ||
+            err.error === 'InvalidDID' ||
+            ['ExpiredToken', 'InvalidToken'].includes(err.error))
         ) {
+          // failed due to a bad refresh token
           this.session = undefined
           this.persistSession?.('expired', undefined)
         } else {
@@ -429,57 +525,6 @@ export class CredentialSession implements SessionManager {
   }
 
   /**
-   * Internal helper to refresh sessions
-   * - Wraps the actual implementation in a promise-guard to ensure only
-   *   one refresh is attempted at a time.
-   */
-  async refreshSession(): Promise<void> {
-    return (this.refreshSessionPromise ||= this._refreshSessionInner().finally(
-      () => {
-        this.refreshSessionPromise = undefined
-      },
-    ))
-  }
-
-  /**
-   * Internal helper to refresh sessions (actual behavior)
-   */
-  private async _refreshSessionInner() {
-    if (!this.session?.refreshJwt) {
-      return
-    }
-
-    try {
-      const res = await this.server.refreshSession(undefined, {
-        headers: { authorization: `Bearer ${this.session.refreshJwt}` },
-      })
-      // succeeded, update the session
-      this.session = {
-        ...this.session,
-        accessJwt: res.data.accessJwt,
-        refreshJwt: res.data.refreshJwt,
-        handle: res.data.handle,
-        did: res.data.did,
-      }
-      this._updateApiEndpoint(res.data.didDoc)
-      this.persistSession?.('update', this.session)
-    } catch (err) {
-      if (
-        err instanceof XRPCError &&
-        err.error &&
-        ['ExpiredToken', 'InvalidToken'].includes(err.error)
-      ) {
-        // failed due to a bad refresh token
-        this.session = undefined
-        this.persistSession?.('expired', undefined)
-      }
-      // else: other failures should be ignored - the issue will
-      // propagate in the _dispatch() second attempt to run
-      // the request
-    }
-  }
-
-  /**
    * Helper to update the pds endpoint dynamically.
    *
    * The session methods (create, resume, refresh) may respond with the user's
@@ -490,11 +535,14 @@ export class CredentialSession implements SessionManager {
    * when the PDSes are operated by a single org.)
    */
   private _updateApiEndpoint(didDoc: unknown) {
-    if (isValidDidDoc(didDoc)) {
-      const endpoint = getPdsEndpoint(didDoc)
-      this.pdsUrl = endpoint ? new URL(endpoint) : undefined
+    const endpoint = isValidDidDoc(didDoc) ? getPdsEndpoint(didDoc) : undefined
+    if (endpoint) {
+      this.pdsUrl = new URL(endpoint)
     } else {
-      // If the did doc is invalid, we clear the pdsUrl (should never happen)
+      // If the did doc is invalid (or missing), we clear the pdsUrl (should
+      // never happen). This is fine if the auth server and PDS are the same
+      // service, or if the auth server will proxy requests to the right PDS
+      // (which is the case for Bluesky's "entryway").
       this.pdsUrl = undefined
     }
   }

@@ -1,5 +1,6 @@
+import { describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
-import { BlobSchema } from './blob.js'
+import { blob } from './blob.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
 const blobCid = parseCid(
@@ -12,7 +13,7 @@ const lexCid = parseCid(
 
 describe('BlobSchema', () => {
   describe('basic validation', () => {
-    const schema = new BlobSchema({})
+    const schema = blob({})
 
     it('validates valid blob references', () => {
       const result = schema.safeParse({
@@ -81,7 +82,7 @@ describe('BlobSchema', () => {
   })
 
   describe('BlobRef validation', () => {
-    const schema = new BlobSchema({})
+    const schema = blob({})
 
     it('rejects blob without $type', () => {
       const result = schema.safeParse({
@@ -213,7 +214,7 @@ describe('BlobSchema', () => {
   })
 
   describe('strict validation', () => {
-    const strictSchema = new BlobSchema({ strict: true })
+    const strictSchema = blob({ strict: true })
 
     it('accepts valid raw CID in strict mode', () => {
       const result = strictSchema.safeParse({
@@ -236,7 +237,7 @@ describe('BlobSchema', () => {
     })
 
     it('accepts non-raw CID in non-strict mode', () => {
-      const nonStrictSchema = new BlobSchema({ strict: false })
+      const nonStrictSchema = blob({ strict: false })
       const result = nonStrictSchema.safeParse({
         $type: 'blob',
         ref: lexCid,
@@ -249,7 +250,7 @@ describe('BlobSchema', () => {
 
   describe('legacy blob format', () => {
     it('rejects legacy format by default', () => {
-      const schema = new BlobSchema({})
+      const schema = blob({})
       const result = schema.safeParse({
         cid: blobCid.toString(),
         mimeType: 'image/jpeg',
@@ -258,7 +259,7 @@ describe('BlobSchema', () => {
     })
 
     it('accepts legacy format when allowLegacy is true', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         cid: blobCid.toString(),
         mimeType: 'image/jpeg',
@@ -273,7 +274,7 @@ describe('BlobSchema', () => {
     })
 
     it('accepts legacy format with lexCid when allowLegacy is true', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         cid: lexCid.toString(),
         mimeType: 'image/png',
@@ -282,7 +283,7 @@ describe('BlobSchema', () => {
     })
 
     it('rejects legacy format without cid', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         mimeType: 'image/jpeg',
       })
@@ -290,7 +291,7 @@ describe('BlobSchema', () => {
     })
 
     it('rejects legacy format without mimeType', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         cid: blobCid.toString(),
       })
@@ -298,7 +299,7 @@ describe('BlobSchema', () => {
     })
 
     it('rejects legacy format with invalid cid', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         cid: 'invalid-cid',
         mimeType: 'image/jpeg',
@@ -307,7 +308,7 @@ describe('BlobSchema', () => {
     })
 
     it('rejects legacy format with numeric cid', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         cid: 123,
         mimeType: 'image/jpeg',
@@ -316,7 +317,7 @@ describe('BlobSchema', () => {
     })
 
     it('rejects legacy format with extra properties', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
       const result = schema.safeParse({
         cid: blobCid.toString(),
         mimeType: 'image/jpeg',
@@ -326,7 +327,7 @@ describe('BlobSchema', () => {
     })
 
     it('accepts both BlobRef and LegacyBlobRef formats when allowLegacy is true', () => {
-      const schema = new BlobSchema({ allowLegacy: true })
+      const schema = blob({ allowLegacy: true })
 
       const blobRefResult = schema.safeParse({
         $type: 'blob',
@@ -346,31 +347,29 @@ describe('BlobSchema', () => {
 
   describe('accept and maxSize options', () => {
     it('accepts blob with accept option (not enforced)', () => {
-      const schema = new BlobSchema({ accept: ['image/jpeg', 'image/png'] })
+      const schema = blob({ accept: ['image/jpeg', 'image/png'] })
       const result = schema.safeParse({
         $type: 'blob',
         ref: blobCid,
         mimeType: 'image/gif',
         size: 10000,
       })
-      // Accept constraints are not enforced (see comment in source)
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('accepts blob with maxSize option (not enforced)', () => {
-      const schema = new BlobSchema({ maxSize: 1000 })
+      const schema = blob({ maxSize: 1000 })
       const result = schema.safeParse({
         $type: 'blob',
         ref: blobCid,
         mimeType: 'image/jpeg',
         size: 10000,
       })
-      // MaxSize constraints are not enforced (see comment in source)
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('accepts blob matching accept constraint', () => {
-      const schema = new BlobSchema({ accept: ['image/jpeg', 'image/png'] })
+      const schema = blob({ accept: ['image/jpeg', 'image/png'] })
       const result = schema.safeParse({
         $type: 'blob',
         ref: blobCid,
@@ -381,7 +380,7 @@ describe('BlobSchema', () => {
     })
 
     it('accepts blob matching maxSize constraint', () => {
-      const schema = new BlobSchema({ maxSize: 20000 })
+      const schema = blob({ maxSize: 20000 })
       const result = schema.safeParse({
         $type: 'blob',
         ref: blobCid,
@@ -393,7 +392,7 @@ describe('BlobSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new BlobSchema({})
+    const schema = blob({})
 
     it('validates blob with large size', () => {
       const result = schema.safeParse({
@@ -458,7 +457,7 @@ describe('BlobSchema', () => {
 
   describe('combined options', () => {
     it('validates with strict and allowLegacy both true', () => {
-      const schema = new BlobSchema({ strict: true, allowLegacy: true })
+      const schema = blob({ strict: true, allowLegacy: true })
 
       // Should accept strict BlobRef
       const blobRefResult = schema.safeParse({
@@ -487,7 +486,7 @@ describe('BlobSchema', () => {
     })
 
     it('validates with all options combined', () => {
-      const schema = new BlobSchema({
+      const schema = blob({
         strict: true,
         allowLegacy: true,
         accept: ['image/jpeg'],

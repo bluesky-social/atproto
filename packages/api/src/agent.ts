@@ -587,6 +587,10 @@ export class Agent extends XrpcClient {
       verificationPrefs: {
         hideBadges: false,
       },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      },
     }
     const res = await this.app.bsky.actor.getPreferences({})
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
@@ -657,6 +661,11 @@ export class Agent extends XrpcClient {
       } else if (predicate.isValidVerificationPrefs(pref)) {
         prefs.verificationPrefs = {
           hideBadges: pref.hideBadges,
+        }
+      } else if (predicate.isValidLiveEventPreferences(pref)) {
+        prefs.liveEventPreferences = {
+          hiddenFeedIds: pref.hiddenFeedIds || [],
+          hideAllFeeds: pref.hideAllFeeds ?? false,
         }
       }
     }
@@ -1361,6 +1370,41 @@ export class Agent extends XrpcClient {
 
       return prefs
         .filter((p) => !AppBskyActorDefs.isVerificationPrefs(p))
+        .concat(pref)
+    })
+  }
+
+  async updateLiveEventPreferences(
+    action:
+      | { type: 'hideFeed'; id: string }
+      | { type: 'unhideFeed'; id: string }
+      | { type: 'toggleHideAllFeeds' },
+  ) {
+    return this.updatePreferences((prefs) => {
+      const pref = prefs.findLast(predicate.isValidLiveEventPreferences) || {
+        $type: 'app.bsky.actor.defs#liveEventPreferences',
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      }
+
+      const hiddenFeedIds = new Set(pref.hiddenFeedIds || [])
+
+      switch (action.type) {
+        case 'hideFeed':
+          hiddenFeedIds.add(action.id)
+          break
+        case 'unhideFeed':
+          hiddenFeedIds.delete(action.id)
+          break
+        case 'toggleHideAllFeeds':
+          pref.hideAllFeeds = !pref.hideAllFeeds
+          break
+      }
+
+      pref.hiddenFeedIds = [...hiddenFeedIds]
+
+      return prefs
+        .filter((p) => !AppBskyActorDefs.isLiveEventPreferences(p))
         .concat(pref)
     })
   }

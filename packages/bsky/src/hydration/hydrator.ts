@@ -80,7 +80,7 @@ export class HydrateCtx {
   labelers = this.vals.labelers
   viewer = this.vals.viewer !== null ? serviceRefToDid(this.vals.viewer) : null
   includeTakedowns = this.vals.includeTakedowns
-  includeActorTakedowns = this.vals.includeActorTakedowns
+  overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
   featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
@@ -99,7 +99,7 @@ export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: string | null
   includeTakedowns?: boolean
-  includeActorTakedowns?: boolean
+  overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
   featureGates?: CheckedFeatureGatesMap
@@ -228,7 +228,12 @@ export class Hydrator {
     dids: string[],
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
-    const includeTakedowns = ctx.includeTakedowns || ctx.includeActorTakedowns
+    /**
+     * Special case here, we want to include takedowns in special cases, like
+     * `getProfile`, since we throw client-facing errors later in the pipeline.
+     */
+    const includeTakedowns =
+      ctx.includeTakedowns || ctx.overrideIncludeTakedownsForActor
     const [actors, labels, profileViewersState] = await Promise.all([
       this.actor.getActors(dids, {
         includeTakedowns,
@@ -742,7 +747,7 @@ export class Hydrator {
   ): Promise<HydrationState> {
     const postsState = await this.hydratePosts(refs, ctx, undefined, {
       processDynamicTagsForView: ctx.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       )
         ? 'thread'
         : undefined,
@@ -1261,6 +1266,13 @@ export class Hydrator {
       if (parsed.rkey !== 'self') return
       return (
         (await this.actor.getChatDeclarations([uri], includeTakedowns)).get(
+          uri,
+        ) ?? undefined
+      )
+    } else if (collection === ids.ComGermnetworkDeclaration) {
+      if (parsed.rkey !== 'self') return
+      return (
+        (await this.actor.getGermDeclarations([uri], includeTakedowns)).get(
           uri,
         ) ?? undefined
       )

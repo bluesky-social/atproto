@@ -1,11 +1,11 @@
 export const noUndefinedVals = <T>(
   obj: Record<string, T | undefined>,
 ): Record<string, T> => {
-  Object.keys(obj).forEach((k) => {
+  for (const k of Object.keys(obj)) {
     if (obj[k] === undefined) {
       delete obj[k]
     }
-  })
+  }
   return obj as Record<string, T>
 }
 

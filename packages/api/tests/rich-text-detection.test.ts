@@ -371,6 +371,74 @@ describe('detectFacets', () => {
       expect(detectedIndices).toEqual(indices)
     })
   })
+
+  describe('correctly detects cashtags inline', () => {
+    const inputs: [
+      string,
+      string[],
+      { byteStart: number; byteEnd: number }[],
+    ][] = [
+      ['$AAPL', ['$AAPL'], [{ byteStart: 0, byteEnd: 5 }]],
+      ['$aapl', ['$AAPL'], [{ byteStart: 0, byteEnd: 5 }]], // normalized to uppercase
+      ['$A', ['$A'], [{ byteStart: 0, byteEnd: 2 }]],
+      ['$a', ['$A'], [{ byteStart: 0, byteEnd: 2 }]], // single char normalized
+      [
+        '$BTC $ETH',
+        ['$BTC', '$ETH'],
+        [
+          { byteStart: 0, byteEnd: 4 },
+          { byteStart: 5, byteEnd: 9 },
+        ],
+      ],
+      ['$100', [], []], // starts with digit - not a cashtag
+      ['$GOOGL', ['$GOOGL'], [{ byteStart: 0, byteEnd: 6 }]], // 5 chars - max length
+      ['$TOOLONG', [], []], // >5 chars
+      ['check $LEGO now', ['$LEGO'], [{ byteStart: 6, byteEnd: 11 }]],
+      ['($GOOG)', ['$GOOG'], [{ byteStart: 1, byteEnd: 6 }]],
+      ['$AAPL.', ['$AAPL'], [{ byteStart: 0, byteEnd: 5 }]], // trailing punctuation
+      [
+        '$AAPL, $MSFT!',
+        ['$AAPL', '$MSFT'],
+        [
+          { byteStart: 0, byteEnd: 5 },
+          { byteStart: 7, byteEnd: 12 },
+        ],
+      ],
+      ['no$SPACE', [], []], // must have leading space or start
+      ['$', [], []], // just dollar sign
+      ['$ AAPL', [], []], // space after $
+      ['$123ABC', [], []], // starts with digit
+      ['$ABC12', ['$ABC12'], [{ byteStart: 0, byteEnd: 6 }]], // digits after letters OK (5 chars)
+      ['$ABC123', [], []], // 6 chars - too long
+    ]
+
+    it.each(inputs)('%s', (input, tags, indices) => {
+      const rt = new RichText({ text: input })
+      rt.detectFacetsWithoutResolution()
+
+      const detectedTags: string[] = []
+      const detectedIndices: { byteStart: number; byteEnd: number }[] = []
+
+      for (const { facet } of rt.segments()) {
+        if (!facet) continue
+        for (const feature of facet.features) {
+          if (isTag(feature) && feature.tag.startsWith('$')) {
+            detectedTags.push(feature.tag)
+          }
+        }
+        if (
+          facet.features.some(
+            (f) => isTag(f) && (f as any).tag?.startsWith('$'),
+          )
+        ) {
+          detectedIndices.push(facet.index)
+        }
+      }
+
+      expect(detectedTags).toEqual(tags)
+      expect(detectedIndices).toEqual(indices)
+    })
+  })
 })
 
 function segmentToOutput(segment: RichTextSegment): string[] {

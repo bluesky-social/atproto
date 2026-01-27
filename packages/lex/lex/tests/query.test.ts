@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import * as com from './lexicons/com.js'
 
 describe('com.example.query', () => {
@@ -100,6 +101,21 @@ describe('com.example.query', () => {
           array: NaN,
         }),
       ).toThrow('Expected array value type at $.array (got NaN)')
+    })
+
+    it('properly infers the type of default parameters', () => {
+      function returnDef(params: com.example.query.Params): number {
+        return params.def
+      }
+
+      const parsed = com.example.query.$params.parse({
+        boolean: true,
+        integer: 123,
+        string: 'string',
+        array: ['x', 'y'],
+      })
+
+      expect(returnDef(parsed)).toBe(0)
     })
   })
 

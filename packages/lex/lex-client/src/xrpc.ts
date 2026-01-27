@@ -1,109 +1,182 @@
-import { LexValue } from '@atproto/lex-data'
-import { lexParse, lexStringify } from '@atproto/lex-json'
+import { LexValue, isLexScalar, isPlainObject } from '@atproto/lex-data'
+import { lexStringify } from '@atproto/lex-json'
 import {
-  DidString,
-  InferParamsSchema,
-  InferPayloadBody,
+  InferInput,
+  InferPayload,
+  Main,
   Params,
-  ParamsSchema,
+  Payload,
   Procedure,
   Query,
   Restricted,
   Subscription,
+  getMain,
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
 import {
-  KnownError,
   XrpcResponseError,
-  XrpcServiceError,
-  xrpcErrorBodySchema,
-} from './error.js'
-import { XrpcResponse, XrpcResponseBody } from './response.js'
-import { CallOptions, Namespace, Service, getMain } from './types.js'
+  XrpcUnexpectedError,
+  XrpcUpstreamError,
+} from './errors.js'
+import { XrpcResponse } from './response.js'
+import { BinaryBodyInit, CallOptions } from './types.js'
+import {
+  XrpcPayload,
+  buildAtprotoHeaders,
+  isAsyncIterable,
+  isBlobLike,
+  toReadableStream,
+} from './util.js'
+
+// If all params are optional, allow omitting the params object
+type XrpcParamsOptions<P extends Params> =
+  NonNullable<unknown> extends P ? { params?: P } : { params: P }
+
+export type XrpcRequestParams<M extends Procedure | Query | Subscription> =
+  InferInput<M['parameters']>
+
+type XrpcRequestPayload<M extends Procedure | Query> = M extends Procedure
+  ? InferPayload<M['input'], BinaryBodyInit>
+  : undefined
+
+type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
+  ? // encoding will be inferred from the schema at runtime if not provided
+    { body: B; encoding?: E }
+  : { body?: undefined; encoding?: undefined }
 
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  CallOptions & XrpcRequestUrlOptions<M> & XrpcRequestInitOptions<M>
+  CallOptions &
+    XrpcInputOptions<XrpcRequestPayload<M>> &
+    XrpcParamsOptions<XrpcRequestParams<M>>
 
+export type XrpcFailure<M extends Procedure | Query> =
+  // The server returned a valid XRPC error response
+  | XrpcResponseError<M>
+  // The response was not a valid XRPC response, or it does not match the schema
+  | XrpcUpstreamError
+  // Something went wrong (network error, etc.)
+  | XrpcUnexpectedError
+
+export type XrpcResult<M extends Procedure | Query> =
+  | XrpcResponse<M>
+  | XrpcFailure<M>
+
+/**
+ * Utility method to type cast the error thrown by {@link xrpc} to an
+ * {@link XrpcFailure} matching the provided method. Only use this function
+ * inside a catch block right after calling {@link xrpc}, and use the same
+ * method type parameter as used in the {@link xrpc} call.
+ */
+export function asXrpcFailure<M extends Procedure | Query = Procedure | Query>(
+  err: unknown,
+): XrpcFailure<M> {
+  if (err instanceof XrpcResponseError) return err
+  if (err instanceof XrpcUpstreamError) return err
+  return XrpcUnexpectedError.from(err)
+}
+
+/**
+ * @throws XrpcFailure<M>
+ */
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
   ns: NonNullable<unknown> extends XrpcOptions<M>
-    ? Namespace<M>
+    ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M>,
 ): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
-  ns: Namespace<M>,
+  ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResponse<M>> {
-  options.signal?.throwIfAborted()
+  try {
+    return await lexRpcRequest<M>(agent, ns, options)
+  } catch (err) {
+    throw asXrpcFailure<M>(err)
+  }
+}
+
+export async function xrpcSafe<const M extends Query | Procedure>(
+  agent: Agent,
+  ns: NonNullable<unknown> extends XrpcOptions<M>
+    ? Main<M>
+    : Restricted<'This XRPC method requires an "options" argument'>,
+): Promise<XrpcResult<M>>
+export async function xrpcSafe<const M extends Query | Procedure>(
+  agent: Agent,
+  ns: Main<M>,
+  options: XrpcOptions<M>,
+): Promise<XrpcResult<M>>
+export async function xrpcSafe<const M extends Query | Procedure>(
+  agent: Agent,
+  ns: Main<M>,
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcResult<M>> {
+  return lexRpcRequest<M>(agent, ns, options).catch(asXrpcFailure<M>)
+}
+
+async function lexRpcRequest<const M extends Query | Procedure>(
+  agent: Agent,
+  ns: Main<M>,
+  options: XrpcOptions<M> = {} as XrpcOptions<M>,
+): Promise<XrpcResponse<M>> {
   const method = getMain(ns)
+  options.signal?.throwIfAborted()
   const url = xrpcRequestUrl(method, options)
   const request = xrpcRequestInit(method, options)
   const response = await agent.fetchHandler(url, request)
-  return xrpcResponseHandler<M>(response, method, options)
+  return XrpcResponse.fromFetchResponse<M>(method, response, options)
 }
 
-export type XrpcRequestUrlOptions<M extends Query | Procedure | Subscription> =
-  CallOptions &
-    (undefined extends InferParamsSchema<M['parameters']>
-      ? { params?: InferParamsSchema<M['parameters']> }
-      : { params: InferParamsSchema<M['parameters']> })
-
-export function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
+function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   method: M,
-  options: XrpcRequestUrlOptions<M>,
+  options: CallOptions & { params?: Params },
 ) {
   const path = `/xrpc/${method.nsid}`
 
-  const queryString = options.params
-    ? xrpcRequestParams(method.parameters, options.params, options)
-    : undefined
+  const queryString = method.parameters
+    ?.toURLSearchParams(options.params ?? {})
+    .toString()
 
   return queryString ? `${path}?${queryString}` : path
 }
 
-export function xrpcRequestParams(
-  schema: ParamsSchema | undefined,
-  params: Params | undefined,
-  options: CallOptions,
-): undefined | string {
-  const urlSearchParams = schema?.toURLSearchParams(
-    options.validateRequest ? schema.parse(params) : (params as any),
-  )
-  return urlSearchParams?.size ? urlSearchParams.toString() : undefined
-}
-
-export type XrpcRequestInitOptions<T extends Query | Procedure> = CallOptions &
-  (T extends Procedure
-    ? never extends InferPayloadBody<T['input']>
-      ? { body?: InferPayloadBody<T['input']> }
-      : { body: InferPayloadBody<T['input']> }
-    : { body?: never })
-
-export function xrpcRequestInit<T extends Procedure | Query>(
+function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
-  options: XrpcRequestInitOptions<T>,
+  options: CallOptions & {
+    body?: LexValue | BinaryBodyInit
+    encoding?: string
+  },
 ): RequestInit & { duplex?: 'half' } {
-  const headers = xrpcRequestHeaders(options)
+  const headers = buildAtprotoHeaders(options)
+
+  // Tell the server what type of response we're expecting
+  if (schema.output.encoding) {
+    headers.set('accept', schema.output.encoding)
+  }
+
+  // Caller should not set content-type header
+  if (headers.has('content-type')) {
+    const contentType = headers.get('content-type')
+    throw new TypeError(`Unexpected content-type header (${contentType})`)
+  }
 
   // Requests with body
-  if ('input' in schema && schema.input?.encoding) {
-    if (
-      options.validateRequest &&
-      schema.input == null &&
-      options.body !== undefined
-    ) {
-      throw new TypeError(
-        `XRPC method ${schema.nsid} does not accept a request body`,
-      )
+  if ('input' in schema) {
+    const encodingHint = options.encoding
+    const input = xrpcProcedureInput(schema, options, encodingHint)
+
+    if (input) {
+      headers.set('content-type', input.encoding)
+    } else if (encodingHint != null) {
+      throw new TypeError(`Unexpected encoding hint (${encodingHint})`)
     }
 
-    headers.set('content-type', schema.input.encoding)
     return {
       duplex: 'half',
       redirect: 'follow',
@@ -112,12 +185,7 @@ export function xrpcRequestInit<T extends Procedure | Query>(
       signal: options.signal,
       method: 'POST',
       headers,
-      body: xrpcRequestBody(
-        schema.input?.encoding,
-        options.validateRequest
-          ? schema.input?.body.parse(options.body)
-          : options.body,
-      ),
+      body: input?.body,
     }
   }
 
@@ -128,208 +196,118 @@ export function xrpcRequestInit<T extends Procedure | Query>(
     referrerPolicy: 'strict-origin-when-cross-origin', // (default)
     mode: 'cors', // (default)
     signal: options.signal,
-    method: schema instanceof Query ? 'GET' : 'POST',
+    method: 'GET',
     headers,
   }
 }
 
-export function xrpcRequestHeaders(options: {
-  headers?: HeadersInit
-  service?: Service
-  labelers?: Iterable<DidString>
-}): Headers {
-  const headers = new Headers(options.headers)
+function xrpcProcedureInput(
+  method: Procedure,
+  options: CallOptions & { body?: LexValue | BinaryBodyInit },
+  encodingHint?: string,
+): null | XrpcPayload<BodyInit> {
+  const { input } = method
+  const { body } = options
 
-  if (options.service && !headers.has('atproto-proxy')) {
-    headers.set('atproto-proxy', options.service)
+  if (options.validateRequest) {
+    input.schema?.check(body)
   }
 
-  if (options.labelers) {
-    headers.set(
-      'atproto-accept-labelers',
-      [...options.labelers, headers.get('atproto-accept-labelers')?.trim()]
-        .filter(Boolean)
-        .join(', '),
-    )
+  // Special handling for endpoints expecting application/json input
+  if (input.encoding === 'application/json') {
+    // @NOTE **NOT** using isLexValue here to avoid deep checks in order to
+    // distinguish between LexValue and BinaryBodyInit.
+    if (!isLexScalar(body) && !isPlainObject(body) && !Array.isArray(body)) {
+      throw new TypeError(`Expected LexValue body, got ${typeof body}`)
+    }
+
+    return buildPayload(input, lexStringify(body), encodingHint)
   }
 
-  return headers
+  // Other encodings will be sent unaltered (ie. as binary data)
+  switch (typeof body) {
+    case 'undefined':
+    case 'string':
+      return buildPayload(input, body, encodingHint)
+    case 'object': {
+      if (body === null) break
+      if (
+        ArrayBuffer.isView(body) ||
+        body instanceof ArrayBuffer ||
+        body instanceof ReadableStream
+      ) {
+        return buildPayload(input, body, encodingHint)
+      } else if (isAsyncIterable(body)) {
+        return buildPayload(input, toReadableStream(body), encodingHint)
+      } else if (isBlobLike(body)) {
+        return buildPayload(input, body, encodingHint || body.type)
+      }
+    }
+  }
+
+  throw new TypeError(
+    `Invalid ${typeof body} body for ${input.encoding} encoding`,
+  )
 }
 
-function xrpcRequestBody(
-  encoding: string | undefined,
-  body: LexValue | undefined,
-): BodyInit | null {
-  if (encoding === undefined) {
+function buildPayload(
+  schema: Payload,
+  body: undefined | BodyInit,
+  encodingHint?: string,
+): null | XrpcPayload<BodyInit> {
+  if (schema.encoding === undefined) {
+    if (body !== undefined) {
+      throw new TypeError(
+        `Cannot send a ${typeof body} body with undefined encoding`,
+      )
+    }
+
     return null
   }
 
-  if (encoding === 'application/json') {
-    if (body !== undefined) return lexStringify(body)
-  } else if (encoding.startsWith('text/')) {
-    if (typeof body === 'string') return body
-  } else {
-    if (ArrayBuffer.isView(body) || body instanceof ArrayBuffer) return body
+  if (body === undefined) {
+    // This error would be returned by the server, but we can catch it earlier
+    // to avoid un-necessary requests. Note that a content-length of 0 does not
+    // necessary mean that the body is "empty" (e.g. an empty txt file).
+    throw new TypeError(`A request body is expected but none was provided`)
   }
 
-  throw new TypeError(`Invalid ${typeof body} body for ${encoding} encoding`)
+  const encoding = buildEncoding(schema, encodingHint)
+  return { encoding, body }
 }
 
-export async function xrpcResponseHandler<M extends Procedure | Query>(
-  response: Response,
-  schema: M,
-  options?: { validateResponse?: boolean },
-): Promise<XrpcResponse<M>> {
-  // @NOTE The body MUST either be read or canceled to avoid resource leaks.
-  // Since nothing should cause an exception before "readXrpcResponseBody" is
-  // called, we can safely not use a try/finally here.
+function buildEncoding(schema: Payload, encodingHint?: string): string {
+  // Should never happen (required for type safety)
+  if (!schema.encoding) {
+    throw new TypeError('Unexpected payload')
+  }
 
-  const encoding = extractEncoding(response.headers)
-
-  const body = await readResponseBody(response, encoding).catch((cause) => {
-    throw new XrpcServiceError(
-      KnownError.InvalidResponse,
-      response.status,
-      response.headers,
-      undefined,
-      'Failed to read XRPC response',
-      { cause },
-    )
-  })
-
-  // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
-  if (response.status < 200 || response.status >= 300) {
-    // All unsuccessful responses should follow a standard error response
-    // schema. The Content-Type should be application/json, and the payload
-    // should be a JSON object with the following fields:
-    // - error (string, required): type name of the error (generic ASCII
-    //   constant, no whitespace)
-    // - message (string, optional): description of the error, appropriate for
-    //   display to humans
-    if (
-      body != null &&
-      encoding === 'application/json' &&
-      xrpcErrorBodySchema.matches(body)
-    ) {
-      throw new XrpcResponseError(
-        response.status,
-        response.headers,
-        encoding,
-        body,
+  if (encodingHint?.length) {
+    if (!schema.matchesEncoding(encodingHint)) {
+      throw new TypeError(
+        `Cannot send a body with content-type "${encodingHint}" for "${schema.encoding}" encoding`,
       )
     }
-
-    throw new XrpcServiceError(
-      response.status >= 500
-        ? KnownError.InternalServerError
-        : KnownError.InvalidResponse,
-      response.status,
-      response.headers,
-      body,
-    )
+    return encodingHint
   }
 
-  // Check response encoding
-  if (schema.output.encoding !== encoding) {
-    throw new XrpcServiceError(
-      KnownError.InvalidResponse,
-      response.status,
-      response.headers,
-      body,
-      `Expected response with content-type ${schema.output.encoding}, got ${encoding}`,
-    )
+  // Fallback
+
+  if (schema.encoding === '*/*') {
+    return 'application/octet-stream'
   }
 
-  if (schema.output.encoding == null) {
-    if (body !== undefined) {
-      throw new XrpcServiceError(
-        KnownError.InvalidResponse,
-        response.status,
-        response.headers,
-        body,
-        `Expected empty response body`,
-      )
-    }
-
-    return new XrpcResponse<M>(
-      schema,
-      response.status,
-      response.headers,
-      undefined as XrpcResponseBody<M>,
-    )
-  } else {
-    // @NOTE this should already be enforced by readXrpcResponseBody
-    if (body === undefined) {
-      throw new XrpcServiceError(
-        KnownError.InvalidResponse,
-        response.status,
-        response.headers,
-        body,
-        `Expected non-empty response body`,
-      )
-    }
-
-    return new XrpcResponse<M>(
-      schema,
-      response.status,
-      response.headers,
-      schema.output.schema == null || options?.validateResponse === false
-        ? (body as XrpcResponseBody<M>)
-        : (schema.output.schema.parse(body) as XrpcResponseBody<M>),
-    )
-  }
-}
-
-export function extractEncoding(headers: Headers): string | undefined {
-  const contentType = headers.get('content-type')
-  if (!contentType) return undefined
-  return contentType.split(';')[0].trim()
-}
-
-export async function readResponseBody(
-  response: Response,
-  encoding: string,
-): Promise<LexValue>
-export async function readResponseBody(
-  response: Response,
-  encoding: string | undefined,
-): Promise<LexValue | undefined>
-export async function readResponseBody(
-  response: Response,
-  encoding: string | undefined,
-): Promise<LexValue | undefined> {
-  // When encoding is undefined or empty, we expect no body
-  if (encoding == null) {
-    if (response.body == null) return undefined
-
-    // Let's make sure the body is empty (while avoiding reading it all).
-    if (!('getReader' in response.body)) {
-      // Some environments may not support body.getReader(), fall back to
-      // reading the whole body.
-      const buffer = await response.arrayBuffer()
-      if (buffer.byteLength === 0) return undefined
-    } else {
-      const reader = response.body.getReader()
-      const next = await reader.read()
-      if (next.done) return undefined
-      await reader.cancel() // Drain the rest of the (non-empty) body stream
-    }
-
-    throw new SyntaxError('Content-type is undefined but body is not empty')
+  if (schema.encoding.startsWith('text/')) {
+    return schema.encoding.includes('*')
+      ? 'text/plain; charset=utf-8'
+      : `${schema.encoding}; charset=utf-8`
   }
 
-  if (encoding === 'application/json') {
-    // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as using
-    // a reviver function during JSON.parse should be faster than parsing to
-    // JSON then converting to Lex (?)
-
-    // @TODO verify statement above
-    return lexParse(await response.text())
+  if (!schema.encoding.includes('*')) {
+    return schema.encoding
   }
 
-  if (encoding.startsWith('text/')) {
-    return response.text()
-  }
-
-  return new Uint8Array(await response.arrayBuffer())
+  throw new TypeError(
+    `Unable to determine payload encoding. Please provide a 'content-type' header matching ${schema.encoding}.`,
+  )
 }

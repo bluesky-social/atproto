@@ -58,13 +58,14 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json',
         body: {
+          accessJwt,
+          refreshJwt,
+
           did: user.did,
           didDoc,
           handle: user.handle ?? INVALID_HANDLE,
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
-          accessJwt,
-          refreshJwt,
           active,
           status,
         },

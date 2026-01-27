@@ -1,5 +1,6 @@
-import { LexValue, parseCid } from '@atproto/lex-data'
-import { decode, decodeAll, encode } from '..'
+import { assert, describe, expect, it } from 'vitest'
+import { LexValue, isLexMap, parseCid } from '@atproto/lex-data'
+import { decode, decodeAll, encode } from '../src/index.js'
 
 describe('encode', () => {
   it('encodes data to CBOR format', () => {
@@ -15,8 +16,12 @@ describe('encode', () => {
     expect(() => encode({ value: 3.14 })).toThrow()
   })
 
-  it('throws when encoding "undefined" values', () => {
-    expect(() => encode({ value: undefined })).toThrow()
+  it('Supports encoding "undefined" values', () => {
+    expect(encode({ value: undefined })).toStrictEqual(encode({}))
+    expect(encode({ a: 1, value: undefined })).toStrictEqual(encode({ a: 1 }))
+    expect(encode({ foo: { bar: undefined } })).toStrictEqual(
+      encode({ foo: {} }),
+    )
   })
 
   it('throws when encoding Maps with non-string keys', () => {
@@ -110,7 +115,9 @@ describe('ipld decode multi', () => {
       test: Number.MAX_SAFE_INTEGER,
     }
     const encoded = encode(one)
-    const decoded = Array.from(decodeAll(encoded))
-    expect(Number.isInteger(decoded[0]?.['test'])).toBe(true)
+    const { length, 0: first } = Array.from(decodeAll(encoded))
+    expect(length).toBe(1)
+    assert(isLexMap(first))
+    expect(Number.isInteger(first.test)).toBe(true)
   })
 })

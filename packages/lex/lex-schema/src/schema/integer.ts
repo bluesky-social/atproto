@@ -1,29 +1,26 @@
-import { Schema, ValidationResult, ValidatorContext } from '../validation.js'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
 export type IntegerSchemaOptions = {
-  default?: number
   minimum?: number
   maximum?: number
 }
 
 export class IntegerSchema extends Schema<number> {
-  constructor(readonly options: IntegerSchemaOptions = {}) {
+  constructor(readonly options?: IntegerSchemaOptions) {
     super()
   }
 
-  validateInContext(
-    input: unknown = this.options?.default,
-    ctx: ValidatorContext,
-  ): ValidationResult<number> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isInteger(input)) {
       return ctx.issueInvalidType(input, 'integer')
     }
 
-    if (this.options.minimum !== undefined && input < this.options.minimum) {
+    if (this.options?.minimum != null && input < this.options.minimum) {
       return ctx.issueTooSmall(input, 'integer', this.options.minimum, input)
     }
 
-    if (this.options.maximum !== undefined && input > this.options.maximum) {
+    if (this.options?.maximum != null && input > this.options.maximum) {
       return ctx.issueTooBig(input, 'integer', this.options.maximum, input)
     }
 
@@ -32,8 +29,14 @@ export class IntegerSchema extends Schema<number> {
 }
 
 /**
- * Simple wrapper around {@link Number.isInteger} that acts as a type guard.
+ * Simple wrapper around {@link Number.isSafeInteger} that acts as a type guard.
  */
 function isInteger(input: unknown): input is number {
-  return Number.isInteger(input)
+  return Number.isSafeInteger(input)
 }
+
+export const integer = /*#__PURE__*/ memoizedOptions(function (
+  options?: IntegerSchemaOptions,
+) {
+  return new IntegerSchema(options)
+})

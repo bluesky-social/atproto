@@ -53,7 +53,12 @@ app.bsky.actor.profile.$validate({
 - [TypeScript Schemas](#typescript-schemas)
   - [Generated Schema Structure](#generated-schema-structure)
   - [Type definitions](#type-definitions)
+  - [Building data](#building-data)
   - [Validation Helpers](#validation-helpers)
+- [Data Model](#data-model)
+  - [Types](#types)
+  - [JSON Encoding](#json-encoding)
+  - [DAG-CBOR Encoding](#dag-cbor-encoding)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -61,6 +66,8 @@ app.bsky.actor.profile.$validate({
   - [Authentication Methods](#authentication-methods)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
+- [Blob references](#blob-references)
+- [Utilities](#utilities)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
   - [Tree-Shaking](#tree-shaking)
@@ -89,7 +96,7 @@ This creates:
 
 > [!NOTE]
 >
-> The `lex` command might conflict with other binaries intalled on your system.
+> The `lex` command might conflict with other binaries installed on your system.
 > If that happens, you can also run the CLI using `ts-lex`, `pnpm exec lex` or
 > `npx @atproto/lex`.
 
@@ -193,6 +200,7 @@ Options:
 - `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
+- `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
 
 ### Generated Schema Structure
 
@@ -209,15 +217,25 @@ You can extract TypeScript types from the generated schemas for use in you appli
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Extract the type for a post record
-type Post = app.bsky.feed.post.Main
-
-// Use the extracted types
-const post: Post = {
-  $type: 'app.bsky.feed.post',
-  text: 'Hello, AT Protocol!',
-  createdAt: new Date().toISOString(),
+function renderPost(p: app.bsky.feed.post.Main) {
+  console.log(p.$type) // 'app.bsky.feed.post'
+  console.log(p.text)
 }
+```
+
+### Building data
+
+It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// variable type will be inferred as "app.bsky.feed.post.Main"
+const post = app.bsky.feed.post.$build({
+  // No need to specify $type when using $build
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
+})
 ```
 
 ### Validation Helpers
@@ -284,14 +302,37 @@ try {
 }
 ```
 
-#### `$validate(data)` - Get Validation Result
+> [!NOTE]
+>
+> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Use `$validate()` for value validation.
+
+#### `$validate(data)` - Validate a value against the schema
+
+Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
+
+```typescript
+import * as app from './lexicons/app.js'
+
+const value = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: new Date().toISOString(),
+}
+
+// Throws if no valid
+const result = app.bsky.feed.post.$validate(value)
+
+value === result // true
+```
+
+#### `$safeParse(data)` - Parse a value against a schema and get the resulting value
 
 Returns a detailed validation result object without throwing:
 
 ```typescript
 import * as app from './lexicons/app.js'
 
-const result = app.bsky.feed.post.$validate({
+const result = app.bsky.feed.post.$safeParse({
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
   createdAt: new Date().toISOString(),
@@ -306,12 +347,12 @@ if (result.success) {
 
 #### `$build(data)` - Build with Defaults
 
-Creates a valid object by applying defaults for optional fields:
+Builds data without needing to specify the `$type` property, and properly types the result:
 
 ```typescript
 import * as app from './lexicons/app.js'
 
-// Build a like record with defaults (and without needing to specify $type)
+// The type of the "like" variable will be "app.bsky.feed.like.Main"
 const like = app.bsky.feed.like.$build({
   subject: {
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
@@ -323,7 +364,7 @@ const like = app.bsky.feed.like.$build({
 
 #### `$isTypeOf(data)` - Type Discriminator
 
-Discriminates (already validated) data by `$type`, without re-validating. This is especially useful when working with union types:
+Discriminates (pre-validated) data based on its `$type` property, without re-validating. This is especially useful when working with union types:
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -332,12 +373,72 @@ import * as app from './lexicons/app.js'
 declare const data:
   | app.bsky.feed.post.Main
   | app.bsky.feed.like.Main
-  | l.TypedObject
+  | l.Unknown$TypedObject
 
 // Discriminate by $type without re-validating
 if (app.bsky.feed.post.$isTypeOf(data)) {
   // data is a post
 }
+```
+
+## Data Model
+
+The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional types: **CIDs** (content-addressed links) and **bytes**. This data is encoded as JSON for XRPC (HTTP API) or as [DAG-CBOR](https://ipld.io/docs/codecs/known/dag-cbor/) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
+
+### Types
+
+```typescript
+import type {
+  LexValue,
+  LexMap,
+  LexScalar,
+  TypedLexMap,
+  Cid,
+} from '@atproto/lex'
+import { isLexValue, isLexMap, isTypedLexMap, isCid } from '@atproto/lex'
+
+// LexScalar: number | string | boolean | null | Cid | Uint8Array
+// LexValue:  LexScalar | LexValue[] | { [key: string]?: LexValue }
+// LexMap:    { [key: string]?: LexValue }
+// TypedLexMap: LexMap & { $type: string }
+// Cid: Content Identifier (link by hash)
+
+if (isTypedLexMap(data)) {
+  console.log(data.$type) // some string
+}
+```
+
+### JSON Encoding
+
+In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`:
+
+```typescript
+import { lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
+
+// Parse JSON string → data model (decodes $link and $bytes)
+const data = lexParse('{"ref": {"$link": "bafyrei..."}}')
+
+// Data model → JSON string (encodes CIDs and bytes)
+const json = lexStringify({ ref: someCid, data: someBytes })
+
+// Convert between parsed JSON objects and data model values
+const lex = jsonToLex(jsonObject)
+const obj = lexToJson(lexValue)
+```
+
+### DAG-CBOR Encoding
+
+Use `@atproto/lex-cbor` to encode/decode the data model to/from DAG-CBOR format for storage and authentication:
+
+```typescript
+import { encode, decode } from '@atproto/lex-cbor'
+import type { LexValue } from '@atproto/lex'
+
+// Encode data model to DAG-CBOR bytes
+const cborBytes = encode(someLexValue)
+
+// Decode DAG-CBOR bytes to data model
+const lexValue: LexValue = decode(cborBytes)
 ```
 
 ## Client API
@@ -371,6 +472,149 @@ const client = new Client(session)
 ```
 
 For detailed OAuth setup, see the [@atproto/oauth-client](../../../oauth/oauth-client) documentation.
+
+#### Authenticated Client with Password
+
+For simpler use cases (CLI tools, scripts, server-to-server), you can use password-based authentication with `@atproto/lex-password-session`:
+
+```bash
+npm install @atproto/lex-password-session
+```
+
+```typescript
+import { Client } from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
+import * as app from './lexicons/app.js'
+
+// Create a session with app password credentials
+const session = await PasswordSession.create({
+  service: 'https://bsky.social',
+  identifier: 'alice.bsky.social', // handle or email
+  password: 'xxxx-xxxx-xxxx-xxxx', // App password (not your main password)
+
+  // Called when session is created or refreshed - persist the session data
+  onUpdated: (data) => {
+    saveToStorage(data) // Your persistence logic
+  },
+
+  // Called when session becomes invalid - clean up stored data
+  onDeleted: (data) => {
+    removeFromStorage(data.did)
+  },
+})
+
+// Use the session with a Client
+const client = new Client(session)
+
+const profile = await client.call(app.bsky.actor.getProfile, {
+  actor: 'atproto.com',
+})
+```
+
+**Resuming a Session**
+
+Resume a previously persisted session. The `resume()` method validates the session by refreshing it:
+
+```typescript
+const savedData = loadFromStorage() // Your retrieval logic
+
+// Resume validates the session by refreshing it
+// Throws if the session is definitively invalid
+const session = await PasswordSession.resume(savedData, {
+  onUpdated: (data) => saveToStorage(data),
+  onDeleted: (data) => removeFromStorage(data.did),
+})
+
+const client = new Client(session)
+
+// Access session properties
+console.log(session.did) // User's DID
+console.log(session.handle) // User's handle
+console.log(session.destroyed) // false (session is active)
+```
+
+**Logging Out**
+
+```typescript
+await session.logout()
+```
+
+**Deleting a Session Without Resuming**
+
+Delete a stored session without needing to resume it first:
+
+```typescript
+const savedData = loadFromStorage()
+
+// Delete the session directly - throws on transient errors (network, server down)
+await PasswordSession.delete(savedData)
+```
+
+**Error Handling Hooks**
+
+Handle transient errors (network issues, server unavailability) separately from permanent failures:
+
+```typescript
+const session = await PasswordSession.create({
+  service: 'https://bsky.social',
+  identifier: 'alice.bsky.social',
+  password: 'xxxx-xxxx-xxxx-xxxx',
+
+  onUpdated: (data) => saveToStorage(data),
+  onDeleted: (data) => removeFromStorage(data.did),
+
+  // Called when refresh fails due to transient errors (network, server down)
+  // The session may still be valid - don't delete stored credentials
+  onUpdateFailure: (data, error) => {
+    console.warn('Session refresh failed, will retry:', error.message)
+  },
+
+  // Called when logout fails due to transient errors
+  // Consider retrying later to avoid orphaned sessions
+  onDeleteFailure: (data, error) => {
+    console.error('Logout failed, session may still be active:', error.message)
+    scheduleRetry(data) // Your retry logic
+  },
+})
+```
+
+**Handling Two-Factor Authentication (2FA)**
+
+> [!CAUTION]
+>
+> Two-factor authentication only applies when using **main account credentials**, which is **strongly discouraged**. Password authentication should be used with [app passwords](https://bsky.app/settings/app-passwords) only because they are designed for programmatic access (bots, scripts, CLI tools). For user-facing applications, use OAuth via [@atproto/oauth-client](../../../oauth/oauth-client) which provides better security and user control.
+
+```typescript
+import {
+  PasswordSession,
+  LexAuthFactorError,
+} from '@atproto/lex-password-session'
+
+async function loginWithMainCredentials(
+  identifier: string,
+  password: string,
+  authFactorToken?: string,
+): Promise<PasswordSession> {
+  try {
+    return await PasswordSession.create({
+      service: 'https://bsky.social',
+      identifier,
+      password,
+      authFactorToken,
+
+      onUpdated: (data) => saveToStorage(data),
+      onDeleted: (data) => removeFromStorage(data.did),
+    })
+  } catch (err) {
+    if (err instanceof LexAuthFactorError && !authFactorToken) {
+      // 2FA required
+      const token = await promptUserFor2FACode(err.message)
+      return loginWithMainCredentials(identifier, password, token)
+    }
+    throw err
+  }
+}
+```
 
 #### Creating a Client from Another Client
 
@@ -617,23 +861,37 @@ const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
 })
 
 if (result.success) {
-  // Success - result is an XrpcResponse
+  // Handle success
   console.log(result.body)
 } else {
-  // Failure - result is a ResponseFailure, the type depends on the method's error definitions
-
-  result // ResponseFailure<"HandleNotFound">
-
-  // Handle error based on type
-  if (result.name === 'UnexpectedError') {
-    // Network error, invalid response, etc.
-    result.error // "unknown" type
-  } else if (result.name === 'Unknown') {
-    // Server returned a valid XRPC error response with an unknown error type
-    result.error // XrpcResponseError<string>
+  // Handle failure
+  if (result.error === 'Unknown') {
+    // Unable to perform the request
+    const { reason } = result
+    if (reason instanceof XrpcResponseError) {
+      // The server returned a syntactically valid XRPC error response, but
+      // used an error code that is not declared for this method
+      reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
+      reason.message // string
+      reason.status // number
+      reason.headers // Headers
+      reason.payload // { body: { error: string, message?: string }; encoding: string }
+    } else if (reason instanceof XrpcUpstreamError) {
+      // The response was incomplete (e.g. connection dropped), or
+      // invalid (e.g. malformed JSON, data does not match schema).
+      reason.error // "InvalidResponse"
+      reason.message // string
+      reason.response.status // number
+      reason.response.headers // Headers
+      reason.response.payload // null | { body: unknown; encoding: string }
+    } else {
+      reason // unknown (fetch failed, other?)
+    }
   } else {
-    // Declared error from the method's errors list
-    result.error // XrpcResponseError<"HandleNotFound">
+    // A declared error for that method
+    result // XrpcResponseError<"HandleNotFound">
+    result.error // "HandleNotFound"
+    result.message // string
   }
 }
 ```
@@ -644,7 +902,7 @@ The `ResponseFailure<M>` type is a union with three possible error types:
 
    ```typescript
    // XrpcResponseError<N>
-   type KnownXrpcResponseFailure<N extends string> = {
+   type KnownLexRpcResponseFailure<N extends string> = {
      success: false
      name: N
      error: XrpcResponseError<N>
@@ -653,25 +911,25 @@ The `ResponseFailure<M>` type is a union with three possible error types:
      status: number
      headers: Headers
      encoding: undefined | string
-     body: XrpcErrorBody<N>
+     body: LexErrorData<N>
    }
    ```
 
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   // XrpcResponseFailure<'Unknown', XrpcResponseError>
-   type UnknownXrpcResponseFailure = {
+   // LexRpcResponseFailure<'Unexpected', XrpcResponseError>
+   type UnknownLexRpcResponseFailure = {
      success: false
-     name: 'Unknown'
+     name: 'Unexpected'
      error: XrpcResponseError<string>
    }
    ```
 
 3. **Unexpected errors** - Network errors, invalid responses, or other client-side errors:
    ```typescript
-   // XrpcResponseFailure<'UnexpectedError', unknown>
-   type UnexpectedXrpcResponseFailure = {
+   // LexRpcResponseFailure<'UnexpectedError', unknown>
+   type UnexpectedLexRpcResponseFailure = {
      success: false
      name: 'UnexpectedError'
      error: unknown // Could be anything (network error, parsing error, etc.)
@@ -751,6 +1009,77 @@ const response = await client.xrpc(app.bsky.feed.getTimeline, {
 console.log(response.status)
 console.log(response.headers)
 console.log(response.body)
+```
+
+## Blob references
+
+In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+
+```typescript
+import { BlobRef, isBlobRef } from '@atproto/lex'
+
+const blobRef: BlobRef = {
+  $type: 'blob',
+  ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
+  mimeType: 'image/png',
+  size: 12345,
+}
+
+if (isBlobRef(blobRef)) {
+  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+}
+```
+
+> [!NOTE]
+>
+> Historically, references to blobs were represented as simple objects with the following structure:
+>
+> ```typescript
+> type LegacyBlobRef = {
+>   ref: string
+>   mimeType: string
+> }
+> ```
+>
+> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
+
+## Utilities
+
+Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are available:
+
+```typescript
+import {
+  // CID utilities
+  parseCid, // Parse CID string (throws on invalid)
+  ifCid, // Coerce to Cid or null
+  isCid, // Type guard for Cid values
+
+  // Blob references
+  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef objects
+
+  // Equality
+  lexEquals, // Deep equality (handles CIDs and bytes)
+
+  // String length for Lexicon validation
+  graphemeLen, // Count user-perceived characters
+  utf8Len, // Count UTF-8 bytes
+
+  // Language tag validation (BCP-47)
+  isLanguageString, // Validate language tags (e.g., 'en', 'pt-BR')
+
+  // Low-level JSON encoding helpers
+  parseLexLink, // { $link: string } → Cid
+  encodeLexLink, // Cid → { $link: string }
+  parseLexBytes, // { $bytes: string } → Uint8Array
+  encodeLexBytes, // Uint8Array → { $bytes: string }
+} from '@atproto/lex'
+
+// Examples
+const cid = parseCid('bafyreiabc...')
+graphemeLen('👨‍👩‍👧‍👦') // 1
+utf8Len('👨‍👩‍👧‍👦') // 25
+isLanguageString('en-US') // true
 ```
 
 ## Advanced Usage
@@ -1202,7 +1531,7 @@ await client.call(unfollow, { followUri: uri })
 #### Updating Profile with Retry Logic
 
 ```typescript
-import { Action } from '@atproto/lex'
+import { Action, XrpcResponseError } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 
@@ -1244,7 +1573,7 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
     } catch (error) {
       // Retry on swap/concurrent modification errors
       if (
-        error instanceof XrpcRequestFailure &&
+        error instanceof XrpcResponseError &&
         error.name === 'SwapError' &&
         attempt < maxRetries - 1
       ) {

@@ -17,6 +17,7 @@ import { Identifier, matchesIdentifier } from './utils.js'
 
 export type AtprotoIdentityDidMethods = 'plc' | 'web'
 export type AtprotoDid = Did<AtprotoIdentityDidMethods>
+export type AtprotoDidDocument = DidDocument<AtprotoIdentityDidMethods>
 
 export const atprotoDidSchema = z
   .string()
@@ -151,9 +152,7 @@ export function extractAtprotoData<M extends AtprotoIdentityDidMethods>(
   }
 }
 
-export function extractPdsUrl(
-  document: DidDocument<AtprotoIdentityDidMethods>,
-): URL {
+export function extractPdsUrl(document: AtprotoDidDocument): URL {
   const service = document.service?.find(
     isAtprotoPersonalDataServerService,
     document,

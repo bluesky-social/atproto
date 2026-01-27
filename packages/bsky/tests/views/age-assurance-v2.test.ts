@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
-import express, { Application } from 'express'
+import express, { Application, json } from 'express'
 import {
   AppBskyAgeassuranceDefs,
   AtpAgent,
@@ -33,6 +33,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
       {
         countryCode: 'AA',
         regionCode: undefined,
+        minAccessAge: 13,
         rules: [
           {
             $type: ruleIds.IfAssuredOverAge,
@@ -48,6 +49,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
       {
         countryCode: 'BB',
         regionCode: undefined,
+        minAccessAge: 13,
         rules: [
           {
             $type: ruleIds.IfAssuredOverAge,
@@ -102,8 +104,6 @@ describe('age assurance v2 views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_age_assurance_v_two',
       bsky: {
-        statsigEnv: 'test',
-        statsigKey: 'secret-key',
         kws: {
           apiKey: 'apiKey',
           apiOrigin: kws.url,
@@ -665,7 +665,7 @@ class MockKwsServer {
     sendAdultVerifiedFlowEmailMock: jest.Mock
   }) {
     this.app = express()
-      .use(express.json())
+      .use(json())
       .post('/auth/realms/kws/protocol/openid-connect/token', (_, res) =>
         oauthMock(_, res),
       )

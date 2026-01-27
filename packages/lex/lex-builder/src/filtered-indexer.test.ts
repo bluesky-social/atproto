@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
 import { FilteredIndexer } from './filtered-indexer.js'
 

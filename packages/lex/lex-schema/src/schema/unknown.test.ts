@@ -1,8 +1,9 @@
-import { UnknownSchema } from './unknown.js'
+import { describe, expect, it } from 'vitest'
+import { unknown } from './unknown.js'
 
 describe('UnknownSchema', () => {
   describe('basic validation', () => {
-    const schema = new UnknownSchema()
+    const schema = unknown()
 
     it('accepts strings', () => {
       const result = schema.safeParse('hello')
@@ -80,7 +81,7 @@ describe('UnknownSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new UnknownSchema()
+    const schema = unknown()
 
     it('accepts zero', () => {
       const result = schema.safeParse(0)
@@ -251,7 +252,7 @@ describe('UnknownSchema', () => {
   })
 
   describe('special JavaScript values', () => {
-    const schema = new UnknownSchema()
+    const schema = unknown()
 
     it('accepts objects with null prototype', () => {
       const obj = Object.create(null)

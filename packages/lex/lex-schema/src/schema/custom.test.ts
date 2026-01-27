@@ -1,10 +1,11 @@
-import { IssueCustom } from '../validation.js'
-import { CustomSchema } from './custom.js'
+import { describe, expect, it, vi } from 'vitest'
+import { IssueCustom } from '../core.js'
+import { custom } from './custom.js'
 
 describe('CustomSchema', () => {
   describe('basic validation', () => {
     it('validates input that passes custom assertion', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string => typeof input === 'string',
         'Must be a string',
       )
@@ -16,7 +17,7 @@ describe('CustomSchema', () => {
     })
 
     it('rejects input that fails custom assertion', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string => typeof input === 'string',
         'Must be a string',
       )
@@ -25,14 +26,14 @@ describe('CustomSchema', () => {
     })
 
     it('includes custom message in error', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string => typeof input === 'string',
         'Custom error message',
       )
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.message).toContain('Custom error message')
+        expect(result.reason.message).toContain('Custom error message')
       }
     })
   })
@@ -44,7 +45,7 @@ describe('CustomSchema', () => {
         age: number
       }
 
-      const schema = new CustomSchema((input): input is User => {
+      const schema = custom((input): input is User => {
         return (
           typeof input === 'object' &&
           input !== null &&
@@ -64,7 +65,7 @@ describe('CustomSchema', () => {
         age: number
       }
 
-      const schema = new CustomSchema((input): input is User => {
+      const schema = custom((input): input is User => {
         return (
           typeof input === 'object' &&
           input !== null &&
@@ -79,7 +80,7 @@ describe('CustomSchema', () => {
     })
 
     it('validates arrays with specific element types', () => {
-      const schema = new CustomSchema((input): input is number[] => {
+      const schema = custom((input): input is number[] => {
         return (
           Array.isArray(input) &&
           input.every((item) => typeof item === 'number')
@@ -91,7 +92,7 @@ describe('CustomSchema', () => {
     })
 
     it('rejects arrays with mixed types', () => {
-      const schema = new CustomSchema((input): input is number[] => {
+      const schema = custom((input): input is number[] => {
         return (
           Array.isArray(input) &&
           input.every((item) => typeof item === 'number')
@@ -105,7 +106,7 @@ describe('CustomSchema', () => {
 
   describe('custom context usage', () => {
     it('can add custom issues through context', () => {
-      const schema = new CustomSchema((input, ctx): input is string => {
+      const schema = custom((input, ctx): input is string => {
         if (typeof input !== 'string') {
           ctx.addIssue({
             code: 'invalid_type',
@@ -124,7 +125,7 @@ describe('CustomSchema', () => {
 
     it('accesses path from context', () => {
       let capturedPath: any[] = []
-      const schema = new CustomSchema((input, ctx): input is string => {
+      const schema = custom((input, ctx): input is string => {
         capturedPath = [...ctx.path]
         return typeof input === 'string'
       }, 'Must be a string')
@@ -134,7 +135,7 @@ describe('CustomSchema', () => {
     })
 
     it('validates with custom path', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string => typeof input === 'string',
         'Must be a string',
         'customField',
@@ -143,12 +144,12 @@ describe('CustomSchema', () => {
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.message).toContain('customField')
+        expect(result.reason.message).toContain('customField')
       }
     })
 
     it('validates with array of paths', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string => typeof input === 'string',
         'Must be a string',
         ['nested', 'field'],
@@ -157,15 +158,15 @@ describe('CustomSchema', () => {
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.message).toContain('nested')
-        expect(result.error.message).toContain('field')
+        expect(result.reason.message).toContain('nested')
+        expect(result.reason.message).toContain('field')
       }
     })
   })
 
   describe('business logic validation', () => {
     it('validates email format', () => {
-      const schema = new CustomSchema((input): input is string => {
+      const schema = custom((input): input is string => {
         return (
           typeof input === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)
         )
@@ -179,7 +180,7 @@ describe('CustomSchema', () => {
     })
 
     it('validates password strength', () => {
-      const schema = new CustomSchema((input): input is string => {
+      const schema = custom((input): input is string => {
         if (typeof input !== 'string') return false
         return (
           input.length >= 8 &&
@@ -197,7 +198,7 @@ describe('CustomSchema', () => {
     })
 
     it('validates age range', () => {
-      const schema = new CustomSchema((input): input is number => {
+      const schema = custom((input): input is number => {
         return typeof input === 'number' && input >= 18 && input <= 120
       }, 'Age must be between 18 and 120')
 
@@ -212,7 +213,7 @@ describe('CustomSchema', () => {
     })
 
     it('validates positive numbers', () => {
-      const schema = new CustomSchema((input): input is number => {
+      const schema = custom((input): input is number => {
         return typeof input === 'number' && input > 0
       }, 'Must be a positive number')
 
@@ -229,7 +230,7 @@ describe('CustomSchema', () => {
 
   describe('edge cases', () => {
     it('handles null input', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is null => input === null,
         'Must be null',
       )
@@ -242,7 +243,7 @@ describe('CustomSchema', () => {
     })
 
     it('handles undefined input', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is undefined => input === undefined,
         'Must be undefined',
       )
@@ -255,7 +256,7 @@ describe('CustomSchema', () => {
     })
 
     it('handles empty string', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string =>
           typeof input === 'string' && input.length > 0,
         'Must be a non-empty string',
@@ -269,7 +270,7 @@ describe('CustomSchema', () => {
     })
 
     it('handles empty array', () => {
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is any[] => Array.isArray(input) && input.length > 0,
         'Must be a non-empty array',
       )
@@ -287,7 +288,7 @@ describe('CustomSchema', () => {
         metadata: { count: number }
       }
 
-      const schema = new CustomSchema((input): input is ComplexType => {
+      const schema = custom((input): input is ComplexType => {
         if (typeof input !== 'object' || input === null) return false
         const obj = input as any
         return (
@@ -324,7 +325,7 @@ describe('CustomSchema', () => {
     it('correctly narrows union types', () => {
       type StringOrNumber = string | number
 
-      const schema = new CustomSchema(
+      const schema = custom(
         (input): input is string => typeof input === 'string',
         'Must be a string',
       )
@@ -346,7 +347,7 @@ describe('CustomSchema', () => {
         | { type: 'circle'; radius: number }
         | { type: 'rectangle'; width: number; height: number }
 
-      const circleSchema = new CustomSchema((input): input is Shape => {
+      const circleSchema = custom((input): input is Shape => {
         return (
           typeof input === 'object' &&
           input !== null &&
@@ -371,7 +372,7 @@ describe('CustomSchema', () => {
 
   describe('assertion context behavior', () => {
     it('calls assertion with null as this', () => {
-      const assertion = jest.fn(function (
+      const assertion = vi.fn(function (
         this: unknown,
         input: unknown,
       ): input is string {
@@ -379,20 +380,20 @@ describe('CustomSchema', () => {
         return typeof input === 'string'
       })
 
-      new CustomSchema(assertion as any, 'Must be a string').safeParse('test')
+      custom(assertion as any, 'Must be a string').safeParse('test')
 
       expect(assertion).toHaveBeenCalledTimes(1)
     })
 
     it('provides addIssue method in context', () => {
-      const schema = new CustomSchema((input, ctx): input is string => {
+      const schema = custom((input, ctx): input is string => {
         ctx.addIssue(new IssueCustom(ctx.path, input, 'This is a custom issue'))
         return false
       }, 'Must be a string')
 
       expect(schema.safeParse('test')).toMatchObject({
         success: false,
-        error: {
+        reason: {
           issues: [
             { message: 'This is a custom issue' },
             { message: 'Must be a string' },
@@ -402,7 +403,7 @@ describe('CustomSchema', () => {
     })
 
     it('provides path array in context', () => {
-      const schema = new CustomSchema((input, ctx): input is string => {
+      const schema = custom((input, ctx): input is string => {
         expect(Array.isArray(ctx.path)).toBe(true)
         return typeof input === 'string'
       }, 'Must be a string')

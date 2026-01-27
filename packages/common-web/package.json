@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common-web",
-  "version": "0.4.7",
+  "version": "0.4.13",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -21,6 +21,7 @@
   "dependencies": {
     "@atproto/lex-data": "workspace:*",
     "@atproto/lex-json": "workspace:*",
+    "@atproto/syntax": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

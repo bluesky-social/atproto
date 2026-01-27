@@ -1,5 +1,9 @@
-import assert from 'node:assert'
-import { SourceFile, VariableDeclarationKind } from 'ts-morph'
+import {
+  JSDocStructure,
+  OptionalKind,
+  SourceFile,
+  VariableDeclarationKind,
+} from 'ts-morph'
 import {
   LexiconArray,
   LexiconArrayItems,
@@ -32,7 +36,7 @@ import {
   ResolvedRef,
   getPublicIdentifiers,
 } from './ref-resolver.js'
-import { isSafeIdentifier } from './ts-lang.js'
+import { asNamespaceExport } from './ts-lang.js'
 
 export type LexDefBuilderOptions = RefResolverOptions & {
   lib?: string
@@ -171,35 +175,13 @@ export class LexDefBuilder {
       `),
     })
 
+    this.addMethodTypeUtils(ref, def)
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: this.pure(`${ref.varName}.parameters`),
       $input: this.pure(`${ref.varName}.input`),
       $output: this.pure(`${ref.varName}.output`),
     })
-
-    const parametersTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Params',
-      type: `l.InferProcedureParameters<typeof ${ref.varName}>`,
-    })
-
-    addJsDoc(parametersTypeStmt, def.parameters)
-
-    const inputTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Input',
-      type: `l.InferProcedureInputBody<typeof ${ref.varName}>`,
-    })
-
-    addJsDoc(inputTypeStmt, def.input)
-
-    const outputTypeStmt = this.file.addTypeAlias({
-      isExported: true,
-      name: 'Output',
-      type: `l.InferProcedureOutputBody<typeof ${ref.varName}>`,
-    })
-
-    addJsDoc(outputTypeStmt, def.output)
   }
 
   private async addQuery(hash: string, def: LexiconQuery) {
@@ -220,21 +202,11 @@ export class LexDefBuilder {
       `),
     })
 
+    this.addMethodTypeUtils(ref, def)
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: `${ref.varName}.parameters`,
       $output: `${ref.varName}.output`,
-    })
-
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Params',
-      type: `l.InferQueryParameters<typeof ${ref.varName}>`,
-    })
-
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Output',
-      type: `l.InferQueryOutputBody<typeof ${ref.varName}>`,
     })
   }
 
@@ -256,22 +228,65 @@ export class LexDefBuilder {
       `),
     })
 
+    this.addMethodTypeUtils(ref, def)
     this.addUtils({
+      $lxm: this.pure(`${ref.varName}.nsid`),
       $params: `${ref.varName}.parameters`,
       $message: `${ref.varName}.message`,
     })
+  }
 
+  addMethodTypeUtils(
+    ref: ResolvedRef,
+    def: LexiconProcedure | LexiconQuery | LexiconSubscription,
+  ) {
     this.file.addTypeAlias({
       isExported: true,
       name: 'Params',
-      type: `l.InferSubscriptionParameters<typeof ${ref.varName}>`,
+      type: `l.InferMethodParams<typeof ${ref.varName}>`,
+      docs: compileDocs(def.parameters?.description),
     })
 
-    this.file.addTypeAlias({
-      isExported: true,
-      name: 'Message',
-      type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
-    })
+    if (def.type === 'procedure') {
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Input',
+        type: `l.InferMethodInput<typeof ${ref.varName}>`,
+        docs: compileDocs(def.input?.description),
+      })
+
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'InputBody',
+        type: `l.InferMethodInputBody<typeof ${ref.varName}>`,
+        docs: compileDocs(def.input?.description),
+      })
+    }
+
+    if (def.type === 'procedure' || def.type === 'query') {
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Output',
+        type: `l.InferMethodOutput<typeof ${ref.varName}>`,
+        docs: compileDocs(def.output?.description),
+      })
+
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'OutputBody',
+        type: `l.InferMethodOutputBody<typeof ${ref.varName}>`,
+        docs: compileDocs(def.output?.description),
+      })
+    }
+
+    if (def.type === 'subscription') {
+      this.file.addTypeAlias({
+        isExported: true,
+        name: 'Message',
+        type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
+        docs: compileDocs(def.message?.description),
+      })
+    }
   }
 
   private async addRecord(hash: string, def: LexiconRecord) {
@@ -362,32 +377,29 @@ export class LexDefBuilder {
     const ref = await this.refResolver.resolveLocal(hash)
     const pub = getPublicIdentifiers(hash)
 
-    // Fool-proofing
-    assert(isSafeIdentifier(ref.varName), 'Expected safe type identifier')
-    assert(isSafeIdentifier(ref.typeName), 'Expected safe type identifier')
-    assert(isSafeIdentifier(pub.typeName), 'Expected safe type identifier')
-
     if (type) {
-      const typeStmt = this.file.addTypeAlias({
+      this.file.addTypeAlias({
         name: ref.typeName,
         type: typeof type === 'function' ? type(ref) : type,
+        docs: compileDocs(def.description),
       })
-
-      addJsDoc(typeStmt, def)
 
       this.file.addExportDeclaration({
         isTypeOnly: true,
         namedExports: [
           {
             name: ref.typeName,
-            alias: ref.typeName === pub.typeName ? undefined : pub.typeName,
+            alias:
+              ref.typeName === pub.typeName
+                ? undefined
+                : asNamespaceExport(pub.typeName),
           },
         ],
       })
     }
 
     if (schema) {
-      const constStmt = this.file.addVariableStatement({
+      this.file.addVariableStatement({
         declarationKind: VariableDeclarationKind.Const,
         declarations: [
           {
@@ -395,9 +407,8 @@ export class LexDefBuilder {
             initializer: typeof schema === 'function' ? schema(ref) : schema,
           },
         ],
+        docs: compileDocs(def.description),
       })
-
-      addJsDoc(constStmt, def)
 
       this.file.addExportDeclaration({
         namedExports: [
@@ -406,9 +417,7 @@ export class LexDefBuilder {
             alias:
               ref.varName === pub.varName
                 ? undefined
-                : isSafeIdentifier(pub.varName)
-                  ? pub.varName
-                  : JSON.stringify(pub.varName),
+                : asNamespaceExport(pub.varName),
           },
         ],
       })
@@ -425,10 +434,16 @@ export class LexDefBuilder {
     if (hash === 'main' && validationUtils) {
       this.addUtils({
         $assert: markPure(`${ref.varName}.assert.bind(${ref.varName})`),
+        $check: markPure(`${ref.varName}.check.bind(${ref.varName})`),
+        $cast: markPure(`${ref.varName}.cast.bind(${ref.varName})`),
         $ifMatches: markPure(`${ref.varName}.ifMatches.bind(${ref.varName})`),
         $matches: markPure(`${ref.varName}.matches.bind(${ref.varName})`),
         $parse: markPure(`${ref.varName}.parse.bind(${ref.varName})`),
         $safeParse: markPure(`${ref.varName}.safeParse.bind(${ref.varName})`),
+        $validate: markPure(`${ref.varName}.validate.bind(${ref.varName})`),
+        $safeValidate: markPure(
+          `${ref.varName}.safeValidate.bind(${ref.varName})`,
+        ),
       })
     }
 
@@ -437,6 +452,12 @@ export class LexDefBuilder {
 
   private async compilePayload(def: LexiconPayload | undefined) {
     if (!def) return this.pure(`l.payload()`)
+
+    // Special case for JSON object payloads
+    if (def.encoding === 'application/json' && def.schema?.type === 'object') {
+      const properties = await this.compilePropertiesSchemas(def.schema)
+      return this.pure(`l.jsonPayload({${properties.join(',')}})`)
+    }
 
     const encodedEncoding = JSON.stringify(def.encoding)
     if (def.schema) {
@@ -456,10 +477,14 @@ export class LexDefBuilder {
   }
 
   private async compileParamsSchema(def: undefined | LexiconParameters) {
-    if (!def) return this.pure(`l.params({})`)
+    if (!def) return this.pure(`l.params()`)
 
     const properties = await this.compilePropertiesSchemas(def)
-    return this.pure(`l.params({${properties.join(',')}})`)
+    return this.pure(
+      properties.length === 0
+        ? `l.params()`
+        : `l.params({${properties.join(',')}})`,
+    )
   }
 
   private async compileErrors(defs?: readonly LexiconError[]) {
@@ -630,13 +655,24 @@ export class LexDefBuilder {
     return `l.UnknownObject`
   }
 
+  private withDefault(schema: string, defaultValue: unknown) {
+    if (defaultValue === undefined) return schema
+
+    return this.pure(
+      `l.withDefault(${schema}, ${JSON.stringify(defaultValue)})`,
+    )
+  }
+
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
+    const schema = l.boolean()
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
+    }
+
     if (hasConst(def)) return this.compileConstSchema(def)
 
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.BooleanSchemaOptions)[])
-    return this.pure(`l.boolean(${options})`)
+    return this.withDefault(this.pure(`l.boolean()`), def.default)
   }
 
   private async compileBooleanType(def: LexiconBoolean): Promise<string> {
@@ -645,25 +681,29 @@ export class LexDefBuilder {
   }
 
   private async compileIntegerSchema(def: LexiconInteger): Promise<string> {
+    const schema = l.integer(def)
+
     if (hasConst(def)) {
-      const schema: l.IntegerSchema = l.integer(def)
-      schema.assert(def.const)
+      schema.check(def.const)
     }
 
     if (hasEnum(def)) {
-      const schema: l.IntegerSchema = l.integer(def)
-      for (const val of def.enum) schema.assert(val)
+      for (const val of def.enum) schema.check(val)
+    }
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
     const options = stringifyOptions(def, [
-      'default',
       'maximum',
       'minimum',
     ] satisfies (keyof l.IntegerSchemaOptions)[])
-    return this.pure(`l.integer(${options})`)
+
+    return this.withDefault(this.pure(`l.integer(${options})`), def.default)
   }
 
   private async compileIntegerType(def: LexiconInteger): Promise<string> {
@@ -674,26 +714,32 @@ export class LexDefBuilder {
   }
 
   private async compileStringSchema(def: LexiconString): Promise<string> {
+    const schema = l.string(def)
+
     if (hasConst(def)) {
-      const schema: l.StringSchema = l.string(def)
-      schema.assert(def.const)
-    } else if (hasEnum(def)) {
-      const schema: l.StringSchema = l.string(def)
-      for (const val of def.enum) schema.assert(val)
+      schema.check(def.const)
+    }
+
+    if (hasEnum(def)) {
+      for (const val of def.enum) schema.check(val)
+    }
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
     const options = stringifyOptions(def, [
-      'default',
       'format',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',
       'minLength',
     ] satisfies (keyof l.StringSchemaOptions)[])
-    return this.pure(`l.string(${options})`)
+
+    return this.withDefault(this.pure(`l.string(${options})`), def.default)
   }
 
   private async compileStringType(def: LexiconString): Promise<string> {
@@ -768,7 +814,7 @@ export class LexDefBuilder {
   }
 
   private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {
-    return this.pure(`l.cidLink()`)
+    return this.pure(`l.cid()`)
   }
 
   private async compileCidLinkType(_def: LexiconCid): Promise<string> {
@@ -810,10 +856,10 @@ export class LexDefBuilder {
     const types = await Promise.all(
       def.refs.map(async (ref) => {
         const { typeName } = await this.refResolver.resolve(ref)
-        return `l.TypedRef<${typeName}>`
+        return `l.$Typed<${typeName}>`
       }),
     )
-    if (!def.closed) types.push('l.TypedObject')
+    if (!def.closed) types.push('l.Unknown$TypedObject')
     return types.join(' | ') || 'never'
   }
 
@@ -824,10 +870,9 @@ export class LexDefBuilder {
       return this.pure(`l.never()`)
     }
 
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.LiteralSchemaOptions<any>)[])
-    return this.pure(`l.literal(${JSON.stringify(def.const)}, ${options})`)
+    const result = this.pure(`l.literal(${JSON.stringify(def.const)})`)
+
+    return this.withDefault(result, def.default)
   }
 
   private async compileConstType<
@@ -846,13 +891,13 @@ export class LexDefBuilder {
     if (def.enum.length === 0) {
       return this.pure(`l.never()`)
     }
-    if (def.enum.length === 1 && def.default === undefined) {
-      return this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
-    }
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.EnumSchemaOptions<any>)[])
-    return this.pure(`l.enum(${JSON.stringify(def.enum)}, ${options})`)
+
+    const result =
+      def.enum.length === 1
+        ? this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
+        : this.pure(`l.enum(${JSON.stringify(def.enum)})`)
+
+    return this.withDefault(result, def.default)
   }
 
   private async compileEnumType<T extends null | number | string>(def: {
@@ -862,9 +907,9 @@ export class LexDefBuilder {
   }
 }
 
-type ParsedDescription = {
-  description: string
-  deprecated: boolean | string
+type ParsedDescription = OptionalKind<JSDocStructure> & {
+  description?: string
+  tags?: { tagName: string; text?: string }[]
 }
 
 function parseDescription(description: string): ParsedDescription {
@@ -873,49 +918,38 @@ function parseDescription(description: string): ParsedDescription {
       /(\s*deprecated\s*(?:--?|:)?\s*([^-]*)(?:-+)?)/i,
     )
     if (deprecationMatch) {
-      const [, match, deprecationNotice] = deprecationMatch
+      const { 1: match, 2: deprecationNotice } = deprecationMatch
       return {
-        description: description.replace(match, '').trim(),
-        deprecated: deprecationNotice?.trim() || true,
+        description: description.replace(match, '').trim() || undefined,
+        tags: [{ tagName: 'deprecated', text: deprecationNotice?.trim() }],
       }
     } else {
       return {
-        description: description.trim(),
-        deprecated: true,
+        description: description.trim() || undefined,
+        tags: [{ tagName: 'deprecated' }],
       }
     }
   }
 
   return {
-    description: description.trim(),
-    deprecated: false,
+    description: description.trim() || undefined,
   }
 }
 
 function compileLeadingTrivia(description?: string) {
   if (!description) return undefined
-  return `\n\n/**${compileJsDoc(description).replaceAll('\n', '\n * ')}\n */\n`
-}
-
-function addJsDoc(
-  declaration: { addJsDoc: (text: string) => void },
-  def?: { description?: string },
-) {
-  if (def?.description) {
-    declaration.addJsDoc(compileJsDoc(def.description))
-  }
-}
-
-function compileJsDoc(description: string) {
   const parsed = parseDescription(description)
-  return `\n${parsed.description}${
-    !parsed.deprecated
-      ? ''
-      : (parsed.description ? '\n\n' : '') +
-        (parsed.deprecated === true
-          ? '@deprecated'
-          : `@deprecated ${parsed.deprecated}`)
-  }`
+  if (!parsed.description && !parsed.tags?.length) return undefined
+  const tags = parsed.tags
+    ?.map(({ tagName, text }) => (text ? `@${tagName} ${text}` : `@${tagName}`))
+    ?.join('\n')
+  const text = `\n${[parsed.description, tags].filter(Boolean).join('\n\n')}`
+  return `\n\n/**${text.replaceAll('\n', '\n * ')}\n */\n`
+}
+
+function compileDocs(description?: string) {
+  if (!description) return undefined
+  return [parseDescription(description)]
 }
 
 function stringifyOptions<O extends Record<string, unknown>>(
