@@ -22,17 +22,19 @@ export type NeuroCallbackPayload = {
 /**
  * Extract email from Neuro properties (case-insensitive)
  */
-export function extractEmail(properties?: Record<string, any>): string | undefined {
+export function extractEmail(
+  properties?: Record<string, any>,
+): string | undefined {
   if (!properties) return undefined
-  
+
   // Try common cases
   if (properties.EMAIL) return properties.EMAIL
   if (properties.email) return properties.email
   if (properties.Email) return properties.Email
-  
+
   // Case-insensitive search
   const emailKey = Object.keys(properties).find(
-    (key) => key.toLowerCase() === 'email'
+    (key) => key.toLowerCase() === 'email',
   )
   return emailKey ? properties[emailKey] : undefined
 }
@@ -40,17 +42,19 @@ export function extractEmail(properties?: Record<string, any>): string | undefin
 /**
  * Extract user name from Neuro properties (case-insensitive)
  */
-export function extractUserName(properties?: Record<string, any>): string | undefined {
+export function extractUserName(
+  properties?: Record<string, any>,
+): string | undefined {
   if (!properties) return undefined
-  
+
   // Try common cases
   if (properties.NAME) return properties.NAME
   if (properties.name) return properties.name
   if (properties.Name) return properties.Name
-  
+
   // Case-insensitive search
   const nameKey = Object.keys(properties).find(
-    (key) => key.toLowerCase() === 'name'
+    (key) => key.toLowerCase() === 'name',
   )
   return nameKey ? properties[nameKey] : undefined
 }
@@ -60,10 +64,10 @@ export function extractUserName(properties?: Record<string, any>): string | unde
  */
 export async function deriveAvailableHandle(
   ctx: AppContext,
-  email?: string
+  email?: string,
 ): Promise<string> {
   let baseName: string
-  
+
   if (email) {
     // Extract username from email (e.g., "john.doe@example.com" → "john-doe")
     const emailUsername = email.split('@')[0]
@@ -76,15 +80,15 @@ export async function deriveAvailableHandle(
     // Fallback to timestamp-based handle
     baseName = `ql-${Date.now()}`
   }
-  
+
   // Try base handle first
   let handle = `${baseName}.${ctx.cfg.service.hostname}`
   let existing = await ctx.accountManager.getAccount(handle)
-  
+
   if (!existing) {
     return handle
   }
-  
+
   // Handle taken, append random digits
   let suffix = ''
   for (let attempts = 0; attempts < 10; attempts++) {
@@ -92,12 +96,12 @@ export async function deriveAvailableHandle(
     suffix += randomDigit
     handle = `${baseName}-${suffix}.${ctx.cfg.service.hostname}`
     existing = await ctx.accountManager.getAccount(handle)
-    
+
     if (!existing) {
       return handle
     }
   }
-  
+
   // Safety fallback: use timestamp
   return `ql-${Date.now()}.${ctx.cfg.service.hostname}`
 }
@@ -112,13 +116,13 @@ export async function createAccountViaQuickLogin(
     neuroJid: string
     email?: string
     userName?: string
-  }
+  },
 ): Promise<QuickLoginResult> {
   const { handle, neuroJid, email, userName } = params
-  
+
   // Generate signing keypair
   const signingKey = await Secp256k1Keypair.create({ exportable: true })
-  
+
   // Create PLC DID operation
   const plcCreate = await plc.createOp({
     signingKey: signingKey.did(),
@@ -127,18 +131,18 @@ export async function createAccountViaQuickLogin(
     pds: ctx.cfg.service.publicUrl,
     signer: ctx.plcRotationKey,
   })
-  
+
   const did = plcCreate.did
-  
+
   // Create actor repo
   await ctx.actorStore.create(did, signingKey)
   const commit = await ctx.actorStore.transact(did, (actorTxn) =>
-    actorTxn.repo.createRepo([])
+    actorTxn.repo.createRepo([]),
   )
-  
+
   // Publish DID to PLC
   await ctx.plcClient.sendOperation(did, plcCreate.op)
-  
+
   // Create account (without password)
   await ctx.accountManager.createAccount({
     did,
@@ -148,7 +152,7 @@ export async function createAccountViaQuickLogin(
     repoCid: commit.cid,
     repoRev: commit.rev,
   })
-  
+
   // Link Neuro identity
   await ctx.accountManager.db.db
     .insertInto('neuro_identity_link')
@@ -161,19 +165,19 @@ export async function createAccountViaQuickLogin(
       lastLoginAt: new Date().toISOString(),
     })
     .execute()
-  
+
   // Sequence events
   await ctx.sequencer.sequenceIdentityEvt(did, handle)
   await ctx.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
   await ctx.sequencer.sequenceCommit(did, commit)
-  
+
   // Create session
   const { accessJwt, refreshJwt } = await ctx.accountManager.createSession(
     did,
     null, // No appPassword
     false, // Not privileged
   )
-  
+
   return {
     accessJwt,
     refreshJwt,

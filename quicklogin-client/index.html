@@ -93,9 +93,9 @@
     <div class="card">
         <h1>🔐 QuickLogin Test Client</h1>
         <p>Test the QuickLogin flow with your W ID app</p>
-        
+
         <button id="startBtn" onclick="startQuickLogin()">Start QuickLogin</button>
-        
+
         <div id="status" style="display: none;"></div>
         <div id="qrcode" style="display: none;"></div>
         <div id="result" style="display: none;"></div>
@@ -112,7 +112,7 @@
             const statusDiv = document.getElementById('status');
             const qrcodeDiv = document.getElementById('qrcode');
             const resultDiv = document.getElementById('result');
-            
+
             btn.disabled = true;
             statusDiv.style.display = 'block';
             statusDiv.className = 'status pending';
@@ -182,7 +182,7 @@
                     clearInterval(pollInterval);
                     statusDiv.className = 'status completed';
                     statusDiv.innerHTML = '✅ QuickLogin successful!';
-                    
+
                     const result = statusData.result;
                     resultDiv.innerHTML = `
                         <h3>Login Result</h3>
@@ -194,7 +194,7 @@
                     `;
                     resultDiv.style.display = 'block';
                     resultDiv.className = 'result';
-                    
+
                     document.getElementById('startBtn').disabled = false;
 
                 } else if (statusData.status === 'failed') {

@@ -1,5 +1,4 @@
-import { randomBytes } from 'crypto'
-import { randomUUID } from 'crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 
 export type QuickLoginSession = {
   sessionId: string
@@ -27,12 +26,18 @@ export class QuickLoginSessionStore {
 
   constructor() {
     // Run cleanup every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup()
-    }, 5 * 60 * 1000)
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup()
+      },
+      5 * 60 * 1000,
+    )
   }
 
-  createSession(allowCreate: boolean, serviceId: string): {
+  createSession(
+    allowCreate: boolean,
+    serviceId: string,
+  ): {
     sessionId: string
     sessionToken: string
     expiresAt: string

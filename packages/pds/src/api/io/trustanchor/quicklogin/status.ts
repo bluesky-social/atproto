@@ -7,18 +7,18 @@ export function statusQuickLogin(router: Router, ctx: AppContext) {
       if (!ctx.cfg.quicklogin) {
         return res.status(400).json({ error: 'QuickLogin not enabled' })
       }
-      
+
       const { sessionId, sessionToken } = req.body
-      
+
       if (!sessionId || !sessionToken) {
         return res.status(400).json({ error: 'Missing sessionId or sessionToken' })
       }
-      
+
       const session = ctx.quickloginStore.getSession(sessionId)
       if (!session || session.sessionToken !== sessionToken) {
         return res.status(404).json({ error: 'Invalid session' })
       }
-      
+
       return res.json({
         status: session.status,
         result: session.result || undefined,
