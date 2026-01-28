@@ -4,7 +4,7 @@ import { AppContext } from '../../../../context'
 import { dbLogger as logger } from '../../../../logger'
 
 export function initQuickLogin(router: Router, ctx: AppContext) {
-  router.post('/io.trustanchor.quicklogin.init', async (req, res) => {
+  router.post('/api/quicklogin/init', async (req, res) => {
     try {
       if (!ctx.cfg.quicklogin) {
         return res.status(400).json({ error: 'QuickLogin not enabled' })
@@ -14,7 +14,7 @@ export function initQuickLogin(router: Router, ctx: AppContext) {
 
       // Call provider to register session
       const providerUrl = `${ctx.cfg.quicklogin.apiBaseUrl}/QuickLogin`
-      const callbackUrl = `${ctx.cfg.service.publicUrl}/xrpc/io.trustanchor.quicklogin.callback`
+      const callbackUrl = `${ctx.cfg.service.publicUrl}/api/quicklogin/callback`
 
       // Create temporary session ID for provider registration
       const tempSessionId = randomUUID()

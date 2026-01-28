@@ -103,6 +103,7 @@
 
     <script>
         const PDS_URL = 'http://localhost:2583';
+        //const PDS_URL = 'http://pds-stage.wsocial.eu:2583';
         let sessionId = null;
         let sessionToken = null;
         let pollInterval = null;
@@ -122,7 +123,7 @@
 
             try {
                 // Call init endpoint
-                const initResponse = await fetch(`${PDS_URL}/xrpc/io.trustanchor.quicklogin.init`, {
+                const initResponse = await fetch(`${PDS_URL}/api/quicklogin/init`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ allowCreate: true })
@@ -162,7 +163,7 @@
 
         async function checkStatus() {
             try {
-                const statusResponse = await fetch(`${PDS_URL}/xrpc/io.trustanchor.quicklogin.status`, {
+                const statusResponse = await fetch(`${PDS_URL}/api/quicklogin/status`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionId, sessionToken })
