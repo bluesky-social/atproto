@@ -51,6 +51,7 @@ export default function (server: Server, ctx: AppContext) {
         })
       } else {
         const manageableRoles = getRolesForInstanceOption(access)
+        const requestedManagerRole = getManagerRole(managerRole)
         const existingSetting = await getExistingSetting(
           settingService,
           ownerDid,
@@ -64,10 +65,15 @@ export default function (server: Server, ctx: AppContext) {
         ) {
           throw new AuthRequiredError(`Not permitted to update setting ${key}`)
         }
+
+        if (requestedManagerRole && !manageableRoles.includes(requestedManagerRole)) {
+          throw new AuthRequiredError(`Not permitted to set managerRole for setting ${key}`)
+        }
+
         const option = {
           ...baseOption,
           scope: 'instance' as const,
-          managerRole: getManagerRole(managerRole),
+          managerRole: requestedManagerRole,
         }
 
         if (settingValidators.has(key)) {
