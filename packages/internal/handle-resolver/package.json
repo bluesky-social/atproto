@@ -28,9 +28,9 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto-labs/simple-store-memory": "workspace:*",
-    "@atproto/did": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto-labs/simple-store-memory": "workspace:^",
+    "@atproto/did": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {

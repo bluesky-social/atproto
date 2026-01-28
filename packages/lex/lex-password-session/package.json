@@ -35,13 +35,13 @@
     }
   },
   "dependencies": {
-    "@atproto/lex-client": "workspace:*",
-    "@atproto/lex-schema": "workspace:*",
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-server": "workspace:*",
+    "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-server": "workspace:^",
     "vitest": "^4.0.16"
   },
   "scripts": {

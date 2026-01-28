@@ -25,8 +25,8 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/did-resolver": "workspace:*",
-    "@atproto-labs/handle-resolver": "workspace:*"
+    "@atproto-labs/did-resolver": "workspace:^",
+    "@atproto-labs/handle-resolver": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.6.3"
