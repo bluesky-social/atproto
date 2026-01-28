@@ -4,7 +4,7 @@ import { AppContext } from '../../../../context'
 import { dbLogger as logger } from '../../../../logger'
 
 export function initQuickLogin(router: Router, ctx: AppContext) {
-  router.post('/io.trustanchor.quicklogin.init', async (req, res) => {
+  router.post('/xrpc/io.trustanchor.quicklogin.init', async (req, res) => {
     try {
       if (!ctx.cfg.quicklogin) {
         return res.status(400).json({ error: 'QuickLogin not enabled' })

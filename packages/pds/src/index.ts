@@ -66,13 +66,14 @@ export class PDS {
     this.app = opts.app
 
     // Setup Neuro cleanup interval if using database storage
-    if (opts.ctx.cfg.neuro?.enabled && opts.ctx.cfg.neuro.storageBackend === 'database') {
+    if (
+      opts.ctx.cfg.neuro?.enabled &&
+      opts.ctx.cfg.neuro.storageBackend === 'database'
+    ) {
       this.neuroCleanupInterval = setInterval(() => {
         opts.ctx.neuroAuthManager
           ?.cleanupExpiredSessions()
-          .catch((err) =>
-            console.error('Neuro session cleanup failed:', err),
-          )
+          .catch((err) => console.error('Neuro session cleanup failed:', err))
       }, 60 * 1000)
 
       // Allow Node to exit even if this timer is still active
@@ -178,8 +179,8 @@ export class PDS {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    // QuickLogin routes (before XRPC router to bypass lexicon checking)
-    app.use('/xrpc', ioTrustanchor(ctx))
+    // QuickLogin routes (separate path to avoid XRPC body parsing conflict)
+    app.use(ioTrustanchor(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 

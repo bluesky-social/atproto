@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { AppContext } from '../../../../context'
 
 export function statusQuickLogin(router: Router, ctx: AppContext) {
-  router.post('/io.trustanchor.quicklogin.status', async (req, res) => {
+  router.post('/xrpc/io.trustanchor.quicklogin.status', async (req, res) => {
     try {
       if (!ctx.cfg.quicklogin) {
         return res.status(400).json({ error: 'QuickLogin not enabled' })
@@ -11,7 +11,9 @@ export function statusQuickLogin(router: Router, ctx: AppContext) {
       const { sessionId, sessionToken } = req.body
 
       if (!sessionId || !sessionToken) {
-        return res.status(400).json({ error: 'Missing sessionId or sessionToken' })
+        return res
+          .status(400)
+          .json({ error: 'Missing sessionId or sessionToken' })
       }
 
       const session = ctx.quickloginStore.getSession(sessionId)
@@ -26,9 +28,13 @@ export function statusQuickLogin(router: Router, ctx: AppContext) {
         expiresAt: session.expiresAt,
       })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error'
       const errorStack = error instanceof Error ? error.stack : undefined
-      req.log.error({ error: errorMessage, stack: errorStack }, 'QuickLogin status check failed')
+      req.log.error(
+        { error: errorMessage, stack: errorStack },
+        'QuickLogin status check failed',
+      )
       return res.status(500).json({ error: 'Internal server error' })
     }
   })
