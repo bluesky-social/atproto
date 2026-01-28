@@ -19,6 +19,7 @@ import {
   XRPCError,
 } from '@atproto/xrpc-server'
 import apiRoutes from './api'
+import ioTrustanchor from './api/io/trustanchor'
 import * as authRoutes from './auth-routes'
 import * as basicRoutes from './basic-routes'
 import { ServerConfig, ServerSecrets } from './config'
@@ -58,10 +59,27 @@ export class PDS {
   private terminator?: HttpTerminator
   private dbStatsInterval?: NodeJS.Timeout
   private sequencerStatsInterval?: NodeJS.Timeout
+  private neuroCleanupInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
     this.app = opts.app
+
+    // Setup Neuro cleanup interval if using database storage
+    if (
+      opts.ctx.cfg.neuro?.enabled &&
+      opts.ctx.cfg.neuro.storageBackend === 'database'
+    ) {
+      this.neuroCleanupInterval = setInterval(() => {
+        opts.ctx.neuroAuthManager
+          ?.cleanupExpiredSessions()
+          .catch((err) => console.error('Neuro session cleanup failed:', err))
+      }, 60 * 1000)
+
+      // Allow Node to exit even if this timer is still active
+      // This is important for test environments where destroy() is called
+      this.neuroCleanupInterval.unref()
+    }
   }
 
   static async create(
@@ -161,6 +179,8 @@ export class PDS {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
+    // QuickLogin API routes (using /api/quicklogin/* instead of /xrpc/* to avoid XRPC router)
+    app.use(ioTrustanchor(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
 
@@ -189,6 +209,7 @@ export class PDS {
     await this.ctx.proxyAgent.destroy()
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
+    clearInterval(this.neuroCleanupInterval)
   }
 }
 

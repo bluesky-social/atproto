@@ -1983,6 +1983,9 @@ importers:
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../bsky
+      '@atproto/dev-env':
+        specifier: workspace:^
+        version: link:../dev-env
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
