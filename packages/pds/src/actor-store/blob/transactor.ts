@@ -1,30 +1,23 @@
 import crypto from 'node:crypto'
 import stream from 'node:stream'
-import bytes from 'bytes'
 import { fromStream as fileTypeFromStream } from 'file-type'
-import { CID } from 'multiformats/cid'
 import PQueue from 'p-queue'
-import {
-  SECOND,
-  cloneStream,
-  sha256RawToCid,
-  streamSize,
-} from '@atproto/common'
-import { BlobRef } from '@atproto/lexicon'
+import { SECOND, cloneStream, streamSize } from '@atproto/common'
+import { BlobRef, Cid, cidForRawHash, parseCid } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { com } from '../../lexicons/index.js'
 import { blobStoreLogger as log } from '../../logger'
-import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
+import { PreparedWrite } from '../../repo/types'
 import { ActorDb, Blob as BlobTable } from '../db'
 import { BlobReader } from './reader'
 
 export type BlobMetadata = {
   tempKey: string
   size: number
-  cid: CID
+  cid: Cid
   mimeType: string
 }
 
@@ -63,23 +56,22 @@ export class BlobTransactor extends BlobReader {
       mimeTypeFromStream(cloneStream(blobStream)),
     ])
 
-    const cid = sha256RawToCid(sha256)
-    const mimeType = sniffedMime || userSuggestedMime
-
     return {
       tempKey,
       size,
-      cid,
-      mimeType,
+      cid: cidForRawHash(sha256),
+      mimeType: sniffedMime || userSuggestedMime,
     }
   }
 
-  async trackUntetheredBlob(metadata: BlobMetadata) {
+  async trackUntetheredBlob(metadata: BlobMetadata): Promise<BlobRef> {
     const { tempKey, size, cid, mimeType } = metadata
+    const cidStr = cid.toString()
+
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
-      .where('cid', '=', cid.toString())
+      .where('cid', '=', cidStr)
       .executeTakeFirst()
     if (found?.takedownRef) {
       throw new InvalidRequestError('Blob has been takendown, cannot re-upload')
@@ -88,7 +80,7 @@ export class BlobTransactor extends BlobReader {
     await this.db.db
       .insertInto('blob')
       .values({
-        cid: cid.toString(),
+        cid: cidStr,
         mimeType,
         size,
         tempKey,
@@ -101,7 +93,13 @@ export class BlobTransactor extends BlobReader {
           .where('blob.tempKey', 'is not', null),
       )
       .execute()
-    return new BlobRef(cid, mimeType, size)
+
+    return {
+      $type: 'blob',
+      ref: cid,
+      mimeType,
+      size,
+    }
   }
 
   async processWriteBlobs(rev: string, writes: PreparedWrite[]) {
@@ -143,7 +141,10 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async updateBlobTakedownStatus(cid: CID, takedown: StatusAttr) {
+  async updateBlobTakedownStatus(
+    cid: Cid,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
     const takedownRef = takedown.applied
       ? takedown.ref ?? new Date().toISOString()
       : null
@@ -199,7 +200,7 @@ export class BlobTransactor extends BlobReader {
 
     const newBlobCids = writes
       .filter((w) => isUpdate(w) || isCreate(w))
-      .flatMap((w) => w.blobs.map((b) => b.cid.toString()))
+      .flatMap((w) => w.blobs.map((b) => b.ref.toString()))
 
     const cidsToKeep = [
       ...newBlobCids,
@@ -220,7 +221,7 @@ export class BlobTransactor extends BlobReader {
       this.db.onCommit(() => {
         this.backgroundQueue.add(async () => {
           try {
-            const cids = cidsToDelete.map((cid) => CID.parse(cid))
+            const cids = cidsToDelete.map((cid) => parseCid(cid))
             await this.blobstore.deleteMany(cids)
           } catch (err) {
             log.error(
@@ -234,13 +235,13 @@ export class BlobTransactor extends BlobReader {
   }
 
   async verifyBlobAndMakePermanent(
-    blob: PreparedBlobRef,
+    blob: BlobRef,
     signal?: AbortSignal,
   ): Promise<void> {
     const found = await this.db.db
       .selectFrom('blob')
       .select(['tempKey', 'size', 'mimeType'])
-      .where('cid', '=', blob.cid.toString())
+      .where('cid', '=', blob.ref.toString())
       .where('takedownRef', 'is', null)
       .executeTakeFirst()
 
@@ -248,7 +249,7 @@ export class BlobTransactor extends BlobReader {
 
     if (!found) {
       throw new InvalidRequestError(
-        `Could not find blob: ${blob.cid.toString()}`,
+        `Could not find blob: ${blob.ref.toString()}`,
         'BlobNotFound',
       )
     }
@@ -265,10 +266,10 @@ export class BlobTransactor extends BlobReader {
       // transaction.
 
       await this.blobstore
-        .makePermanent(found.tempKey, blob.cid)
+        .makePermanent(found.tempKey, blob.ref)
         .catch((err) => {
           log.error(
-            { err, cid: blob.cid.toString() },
+            { err, cid: blob.ref.toString() },
             'could not make blob permanent',
           )
 
@@ -285,11 +286,11 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async insertBlobMetadata(blob: PreparedBlobRef): Promise<void> {
+  async insertBlobMetadata(blob: BlobRef): Promise<void> {
     await this.db.db
       .insertInto('blob')
       .values({
-        cid: blob.cid.toString(),
+        cid: blob.ref.toString(),
         mimeType: blob.mimeType,
         size: blob.size,
         createdAt: new Date().toISOString(),
@@ -298,11 +299,11 @@ export class BlobTransactor extends BlobReader {
       .execute()
   }
 
-  async associateBlob(blob: PreparedBlobRef, recordUri: AtUri): Promise<void> {
+  async associateBlob(blob: BlobRef, recordUri: AtUri): Promise<void> {
     await this.db.db
       .insertInto('record_blob')
       .values({
-        blobCid: blob.cid.toString(),
+        blobCid: blob.ref.toString(),
         recordUri: recordUri.toString(),
       })
       .onConflict((oc) => oc.doNothing())
@@ -311,8 +312,8 @@ export class BlobTransactor extends BlobReader {
 }
 
 export class CidNotFound extends Error {
-  cid: CID
-  constructor(cid: CID) {
+  cid: Cid
+  constructor(cid: Cid) {
     super(`cid not found: ${cid.toString()}`)
     this.cid = cid
   }
@@ -340,46 +341,24 @@ async function mimeTypeFromStream(
   return fileType?.mime
 }
 
-function acceptedMime(mime: string, accepted: string[]): boolean {
-  if (accepted.includes('*/*')) return true
-  const globs = accepted.filter((a) => a.endsWith('/*'))
-  for (const glob of globs) {
-    const [start] = glob.split('/')
-    if (mime.startsWith(`${start}/`)) {
-      return true
-    }
-  }
-  return accepted.includes(mime)
-}
-
+/**
+ * Ensures that the blob referenced in the record matches the stored blob.
+ */
 function verifyBlob(
-  blob: PreparedBlobRef,
+  blob: BlobRef,
   found: Pick<BlobTable, 'size' | 'mimeType'>,
 ) {
-  const throwInvalid = (msg: string, errName = 'InvalidBlob') => {
-    throw new InvalidRequestError(msg, errName)
-  }
-  if (blob.constraints.maxSize && found.size > blob.constraints.maxSize) {
-    throwInvalid(
-      `This file is too large. It is ${bytes.format(
-        found.size,
-      )} but the maximum size is ${bytes.format(blob.constraints.maxSize)}.`,
-      'BlobTooLarge',
-    )
-  }
   if (blob.mimeType !== found.mimeType) {
-    throwInvalid(
+    throw new InvalidRequestError(
       `Referenced Mimetype does not match stored blob. Expected: ${found.mimeType}, Got: ${blob.mimeType}`,
       'InvalidMimeType',
     )
   }
-  if (
-    blob.constraints.accept &&
-    !acceptedMime(blob.mimeType, blob.constraints.accept)
-  ) {
-    throwInvalid(
-      `Wrong type of file. It is ${blob.mimeType} but it must match ${blob.constraints.accept}.`,
-      'InvalidMimeType',
+
+  if (blob.size !== found.size) {
+    throw new InvalidRequestError(
+      `Referenced Size does not match stored blob. Expected: ${found.size}, Got: ${blob.size}`,
+      'InvalidSize',
     )
   }
 }

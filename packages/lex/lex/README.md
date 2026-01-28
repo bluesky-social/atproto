@@ -487,7 +487,7 @@ import { PasswordSession } from '@atproto/lex-password-session'
 import * as app from './lexicons/app.js'
 
 // Create a session with app password credentials
-const session = await PasswordSession.create({
+const session = await PasswordSession.login({
   service: 'https://bsky.social',
   identifier: 'alice.bsky.social', // handle or email
   password: 'xxxx-xxxx-xxxx-xxxx', // App password (not your main password)
@@ -555,7 +555,7 @@ await PasswordSession.delete(savedData)
 Handle transient errors (network issues, server unavailability) separately from permanent failures:
 
 ```typescript
-const session = await PasswordSession.create({
+const session = await PasswordSession.login({
   service: 'https://bsky.social',
   identifier: 'alice.bsky.social',
   password: 'xxxx-xxxx-xxxx-xxxx',
@@ -596,7 +596,7 @@ async function loginWithMainCredentials(
   authFactorToken?: string,
 ): Promise<PasswordSession> {
   try {
-    return await PasswordSession.create({
+    return await PasswordSession.login({
       service: 'https://bsky.social',
       identifier,
       password,

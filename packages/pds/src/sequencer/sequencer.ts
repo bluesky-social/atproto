@@ -1,6 +1,8 @@
 import EventEmitter from 'node:events'
 import TypedEmitter from 'typed-emitter'
-import { SECOND, cborDecode, wait } from '@atproto/common'
+import { SECOND, wait } from '@atproto/common'
+import { decode as cborDecode } from '@atproto/lex-cbor'
+import { DatetimeString } from '@atproto/syntax'
 import { AccountStatus } from '../account-manager/helpers/account'
 import { Crawlers } from '../crawlers'
 import { seqLogger as log } from '../logger'
@@ -217,28 +219,28 @@ export const parseRepoSeqRows = (rows: RepoSeqEntry[]): SeqEvt[] => {
       seqEvts.push({
         type: 'commit',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as CommitEvt,
       })
     } else if (row.eventType === 'sync') {
       seqEvts.push({
         type: 'sync',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as SyncEvt,
       })
     } else if (row.eventType === 'identity') {
       seqEvts.push({
         type: 'identity',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as IdentityEvt,
       })
     } else if (row.eventType === 'account') {
       seqEvts.push({
         type: 'account',
         seq: row.seq,
-        time: row.sequencedAt,
+        time: row.sequencedAt as DatetimeString,
         evt: evt as AccountEvt,
       })
     }

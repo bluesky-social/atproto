@@ -419,15 +419,11 @@ describe('Client', () => {
         'bafyreihx5eurnmsnj6ulfby3icl4ebh6pliwuqaze25z4ejitnt23b4vw4',
       )
 
-      const aliceGenerator = await client.create(
-        // @ts-expect-error an "rkey" option is required for feed generator records
-        app.bsky.feed.generator,
-        {
-          did,
-          displayName: 'Alice Generator',
-          createdAt: new Date().toISOString(),
-        },
-      )
+      const aliceGenerator = await client.create(app.bsky.feed.generator, {
+        did,
+        displayName: 'Alice Generator',
+        createdAt: new Date().toISOString(),
+      })
 
       expect(nextTid).toHaveBeenCalledTimes(1)
       expect(aliceGenerator.uri).toBe(

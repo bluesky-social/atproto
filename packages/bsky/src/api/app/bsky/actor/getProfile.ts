@@ -1,19 +1,19 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { DidString } from '@atproto/syntax'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfile'
+import { app } from '../../../../lexicons/index.js'
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.actor.getProfile({
+  server.add(app.bsky.actor.getProfile, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -97,8 +97,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.actor.getProfile.Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { did: string }
+type SkeletonState = { did: DidString }

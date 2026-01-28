@@ -1,13 +1,13 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getPosts'
+import { app } from '../../../../lexicons/index.js'
 import { createPipeline } from '../../../../pipeline'
 import { uriToDid as creatorFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
@@ -15,12 +15,13 @@ import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getPosts = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.feed.getPosts({
+  server.add(app.bsky.feed.getPosts, {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         if (!method) return false
         return (
-          method === ids.AppBskyFeedGetPosts || method.startsWith('chat.bsky.')
+          method === app.bsky.feed.getPosts.$lxm ||
+          method.startsWith('chat.bsky.')
         )
       },
     }),
@@ -40,7 +41,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: { params: Params }) => {
+const skeleton = async (inputs: { params: Params }): Promise<Skeleton> => {
   return { posts: dedupeStrs(inputs.params.uris) }
 }
 
@@ -87,8 +88,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.feed.getPosts.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  posts: string[]
+  posts: AtUriString[]
 }

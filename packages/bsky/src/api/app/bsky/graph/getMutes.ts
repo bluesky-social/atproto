@@ -1,8 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/lex'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getMutes'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -15,7 +16,7 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getMutes = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.graph.getMutes({
+  server.add(app.bsky.graph.getMutes, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -34,7 +35,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   if (clearlyBadCursor(params.cursor)) {
     return { mutedDids: [] }
@@ -45,7 +48,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     limit: params.limit,
   })
   return {
-    mutedDids: dids,
+    mutedDids: dids as DidString[],
     cursor: cursor || undefined,
   }
 }
@@ -74,11 +77,11 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getMutes.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  mutedDids: string[]
+  mutedDids: DidString[]
   cursor?: string
 }

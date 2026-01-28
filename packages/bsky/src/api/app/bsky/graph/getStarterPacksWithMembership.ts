@@ -1,16 +1,13 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUriString, DidString } from '@atproto/syntax'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import {
-  OutputSchema,
-  QueryParams,
-} from '../../../../lexicon/types/app/bsky/graph/getStarterPacksWithMembership'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -28,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.graph.getStarterPacksWithMembership({
+  server.add(app.bsky.graph.getStarterPacksWithMembership, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -69,7 +66,11 @@ const skeleton = async (
       limit: params.limit,
     })
 
-  return { actorDid, starterPackUris, cursor: cursor || undefined }
+  return {
+    actorDid,
+    starterPackUris: starterPackUris as AtUriString[],
+    cursor: cursor || undefined,
+  }
 }
 
 const hydration = async (
@@ -96,7 +97,7 @@ const hydration = async (
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
-): OutputSchema => {
+): app.bsky.graph.getStarterPacksWithMembership.OutputBody => {
   const { ctx, skeleton, hydration } = input
   const { actorDid, starterPackUris, cursor } = skeleton
 
@@ -124,12 +125,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getStarterPacksWithMembership.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  actorDid: string
-  starterPackUris: string[]
+  actorDid: DidString
+  starterPackUris: AtUriString[]
   cursor?: string
 }

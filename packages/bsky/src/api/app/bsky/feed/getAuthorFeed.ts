@@ -1,5 +1,6 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUriString } from '@atproto/lex'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { Actor } from '../../../../hydration/actor'
@@ -11,8 +12,7 @@ import {
   mergeStates,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getAuthorFeed'
+import { app } from '../../../../lexicons/index.js'
 import { createPipeline } from '../../../../pipeline'
 import { FeedType } from '../../../../proto/bsky_pb'
 import { safePinnedPost, uriToDid } from '../../../../util/uris'
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutedReposts,
     presentation,
   )
-  server.app.bsky.feed.getAuthorFeed({
+  server.add(app.bsky.feed.getAuthorFeed, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -98,9 +98,9 @@ export const skeleton = async (inputs: {
   })
 
   let items: FeedItem[] = res.items.map((item) => ({
-    post: { uri: item.uri, cid: item.cid || undefined },
+    post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
     repost: item.repost
-      ? { uri: item.repost, cid: item.repostCid || undefined }
+      ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
       : undefined,
   }))
 
@@ -208,14 +208,14 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.feed.getAuthorFeed.Params & {
   hydrateCtx: HydrateCtx
 }
 
 type Skeleton = {
   actor: Actor
   items: FeedItem[]
-  filter: QueryParams['filter']
+  filter: app.bsky.feed.getAuthorFeed.Params['filter']
   cursor?: string
 }
 
@@ -234,7 +234,7 @@ class SelfThreadTracker {
     })
   }
 
-  ok(uri: string, loop = new Set<string>()) {
+  ok(uri: AtUriString, loop = new Set<AtUriString>()) {
     // if we've already checked this uri, pull from the cache
     if (this.cache.has(uri)) {
       return this.cache.get(uri) ?? false
@@ -252,7 +252,7 @@ class SelfThreadTracker {
     return result
   }
 
-  private _ok(uri: string, loop: Set<string>): boolean {
+  private _ok(uri: AtUriString, loop: Set<AtUriString>): boolean {
     // must be in the feed to be in a self-thread
     if (!this.feedUris.has(uri)) {
       return false

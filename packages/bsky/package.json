@@ -16,7 +16,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prebuild": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/com/germnetwork/*",
+    "prebuild": "lex build --lexicons ../../lexicons --clear --indexFile",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
@@ -36,7 +36,9 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/did": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/sync": "workspace:^",
     "@atproto/syntax": "workspace:^",
@@ -61,7 +63,6 @@
     "key-encoder": "^2.0.3",
     "kysely": "^0.22.0",
     "leo-profanity": "^1.8.0",
-    "multiformats": "^9.9.0",
     "murmurhash": "^2.0.1",
     "p-queue": "^6.6.2",
     "pg": "^8.10.0",
@@ -75,10 +76,7 @@
     "zod": "3.23.8"
   },
   "devDependencies": {
-    "@atproto/api": "workspace:^",
-    "@atproto/lex-cli": "workspace:^",
     "@atproto/pds": "workspace:^",
-    "@atproto/xrpc": "workspace:^",
     "@bufbuild/buf": "^1.28.1",
     "@bufbuild/protoc-gen-es": "^1.5.0",
     "@connectrpc/protoc-gen-connect-es": "^1.1.4",

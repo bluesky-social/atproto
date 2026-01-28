@@ -19,17 +19,12 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
+import { XrpcError } from './errors.js'
 import { com } from './lexicons/index.js'
 import { XrpcResponse, XrpcResponseBody } from './response.js'
 import { BinaryBodyInit, CallOptions, Service } from './types.js'
 import { buildAtprotoHeaders } from './util.js'
-import {
-  XrpcFailure,
-  XrpcOptions,
-  XrpcRequestParams,
-  xrpc,
-  xrpcSafe,
-} from './xrpc.js'
+import { XrpcOptions, XrpcRequestParams, xrpc, xrpcSafe } from './xrpc.js'
 
 export type {
   AtIdentifierString,
@@ -103,7 +98,7 @@ export type RecordKeyOptions<
   : { rkey: InferRecordKey<T> }
 
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
-  RecordKeyOptions<T, 'tid'>
+  RecordKeyOptions<T, 'tid' | 'any'>
 export type CreateOutput = InferMethodOutputBody<
   typeof com.atproto.repo.createRecord.main,
   Uint8Array
@@ -214,7 +209,7 @@ export class Client implements Agent {
   }
 
   /**
-   * @throws {XrpcFailure<M>} when the request fails or the response is an error
+   * @throws {XrpcError<M>} when the request fails or the response is an error
    */
   async xrpc<const M extends Query | Procedure>(
     ns: NonNullable<unknown> extends XrpcOptions<M>
@@ -236,15 +231,15 @@ export class Client implements Agent {
     ns: NonNullable<unknown> extends XrpcOptions<M>
       ? Main<M>
       : Restricted<'This XRPC method requires an "options" argument'>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcError<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Main<M>,
     options: XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>>
+  ): Promise<XrpcResponse<M> | XrpcError<M>>
   async xrpcSafe<const M extends Query | Procedure>(
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
-  ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
+  ): Promise<XrpcResponse<M> | XrpcError<M>> {
     return xrpcSafe(this, ns, options)
   }
 
@@ -354,6 +349,11 @@ export class Client implements Agent {
     ns: NonNullable<unknown> extends XrpcRequestParams<T>
       ? Main<T>
       : Restricted<'This query type requires a "params" argument'>,
+  ): Promise<XrpcResponseBody<T>>
+  public async call<const T extends Procedure>(
+    ns: undefined extends InferMethodInputBody<T, Uint8Array>
+      ? Main<T>
+      : Restricted<'This procedure type requires an "input" argument'>,
   ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Action>(
     ns: void extends InferActionInput<T>

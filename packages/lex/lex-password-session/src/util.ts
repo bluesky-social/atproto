@@ -1,8 +1,6 @@
 import { LexMap, LexValue } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 
-export const noop = () => {}
-
 export async function extractXrpcErrorCode(
   response: Response,
 ): Promise<string | null> {

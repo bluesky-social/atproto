@@ -1,15 +1,13 @@
-import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { Client, DidString } from '@atproto/lex'
+import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { SkeletonTrend } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrends'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -21,7 +19,7 @@ import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getTrends = createPipeline(skeleton, hydration, noBlocks, presentation)
-  server.app.bsky.unspecced.getTrends({
+  server.add(app.bsky.unspecced.getTrends, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -51,8 +49,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (ctx.topicsAgent) {
-    const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendsSkeleton(
+  if (ctx.topicsClient) {
+    return ctx.topicsClient.call(
+      app.bsky.unspecced.getTrendsSkeleton,
       {
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
@@ -61,7 +60,6 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         headers: params.headers,
       },
     )
-    return res.data
   } else {
     throw new InternalServerError('Topics agent not available')
   }
@@ -71,12 +69,12 @@ const hydration = async (
   input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
-  let dids: string[] = []
+  let dids: DidString[] = []
   for (const trend of skeleton.trends) {
     dids.push(...trend.dids)
   }
   dids = dedupeStrs(dids)
-  const pairs: Map<string, string[]> = new Map()
+  const pairs: Map<DidString, DidString[]> = new Map()
   const viewer = params.hydrateCtx.viewer
   if (viewer) {
     pairs.set(viewer, dids)
@@ -131,14 +129,14 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.unspecced.getTrendingTopics.Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
 }
 
 type SkeletonState = {
-  trends: SkeletonTrend[]
+  trends: app.bsky.unspecced.defs.SkeletonTrend[]
 }

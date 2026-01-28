@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 
 import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
-import { Client, XrpcResponseError } from '@atproto/lex-client'
+import { Client, XrpcAuthenticationError } from '@atproto/lex-client'
 import { l } from '@atproto/lex-schema'
 import { LexRouter, LexServerAuthError } from '@atproto/lex-server'
 import { Server, serve } from '@atproto/lex-server/nodejs'
@@ -171,7 +171,7 @@ describe(PasswordSession, () => {
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
     await expect(
-      PasswordSession.create({
+      PasswordSession.login({
         ...defaultOptions,
         service: entrywayOrigin,
         identifier: 'alice',
@@ -181,7 +181,6 @@ describe(PasswordSession, () => {
       }),
     ).rejects.toMatchObject({
       success: false,
-      status: 401,
       error: 'AuthenticationRequired',
     })
 
@@ -193,7 +192,7 @@ describe(PasswordSession, () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const result = await PasswordSession.create({
+    const result = await PasswordSession.login({
       ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'alice',
@@ -217,7 +216,7 @@ describe(PasswordSession, () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const session = await PasswordSession.create({
+    const session = await PasswordSession.login({
       ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'alice',
@@ -263,22 +262,21 @@ describe(PasswordSession, () => {
     })
 
     assert(result.success === false)
-    assert(result instanceof XrpcResponseError)
+    assert(result instanceof XrpcAuthenticationError)
     expect(result).toMatchObject({
       success: false,
-      status: 401,
       error: 'AuthenticationRequired',
     })
-    expect(result.headers.get('www-authenticate')).toBe(
-      'Bearer realm="access token"',
-    )
+    expect(result.wwwAuthenticate).toEqual({
+      Bearer: { realm: 'access token' },
+    })
   })
 
   it('refreshes expired token', async () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const session = await PasswordSession.create({
+    const session = await PasswordSession.login({
       ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'bob',
@@ -332,7 +330,7 @@ describe(PasswordSession, () => {
     const onDeleted: PasswordSessionOptions['onDeleted'] = vi.fn()
     const onUpdated: PasswordSessionOptions['onUpdated'] = vi.fn()
 
-    const initialAgent = await PasswordSession.create({
+    const initialAgent = await PasswordSession.login({
       ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'carla',
@@ -368,7 +366,6 @@ describe(PasswordSession, () => {
     await expect(initialAgent.refresh()).rejects.toMatchObject({
       success: false,
       error: 'ExpiredToken',
-      status: 401,
     })
 
     expect(onDeleted).toHaveBeenCalledTimes(1)
@@ -393,7 +390,7 @@ describe(PasswordSession, () => {
   it('silently ignores expected logout errors', async () => {
     let sessionData: SessionData | null = null
 
-    const session = await PasswordSession.create({
+    const session = await PasswordSession.login({
       ...defaultOptions,
       service: entrywayOrigin,
       identifier: 'dave',

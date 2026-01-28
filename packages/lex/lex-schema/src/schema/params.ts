@@ -32,7 +32,9 @@ export type ParamsSchemaShape = {
 }
 
 export class ParamsSchema<
-  const TShape extends ParamsSchemaShape = ParamsSchemaShape,
+  const TShape extends ParamsSchemaShape = {
+    [x: string]: Validator<Param | undefined>
+  },
 > extends Schema<
   WithOptionalProperties<{
     [K in keyof TShape]: InferInput<TShape[K]>

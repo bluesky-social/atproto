@@ -1,4 +1,6 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { FeedItem } from '../../../../hydration/feed'
@@ -8,8 +10,7 @@ import {
   Hydrator,
 } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/getTimeline'
+import { app } from '../../../../lexicons/index.js'
 import { createPipeline } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
@@ -21,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.feed.getTimeline({
+  server.add(app.bsky.feed.getTimeline, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -59,9 +60,9 @@ export const skeleton = async (inputs: {
   })
   return {
     items: res.items.map((item) => ({
-      post: { uri: item.uri, cid: item.cid || undefined },
+      post: { uri: item.uri as AtUriString, cid: item.cid || undefined },
       repost: item.repost
-        ? { uri: item.repost, cid: item.repostCid || undefined }
+        ? { uri: item.repost as AtUriString, cid: item.repostCid || undefined }
         : undefined,
     })),
     cursor: parseString(res.cursor),
@@ -114,7 +115,9 @@ type Context = {
   dataplane: DataPlaneClient
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx & { viewer: string } }
+type Params = app.bsky.feed.getTimeline.Params & {
+  hydrateCtx: HydrateCtx & { viewer: string }
+}
 
 type Skeleton = {
   items: FeedItem[]

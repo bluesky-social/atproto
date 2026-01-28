@@ -1,11 +1,11 @@
-import { ForbiddenError } from '@atproto/xrpc-server'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { resultPassthru } from '../../../proxy'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.listAppPasswords({
+  const { entrywayClient } = ctx
+
+  server.add(com.atproto.server.listAppPasswords, {
     auth: ctx.authVerifier.authorization({
       authorize: () => {
         throw new ForbiddenError(
@@ -13,27 +13,29 @@ export default function (server: Server, ctx: AppContext) {
         )
       },
     }),
-    handler: async ({ auth, req }) => {
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.listAppPasswords(
-            undefined,
-            await ctx.entrywayAuthHeaders(
-              req,
-              auth.credentials.did,
-              ids.ComAtprotoServerListAppPasswords,
-            ),
-          ),
-        )
-      }
+    handler: entrywayClient
+      ? async ({ auth, req }) => {
+          const { headers } = await ctx.entrywayAuthHeaders(
+            req,
+            auth.credentials.did,
+            com.atproto.server.listAppPasswords.$lxm,
+          )
 
-      const passwords = await ctx.accountManager.listAppPasswords(
-        auth.credentials.did,
-      )
-      return {
-        encoding: 'application/json',
-        body: { passwords },
-      }
-    },
+          return entrywayClient.xrpc(com.atproto.server.listAppPasswords, {
+            validateResponse: false, // ignore invalid upstream responses
+            headers,
+          })
+        }
+      : async ({
+          auth,
+        }): Promise<com.atproto.server.listAppPasswords.Output> => {
+          const passwords = await ctx.accountManager.listAppPasswords(
+            auth.credentials.did,
+          )
+          return {
+            encoding: 'application/json' as const,
+            body: { passwords },
+          }
+        },
   })
 }

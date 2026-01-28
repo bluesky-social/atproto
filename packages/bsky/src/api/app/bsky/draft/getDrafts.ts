@@ -1,13 +1,10 @@
-import { jsonStringToLex } from '@atproto/lexicon'
+import { lexParse } from '@atproto/lex-json'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import {
-  DraftView,
-  DraftWithId,
-} from '../../../../lexicon/types/app/bsky/draft/defs'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.draft.getDrafts({
+  server.add(app.bsky.draft.getDrafts, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
       const viewer = auth.credentials.iss
@@ -18,10 +15,9 @@ export default function (server: Server, ctx: AppContext) {
         cursor: params.cursor,
       })
 
-      const draftViews = drafts.map((d): DraftView => {
-        const draftWithId = jsonStringToLex(
-          Buffer.from(d.payload).toString('utf8'),
-        ) as DraftWithId
+      const draftViews = drafts.map((d): app.bsky.draft.defs.DraftView => {
+        const jsonStr = Buffer.from(d.payload).toString('utf8')
+        const draftWithId = lexParse<app.bsky.draft.defs.DraftWithId>(jsonStr)
         return {
           id: draftWithId.id,
           draft: draftWithId.draft,

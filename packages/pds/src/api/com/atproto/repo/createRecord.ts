@@ -1,8 +1,12 @@
-import { CID } from 'multiformats/cid'
+import { parseCid } from '@atproto/lex-data'
 import { InvalidRecordKeyError } from '@atproto/syntax'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -13,7 +17,7 @@ import {
 } from '../../../../repo'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.createRecord({
+  server.add(com.atproto.repo.createRecord, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -61,7 +65,7 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
 
       let write: PreparedCreate
       try {
@@ -120,7 +124,7 @@ export default function (server: Server, ctx: AppContext) {
         })
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),
