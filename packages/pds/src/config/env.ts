@@ -180,6 +180,10 @@ export function readEnv() {
           petitionTimeoutSeconds: envInt('PDS_NEURO_PETITION_TIMEOUT') || 300,
         } as NeuroConfig)
       : undefined,
+
+    // quicklogin (simpler standalone implementation)
+    quickloginEnabled: envBool('PDS_QUICKLOGIN_ENABLED'),
+    quickloginApiBaseUrl: envStr('PDS_QUICKLOGIN_API_BASE_URL'),
   }
 }
 

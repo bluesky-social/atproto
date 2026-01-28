@@ -14883,6 +14883,217 @@ export const schemaDict = {
       },
     },
   },
+  IoTrustanchorQuickloginCallback: {
+    lexicon: 1,
+    id: 'io.trustanchor.quicklogin.callback',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Receive QuickLogin provider callback after user scans QR',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['SessionId', 'State'],
+            properties: {
+              SessionId: {
+                type: 'string',
+                description: 'Session ID from init request',
+              },
+              State: {
+                type: 'string',
+                description: 'Authentication state (Approved/Rejected)',
+              },
+              JID: {
+                type: 'string',
+                description: "User's JID from W ID app",
+              },
+              Provider: {
+                type: 'string',
+                description: 'Provider domain',
+              },
+              Domain: {
+                type: 'string',
+                description: 'Domain used for authentication',
+              },
+              Key: {
+                type: 'string',
+                description: 'Public key',
+              },
+              Properties: {
+                type: 'unknown',
+                description: 'User properties from W ID',
+              },
+              Created: {
+                type: 'string',
+                format: 'datetime',
+              },
+              Updated: {
+                type: 'string',
+                format: 'datetime',
+              },
+              From: {
+                type: 'string',
+                format: 'datetime',
+              },
+              To: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorQuickloginInit: {
+    lexicon: 1,
+    id: 'io.trustanchor.quicklogin.init',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initialize QuickLogin session',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              allowCreate: {
+                type: 'boolean',
+                description:
+                  'Allow automatic account creation if JID not found',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'sessionId',
+              'sessionToken',
+              'serviceId',
+              'expiresAt',
+              'providerBaseUrl',
+            ],
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Unique session identifier',
+              },
+              sessionToken: {
+                type: 'string',
+                description: 'Secret token for polling status',
+              },
+              serviceId: {
+                type: 'string',
+                description: 'Service ID from provider for QR generation',
+              },
+              expiresAt: {
+                type: 'string',
+                format: 'datetime',
+                description: 'When this session expires',
+              },
+              providerBaseUrl: {
+                type: 'string',
+                format: 'uri',
+                description: 'Provider base URL for fetching QR code',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorQuickloginStatus: {
+    lexicon: 1,
+    id: 'io.trustanchor.quicklogin.status',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Poll QuickLogin session status',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sessionId', 'sessionToken'],
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session identifier from init',
+              },
+              sessionToken: {
+                type: 'string',
+                description: 'Session token from init',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['status', 'expiresAt'],
+            properties: {
+              status: {
+                type: 'string',
+                enum: ['pending', 'completed', 'failed'],
+                description: 'Current session status',
+              },
+              expiresAt: {
+                type: 'string',
+                format: 'datetime',
+                description: 'When this session expires',
+              },
+              result: {
+                type: 'ref',
+                ref: 'lex:io.trustanchor.quicklogin.status#loginResult',
+                description: 'Login result if completed',
+              },
+              error: {
+                type: 'string',
+                description: 'Error message if failed',
+              },
+            },
+          },
+        },
+      },
+      loginResult: {
+        type: 'object',
+        required: ['accessJwt', 'refreshJwt', 'did', 'handle'],
+        properties: {
+          accessJwt: {
+            type: 'string',
+            description: 'Access token',
+          },
+          refreshJwt: {
+            type: 'string',
+            description: 'Refresh token',
+          },
+          did: {
+            type: 'string',
+            description: 'User DID',
+          },
+          handle: {
+            type: 'string',
+            description: 'User handle',
+          },
+          created: {
+            type: 'boolean',
+            description: 'Whether account was newly created',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneCommunicationCreateTemplate: {
     lexicon: 1,
     id: 'tools.ozone.communication.createTemplate',
@@ -20356,6 +20567,9 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  IoTrustanchorQuickloginCallback: 'io.trustanchor.quicklogin.callback',
+  IoTrustanchorQuickloginInit: 'io.trustanchor.quicklogin.init',
+  IoTrustanchorQuickloginStatus: 'io.trustanchor.quicklogin.status',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',

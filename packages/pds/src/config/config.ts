@@ -350,6 +350,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     proxy: proxyCfg,
     oauth: oauthCfg,
     neuro: env.neuro || null,
+    quicklogin: env.quickloginEnabled
+      ? {
+          enabled: true,
+          apiBaseUrl: env.quickloginApiBaseUrl || 'https://lab.tagroot.io',
+        }
+      : null,
   }
 }
 
@@ -375,6 +381,7 @@ export type ServerConfig = {
   oauth: OAuthConfig
   lexicon: LexiconResolverConfig
   neuro: NeuroConfig | null
+  quicklogin: QuickLoginConfig | null
 }
 
 export type ServiceConfig = {
@@ -545,4 +552,9 @@ export type NeuroConfig = {
   // JWT verification
   verifyJwtSignature?: boolean
   petitionTimeoutSeconds?: number
+}
+
+export type QuickLoginConfig = {
+  enabled: boolean
+  apiBaseUrl: string
 }

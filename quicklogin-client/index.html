@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickLogin Test Client</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-top: 0;
+        }
+        button {
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0052cc;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            background: #f0f0f0;
+        }
+        .status.pending {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        .status.completed {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .status.failed {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        #qrcode {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+        }
+        #qrcode img {
+            max-width: 300px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+        }
+        .info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .result {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .result h3 {
+            margin-top: 0;
+            font-family: system-ui;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔐 QuickLogin Test Client</h1>
+        <p>Test the QuickLogin flow with your W ID app</p>
+
+        <button id="startBtn" onclick="startQuickLogin()">Start QuickLogin</button>
+
+        <div id="status" style="display: none;"></div>
+        <div id="qrcode" style="display: none;"></div>
+        <div id="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const PDS_URL = 'http://localhost:2583';
+        let sessionId = null;
+        let sessionToken = null;
+        let pollInterval = null;
+
+        async function startQuickLogin() {
+            const btn = document.getElementById('startBtn');
+            const statusDiv = document.getElementById('status');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const resultDiv = document.getElementById('result');
+
+            btn.disabled = true;
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status pending';
+            statusDiv.innerHTML = '⏳ Initializing QuickLogin session...';
+            qrcodeDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+
+            try {
+                // Call init endpoint
+                const initResponse = await fetch(`${PDS_URL}/xrpc/io.trustanchor.quicklogin.init`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ allowCreate: true })
+                });
+
+                if (!initResponse.ok) {
+                    throw new Error(`Init failed: ${initResponse.statusText}`);
+                }
+
+                const initData = await initResponse.json();
+                sessionId = initData.sessionId;
+                sessionToken = initData.sessionToken;
+
+                console.log('QuickLogin initialized:', initData);
+
+                // Display QR code from init response
+                qrcodeDiv.innerHTML = `
+                    <h3>Scan this QR code with Neuro Access app</h3>
+                    <img src="${initData.qrCodeUrl}" alt="QR Code" style="max-width: 400px;">
+                    <div class="info">Sign URL: <code style="font-size: 10px; word-break: break-all;">${initData.signUrl}</code></div>
+                    <div class="info">Session expires: ${new Date(initData.expiresAt).toLocaleTimeString()}</div>
+                `;
+                qrcodeDiv.style.display = 'block';
+
+                statusDiv.innerHTML = '📱 Waiting for QR code scan...';
+
+                // Start polling status
+                pollInterval = setInterval(checkStatus, 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status failed';
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+                btn.disabled = false;
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const statusResponse = await fetch(`${PDS_URL}/xrpc/io.trustanchor.quicklogin.status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId, sessionToken })
+                });
+
+                if (!statusResponse.ok) {
+                    throw new Error(`Status check failed: ${statusResponse.statusText}`);
+                }
+
+                const statusData = await statusResponse.json();
+                console.log('Status:', statusData);
+
+                const statusDiv = document.getElementById('status');
+                const resultDiv = document.getElementById('result');
+
+                if (statusData.status === 'completed') {
+                    clearInterval(pollInterval);
+                    statusDiv.className = 'status completed';
+                    statusDiv.innerHTML = '✅ QuickLogin successful!';
+
+                    const result = statusData.result;
+                    resultDiv.innerHTML = `
+                        <h3>Login Result</h3>
+                        <p><strong>DID:</strong> ${result.did}</p>
+                        <p><strong>Handle:</strong> ${result.handle}</p>
+                        <p><strong>Account Created:</strong> ${result.created ? 'Yes (new user)' : 'No (existing user)'}</p>
+                        <p><strong>Access JWT:</strong> ${result.accessJwt.substring(0, 50)}...</p>
+                        <p><strong>Refresh JWT:</strong> ${result.refreshJwt.substring(0, 50)}...</p>
+                    `;
+                    resultDiv.style.display = 'block';
+                    resultDiv.className = 'result';
+
+                    document.getElementById('startBtn').disabled = false;
+
+                } else if (statusData.status === 'failed') {
+                    clearInterval(pollInterval);
+                    statusDiv.className = 'status failed';
+                    statusDiv.innerHTML = `❌ QuickLogin failed: ${statusData.error}`;
+                    document.getElementById('startBtn').disabled = false;
+                }
+                // else status is still 'pending', keep polling
+
+            } catch (error) {
+                console.error('Status check error:', error);
+                clearInterval(pollInterval);
+                const statusDiv = document.getElementById('status');
+                statusDiv.className = 'status failed';
+                statusDiv.innerHTML = `❌ Error checking status: ${error.message}`;
+                document.getElementById('startBtn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
