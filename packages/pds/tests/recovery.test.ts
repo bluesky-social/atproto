@@ -4,6 +4,7 @@ import AtpAgent from '@atproto/api'
 import { renameIfExists, rmIfExists } from '@atproto/common'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
 import { verifyRepoCar } from '@atproto/repo'
+import { DidString } from '@atproto/syntax'
 import { AppContext, scripts } from '../dist'
 
 describe('recovery', () => {
@@ -11,9 +12,9 @@ describe('recovery', () => {
   let ctx: AppContext
   let sc: SeedClient
   let agent: AtpAgent
-  let alice: string
-  let bob: string
-  let elli: string
+  let alice: DidString
+  let bob: DidString
+  let elli: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

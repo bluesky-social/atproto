@@ -29,7 +29,7 @@ describe('timeline views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_home_feed',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

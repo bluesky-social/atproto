@@ -1,16 +1,17 @@
-import { AtpAgent, BlobRef } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { AppContext } from '../src'
+import { BlobRef, Client } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
+import { AppContext, app, com } from '../src'
 
 describe('blob deletes', () => {
   let network: TestNetworkNoAppView
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
 
   let ctx: AppContext
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -18,7 +19,7 @@ describe('blob deletes', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
@@ -122,7 +123,8 @@ describe('blob deletes', () => {
     )
     const post = await sc.post(alice, 'post', undefined, [img])
 
-    await agent.com.atproto.repo.applyWrites(
+    await client.call(
+      com.atproto.repo.applyWrites,
       {
         repo: alice,
         writes: [
@@ -150,7 +152,7 @@ describe('blob deletes', () => {
           },
         ],
       },
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice) },
     )
     await network.processAll()
 
@@ -184,20 +186,20 @@ describe('blob deletes', () => {
 
 async function updateProfile(
   sc: SeedClient,
-  did: string,
+  did: DidString,
   avatar?: BlobRef,
   banner?: BlobRef,
 ) {
-  return await sc.agent.api.com.atproto.repo.putRecord(
+  return await sc.client.put(
+    app.bsky.actor.profile,
+    {
+      avatar: avatar,
+      banner: banner,
+    },
     {
       repo: did,
-      collection: 'app.bsky.actor.profile',
       rkey: 'self',
-      record: {
-        avatar: avatar,
-        banner: banner,
-      },
+      headers: sc.getHeaders(did),
     },
-    { encoding: 'application/json', headers: sc.getHeaders(did) },
   )
 }

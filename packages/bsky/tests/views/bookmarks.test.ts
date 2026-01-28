@@ -32,7 +32,7 @@ describe('appview bookmarks views', () => {
       dbPostgresSchema: 'bsky_views_bookmarks',
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

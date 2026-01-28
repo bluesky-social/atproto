@@ -1,14 +1,15 @@
-import { AppBskyFeedPost } from '@atproto/api'
 import type { DatabaseSchema } from '@atproto/bsky'
+import { app } from '@atproto/pds'
+import { DidString, HandleString } from '@atproto/syntax'
 import { TestNetwork } from '../network'
 import { TestNetworkNoAppView } from '../network-no-appview'
 import { RecordRef, SeedClient } from './client'
 
 type User = {
   id: string
-  did: string
+  did: DidString
   email: string
-  handle: string
+  handle: HandleString
   password: string
   displayName: string
   description: string
@@ -57,7 +58,7 @@ async function createUsers<T extends readonly string[]>(
 
 type ReplyFn = (
   replyAuthor: User,
-  overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+  overridesOrCb?: Partial<app.bsky.feed.post.Main> | ReplyCb,
   maybeReplyCb?: ReplyCb,
 ) => Promise<void>
 
@@ -80,10 +81,10 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
   let index = 0
   return async (
     replyAuthor: User,
-    overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+    overridesOrCb?: Partial<app.bsky.feed.post.Main> | ReplyCb,
     maybeReplyCb?: ReplyCb,
   ) => {
-    let overrides: Partial<AppBskyFeedPost.Record> | undefined
+    let overrides: Partial<app.bsky.feed.post.Main> | undefined
     let replyCb: ReplyCb | undefined
     if (overridesOrCb && typeof overridesOrCb === 'function') {
       replyCb = overridesOrCb
@@ -115,10 +116,10 @@ const rootReplyFnBuilder = <T extends TestNetworkNoAppView>(
 const createThread = async <T extends TestNetworkNoAppView>(
   sc: SeedClient<T>,
   rootAuthor: User,
-  overridesOrCb?: Partial<AppBskyFeedPost.Record> | ReplyCb,
+  overridesOrCb?: Partial<app.bsky.feed.post.Main> | ReplyCb,
   maybeReplyCb?: ReplyCb,
 ) => {
-  let overrides: Partial<AppBskyFeedPost.Record> | undefined
+  let overrides: Partial<app.bsky.feed.post.Main> | undefined
   let replyCb: ReplyCb | undefined
   if (overridesOrCb && typeof overridesOrCb === 'function') {
     replyCb = overridesOrCb
@@ -791,18 +792,9 @@ export async function threadgated(sc: SeedClient<TestNetwork>) {
     })
   })
 
-  await sc.agent.app.bsky.feed.threadgate.create(
-    {
-      repo: op.did,
-      rkey: root.ref.uri.rkey,
-    },
-    {
-      post: root.ref.uriStr,
-      createdAt: new Date().toISOString(),
-      hiddenReplies: [r['1'].ref.uriStr, r['2.1'].ref.uriStr],
-    },
-    sc.getHeaders(op.did),
-  )
+  await sc.createThreadgate(op.did, root.ref, {
+    hiddenReplies: [r['1'].ref.uriStr, r['2.1'].ref.uriStr],
+  })
 
   // Just throw a mute there to test the prioritization between muted and threadgated.
   await sc.mute(op.did, opMuted.did)

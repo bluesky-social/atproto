@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "@atproto/pds": "workspace:^",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",

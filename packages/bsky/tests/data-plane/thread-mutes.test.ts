@@ -1,14 +1,15 @@
-import { AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { Client } from '@atproto/lex'
+import { app } from '@atproto/pds'
+import { DidString } from '@atproto/syntax'
 
 describe('thread mutes', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   let rootPost: RecordRef
   let replyPost: RecordRef
@@ -18,7 +19,7 @@ describe('thread mutes', () => {
       dbPostgresSchema: 'bsky_thread_mutes',
     })
     sc = network.getSeedClient()
-    agent = network.bsky.getClient()
+    client = network.bsky.getClient()
     await usersSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -32,29 +33,33 @@ describe('thread mutes', () => {
   })
 
   it('mutes threads', async () => {
-    await agent.api.app.bsky.graph.muteThread(
+    await client.call(
+      app.bsky.graph.muteThread,
       { root: rootPost.uriStr },
       {
-        encoding: 'application/json',
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyGraphMuteThread,
+          app.bsky.graph.muteThread.$lxm,
         ),
       },
     )
   })
 
   it('notes that threads are muted in viewer state', async () => {
-    const res = await agent.api.app.bsky.feed.getPosts(
+    const res = await client.call(
+      app.bsky.feed.getPosts,
       {
         uris: [rootPost.uriStr, replyPost.uriStr],
       },
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetPosts),
+        headers: await network.serviceHeaders(
+          alice,
+          app.bsky.feed.getPosts.$lxm,
+        ),
       },
     )
-    expect(res.data.posts[0].viewer?.threadMuted).toBe(true)
-    expect(res.data.posts[1].viewer?.threadMuted).toBe(true)
+    expect(res.posts[0].viewer?.threadMuted).toBe(true)
+    expect(res.posts[1].viewer?.threadMuted).toBe(true)
   })
 
   it('prevents notifs from replies', async () => {
@@ -62,16 +67,17 @@ describe('thread mutes', () => {
     await sc.reply(bob, rootPost, replyPost, 'reply')
     await network.processAll()
 
-    const notifsRes = await agent.api.app.bsky.notification.listNotifications(
+    const notifsRes = await client.call(
+      app.bsky.notification.listNotifications,
       {},
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          app.bsky.notification.listNotifications.$lxm,
         ),
       },
     )
-    expect(notifsRes.data.notifications.length).toBe(0)
+    expect(notifsRes.notifications.length).toBe(0)
   })
 
   it('prevents notifs from quote posts', async () => {
@@ -79,16 +85,17 @@ describe('thread mutes', () => {
     await sc.post(bob, 'quote', undefined, undefined, replyPost)
     await network.processAll()
 
-    const notifsRes = await agent.api.app.bsky.notification.listNotifications(
+    const notifsRes = await client.call(
+      app.bsky.notification.listNotifications,
       {},
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          app.bsky.notification.listNotifications.$lxm,
         ),
       },
     )
-    expect(notifsRes.data.notifications.length).toBe(0)
+    expect(notifsRes.notifications.length).toBe(0)
   })
 
   it('prevents notifs from likes', async () => {
@@ -96,16 +103,17 @@ describe('thread mutes', () => {
     await sc.like(bob, replyPost)
     await network.processAll()
 
-    const notifsRes = await agent.api.app.bsky.notification.listNotifications(
+    const notifsRes = await client.call(
+      app.bsky.notification.listNotifications,
       {},
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          app.bsky.notification.listNotifications.$lxm,
         ),
       },
     )
-    expect(notifsRes.data.notifications.length).toBe(0)
+    expect(notifsRes.notifications.length).toBe(0)
   })
 
   it('prevents notifs from reposts', async () => {
@@ -113,42 +121,47 @@ describe('thread mutes', () => {
     await sc.repost(bob, replyPost)
     await network.processAll()
 
-    const notifsRes = await agent.api.app.bsky.notification.listNotifications(
+    const notifsRes = await client.call(
+      app.bsky.notification.listNotifications,
       {},
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          app.bsky.notification.listNotifications.$lxm,
         ),
       },
     )
-    expect(notifsRes.data.notifications.length).toBe(0)
+    expect(notifsRes.notifications.length).toBe(0)
   })
 
   it('unmutes threads', async () => {
-    await agent.api.app.bsky.graph.unmuteThread(
+    await client.call(
+      app.bsky.graph.unmuteThread,
       { root: rootPost.uriStr },
       {
-        encoding: 'application/json',
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyGraphUnmuteThread,
+          app.bsky.graph.unmuteThread.$lxm,
         ),
       },
     )
   })
 
   it('no longer notes that threads are muted in viewer state after unmuting', async () => {
-    const res = await agent.api.app.bsky.feed.getPosts(
+    const res = await client.call(
+      app.bsky.feed.getPosts,
       {
         uris: [rootPost.uriStr, replyPost.uriStr],
       },
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetPosts),
+        headers: await network.serviceHeaders(
+          alice,
+          app.bsky.feed.getPosts.$lxm,
+        ),
       },
     )
-    expect(res.data.posts[0].viewer?.threadMuted).toBe(false)
-    expect(res.data.posts[1].viewer?.threadMuted).toBe(false)
+    expect(res.posts[0].viewer?.threadMuted).toBe(false)
+    expect(res.posts[1].viewer?.threadMuted).toBe(false)
   })
 
   it('sends notifications after unmuting', async () => {
@@ -158,15 +171,16 @@ describe('thread mutes', () => {
     await sc.repost(bob, replyPost)
     await network.processAll()
 
-    const notifsRes = await agent.api.app.bsky.notification.listNotifications(
+    const notifsRes = await client.call(
+      app.bsky.notification.listNotifications,
       {},
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          app.bsky.notification.listNotifications.$lxm,
         ),
       },
     )
-    expect(notifsRes.data.notifications.length).toBe(4)
+    expect(notifsRes.notifications.length).toBe(4)
   })
 })

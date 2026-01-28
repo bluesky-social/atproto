@@ -3,6 +3,7 @@ import util from 'node:util'
 import { request } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 import { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic'
 
@@ -11,7 +12,7 @@ describe('proxy read after write', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
   let carol: string
 
   beforeAll(async () => {
@@ -156,8 +157,7 @@ describe('proxy read after write', () => {
           root: sc.posts[alice][2].ref.raw,
           parent: sc.posts[alice][2].ref.raw,
         },
-        embed: {
-          $type: 'app.bsky.embed.images',
+        embed: app.bsky.embed.images.$build({
           images: [
             {
               image: img.image,
@@ -165,7 +165,7 @@ describe('proxy read after write', () => {
               alt: 'alt text',
             },
           ],
-        },
+        }),
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),
@@ -181,15 +181,14 @@ describe('proxy read after write', () => {
             cid: replyRes1.cid,
           },
         },
-        embed: {
-          $type: 'app.bsky.embed.external',
+        embed: app.bsky.embed.external.$build({
           external: {
             uri: 'https://example.com',
             title: 'TestImage',
             description: 'testLink',
             thumb: img.image,
           },
-        },
+        }),
         createdAt: new Date().toISOString(),
       },
       sc.getHeaders(alice),

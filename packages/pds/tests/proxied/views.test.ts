@@ -1,5 +1,6 @@
 import { AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
@@ -8,10 +9,10 @@ describe('proxies view requests', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({

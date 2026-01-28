@@ -1,10 +1,11 @@
 import { SeedClient, TestNetwork, TestNetworkNoAppView } from '@atproto/dev-env'
+import { DidString, HandleString } from '@atproto/syntax'
 
 export type User = {
   id: string
-  did: string
+  did: DidString
   email: string
-  handle: string
+  handle: HandleString
   password: string
   displayName: string
   description: string

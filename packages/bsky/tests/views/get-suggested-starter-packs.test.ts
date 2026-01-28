@@ -31,7 +31,7 @@ describe('getSuggestedStarterPacks', () => {
         topicsApiKey: 'test',
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     const result = await starterPacksSeed(sc)

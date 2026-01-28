@@ -1,8 +1,9 @@
-import { TID, cidForCbor } from '@atproto/common'
+import { TID } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
+import { cidForLex } from '@atproto/lex-cbor'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../src/lexicon/lexicons'
+import { app } from '../../src/lexicons/index.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -33,21 +34,19 @@ describe('duplicate record', () => {
   }
 
   it('dedupes reposts', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedRepost
+    const subject = AtUri.make(did, app.bsky.feed.post.$nsid, TID.nextStr())
+    const subjectCid = await cidForLex({ test: 'blah' })
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
-      const repost = {
-        $type: coll,
+      const repost = app.bsky.feed.repost.$build({
         subject: {
           uri: subject.toString(),
           cid: subjectCid.toString(),
         },
         createdAt: new Date().toISOString(),
-      }
-      const uri = AtUri.make(did, coll, TID.nextStr())
-      const cid = await cidForCbor(repost)
+      })
+      const uri = AtUri.make(did, repost.$type, TID.nextStr())
+      const cid = await cidForLex(repost)
       await network.bsky.sub.indexingSvc.indexRecord(
         uri,
         cid,
@@ -73,21 +72,19 @@ describe('duplicate record', () => {
   })
 
   it('dedupes like', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
-    const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedLike
+    const subject = AtUri.make(did, app.bsky.feed.post.$nsid, TID.nextStr())
+    const subjectCid = await cidForLex({ test: 'blah' })
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
-      const like = {
-        $type: coll,
+      const like = app.bsky.feed.like.$build({
         subject: {
           uri: subject.toString(),
           cid: subjectCid.toString(),
         },
         createdAt: new Date().toISOString(),
-      }
-      const uri = AtUri.make(did, coll, TID.nextStr())
-      const cid = await cidForCbor(like)
+      })
+      const uri = AtUri.make(did, like.$type, TID.nextStr())
+      const cid = await cidForLex(like)
       await network.bsky.sub.indexingSvc.indexRecord(
         uri,
         cid,
@@ -119,16 +116,14 @@ describe('duplicate record', () => {
   })
 
   it('dedupes follows', async () => {
-    const coll = lex.ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
-      const follow = {
-        $type: coll,
+      const follow = app.bsky.graph.follow.$build({
         subject: 'did:example:bob',
         createdAt: new Date().toISOString(),
-      }
-      const uri = AtUri.make(did, coll, TID.nextStr())
-      const cid = await cidForCbor(follow)
+      })
+      const uri = AtUri.make(did, follow.$type, TID.nextStr())
+      const cid = await cidForLex(follow)
       await network.bsky.sub.indexingSvc.indexRecord(
         uri,
         cid,

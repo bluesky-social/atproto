@@ -1,6 +1,6 @@
-import { AtUri } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
+import { AtUri } from '@atproto/syntax'
 import { Subscription } from '@atproto/xrpc-server'
 import { com } from '../../src/lexicons.js'
 import basicSeed from '../seeds/basic.js'
@@ -33,7 +33,7 @@ describe('invertible ops', () => {
       ]
     }
     for (const post of posts) {
-      await sc.deletePost(post.hostname, post)
+      await sc.deletePost(post.did, post)
     }
 
     await network.processAll()

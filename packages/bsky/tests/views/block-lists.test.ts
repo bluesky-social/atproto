@@ -19,7 +19,7 @@ describe('pds views with blocking from block lists', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'views_block_lists',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)

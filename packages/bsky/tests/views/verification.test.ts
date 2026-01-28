@@ -36,7 +36,7 @@ describe('verification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_verification',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await verificationsSeed(sc)
 

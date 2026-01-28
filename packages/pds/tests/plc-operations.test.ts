@@ -7,6 +7,7 @@ import { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 import { AppContext } from '../src'
 
 describe('plc operations', () => {
@@ -18,7 +19,7 @@ describe('plc operations', () => {
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
-  let alice: string
+  let alice: DidString
 
   let sampleKey: string
 

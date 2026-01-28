@@ -1,34 +1,24 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
-import { ImageRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import {
-  RepoBlobRef,
-  RepoRef,
-  isRepoBlobRef,
-  isRepoRef,
-} from '../../src/lexicon/types/com/atproto/admin/defs'
-import {
-  Main as StrongRef,
-  isMain as isStrongRef,
-} from '../../src/lexicon/types/com/atproto/repo/strongRef'
-import { $Typed } from '../../src/lexicon/util'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import { $Typed, Client } from '@atproto/lex'
+import { app, com } from '../../src/lexicons/index.js'
 
 describe('moderation', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
 
-  let repoSubject: $Typed<RepoRef>
-  let recordSubject: $Typed<StrongRef>
-  let blobSubject: $Typed<RepoBlobRef>
-  let blobRef: ImageRef
+  let repoSubject: $Typed<com.atproto.admin.defs.RepoRef>
+  let recordSubject: $Typed<com.atproto.repo.strongRef.Main>
+  let blobSubject: $Typed<com.atproto.admin.defs.RepoBlobRef>
+  let blobRef: app.bsky.embed.images.Image
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_moderation',
     })
 
-    agent = network.bsky.getClient()
+    client = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -55,95 +45,99 @@ describe('moderation', () => {
   })
 
   it('takes down accounts', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: repoSubject,
         takedown: { applied: true, ref: 'test-repo' },
       },
       {
-        encoding: 'application/json',
         headers: network.bsky.adminAuthHeaders(),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectStatus(
+    const res = await client.call(
+      com.atproto.admin.getSubjectStatus,
       {
         did: repoSubject.did,
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isRepoRef(res.data.subject))
-    expect(res.data.subject.did).toEqual(sc.dids.bob)
-    expect(res.data.takedown?.applied).toBe(true)
-    // expect(res.data.takedown?.ref).toBe('test-repo') @TODO add these checks back in once takedown refs make it into dataplane
+    assert(com.atproto.admin.defs.repoRef.$matches(res.subject))
+    expect(res.subject.did).toEqual(sc.dids.bob)
+    expect(res.takedown?.applied).toBe(true)
+    // expect(res.takedown?.ref).toBe('test-repo') @TODO add these checks back in once takedown refs make it into dataplane
   })
 
   it('restores takendown accounts', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: repoSubject,
         takedown: { applied: false },
       },
       {
-        encoding: 'application/json',
         headers: network.bsky.adminAuthHeaders(),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectStatus(
+    const res = await client.call(
+      com.atproto.admin.getSubjectStatus,
       {
         did: repoSubject.did,
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isRepoRef(res.data.subject))
-    expect(res.data.subject.did).toEqual(sc.dids.bob)
-    expect(res.data.takedown?.applied).toBe(false)
-    expect(res.data.takedown?.ref).toBeUndefined()
+    assert(com.atproto.admin.defs.repoRef.$matches(res.subject))
+    expect(res.subject.did).toEqual(sc.dids.bob)
+    expect(res.takedown?.applied).toBe(false)
+    expect(res.takedown?.ref).toBeUndefined()
   })
 
   it('takes down records', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: recordSubject,
         takedown: { applied: true, ref: 'test-record' },
       },
       {
-        encoding: 'application/json',
         headers: network.bsky.adminAuthHeaders(),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectStatus(
+    const res = await client.call(
+      com.atproto.admin.getSubjectStatus,
       {
         uri: recordSubject.uri,
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isStrongRef(res.data.subject))
-    expect(res.data.subject.uri).toEqual(recordSubject.uri)
-    expect(res.data.takedown?.applied).toBe(true)
-    // expect(res.data.takedown?.ref).toBe('test-record')
+    assert(com.atproto.repo.strongRef.main.$matches(res.subject))
+    expect(res.subject.uri).toEqual(recordSubject.uri)
+    expect(res.takedown?.applied).toBe(true)
+    // expect(res.takedown?.ref).toBe('test-record')
   })
 
   it('restores takendown records', async () => {
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: recordSubject,
         takedown: { applied: false },
       },
       {
-        encoding: 'application/json',
         headers: network.bsky.adminAuthHeaders(),
       },
     )
-    const res = await agent.api.com.atproto.admin.getSubjectStatus(
+    const res = await client.call(
+      com.atproto.admin.getSubjectStatus,
       {
         uri: recordSubject.uri,
       },
       { headers: network.bsky.adminAuthHeaders() },
     )
-    assert(isStrongRef(res.data.subject))
-    expect(res.data.subject.uri).toEqual(recordSubject.uri)
-    expect(res.data.takedown?.applied).toBe(false)
-    expect(res.data.takedown?.ref).toBeUndefined()
+    assert(com.atproto.repo.strongRef.main.$matches(res.subject))
+    expect(res.subject.uri).toEqual(recordSubject.uri)
+    expect(res.takedown?.applied).toBe(false)
+    expect(res.takedown?.ref).toBeUndefined()
   })
 
   describe('blob takedown', () => {
@@ -162,28 +156,29 @@ describe('moderation', () => {
     })
 
     it('takes down blobs', async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
+      await client.call(
+        com.atproto.admin.updateSubjectStatus,
         {
           subject: blobSubject,
           takedown: { applied: true, ref: 'test-blob' },
         },
         {
-          encoding: 'application/json',
           headers: network.bsky.adminAuthHeaders(),
         },
       )
-      const res = await agent.api.com.atproto.admin.getSubjectStatus(
+      const res = await client.call(
+        com.atproto.admin.getSubjectStatus,
         {
           did: blobSubject.did,
           blob: blobSubject.cid,
         },
         { headers: network.bsky.adminAuthHeaders() },
       )
-      assert(isRepoBlobRef(res.data.subject))
-      expect(res.data.subject.did).toEqual(blobSubject.did)
-      expect(res.data.subject.cid).toEqual(blobSubject.cid)
-      expect(res.data.takedown?.applied).toBe(true)
-      // expect(res.data.takedown?.ref).toBe('test-blob')
+      assert(com.atproto.admin.defs.repoBlobRef.$matches(res.subject))
+      expect(res.subject.did).toEqual(blobSubject.did)
+      expect(res.subject.cid).toEqual(blobSubject.cid)
+      expect(res.takedown?.applied).toBe(true)
+      // expect(res.takedown?.ref).toBe('test-blob')
     })
 
     it('prevents resolution of blob', async () => {
@@ -196,13 +191,13 @@ describe('moderation', () => {
     })
 
     it('restores blob when takedown is removed', async () => {
-      await agent.api.com.atproto.admin.updateSubjectStatus(
+      await client.call(
+        com.atproto.admin.updateSubjectStatus,
         {
           subject: blobSubject,
           takedown: { applied: false },
         },
         {
-          encoding: 'application/json',
           headers: network.bsky.adminAuthHeaders(),
         },
       )

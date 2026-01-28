@@ -31,7 +31,7 @@ describe('moderation', () => {
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     pdsAgent = network.pds.getAgent()
-    bskyAgent = network.bsky.getClient()
+    bskyAgent = network.bsky.getAgent()
     await basicSeed(sc)
     await network.processAll()
   })

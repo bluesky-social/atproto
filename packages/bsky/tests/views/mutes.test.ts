@@ -24,7 +24,7 @@ describe('mute views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_mutes',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await usersBulkSeed(sc, 10)

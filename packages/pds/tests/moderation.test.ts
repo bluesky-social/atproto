@@ -5,8 +5,9 @@ import {
   ComAtprotoAdminDefs,
   ComAtprotoRepoStrongRef,
 } from '@atproto/api'
-import { ImageRef, SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
+import { app } from '../src'
 import basicSeed from './seeds/basic'
 
 describe('moderation', () => {
@@ -17,7 +18,7 @@ describe('moderation', () => {
   let repoSubject: $Typed<ComAtprotoAdminDefs.RepoRef>
   let recordSubject: $Typed<ComAtprotoRepoStrongRef.Main>
   let blobSubject: $Typed<ComAtprotoAdminDefs.RepoBlobRef>
-  let blobRef: ImageRef
+  let blobRef: app.bsky.embed.images.Image
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

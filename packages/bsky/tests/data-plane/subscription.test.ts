@@ -1,23 +1,22 @@
-import { AtpAgent } from '@atproto/api'
-import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { CommitDataWithOps, sequencer } from '@atproto/pds'
+import { Client, DidString, Infer } from '@atproto/lex'
+import { decode as cborDecode, encode as cborEncode } from '@atproto/lex-cbor'
+import { CommitDataWithOps, app, sequencer } from '@atproto/pds'
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
-import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
 
 describe('sync', () => {
   let network: TestNetwork
-  let pdsAgent: AtpAgent
+  let pdsClient: Client
   let sc: SeedClient
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_subscription_repo',
     })
-    pdsAgent = network.pds.getAgent()
+    pdsClient = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
   })
@@ -37,8 +36,8 @@ describe('sync', () => {
     await sc.follow(dan, bob)
     await sc.like(dan, sc.posts[alice][1].ref) // Identical
     await sc.like(alice, sc.posts[carol][0].ref) // Identical
-    await updateProfile(pdsAgent, alice, { displayName: 'ali!' })
-    await updateProfile(pdsAgent, bob, { displayName: 'robert!' })
+    await updateProfile(pdsClient, alice, { displayName: 'ali!' })
+    await updateProfile(pdsClient, bob, { displayName: 'robert!' })
 
     await network.processAll()
 
@@ -95,19 +94,15 @@ describe('sync', () => {
   })
 
   async function updateProfile(
-    agent: AtpAgent,
-    did: string,
-    record: Record<string, unknown>,
+    client: Client,
+    did: DidString,
+    record: Omit<Infer<typeof app.bsky.actor.profile.main>, '$type'>,
   ) {
-    return await agent.api.com.atproto.repo.putRecord(
-      {
-        repo: did,
-        collection: ids.AppBskyActorProfile,
-        rkey: 'self',
-        record,
-      },
-      { headers: sc.getHeaders(did), encoding: 'application/json' },
-    )
+    return await client.create(app.bsky.actor.profile, record, {
+      repo: did,
+      rkey: 'self',
+      headers: sc.getHeaders(did),
+    })
   }
 })
 

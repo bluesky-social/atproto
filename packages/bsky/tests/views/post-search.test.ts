@@ -29,7 +29,7 @@ describe('appview search', () => {
         searchTagsHide: new Set([TAG_HIDE]),
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     ozoneAgent = network.ozone.getClient()
     await basicSeed(sc)

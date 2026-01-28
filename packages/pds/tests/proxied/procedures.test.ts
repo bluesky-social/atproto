@@ -1,21 +1,23 @@
-import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
+import { app } from '../../src'
 import basicSeed from '../seeds/basic'
 
 describe('proxies appview procedures', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
 
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_procedures',
     })
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()
@@ -30,22 +32,19 @@ describe('proxies appview procedures', () => {
 
   it('maintains muted actors.', async () => {
     // mute actors
-    await agent.api.app.bsky.graph.muteActor(
+    await client.call(
+      app.bsky.graph.muteActor,
       { actor: bob },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
-    await agent.api.app.bsky.graph.muteActor(
+    await client.call(
+      app.bsky.graph.muteActor,
       { actor: carol },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
     // check
-    const { data: result1 } = await agent.api.app.bsky.graph.getMutes(
+    const result1 = await client.call(
+      app.bsky.graph.getMutes,
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -54,15 +53,14 @@ describe('proxies appview procedures', () => {
       'bob.test',
     ])
     // unmute actors
-    await agent.api.app.bsky.graph.unmuteActor(
+    await client.call(
+      app.bsky.graph.unmuteActor,
       { actor: bob },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
     // check
-    const { data: result2 } = await agent.api.app.bsky.graph.getMutes(
+    const result2 = await client.call(
+      app.bsky.graph.getMutes,
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -71,46 +69,43 @@ describe('proxies appview procedures', () => {
 
   it('maintains muted actor lists.', async () => {
     // setup lists
-    const bobList = await agent.api.app.bsky.graph.list.create(
-      { repo: bob },
+    const bobList = await client.create(
+      app.bsky.graph.list,
       {
         name: 'bob mutes',
         purpose: 'app.bsky.graph.defs#modlist',
         description: "bob's list of mutes",
         createdAt: new Date().toISOString(),
       },
-      sc.getHeaders(bob),
+      { repo: bob, headers: sc.getHeaders(bob) },
     )
-    const carolList = await agent.api.app.bsky.graph.list.create(
-      { repo: carol },
+    const carolList = await client.create(
+      app.bsky.graph.list,
       {
         name: 'carol mutes',
         purpose: 'app.bsky.graph.defs#modlist',
         description: "carol's list of mutes",
         createdAt: new Date().toISOString(),
       },
-      sc.getHeaders(carol),
+      { repo: carol, headers: sc.getHeaders(carol) },
     )
     await network.processAll()
 
     // mute lists
-    await agent.api.app.bsky.graph.muteActorList(
+    await client.call(
+      app.bsky.graph.muteActorList,
       { list: bobList.uri },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
-    await agent.api.app.bsky.graph.muteActorList(
+    await client.call(
+      app.bsky.graph.muteActorList,
       { list: carolList.uri },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
     await network.processAll()
     // check
-    const { data: result1 } = await agent.api.app.bsky.graph.getListMutes(
+    const result1 = await client.call(
+      app.bsky.graph.getListMutes,
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -119,15 +114,14 @@ describe('proxies appview procedures', () => {
       bobList.uri,
     ])
     // unmute lists
-    await agent.api.app.bsky.graph.unmuteActorList(
+    await client.call(
+      app.bsky.graph.unmuteActorList,
       { list: bobList.uri },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
     // check
-    const { data: result2 } = await agent.api.app.bsky.graph.getListMutes(
+    const result2 = await client.call(
+      app.bsky.graph.getListMutes,
       {},
       { headers: sc.getHeaders(alice) },
     )
@@ -136,11 +130,11 @@ describe('proxies appview procedures', () => {
 
   it('maintains notification last seen state.', async () => {
     // check original notifs
-    const { data: result1 } =
-      await agent.api.app.bsky.notification.listNotifications(
-        {},
-        { headers: sc.getHeaders(alice) },
-      )
+    const result1 = await client.call(
+      app.bsky.notification.listNotifications,
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
     expect(result1.notifications.length).toBeGreaterThanOrEqual(5)
     expect(
       result1.notifications.every((n, i) => {
@@ -149,19 +143,17 @@ describe('proxies appview procedures', () => {
     ).toBe(true)
     // update last seen
     const { indexedAt: lastSeenAt } = result1.notifications[2]
-    await agent.api.app.bsky.notification.updateSeen(
+    await client.call(
+      app.bsky.notification.updateSeen,
       { seenAt: lastSeenAt },
-      {
-        headers: sc.getHeaders(alice),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(alice) },
     )
     // check
-    const { data: result2 } =
-      await agent.api.app.bsky.notification.listNotifications(
-        {},
-        { headers: sc.getHeaders(alice) },
-      )
+    const result2 = await client.call(
+      app.bsky.notification.listNotifications,
+      {},
+      { headers: sc.getHeaders(alice) },
+    )
     expect(result2.notifications.some((n) => n.isRead)).toBe(true)
     expect(result2.notifications.some((n) => !n.isRead)).toBe(true)
     expect(result2.notifications).toEqual(

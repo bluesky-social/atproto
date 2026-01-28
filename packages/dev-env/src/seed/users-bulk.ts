@@ -1,4 +1,5 @@
 import { chunkArray } from '@atproto/common-web'
+import { HandleString } from '@atproto/syntax'
 import { SeedClient } from './client'
 
 export default async (sc: SeedClient, max = Infinity) => {
@@ -225,4 +226,4 @@ const users = [
   { handle: 'gideon-ohara51.test', displayName: null },
   { handle: 'carolina-mcderm77.test', displayName: 'Latoya Windler' },
   { handle: 'danyka90.test', displayName: 'Hope Kub' },
-]
+] satisfies { handle: HandleString; displayName: string | null }[]

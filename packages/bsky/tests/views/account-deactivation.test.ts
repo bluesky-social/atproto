@@ -1,26 +1,27 @@
-import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { Client, DidString } from '@atproto/lex'
+import { app, com } from '@atproto/pds'
 
 describe('bsky account deactivation', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_account_deactivation',
     })
-    agent = network.bsky.getClient()
+    client = network.bsky.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
-    const pdsAgent = network.pds.getAgent()
-    await pdsAgent.com.atproto.server.deactivateAccount(
+    const pdsClient = network.pds.getClient()
+    await pdsClient.call(
+      com.atproto.server.deactivateAccount,
       {},
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice) },
     )
     await network.processAll()
   })
@@ -30,26 +31,26 @@ describe('bsky account deactivation', () => {
   })
 
   it('does not return deactivated profiles', async () => {
-    const attempt = agent.api.app.bsky.actor.getProfile({
+    const attempt = client.call(app.bsky.actor.getProfile, {
       actor: alice,
     })
     await expect(attempt).rejects.toThrow('Account is deactivated')
-    const res = await agent.api.app.bsky.actor.getProfiles({
+    const res = await client.call(app.bsky.actor.getProfiles, {
       actors: [sc.dids.alice, sc.dids.bob, sc.dids.carol],
     })
-    expect(res.data.profiles.length).toBe(2)
-    expect(res.data.profiles.some((p) => p.did === alice)).toBe(false)
+    expect(res.profiles.length).toBe(2)
+    expect(res.profiles.some((p) => p.did === alice)).toBe(false)
   })
 
   it('does not return deactivated accounts in follows', async () => {
-    const follows = await agent.api.app.bsky.graph.getFollows({
+    const follows = await client.call(app.bsky.graph.getFollows, {
       actor: sc.dids.bob,
     })
-    expect(follows.data.follows.some((f) => f.did === alice)).toBe(false)
-    const followers = await agent.api.app.bsky.graph.getFollowers({
+    expect(follows.follows.some((f) => f.did === alice)).toBe(false)
+    const followers = await client.call(app.bsky.graph.getFollowers, {
       actor: sc.dids.bob,
     })
-    expect(followers.data.followers.some((f) => f.did === alice)).toBe(false)
+    expect(followers.followers.some((f) => f.did === alice)).toBe(false)
   })
 
   it('does not return posts from deactivated accounts', async () => {
@@ -61,22 +62,23 @@ describe('bsky account deactivation', () => {
       sc.posts[sc.dids.dan][1].ref.uriStr,
       sc.replies[sc.dids.alice][0].ref.uriStr,
     ]
-    const res = await agent.api.app.bsky.feed.getPosts({ uris })
+    const res = await client.call(app.bsky.feed.getPosts, { uris })
 
-    expect(res.data.posts.length).toBe(3)
-    expect(res.data.posts.some((p) => p.author.did === alice)).toBe(false)
+    expect(res.posts.length).toBe(3)
+    expect(res.posts.some((p) => p.author.did === alice)).toBe(false)
   })
 
   it('does not return posts from deactivated in timelines', async () => {
-    const res = await agent.api.app.bsky.feed.getTimeline(
+    const res = await client.call(
+      app.bsky.feed.getTimeline,
       {},
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyFeedGetTimeline,
+          app.bsky.feed.getTimeline.$lxm,
         ),
       },
     )
-    expect(res.data.feed.some((p) => p.post.author.did === alice)).toBe(false)
+    expect(res.feed.some((p) => p.post.author.did === alice)).toBe(false)
   })
 })

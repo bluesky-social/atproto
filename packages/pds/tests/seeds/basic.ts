@@ -1,4 +1,5 @@
 import { EXAMPLE_LABELER, SeedClient, TestBsky } from '@atproto/dev-env'
+import { DatetimeString } from '@atproto/syntax'
 import { app, com } from '../../src/lexicons/index.js'
 import usersSeed from './users'
 
@@ -13,10 +14,12 @@ export default async (
   const carol = sc.dids.carol
   const dan = sc.dids.dan
   const createdAtMicroseconds = () => ({
-    createdAt: new Date().toISOString().replace('Z', '000Z'), // microseconds
+    createdAt: new Date().toISOString().replace('Z', '000Z') as DatetimeString, // microseconds
   })
   const createdAtTimezone = () => ({
-    createdAt: new Date().toISOString().replace('Z', '+00:00'), // iso timezone format
+    createdAt: new Date()
+      .toISOString()
+      .replace('Z', '+00:00') as DatetimeString, // iso timezone format
   })
 
   await sc.follow(alice, bob)

@@ -1,12 +1,14 @@
-import { AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { app } from '../../src'
 import { forSnapshot } from '../_util'
 import basicSeed from '../seeds/basic'
 
 describe('feedgen proxy view', () => {
   let network: TestNetwork
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
   let feedUri: AtUri
 
@@ -14,7 +16,7 @@ describe('feedgen proxy view', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_feedgen',
     })
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
 
@@ -38,14 +40,18 @@ describe('feedgen proxy view', () => {
     })
 
     // publish feed
-    await agent.api.app.bsky.feed.generator.create(
-      { repo: sc.dids.alice, rkey: feedUri.rkey },
+    await client.create(
+      app.bsky.feed.generator,
       {
         did: feedGen.did,
         displayName: 'Test feed',
         createdAt: new Date().toISOString(),
       },
-      sc.getHeaders(sc.dids.alice),
+      {
+        repo: sc.dids.alice,
+        rkey: feedUri.rkey,
+        headers: sc.getHeaders(sc.dids.alice),
+      },
     )
     await network.processAll()
   })
@@ -55,11 +61,10 @@ describe('feedgen proxy view', () => {
   })
 
   it('performs basic proxy of getFeed', async () => {
-    const { data: feed } = await agent.api.app.bsky.feed.getFeed(
+    const feed = await client.call(
+      app.bsky.feed.getFeed,
       { feed: feedUri.toString() },
-      {
-        headers: { ...sc.getHeaders(sc.dids.alice) },
-      },
+      { headers: { ...sc.getHeaders(sc.dids.alice) } },
     )
     expect(forSnapshot(feed)).toMatchSnapshot()
   })

@@ -1,15 +1,15 @@
-import { AtpAgent } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { Client, DidString } from '@atproto/lex'
+import { app, com } from '../../src/lexicons/index.js'
 
 describe('handle invalidation', () => {
   let network: TestNetwork
-  let agent: AtpAgent
-  let pdsAgent: AtpAgent
+  let client: Client
+  let pdsAgent: Client
   let sc: SeedClient
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   const mockHandles = {}
 
@@ -17,8 +17,8 @@ describe('handle invalidation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_handle_invalidation',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getAgent()
+    client = network.bsky.getClient()
+    pdsAgent = network.pds.getClient()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -61,16 +61,17 @@ describe('handle invalidation', () => {
     })
     await network.processAll()
 
-    const res = await agent.api.app.bsky.actor.getProfile(
+    const res = await client.call(
+      app.bsky.actor.getProfile,
       { actor: eveAccnt.did },
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          app.bsky.actor.getProfile.$lxm,
         ),
       },
     )
-    expect(res.data.handle).toEqual('handle.invalid')
+    expect(res.handle).toEqual('handle.invalid')
   })
 
   it('invalidates out of date handles', async () => {
@@ -81,16 +82,17 @@ describe('handle invalidation', () => {
     mockHandles[aliceHandle] = null
     await sc.post(alice, 'blah')
     await network.processAll()
-    const res = await agent.api.app.bsky.actor.getProfile(
+    const res = await client.call(
+      app.bsky.actor.getProfile,
       { actor: alice },
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          app.bsky.actor.getProfile.$lxm,
         ),
       },
     )
-    expect(res.data.handle).toEqual('handle.invalid')
+    expect(res.handle).toEqual('handle.invalid')
   })
 
   it('revalidates an out of date handle', async () => {
@@ -101,16 +103,17 @@ describe('handle invalidation', () => {
 
     await sc.post(alice, 'blah')
     await network.processAll()
-    const res = await agent.api.app.bsky.actor.getProfile(
+    const res = await client.call(
+      app.bsky.actor.getProfile,
       { actor: alice },
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          app.bsky.actor.getProfile.$lxm,
         ),
       },
     )
-    expect(res.data.handle).toEqual(sc.accounts[alice].handle)
+    expect(res.handle).toEqual(sc.accounts[alice].handle)
   })
 
   it('deals with handle contention', async () => {
@@ -118,34 +121,37 @@ describe('handle invalidation', () => {
     // update alices handle so that the pds will let bob take her old handle
     await network.pds.ctx.accountManager.updateHandle(alice, 'not-alice.test')
 
-    await pdsAgent.api.com.atproto.identity.updateHandle(
+    await pdsAgent.call(
+      com.atproto.identity.updateHandle,
       {
         handle: sc.accounts[alice].handle,
       },
-      { headers: sc.getHeaders(bob), encoding: 'application/json' },
+      { headers: sc.getHeaders(bob) },
     )
     await network.processAll()
 
-    const aliceRes = await agent.api.app.bsky.actor.getProfile(
+    const aliceRes = await client.call(
+      app.bsky.actor.getProfile,
       { actor: alice },
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          app.bsky.actor.getProfile.$lxm,
         ),
       },
     )
-    expect(aliceRes.data.handle).toEqual('handle.invalid')
+    expect(aliceRes.handle).toEqual('handle.invalid')
 
-    const bobRes = await agent.api.app.bsky.actor.getProfile(
+    const bobRes = await client.call(
+      app.bsky.actor.getProfile,
       { actor: bob },
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          app.bsky.actor.getProfile.$lxm,
         ),
       },
     )
-    expect(bobRes.data.handle).toEqual(sc.accounts[alice].handle)
+    expect(bobRes.handle).toEqual(sc.accounts[alice].handle)
   })
 })

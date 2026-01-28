@@ -48,7 +48,7 @@ describe('appview thread views v2', () => {
       },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     labelerDid = network.bsky.ctx.cfg.modServiceDid
     await network.processAll()

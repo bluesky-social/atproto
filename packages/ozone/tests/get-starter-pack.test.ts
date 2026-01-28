@@ -59,7 +59,7 @@ describe('admin get starter pack view', () => {
 
     it('gets a starterpack while taken down', async () => {
       // Validate that appview returns starterpacks before takedown
-      const appviewAgent = network.bsky.getClient()
+      const appviewAgent = network.bsky.getAgent()
       const beforeTakedownFromAppview =
         await appviewAgent.api.app.bsky.graph.getStarterPack(
           { starterPack: sp1.uriStr },

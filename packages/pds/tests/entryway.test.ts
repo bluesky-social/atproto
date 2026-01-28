@@ -5,19 +5,21 @@ import * as plcLib from '@did-plc/lib'
 import getPort from 'get-port'
 import { decodeJwt } from 'jose'
 import * as ui8 from 'uint8arrays'
-import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
 import * as pdsEntryway from '@atproto/pds-entryway'
+import { DidString } from '@atproto/syntax'
 import { parseReqNsid } from '@atproto/xrpc-server'
+import { com } from '../src'
 
 describe('entryway', () => {
   let plc: TestPlc
   let pds: TestPds
   let entryway: pdsEntryway.PDS
-  let pdsAgent: AtpAgent
-  let entrywayAgent: AtpAgent
-  let alice: string
+  let pdsClient: Client
+  let entrywayClient: Client
+  let alice: DidString
   let accessToken: string
 
   beforeAll(async () => {
@@ -56,8 +58,8 @@ describe('entryway', () => {
         weight: 1,
       })
       .execute()
-    pdsAgent = pds.getAgent()
-    entrywayAgent = new AtpAgent({
+    pdsClient = pds.getClient()
+    entrywayClient = new Client({
       service: entryway.ctx.cfg.service.publicUrl,
     })
   })
@@ -69,13 +71,13 @@ describe('entryway', () => {
   })
 
   it('creates account.', async () => {
-    const res = await entrywayAgent.api.com.atproto.server.createAccount({
+    const res = await entrywayClient.call(com.atproto.server.createAccount, {
       email: 'alice@test.com',
       handle: 'alice.test',
       password: 'test123',
     })
-    alice = res.data.did
-    accessToken = res.data.accessJwt
+    alice = res.did
+    accessToken = res.accessJwt
 
     const account = await pds.ctx.accountManager.getAccount(alice)
     expect(account?.did).toEqual(alice)
@@ -83,23 +85,27 @@ describe('entryway', () => {
   })
 
   it('auths with both services.', async () => {
-    const entrywaySession =
-      await entrywayAgent.api.com.atproto.server.getSession(undefined, {
+    const entrywaySession = await entrywayClient.call(
+      com.atproto.server.getSession,
+      {},
+      {
         headers: SeedClient.getHeaders(accessToken),
-      })
-    const pdsSession = await pdsAgent.api.com.atproto.server.getSession(
-      undefined,
+      },
+    )
+    const pdsSession = await pdsClient.call(
+      com.atproto.server.getSession,
+      {},
       { headers: SeedClient.getHeaders(accessToken) },
     )
-    expect(entrywaySession.data).toEqual(pdsSession.data)
+    expect(entrywaySession).toEqual(pdsSession)
   })
 
   it('updates handle from pds.', async () => {
-    await pdsAgent.api.com.atproto.identity.updateHandle(
+    await pdsClient.call(
+      com.atproto.identity.updateHandle,
       { handle: 'alice2.test' },
       {
         headers: SeedClient.getHeaders(accessToken),
-        encoding: 'application/json',
       },
     )
     const doc = await pds.ctx.idResolver.did.resolve(alice)
@@ -115,7 +121,8 @@ describe('entryway', () => {
   })
 
   it('updates handle from entryway.', async () => {
-    await entrywayAgent.api.com.atproto.identity.updateHandle(
+    await entrywayClient.call(
+      com.atproto.identity.updateHandle,
       { handle: 'alice3.test' },
       await pds.ctx.serviceAuthHeaders(
         alice,
@@ -137,9 +144,10 @@ describe('entryway', () => {
   })
 
   it('does not allow bringing own op to account creation.', async () => {
-    const {
-      data: { signingKey },
-    } = await pdsAgent.api.com.atproto.server.reserveSigningKey({})
+    const { signingKey } = await pdsClient.call(
+      com.atproto.server.reserveSigningKey,
+      {},
+    )
     const rotationKey = await Secp256k1Keypair.create()
     const plcCreate = await plcLib.createOp({
       signingKey,
@@ -148,8 +156,8 @@ describe('entryway', () => {
       pds: pds.ctx.cfg.service.publicUrl,
       signer: rotationKey,
     })
-    const tryCreateAccount = pdsAgent.api.com.atproto.server.createAccount({
-      did: plcCreate.did,
+    const tryCreateAccount = pdsClient.call(com.atproto.server.createAccount, {
+      did: plcCreate.did as DidString,
       plcOp: plcCreate.op,
       handle: 'weirdalice.test',
     })

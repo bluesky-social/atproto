@@ -28,7 +28,7 @@ describe('indexing', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_indexing',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     db = network.bsky.db

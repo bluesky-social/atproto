@@ -1,18 +1,20 @@
 import { finished } from 'node:stream/promises'
 import express from 'express'
 import { request } from 'undici'
-import { AtUri, AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { AtUri, DidString } from '@atproto/syntax'
+import { app } from '../src'
 import { handler as errorHandler } from '../src/error'
 import { startServer } from './_util'
 import basicSeed from './seeds/basic'
 
 describe('server', () => {
   let network: TestNetworkNoAppView
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -21,7 +23,7 @@ describe('server', () => {
         version: '0.0.0',
       },
     })
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -85,15 +87,11 @@ describe('server', () => {
     for (let i = 0; i < 100; i++) {
       record[randomStr(8, 'base32')] = randomStr(32, 'base32')
     }
-    const createRes = await agent.com.atproto.repo.createRecord(
-      {
-        repo: alice,
-        collection: 'app.bsky.feed.post',
-        record,
-      },
-      { headers: sc.getHeaders(alice), encoding: 'application/json' },
-    )
-    const uri = new AtUri(createRes.data.uri)
+    const createRes = await client.create(app.bsky.feed.post, record, {
+      repo: alice,
+      headers: sc.getHeaders(alice),
+    })
+    const uri = new AtUri(createRes.uri)
 
     const res = await request(
       `${network.pds.url}/xrpc/com.atproto.repo.getRecord?repo=${uri.host}&collection=${uri.collection}&rkey=${uri.rkey}`,

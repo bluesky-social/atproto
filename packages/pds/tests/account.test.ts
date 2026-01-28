@@ -1,10 +1,10 @@
 import { EventEmitter, once } from 'node:events'
 import Mail from 'nodemailer/lib/mailer'
-import { AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
-import { AppContext } from '../src'
+import { Client, DidString, HandleString } from '@atproto/lex'
+import { AppContext, com } from '../src'
 import { ServerMailer } from '../src/mailer'
 
 const email = 'alice@test.com'
@@ -16,7 +16,7 @@ const minsToMs = 60 * 1000
 describe('account', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
-  let agent: AtpAgent
+  let client: Client
   let mailer: ServerMailer
   let idResolver: IdResolver
   const mailCatcher = new EventEmitter()
@@ -36,7 +36,7 @@ describe('account', () => {
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
 
     // Catch emails for use in tests
     _origSendMail = mailer.transporter.sendMail
@@ -53,19 +53,17 @@ describe('account', () => {
   })
 
   it('serves the accounts system config', async () => {
-    const res = await agent.api.com.atproto.server.describeServer({})
-    expect(res.data.inviteCodeRequired).toBe(false)
-    expect(res.data.availableUserDomains[0]).toBe('.test')
-    expect(typeof res.data.inviteCodeRequired).toBe('boolean')
-    expect(res.data.links?.privacyPolicy).toBe(
-      'https://example.com/privacy-policy',
-    )
-    expect(res.data.links?.termsOfService).toBe('https://example.com/tos')
-    expect(res.data.contact?.email).toBe('abuse@example.com')
+    const res = await client.call(com.atproto.server.describeServer, {})
+    expect(res.inviteCodeRequired).toBe(false)
+    expect(res.availableUserDomains[0]).toBe('.test')
+    expect(typeof res.inviteCodeRequired).toBe('boolean')
+    expect(res.links?.privacyPolicy).toBe('https://example.com/privacy-policy')
+    expect(res.links?.termsOfService).toBe('https://example.com/tos')
+    expect(res.contact?.email).toBe('abuse@example.com')
   })
 
   it('fails on invalid handles', async () => {
-    const promise = agent.api.com.atproto.server.createAccount({
+    const promise = client.call(com.atproto.server.createAccount, {
       email: 'bad-handle@test.com',
       handle: 'did:bad-handle.test',
       password: 'asdf',
@@ -75,7 +73,7 @@ describe('account', () => {
 
   describe('email validation', () => {
     it('succeeds on allowed emails', async () => {
-      const promise = agent.api.com.atproto.server.createAccount({
+      const promise = client.call(com.atproto.server.createAccount, {
         email: 'ok-email@gmail.com',
         handle: 'ok-email.test',
         password: 'asdf',
@@ -84,7 +82,7 @@ describe('account', () => {
     })
 
     it('fails on disallowed emails', async () => {
-      const promise = agent.api.com.atproto.server.createAccount({
+      const promise = client.call(com.atproto.server.createAccount, {
         email: 'bad-email@disposeamail.com',
         handle: 'bad-email.test',
         password: 'asdf',
@@ -95,21 +93,21 @@ describe('account', () => {
     })
   })
 
-  let did: string
+  let did: DidString
   let jwt: string
 
   it('creates an account', async () => {
-    const res = await agent.api.com.atproto.server.createAccount({
+    const res = await client.call(com.atproto.server.createAccount, {
       email,
       handle,
       password,
     })
-    did = res.data.did
-    jwt = res.data.accessJwt
+    did = res.did
+    jwt = res.accessJwt
 
-    expect(typeof jwt).toBe('string')
+    expect(typeof res.accessJwt).toBe('string')
     expect(did.startsWith('did:plc:')).toBeTruthy()
-    expect(res.data.handle).toEqual(handle)
+    expect(res.handle).toEqual(handle)
   })
 
   it('generates a properly formatted PLC DID', async () => {
@@ -124,14 +122,14 @@ describe('account', () => {
 
   it('allows a custom set recovery key', async () => {
     const recoveryKey = (await crypto.P256Keypair.create()).did()
-    const res = await agent.api.com.atproto.server.createAccount({
+    const res = await client.call(com.atproto.server.createAccount, {
       email: 'custom-recovery@test.com',
       handle: 'custom-recovery.test',
       password: 'custom-recovery',
       recoveryKey,
     })
 
-    const didData = await ctx.plcClient.getDocumentData(res.data.did)
+    const didData = await ctx.plcClient.getDocumentData(res.did)
 
     expect(didData.rotationKeys).toEqual([
       recoveryKey,
@@ -236,29 +234,25 @@ describe('account', () => {
   // })
 
   it('allows administrative email updates', async () => {
-    await agent.api.com.atproto.admin.updateAccountEmail(
+    await client.call(
+      com.atproto.admin.updateAccountEmail,
       {
         account: handle,
         email: 'alIce-NEw@teST.com',
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     const accnt = await ctx.accountManager.getAccount(handle)
     expect(accnt?.email).toBe('alice-new@test.com')
 
-    await agent.api.com.atproto.admin.updateAccountEmail(
+    await client.call(
+      com.atproto.admin.updateAccountEmail,
       {
         account: did,
         email,
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     const accnt2 = await ctx.accountManager.getAccount(handle)
@@ -267,16 +261,16 @@ describe('account', () => {
 
   it('disallows duplicate email addresses and handles', async () => {
     const email = 'bob@test.com'
-    const handle = 'bob.test'
+    const handle: HandleString = 'bob.test'
     const password = 'test123'
-    await agent.api.com.atproto.server.createAccount({
+    await client.call(com.atproto.server.createAccount, {
       email,
       handle,
       password,
     })
 
     await expect(
-      agent.api.com.atproto.server.createAccount({
+      client.call(com.atproto.server.createAccount, {
         email: email.toUpperCase(),
         handle: 'carol.test',
         password,
@@ -284,22 +278,23 @@ describe('account', () => {
     ).rejects.toThrow('Email already taken: BOB@TEST.COM')
 
     await expect(
-      agent.api.com.atproto.server.createAccount({
+      client.call(com.atproto.server.createAccount, {
         email: 'carol@test.com',
-        handle: handle.toUpperCase(),
+        handle: handle.toUpperCase() as HandleString,
         password,
       }),
     ).rejects.toThrow('Handle already taken: bob.test')
   })
 
   it('disallows improperly formatted handles', async () => {
-    const tryHandle = async (handle: string) => {
-      await agent.api.com.atproto.server.createAccount({
+    const tryHandle = async (handle: HandleString) => {
+      await client.call(com.atproto.server.createAccount, {
         email: 'john@test.com',
         handle,
         password: 'test123',
       })
     }
+    // @ts-expect-error
     await expect(tryHandle('did:john')).rejects.toThrow(
       'Input/handle must be a valid handle',
     )
@@ -347,7 +342,7 @@ describe('account', () => {
     for (let i = 0; i < COUNT; i++) {
       const attempt = async () => {
         try {
-          await agent.api.com.atproto.server.createAccount({
+          await client.call(com.atproto.server.createAccount, {
             email: `matching@test.com`,
             handle: `matching.test`,
             password: `password`,
@@ -365,28 +360,30 @@ describe('account', () => {
   })
 
   it('fails on unauthenticated requests', async () => {
-    await expect(agent.api.com.atproto.server.getSession({})).rejects.toThrow()
+    await expect(
+      client.call(com.atproto.server.getSession, {}),
+    ).rejects.toThrow()
   })
 
   it('logs in', async () => {
-    const res = await agent.api.com.atproto.server.createSession({
+    const res = await client.call(com.atproto.server.createSession, {
       identifier: handle,
       password,
     })
-    jwt = res.data.accessJwt
+    jwt = res.accessJwt
     expect(typeof jwt).toBe('string')
-    expect(res.data.handle).toBe('alice.test')
-    expect(res.data.did).toBe(did)
-    expect(res.data.email).toBe(email)
+    expect(res.handle).toBe('alice.test')
+    expect(res.did).toBe(did)
+    expect(res.email).toBe(email)
   })
 
   it('can perform authenticated requests', async () => {
     // @TODO each test should be able to run independently & concurrently
-    agent.api.setHeader('authorization', `Bearer ${jwt}`)
-    const res = await agent.api.com.atproto.server.getSession({})
-    expect(res.data.did).toBe(did)
-    expect(res.data.handle).toBe(handle)
-    expect(res.data.email).toBe(email)
+    client.headers.set('authorization', `Bearer ${jwt}`)
+    const res = await client.call(com.atproto.server.getSession, {})
+    expect(res.did).toBe(did)
+    expect(res.handle).toBe(handle)
+    expect(res.email).toBe(email)
   })
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
@@ -399,7 +396,7 @@ describe('account', () => {
 
   it('can reset account password', async () => {
     const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
+      client.call(com.atproto.server.requestPasswordReset, { email }),
     )
 
     expect(mail.to).toEqual(email)
@@ -412,21 +409,21 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    await agent.api.com.atproto.server.resetPassword({
+    await client.call(com.atproto.server.resetPassword, {
       token,
       password: passwordAlt,
     })
 
     // Logs in with new password and not previous password
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: handle,
         password,
       }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: handle,
         password: passwordAlt,
       }),
@@ -435,7 +432,7 @@ describe('account', () => {
 
   it('allows only single-use of password reset token', async () => {
     const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
+      client.call(com.atproto.server.requestPasswordReset, { email }),
     )
 
     const token = getTokenFromMail(mail)
@@ -445,23 +442,28 @@ describe('account', () => {
     }
 
     // Reset back from passwordAlt to password
-    await agent.api.com.atproto.server.resetPassword({ token, password })
+    await client.call(com.atproto.server.resetPassword, { token, password })
 
     // Reuse of token fails
-    await expect(
-      agent.api.com.atproto.server.resetPassword({ token, password }),
-    ).rejects.toThrow(ComAtprotoServerResetPassword.InvalidTokenError)
+    expect(
+      await client.xrpcSafe(com.atproto.server.resetPassword, {
+        body: { token, password },
+      }),
+    ).toMatchObject({
+      success: false,
+      error: 'InvalidTokenError',
+    })
 
     // Logs in with new password and not previous password
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: handle,
         password: passwordAlt,
       }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: handle,
         password,
       }),
@@ -470,7 +472,7 @@ describe('account', () => {
 
   it('changing password invalidates past refresh tokens', async () => {
     const mail = await getMailFrom(
-      agent.api.com.atproto.server.requestPasswordReset({ email }),
+      client.call(com.atproto.server.requestPasswordReset, { email }),
     )
 
     expect(mail.to).toEqual(email)
@@ -483,25 +485,25 @@ describe('account', () => {
       return expect(token).toBeDefined()
     }
 
-    const session = await agent.api.com.atproto.server.createSession({
+    const session = await client.call(com.atproto.server.createSession, {
       identifier: handle,
       password,
     })
 
-    await agent.api.com.atproto.server.resetPassword({
+    await client.call(com.atproto.server.resetPassword, {
       token: token.toLowerCase(), // Reset should work case-insensitively
       password,
     })
 
     await expect(
-      agent.api.com.atproto.server.refreshSession(undefined, {
-        headers: { authorization: `Bearer ${session.data.refreshJwt}` },
+      client.call(com.atproto.server.refreshSession, undefined, {
+        headers: { authorization: `Bearer ${session.refreshJwt}` },
       }),
     ).rejects.toThrow('Token has been revoked')
   })
 
   it('allows only unexpired password reset tokens', async () => {
-    await agent.api.com.atproto.server.requestPasswordReset({ email })
+    await client.call(com.atproto.server.requestPasswordReset, { email })
 
     const res = await ctx.accountManager.db.db
       .updateTable('email_token')
@@ -517,23 +519,28 @@ describe('account', () => {
     }
 
     // Use of expired token fails
-    await expect(
-      agent.api.com.atproto.server.resetPassword({
-        token: res.token,
-        password: passwordAlt,
+    expect(
+      await client.xrpcSafe(com.atproto.server.resetPassword, {
+        body: {
+          token: res.token,
+          password: passwordAlt,
+        },
       }),
-    ).rejects.toThrow(ComAtprotoServerResetPassword.ExpiredTokenError)
+    ).toMatchObject({
+      success: false,
+      error: 'ExpiredTokenError',
+    })
 
     // Still logs in with previous password
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: handle,
         password: passwordAlt,
       }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: handle,
         password,
       }),
@@ -541,30 +548,28 @@ describe('account', () => {
   })
 
   it('allows an admin to update password', async () => {
-    const tryUnauthed = agent.api.com.atproto.admin.updateAccountPassword({
+    const tryUnauthed = client.call(com.atproto.admin.updateAccountPassword, {
       did,
       password: 'new-admin-pass',
     })
     await expect(tryUnauthed).rejects.toThrow('Authentication Required')
 
-    await agent.api.com.atproto.admin.updateAccountPassword(
+    await client.call(
+      com.atproto.admin.updateAccountPassword,
       { did, password: 'new-admin-password' },
-      {
-        headers: network.pds.adminAuthHeaders(),
-        encoding: 'application/json',
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     // old password fails
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: did,
         password,
       }),
     ).rejects.toThrow('Invalid identifier or password')
 
     await expect(
-      agent.api.com.atproto.server.createSession({
+      client.call(com.atproto.server.createSession, {
         identifier: did,
         password: 'new-admin-password',
       }),

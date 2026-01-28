@@ -2,20 +2,16 @@ import assert from 'node:assert'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
+import { $Typed } from '@atproto/lex'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { ids } from '../../src/lexicon/lexicons'
-import {
-  RepoRef,
-  isRepoRef,
-} from '../../src/lexicon/types/com/atproto/admin/defs'
-import { $Typed } from '../../src/lexicon/util'
+import { com } from '../../src/lexicons/index.js'
 
 describe('admin auth', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: $Typed<RepoRef>
+  let repoSubject: $Typed<com.atproto.admin.defs.RepoRef>
 
   const modServiceDid = 'did:example:mod'
   const altModDid = 'did:example:alt'
@@ -59,7 +55,7 @@ describe('admin auth', () => {
       return origResolve.call(this, did, forceRefresh)
     }
 
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -77,7 +73,7 @@ describe('admin auth', () => {
     const updateHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -94,14 +90,14 @@ describe('admin auth', () => {
     const getHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      lxm: ids.ComAtprotoAdminGetSubjectStatus,
+      lxm: com.atproto.admin.getSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
       { did: repoSubject.did },
       getHeaders,
     )
-    assert(isRepoRef(res.data.subject))
+    assert(com.atproto.admin.defs.repoRef.$matches(res.data.subject))
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
   })
@@ -110,7 +106,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: bskyDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -131,7 +127,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: sc.dids.alice,
       aud: bskyDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: aliceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -152,7 +148,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: bskyDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -175,7 +171,7 @@ describe('admin auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

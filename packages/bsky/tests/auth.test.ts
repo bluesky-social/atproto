@@ -17,7 +17,7 @@ describe('auth', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_auth',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()

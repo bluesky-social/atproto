@@ -11,7 +11,7 @@ describe('post views w/ debug field', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_posts_debug',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

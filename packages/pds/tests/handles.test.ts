@@ -1,12 +1,13 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
+import { DidString } from '@atproto/syntax'
 import { AppContext } from '../src'
 import basicSeed from './seeds/basic'
 
 // outside of suite so they can be used in mock
-let alice: string
-let bob: string
+let alice: DidString
+let bob: DidString
 
 jest.mock('node:dns/promises', () => {
   return {

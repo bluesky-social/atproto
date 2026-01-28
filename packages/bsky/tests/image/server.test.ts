@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream'
-import { cidForCbor } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
+import { cidForLex } from '@atproto/lex-cbor'
 import { Cid } from '@atproto/lex-data'
 import { getInfo } from '../../src/image/sharp'
 import { ImageUriBuilder } from '../../src/image/uri'
@@ -77,7 +77,7 @@ describe('image processing server', () => {
   })
 
   it('errors on missing file.', async () => {
-    const missingCid = await cidForCbor('missing-file')
+    const missingCid = await cidForLex('missing-file')
 
     const path = ImageUriBuilder.getPath({
       preset: 'feed_fullsize',

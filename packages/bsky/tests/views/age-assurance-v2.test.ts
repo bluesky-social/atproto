@@ -122,7 +122,7 @@ describe('age assurance v2 views', () => {
     kws.setBskyBaseUrl(network.bsky.url)
 
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await basicSeed(sc)

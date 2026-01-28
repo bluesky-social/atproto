@@ -6,6 +6,7 @@ import * as plc from '@did-plc/lib'
 import express from 'express'
 import { Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 import { verifyJwt } from '@atproto/xrpc-server'
 import { parseProxyHeader } from '../../src/pipethrough'
 
@@ -13,7 +14,7 @@ describe('proxy header', () => {
   let network: TestNetworkNoAppView
   let sc: SeedClient
 
-  let alice: string
+  let alice: DidString
 
   let proxyServer: ProxyServer
 

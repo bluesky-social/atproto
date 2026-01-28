@@ -1,4 +1,5 @@
 import { SeedClient } from '@atproto/dev-env'
+import { HandleString } from '@atproto/syntax'
 
 export default async (sc: SeedClient) => {
   await sc.createAccount('alice', users.alice)
@@ -54,4 +55,11 @@ const users = {
     handle: 'eve.test',
     password: 'eve-pass',
   },
-}
+} satisfies Record<
+  string,
+  {
+    email: string
+    handle: HandleString
+    password: string
+  }
+>

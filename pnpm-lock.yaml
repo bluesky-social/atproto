@@ -311,6 +311,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@atproto/lex-cbor':
+        specifier: workspace:^
+        version: link:../lex/lex-cbor
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
@@ -1802,6 +1805,9 @@ importers:
       '@atproto/lex-cli':
         specifier: workspace:^
         version: link:../lex-cli
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
@@ -1977,6 +1983,9 @@ importers:
       '@atproto/lex-document':
         specifier: workspace:^
         version: link:../lex/lex-document
+      '@atproto/lex-password-session':
+        specifier: workspace:^
+        version: link:../lex/lex-password-session
       '@atproto/oauth-client-browser-example':
         specifier: workspace:*
         version: link:../oauth/oauth-client-browser-example
@@ -6660,7 +6669,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.22.10
-      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.2)
+      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3)
       '@lingui/message-utils': 5.2.0
       babel-plugin-macros: 3.1.0
       unraw: 3.0.0

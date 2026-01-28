@@ -25,7 +25,7 @@ describe('admin get lists', () => {
     })
     ozone = network.ozone
     agent = ozone.getClient()
-    appviewAgent = network.bsky.getClient()
+    appviewAgent = network.bsky.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

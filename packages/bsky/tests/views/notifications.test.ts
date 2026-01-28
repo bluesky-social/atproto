@@ -52,7 +52,7 @@ describe('notification views', () => {
       },
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
@@ -848,7 +848,7 @@ describe('notification views', () => {
         },
         dbPostgresSchema: 'bsky_views_notifications_delay',
       })
-      delayAgent = delayNetwork.bsky.getClient()
+      delayAgent = delayNetwork.bsky.getAgent()
       delaySc = delayNetwork.getSeedClient()
       await basicSeed(delaySc)
       await delayNetwork.processAll()

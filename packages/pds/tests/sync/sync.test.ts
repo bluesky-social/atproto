@@ -301,7 +301,7 @@ describe('repo sync', () => {
   })
 })
 
-const makePost = async (sc: SeedClient, did: string) => {
+const makePost = async (sc: SeedClient, did: DidString) => {
   const res = await sc.post(did, randomStr(32, 'base32'))
   const uri = res.ref.uri
   const data = await sc.client.call(com.atproto.repo.getRecord, {

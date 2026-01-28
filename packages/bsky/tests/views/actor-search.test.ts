@@ -17,7 +17,7 @@ describe.skip('pds actor search views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_search',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await wait(50) // allow pending sub to be established

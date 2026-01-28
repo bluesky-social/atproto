@@ -31,7 +31,7 @@ import { proxyHandler } from './pipethrough'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
 
-export * as lexicons from './lexicons.js'
+export * from './lexicons.js'
 export { createSecretKeyObject } from './auth-verifier'
 export * from './config'
 export { AppContext } from './context'

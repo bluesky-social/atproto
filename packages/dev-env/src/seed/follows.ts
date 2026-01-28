@@ -1,3 +1,4 @@
+import { HandleString } from '@atproto/syntax'
 import { SeedClient } from './client'
 
 export default async (sc: SeedClient) => {
@@ -54,4 +55,11 @@ const users = {
     handle: 'eve.test',
     password: 'eve-pass',
   },
-}
+} satisfies Record<
+  string,
+  {
+    email: string
+    handle: HandleString
+    password: string
+  }
+>

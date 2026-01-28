@@ -1,12 +1,9 @@
-import {
-  cborDecode,
-  cborEncode,
-  readFromGenerator,
-  wait,
-} from '@atproto/common'
+import { readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { decode as cborDecode, encode as cborEncode } from '@atproto/lex-cbor'
 import { readCarWithRoot } from '@atproto/repo'
+import { DidString } from '@atproto/syntax'
 import { sequencer } from '../../pds'
 import { SeqEvt, Sequencer, formatSeqSyncEvt } from '../src/sequencer'
 import { Outbox } from '../src/sequencer/outbox'
@@ -16,8 +13,8 @@ describe('sequencer', () => {
   let network: TestNetworkNoAppView
   let sequencer: Sequencer
   let sc: SeedClient
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   let totalEvts
   let lastSeen: number
@@ -44,7 +41,8 @@ describe('sequencer', () => {
     await network.close()
   })
 
-  const randomPost = async (by: string) => sc.post(by, randomStr(8, 'base32'))
+  const randomPost = async (by: DidString) =>
+    sc.post(by, randomStr(8, 'base32'))
   const createPosts = async (count: number): Promise<void> => {
     const promises: Promise<unknown>[] = []
     for (let i = 0; i < count; i++) {

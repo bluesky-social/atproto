@@ -1,22 +1,25 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
 import {
   SeedClient,
   TestNetworkNoAppView,
   TestPds,
   mockNetworkUtilities,
 } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
 import { readCar } from '@atproto/repo'
+import { AtUri, DidString } from '@atproto/syntax'
+import { app, com } from '../src/lexicons'
 
 describe('account migration', () => {
   let network: TestNetworkNoAppView
   let newPds: TestPds
 
   let sc: SeedClient
-  let oldAgent: AtpAgent
-  let newAgent: AtpAgent
+  let oldClient: Client
+  let newClient: Client
 
-  let alice: string
+  let alice: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -28,8 +31,6 @@ describe('account migration', () => {
     mockNetworkUtilities(newPds)
 
     sc = network.getSeedClient()
-    oldAgent = network.pds.getAgent()
-    newAgent = newPds.getAgent()
 
     await sc.createAccount('alice', {
       email: 'alice@test.com',
@@ -63,10 +64,35 @@ describe('account migration', () => {
 
     await network.processAll()
 
-    await oldAgent.login({
+    const oldSession = await PasswordSession.login({
+      service: network.pds.url,
       identifier: sc.accounts[alice].handle,
       password: sc.accounts[alice].password,
     })
+
+    oldClient = new Client(oldSession)
+
+    const describeRes = await newClient.call(com.atproto.server.describeServer)
+
+    const { token } = await oldClient.call(com.atproto.server.getServiceAuth, {
+      aud: describeRes.did,
+      lxm: 'com.atproto.server.createAccount',
+    })
+
+    const newSession = await PasswordSession.createAccount(
+      {
+        handle: 'new-alice.test',
+        email: 'alice@test.com',
+        password: 'alice-pass',
+        did: alice,
+      },
+      {
+        service: newPds.url,
+        headers: { authorization: `Bearer ${token}` },
+      },
+    )
+
+    newClient = new Client(newSession)
   })
 
   afterAll(async () => {
@@ -75,34 +101,9 @@ describe('account migration', () => {
   })
 
   it('migrates an account', async () => {
-    const describeRes = await newAgent.api.com.atproto.server.describeServer()
-    const newServerDid = describeRes.data.did
-
-    const serviceJwtRes = await oldAgent.com.atproto.server.getServiceAuth({
-      aud: newServerDid,
-      lxm: 'com.atproto.server.createAccount',
-    })
-    const serviceJwt = serviceJwtRes.data.token
-
-    await newAgent.api.com.atproto.server.createAccount(
-      {
-        handle: 'new-alice.test',
-        email: 'alice@test.com',
-        password: 'alice-pass',
-        did: alice,
-      },
-      {
-        headers: { authorization: `Bearer ${serviceJwt}` },
-        encoding: 'application/json',
-      },
-    )
-    await newAgent.login({
-      identifier: 'new-alice.test',
-      password: 'alice-pass',
-    })
-
-    const statusRes1 = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes1.data).toMatchObject({
+    expect(
+      await newClient.call(com.atproto.server.checkAccountStatus),
+    ).toMatchObject({
       activated: false,
       validDid: false,
       repoBlocks: 2, // commit & empty data root
@@ -112,15 +113,19 @@ describe('account migration', () => {
       importedBlobs: 0,
     })
 
-    const repoRes = await oldAgent.com.atproto.sync.getRepo({ did: alice })
-    const carBlocks = await readCar(repoRes.data)
+    const repoRes = await oldClient.call(com.atproto.sync.getRepo, {
+      did: alice,
+    })
+    const carBlocks = await readCar(repoRes)
 
-    await newAgent.com.atproto.repo.importRepo(repoRes.data, {
-      encoding: 'application/vnd.ipld.car',
+    await newClient.call(com.atproto.repo.importRepo, repoRes, {
+      headers: { 'content-type': 'application/vnd.ipld.car' },
     })
 
-    const statusRes2 = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes2.data).toMatchObject({
+    const statusRes2 = await newClient.call(
+      com.atproto.server.checkAccountStatus,
+    )
+    expect(statusRes2).toMatchObject({
       activated: false,
       validDid: false,
       indexedRecords: 103,
@@ -128,40 +133,43 @@ describe('account migration', () => {
       expectedBlobs: 3,
       importedBlobs: 0,
     })
-    expect(statusRes2.data.repoBlocks).toBe(carBlocks.blocks.size)
+    expect(statusRes2.repoBlocks).toBe(carBlocks.blocks.size)
 
-    const missingBlobs = await newAgent.com.atproto.repo.listMissingBlobs()
-    expect(missingBlobs.data.blobs.length).toBe(3)
+    const missingBlobs = await newClient.call(com.atproto.repo.listMissingBlobs)
+    expect(missingBlobs.blobs.length).toBe(3)
 
     let blobCursor: string | undefined = undefined
     do {
-      const listedBlobs = await oldAgent.com.atproto.sync.listBlobs({
+      const listedBlobs = await oldClient.call(com.atproto.sync.listBlobs, {
         did: alice,
         cursor: blobCursor,
       })
-      for (const cid of listedBlobs.data.cids) {
-        const blobRes = await oldAgent.com.atproto.sync.getBlob({
-          did: alice,
-          cid,
+      for (const cid of listedBlobs.cids) {
+        const blobRes = await oldClient.xrpc(com.atproto.sync.getBlob, {
+          params: { did: alice, cid },
         })
-        await newAgent.com.atproto.repo.uploadBlob(blobRes.data, {
+        await newClient.uploadBlob(blobRes.body, {
           encoding: blobRes.headers['content-type'],
         })
       }
-      blobCursor = listedBlobs.data.cursor
+      blobCursor = listedBlobs.cursor
     } while (blobCursor)
 
-    const statusRes3 = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes3.data.expectedBlobs).toBe(3)
-    expect(statusRes3.data.importedBlobs).toBe(3)
+    expect(
+      await newClient.call(com.atproto.server.checkAccountStatus),
+    ).toMatchObject({
+      expectedBlobs: 3,
+      importedBlobs: 3,
+    })
 
-    const prefs = await oldAgent.api.app.bsky.actor.getPreferences()
-    await newAgent.api.app.bsky.actor.putPreferences(prefs.data)
+    const prefs = await oldClient.call(app.bsky.actor.getPreferences)
+    await newClient.call(app.bsky.actor.putPreferences, prefs)
 
-    const getDidCredentials =
-      await newAgent.com.atproto.identity.getRecommendedDidCredentials()
+    const getDidCredentials = await newClient.call(
+      com.atproto.identity.getRecommendedDidCredentials,
+    )
 
-    await oldAgent.com.atproto.identity.requestPlcOperationSignature()
+    await oldClient.call(com.atproto.identity.requestPlcOperationSignature)
     const res = await network.pds.ctx.accountManager.db.db
       .selectFrom('email_token')
       .selectAll()
@@ -171,19 +179,20 @@ describe('account migration', () => {
     const token = res?.token
     assert(token)
 
-    const plcOp = await oldAgent.com.atproto.identity.signPlcOperation({
+    const plcOp = await oldClient.call(com.atproto.identity.signPlcOperation, {
       token,
-      ...getDidCredentials.data,
+      ...getDidCredentials,
     })
 
-    await newAgent.com.atproto.identity.submitPlcOperation({
-      operation: plcOp.data.operation,
+    await newClient.call(com.atproto.identity.submitPlcOperation, {
+      operation: plcOp.operation,
     })
 
-    await newAgent.com.atproto.server.activateAccount()
+    await newClient.call(com.atproto.server.activateAccount)
 
-    const statusRes4 = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes4.data).toMatchObject({
+    expect(
+      await newClient.call(com.atproto.server.checkAccountStatus),
+    ).toMatchObject({
       activated: true,
       validDid: true,
       indexedRecords: 103,
@@ -192,29 +201,29 @@ describe('account migration', () => {
       importedBlobs: 3,
     })
 
-    await oldAgent.com.atproto.server.deactivateAccount({})
+    await oldClient.call(com.atproto.server.deactivateAccount, {})
 
-    const statusResOldPds =
-      await oldAgent.com.atproto.server.checkAccountStatus()
-    expect(statusResOldPds.data).toMatchObject({
+    const statusResOldPds = await oldClient.call(
+      com.atproto.server.checkAccountStatus,
+    )
+    expect(statusResOldPds).toMatchObject({
       activated: false,
       validDid: false,
     })
 
-    const postRes = await newAgent.api.app.bsky.feed.post.create(
-      { repo: alice },
-      {
-        text: 'new pds!',
-        createdAt: new Date().toISOString(),
-      },
-    )
+    const postRes = await newClient.create(app.bsky.feed.post, {
+      text: 'new pds!',
+      createdAt: new Date().toISOString(),
+    })
     const postUri = new AtUri(postRes.uri)
-    const fetchedPost = await newAgent.api.app.bsky.feed.post.get({
-      repo: postUri.hostname,
+    const fetchedPost = await newClient.get(app.bsky.feed.post, {
+      repo: postUri.did,
       rkey: postUri.rkey,
     })
     expect(fetchedPost.value.text).toEqual('new pds!')
-    const statusRes5 = await newAgent.com.atproto.server.checkAccountStatus()
-    expect(statusRes5.data.indexedRecords).toBe(104)
+    const statusRes5 = await newClient.call(
+      com.atproto.server.checkAccountStatus,
+    )
+    expect(statusRes5.indexedRecords).toBe(104)
   })
 })

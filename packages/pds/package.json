@@ -81,6 +81,7 @@
     "@atproto/api": "workspace:^",
     "@atproto/bsky": "workspace:^",
     "@atproto/lex-document": "workspace:^",
+    "@atproto/lex-password-session": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:*",
     "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.3",
     "@did-plc/server": "^0.0.1",

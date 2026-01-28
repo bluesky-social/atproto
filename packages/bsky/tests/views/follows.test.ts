@@ -17,7 +17,7 @@ describe('pds follow views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_follows',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await followsSeed(sc)
     await network.processAll()

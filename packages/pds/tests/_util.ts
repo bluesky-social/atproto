@@ -1,11 +1,10 @@
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
 import { isCidString } from '@atproto/lex'
 import { isCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { app } from '../src/lexicons.js'
+import { app, tools } from '../src/lexicons.js'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -196,15 +195,15 @@ export async function stopServer(server: Server) {
 }
 
 const normalizeSubjectStatus = (
-  subject: ToolsOzoneModerationDefs.SubjectStatusView,
+  subject: tools.ozone.moderation.defs.SubjectStatusView,
 ) => {
   return { ...subject, tags: subject.tags?.sort() }
 }
 
 export const forSubjectStatusSnapshot = (
   status:
-    | ToolsOzoneModerationDefs.SubjectStatusView
-    | ToolsOzoneModerationDefs.SubjectStatusView[],
+    | tools.ozone.moderation.defs.SubjectStatusView
+    | tools.ozone.moderation.defs.SubjectStatusView[],
 ) => {
   if (Array.isArray(status)) {
     return forSnapshot(status.map(normalizeSubjectStatus))

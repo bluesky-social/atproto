@@ -5,7 +5,6 @@ import {
 } from '@atproto/api'
 import { HOUR } from '@atproto/common'
 import {
-  ImageRef,
   ModeratorClient,
   RecordRef,
   SeedClient,
@@ -13,7 +12,8 @@ import {
   TestOzone,
   basicSeed,
 } from '@atproto/dev-env'
-import { AtUri } from '@atproto/syntax'
+import { Cid } from '@atproto/lex-data'
+import { AtUri, AtUriString, DidString } from '@atproto/syntax'
 import { EventReverser } from '../src'
 import { ImageInvalidator } from '../src/image-invalidator'
 import { ids } from '../src/lexicon/lexicons'
@@ -30,6 +30,22 @@ import {
 import { TAKEDOWN_LABEL } from '../src/mod-service'
 import { forSnapshot, identity } from './_util'
 
+type ImageRef = {
+  $type?: 'app.bsky.embed.images#image'
+  image: {
+    $type: 'blob'
+    mimeType: string
+    ref: Cid
+    size: number
+  }
+  alt: string
+  aspectRatio?: {
+    $type?: 'app.bsky.embed.defs#aspectRatio'
+    width: number
+    height: number
+  }
+}
+
 describe('moderation', () => {
   let network: TestNetwork
   let ozone: TestOzone
@@ -40,16 +56,25 @@ describe('moderation', () => {
   let sc: SeedClient
   let modClient: ModeratorClient
 
-  const repoSubject = (did: string) => ({
-    $type: 'com.atproto.admin.defs#repoRef',
-    did,
-  })
+  const repoSubject = (did: string) =>
+    ({
+      $type: 'com.atproto.admin.defs#repoRef',
+      did,
+    }) as {
+      $type: 'com.atproto.admin.defs#repoRef'
+      did: DidString
+    }
 
-  const recordSubject = (ref: RecordRef) => ({
-    $type: 'com.atproto.repo.strongRef',
-    uri: ref.uriStr,
-    cid: ref.cidStr,
-  })
+  const recordSubject = (ref: RecordRef) =>
+    ({
+      $type: 'com.atproto.repo.strongRef',
+      uri: ref.uriStr,
+      cid: ref.cidStr,
+    }) as {
+      $type: 'com.atproto.repo.strongRef'
+      uri: AtUriString
+      cid: string
+    }
 
   const getLabel = async (uri: string, val: string, neg = false) => {
     return ozone.ctx.db.db
@@ -72,7 +97,7 @@ describe('moderation', () => {
     })
     ozone = network.ozone
     agent = network.ozone.getClient()
-    bskyAgent = network.bsky.getClient()
+    bskyAgent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()

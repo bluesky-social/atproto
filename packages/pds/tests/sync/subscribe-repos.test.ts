@@ -1,17 +1,13 @@
 import { WebSocket } from 'ws'
-import { AtpAgent } from '@atproto/api'
-import {
-  HOUR,
-  MINUTE,
-  cborDecode,
-  readFromGenerator,
-  wait,
-} from '@atproto/common'
+import { HOUR, MINUTE, readFromGenerator, wait } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { decode as cborDecode } from '@atproto/lex-cbor'
 import { Cid } from '@atproto/lex-data'
 import * as repo from '@atproto/repo'
 import { readCar } from '@atproto/repo'
+import { DidString } from '@atproto/syntax'
 import { ErrorFrame, Frame, MessageFrame, byFrame } from '@atproto/xrpc-server'
 import { AppContext } from '../../src'
 import { AccountStatus } from '../../src/account-manager/account-manager'
@@ -24,12 +20,12 @@ describe('repo subscribe repos', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
 
-  let agent: AtpAgent
+  let client: Client
   let sc: SeedClient
-  let alice: string
-  let bob: string
-  let carol: string
-  let dan: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
+  let dan: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -41,7 +37,7 @@ describe('repo subscribe repos', () => {
     serverHost = network.pds.url.replace('http://', '')
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -54,9 +50,9 @@ describe('repo subscribe repos', () => {
     await network.close()
   })
 
-  const getRepo = async (did: string): Promise<repo.VerifiedRepo> => {
-    const carRes = await agent.api.com.atproto.sync.getRepo({ did })
-    const car = await repo.readCarWithRoot(carRes.data)
+  const getRepo = async (did: DidString): Promise<repo.VerifiedRepo> => {
+    const carRes = await client.call(com.atproto.sync.getRepo, { did })
+    const car = await repo.readCarWithRoot(carRes)
     const signingKey = await network.pds.ctx.actorStore.keypair(did)
     return repo.verifyRepo(car.blocks, car.root, did, signingKey.did())
   }
@@ -122,7 +118,7 @@ describe('repo subscribe repos', () => {
 
   const verifyIdentityEvent = (
     evt: com.atproto.sync.subscribeRepos.Identity,
-    did: string,
+    did: DidString,
     handle?: string,
   ) => {
     expect(typeof evt.seq).toBe('number')
@@ -133,7 +129,7 @@ describe('repo subscribe repos', () => {
 
   const verifyAccountEvent = (
     evt: com.atproto.sync.subscribeRepos.Account,
-    did: string,
+    did: DidString,
     active: boolean,
     status?: AccountStatus,
   ) => {
@@ -146,7 +142,7 @@ describe('repo subscribe repos', () => {
 
   const verifySyncEvent = async (
     evt: com.atproto.sync.subscribeRepos.Sync,
-    did: string,
+    did: DidString,
     commit: Cid,
     rev: string,
   ) => {
@@ -172,7 +168,7 @@ describe('repo subscribe repos', () => {
   }
 
   const verifyRepo = async (
-    did: string,
+    did: DidString,
     evts: com.atproto.sync.subscribeRepos.Commit[],
   ) => {
     const fromRpc = await getRepo(did)
@@ -219,7 +215,7 @@ describe('repo subscribe repos', () => {
     }
   }
 
-  const randomPost = (by: string) => sc.post(by, randomStr(8, 'base32'))
+  const randomPost = (by: DidString) => sc.post(by, randomStr(8, 'base32'))
   const makePosts = async () => {
     for (let i = 0; i < 10; i++) {
       await Promise.all([
@@ -402,19 +398,18 @@ describe('repo subscribe repos', () => {
 
   it('syncs account events', async () => {
     // deactivate then reactivate alice
-    await agent.api.com.atproto.server.deactivateAccount(
+    await client.call(
+      com.atproto.server.deactivateAccount,
       {},
-      {
-        encoding: 'application/json',
-        headers: sc.getHeaders(alice),
-      },
+      { headers: sc.getHeaders(alice) },
     )
-    await agent.api.com.atproto.server.activateAccount(undefined, {
+    await client.call(com.atproto.server.activateAccount, undefined, {
       headers: sc.getHeaders(alice),
     })
 
     // takedown then restore bob
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -422,12 +417,10 @@ describe('repo subscribe repos', () => {
         },
         takedown: { applied: true },
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -435,10 +428,7 @@ describe('repo subscribe repos', () => {
         },
         takedown: { applied: false },
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     const ws = new WebSocket(
@@ -461,14 +451,13 @@ describe('repo subscribe repos', () => {
   it('syncs interleaved account events', async () => {
     // deactivate -> takedown -> restore -> activate
     // deactivate then reactivate alice
-    await agent.api.com.atproto.server.deactivateAccount(
+    await client.call(
+      com.atproto.server.deactivateAccount,
       {},
-      {
-        encoding: 'application/json',
-        headers: sc.getHeaders(alice),
-      },
+      { headers: sc.getHeaders(alice) },
     )
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -476,12 +465,10 @@ describe('repo subscribe repos', () => {
         },
         takedown: { applied: true },
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
-    await agent.api.com.atproto.admin.updateSubjectStatus(
+    await client.call(
+      com.atproto.admin.updateSubjectStatus,
       {
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
@@ -489,12 +476,9 @@ describe('repo subscribe repos', () => {
         },
         takedown: { applied: false },
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
-    await agent.api.com.atproto.server.activateAccount(undefined, {
+    await client.call(com.atproto.server.activateAccount, undefined, {
       headers: sc.getHeaders(alice),
     })
 
@@ -516,14 +500,12 @@ describe('repo subscribe repos', () => {
   })
 
   it('emits sync event on account activation', async () => {
-    await agent.api.com.atproto.server.deactivateAccount(
+    await client.call(
+      com.atproto.server.deactivateAccount,
       {},
-      {
-        encoding: 'application/json',
-        headers: sc.getHeaders(alice),
-      },
+      { headers: sc.getHeaders(alice) },
     )
-    await agent.api.com.atproto.server.activateAccount(undefined, {
+    await client.call(com.atproto.server.activateAccount, undefined, {
       headers: sc.getHeaders(alice),
     })
 
@@ -562,19 +544,17 @@ describe('repo subscribe repos', () => {
       baddie1,
       'delete_account',
     )
-    await agent.api.com.atproto.server.deleteAccount({
+    await client.call(com.atproto.server.deleteAccount, {
       did: baddie1,
       password: 'baddie1-pass',
       token: deleteToken,
     })
-    await agent.api.com.atproto.admin.deleteAccount(
+    await client.call(
+      com.atproto.admin.deleteAccount,
       {
         did: baddie2,
       },
-      {
-        encoding: 'application/json',
-        headers: network.pds.adminAuthHeaders(),
-      },
+      { headers: network.pds.adminAuthHeaders() },
     )
 
     const ws = new WebSocket(
@@ -606,7 +586,7 @@ describe('repo subscribe repos', () => {
       baddie3,
       'delete_account',
     )
-    await agent.api.com.atproto.server.deleteAccount({
+    await client.call(com.atproto.server.deleteAccount, {
       token,
       did: baddie3,
       password: sc.accounts[baddie3].password,

@@ -32,7 +32,7 @@ describe('appview drafts views', () => {
       },
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

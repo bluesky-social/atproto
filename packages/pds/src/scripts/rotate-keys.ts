@@ -1,10 +1,11 @@
 import fs from 'node:fs/promises'
 import * as plc from '@did-plc/lib'
 import PQueue from 'p-queue'
-import AtpAgent from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client, DidString, isDidString } from '@atproto/lex'
 import { ActorStore } from '../actor-store/actor-store'
+import { com } from '../lexicons/index.js'
 import { SyncEvtData } from '../repo'
 import { Sequencer } from '../sequencer'
 import { getRecoveryDbFromSequencerLoc } from './sequencer-recovery/recovery-db'
@@ -16,10 +17,10 @@ export type RotateKeysContext = {
   idResolver: IdResolver
   plcClient: plc.Client
   plcRotationKey: Keypair
-  entrywayAdminAgent?: AtpAgent
+  entrywayAdminClient?: Client
 }
 
-export const rotateKeys = async (ctx: RotateKeysContext, args: string[]) => {
+export const rotateKeys = async (ctx: RotateKeysContext, args: DidString[]) => {
   const dids = args
   await rotateKeysForRepos(ctx, dids, 10)
 }
@@ -38,6 +39,7 @@ export const rotateKeysFromFile = async (
     .toString()
     .split('\n')
     .map((did) => did.trim())
+    .filter(isDidString)
     .filter((did) => did.startsWith('did:plc'))
 
   await rotateKeysForRepos(ctx, dids, concurrency)
@@ -57,7 +59,7 @@ export const rotateKeysRecovery = async (
     .select('did')
     .where('new_account.published', '=', 0)
     .execute()
-  const dids = rows.map((r) => r.did)
+  const dids = rows.map((r) => r.did).filter(isDidString)
 
   await rotateKeysForRepos(ctx, dids, concurrency, async (did) => {
     await recoveryDb.db
@@ -70,7 +72,7 @@ export const rotateKeysRecovery = async (
 
 const rotateKeysForRepos = async (
   ctx: RotateKeysContext,
-  dids: string[],
+  dids: DidString[],
   concurrency: number,
   onSuccess?: (did: string) => Promise<void>,
 ) => {
@@ -119,18 +121,21 @@ const rotateKeysForRepos = async (
   console.log('DONE')
 }
 
-const updatePlcSigningKey = async (ctx: RotateKeysContext, did: string) => {
+const updatePlcSigningKey = async (ctx: RotateKeysContext, did: DidString) => {
   const updateTo = await ctx.actorStore.keypair(did)
   const currSigningKey = await ctx.idResolver.did.resolveAtprotoKey(did, true)
   if (updateTo.did() === currSigningKey) {
     // already up to date
     return
   }
-  if (ctx.entrywayAdminAgent) {
-    await ctx.entrywayAdminAgent.api.com.atproto.admin.updateAccountSigningKey({
-      did,
-      signingKey: updateTo.did(),
-    })
+  if (ctx.entrywayAdminClient) {
+    await ctx.entrywayAdminClient.call(
+      com.atproto.admin.updateAccountSigningKey,
+      {
+        did,
+        signingKey: updateTo.did() as DidString,
+      },
+    )
   } else {
     await ctx.plcClient.updateAtprotoKey(
       did,

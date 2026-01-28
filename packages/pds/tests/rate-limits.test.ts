@@ -1,14 +1,15 @@
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 import userSeed from './seeds/basic'
 
 describe('rate limits', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({

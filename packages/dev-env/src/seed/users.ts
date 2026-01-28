@@ -1,3 +1,4 @@
+import { HandleString } from '@atproto/syntax'
 import { SeedClient } from './client'
 
 export default async (sc: SeedClient) => {
@@ -19,11 +20,7 @@ export default async (sc: SeedClient) => {
     users.bob.selfLabels,
   )
 
-  await sc.agent.api.chat.bsky.actor.declaration.create(
-    { repo: sc.dids.dan },
-    { allowIncoming: 'none' },
-    sc.getHeaders(sc.dids.dan),
-  )
+  await sc.createChatDeclaration(sc.dids.dan, 'none')
 
   return sc
 }
@@ -61,4 +58,14 @@ const users = {
     description: undefined,
     selfLabels: undefined,
   },
-}
+} satisfies Record<
+  string,
+  {
+    email: string
+    handle: HandleString
+    password: string
+    displayName?: string
+    description?: string
+    selfLabels?: string[] | undefined
+  }
+>

@@ -12,7 +12,7 @@ describe('suggested follows', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_suggested_follows',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await likesSeed(sc)

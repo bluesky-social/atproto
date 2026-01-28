@@ -1,6 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { DidString } from '@atproto/syntax'
 
 describe('pds admin invite views', () => {
   let network: TestNetworkNoAppView
@@ -23,9 +24,9 @@ describe('pds admin invite views', () => {
     await network.close()
   })
 
-  let alice: string
-  let bob: string
-  let carol: string
+  let alice: DidString
+  let bob: DidString
+  let carol: DidString
 
   beforeAll(async () => {
     const adminCode = await agent.api.com.atproto.server.createInviteCode(

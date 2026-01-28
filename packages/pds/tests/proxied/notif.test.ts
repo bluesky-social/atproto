@@ -2,8 +2,8 @@ import { once } from 'node:events'
 import http from 'node:http'
 import { AddressInfo } from 'node:net'
 import express from 'express'
-import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client, DidString } from '@atproto/lex'
 import { createServer, verifyJwt } from '@atproto/xrpc-server'
 import { app } from '../../src/lexicons/index.js'
 import usersSeed from '../seeds/users'
@@ -11,8 +11,8 @@ import usersSeed from '../seeds/users'
 describe('notif service proxy', () => {
   let network: TestNetworkNoAppView
   let notifServer: http.Server
-  let notifDid: string
-  let agent: AtpAgent
+  let notifDid: DidString
+  let client: Client
   let sc: SeedClient
   const spy: { current: unknown } = { current: null }
 
@@ -22,7 +22,7 @@ describe('notif service proxy', () => {
     })
     network.pds.server.app.get
     const plc = network.plc.getClient()
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -47,17 +47,15 @@ describe('notif service proxy', () => {
   })
 
   it('proxies to notif service.', async () => {
-    await agent.api.app.bsky.notification.registerPush(
+    await client.call(
+      app.bsky.notification.registerPush,
       {
         serviceDid: notifDid,
         token: 'tok1',
         platform: 'web',
         appId: 'app1',
       },
-      {
-        headers: sc.getHeaders(sc.dids.bob),
-        encoding: 'application/json',
-      },
+      { headers: sc.getHeaders(sc.dids.bob) },
     )
     expect(spy.current?.['input']).toEqual({
       serviceDid: notifDid,

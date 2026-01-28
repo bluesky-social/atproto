@@ -1,19 +1,16 @@
-import { AtpAgent } from '@atproto/api'
-import {
-  ImageRef,
-  SeedClient,
-  TestNetworkNoAppView,
-  basicSeed,
-} from '@atproto/dev-env'
+import { SeedClient, TestNetworkNoAppView, basicSeed } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
+import { app, com } from '../src'
 
 describe('account deactivation', () => {
   let network: TestNetworkNoAppView
 
   let sc: SeedClient
-  let agent: AtpAgent
+  let client: Client
 
-  let alice: string
-  let aliceAvatar: ImageRef
+  let alice: DidString
+  let aliceAvatar: app.bsky.embed.images.Image
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -21,7 +18,7 @@ describe('account deactivation', () => {
     })
 
     sc = network.getSeedClient()
-    agent = network.pds.getAgent()
+    client = network.pds.getClient()
 
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -43,97 +40,106 @@ describe('account deactivation', () => {
   })
 
   it('deactivates account', async () => {
-    await agent.com.atproto.server.deactivateAccount(
+    await client.call(
+      com.atproto.server.deactivateAccount,
       {},
-      { encoding: 'application/json', headers: sc.getHeaders(alice) },
+      { headers: sc.getHeaders(alice) },
     )
   })
 
   it('returns deactivated status', async () => {
-    const res = await agent.com.atproto.sync.getRepoStatus({ did: alice })
-    expect(res.data).toEqual({
+    const res = await client.call(com.atproto.sync.getRepoStatus, {
+      did: alice,
+    })
+    expect(res).toEqual({
       did: alice,
       active: false,
       status: 'deactivated',
     })
 
-    const adminRes = await agent.com.atproto.admin.getAccountInfo(
+    const adminRes = await client.call(
+      com.atproto.admin.getAccountInfo,
       {
         did: alice,
       },
       { headers: network.pds.adminAuthHeaders() },
     )
-    expect(typeof adminRes.data.deactivatedAt).toBeDefined()
+    expect(typeof adminRes.deactivatedAt).toBeDefined()
   })
 
   it('no longer serves repo data', async () => {
     await expect(
-      agent.com.atproto.sync.getRepo({ did: alice }),
+      client.call(com.atproto.sync.getRepo, { did: alice }),
     ).rejects.toThrow(/Repo has been deactivated/)
     await expect(
-      agent.com.atproto.sync.getLatestCommit({ did: alice }),
+      client.call(com.atproto.sync.getLatestCommit, { did: alice }),
     ).rejects.toThrow(/Repo has been deactivated/)
     await expect(
-      agent.com.atproto.sync.listBlobs({ did: alice }),
+      client.call(com.atproto.sync.listBlobs, { did: alice }),
     ).rejects.toThrow(/Repo has been deactivated/)
     const recordUri = sc.posts[alice][0].ref.uri
     await expect(
-      agent.com.atproto.sync.getRecord({
+      client.call(com.atproto.sync.getRecord, {
         did: alice,
         collection: recordUri.collection,
         rkey: recordUri.rkey,
       }),
     ).rejects.toThrow(/Repo has been deactivated/)
     await expect(
-      agent.com.atproto.repo.getRecord({
+      client.call(com.atproto.repo.getRecord, {
         repo: alice,
         collection: recordUri.collection,
         rkey: recordUri.rkey,
       }),
     ).rejects.toThrow()
     await expect(
-      agent.com.atproto.repo.describeRepo({
+      client.call(com.atproto.repo.describeRepo, {
         repo: alice,
       }),
     ).rejects.toThrow(/Repo has been deactivated/)
 
     await expect(
-      agent.com.atproto.sync.getBlob({
+      client.call(com.atproto.sync.getBlob, {
         did: alice,
         cid: aliceAvatar.image.ref.toString(),
       }),
     ).rejects.toThrow(/Repo has been deactivated/)
-    const listedRepos = await agent.com.atproto.sync.listRepos()
-    const listedAlice = listedRepos.data.repos.find((r) => r.did === alice)
+    const listedRepos = await client.call(com.atproto.sync.listRepos)
+    const listedAlice = listedRepos.repos.find((r) => r.did === alice)
     expect(listedAlice?.active).toBe(false)
     expect(listedAlice?.status).toBe('deactivated')
   })
 
   it('no longer resolves handle', async () => {
     await expect(
-      agent.com.atproto.identity.resolveHandle({
+      client.call(com.atproto.identity.resolveHandle, {
         handle: sc.accounts[alice].handle,
       }),
     ).rejects.toThrow()
   })
 
   it('still allows login and returns status', async () => {
-    const res = await agent.com.atproto.server.createSession({
+    const res = await client.call(com.atproto.server.createSession, {
       identifier: alice,
       password: sc.accounts[alice].password,
     })
-    expect(res.data.status).toEqual('deactivated')
+    expect(res.status).toEqual('deactivated')
   })
 
   it('returns status on getSession', async () => {
-    const res = await agent.com.atproto.server.getSession(undefined, {
-      headers: sc.getHeaders(alice),
-    })
-    expect(res.data.status).toEqual('deactivated')
+    const res = await client.call(
+      com.atproto.server.getSession,
+      {},
+      {
+        headers: sc.getHeaders(alice),
+      },
+    )
+    expect(res.status).toEqual('deactivated')
   })
 
   it('does not allow writes', async () => {
-    const createAttempt = agent.com.atproto.repo.createRecord(
+    const createAttempt = client.call(
+      com.atproto.repo.createRecord,
       {
         repo: alice,
         collection: 'app.bsky.feed.post',
@@ -143,14 +149,14 @@ describe('account deactivation', () => {
         },
       },
       {
-        encoding: 'application/json',
         headers: sc.getHeaders(alice),
       },
     )
     const uri = sc.posts[alice][0].ref.uri
     await expect(createAttempt).rejects.toThrow('Account is deactivated')
 
-    const putAttempt = agent.com.atproto.repo.putRecord(
+    const putAttempt = client.call(
+      com.atproto.repo.putRecord,
       {
         repo: alice,
         collection: uri.collection,
@@ -161,20 +167,19 @@ describe('account deactivation', () => {
         },
       },
       {
-        encoding: 'application/json',
         headers: sc.getHeaders(alice),
       },
     )
     await expect(putAttempt).rejects.toThrow('Account is deactivated')
 
-    const deleteAttempt = agent.com.atproto.repo.deleteRecord(
+    const deleteAttempt = client.call(
+      com.atproto.repo.deleteRecord,
       {
         repo: alice,
         collection: uri.collection,
         rkey: uri.rkey,
       },
       {
-        encoding: 'application/json',
         headers: sc.getHeaders(alice),
       },
     )
@@ -182,22 +187,25 @@ describe('account deactivation', () => {
   })
 
   it('reactivates', async () => {
-    await agent.com.atproto.server.activateAccount(undefined, {
+    await client.call(com.atproto.server.activateAccount, undefined, {
       headers: sc.getHeaders(alice),
     })
 
-    await agent.com.atproto.sync.getRepo({ did: alice })
+    await client.call(com.atproto.sync.getRepo, { did: alice })
 
-    const statusRes = await agent.com.atproto.sync.getRepoStatus({ did: alice })
-    expect(statusRes.data.active).toBe(true)
-    expect(statusRes.data.status).toBeUndefined()
+    const statusRes = await client.call(com.atproto.sync.getRepoStatus, {
+      did: alice,
+    })
+    expect(statusRes.active).toBe(true)
+    expect(statusRes.status).toBeUndefined()
 
-    const adminRes = await agent.com.atproto.admin.getAccountInfo(
+    const adminRes = await client.call(
+      com.atproto.admin.getAccountInfo,
       {
         did: alice,
       },
       { headers: network.pds.adminAuthHeaders() },
     )
-    expect(adminRes.data.deactivatedAt).toBeUndefined()
+    expect(adminRes.deactivatedAt).toBeUndefined()
   })
 })

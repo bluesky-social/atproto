@@ -49,7 +49,7 @@ describe('pds author feed views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_author_feed',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await authorFeedSeed(sc)

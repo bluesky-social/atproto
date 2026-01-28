@@ -14,7 +14,7 @@ describe('feed hidden replies', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_feed_hidden_replies',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
 
