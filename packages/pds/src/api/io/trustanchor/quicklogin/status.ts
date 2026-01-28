@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { AppContext } from '../../../../context'
 
 export function statusQuickLogin(router: Router, ctx: AppContext) {
-  router.post('/xrpc/io.trustanchor.quicklogin.status', async (req, res) => {
+  router.post('/api/quicklogin/status', async (req, res) => {
     try {
       if (!ctx.cfg.quicklogin) {
         return res.status(400).json({ error: 'QuickLogin not enabled' })

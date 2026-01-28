@@ -179,7 +179,7 @@ export class PDS {
     app.use(cors({ maxAge: DAY / SECOND }))
     app.use(basicRoutes.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
-    // QuickLogin routes (separate path to avoid XRPC body parsing conflict)
+    // QuickLogin API routes (using /api/quicklogin/* instead of /xrpc/* to avoid XRPC router)
     app.use(ioTrustanchor(ctx))
     app.use(server.xrpc.router)
     app.use(error.handler)
