@@ -14,7 +14,7 @@ export function initQuickLogin(router: Router, ctx: AppContext) {
 
       // Call provider to register session
       const providerUrl = `${ctx.cfg.quicklogin.apiBaseUrl}/QuickLogin`
-      const callbackUrl = `${ctx.cfg.service.publicUrl}/xrpc/io.trustanchor.quicklogin.callback`
+      const callbackUrl = `${ctx.cfg.service.publicUrl}/api/quicklogin/callback`
 
       // Create temporary session ID for provider registration
       const tempSessionId = randomUUID()
