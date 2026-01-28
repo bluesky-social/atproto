@@ -7,8 +7,10 @@ import {
   ResultSuccess,
 } from '@atproto/lex-schema'
 import {
+  XrpcAuthenticationError,
   XrpcResponseError,
   XrpcUpstreamError,
+  isXrpcErrorPayload,
   isXrpcMethodErrorPayload,
 } from './errors.js'
 import { XrpcPayload } from './util.js'
@@ -94,6 +96,10 @@ export class XrpcResponse<M extends Procedure | Query>
 
       if (response.status >= 400 && isXrpcMethodErrorPayload(method, payload)) {
         throw new XrpcResponseError<M>(method, response, payload)
+      }
+
+      if (response.status === 401 && isXrpcErrorPayload(payload)) {
+        throw new XrpcAuthenticationError<M>(method, response, payload)
       }
 
       if (response.status >= 500) {

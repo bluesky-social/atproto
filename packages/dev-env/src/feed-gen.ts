@@ -5,11 +5,9 @@ import http from 'node:http'
 import * as plc from '@did-plc/lib'
 import getPort from 'get-port'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { SkeletonHandler, lexicons } from '@atproto/pds'
+import { SkeletonHandler, app } from '@atproto/pds'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, createServer } from '@atproto/xrpc-server'
-
-const { app } = lexicons
 
 export class TestFeedGen {
   destroyed = false
@@ -41,8 +39,8 @@ export class TestFeedGen {
         encoding: 'application/json',
         body: {
           did: did as DidString,
-          feeds: Object.keys(feeds).map((uri) => ({
-            uri: uri as AtUriString,
+          feeds: (Object.keys(feeds) as AtUriString[]).map((uri) => ({
+            uri,
           })),
         },
       }
@@ -65,7 +63,10 @@ export class TestFeedGen {
   }
 }
 
-const createFgDid = async (plcUrl: string, port: number): Promise<string> => {
+const createFgDid = async (
+  plcUrl: string,
+  port: number,
+): Promise<DidString> => {
   const keypair = await Secp256k1Keypair.create()
   const plcClient = new plc.Client(plcUrl)
   const op = await plc.signOperation(
@@ -88,5 +89,5 @@ const createFgDid = async (plcUrl: string, port: number): Promise<string> => {
   )
   const did = await plc.didForCreateOp(op)
   await plcClient.sendOperation(did, op)
-  return did
+  return did as DidString
 }

@@ -7,6 +7,10 @@ import {
   lexErrorData,
 } from '@atproto/lex-schema'
 import { XrpcPayload } from './util.js'
+import {
+  WWWAuthenticate,
+  parseWWWAuthenticateHeader,
+} from './www-authenticate.js'
 
 export const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
@@ -135,6 +139,50 @@ export class XrpcResponseError<
   }
 }
 
+export type { WWWAuthenticate }
+export class XrpcAuthenticationError<
+  M extends Procedure | Query = Procedure | Query,
+> extends XrpcError<M, 'AuthenticationRequired', XrpcAuthenticationError<M>> {
+  name = 'XrpcAuthenticationError'
+
+  constructor(
+    method: M,
+    readonly response: Response,
+    readonly payload: XrpcErrorPayload,
+    message: string = payload.body.message ?? 'Authentication failed',
+    options?: ErrorOptions,
+  ) {
+    super(method, 'AuthenticationRequired', message, options)
+  }
+
+  override get reason() {
+    return this
+  }
+
+  override shouldRetry(): boolean {
+    return false
+  }
+
+  override matchesSchema(): this is XrpcError<M, InferMethodError<M>, unknown> {
+    return false
+  }
+
+  override toResponse(): Response {
+    // If a server is making authenticated requests towards another server, it
+    // should not expose upstream authentication errors downstream.
+    return Response.json({ error: 'InternalServerError' }, { status: 500 })
+  }
+
+  get body(): LexErrorData {
+    return this.payload.body
+  }
+
+  get wwwAuthenticate(): WWWAuthenticate {
+    const header = this.response.headers.get('www-authenticate')
+    return parseWWWAuthenticateHeader(header) ?? {}
+  }
+}
+
 /**
  * This class represents an invalid XRPC response from the server.
  */
@@ -154,7 +202,7 @@ export class XrpcUpstreamError<
     message: string = `${error} upstream XRPC error`,
     options?: ErrorOptions,
   ) {
-    super(method, error, message, { cause: options?.cause })
+    super(method, error, message, options)
   }
 
   override get reason() {
@@ -182,9 +230,15 @@ export class XrpcUnexpectedError<
     message: string = reason instanceof LexError
       ? reason.message
       : 'XRPC request failed',
-    options?: Omit<ErrorOptions, 'cause'>,
+    options?: ErrorOptions,
   ) {
-    super(method, 'InternalServerError', message, { ...options, cause: reason })
+    super(
+      method,
+      'InternalServerError',
+      message,
+      // @NOTE use "reason" as cause if no "cause" was provided
+      options?.cause != null ? options : { ...options, cause: reason },
+    )
   }
 
   override shouldRetry(): true {
@@ -199,6 +253,8 @@ export class XrpcUnexpectedError<
 export type XrpcFailure<M extends Procedure | Query = Procedure | Query> =
   // The server returned a valid XRPC error response
   | XrpcResponseError<M>
+  // Authentication error
+  | XrpcAuthenticationError<M>
   // The response was not a valid XRPC response, or it does not match the schema
   | XrpcUpstreamError<M>
   // Something went wrong (network error, etc.)
@@ -210,6 +266,7 @@ export function asXrpcFailure<M extends Procedure | Query>(
 ): XrpcFailure<M> {
   if (
     (value instanceof XrpcResponseError ||
+      value instanceof XrpcAuthenticationError ||
       value instanceof XrpcUpstreamError ||
       value instanceof XrpcUnexpectedError) &&
     value.method === method

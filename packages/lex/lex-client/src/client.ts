@@ -98,7 +98,7 @@ export type RecordKeyOptions<
   : { rkey: InferRecordKey<T> }
 
 export type CreateOptions<T extends RecordSchema> = CreateRecordOptions &
-  RecordKeyOptions<T, 'tid'>
+  RecordKeyOptions<T, 'tid' | 'any'>
 export type CreateOutput = InferMethodOutputBody<
   typeof com.atproto.repo.createRecord.main,
   Uint8Array
@@ -349,6 +349,11 @@ export class Client implements Agent {
     ns: NonNullable<unknown> extends XrpcRequestParams<T>
       ? Main<T>
       : Restricted<'This query type requires a "params" argument'>,
+  ): Promise<XrpcResponseBody<T>>
+  public async call<const T extends Procedure>(
+    ns: undefined extends InferMethodInputBody<T, Uint8Array>
+      ? Main<T>
+      : Restricted<'This procedure type requires an "input" argument'>,
   ): Promise<XrpcResponseBody<T>>
   public async call<const T extends Action>(
     ns: void extends InferActionInput<T>
