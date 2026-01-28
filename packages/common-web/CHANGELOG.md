@@ -1,5 +1,15 @@
 # @atproto/common-web
 
+## 0.4.14
+
+### Patch Changes
+
+- [#4580](https://github.com/bluesky-social/atproto/pull/4580) [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Deprecate the `didDocument` schema in favor of `@atproto/did`
+
+- [#4580](https://github.com/bluesky-social/atproto/pull/4580) [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow (and validate) `publicKeyJwk` properties in DID document verification methods
+
+- [#4580](https://github.com/bluesky-social/atproto/pull/4580) [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Validate DID document's `@context` and `authentication` properties.
+
 ## 0.4.13
 
 ### Patch Changes
