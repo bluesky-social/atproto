@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-expo",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [
@@ -32,9 +32,9 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
-    "@atproto/oauth-client-browser": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto/oauth-client": "workspace:^",
+    "@atproto/oauth-client-browser": "workspace:^",
     "core-js": "^3",
     "event-target-polyfill": "^0.0.4",
     "expo-web-browser": "^15.0.8",

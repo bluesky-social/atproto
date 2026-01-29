@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { LexValue, decodeAll, encode } from '@atproto/lex-cbor'
 import {
   ErrorFrameBody,

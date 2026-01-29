@@ -3018,6 +3018,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
+          presentation: {
+            type: 'string',
+            description: 'A hint to the client about how to present the video.',
+            knownValues: ['default', 'gif'],
+          },
         },
       },
       caption: {
@@ -3059,6 +3064,11 @@ export const schemaDict = {
           aspectRatio: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+          presentation: {
+            type: 'string',
+            description: 'A hint to the client about how to present the video.',
+            knownValues: ['default', 'gif'],
           },
         },
       },

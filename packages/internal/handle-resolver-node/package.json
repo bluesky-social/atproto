@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver-node",
-  "version": "0.1.24",
+  "version": "0.1.25",
   "license": "MIT",
   "description": "Node specific ATProto handle to DID resolver",
   "keywords": [
@@ -29,9 +29,9 @@
     "node": ">=18.7.0"
   },
   "dependencies": {
-    "@atproto-labs/fetch-node": "workspace:*",
-    "@atproto-labs/handle-resolver": "workspace:*",
-    "@atproto/did": "workspace:*"
+    "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/handle-resolver": "workspace:^",
+    "@atproto/did": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

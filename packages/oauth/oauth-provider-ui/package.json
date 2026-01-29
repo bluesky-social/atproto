@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-ui",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
   "description": "Sign-in & Sign-up UI for the @atproto/oauth-provider",
   "homepage": "https://atproto.com",
@@ -26,14 +26,14 @@
     "hydration-data.d.ts"
   ],
   "optionalDependencies": {
-    "@atproto/oauth-provider-api": "workspace:*"
+    "@atproto/oauth-provider-api": "workspace:^"
   },
   "devDependencies": {
-    "@atproto-labs/fetch": "workspace:*",
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
-    "@atproto/oauth-provider-api": "workspace:*",
-    "@atproto/oauth-scopes": "workspace:*",
-    "@atproto/oauth-types": "workspace:*",
+    "@atproto-labs/fetch": "workspace:^",
+    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
+    "@atproto/oauth-provider-api": "workspace:^",
+    "@atproto/oauth-scopes": "workspace:^",
+    "@atproto/oauth-types": "workspace:^",
     "@hcaptcha/react-hcaptcha": "^1.11.2",
     "@lingui/cli": "^5.2.0",
     "@lingui/core": "^5.2.0",

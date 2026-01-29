@@ -2091,6 +2091,7 @@ export class Views {
       thumbnail: this.videoUriBuilder.thumbnail({ did, cid }),
       alt: embed.alt,
       aspectRatio: embed.aspectRatio,
+      presentation: embed.presentation,
     }
   }
 

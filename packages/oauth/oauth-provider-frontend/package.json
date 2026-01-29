@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-frontend",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "license": "MIT",
   "homepage": "https://atproto.com",
   "repository": {
@@ -25,14 +25,14 @@
     "hydration-data.d.ts"
   ],
   "optionalDependencies": {
-    "@atproto/oauth-provider-api": "workspace:*"
+    "@atproto/oauth-provider-api": "workspace:^"
   },
   "devDependencies": {
-    "@atproto-labs/fetch": "workspace:*",
-    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:*",
-    "@atproto/oauth-provider-api": "workspace:*",
-    "@atproto/oauth-types": "workspace:*",
-    "@atproto/syntax": "workspace:*",
+    "@atproto-labs/fetch": "workspace:^",
+    "@atproto-labs/rollup-plugin-bundle-manifest": "workspace:^",
+    "@atproto/oauth-provider-api": "workspace:^",
+    "@atproto/oauth-types": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "@lingui/cli": "^5.2.0",
     "@lingui/core": "^5.2.0",
     "@lingui/react": "^5.2.0",

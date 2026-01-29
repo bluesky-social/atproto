@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "license": "MIT",
   "description": "OAuth client for ATPROTO PDS. This package serves as common base for environment-specific implementations (NodeJS, Browser, React-Native).",
   "keywords": [
@@ -25,16 +25,16 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/did-resolver": "workspace:*",
-    "@atproto-labs/fetch": "workspace:*",
-    "@atproto-labs/handle-resolver": "workspace:*",
-    "@atproto-labs/identity-resolver": "workspace:*",
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto-labs/simple-store-memory": "workspace:*",
-    "@atproto/did": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/oauth-types": "workspace:*",
-    "@atproto/xrpc": "workspace:*",
+    "@atproto-labs/did-resolver": "workspace:^",
+    "@atproto-labs/fetch": "workspace:^",
+    "@atproto-labs/handle-resolver": "workspace:^",
+    "@atproto-labs/identity-resolver": "workspace:^",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto-labs/simple-store-memory": "workspace:^",
+    "@atproto/did": "workspace:^",
+    "@atproto/jwk": "workspace:^",
+    "@atproto/oauth-types": "workspace:^",
+    "@atproto/xrpc": "workspace:^",
     "core-js": "^3",
     "multiformats": "^9.9.0",
     "zod": "^3.23.8"

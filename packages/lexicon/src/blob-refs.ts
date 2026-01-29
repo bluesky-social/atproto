@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { check, ipldToJson, schema } from '@atproto/common-web'

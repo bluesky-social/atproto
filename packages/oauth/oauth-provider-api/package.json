@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-provider-api",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "license": "MIT",
   "description": "Shared data types for the @atproto/oauth-provider and @atproto/oauth-provider-ui packages",
   "keywords": [
@@ -25,8 +25,8 @@
     }
   },
   "dependencies": {
-    "@atproto/jwk": "workspace:*",
-    "@atproto/oauth-types": "workspace:*"
+    "@atproto/jwk": "workspace:^",
+    "@atproto/oauth-types": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

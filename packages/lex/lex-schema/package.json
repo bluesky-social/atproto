@@ -35,8 +35,8 @@
     }
   },
   "dependencies": {
-    "@atproto/syntax": "workspace:*",
-    "@atproto/lex-data": "workspace:*",
+    "@atproto/syntax": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
