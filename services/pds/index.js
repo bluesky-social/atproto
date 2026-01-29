@@ -21,8 +21,8 @@ const main = async () => {
   await pds.start()
 
   httpLogger.info(
-    { version: pkg.version, build: new Date().toISOString() },
-    'pds is running',
+    { version: pkg.version, build: '20260129-1010' },
+    'pds is running W2',
   )
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   process.on('SIGTERM', async () => {
