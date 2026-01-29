@@ -1,5 +1,5 @@
 // packages/dev-env/custom/run-pds-plc.ts
-import '../env' // Import env first to respect LOG_ENABLED
+import '../src/env' // Import env first to respect LOG_ENABLED
 import { TestNetworkNoAppView } from '..'
 
 async function main() {
