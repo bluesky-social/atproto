@@ -142,6 +142,7 @@ async function getPreferences(client: Client, signal: AbortSignal) {
       return await client.call(app.bsky.actor.getPreferences, {}, { signal })
     } catch (err) {
       // TODO handle 403 ?
+      console.warn('Failed to get preferences, retrying...', err)
       signal.throwIfAborted()
       await new Promise((resolve) =>
         setTimeout(resolve, Math.min(200 * 1.5 ** attempt, 5000)),

@@ -37,34 +37,28 @@ export const SIGN_UP_URL = getParam('sign_up_url', SIGN_UP_URL_DEFAULT)
 export const OAUTH_SCOPE_DEFAULT: string =
   ENV === 'development'
     ? [
-        'atproto',
         'account:email',
         'account:status',
         'identity:*',
         'blob:*/*',
         'repo:*',
-        'rpc:app.bsky.actor.getPreferences?aud=*',
         `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
         `include:com.example.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
       ].join(' ')
     : ENV === 'production'
       ? [
-          'atproto',
           'account:email',
           'account:status',
           'blob:*/*',
           'repo:*',
-          'rpc:app.bsky.actor.getPreferences?aud=*',
           `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
           `include:directory.lexicon.calendar.basePermissions?aud=${BSKY_API_DID}#calendar_service`,
         ].join(' ')
       : [
-          'atproto',
           'account:email',
           'account:status',
           'blob:*/*',
           'repo:*',
-          'rpc:app.bsky.actor.getPreferences?aud=*',
           `rpc:*?aud=${BSKY_API_DID}#bsky_appview`,
         ].join(' ')
 export const OAUTH_SCOPE: string =
