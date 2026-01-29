@@ -1,0 +1,44 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.updateQueue",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update queue properties. Currently only supports updating the name and enabled status to prevent configuration conflicts.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queueId"],
+          "properties": {
+            "queueId": {
+              "type": "integer",
+              "description": "ID of the queue to update"
+            },
+            "name": {
+              "type": "string",
+              "description": "New display name for the queue"
+            },
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable or disable the queue"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queue"],
+          "properties": {
+            "queue": {
+              "type": "ref",
+              "ref": "tools.ozone.queue.defs#queueView"
+            }
+          }
+        }
+      }
+    }
+  }
+}

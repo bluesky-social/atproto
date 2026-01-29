@@ -1,0 +1,218 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderation.queryReports",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "View moderation reports. Reports are individual instances of content being reported, as opposed to subject statuses which aggregate reports at the subject level.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "queueId": {
+            "type": "integer",
+            "description": "Filter by queue ID. Use -1 for unassigned reports."
+          },
+          "reportTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Filter by report types (fully qualified string in the format of com.atproto.moderation.defs#reason<name>)."
+          },
+          "status": {
+            "type": "string",
+            "knownValues": ["open", "closed", "escalated"],
+            "description": "Filter by report status."
+          },
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "Filter by subject DID or AT-URI."
+          },
+          "subjectType": {
+            "type": "string",
+            "description": "If specified, reports of the given type (account or record) will be returned.",
+            "knownValues": ["account", "record"]
+          },
+          "collections": {
+            "type": "array",
+            "maxLength": 20,
+            "description": "If specified, reports where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+            "items": {
+              "type": "string",
+              "format": "nsid"
+            }
+          },
+          "reportedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Retrieve reports created after a given timestamp"
+          },
+          "reportedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Retrieve reports created before a given timestamp"
+          },
+          "reviewedBy": {
+            "type": "string",
+            "format": "did",
+            "description": "Filter by moderator who reviewed/actioned the report"
+          },
+          "sortField": {
+            "type": "string",
+            "default": "createdAt",
+            "enum": ["createdAt", "updatedAt"]
+          },
+          "sortDirection": {
+            "type": "string",
+            "default": "desc",
+            "enum": ["asc", "desc"]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reports"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "reports": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#reportView"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reportView": {
+      "type": "object",
+      "required": ["id", "eventId", "status", "subject", "reportType", "reportedBy", "createdAt"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Report ID"
+        },
+        "eventId": {
+          "type": "integer",
+          "description": "ID of the moderation event that created this report"
+        },
+        "queueId": {
+          "type": "integer",
+          "description": "Queue ID this report is assigned to. Null = not yet assigned, -1 = no matching queue"
+        },
+        "queueName": {
+          "type": "string",
+          "description": "Display name of the queue (if assigned)"
+        },
+        "status": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated"],
+          "description": "Current status of the report"
+        },
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ],
+          "description": "The subject that was reported"
+        },
+        "reportType": {
+          "type": "ref",
+          "ref": "com.atproto.moderation.defs#reasonType",
+          "description": "Type of report"
+        },
+        "reportedBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the user who made the report"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Comment provided by the reporter"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the report was created"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the report was last updated"
+        },
+        "queuedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the report was assigned to its current queue"
+        },
+        "actionEventIds": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Array of moderation event IDs representing actions taken on this report (sorted DESC, most recent first)"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "ref",
+            "ref": "tools.ozone.moderation.defs#modEventView"
+          },
+          "description": "Optional: expanded action events"
+        },
+        "actionNote": {
+          "type": "string",
+          "description": "Note sent to reporter when report was actioned"
+        },
+        "subjectStatus": {
+          "type": "ref",
+          "ref": "tools.ozone.moderation.defs#subjectStatusView",
+          "description": "Current status of the reported subject"
+        },
+        "relatedReportCount": {
+          "type": "integer",
+          "description": "Number of other pending reports on the same subject"
+        },
+        "inReview": {
+          "type": "ref",
+          "ref": "#reportInReview",
+          "description": "Information about moderator currently reviewing this report (if any)"
+        }
+      }
+    },
+    "reportInReview": {
+      "type": "object",
+      "required": ["moderatorDid", "moderatorHandle", "startedAt"],
+      "properties": {
+        "moderatorDid": {
+          "type": "string",
+          "format": "did"
+        },
+        "moderatorHandle": {
+          "type": "string",
+          "format": "handle"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    }
+  }
+}

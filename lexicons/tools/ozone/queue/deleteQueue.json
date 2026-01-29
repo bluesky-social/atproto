@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.deleteQueue",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a moderation queue. Optionally migrate reports to another queue.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queueId"],
+          "properties": {
+            "queueId": {
+              "type": "integer",
+              "description": "ID of the queue to delete"
+            },
+            "migrateToQueueId": {
+              "type": "integer",
+              "description": "Optional: migrate all reports to this queue. If not specified, reports will be set to unassigned (-1)."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["deleted"],
+          "properties": {
+            "deleted": {
+              "type": "boolean"
+            },
+            "reportsMigrated": {
+              "type": "integer",
+              "description": "Number of reports that were migrated (if migration occurred)"
+            }
+          }
+        }
+      }
+    }
+  }
+}
