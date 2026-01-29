@@ -127,6 +127,10 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
 
         if (!email) {
           req.log.error({ jid }, 'No email found in QuickLogin payload')
+          ctx.quickloginStore.updateSession(session.sessionId, {
+            status: 'failed',
+            error: 'Email required',
+          })
           return res.status(400).json({ error: 'Email required' })
         }
 
@@ -143,6 +147,11 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
             { jid, email },
             'Account not found - user scanned QR before account provisioning completed',
           )
+          ctx.quickloginStore.updateSession(session.sessionId, {
+            status: 'failed',
+            error:
+              'Account not found. Please ensure your account is fully set up.',
+          })
           return res.status(400).json({
             error:
               'Account not found. Please ensure your account is fully set up.',
