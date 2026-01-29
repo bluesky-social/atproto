@@ -1,9 +1,9 @@
-import { Router } from 'express'
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 import * as plc from '@did-plc/lib'
-import { AppContext } from '../../context'
+import { Router } from 'express'
 import { AccountStatus } from '../../account-manager/account-manager'
 import { setEmailConfirmedAt } from '../../account-manager/helpers/account'
+import { AppContext } from '../../context'
 
 export const createProvisionAccountRoute = (ctx: AppContext): Router => {
   const router = Router()
@@ -15,30 +15,39 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
 
     // Step 1: Filter events - only process LegalIdUpdated with State=Approved
     if (eventId === 'AccountCreated') {
-      req.log.debug({ account: payload.Object }, 'AccountCreated event - not relevant')
+      req.log.debug(
+        { account: payload.Object },
+        'AccountCreated event - not relevant',
+      )
       return res.status(200).json({
-        message: 'AccountCreated acknowledged'
+        message: 'AccountCreated acknowledged',
       })
     }
 
     if (eventId === 'LegalIdRegistered') {
-      req.log.debug({ legalId: payload.Object, state }, 'LegalIdRegistered event - not approved yet')
+      req.log.debug(
+        { legalId: payload.Object, state },
+        'LegalIdRegistered event - not approved yet',
+      )
       return res.status(200).json({
-        message: 'LegalIdRegistered acknowledged, waiting for approval'
+        message: 'LegalIdRegistered acknowledged, waiting for approval',
       })
     }
 
     if (eventId === 'LegalIdUpdated' && state !== 'Approved') {
-      req.log.info({ legalId: payload.Object, state }, 'LegalIdUpdated with non-Approved state - ignoring')
+      req.log.info(
+        { legalId: payload.Object, state },
+        'LegalIdUpdated with non-Approved state - ignoring',
+      )
       return res.status(200).json({
-        message: `Legal ID state is ${state}, not Approved`
+        message: `Legal ID state is ${state}, not Approved`,
       })
     }
 
     if (eventId !== 'LegalIdUpdated') {
       req.log.debug({ eventId }, 'Ignoring unknown event type')
       return res.status(200).json({
-        message: `Event ${eventId} not relevant for provisioning`
+        message: `Event ${eventId} not relevant for provisioning`,
       })
     }
 
@@ -48,11 +57,11 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
 
     // Step 2: Extract and validate required fields from LegalIdUpdated (Approved)
     const legalId = payload.Tags?.ID
-    const userName = payload.Tags?.Account
+    const userName = payload.Tags?.Account?.toLowerCase() // Lowercase for Caddy validation
     const timestamp = payload.Timestamp
     const emailFromNeuro = payload.Tags?.EMAIL?.trim()
     const phone = payload.Tags?.PHONE?.trim()
-    const jidRef = payload.Tags?.JID  // For reference only
+    const jidRef = payload.Tags?.JID // For reference only
     // eventId and state already extracted in Step 1
     const object = payload.Object
     const actor = payload.Actor || ''
@@ -60,7 +69,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
     if (!legalId || !userName || !timestamp) {
       return res.status(400).json({
         error: 'InvalidRequest',
-        message: 'Missing required fields: Tags.ID, Tags.Account, Timestamp'
+        message: 'Missing required fields: Tags.ID, Tags.Account, Timestamp',
       })
     }
 
@@ -68,7 +77,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
     if (!legalId.includes('@legal.')) {
       return res.status(400).json({
         error: 'InvalidLegalId',
-        message: 'Tags.ID must be in format uuid@legal.domain'
+        message: 'Tags.ID must be in format uuid@legal.domain',
       })
     }
 
@@ -79,7 +88,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
     if (Math.abs(now - requestTime) > tenMinutes) {
       return res.status(400).json({
         error: 'RequestExpired',
-        message: 'Timestamp is too old or too far in the future'
+        message: 'Timestamp is too old or too far in the future',
       })
     }
 
@@ -92,21 +101,24 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
     // Step 6: Handle email (use Neuro's email or fallback to noreply)
     const email = emailFromNeuro || 'noreply@wsocial.eu'
 
-    req.log.info({
-      legalId,
-      userName,
-      email,
-      emailFromNeuro: !!emailFromNeuro,
-      phone,
-      jidRef,
-      country: payload.Tags?.COUNTRY,
-      nonce,
-      eventId,
-      timestamp,
-      object,
-      actor,
-      state
-    }, 'Received LegalIdUpdated (Approved) - provisioning account')
+    req.log.info(
+      {
+        legalId,
+        userName,
+        email,
+        emailFromNeuro: !!emailFromNeuro,
+        phone,
+        jidRef,
+        country: payload.Tags?.COUNTRY,
+        nonce,
+        eventId,
+        timestamp,
+        object,
+        actor,
+        state,
+      },
+      'Received LegalIdUpdated (Approved) - provisioning account',
+    )
 
     // Step 7: Check for nonce reuse (replay protection)
     const nonceExists = await ctx.accountManager.db.db
@@ -119,7 +131,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
       req.log.warn({ nonce, legalId }, 'Nonce reused - duplicate event')
       return res.status(400).json({
         error: 'NonceReused',
-        message: 'This event has already been processed'
+        message: 'This event has already been processed',
       })
     }
 
@@ -131,7 +143,10 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
       .executeTakeFirst()
 
     if (existingLink) {
-      req.log.info({ legalId, did: existingLink.did }, 'Account already provisioned for this Legal ID')
+      req.log.info(
+        { legalId, did: existingLink.did },
+        'Account already provisioned for this Legal ID',
+      )
 
       // Idempotent: return existing account info
       const account = await ctx.accountManager.getAccount(existingLink.did)
@@ -140,7 +155,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
         alreadyExists: true,
         did: existingLink.did,
         handle: account?.handle || null,
-        legalId
+        legalId,
       })
     }
 
@@ -150,7 +165,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
       if (emailAcct) {
         return res.status(409).json({
           error: 'EmailTaken',
-          message: 'This email is already associated with another account'
+          message: 'This email is already associated with another account',
         })
       }
     }
@@ -170,15 +185,21 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
 
       // Safety: prevent infinite loop (extremely unlikely)
       if (suffix.length > 10) {
-        req.log.error({ userName, suffix }, 'Unable to generate unique handle after 10 attempts')
+        req.log.error(
+          { userName, suffix },
+          'Unable to generate unique handle after 10 attempts',
+        )
         return res.status(500).json({
           error: 'HandleGenerationFailed',
-          message: 'Unable to generate unique handle'
+          message: 'Unable to generate unique handle',
         })
       }
     }
 
-    req.log.info({ legalId, email, handle, userName }, 'Auto-provisioning account from Neuro')
+    req.log.info(
+      { legalId, email, handle, userName },
+      'Auto-provisioning account from Neuro',
+    )
 
     // Step 11: Create account with retry logic for handle conflicts
     let accountCreated = false
@@ -214,14 +235,17 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
         await ctx.actorStore.create(did, keypair)
 
         const commit = await ctx.actorStore.transact(did, (actorTxn) =>
-          actorTxn.repo.createRepo([])
+          actorTxn.repo.createRepo([]),
         )
 
         // Send PLC operation
         try {
           await ctx.plcClient.sendOperation(did, plcCreate.op)
         } catch (err) {
-          req.log.error({ didKey: ctx.plcRotationKey.did(), handle }, 'Failed to create did:plc')
+          req.log.error(
+            { didKey: ctx.plcRotationKey.did(), handle },
+            'Failed to create did:plc',
+          )
           throw err
         }
 
@@ -251,53 +275,65 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
             nonce,
             legalId,
             createdAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
           })
           .execute()
 
         accountCreated = true
-        req.log.info({ did, handle, legalId }, 'Account auto-provisioned successfully')
+        req.log.info(
+          { did, handle, legalId },
+          'Account auto-provisioned successfully',
+        )
 
         // Mark email as verified since Neuro already verified it during Legal ID approval
         if (emailFromNeuro && email) {
           await setEmailConfirmedAt(
             ctx.accountManager.db,
             did,
-            new Date().toISOString()
+            new Date().toISOString(),
           )
-          req.log.info({ did, email }, 'Email marked as verified (verified by Neuro)')
+          req.log.info(
+            { did, email },
+            'Email marked as verified (verified by Neuro)',
+          )
         }
 
         return res.status(201).json({
           success: true,
           did,
           handle,
-          legalId
+          legalId,
         })
-
       } catch (err) {
         // Check error type
         const errorMsg = err instanceof Error ? err.message.toLowerCase() : ''
-        const errorType = err instanceof Error ? err.constructor.name : typeof err
+        const errorType =
+          err instanceof Error ? err.constructor.name : typeof err
         const errorStack = err instanceof Error ? err.stack : String(err)
 
         // Handle specific error cases
-        const isUserExists = errorType === 'UserAlreadyExistsError' || errorMsg.includes('already exists')
-        const isHandleConflict = errorMsg.includes('handle') ||
-                                 errorMsg.includes('unique') ||
-                                 errorMsg.includes('constraint')
+        const isUserExists =
+          errorType === 'UserAlreadyExistsError' ||
+          errorMsg.includes('already exists')
+        const isHandleConflict =
+          errorMsg.includes('handle') ||
+          errorMsg.includes('unique') ||
+          errorMsg.includes('constraint')
 
         // Case 1: User/email already exists
         if (isUserExists) {
-          req.log.warn({
-            legalId,
-            email,
-            errorType
-          }, 'Account with this email already exists - skipping provisioning')
+          req.log.warn(
+            {
+              legalId,
+              email,
+              errorType,
+            },
+            'Account with this email already exists - skipping provisioning',
+          )
 
           return res.status(409).json({
             error: 'AccountExists',
-            message: 'Account with this email already exists'
+            message: 'Account with this email already exists',
           })
         }
 
@@ -307,37 +343,46 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
           const randomDigit = Math.floor(Math.random() * 10)
           suffix += randomDigit
           handle = `${userName}_${suffix}.${ctx.cfg.service.hostname}`
-          req.log.warn({
-            previousHandle: `${userName}_${suffix.slice(0, -1)}.${ctx.cfg.service.hostname}`,
-            newHandle: handle,
-            retryCount,
-            error: errorMsg
-          }, 'Handle conflict during creation, retrying with new suffix')
+          req.log.warn(
+            {
+              previousHandle: `${userName}_${suffix.slice(0, -1)}.${ctx.cfg.service.hostname}`,
+              newHandle: handle,
+              retryCount,
+              error: errorMsg,
+            },
+            'Handle conflict during creation, retrying with new suffix',
+          )
           continue // Retry with new handle
         }
 
         // Case 3: Other errors or max retries reached
-        req.log.error({
-          error: errorMsg,
-          errorType,
-          stack: errorStack,
-          legalId,
-          email,
-          handle,
-          retryCount
-        }, 'Failed to provision account')
+        req.log.error(
+          {
+            error: errorMsg,
+            errorType,
+            stack: errorStack,
+            legalId,
+            email,
+            handle,
+            retryCount,
+          },
+          'Failed to provision account',
+        )
         return res.status(500).json({
           error: 'ProvisionFailed',
-          message: err instanceof Error ? err.message : 'Unknown error'
+          message: err instanceof Error ? err.message : 'Unknown error',
         })
       }
     }
 
     // If we get here, max retries exceeded
-    req.log.error({ legalId, userName, retryCount }, 'Max retries exceeded for handle generation')
+    req.log.error(
+      { legalId, userName, retryCount },
+      'Max retries exceeded for handle generation',
+    )
     return res.status(500).json({
       error: 'ProvisionFailed',
-      message: 'Unable to generate unique handle after multiple attempts'
+      message: 'Unable to generate unique handle after multiple attempts',
     })
   })
 

@@ -41,6 +41,7 @@ export function extractEmail(
 
 /**
  * Extract user name from Neuro properties (case-insensitive)
+ * Returns lowercase name for Caddy compatibility
  */
 export function extractUserName(
   properties?: Record<string, any>,
@@ -48,15 +49,15 @@ export function extractUserName(
   if (!properties) return undefined
 
   // Try common cases
-  if (properties.NAME) return properties.NAME
-  if (properties.name) return properties.name
-  if (properties.Name) return properties.Name
+  if (properties.NAME) return properties.NAME.toLowerCase()
+  if (properties.name) return properties.name.toLowerCase()
+  if (properties.Name) return properties.Name.toLowerCase()
 
   // Case-insensitive search
   const nameKey = Object.keys(properties).find(
     (key) => key.toLowerCase() === 'name',
   )
-  return nameKey ? properties[nameKey] : undefined
+  return nameKey ? properties[nameKey].toLowerCase() : undefined
 }
 
 /**
