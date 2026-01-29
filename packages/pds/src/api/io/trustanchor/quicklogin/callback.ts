@@ -86,10 +86,10 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
       let handle: string
 
       if (existingLink) {
-        // Existing user - create session
+        // User has logged in via QuickLogin before - use existing link
         req.log.info(
           { jid, did: existingLink.did },
-          'Existing Neuro identity found',
+          'Existing Neuro identity link found',
         )
 
         did = existingLink.did
@@ -113,37 +113,68 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
         accessJwt = tokens.accessJwt
         refreshJwt = tokens.refreshJwt
       } else {
-        // New user - check if account creation allowed
-        if (!session.allowCreate) {
-          req.log.warn({ jid }, 'Account creation not allowed for this session')
-          ctx.quickloginStore.updateSession(session.sessionId, {
-            status: 'failed',
-            error: 'Account creation not allowed',
-          })
-          return res.status(400).json({ error: 'Account creation not allowed' })
-        }
+        // No existing link - this is user's first QuickLogin (but account should exist)
+        //
+        // IMPORTANT: QuickLogin is ONLY for login, not account creation.
+        // The W ID app enforces that users cannot scan QR codes until both their
+        // W ID account AND W Social account have been provisioned. Account provisioning
+        // happens via the /neuro/provision/account endpoint when Neuro sends a
+        // LegalIdUpdated notification. Therefore, when we reach this code, the account
+        // must already exist - we just need to create the neuro_identity_link.
 
-        req.log.info({ jid }, 'Creating new account for Neuro identity')
-
-        // Extract metadata
         const email = extractEmail(payload.Properties)
         const userName = extractUserName(payload.Properties)
 
-        // Derive handle
-        const derivedHandle = await deriveAvailableHandle(ctx, email)
+        if (!email) {
+          req.log.error({ jid }, 'No email found in QuickLogin payload')
+          return res.status(400).json({ error: 'Email required' })
+        }
 
-        // Create account
-        const result = await createAccountViaQuickLogin(ctx, {
-          handle: derivedHandle,
-          neuroJid: jid,
-          email,
-          userName,
-        })
+        // Find the existing account by email
+        const existingAccount = await ctx.accountManager.db.db
+          .selectFrom('account')
+          .selectAll()
+          .where('email', '=', email.toLowerCase())
+          .executeTakeFirst()
 
-        did = result.did
-        handle = result.handle
-        accessJwt = result.accessJwt
-        refreshJwt = result.refreshJwt
+        if (!existingAccount) {
+          // This should never happen given W ID app behavior
+          req.log.error(
+            { jid, email },
+            'Account not found - user scanned QR before account provisioning completed',
+          )
+          return res.status(400).json({
+            error:
+              'Account not found. Please ensure your account is fully set up.',
+          })
+        }
+
+        // Account exists - create the link
+        req.log.info(
+          { jid, email, did: existingAccount.did },
+          'Creating Neuro identity link for existing account',
+        )
+
+        did = existingAccount.did
+        handle = await getHandleForDid(ctx, did)
+
+        // Create the neuro_identity_link
+        await ctx.accountManager.db.db
+          .insertInto('neuro_identity_link')
+          .values({
+            neuroJid: jid,
+            did,
+            email: email || null,
+            userName: userName || null,
+            linkedAt: new Date().toISOString(),
+            lastLoginAt: new Date().toISOString(),
+          })
+          .execute()
+
+        // Create session
+        const tokens = await ctx.accountManager.createSession(did, null, false)
+        accessJwt = tokens.accessJwt
+        refreshJwt = tokens.refreshJwt
       }
 
       // Update session with success
@@ -166,7 +197,19 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
       // Return success to provider
       return res.json({ success: true })
     } catch (error) {
-      req.log.error({ error }, 'QuickLogin callback failed')
+      req.log.error(
+        {
+          error:
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack,
+                  name: error.name,
+                }
+              : error,
+        },
+        'QuickLogin callback failed',
+      )
       return res.status(500).json({ error: 'Internal server error' })
     }
   })
