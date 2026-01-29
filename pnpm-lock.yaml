@@ -6,6 +6,7 @@ settings:
 
 overrides:
   cookie: ^0.7.2
+  '@atproto/api': workspace:@sokaa/atproto-custom-api@*
 
 importers:
 
@@ -182,7 +183,7 @@ importers:
         specifier: workspace:^
         version: link:../internal/xrpc-utils
       '@atproto/api':
-        specifier: workspace:^
+        specifier: workspace:@sokaa/atproto-custom-api@*
         version: link:../api
       '@atproto/common':
         specifier: workspace:^
@@ -493,7 +494,7 @@ importers:
   packages/dev-env:
     dependencies:
       '@atproto/api':
-        specifier: workspace:^
+        specifier: workspace:@sokaa/atproto-custom-api@*
         version: link:../api
       '@atproto/bsky':
         specifier: workspace:^
@@ -1730,7 +1731,7 @@ importers:
   packages/ozone:
     dependencies:
       '@atproto/api':
-        specifier: workspace:^
+        specifier: workspace:@sokaa/atproto-custom-api@*
         version: link:../api
       '@atproto/common':
         specifier: workspace:^
@@ -1857,7 +1858,7 @@ importers:
         specifier: workspace:^
         version: link:../internal/xrpc-utils
       '@atproto/api':
-        specifier: workspace:^
+        specifier: workspace:@sokaa/atproto-custom-api@*
         version: link:../api
       '@atproto/aws':
         specifier: workspace:^
@@ -3436,7 +3437,6 @@ packages:
   /@babel/helper-validator-identifier@7.28.5:
     resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
     engines: {node: '>=6.9.0'}
-    dev: true
 
   /@babel/helper-validator-option@7.25.9:
     resolution: {integrity: sha512-e/zv1co8pp55dNdEcCynfj9X7nyUKUXoUEwfXqaZt0omVOmDe9oOTdKStH4GmAw6zxMFs50ZayuMfHDKlO7Tfw==}
@@ -3492,7 +3492,6 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.28.5
-    dev: true
 
   /@babel/plugin-proposal-decorators@7.28.0(@babel/core@7.26.9):
     resolution: {integrity: sha512-zOiZqvANjWDUaUS9xMxbMcK/Zccztbe/6ikvUXaG9nsPH3w6qh5UaPGAnirI/WhIbZ8m3OHU0ReyPrknG+ZKeg==}
@@ -4342,9 +4341,9 @@ packages:
       '@babel/code-frame': 7.27.1
       '@babel/generator': 7.28.3
       '@babel/helper-globals': 7.28.0
-      '@babel/parser': 7.28.4
+      '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
-      '@babel/types': 7.28.4
+      '@babel/types': 7.28.5
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
@@ -4369,7 +4368,6 @@ packages:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
-    dev: true
 
   /@bcoe/v8-coverage@0.2.3:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}

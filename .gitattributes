@@ -1,3 +1,6 @@
+# Enforce LF line endings for all text files
+* text=auto eol=lf
+
 # buf
 packages/bsky/src/proto/** linguist-generated=true
 packages/bsync/src/proto/** linguist-generated=true

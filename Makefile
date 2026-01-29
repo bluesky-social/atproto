@@ -26,6 +26,14 @@ run-dev-env: ## Run a "development environment" shell
 run-dev-env-logged: ## Run a "development environment" shell (with logging)
 	cd packages/dev-env; LOG_ENABLED=true NODE_ENV=development pnpm run start | pnpm exec pino-pretty
 
+.PHONY: run-custom-dev-env
+run-custom-dev-env: ## Run PDS + PLC servers only (no appview)
+	cd packages/dev-env; NODE_ENV=development pnpm run start-custom-dev
+
+.PHONY: run-custom-dev-env-logged
+run-custom-dev-env-logged: ## Run PDS + PLC servers with pretty logging
+	cd packages/dev-env; LOG_ENABLED=true NODE_ENV=development pnpm run start-custom-dev | pnpm exec pino-pretty
+
 .PHONY: codegen
 codegen: ## Re-generate packages from lexicon/ files
 	pnpm codegen

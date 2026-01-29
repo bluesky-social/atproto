@@ -1,0 +1,10 @@
+{
+  "name": "atproto-dev",
+  "image": "node:18",
+  "postCreateCommand": "corepack enable && pnpm install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}
