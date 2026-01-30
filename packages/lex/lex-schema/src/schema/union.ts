@@ -1,38 +1,42 @@
 import {
-  Infer,
+  InferInput,
+  InferOutput,
   Schema,
+  ValidationContext,
   ValidationError,
   ValidationFailure,
-  ValidationResult,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 
 export type UnionSchemaValidators = readonly [Validator, ...Validator[]]
-export type UnionSchemaOutput<V extends readonly Validator[]> = Infer<V[number]>
 
-export class UnionSchema<V extends UnionSchemaValidators = any> extends Schema<
-  UnionSchemaOutput<V>
+export class UnionSchema<
+  const TValidators extends UnionSchemaValidators = any,
+> extends Schema<
+  InferInput<TValidators[number]>,
+  InferOutput<TValidators[number]>
 > {
-  constructor(protected readonly validators: V) {
+  constructor(protected readonly validators: TValidators) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<UnionSchemaOutput<V>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const failures: ValidationFailure[] = []
 
     for (const validator of this.validators) {
       const result = ctx.validate(input, validator)
-      if (result.success) {
-        return result as ValidationResult<UnionSchemaOutput<V>>
-      } else {
-        failures.push(result)
-      }
+      if (result.success) return result
+
+      failures.push(result)
     }
 
     return ctx.failure(ValidationError.fromFailures(failures))
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function union<const TValidators extends UnionSchemaValidators>(
+  validators: TValidators,
+) {
+  return new UnionSchema<TValidators>(validators)
 }

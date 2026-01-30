@@ -24,6 +24,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   actors: AppBskyActorDefs.ProfileView[]
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: string
 }
 
 export type HandlerInput = void

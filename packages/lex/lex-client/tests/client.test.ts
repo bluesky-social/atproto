@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { LexValue, cidForLex, cidForRawBytes } from '@atproto/lex-cbor'
+import { LexValue, cidForLex } from '@atproto/lex-cbor'
+import { cidForRawBytes } from '@atproto/lex-data'
 import { lexParse, lexStringify } from '@atproto/lex-json'
 import { Action, Client } from '../src/index.js'
 import { app, com } from './lexicons/index.js'
@@ -10,6 +11,7 @@ describe('utils', () => {
   describe('TypedObjectSchema', () => {
     it('overrides $type when building an object', () => {
       const _r = app.bsky.actor.defs.adultContentPref.build({
+        // @ts-expect-error
         $type: 'foo',
         enabled: true,
       })
@@ -328,7 +330,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toMatchObject({
-        name: 'LexRpcResponseError',
+        name: 'XrpcResponseError',
         message: 'This is a custom error message from the server',
         payload: {
           encoding: 'application/json',
@@ -394,7 +396,7 @@ describe('Client', () => {
             validateRequest: true,
           },
         )
-      }).rejects.toThrow('Invalid DID format')
+      }).rejects.toThrow('Invalid DID at $.did')
 
       // validate performs schema validation before making the request
       expect(fetchHandler).toHaveBeenCalledTimes(0)
@@ -421,7 +423,7 @@ describe('Client', () => {
         // @ts-expect-error an "rkey" option is required for feed generator records
         app.bsky.feed.generator,
         {
-          did: 'no-a-did',
+          did,
           displayName: 'Alice Generator',
           createdAt: new Date().toISOString(),
         },

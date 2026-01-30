@@ -2,11 +2,16 @@ import assert from 'node:assert'
 import { join } from 'node:path'
 import { SourceFile } from 'ts-morph'
 import { LexiconDocument, LexiconIndexer } from '@atproto/lex-document'
-import { isReservedWord, isSafeIdentifier } from './ts-lang.js'
+import {
+  isGlobalIdentifier,
+  isJsKeyword,
+  isSafeLocalIdentifier,
+  isValidJsIdentifier,
+} from './ts-lang.js'
 import {
   asRelativePath,
   memoize,
-  startsWithLowerLetter,
+  startsWithLower,
   toCamelCase,
   toPascalCase,
   ucFirst,
@@ -48,13 +53,29 @@ export class RefResolver {
   )
 
   #defCounters = new Map<string, number>()
-  private nextSafeDefinitionIdentifier(safeIdentifier: string) {
-    const count = this.#defCounters.get(safeIdentifier) ?? 0
-    this.#defCounters.set(safeIdentifier, count + 1)
+  private nextSafeDefinitionIdentifier(name: string) {
+    // use camelCase version of the hash as base name
+    const nameSafe =
+      startsWithLower(name) && isValidJsIdentifier(name)
+        ? name
+        : toCamelCase(name).replace(/^[0-9]+/g, '') || 'def'
+
+    const count = this.#defCounters.get(nameSafe) ?? 0
+    this.#defCounters.set(nameSafe, count + 1)
+
     // @NOTE We don't need to check against local declarations in the file here
     // since we are using a naming system that should guarantee no other
-    // identifier has a <safeIdentifier>$<number> format.
-    return `${safeIdentifier}$${count}`
+    // identifier has a <nameSafe>$<number> format ("$" cannot appear in
+    // hashes so only *we* are generating such identifiers).
+
+    const identifier = `${nameSafe}$${count}`
+
+    assert(
+      isValidJsIdentifier(identifier),
+      `Unable to generate safe identifier for: "${name}"`,
+    )
+
+    return identifier
   }
 
   /**
@@ -109,9 +130,10 @@ export class RefResolver {
             // as base, and append a counter to avoid conflicts
             this.nextSafeDefinitionIdentifier(safeIdentifier)
         : // hash only contained unsafe characters, generate a safe one
-          this.nextSafeDefinitionIdentifier('def')
+          this.nextSafeDefinitionIdentifier(hash)
 
       const typeName = ucFirst(varName)
+      assert(isSafeLocalIdentifier(typeName), 'Expected safe type identifier')
       assert(varName !== typeName, 'Variable and type name should be different')
 
       return { varName, typeName }
@@ -141,13 +163,33 @@ export class RefResolver {
         )
       }
 
+      const publicIds = getPublicIdentifiers(hash)
+
+      if (!isValidJsIdentifier(publicIds.typeName)) {
+        // If <typeName> is not a valid identifier, we cannot access the type
+        // using dot notation (<nsIdentifier>.<typeName>). Note that, unlike js
+        // variables, types cannot be accessed using string indexing (like:
+        // <nsIdentifier>['<typeName>']) because it generates TypeScript errors:
+        //
+        // > "Cannot use namespace '<nsIdentifier>' as a type."
+
+        // Instead the generated code should look like:
+        // import { "<unsafeTypeName>" as <safeIdentifier> } from './<moduleSpecifier>'
+
+        // Because it requires more complex management of local variables names,
+        // and we don't expect this to actually happen with properly designed
+        // lexicons documents, we do not support this for now.
+
+        throw new Error(
+          'Import of definitions with unsafe type names is not supported',
+        )
+      }
+
       // import * as <nsIdentifier> from './<moduleSpecifier>'
       const nsIdentifier = this.getNsIdentifier(nsid, moduleSpecifier)
 
-      const publicIds = getPublicIdentifiers(hash)
-
       return {
-        varName: isSafeIdentifier(publicIds.varName)
+        varName: isValidJsIdentifier(publicIds.varName)
           ? `${nsIdentifier}.${publicIds.varName}`
           : `${nsIdentifier}[${JSON.stringify(publicIds.varName)}]`,
         typeName: `${nsIdentifier}.${publicIds.typeName}`,
@@ -196,7 +238,7 @@ export class RefResolver {
   }
 
   private conflictsWithKeywords(name: string) {
-    return isReservedWord(name)
+    return isJsKeyword(name) || isGlobalIdentifier(name)
   }
 
   private conflictsWithUtils(name: string) {
@@ -274,7 +316,7 @@ function nsidToIdentifier(nsid: string) {
   // full NSID.
   for (let i = 2; i < parts.length; i++) {
     const identifier = toPascalCase(parts.slice(-i).join('.'))
-    if (isSafeIdentifier(identifier)) return identifier
+    if (isSafeLocalIdentifier(identifier)) return identifier
   }
 
   return undefined
@@ -289,26 +331,34 @@ function nsidToIdentifier(nsid: string) {
  */
 export function getPublicIdentifiers(hash: string): ResolvedRef {
   const varName = hash
-  // @NOTE Type names *must* be valid TypeScript identifiers (this is because,
-  // unlike variable names, we cannot use string indexing to access exported
-  // types).
-  const typeName = toPascalCase(hash)
-  if (!typeName || varName === typeName || !isSafeIdentifier(typeName)) {
-    return { varName, typeName: `Def${typeName}` }
+
+  // @NOTE we try to circumvent the issue of unsafe type names described in
+  // `RefResolver.resolveExternal` by ensuring that type names are always safe
+  // identifiers, even if it means changing them from the original hash.
+  let typeName = toPascalCase(hash)
+
+  if (varName === typeName || !isValidJsIdentifier(typeName)) {
+    typeName = `TypeOf${typeName}`
   }
+
+  assert(
+    isValidJsIdentifier(typeName),
+    `Unable to generate a predictable safe identifier for "${hash}"`,
+  )
+
   return { varName, typeName }
 }
 
 function asSafeDefinitionIdentifier(name: string) {
   if (
-    startsWithLowerLetter(name) &&
-    isSafeIdentifier(name) &&
-    isSafeIdentifier(ucFirst(name))
+    startsWithLower(name) &&
+    isSafeLocalIdentifier(name) &&
+    isSafeLocalIdentifier(ucFirst(name))
   ) {
     return name
   }
   const camel = toCamelCase(name)
-  if (isSafeIdentifier(camel) && isSafeIdentifier(ucFirst(camel))) {
+  if (isSafeLocalIdentifier(camel) && isSafeLocalIdentifier(ucFirst(camel))) {
     return camel
   }
   return undefined

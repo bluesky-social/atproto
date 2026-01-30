@@ -93,6 +93,10 @@ describe('agent', () => {
       verificationPrefs: {
         hideBadges: false,
       },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      },
     })
   })
 
@@ -149,6 +153,10 @@ describe('agent', () => {
       verificationPrefs: {
         hideBadges: false,
       },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
+      },
     })
     expect(agent.labelers).toStrictEqual(['did:plc:other'])
 
@@ -189,6 +197,10 @@ describe('agent', () => {
       },
       verificationPrefs: {
         hideBadges: false,
+      },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
       },
     })
     expect(agent.labelers).toStrictEqual([])
@@ -252,6 +264,10 @@ describe('agent', () => {
       },
       verificationPrefs: {
         hideBadges: false,
+      },
+      liveEventPreferences: {
+        hiddenFeedIds: [],
+        hideAllFeeds: false,
       },
     })
   })

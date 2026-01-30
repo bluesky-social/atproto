@@ -304,16 +304,35 @@ try {
 
 > [!NOTE]
 >
-> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$parse()`.
+> The `$parse` method will apply defaults defined in the schema for optional fields, as well as data coercion (e.g., CID strings to Cid types). This means that the returned value might be different from the input data if defaults were applied. Use `$validate()` for value validation.
 
-#### `$validate(data)` - Get Validation Result
+#### `$validate(data)` - Validate a value against the schema
+
+Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
+
+```typescript
+import * as app from './lexicons/app.js'
+
+const value = {
+  $type: 'app.bsky.feed.post',
+  text: 'Hello!',
+  createdAt: new Date().toISOString(),
+}
+
+// Throws if no valid
+const result = app.bsky.feed.post.$validate(value)
+
+value === result // true
+```
+
+#### `$safeParse(data)` - Parse a value against a schema and get the resulting value
 
 Returns a detailed validation result object without throwing:
 
 ```typescript
 import * as app from './lexicons/app.js'
 
-const result = app.bsky.feed.post.$validate({
+const result = app.bsky.feed.post.$safeParse({
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
   createdAt: new Date().toISOString(),
@@ -325,10 +344,6 @@ if (result.success) {
   console.error('Validation failed:', result.error)
 }
 ```
-
-> [!NOTE]
->
-> Like `$parse`, the `$validate` method will apply defaults and coercion. Disable this behavior by passing `{ allowTransform: false }` as the second argument to `$validate()`.
 
 #### `$build(data)` - Build with Defaults
 
@@ -358,7 +373,7 @@ import * as app from './lexicons/app.js'
 declare const data:
   | app.bsky.feed.post.Main
   | app.bsky.feed.like.Main
-  | l.TypedObject
+  | l.Unknown$TypedObject
 
 // Discriminate by $type without re-validating
 if (app.bsky.feed.post.$isTypeOf(data)) {
@@ -457,6 +472,149 @@ const client = new Client(session)
 ```
 
 For detailed OAuth setup, see the [@atproto/oauth-client](../../../oauth/oauth-client) documentation.
+
+#### Authenticated Client with Password
+
+For simpler use cases (CLI tools, scripts, server-to-server), you can use password-based authentication with `@atproto/lex-password-session`:
+
+```bash
+npm install @atproto/lex-password-session
+```
+
+```typescript
+import { Client } from '@atproto/lex'
+import { PasswordSession } from '@atproto/lex-password-session'
+import * as app from './lexicons/app.js'
+
+// Create a session with app password credentials
+const session = await PasswordSession.create({
+  service: 'https://bsky.social',
+  identifier: 'alice.bsky.social', // handle or email
+  password: 'xxxx-xxxx-xxxx-xxxx', // App password (not your main password)
+
+  // Called when session is created or refreshed - persist the session data
+  onUpdated: (data) => {
+    saveToStorage(data) // Your persistence logic
+  },
+
+  // Called when session becomes invalid - clean up stored data
+  onDeleted: (data) => {
+    removeFromStorage(data.did)
+  },
+})
+
+// Use the session with a Client
+const client = new Client(session)
+
+const profile = await client.call(app.bsky.actor.getProfile, {
+  actor: 'atproto.com',
+})
+```
+
+**Resuming a Session**
+
+Resume a previously persisted session. The `resume()` method validates the session by refreshing it:
+
+```typescript
+const savedData = loadFromStorage() // Your retrieval logic
+
+// Resume validates the session by refreshing it
+// Throws if the session is definitively invalid
+const session = await PasswordSession.resume(savedData, {
+  onUpdated: (data) => saveToStorage(data),
+  onDeleted: (data) => removeFromStorage(data.did),
+})
+
+const client = new Client(session)
+
+// Access session properties
+console.log(session.did) // User's DID
+console.log(session.handle) // User's handle
+console.log(session.destroyed) // false (session is active)
+```
+
+**Logging Out**
+
+```typescript
+await session.logout()
+```
+
+**Deleting a Session Without Resuming**
+
+Delete a stored session without needing to resume it first:
+
+```typescript
+const savedData = loadFromStorage()
+
+// Delete the session directly - throws on transient errors (network, server down)
+await PasswordSession.delete(savedData)
+```
+
+**Error Handling Hooks**
+
+Handle transient errors (network issues, server unavailability) separately from permanent failures:
+
+```typescript
+const session = await PasswordSession.create({
+  service: 'https://bsky.social',
+  identifier: 'alice.bsky.social',
+  password: 'xxxx-xxxx-xxxx-xxxx',
+
+  onUpdated: (data) => saveToStorage(data),
+  onDeleted: (data) => removeFromStorage(data.did),
+
+  // Called when refresh fails due to transient errors (network, server down)
+  // The session may still be valid - don't delete stored credentials
+  onUpdateFailure: (data, error) => {
+    console.warn('Session refresh failed, will retry:', error.message)
+  },
+
+  // Called when logout fails due to transient errors
+  // Consider retrying later to avoid orphaned sessions
+  onDeleteFailure: (data, error) => {
+    console.error('Logout failed, session may still be active:', error.message)
+    scheduleRetry(data) // Your retry logic
+  },
+})
+```
+
+**Handling Two-Factor Authentication (2FA)**
+
+> [!CAUTION]
+>
+> Two-factor authentication only applies when using **main account credentials**, which is **strongly discouraged**. Password authentication should be used with [app passwords](https://bsky.app/settings/app-passwords) only because they are designed for programmatic access (bots, scripts, CLI tools). For user-facing applications, use OAuth via [@atproto/oauth-client](../../../oauth/oauth-client) which provides better security and user control.
+
+```typescript
+import {
+  PasswordSession,
+  LexAuthFactorError,
+} from '@atproto/lex-password-session'
+
+async function loginWithMainCredentials(
+  identifier: string,
+  password: string,
+  authFactorToken?: string,
+): Promise<PasswordSession> {
+  try {
+    return await PasswordSession.create({
+      service: 'https://bsky.social',
+      identifier,
+      password,
+      authFactorToken,
+
+      onUpdated: (data) => saveToStorage(data),
+      onDeleted: (data) => removeFromStorage(data.did),
+    })
+  } catch (err) {
+    if (err instanceof LexAuthFactorError && !authFactorToken) {
+      // 2FA required
+      const token = await promptUserFor2FACode(err.message)
+      return loginWithMainCredentials(identifier, password, token)
+    }
+    throw err
+  }
+}
+```
 
 #### Creating a Client from Another Client
 
@@ -710,7 +868,7 @@ if (result.success) {
   if (result.error === 'Unknown') {
     // Unable to perform the request
     const { reason } = result
-    if (reason instanceof LexRpcResponseError) {
+    if (reason instanceof XrpcResponseError) {
       // The server returned a syntactically valid XRPC error response, but
       // used an error code that is not declared for this method
       reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
@@ -718,7 +876,7 @@ if (result.success) {
       reason.status // number
       reason.headers // Headers
       reason.payload // { body: { error: string, message?: string }; encoding: string }
-    } else if (reason instanceof LexRpcUpstreamError) {
+    } else if (reason instanceof XrpcUpstreamError) {
       // The response was incomplete (e.g. connection dropped), or
       // invalid (e.g. malformed JSON, data does not match schema).
       reason.error // "InvalidResponse"
@@ -731,7 +889,7 @@ if (result.success) {
     }
   } else {
     // A declared error for that method
-    result // LexRpcResponseError<"HandleNotFound">
+    result // XrpcResponseError<"HandleNotFound">
     result.error // "HandleNotFound"
     result.message // string
   }
@@ -740,14 +898,14 @@ if (result.success) {
 
 The `ResponseFailure<M>` type is a union with three possible error types:
 
-1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `LexRpcResponseError<N>` instance:
+1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `XrpcResponseError<N>` instance:
 
    ```typescript
-   // LexRpcResponseError<N>
+   // XrpcResponseError<N>
    type KnownLexRpcResponseFailure<N extends string> = {
      success: false
      name: N
-     error: LexRpcResponseError<N>
+     error: XrpcResponseError<N>
 
      // Additional response details
      status: number
@@ -760,11 +918,11 @@ The `ResponseFailure<M>` type is a union with three possible error types:
 2. **Unknown errors** - Server errors not declared in the method's schema:
 
    ```typescript
-   // LexRpcResponseFailure<'Unexpected', LexRpcResponseError>
+   // LexRpcResponseFailure<'Unexpected', XrpcResponseError>
    type UnknownLexRpcResponseFailure = {
      success: false
      name: 'Unexpected'
-     error: LexRpcResponseError<string>
+     error: XrpcResponseError<string>
    }
    ```
 
@@ -893,7 +1051,7 @@ Various utilities for working with CIDs, string lengths, language tags, and low-
 import {
   // CID utilities
   parseCid, // Parse CID string (throws on invalid)
-  asCid, // Coerce to Cid or null
+  ifCid, // Coerce to Cid or null
   isCid, // Type guard for Cid values
 
   // Blob references
@@ -1373,7 +1531,7 @@ await client.call(unfollow, { followUri: uri })
 #### Updating Profile with Retry Logic
 
 ```typescript
-import { Action, LexRpcResponseError } from '@atproto/lex'
+import { Action, XrpcResponseError } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 import * as com from './lexicons/com.js'
 
@@ -1415,7 +1573,7 @@ export const updateProfile: Action<ProfileUpdate, void> = async (
     } catch (error) {
       // Retry on swap/concurrent modification errors
       if (
-        error instanceof LexRpcResponseError &&
+        error instanceof XrpcResponseError &&
         error.name === 'SwapError' &&
         attempt < maxRetries - 1
       ) {

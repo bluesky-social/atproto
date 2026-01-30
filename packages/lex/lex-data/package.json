@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-data",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "license": "MIT",
   "description": "Core utilities for AT Lexicons",
   "keywords": [
@@ -35,7 +35,6 @@
     }
   },
   "dependencies": {
-    "@atproto/syntax": "workspace:*",
     "multiformats": "^9.9.0",
     "tslib": "^2.8.1",
     "uint8arrays": "3.0.0",

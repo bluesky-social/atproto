@@ -1,30 +1,31 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
 import {
-  InferMethodParams,
-  LexRpcFailure,
-  LexRpcResponse,
   Query,
   Restricted,
+  XrpcFailure,
+  XrpcRequestParams,
+  XrpcResponse,
+  getMain,
 } from '@atproto/lex'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 
 export function useLexQuery<S extends Query>(
-  ns: NonNullable<unknown> extends InferMethodParams<S>
+  ns: NonNullable<unknown> extends XrpcRequestParams<S>
     ? S | { main: S }
     : Restricted<'This XRPC method requires a "params" argument'>,
-): UseQueryResult<LexRpcResponse<S>, LexRpcFailure<S>>
+): UseQueryResult<XrpcResponse<S>, XrpcFailure<S>>
 export function useLexQuery<
   S extends Query,
-  P extends false | InferMethodParams<S>,
+  P extends false | XrpcRequestParams<S>,
 >(
   ns: S | { main: S },
   params: P,
-): UseQueryResult<P extends false ? null : LexRpcResponse<S>, LexRpcFailure<S>>
+): UseQueryResult<P extends false ? null : XrpcResponse<S>, XrpcFailure<S>>
 export function useLexQuery<S extends Query>(
   ns: S | { main: S },
-  params: false | InferMethodParams<S> = {} as InferMethodParams<S>,
-): UseQueryResult<null | LexRpcResponse<S>, LexRpcFailure<S>> {
-  const schema = 'main' in ns ? ns.main : ns
+  params: false | XrpcRequestParams<S> = {} as XrpcRequestParams<S>,
+): UseQueryResult<null | XrpcResponse<S>, XrpcFailure<S>> {
+  const schema = getMain(ns)
   const client = useBskyClient()
 
   const queryString =
@@ -37,8 +38,8 @@ export function useLexQuery<S extends Query>(
     queryFn: async ({ signal }) => {
       if (params === false) return null
       const result = await client.xrpcSafe(schema, { signal, params } as any)
-      if (result.success) return result
-      throw result
+      if (result.success) return result.value
+      throw result.reason
     },
     retry: (failureCount, error) => {
       if (failureCount > 10) return false

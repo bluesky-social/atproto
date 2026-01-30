@@ -13,7 +13,7 @@ export function memoize<T extends (arg: string) => NonNullable<unknown> | null>(
   }) as T
 }
 
-export function startsWithLowerLetter(str: string) {
+export function startsWithLower(str: string) {
   const code = str.charCodeAt(0)
   return code >= 97 && code <= 122 // 'a' to 'z'
 }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-schema",
-  "version": "0.0.7",
+  "version": "0.0.10",
   "license": "MIT",
   "description": "Lexicon schema system for AT Lexicons",
   "keywords": [
@@ -35,8 +35,8 @@
     }
   },
   "dependencies": {
-    "@atproto/syntax": "workspace:*",
-    "@atproto/lex-data": "workspace:*",
+    "@atproto/syntax": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

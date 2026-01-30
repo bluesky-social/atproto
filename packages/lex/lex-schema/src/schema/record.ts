@@ -1,37 +1,36 @@
 import {
   $Typed,
-  Infer,
+  $typed,
+  InferInput,
+  InferOutput,
   LexiconRecordKey,
   NsidString,
   Schema,
   TidString,
-  ValidationResult,
+  Unknown$TypedObject,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
-import { LiteralSchema } from './literal.js'
-import { StringSchema } from './string.js'
-import { TypedObject } from './typed-union.js'
+import { literal } from './literal.js'
+import { string } from './string.js'
 
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
-
-export type RecordSchemaOutput<
-  T extends NsidString,
-  S extends Validator<{ [k: string]: unknown }>,
-> = $Typed<Infer<S>, T>
+  R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
 
 export class RecordSchema<
-  K extends LexiconRecordKey = any,
-  T extends NsidString = any,
-  S extends Validator<{ [k: string]: unknown }> = any,
-> extends Schema<RecordSchemaOutput<T, S>> {
-  keySchema: RecordKeySchema<K>
+  const TKey extends LexiconRecordKey = any,
+  const TType extends NsidString = any,
+  const TShape extends Validator<{ [k: string]: unknown }> = any,
+> extends Schema<
+  $Typed<InferInput<TShape>, TType>,
+  $Typed<InferOutput<TShape>, TType>
+> {
+  keySchema: RecordKeySchema<TKey>
 
   constructor(
-    readonly key: K,
-    readonly $type: T,
-    readonly schema: S,
+    readonly key: TKey,
+    readonly $type: TType,
+    readonly schema: TShape,
   ) {
     super()
     this.keySchema = recordKey(key)
@@ -39,41 +38,38 @@ export class RecordSchema<
 
   isTypeOf<X extends { $type?: unknown }>(
     value: X,
-  ): value is Exclude<X extends { $type: T } ? X : $Typed<X, T>, TypedObject> {
+  ): value is X extends { $type: TType }
+    ? X
+    : $Typed<Exclude<X, Unknown$TypedObject>, TType> {
     return value.$type === this.$type
   }
 
-  build<X extends Omit<Infer<S>, '$type'>>(
-    input: X,
-  ): $Typed<Omit<X, '$type'>, T> {
-    return input.$type === this.$type
-      ? (input as $Typed<X, T>)
-      : { ...input, $type: this.$type }
+  build(
+    input: Omit<InferInput<this>, '$type'>,
+  ): $Typed<InferOutput<this>, TType> {
+    return this.parse($typed(input, this.$type))
   }
 
   $isTypeOf<X extends { $type?: unknown }>(value: X) {
     return this.isTypeOf<X>(value)
   }
 
-  $build<X extends Omit<Infer<S>, '$type'>>(input: X) {
-    return this.build<X>(input)
+  $build(input: Omit<InferInput<this>, '$type'>) {
+    return this.build(input)
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<RecordSchemaOutput<T, S>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const result = ctx.validate(input, this.schema)
 
     if (!result.success) {
       return result
     }
 
-    if (this.$type !== result.value.$type) {
+    if (result.value.$type !== this.$type) {
       return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
     }
 
-    return result as ValidationResult<RecordSchemaOutput<T, S>>
+    return result
   }
 }
 
@@ -92,10 +88,10 @@ export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 
-const keySchema = new StringSchema({ minLength: 1 })
-const tidSchema = new StringSchema({ format: 'tid' })
-const nsidSchema = new StringSchema({ format: 'nsid' })
-const selfLiteralSchema = new LiteralSchema('self')
+const keySchema = string({ minLength: 1 })
+const tidSchema = string({ format: 'tid' })
+const nsidSchema = string({ format: 'nsid' })
+const selfLiteralSchema = literal('self')
 
 function recordKey<Key extends LexiconRecordKey>(
   key: Key,
@@ -107,8 +103,46 @@ function recordKey<Key extends LexiconRecordKey>(
   if (key.startsWith('literal:')) {
     const value = key.slice(8) as RecordKeySchemaOutput<Key>
     if (value === 'self') return selfLiteralSchema as any
-    return new LiteralSchema(value)
+    return literal(value)
   }
 
   throw new Error(`Unsupported record key type: ${key}`)
+}
+
+/**
+ * Ensures that a `$type` used in a record is a valid NSID (i.e. no fragment).
+ */
+type AsNsid<T> = T extends `${string}#${string}` ? never : T
+
+/**
+ * This function offers two overloads:
+ * - One that allows creating a {@link RecordSchema}, and infer the output type
+ *   from the provided arguments, without requiring to specify any of the
+ *   generics. This is useful when you want to define a record without
+ *   explicitly defining its interface. This version does not support circular
+ *   references, as TypeScript cannot infer types in such cases.
+ * - One allows creating a {@link RecordSchema} with an explicitly defined
+ *   interface. This will typically be used by codegen (`lex build`) to generate
+ *   schemas that work even if they contain circular references.
+ */
+export function record<
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
+  const S extends Validator<{ [k: string]: unknown }>,
+>(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
+export function record<
+  const K extends LexiconRecordKey,
+  const V extends { $type: NsidString },
+>(
+  key: K,
+  type: AsNsid<V['$type']>,
+  validator: Validator<Omit<V, '$type'>>,
+): RecordSchema<K, V['$type'], Validator<Omit<V, '$type'>>>
+/*@__NO_SIDE_EFFECTS__*/
+export function record<
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
+  const S extends Validator<{ [k: string]: unknown }>,
+>(key: K, type: T, validator: S) {
+  return new RecordSchema<K, T, S>(key, type, validator)
 }

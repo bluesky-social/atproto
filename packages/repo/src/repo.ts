@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats/cid'
 import { TID, dataToCborBlock } from '@atproto/common'
 import * as crypto from '@atproto/crypto'

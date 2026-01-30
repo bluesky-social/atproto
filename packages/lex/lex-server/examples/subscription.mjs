@@ -23,8 +23,10 @@ const main = l.subscription(
   nsid,
   l.params({
     message: l.string({ minLength: 1 }),
-    cursor: l.optional(l.integer({ minimum: 0, default: 0 })),
-    limit: l.optional(l.integer({ minimum: 1, maximum: 100, default: 10 })),
+    cursor: l.optional(l.withDefault(l.integer({ minimum: 0 }), 0)),
+    limit: l.optional(
+      l.withDefault(l.integer({ minimum: 1, maximum: 100 }), 10),
+    ),
   }),
   l.typedUnion([l.typedRef(() => message)], false),
   ['LimitReached'],
@@ -39,7 +41,7 @@ const router = new LexRouter({
 })
   //
   .add(com.example.echo, async function* ({ request, params }) {
-    const { message, cursor = 0, limit = 10 } = params
+    const { message, cursor, limit } = params
     const { signal } = request
 
     for (let i = 0; i < limit; i++) {
@@ -60,7 +62,7 @@ serve(
     const url = new URL(request.url)
 
     if (url.pathname.startsWith('/xrpc/')) {
-      return router.handle(request, info)
+      return router.fetch(request, info)
     }
 
     return indexHtml()

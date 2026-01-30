@@ -1,74 +1,62 @@
 import { l } from '@atproto/lex-schema'
 
-// Re-usable shortcuts (avoid creating too many schemas)
-
-const bool = l.boolean()
-const int = l.integer()
-const str = l.string()
-
-const boopOpt = l.optional(bool)
-const intOpt = l.optional(int)
-const strOpt = l.optional(str)
-
-const strArrOpt = l.optional(l.array(str))
-
 // https://atproto.com/specs/lexicon
 
 // "Concrete" Types
 
 export const lexiconBooleanSchema = l.object({
   type: l.literal('boolean'),
-  default: boopOpt,
-  const: boopOpt,
-  description: strOpt,
+  default: l.optional(l.boolean()),
+  const: l.optional(l.boolean()),
+  description: l.optional(l.string()),
 })
 export type LexiconBoolean = l.Infer<typeof lexiconBooleanSchema>
 
 export const lexiconIntegerSchema = l.object({
   type: l.literal('integer'),
-  default: intOpt,
-  minimum: intOpt,
-  maximum: intOpt,
+  default: l.optional(l.integer()),
+  minimum: l.optional(l.integer()),
+  maximum: l.optional(l.integer()),
   enum: l.optional(l.array(l.integer())),
-  const: intOpt,
-  description: strOpt,
+  const: l.optional(l.integer()),
+  description: l.optional(l.string()),
 })
 export type LexiconInteger = l.Infer<typeof lexiconIntegerSchema>
 
 export const lexiconStringSchema = l.object({
   type: l.literal('string'),
   format: l.optional(l.enum<l.StringFormat>(l.STRING_FORMATS)),
-  default: strOpt,
-  minLength: intOpt,
-  maxLength: intOpt,
-  minGraphemes: intOpt,
-  maxGraphemes: intOpt,
-  enum: strArrOpt,
-  const: strOpt,
-  knownValues: strArrOpt,
-  description: strOpt,
+  default: l.optional(l.string()),
+  minLength: l.optional(l.integer()),
+  maxLength: l.optional(l.integer()),
+  minGraphemes: l.optional(l.integer()),
+  maxGraphemes: l.optional(l.integer()),
+  enum: l.optional(l.array(l.string())),
+  const: l.optional(l.string()),
+  knownValues: l.optional(l.array(l.string())),
+  description: l.optional(l.string()),
 })
 export type LexiconString = l.Infer<typeof lexiconStringSchema>
 
 export const lexiconBytesSchema = l.object({
   type: l.literal('bytes'),
-  maxLength: intOpt,
-  minLength: intOpt,
-  description: strOpt,
+  maxLength: l.optional(l.integer()),
+  minLength: l.optional(l.integer()),
+  description: l.optional(l.string()),
 })
 export type LexiconBytes = l.Infer<typeof lexiconBytesSchema>
 
 export const lexiconCidLinkSchema = l.object({
   type: l.literal('cid-link'),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconCid = l.Infer<typeof lexiconCidLinkSchema>
 
 export const lexiconBlobSchema = l.object({
   type: l.literal('blob'),
-  accept: strArrOpt,
-  maxSize: intOpt,
-  description: strOpt,
+  accept: l.optional(l.array(l.string())),
+  maxSize: l.optional(l.integer()),
+  description: l.optional(l.string()),
 })
 export type LexiconBlob = l.Infer<typeof lexiconBlobSchema>
 
@@ -87,28 +75,28 @@ const CONCRETE_TYPES = [
 
 export const lexiconUnknownSchema = l.object({
   type: l.literal('unknown'),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconUnknown = l.Infer<typeof lexiconUnknownSchema>
 
 export const lexiconTokenSchema = l.object({
   type: l.literal('token'),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconToken = l.Infer<typeof lexiconTokenSchema>
 
 export const lexiconRefSchema = l.object({
   type: l.literal('ref'),
-  ref: str,
-  description: strOpt,
+  ref: l.string(),
+  description: l.optional(l.string()),
 })
 export type LexiconRef = l.Infer<typeof lexiconRefSchema>
 
 export const lexiconRefUnionSchema = l.object({
   type: l.literal('union'),
-  refs: l.array(str),
-  closed: boopOpt,
-  description: strOpt,
+  refs: l.array(l.string()),
+  closed: l.optional(l.boolean()),
+  description: l.optional(l.string()),
 })
 export type LexiconRefUnion = l.Infer<typeof lexiconRefUnionSchema>
 
@@ -127,9 +115,9 @@ export type LexiconArrayItems = l.Infer<(typeof ARRAY_ITEMS_SCHEMAS)[number]>
 export const lexiconArraySchema = l.object({
   type: l.literal('array'),
   items: l.discriminatedUnion('type', ARRAY_ITEMS_SCHEMAS),
-  minLength: intOpt,
-  maxLength: intOpt,
-  description: strOpt,
+  minLength: l.optional(l.integer()),
+  maxLength: l.optional(l.integer()),
+  description: l.optional(l.string()),
 })
 export type LexiconArray = l.Infer<typeof lexiconArraySchema>
 
@@ -146,15 +134,15 @@ export const lexiconObjectSchema = l.refine(
   l.object({
     type: l.literal('object'),
     properties: l.dict(
-      str,
+      l.string(),
       l.discriminatedUnion('type', [
         ...ARRAY_ITEMS_SCHEMAS,
         lexiconArraySchema,
       ]),
     ),
-    required: strArrOpt,
-    nullable: strArrOpt,
-    description: strOpt,
+    required: l.optional(l.array(l.string())),
+    nullable: l.optional(l.array(l.string())),
+    description: l.optional(l.string()),
   }),
   requirePropertiesRefinement,
 )
@@ -172,7 +160,7 @@ export type LexiconRecordKey = l.LexiconRecordKey
 export const lexiconRecordSchema = l.object({
   type: l.literal('record'),
   record: lexiconObjectSchema,
-  description: strOpt,
+  description: l.optional(l.string()),
   key: lexiconRecordKeySchema,
 })
 export type LexiconRecord = l.Infer<typeof lexiconRecordSchema>
@@ -183,7 +171,7 @@ export const lexiconParameters = l.refine(
   l.object({
     type: l.literal('params'),
     properties: l.dict(
-      str,
+      l.string(),
       l.discriminatedUnion('type', [
         lexiconBooleanSchema,
         lexiconIntegerSchema,
@@ -195,21 +183,21 @@ export const lexiconParameters = l.refine(
             lexiconIntegerSchema,
             lexiconStringSchema,
           ]),
-          minLength: intOpt,
-          maxLength: intOpt,
-          description: strOpt,
+          minLength: l.optional(l.integer()),
+          maxLength: l.optional(l.integer()),
+          description: l.optional(l.string()),
         }),
       ]),
     ),
-    required: strArrOpt,
-    description: strOpt,
+    required: l.optional(l.array(l.string())),
+    description: l.optional(l.string()),
   }),
   requirePropertiesRefinement,
 )
 export type LexiconParameters = l.Infer<typeof lexiconParameters>
 
 export const lexiconPayload = l.object({
-  encoding: str,
+  encoding: l.string(),
   schema: l.optional(
     l.discriminatedUnion('type', [
       lexiconRefSchema,
@@ -217,13 +205,13 @@ export const lexiconPayload = l.object({
       lexiconObjectSchema,
     ]),
   ),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconPayload = l.Infer<typeof lexiconPayload>
 
 export const lexiconError = l.object({
   name: l.string({ minLength: 1 }),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconError = l.Infer<typeof lexiconError>
 
@@ -232,7 +220,7 @@ export const lexiconQuerySchema = l.object({
   parameters: l.optional(lexiconParameters),
   output: l.optional(lexiconPayload),
   errors: l.optional(l.array(lexiconError)),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconQuery = l.Infer<typeof lexiconQuerySchema>
 
@@ -242,16 +230,16 @@ export const lexiconProcedureSchema = l.object({
   input: l.optional(lexiconPayload),
   output: l.optional(lexiconPayload),
   errors: l.optional(l.array(lexiconError)),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 export type LexiconProcedure = l.Infer<typeof lexiconProcedureSchema>
 
 export const lexiconSubscriptionSchema = l.object({
   type: l.literal('subscription'),
-  description: strOpt,
+  description: l.optional(l.string()),
   parameters: l.optional(lexiconParameters),
   message: l.object({
-    description: strOpt,
+    description: l.optional(l.string()),
     schema: lexiconRefUnionSchema,
   }),
   errors: l.optional(l.array(lexiconError)),
@@ -265,7 +253,7 @@ const lexiconLanguageSchema = l.string({ format: 'language' })
 
 export type LexiconLanguage = l.Infer<typeof lexiconLanguageSchema>
 
-const lexiconLanguageDict = l.dict(lexiconLanguageSchema, str)
+const lexiconLanguageDict = l.dict(lexiconLanguageSchema, l.string())
 
 export type LexiconLanguageDict = l.Infer<typeof lexiconLanguageDict>
 
@@ -274,7 +262,7 @@ const lexiconPermissionSchema = l.intersection(
     type: l.literal('permission'),
     resource: l.string({ minLength: 1 }),
   }),
-  l.paramsSchema,
+  l.dict(l.string(), l.paramSchema),
 )
 
 export type LexiconPermission = l.Infer<typeof lexiconPermissionSchema>
@@ -282,11 +270,11 @@ export type LexiconPermission = l.Infer<typeof lexiconPermissionSchema>
 const lexiconPermissionSetSchema = l.object({
   type: l.literal('permission-set'),
   permissions: l.array(lexiconPermissionSchema),
-  title: strOpt,
+  title: l.optional(l.string()),
   'title:lang': l.optional(lexiconLanguageDict),
-  detail: strOpt,
+  detail: l.optional(l.string()),
   'detail:lang': l.optional(lexiconLanguageDict),
-  description: strOpt,
+  description: l.optional(l.string()),
 })
 
 export type LexiconPermissionSet = l.Infer<typeof lexiconPermissionSetSchema>
@@ -323,8 +311,8 @@ export type LexiconIdentifier = l.Infer<typeof lexiconIdentifierSchema>
 export const lexiconDocumentSchema = l.object({
   lexicon: l.literal(1),
   id: lexiconIdentifierSchema,
-  revision: intOpt,
-  description: strOpt,
+  revision: l.optional(l.integer()),
+  description: l.optional(l.string()),
   defs: l.intersection(
     l.object({
       main: l.optional(l.discriminatedUnion('type', MAIN_LEXICON_SCHEMAS)),

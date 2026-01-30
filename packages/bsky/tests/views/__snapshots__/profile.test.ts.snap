@@ -529,6 +529,13 @@ Object {
 }
 `;
 
+exports[`pds profile views germ returns germ record if it does exist 1`] = `
+Object {
+  "messageMeUrl": "https://chat.example.com/start-conversation",
+  "showButtonTo": "everyone",
+}
+`;
+
 exports[`pds profile views presents avatars & banners 1`] = `
 Object {
   "associated": Object {
@@ -703,6 +710,7 @@ Object {
 
 exports[`pds profile views status returns active status when within the duration 1`] = `
 Object {
+  "cid": "cids(0)",
   "embed": Object {
     "$type": "app.bsky.embed.external#view",
     "external": Object {
@@ -713,6 +721,7 @@ Object {
   },
   "expiresAt": "1970-01-01T00:00:00.000Z",
   "isActive": true,
+  "isDisabled": false,
   "record": Object {
     "$type": "app.bsky.actor.status",
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -728,11 +737,13 @@ Object {
     "status": "app.bsky.actor.status#live",
   },
   "status": "app.bsky.actor.status#live",
+  "uri": "record(0)",
 }
 `;
 
 exports[`pds profile views status when outside the duration returns inactive status 1`] = `
 Object {
+  "cid": "cids(0)",
   "embed": Object {
     "$type": "app.bsky.embed.external#view",
     "external": Object {
@@ -741,11 +752,12 @@ Object {
       "uri": "https://example.com",
     },
   },
-  "expiresAt": "2021-01-01T01:10:00.000Z",
+  "expiresAt": "1970-01-01T00:00:00.000Z",
   "isActive": false,
+  "isDisabled": false,
   "record": Object {
     "$type": "app.bsky.actor.status",
-    "createdAt": "2021-01-01T01:00:00.000Z",
+    "createdAt": "1970-01-01T00:00:00.000Z",
     "durationMinutes": 10,
     "embed": Object {
       "$type": "app.bsky.embed.external",
@@ -758,5 +770,39 @@ Object {
     "status": "app.bsky.actor.status#live",
   },
   "status": "app.bsky.actor.status#live",
+  "uri": "record(0)",
+}
+`;
+
+exports[`pds profile views status when taken down it returns the live status with isDisabled=true for status owner 1`] = `
+Object {
+  "cid": "cids(0)",
+  "embed": Object {
+    "$type": "app.bsky.embed.external#view",
+    "external": Object {
+      "description": "testLink",
+      "title": "TestImage",
+      "uri": "https://example.com",
+    },
+  },
+  "expiresAt": "1970-01-01T00:00:00.000Z",
+  "isActive": true,
+  "isDisabled": true,
+  "record": Object {
+    "$type": "app.bsky.actor.status",
+    "createdAt": "1970-01-01T00:00:00.000Z",
+    "durationMinutes": 10,
+    "embed": Object {
+      "$type": "app.bsky.embed.external",
+      "external": Object {
+        "description": "testLink",
+        "title": "TestImage",
+        "uri": "https://example.com",
+      },
+    },
+    "status": "app.bsky.actor.status#live",
+  },
+  "status": "app.bsky.actor.status#live",
+  "uri": "record(0)",
 }
 `;

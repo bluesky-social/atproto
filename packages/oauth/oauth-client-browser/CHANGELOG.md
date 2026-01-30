@@ -1,5 +1,16 @@
 # @atproto/oauth-client-browser
 
+## 0.3.40
+
+### Patch Changes
+
+- Updated dependencies [[`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/did@0.3.0
+  - @atproto-labs/did-resolver@0.2.6
+  - @atproto-labs/handle-resolver@0.3.6
+  - @atproto/oauth-client@0.5.14
+  - @atproto/oauth-types@0.6.2
+
 ## 0.3.39
 
 ### Patch Changes

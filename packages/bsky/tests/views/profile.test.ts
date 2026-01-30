@@ -1,6 +1,10 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyEmbedExternal, AtpAgent } from '@atproto/api'
+import {
+  AppBskyEmbedExternal,
+  AtpAgent,
+  ComGermnetworkDeclaration,
+} from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
@@ -490,8 +494,118 @@ describe('pds profile views', () => {
         )
 
         // Doesn't need `forSnapshot` because the dates are already mocked.
-        expect(data.status).toMatchSnapshot()
+        expect(forSnapshot(data.status)).toMatchSnapshot()
       })
+    })
+
+    describe('when taken down', () => {
+      beforeAll(async () => {
+        const res = await sc.agent.com.atproto.repo.putRecord(
+          {
+            repo: alice,
+            collection: ids.AppBskyActorStatus,
+            rkey: 'self',
+            record: {
+              status: 'app.bsky.actor.status#live',
+              embed,
+              durationMinutes: 10,
+              createdAt: new Date().toISOString(),
+            },
+          },
+          {
+            headers: sc.getHeaders(alice),
+            encoding: 'application/json',
+          },
+        )
+        await network.processAll()
+
+        await network.bsky.ctx.dataplane.takedownRecord({
+          recordUri: res.data.uri,
+        })
+        await network.processAll()
+      })
+
+      it('it returns the live status with isDisabled=true for status owner', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              alice,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        expect(data.status?.isDisabled).toBe(true)
+        expect(forSnapshot(data.status)).toMatchSnapshot()
+      })
+
+      it('it does not return the live status for non-owner', async () => {
+        const { data } = await agent.api.app.bsky.actor.getProfile(
+          { actor: alice },
+          {
+            headers: await network.serviceHeaders(
+              bob,
+              ids.AppBskyActorGetProfile,
+            ),
+          },
+        )
+
+        expect(forSnapshot(data.status)).toBeUndefined()
+      })
+    })
+  })
+
+  describe('germ', () => {
+    const germDeclaration: ComGermnetworkDeclaration.Main = {
+      $type: ids.ComGermnetworkDeclaration,
+      version: '0.1.0',
+      currentKey: new Uint8Array([0o01, 0o02, 0o03]),
+      messageMe: {
+        messageMeUrl: 'https://chat.example.com/start-conversation',
+        showButtonTo: 'everyone',
+      },
+    }
+
+    it(`omits germ record if doesn't exist`, async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.germ).toBeUndefined()
+    })
+
+    it('returns germ record if it does exist', async () => {
+      await sc.agent.com.atproto.repo.createRecord(
+        {
+          repo: bob,
+          collection: ids.ComGermnetworkDeclaration,
+          rkey: 'self',
+          record: germDeclaration,
+        },
+        {
+          headers: sc.getHeaders(bob),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: bob },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.germ?.showButtonTo).toEqual('everyone')
+      expect(forSnapshot(data.associated?.germ)).toMatchSnapshot()
     })
   })
 

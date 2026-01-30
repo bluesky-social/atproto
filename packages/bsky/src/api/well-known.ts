@@ -1,13 +1,13 @@
 import { Router } from 'express'
+import { didWebToUrl, isDidWeb } from '@atproto/did'
 import { AppContext } from '../context'
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
 
   const did = ctx.cfg.serverDid
-  if (did.startsWith('did:web:')) {
-    const hostname = did.slice('did:web:'.length)
-    const serviceEndpoint = `https://${hostname}`
+  if (isDidWeb(did)) {
+    const serviceEndpoint = didWebToUrl(did).origin
 
     router.get('/.well-known/did.json', (_req, res) => {
       res.json({

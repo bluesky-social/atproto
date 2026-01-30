@@ -23,6 +23,8 @@ export interface Main {
   /** Alt text description of the video, for accessibility. */
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  /** A hint to the client about how to present the video. */
+  presentation?: 'default' | 'gif' | (string & {})
 }
 
 const hashMain = 'main'
@@ -58,6 +60,8 @@ export interface View {
   thumbnail?: string
   alt?: string
   aspectRatio?: AppBskyEmbedDefs.AspectRatio
+  /** A hint to the client about how to present the video. */
+  presentation?: 'default' | 'gif' | (string & {})
 }
 
 const hashView = 'view'

@@ -33,6 +33,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
       {
         countryCode: 'AA',
         regionCode: undefined,
+        minAccessAge: 13,
         rules: [
           {
             $type: ruleIds.IfAssuredOverAge,
@@ -48,6 +49,7 @@ jest.mock('../../dist/api/age-assurance/const.js', () => {
       {
         countryCode: 'BB',
         regionCode: undefined,
+        minAccessAge: 13,
         rules: [
           {
             $type: ruleIds.IfAssuredOverAge,
@@ -102,8 +104,6 @@ describe('age assurance v2 views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_age_assurance_v_two',
       bsky: {
-        statsigEnv: 'test',
-        statsigKey: 'secret-key',
         kws: {
           apiKey: 'apiKey',
           apiOrigin: kws.url,

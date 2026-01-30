@@ -1,7 +1,5 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats/cid'
-import { IdResolver } from '@atproto/identity'
+import { IdResolver, parseToAtprotoDocument } from '@atproto/identity'
 import { RepoRecord } from '@atproto/lexicon'
 import {
   Commit,
@@ -61,19 +59,30 @@ export function buildRecordResolver(
   ): Promise<RecordResolution> {
     const uri = typeof uriStr === 'string' ? new AtUri(uriStr) : uriStr
     const did = await getDidFromUri(uri, { idResolver })
-    const identity = await idResolver.did
-      .resolveAtprotoData(did, opts.forceRefresh)
+    const identityDoc = await idResolver.did
+      .ensureResolve(did, opts.forceRefresh)
       .catch((err) => {
         throw new RecordResolutionError('Could not resolve DID identity data', {
           cause: err,
         })
       })
+    const { pds, signingKey } = parseToAtprotoDocument(identityDoc)
+    if (!pds) {
+      throw new RecordResolutionError(
+        'Incomplete DID identity data: missing pds',
+      )
+    }
+    if (!signingKey) {
+      throw new RecordResolutionError(
+        'Incomplete DID identity data: missing signing key',
+      )
+    }
     const client = new Client(
       typeof rpc === 'function'
         ? rpc
         : {
             ...rpc,
-            service: rpc?.service ?? identity.pds,
+            service: rpc?.service ?? pds,
             fetch: rpc?.fetch ?? safeFetch,
           },
     )
@@ -90,7 +99,7 @@ export function buildRecordResolver(
       })
     const verified = await verifyRecordProof(proofBytes, {
       uri: AtUri.make(did, uri.collection, uri.rkey),
-      signingKey: identity.signingKey,
+      signingKey,
     })
     return verified
   }

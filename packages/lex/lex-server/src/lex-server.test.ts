@@ -36,14 +36,14 @@ const io = {
       l.payload(
         'application/json',
         l.object({
-          cid: l.cidLink(),
+          cid: l.cid(),
           bytes: l.bytes(),
         }),
       ),
       l.payload(
         'application/json',
         l.object({
-          cid: l.cidLink(),
+          cid: l.cid(),
           bytes: l.bytes(),
         }),
       ),
@@ -87,7 +87,7 @@ describe('LexRouter', () => {
   it('returns MethodNotImplemented when the route is not found', async () => {
     const router = new LexRouter()
     const request = new Request(`https://example.com/xrpc/foo.bar.baz`)
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
     expect(response.status).toBe(501)
     expect(await response.json()).toMatchObject({
       error: 'MethodNotImplemented',
@@ -115,7 +115,7 @@ describe('LexRouter', () => {
         },
       }),
     })
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     const reader = response.body!.getReader()
     const chunks: string[] = []
@@ -141,7 +141,7 @@ describe('LexRouter', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramsToBody?name=Alice&pronouns=she%2Fher&pronouns=they%2Fthem',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({
@@ -162,7 +162,7 @@ describe('lex-client integration', () => {
     const agent = buildAgent({
       fetch: async (input, init) => {
         const request = new Request(input, init)
-        return router.handle(request)
+        return router.fetch(request)
       },
       service: 'https://example.com',
     })
@@ -180,7 +180,7 @@ describe('lex-client integration', () => {
     const agent = buildAgent({
       fetch: async (input, init) => {
         const request = new Request(input, init)
-        return router.handle(request)
+        return router.fetch(request)
       },
       service: 'https://example.com',
     })
@@ -203,7 +203,7 @@ describe('lex-client integration', () => {
     const agent = buildAgent({
       fetch: async (input, init) => {
         const request = new Request(input, init)
-        return router.handle(request)
+        return router.fetch(request)
       },
       service: 'https://example.com',
     })
@@ -228,7 +228,7 @@ describe('IPLD values', () => {
     const agent = buildAgent({
       fetch: async (input, init) => {
         const request = new Request(input, init)
-        return router.handle(request)
+        return router.fetch(request)
       },
       service: 'https://example.com',
     })
@@ -335,7 +335,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: false }),
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -359,7 +359,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: false }),
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -383,7 +383,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: true }),
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -405,7 +405,7 @@ describe('Authentication', () => {
         body: JSON.stringify({ present: true }),
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -461,7 +461,7 @@ describe('Error Handling', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.error?which=foo',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -487,7 +487,7 @@ describe('Error Handling', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.error?which=bar',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -507,7 +507,7 @@ describe('Error Handling', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.throwFalsyValue',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(500)
       const data = await response.json()
@@ -526,7 +526,7 @@ describe('Error Handling', () => {
       const request = new Request('https://example.com/xrpc/io.example.error', {
         method: 'POST',
       })
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(405)
       const data = await response.json()
@@ -550,7 +550,7 @@ describe('Error Handling', () => {
         'https://example.com/xrpc/io.example.procedure',
         { method: 'GET' },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(405)
       const data = await response.json()
@@ -566,7 +566,7 @@ describe('Error Handling', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.doesNotExist',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(501)
       expect(await response.json()).toMatchObject({
@@ -591,7 +591,7 @@ describe('Error Handling', () => {
       customRouter.add(io.example.error, handler)
 
       const request = new Request('https://example.com/xrpc/io.example.error')
-      const response = await customRouter.handle(request)
+      const response = await customRouter.fetch(request)
 
       expect(onHandlerError).toHaveBeenCalled()
       expect(response.status).toBe(500)
@@ -613,7 +613,7 @@ describe('Parameters', () => {
           int: l.integer({ minimum: 2, maximum: 10 }),
           bool: l.boolean(),
           arr: l.array(l.integer(), { maxLength: 2 }),
-          def: l.optional(l.integer({ default: 0 })),
+          def: l.optional(l.withDefault(l.integer(), 0)),
         }),
         l.payload(
           'application/json',
@@ -647,7 +647,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=1&arr=2&def=5',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -662,7 +662,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=3&arr=4',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -674,7 +674,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=10&int=5&bool=true&arr=3&arr=4',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     const data = await response.json()
@@ -688,7 +688,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=n&int=5&bool=true&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -699,7 +699,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=loooooooooooooong&int=5&bool=true&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -710,7 +710,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?int=5&bool=true&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -721,7 +721,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&bool=true&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -732,7 +732,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -743,7 +743,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=-1&bool=true&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -754,7 +754,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=11&bool=true&arr=1',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -765,7 +765,7 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -776,10 +776,10 @@ describe('Parameters', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.paramTest?str=valid&int=5&bool=true&arr=1&arr=2&arr=3',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
+    const data = await response.json()
 
     expect(response.status).toBe(400)
-    const data = await response.json()
     expect(data.message).toContain('arr')
   })
 })
@@ -859,7 +859,7 @@ describe('Procedures', () => {
       'https://example.com/xrpc/io.example.pingOne?message=hello%20world',
       { method: 'POST' },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('text/plain')
@@ -872,7 +872,7 @@ describe('Procedures', () => {
       headers: { 'content-type': 'text/plain' },
       body: 'hello world',
     })
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('text/plain')
@@ -888,7 +888,7 @@ describe('Procedures', () => {
         body: new TextEncoder().encode('hello world'),
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe(
@@ -907,7 +907,7 @@ describe('Procedures', () => {
         body: JSON.stringify({ message: 'hello world' }),
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('application/json')
@@ -971,7 +971,7 @@ describe('Queries', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.pingOne?message=hello%20world',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('text/plain')
@@ -982,7 +982,7 @@ describe('Queries', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.pingTwo?message=hello%20world',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe(
@@ -996,7 +996,7 @@ describe('Queries', () => {
     const request = new Request(
       'https://example.com/xrpc/io.example.pingThree?message=hello%20world',
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toBe('application/json')
@@ -1015,7 +1015,7 @@ describe('Queries', () => {
         headers: { 'content-type': 'application/json' },
       },
     )
-    const response = await router.handle(request)
+    const response = await router.fetch(request)
 
     expect(response.status).toBe(400)
     const data = await response.json()
@@ -1065,7 +1065,7 @@ describe('Responses', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.readableStream',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('content-type')).toBe(
@@ -1111,7 +1111,7 @@ describe('Responses', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.readableStream?shouldErr=true',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
 
@@ -1147,7 +1147,7 @@ describe('Responses', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.emptyResponse',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       expect(response.body).toBeNull()
@@ -1165,7 +1165,7 @@ describe('Responses', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.emptyResponse',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('x-custom-header')).toBe('value')
@@ -1201,7 +1201,7 @@ describe('Responses', () => {
       const request = new Request(
         'https://example.com/xrpc/io.example.customResponse?status=201',
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(201)
       const data = await response.json()
@@ -1256,7 +1256,7 @@ describe('Body Handling', () => {
           body: JSON.stringify({ foo: 'hello', bar: 123 }),
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -1273,7 +1273,7 @@ describe('Body Handling', () => {
           body: JSON.stringify({}),
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1289,7 +1289,7 @@ describe('Body Handling', () => {
           body: JSON.stringify({ foo: 123 }),
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1305,7 +1305,7 @@ describe('Body Handling', () => {
           body: new Uint8Array([1, 2, 3]),
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1346,7 +1346,7 @@ describe('Body Handling', () => {
           body: bytes,
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
@@ -1366,7 +1366,7 @@ describe('Body Handling', () => {
           body: bytes,
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
@@ -1392,7 +1392,7 @@ describe('Body Handling', () => {
           body: stream,
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const responseBytes = new Uint8Array(await response.arrayBuffer())
@@ -1409,7 +1409,7 @@ describe('Body Handling', () => {
           body: bytes,
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
     })
@@ -1444,7 +1444,7 @@ describe('Body Handling', () => {
         },
       )
 
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
       const data = await response.json()
@@ -1481,7 +1481,7 @@ describe('Body Handling', () => {
           body: new Uint8Array([1, 2, 3]),
         },
       )
-      const response = await router.handle(request)
+      const response = await router.fetch(request)
 
       expect(response.status).toBe(200)
       const data = await response.json()
@@ -1497,7 +1497,7 @@ describe('Subscription', () => {
       subscribe: l.subscription(
         'io.example.subscribe',
         l.params({
-          message: l.string({ default: 'hello' }),
+          message: l.withDefault(l.string(), 'hello'),
         }),
         l.object({
           message: l.string(),

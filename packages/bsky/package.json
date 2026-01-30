@@ -1,6 +1,6 @@
 {
   "name": "@atproto/bsky",
-  "version": "0.0.204",
+  "version": "0.0.212",
   "license": "MIT",
   "description": "Reference implementation of app.bsky App View (Bluesky API)",
   "keywords": [
@@ -16,7 +16,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/*",
+    "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/com/germnetwork/*",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
@@ -29,8 +29,8 @@
     "node": ">=18.7.0"
   },
   "dependencies": {
-    "@atproto-labs/fetch-node": "workspace:*",
-    "@atproto-labs/xrpc-utils": "workspace:*",
+    "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/xrpc-utils": "workspace:^",
     "@atproto/api": "workspace:^",
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
@@ -46,6 +46,7 @@
     "@connectrpc/connect-express": "^1.1.4",
     "@connectrpc/connect-node": "^1.1.4",
     "@did-plc/lib": "^0.0.1",
+    "@growthbook/growthbook": "^1.6.2",
     "@hapi/address": "^5.1.1",
     "@types/http-errors": "^2.0.1",
     "compression": "^1.7.4",
@@ -67,7 +68,6 @@
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
     "sharp": "^0.33.5",
-    "statsig-node": "^5.23.1",
     "structured-headers": "^1.0.1",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",

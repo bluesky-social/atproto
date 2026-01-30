@@ -1,6 +1,6 @@
 {
   "name": "@atproto/pds",
-  "version": "0.4.202",
+  "version": "0.4.206",
   "license": "MIT",
   "description": "Reference implementation of atproto Personal Data Server (PDS)",
   "keywords": [
@@ -33,11 +33,11 @@
     "migration:create": "ts-node ./bin/migration-create.ts"
   },
   "dependencies": {
-    "@atproto-labs/fetch-node": "workspace:*",
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto-labs/simple-store-memory": "workspace:*",
-    "@atproto-labs/simple-store-redis": "workspace:*",
-    "@atproto-labs/xrpc-utils": "workspace:*",
+    "@atproto-labs/fetch-node": "workspace:^",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto-labs/simple-store-memory": "workspace:^",
+    "@atproto-labs/simple-store-redis": "workspace:^",
+    "@atproto-labs/xrpc-utils": "workspace:^",
     "@atproto/api": "workspace:^",
     "@atproto/aws": "workspace:^",
     "@atproto/common": "workspace:^",
@@ -75,7 +75,6 @@
     "p-queue": "^6.6.2",
     "pino": "^8.21.0",
     "pino-http": "^8.2.1",
-    "sharp": "^0.33.5",
     "typed-emitter": "^2.1.0",
     "uint8arrays": "3.0.0",
     "undici": "^6.19.8",
@@ -86,7 +85,7 @@
     "@atproto/bsky": "workspace:^",
     "@atproto/dev-env": "workspace:^",
     "@atproto/lex-cli": "workspace:^",
-    "@atproto/oauth-client-browser-example": "workspace:*",
+    "@atproto/oauth-client-browser-example": "workspace:^",
     "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.3",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",

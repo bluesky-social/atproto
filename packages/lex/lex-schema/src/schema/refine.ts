@@ -1,10 +1,10 @@
 import {
-  Infer,
+  InferInput,
   IssueCustom,
   PropertyKey,
+  ValidationContext,
   ValidationResult,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 import { CustomAssertionContext } from './custom.js'
 
@@ -48,23 +48,26 @@ export type Refinement<T = any, Out extends T = T> =
  * // result.success === false
  * ```
  */
-export function refine<S extends Validator, Out extends Infer<S>>(
-  schema: S,
-  refinement: RefinementAssertion<Infer<S>, Out>,
-): S & Validator<Out>
-export function refine<S extends Validator>(
-  schema: S,
-  refinement: RefinementCheck<Infer<S>>,
-): S
 export function refine<
-  R extends Refinement,
-  S extends Validator<InferRefinement<R>>,
->(schema: S, refinement: R): S
+  const TValidator extends Validator,
+  TInput extends InferInput<TValidator>,
+>(
+  schema: TValidator,
+  refinement: RefinementAssertion<InferInput<TValidator>, TInput>,
+): TValidator & Validator<TInput>
+export function refine<const TValidator extends Validator>(
+  schema: TValidator,
+  refinement: RefinementCheck<InferInput<TValidator>>,
+): TValidator
+export function refine<
+  TRefinement extends Refinement,
+  const TValidator extends Validator<InferRefinement<TRefinement>>,
+>(schema: TValidator, refinement: TRefinement): TValidator
 /*@__NO_SIDE_EFFECTS__*/
-export function refine<S extends Validator>(
-  schema: S,
-  refinement: Refinement<Infer<S>>,
-): S {
+export function refine<const TValidator extends Validator>(
+  schema: TValidator,
+  refinement: Refinement<unknown>,
+): TValidator {
   // This is basically the same as monkey patching the "validateInContext"
   // method to the schema, but done in a way that does not mutate the original
   // schema. This is safe to do because Validators don't update their internal
@@ -84,11 +87,11 @@ export function refine<S extends Validator>(
 function validateInContextUnbound<S extends Validator>(
   this: {
     schema: S
-    refinement: Refinement<Infer<S>>
+    refinement: Refinement<InferInput<S>>
   },
   input: unknown,
-  ctx: ValidatorContext,
-): ValidationResult<Infer<S>> {
+  ctx: ValidationContext,
+): ValidationResult<InferInput<S>> {
   const result = ctx.validate(input, this.schema)
   if (!result.success) return result
 

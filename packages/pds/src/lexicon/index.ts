@@ -31,6 +31,10 @@ import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.j
 import * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
+import * as AppBskyDraftCreateDraft from './types/app/bsky/draft/createDraft.js'
+import * as AppBskyDraftDeleteDraft from './types/app/bsky/draft/deleteDraft.js'
+import * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
+import * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describeFeedGenerator.js'
 import * as AppBskyFeedGetActorFeeds from './types/app/bsky/feed/getActorFeeds.js'
 import * as AppBskyFeedGetActorLikes from './types/app/bsky/feed/getActorLikes.js'
@@ -411,6 +415,7 @@ export class AppBskyNS {
   ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
   contact: AppBskyContactNS
+  draft: AppBskyDraftNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -426,6 +431,7 @@ export class AppBskyNS {
     this.ageassurance = new AppBskyAgeassuranceNS(server)
     this.bookmark = new AppBskyBookmarkNS(server)
     this.contact = new AppBskyContactNS(server)
+    this.draft = new AppBskyDraftNS(server)
     this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
@@ -717,6 +723,62 @@ export class AppBskyContactNS {
     >,
   ) {
     const nsid = 'app.bsky.contact.verifyPhone' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class AppBskyDraftNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createDraft<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyDraftCreateDraft.QueryParams,
+      AppBskyDraftCreateDraft.HandlerInput,
+      AppBskyDraftCreateDraft.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.draft.createDraft' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteDraft<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyDraftDeleteDraft.QueryParams,
+      AppBskyDraftDeleteDraft.HandlerInput,
+      AppBskyDraftDeleteDraft.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.draft.deleteDraft' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getDrafts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyDraftGetDrafts.QueryParams,
+      AppBskyDraftGetDrafts.HandlerInput,
+      AppBskyDraftGetDrafts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.draft.getDrafts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateDraft<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyDraftUpdateDraft.QueryParams,
+      AppBskyDraftUpdateDraft.HandlerInput,
+      AppBskyDraftUpdateDraft.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.draft.updateDraft' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

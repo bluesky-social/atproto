@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import type { CID } from 'multiformats/cid'
 import { DidDocument } from '@atproto/identity'
 import type { RepoRecord } from '@atproto/lexicon'

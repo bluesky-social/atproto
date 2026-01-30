@@ -24,7 +24,7 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/simple-store": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:^",
     "lru-cache": "^10.2.0"
   },
   "devDependencies": {

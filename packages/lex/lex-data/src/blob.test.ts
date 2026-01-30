@@ -6,16 +6,19 @@ import {
   isBlobRef,
   isLegacyBlobRef,
 } from './blob.js'
-import { parseCid } from './cid.js'
+import { RawCid, parseCid } from './cid.js'
 import { LexArray, LexMap, LexValue } from './lex.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
 const validBlobCid = parseCid(
   'bafkreig77vqcdozl2wyk6z3cscaj5q5fggi53aoh64fewkdiri3cdauyn4',
+  { flavor: 'raw' },
 )
+
 // await cidForLex(Buffer.from('Hello, World!'))
 const invalidBlobCid = parseCid(
   'bafyreic52vzks7wdklat4evp3vimohl55i2unzqpshz2ytka5omzr7exdy',
+  { flavor: 'cbor' },
 )
 
 describe(isBlobRef, () => {
@@ -285,14 +288,14 @@ describe(isLegacyBlobRef, () => {
 })
 
 describe(enumBlobRefs, () => {
-  const valid1: BlobRef = {
+  const valid1: BlobRef<RawCid> = {
     $type: 'blob',
     ref: validBlobCid,
     mimeType: 'image/png',
     size: 2048,
   }
 
-  const valid2: BlobRef = {
+  const valid2: BlobRef<RawCid> = {
     $type: 'blob',
     ref: validBlobCid,
     mimeType: 'image/jpeg',

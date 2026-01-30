@@ -1,8 +1,9 @@
 import { ClientOptions } from 'ws'
-import { Deferrable, createDeferrable, isErrnoException } from '@atproto/common'
+import { Deferrable, createDeferrable } from '@atproto/common'
+import { lexParse } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
-import { formatAdminAuthHeader } from './util'
+import { formatAdminAuthHeader, isCausedBySignal } from './util'
 
 export interface HandlerOpts {
   signal: AbortSignal
@@ -26,7 +27,7 @@ type BufferedAck = {
   defer: Deferrable
 }
 
-export class TapChannel {
+export class TapChannel implements AsyncDisposable {
   private ws: WebSocketKeepAlive
   private handler: TapHandler
 
@@ -94,38 +95,43 @@ export class TapChannel {
         await this.sendAck(ack.id)
         ack.defer.resolve()
         this.bufferedAcks = this.bufferedAcks.slice(1)
-      } catch (err) {
-        this.handler.onError(
-          new Error(`failed to send ack for event ${this.bufferedAcks[0]}`, {
-            cause: err,
-          }),
+      } catch (cause) {
+        const error = new Error(
+          `failed to send ack for event ${this.bufferedAcks[0]}`,
+          { cause },
         )
+        this.handler.onError(error)
         return
       }
     }
   }
 
   async start() {
+    this.abortController.signal.throwIfAborted()
     try {
       for await (const chunk of this.ws) {
         await this.processWsEvent(chunk)
       }
     } catch (err) {
-      if (isErrnoException(err) && err.name === 'AbortError') {
-        this.destroyDefer.resolve()
-      } else {
+      if (!isCausedBySignal(err, this.abortController.signal)) {
         throw err
       }
+    } finally {
+      this.destroyDefer.resolve()
     }
   }
 
   private async processWsEvent(chunk: Uint8Array) {
     let evt: TapEvent
     try {
-      const data = chunk.toString()
-      evt = parseTapEvent(JSON.parse(data))
-    } catch (err) {
-      this.handler.onError(new Error('Failed to parse message', { cause: err }))
+      const data = lexParse(chunk.toString(), {
+        // Reject invalid CIDs and blobs
+        strict: true,
+      })
+      evt = parseTapEvent(data)
+    } catch (cause) {
+      const error = new Error(`Failed to parse message`, { cause })
+      this.handler.onError(error)
       return
     }
 
@@ -136,11 +142,10 @@ export class TapChannel {
           await this.ackEvent(evt.id)
         },
       })
-    } catch (err) {
+    } catch (cause) {
       // Don't ack on error - let Tap retry
-      this.handler.onError(
-        new Error(`Failed to process event ${evt.id}`, { cause: err }),
-      )
+      const error = new Error(`Failed to process event ${evt.id}`, { cause })
+      this.handler.onError(error)
       return
     }
   }
@@ -148,5 +153,9 @@ export class TapChannel {
   async destroy(): Promise<void> {
     this.abortController.abort()
     await this.destroyDefer.complete
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.destroy()
   }
 }

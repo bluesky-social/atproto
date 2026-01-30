@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex",
-  "version": "0.0.9",
+  "version": "0.0.13",
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [
@@ -34,12 +34,12 @@
     }
   },
   "dependencies": {
-    "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-client": "workspace:*",
-    "@atproto/lex-data": "workspace:*",
-    "@atproto/lex-json": "workspace:*",
-    "@atproto/lex-installer": "workspace:*",
-    "@atproto/lex-schema": "workspace:*",
+    "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-installer": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "tslib": "^2.8.1",
     "yargs": "^17.0.0"
   },

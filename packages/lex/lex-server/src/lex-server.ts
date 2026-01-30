@@ -39,7 +39,7 @@ export type ConnectionInfo<A extends Addr = Addr> = {
   completed: Promise<void>
 }
 
-type Handler = (
+export type FetchHandler = (
   request: Request,
   connection?: ConnectionInfo,
 ) => Promise<Response>
@@ -130,7 +130,7 @@ export type LexRouterOptions = {
 }
 
 export class LexRouter {
-  private handlers: Map<NsidString, Handler> = new Map()
+  private handlers: Map<NsidString, FetchHandler> = new Map()
 
   constructor(readonly options: LexRouterOptions = {}) {}
 
@@ -150,6 +150,18 @@ export class LexRouter {
     ns: Main<M>,
     config: LexRouterMethodConfig<M, Credentials>,
   ): this
+  add<M extends LexMethod, Credentials = unknown>(
+    ns: Main<M>,
+    config: M extends Subscription
+      ?
+          | LexRouterSubscriptionHandler<M, Credentials>
+          | LexRouterSubscriptionConfig<M, Credentials>
+      : M extends Query | Procedure
+        ?
+            | LexRouterMethodHandler<M, Credentials>
+            | LexRouterMethodConfig<M, Credentials>
+        : never,
+  ): this
   add<M extends LexMethod>(
     ns: Main<M>,
     config:
@@ -167,7 +179,7 @@ export class LexRouter {
         ? { handler: config, auth: undefined }
         : config
 
-    const handler: Handler =
+    const fetch: FetchHandler =
       method.type === 'subscription'
         ? this.buildSubscriptionHandler(
             method,
@@ -180,7 +192,7 @@ export class LexRouter {
             methodConfig.auth,
           )
 
-    this.handlers.set(method.nsid, handler)
+    this.handlers.set(method.nsid, fetch)
 
     return this
   }
@@ -189,7 +201,7 @@ export class LexRouter {
     method: Method,
     methodHandler: LexRouterMethodHandler<Method, Credentials>,
     auth?: LexRouterAuth<Credentials, Method>,
-  ): Handler {
+  ): FetchHandler {
     const getInput = (
       method.type === 'procedure'
         ? getProcedureInput.bind(method)
@@ -249,7 +261,10 @@ export class LexRouter {
 
         const headers = new Headers(output.headers)
         headers.set('content-type', output.encoding!)
-        return new Response(output.body, { status: 200, headers })
+        return new Response(output.body as BodyInit | null | undefined, {
+          status: 200,
+          headers,
+        })
       } catch (error) {
         return this.handleError(request, method, error)
       }
@@ -260,7 +275,7 @@ export class LexRouter {
     method: Method,
     methodHandler: LexRouterSubscriptionHandler<Method, Credentials>,
     auth?: LexRouterAuth<Credentials, Method>,
-  ): Handler {
+  ): FetchHandler {
     const {
       onHandlerError,
       upgradeWebSocket = (globalThis as any).Deno?.upgradeWebSocket as
@@ -433,14 +448,16 @@ export class LexRouter {
     )
   }
 
-  handle: Handler = async (
+  fetch: FetchHandler = async (
     request: Request,
     connection?: ConnectionInfo,
   ): Promise<Response> => {
     const nsid = extractMethodNsid(request)
 
-    const handler = (this.handlers as Map<string | null, Handler>).get(nsid)
-    if (handler) return handler(request, connection)
+    const fetch = nsid
+      ? (this.handlers as Map<unknown, FetchHandler>).get(nsid)
+      : undefined
+    if (fetch) return fetch(request, connection)
 
     if (!nsid || !isNsidString(nsid)) {
       return Response.json(
@@ -495,9 +512,8 @@ async function getProcedureInput<M extends Procedure>(
 
   if (this.input.encoding === 'application/json') {
     // @TODO limit size?
-    const body = this.input.schema
-      ? this.input.schema.parse(lexParse(await request.text()))
-      : lexParse(await request.text())
+    const data = lexParse(await request.text())
+    const body = this.input.schema ? this.input.schema.parse(data) : data
     return { encoding, body } as InferMethodInput<M, Body>
   } else if (this.input.encoding) {
     const body: Body = request

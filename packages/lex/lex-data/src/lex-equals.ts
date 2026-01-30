@@ -1,4 +1,4 @@
-import { asCid, isCid } from './cid.js'
+import { ifCid, isCid } from './cid.js'
 import { LexValue } from './lex.js'
 import { isPlainObject } from './object.js'
 import { ui8Equals } from './uint8array.js'
@@ -44,7 +44,7 @@ export function lexEquals(a: LexValue, b: LexValue): boolean {
   if (isCid(a)) {
     // @NOTE CID.equals returns its argument when it is falsy (e.g. null or
     // undefined) so we need to explicitly check that the output is "true".
-    return asCid(a)!.equals(asCid(b)) === true
+    return ifCid(b)?.equals(a) === true
   } else if (isCid(b)) {
     return false
   }

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/xrpc-server",
-  "version": "0.10.7",
+  "version": "0.10.10",
   "license": "MIT",
   "description": "atproto HTTP API (XRPC) server library",
   "keywords": [
@@ -25,8 +25,8 @@
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/crypto": "workspace:^",
-    "@atproto/lex-data": "workspace:*",
-    "@atproto/lex-cbor": "workspace:*",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc": "workspace:^",
