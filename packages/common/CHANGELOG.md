@@ -1,5 +1,16 @@
 # @atproto/common
 
+## 0.5.10
+
+### Patch Changes
+
+- [`49b3806`](https://github.com/bluesky-social/atproto/commit/49b38069ed4b5bd1ef71e967c78e5123b1c1f6f1) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update dependency on `@atproto/common-web`
+
+- Updated dependencies [[`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a)]:
+  - @atproto/lex-data@0.0.10
+  - @atproto/common-web@0.4.15
+  - @atproto/lex-cbor@0.0.10
+
 ## 0.5.9
 
 ### Patch Changes

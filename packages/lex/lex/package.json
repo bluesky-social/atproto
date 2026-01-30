@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [

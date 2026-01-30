@@ -1,5 +1,20 @@
 # @atproto/lex-client
 
+## 0.0.11
+
+### Patch Changes
+
+- [#4589](https://github.com/bluesky-social/atproto/pull/4589) [`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add ability to set default `headers` when creating XRPC agent
+
+- [#4589](https://github.com/bluesky-social/atproto/pull/4589) [`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve typing of error responses
+
+- [#4589](https://github.com/bluesky-social/atproto/pull/4589) [`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow omitting `rkey` for record definition usin `any`as record key
+
+- Updated dependencies [[`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a)]:
+  - @atproto/lex-data@0.0.10
+  - @atproto/lex-json@0.0.10
+  - @atproto/lex-schema@0.0.11
+
 ## 0.0.10
 
 ### Patch Changes
