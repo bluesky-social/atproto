@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -23,30 +20,6 @@ jobs:
           echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           echo "message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
 
-          # Determine if this is a tag or branch push
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            # Production: v* tags
-            TAG_NAME="${GITHUB_REF#refs/tags/}"
-            echo "ref_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-            echo "ref_type=tag" >> $GITHUB_OUTPUT
-            echo "environment=production" >> $GITHUB_OUTPUT
-            echo "image_tag=${TAG_NAME}" >> $GITHUB_OUTPUT
-          else
-            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-            echo "ref_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-            echo "ref_type=branch" >> $GITHUB_OUTPUT
-
-            if [ "$BRANCH_NAME" = "develop" ]; then
-              # Development: dev branch
-              echo "environment=development" >> $GITHUB_OUTPUT
-              echo "image_tag=latest" >> $GITHUB_OUTPUT
-            elif [ "$BRANCH_NAME" = "main" ]; then
-              # Staging: main branch
-              echo "environment=staging" >> $GITHUB_OUTPUT
-              echo "image_tag=stable" >> $GITHUB_OUTPUT
-            fi
-          fi
-
       - name: Trigger PDS build
         uses: peter-evans/repository-dispatch@v3
         with:
@@ -57,11 +30,7 @@ jobs:
             {
               "atproto_sha": "${{ steps.commit.outputs.sha }}",
               "atproto_short_sha": "${{ steps.commit.outputs.short_sha }}",
-              "atproto_message": "${{ steps.commit.outputs.message }}",
-              "ref_name": "${{ steps.commit.outputs.ref_name }}",
-              "ref_type": "${{ steps.commit.outputs.ref_type }}",
-              "environment": "${{ steps.commit.outputs.environment }}",
-              "image_tag": "${{ steps.commit.outputs.image_tag }}"
+              "atproto_message": "${{ steps.commit.outputs.message }}"
             }
 
       - name: Build Summary
@@ -69,8 +38,5 @@ jobs:
           echo "## Atproto Updated" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Triggered PDS rebuild with:" >> $GITHUB_STEP_SUMMARY
-          echo "- Ref: \`${{ steps.commit.outputs.ref_name }}\` (${{ steps.commit.outputs.ref_type }})" >> $GITHUB_STEP_SUMMARY
-          echo "- Environment: \`${{ steps.commit.outputs.environment }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Image tag: \`${{ steps.commit.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Commit: \`${{ steps.commit.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Message: ${{ steps.commit.outputs.message }}" >> $GITHUB_STEP_SUMMARY
