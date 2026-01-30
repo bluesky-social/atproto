@@ -2330,11 +2330,13 @@ export const schemaDict = {
             type: 'string',
             description:
               'UUIDv4 identifier of the device that created this draft.',
+            maxLength: 100,
           },
-          platform: {
+          deviceName: {
             type: 'string',
-            knownValues: ['web', 'ios', 'android'],
-            description: 'Platform on which the draft was created.',
+            description:
+              'The device and/or platform on which the draft was created.',
+            maxLength: 100,
           },
           posts: {
             description: 'Array of draft posts that compose this draft.',
