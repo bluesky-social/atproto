@@ -1,10 +1,10 @@
-import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
+import { Cid } from '@atproto/lex-data'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {
   let uriBuilder: ImageUriBuilder
-  let cid: CID
+  let cid: Cid
   const did = 'did:plc:xyz'
 
   beforeAll(async () => {

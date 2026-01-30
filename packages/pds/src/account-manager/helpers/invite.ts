@@ -1,14 +1,19 @@
 import { chunkArray } from '@atproto/common'
+import { DatetimeString, DidString, currentDatetimeString } from '@atproto/lex'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll } from '../../db'
+import { com } from '../../lexicons/index.js'
 import { AccountDb, InviteCode } from '../db'
+
+export type CodeDetail = com.atproto.server.defs.InviteCode
+export type CodeUse = com.atproto.server.defs.InviteCodeUse
 
 export const createInviteCodes = async (
   db: AccountDb,
   toCreate: { account: string; codes: string[] }[],
   useCount: number,
 ) => {
-  const now = new Date().toISOString()
+  const now = currentDatetimeString()
   const rows = toCreate.flatMap((account) =>
     account.codes.map((code) => ({
       code: code,
@@ -33,18 +38,15 @@ export const createAccountInviteCodes = async (
   expectedTotal: number,
   disabled: 0 | 1,
 ): Promise<CodeDetail[]> => {
-  const now = new Date().toISOString()
-  const rows = codes.map(
-    (code) =>
-      ({
-        code,
-        availableUses: 1,
-        disabled,
-        forAccount,
-        createdBy: forAccount,
-        createdAt: now,
-      }) as InviteCode,
-  )
+  const now = currentDatetimeString()
+  const rows: InviteCode[] = codes.map((code) => ({
+    code,
+    availableUses: 1,
+    disabled,
+    forAccount,
+    createdBy: forAccount,
+    createdAt: now,
+  }))
   await db.executeWithRetry(db.db.insertInto('invite_code').values(rows))
 
   const finalRoutineInviteCodes = await db.db
@@ -71,9 +73,9 @@ export const createAccountInviteCodes = async (
 export const recordInviteUse = async (
   db: AccountDb,
   opts: {
-    did: string
+    did: DidString
     inviteCode: string | undefined
-    now: string
+    now: DatetimeString
   },
 ) => {
   if (!opts.inviteCode) return
@@ -159,7 +161,7 @@ export const getAccountsInviteCodes = async (
         ...row,
         uses: uses[row.code] ?? [],
         disabled: row.disabled === 1,
-      },
+      } satisfies com.atproto.server.defs.InviteCode,
     ])
   })
   return results
@@ -188,7 +190,7 @@ export const getInviteCodesUses = async (
 
 export const getInvitedByForAccounts = async (
   db: AccountDb,
-  dids: string[],
+  dids: DidString[],
 ): Promise<Record<string, CodeDetail>> => {
   if (dids.length < 1) return {}
   const codeDetailsRes = await selectInviteCodesQb(db)
@@ -204,20 +206,24 @@ export const getInvitedByForAccounts = async (
     db,
     codeDetailsRes.map((row) => row.code),
   )
-  const codeDetails = codeDetailsRes.map((row) => ({
-    ...row,
-    uses: uses[row.code] ?? [],
-    disabled: row.disabled === 1,
-  }))
-  return codeDetails.reduce(
-    (acc, cur) => {
-      for (const use of cur.uses) {
-        acc[use.usedBy] = cur
-      }
-      return acc
-    },
-    {} as Record<string, CodeDetail>,
+  const codeDetails = codeDetailsRes.map(
+    ({ uses: _, disabled, createdAt, ...row }): CodeDetail => ({
+      ...row,
+      createdAt: createdAt as DatetimeString,
+      uses: uses[row.code] ?? [],
+      disabled: disabled === 1,
+    }),
   )
+
+  const result: Record<string, CodeDetail> = {}
+
+  for (const cur of codeDetails) {
+    for (const use of cur.uses) {
+      result[use.usedBy] = cur
+    }
+  }
+
+  return result
 }
 
 export const disableInviteCodes = async (
@@ -245,7 +251,7 @@ export const disableInviteCodes = async (
 
 export const setAccountInvitesDisabled = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   disabled: boolean,
 ) => {
   await db.executeWithRetry(
@@ -254,19 +260,4 @@ export const setAccountInvitesDisabled = async (
       .where('did', '=', did)
       .set({ invitesDisabled: disabled ? 1 : 0 }),
   )
-}
-
-export type CodeDetail = {
-  code: string
-  available: number
-  disabled: boolean
-  forAccount: string
-  createdBy: string
-  createdAt: string
-  uses: CodeUse[]
-}
-
-type CodeUse = {
-  usedBy: string
-  usedAt: string
 }
