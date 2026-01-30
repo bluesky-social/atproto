@@ -1,6 +1,5 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
 import { forSubjectStatusSnapshot } from './_util'
 
 describe('appeal account takedown', () => {
@@ -22,7 +21,7 @@ describe('appeal account takedown', () => {
     moderator = modAccount.did
     await network.ozone.addModeratorDid(moderator)
 
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {
@@ -129,8 +128,12 @@ describe('appeal account takedown', () => {
           },
         },
       ),
-    ).rejects.toThrow('Report not accepted from takendown account')
+    ).rejects.toMatchObject({
+      error: 'AccountTakedown',
+      message: 'Report not accepted from takendown account',
+    })
   })
+
   it('takendown actor is not allowed to create records.', async () => {
     const { data: auth } = await agent.com.atproto.server.createSession({
       identifier: 'jeff.test',
@@ -143,7 +146,7 @@ describe('appeal account takedown', () => {
       agent.com.atproto.repo.createRecord(
         {
           repo: auth.did,
-          collection: ids.AppBskyFeedPost,
+          collection: 'app.bsky.feed.post',
           // rkey: 'self',
           record: {
             text: 'test',

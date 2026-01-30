@@ -1,24 +1,8 @@
 import { Insertable, Selectable, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
-import { jsonStringToLex } from '@atproto/lexicon'
+import { $Typed, lexParse } from '@atproto/lex'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import { isMain as isEmbedExternal } from '../../../../lexicon/types/app/bsky/embed/external'
-import { isMain as isEmbedImage } from '../../../../lexicon/types/app/bsky/embed/images'
-import { isMain as isEmbedRecord } from '../../../../lexicon/types/app/bsky/embed/record'
-import { isMain as isEmbedRecordWithMedia } from '../../../../lexicon/types/app/bsky/embed/recordWithMedia'
-import { isMain as isEmbedVideo } from '../../../../lexicon/types/app/bsky/embed/video'
-import {
-  Record as PostRecord,
-  ReplyRef,
-} from '../../../../lexicon/types/app/bsky/feed/post'
-import { Record as PostgateRecord } from '../../../../lexicon/types/app/bsky/feed/postgate'
-import { Record as GateRecord } from '../../../../lexicon/types/app/bsky/feed/threadgate'
-import {
-  isLink,
-  isMention,
-} from '../../../../lexicon/types/app/bsky/richtext/facet'
-import { $Typed } from '../../../../lexicon/util'
+import { app } from '../../../../lexicons'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -67,18 +51,16 @@ type IndexedPost = {
   )[]
   ancestors?: PostAncestor[]
   descendents?: PostDescendent[]
-  threadgate?: GateRecord
+  threadgate?: app.bsky.feed.threadgate.Main
 }
-
-const lexId = lex.ids.AppBskyFeedPost
 
 const REPLY_NOTIF_DEPTH = 5
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: PostRecord,
+  cid: Cid,
+  obj: app.bsky.feed.post.Main,
   timestamp: string,
 ): Promise<IndexedPost | null> => {
   const post = {
@@ -143,13 +125,13 @@ const insertFn = async (
   const facets = (obj.facets || [])
     .flatMap((facet) => facet.features)
     .flatMap((feature) => {
-      if (isMention(feature)) {
+      if (app.bsky.richtext.facet.mention.$matches(feature)) {
         return {
           type: 'mention' as const,
           value: feature.did,
         }
       }
-      if (isLink(feature)) {
+      if (app.bsky.richtext.facet.link.$matches(feature)) {
         return {
           type: 'link' as const,
           value: feature.uri,
@@ -166,7 +148,7 @@ const insertFn = async (
   )[] = []
   const postEmbeds = separateEmbeds(obj.embed)
   for (const postEmbed of postEmbeds) {
-    if (isEmbedImage(postEmbed)) {
+    if (app.bsky.embed.images.$matches(postEmbed)) {
       const { images } = postEmbed
       const imagesEmbed = images.map((img, i) => ({
         postUri: uri.toString(),
@@ -176,7 +158,7 @@ const insertFn = async (
       }))
       embeds.push(imagesEmbed)
       await db.insertInto('post_embed_image').values(imagesEmbed).execute()
-    } else if (isEmbedExternal(postEmbed)) {
+    } else if (app.bsky.embed.external.$matches(postEmbed)) {
       const { external } = postEmbed
       const externalEmbed = {
         postUri: uri.toString(),
@@ -187,7 +169,7 @@ const insertFn = async (
       }
       embeds.push(externalEmbed)
       await db.insertInto('post_embed_external').values(externalEmbed).execute()
-    } else if (isEmbedRecord(postEmbed)) {
+    } else if (app.bsky.embed.record.$matches(postEmbed)) {
       const { record } = postEmbed
       const embedUri = new AtUri(record.uri)
       const recordEmbed = {
@@ -198,7 +180,7 @@ const insertFn = async (
       embeds.push(recordEmbed)
       await db.insertInto('post_embed_record').values(recordEmbed).execute()
 
-      if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+      if (embedUri.collection === app.bsky.feed.post.$type) {
         const quote = {
           uri: uri.toString(),
           cid: cid.toString(),
@@ -246,7 +228,7 @@ const insertFn = async (
             .executeTakeFirst()
         }
       }
-    } else if (isEmbedVideo(postEmbed)) {
+    } else if (app.bsky.embed.video.$matches(postEmbed)) {
       const { video } = postEmbed
       const videoEmbed = {
         postUri: uri.toString(),
@@ -317,7 +299,7 @@ const notifsForInsert = (obj: IndexedPost) => {
     for (const embed of obj.embeds ?? []) {
       if ('embedUri' in embed) {
         const embedUri = new AtUri(embed.embedUri)
-        if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+        if (embedUri.collection === app.bsky.feed.post.$type) {
           maybeNotify({
             did: embedUri.host,
             reason: 'quote',
@@ -428,7 +410,7 @@ const deleteFn = async (
     const embedUri = new AtUri(deletedPosts.embedUri)
     deletedEmbeds.push(deletedPosts)
 
-    if (embedUri.collection === lex.ids.AppBskyFeedPost) {
+    if (embedUri.collection === app.bsky.feed.post.$type) {
       await db.deleteFrom('quote').where('uri', '=', uriStr).execute()
       await db
         .insertInto('post_agg')
@@ -504,14 +486,10 @@ const updateAggregates = async (db: DatabaseSchema, postIdx: IndexedPost) => {
   await Promise.all([replyCountQb?.execute(), postsCountQb.execute()])
 }
 
-export type PluginType = RecordProcessor<PostRecord, IndexedPost>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.post.main,
     insertFn,
     findDuplicate,
     deleteFn,
@@ -524,17 +502,17 @@ export const makePlugin = (
 export default makePlugin
 
 function separateEmbeds(
-  embed: PostRecord['embed'],
+  embed: app.bsky.feed.post.Main['embed'],
 ): Array<
   | RecordWithMedia['media']
   | $Typed<RecordWithMedia['record']>
-  | NonNullable<PostRecord['embed']>
+  | NonNullable<app.bsky.feed.post.Main['embed']>
 > {
   if (!embed) {
     return []
   }
-  if (isEmbedRecordWithMedia(embed)) {
-    return [{ $type: lex.ids.AppBskyEmbedRecord, ...embed.record }, embed.media]
+  if (app.bsky.embed.recordWithMedia.$matches(embed)) {
+    return [app.bsky.embed.record.$build(embed.record), embed.media]
   }
   return [embed]
 }
@@ -542,7 +520,7 @@ function separateEmbeds(
 async function validateReply(
   db: DatabaseSchema,
   creator: string,
-  reply: ReplyRef,
+  reply: app.bsky.feed.post.ReplyRef,
 ) {
   const replyRefs = await getReplyRefs(db, reply)
   // check reply
@@ -573,7 +551,7 @@ async function getThreadgateRecord(db: DatabaseSchema, postUri: string) {
     (ref) => ref.uri === threadgateRecordUri,
   )
   if (threadgateRecord) {
-    return jsonStringToLex(threadgateRecord.json) as GateRecord
+    return lexParse<app.bsky.feed.threadgate.Main>(threadgateRecord.json)
   }
 }
 
@@ -596,7 +574,7 @@ async function validatePostEmbed(
   const {
     embeddingRules: { canEmbed },
   } = parsePostgate({
-    gate: jsonStringToLex(postgateRecord.json) as PostgateRecord,
+    gate: lexParse<app.bsky.feed.postgate.Main>(postgateRecord.json),
     viewerDid: uriToDid(parentUri),
     authorDid: uriToDid(embedUri),
   })
@@ -610,7 +588,10 @@ async function validatePostEmbed(
   }
 }
 
-async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
+async function getReplyRefs(
+  db: DatabaseSchema,
+  reply: app.bsky.feed.post.ReplyRef,
+) {
   const replyRoot = reply.root.uri
   const replyParent = reply.parent.uri
   const replyGate = postUriToThreadgateUri(replyRoot)
@@ -628,16 +609,16 @@ async function getReplyRefs(db: DatabaseSchema, reply: ReplyRef) {
     root: root && {
       uri: root.uri,
       invalidReplyRoot: root.invalidReplyRoot,
-      record: jsonStringToLex(root.json) as PostRecord,
+      record: lexParse<app.bsky.feed.post.Main>(root.json),
     },
     parent: parent && {
       uri: parent.uri,
       invalidReplyRoot: parent.invalidReplyRoot,
-      record: jsonStringToLex(parent.json) as PostRecord,
+      record: lexParse<app.bsky.feed.post.Main>(parent.json),
     },
     gate: gate && {
       uri: gate.uri,
-      record: jsonStringToLex(gate.json) as GateRecord,
+      record: lexParse<app.bsky.feed.threadgate.Main>(gate.json),
     },
   }
 }

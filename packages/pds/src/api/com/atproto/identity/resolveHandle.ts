@@ -1,17 +1,19 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { isDidString } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { baseNormalizeAndValidate } from '../../../../handle'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.identity.resolveHandle(async ({ params }) => {
+  server.add(com.atproto.identity.resolveHandle, async ({ params }) => {
     const handle = baseNormalizeAndValidate(params.handle)
 
     const user = await ctx.accountManager.getAccount(handle)
     if (user) {
       return {
-        encoding: 'application/json',
-        body: { did: user.did },
+        encoding: 'application/json' as const,
+        body: { did: user.did as DidString },
       }
     }
 
@@ -23,31 +25,26 @@ export default function (server: Server, ctx: AppContext) {
       throw new InvalidRequestError('Unable to resolve handle')
     }
 
-    // This is not someone on our server, but we help with resolving anyway
-    let did: string | undefined
-
-    // Either ask appview to resolve, or perform resolution, but don't do both.
-    if (ctx.bskyAppView) {
-      try {
-        const result =
-          await ctx.bskyAppView.agent.com.atproto.identity.resolveHandle({
-            handle,
-          })
-        did = result.data.did
-      } catch {
-        // Ignore
-      }
-    } else {
-      did = await ctx.idResolver.handle.resolve(handle)
-    }
-
-    if (!did) {
-      throw new InvalidRequestError('Unable to resolve handle')
-    }
+    const did: DidString = ctx.bskyAppView
+      ? await ctx.bskyAppView.client
+          .call(com.atproto.identity.resolveHandle, { handle })
+          .then((r) => r.did, throwInvalidRequestError)
+      : await ctx.idResolver.handle
+          .resolve(handle)
+          .then(
+            (v) => (v && isDidString(v) ? v : throwInvalidRequestError()),
+            throwInvalidRequestError,
+          )
 
     return {
-      encoding: 'application/json',
+      encoding: 'application/json' as const,
       body: { did },
     }
+  })
+}
+
+function throwInvalidRequestError(cause?: unknown): never {
+  throw new InvalidRequestError('Unable to resolve handle', undefined, {
+    cause,
   })
 }

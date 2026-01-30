@@ -1,21 +1,19 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Verification from '../../../../lexicon/types/app/bsky/graph/verification'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphVerification
 type IndexedVerification = Selectable<DatabaseSchemaType['verification']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Verification.Record,
+  cid: Cid,
+  obj: app.bsky.graph.verification.Main,
   timestamp: string,
 ): Promise<IndexedVerification | null> => {
   const inserted = await db
@@ -40,7 +38,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Verification.Record,
+  obj: app.bsky.graph.verification.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('verification')
@@ -97,17 +95,10 @@ const notifsForDelete = (
   }
 }
 
-export type PluginType = RecordProcessor<
-  Verification.Record,
-  IndexedVerification
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.verification.main,
     insertFn,
     findDuplicate,
     deleteFn,

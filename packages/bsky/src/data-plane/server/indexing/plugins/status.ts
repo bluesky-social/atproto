@@ -1,6 +1,6 @@
-import { CID } from 'multiformats/cid'
+import { Cid as Cid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema } from '../../db/database-schema'
@@ -8,12 +8,10 @@ import { RecordProcessor } from '../processor'
 
 // @NOTE this indexer is a placeholder to ensure it gets indexed in the generic records table
 
-const lexId = lex.ids.AppBskyActorStatus
-
 const insertFn = async (
   _db: DatabaseSchema,
   uri: AtUri,
-  _cid: CID,
+  _cid: Cid,
   _obj: unknown,
   _timestamp: string,
 ): Promise<unknown | null> => {
@@ -41,21 +39,16 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<unknown, unknown>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
-  const processor = new RecordProcessor(db, background, {
-    lexId,
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
+  return new RecordProcessor(db, background, {
+    schema: app.bsky.actor.status.main,
     insertFn,
     findDuplicate,
     deleteFn,
     notifsForInsert,
     notifsForDelete,
   })
-  return processor
 }
 
 export default makePlugin

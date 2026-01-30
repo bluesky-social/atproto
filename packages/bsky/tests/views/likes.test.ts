@@ -1,7 +1,5 @@
-import { AtpAgent } from '@atproto/api'
+import { AppBskyFeedGetLikes, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetLikesOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getLikes'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds like views', () => {
@@ -19,7 +17,7 @@ describe('pds like views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_likes',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await likesSeed(sc)
     await sc.createAccount('frankie', {
@@ -72,7 +70,7 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: GetLikesOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetLikes.OutputSchema[]) =>
       results.flatMap((res) => res.likes)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getLikes(

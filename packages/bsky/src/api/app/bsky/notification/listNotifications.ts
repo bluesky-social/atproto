@@ -1,11 +1,15 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AtUriString,
+  DatetimeString,
+  DidString,
+  toDatetimeString,
+} from '@atproto/syntax'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { isRecord as isPostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listNotifications'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -16,6 +20,7 @@ import {
 import { Notification } from '../../../../proto/bsky_pb'
 import { uriToDid as didFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
+import { isPostRecord } from '../../../../views/types'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -25,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlockOrMutesOrNeedsFiltering,
     presentation,
   )
-  server.app.bsky.notification.listNotifications({
+  server.add(app.bsky.notification.listNotifications, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -150,7 +155,7 @@ const skeleton = async (
     notifs: res.notifications,
     cursor: res.cursor || undefined,
     priority,
-    lastSeenNotifs: lastSeenDate?.toISOString(),
+    lastSeenNotifs: lastSeenDate ? toDatetimeString(lastSeenDate) : undefined,
   }
 }
 
@@ -166,7 +171,8 @@ const noBlockOrMutesOrNeedsFiltering = (
 ) => {
   const { skeleton, hydration, ctx, params } = input
   skeleton.notifs = skeleton.notifs.filter((item) => {
-    const did = didFromUri(item.uri)
+    const uri = item.uri as AtUriString
+    const did = didFromUri(uri)
     if (
       ctx.views.viewerBlockExists(did, hydration) ||
       ctx.views.viewerMuteExists(did, hydration)
@@ -176,7 +182,7 @@ const noBlockOrMutesOrNeedsFiltering = (
     // Filter out hidden replies only if the viewer owns
     // the threadgate and they hid the reply.
     if (item.reason === 'reply') {
-      const post = hydration.posts?.get(item.uri)
+      const post = hydration.posts?.get(uri)
       if (post) {
         const rootPostUri = isPostRecord(post.record)
           ? post.record.reply?.root.uri
@@ -184,11 +190,7 @@ const noBlockOrMutesOrNeedsFiltering = (
         const isRootPostByViewer =
           rootPostUri && didFromUri(rootPostUri) === params.hydrateCtx?.viewer
         const isHiddenByThreadgate = isRootPostByViewer
-          ? ctx.views.replyIsHiddenByThreadgate(
-              item.uri,
-              rootPostUri,
-              hydration,
-            )
+          ? ctx.views.replyIsHiddenByThreadgate(uri, rootPostUri, hydration)
           : false
         if (isHiddenByThreadgate) {
           return false
@@ -202,7 +204,7 @@ const noBlockOrMutesOrNeedsFiltering = (
       item.reason === 'quote' ||
       item.reason === 'mention'
     ) {
-      const post = hydration.posts?.get(item.uri)
+      const post = hydration.posts?.get(uri)
       if (post) {
         for (const [tag] of post.tags.entries()) {
           if (ctx.cfg.threadTagsHide.has(tag)) {
@@ -223,7 +225,7 @@ const noBlockOrMutesOrNeedsFiltering = (
       item.reason === 'like' ||
       item.reason === 'follow'
     ) {
-      if (!ctx.views.viewerSeesNeedsReview({ did, uri: item.uri }, hydration)) {
+      if (!ctx.views.viewerSeesNeedsReview({ did, uri }, hydration)) {
         return false
       }
     }
@@ -234,7 +236,7 @@ const noBlockOrMutesOrNeedsFiltering = (
 
 const presentation = (
   input: PresentationFnInput<Context, Params, SkeletonState>,
-) => {
+): app.bsky.notification.listNotifications.$OutputBody => {
   const { skeleton, hydration, ctx } = input
   const { notifs, lastSeenNotifs, cursor } = skeleton
   const notifications = mapDefined(notifs, (notif) =>
@@ -254,18 +256,18 @@ type Context = {
   cfg: ServerConfig
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.notification.listNotifications.$Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
   notifs: Notification[]
   priority: boolean
-  lastSeenNotifs?: string
+  lastSeenNotifs?: DatetimeString
   cursor?: string
 }
 
-const getPriority = async (ctx: Context, did: string) => {
+const getPriority = async (ctx: Context, did: DidString) => {
   const actors = await ctx.hydrator.actor.getActors([did], {
     skipCacheForDids: [did],
   })

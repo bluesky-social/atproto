@@ -1,20 +1,19 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AccountPreference } from '../../../../actor-store/preference/reader'
 import { isAccessFull } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
+import { app } from '../../../../lexicons/index.js'
 import { computeProxyTo, pipethrough } from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   const { bskyAppView } = ctx
   if (!bskyAppView) return
 
-  server.app.bsky.actor.putPreferences({
+  server.add(app.bsky.actor.putPreferences, {
     auth: ctx.authVerifier.authorization({
       checkTakedown: true,
       authorize: (permissions, { req }) => {
-        const lxm = ids.AppBskyActorPutPreferences
+        const lxm = app.bsky.actor.putPreferences.$lxm
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       // If the request has a proxy header different from the bsky app view,
       // we need to proxy the request to the requested app view.
       // @TODO This behavior should not be implemented as part of the XRPC framework
-      const lxm = ids.AppBskyActorPutPreferences
+      const lxm = app.bsky.actor.putPreferences.$lxm
       const aud = computeProxyTo(ctx, req, lxm)
       if (aud !== `${bskyAppView.did}#bsky_appview`) {
         return pipethrough(ctx, req, { iss: did, aud, lxm })

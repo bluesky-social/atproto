@@ -1,7 +1,6 @@
 import { AtpAgent, BlobRef } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { AppContext } from '../src'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('blob deletes', () => {
   let network: TestNetworkNoAppView
@@ -19,7 +18,7 @@ describe('blob deletes', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await sc.createAccount('alice', {
       email: 'alice@test.com',
@@ -192,7 +191,7 @@ async function updateProfile(
   return await sc.agent.api.com.atproto.repo.putRecord(
     {
       repo: did,
-      collection: ids.AppBskyActorProfile,
+      collection: 'app.bsky.actor.profile',
       rkey: 'self',
       record: {
         avatar: avatar,

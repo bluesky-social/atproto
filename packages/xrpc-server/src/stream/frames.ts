@@ -1,4 +1,6 @@
-import { LexValue, decodeAll, encode } from '@atproto/lex-cbor'
+import { decodeAll, encode } from '@atproto/lex-cbor'
+import { LexValue, isPlainObject } from '@atproto/lex-data'
+import { XRPCError } from '../errors'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -35,19 +37,21 @@ export abstract class Frame<T extends LexValue = LexValue> {
 
     const parsedHeader = frameHeader.safeParse(header)
     if (!parsedHeader.success) {
-      throw new Error(`Invalid frame header: ${parsedHeader.error.message}`)
+      throw new Error(`Invalid frame header: ${parsedHeader.reason.message}`)
     }
-    const frameOp = parsedHeader.data.op
+    const frameOp = parsedHeader.value.op
     if (frameOp === FrameType.Message) {
       return new MessageFrame(body, {
-        type: parsedHeader.data.t,
+        type: parsedHeader.value.t,
       })
     } else if (frameOp === FrameType.Error) {
       const parsedBody = errorFrameBody.safeParse(body)
       if (!parsedBody.success) {
-        throw new Error(`Invalid error frame body: ${parsedBody.error.message}`)
+        throw new Error(
+          `Invalid error frame body: ${parsedBody.reason.message}`,
+        )
       }
-      return new ErrorFrame(parsedBody.data)
+      return new ErrorFrame(parsedBody.value)
     } else {
       const exhaustiveCheck: never = frameOp
       throw new Error(`Unknown frame op: ${exhaustiveCheck}`)
@@ -70,6 +74,29 @@ export class MessageFrame<T extends LexValue = LexValue> extends Frame<T> {
   get type() {
     return this.header.t
   }
+
+  static fromLexValue(data: LexValue, nsid: string) {
+    if (!isPlainObject(data)) {
+      return new MessageFrame(data)
+    }
+
+    const $type = data?.['$type']
+    if (typeof $type !== 'string') {
+      return new MessageFrame(data)
+    }
+
+    let type: string
+
+    const split = $type.split('#')
+    if (split.length === 2 && (split[0] === '' || split[0] === nsid)) {
+      type = `#${split[1]}`
+    } else {
+      type = $type
+    }
+
+    const { $type: _, ...clone } = data
+    return new MessageFrame(clone, { type })
+  }
 }
 
 export class ErrorFrame<T extends string = string> extends Frame<
@@ -88,5 +115,11 @@ export class ErrorFrame<T extends string = string> extends Frame<
   }
   get message() {
     return this.body.message
+  }
+
+  static fromError(err: unknown): ErrorFrame {
+    if (err instanceof ErrorFrame) return err
+    const { error = 'Unknown', message } = XRPCError.fromError(err).payload
+    return new ErrorFrame({ error, message })
   }
 }

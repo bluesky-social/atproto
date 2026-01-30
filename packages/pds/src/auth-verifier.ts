@@ -4,6 +4,7 @@ import * as jose from 'jose'
 import KeyEncoder from 'key-encoder'
 import { getVerificationMaterial } from '@atproto/common'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import { isDidString } from '@atproto/lex'
 import {
   OAuthError,
   OAuthVerifier,
@@ -14,6 +15,7 @@ import {
   ScopePermissions,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
+import { AtIdentifierString, DidString, ensureValidDid } from '@atproto/syntax'
 import {
   AuthRequiredError,
   Awaitable,
@@ -82,7 +84,7 @@ export type VerifyBearerJwtOptions<S extends AuthScope = AuthScope> =
   >
 
 export type VerifyBearerJwtResult<S extends AuthScope = AuthScope> = {
-  sub: string
+  sub: DidString
   aud: string
   jti: string | undefined
   scope: S
@@ -149,7 +151,7 @@ export class AuthVerifier {
     return {
       credentials: {
         type: 'mod_service',
-        did: payload.iss,
+        did: payload.iss as DidString,
       },
     }
   }
@@ -183,15 +185,15 @@ export class AuthVerifier {
     return async (ctx) => {
       setAuthHeaders(ctx.res)
 
-      const { sub: did, scope } = await this.verifyBearerJwt(
+      const { sub, scope } = await this.verifyBearerJwt(
         ctx.req,
         verifyJwtOptions,
       )
 
-      await this.verifyStatus(did, statusOptions)
+      await this.verifyStatus(sub, statusOptions)
 
       return {
-        credentials: { type: 'access', did, scope },
+        credentials: { type: 'access', did: sub, scope },
       }
     }
   }
@@ -298,7 +300,7 @@ export class AuthVerifier {
     return {
       credentials: {
         type: 'user_service_auth',
-        did: payload.iss,
+        did: payload.iss as DidString,
       },
     }
   }
@@ -382,8 +384,12 @@ export class AuthVerifier {
           throw err
         })
 
-      if (typeof did !== 'string' || !did.startsWith('did:')) {
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
+      try {
+        ensureValidDid(did)
+      } catch (cause) {
+        throw new InvalidRequestError('Malformed token', 'InvalidToken', {
+          cause,
+        })
       }
 
       await this.verifyStatus(did, verifyStatusOptions)
@@ -411,7 +417,7 @@ export class AuthVerifier {
   }
 
   protected async verifyStatus(
-    did: string,
+    did: DidString,
     options: VerifiedOptions,
   ): Promise<void> {
     if (options.checkDeactivated || options.checkTakedown) {
@@ -425,7 +431,7 @@ export class AuthVerifier {
    * `options.checkTakedown` are set to true, respectively).
    */
   public async findAccount(
-    handleOrDid: string,
+    handleOrDid: AtIdentifierString,
     options: VerifiedOptions,
   ): Promise<ActorAccount> {
     const account = await this.accountManager.getAccount(handleOrDid, {
@@ -503,7 +509,7 @@ export class AuthVerifier {
       // https://www.rfc-editor.org/rfc/rfc7800.html
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
-    if (typeof sub !== 'string' || !sub.startsWith('did:')) {
+    if (typeof sub !== 'string' || !isDidString(sub)) {
       throw new InvalidRequestError('Malformed token', 'InvalidToken')
     }
     if (typeof aud !== 'string' || !aud.startsWith('did:')) {

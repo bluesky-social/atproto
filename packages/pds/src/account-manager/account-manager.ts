@@ -1,8 +1,9 @@
 import { KeyObject } from 'node:crypto'
-import { CID } from 'multiformats/cid'
 import { HOUR, wait } from '@atproto/common'
 import { IdResolver } from '@atproto/identity'
-import { isValidTld } from '@atproto/syntax'
+import { AtIdentifierString, isAtIdentifierString } from '@atproto/lex'
+import { Cid } from '@atproto/lex-data'
+import { DidString, HandleString, isValidTld } from '@atproto/syntax'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AuthScope } from '../auth-scope'
 import { softDeleted } from '../db'
@@ -12,7 +13,7 @@ import {
   ensureHandleServiceConstraints,
   isServiceDomain,
 } from '../handle/index'
-import { StatusAttr } from '../lexicon/types/com/atproto/admin/defs'
+import { com } from '../lexicons/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
@@ -57,14 +58,14 @@ export class AccountManager {
   // ----------
 
   async getAccount(
-    handleOrDid: string,
+    handleOrDid: AtIdentifierString,
     flags?: account.AvailabilityFlags,
   ): Promise<ActorAccount | null> {
     return account.getAccount(this.db, handleOrDid, flags)
   }
 
   async getAccounts(
-    dids: string[],
+    dids: DidString[],
     flags?: account.AvailabilityFlags,
   ): Promise<Map<string, ActorAccount>> {
     return account.getAccounts(this.db, dids, flags)
@@ -77,21 +78,23 @@ export class AccountManager {
     return account.getAccountByEmail(this.db, email, flags)
   }
 
-  async isAccountActivated(did: string): Promise<boolean> {
+  async isAccountActivated(did: DidString): Promise<boolean> {
     const account = await this.getAccount(did, { includeDeactivated: true })
     if (!account) return false
     return !account.deactivatedAt
   }
 
   async getDidForActor(
-    handleOrDid: string,
+    handleOrDid: AtIdentifierString,
     flags?: account.AvailabilityFlags,
   ): Promise<string | null> {
     const got = await this.getAccount(handleOrDid, flags)
     return got?.did ?? null
   }
 
-  async getAccountStatus(handleOrDid: string): Promise<AccountStatus> {
+  async getAccountStatus(
+    handleOrDid: AtIdentifierString,
+  ): Promise<AccountStatus> {
     const got = await this.getAccount(handleOrDid, {
       includeDeactivated: true,
       includeTakenDown: true,
@@ -110,7 +113,7 @@ export class AccountManager {
       did?: string
       allowAnyValid?: boolean
     } = {},
-  ): Promise<string> {
+  ): Promise<HandleString> {
     const normalized = baseNormalizeAndValidate(handle)
 
     // tld validation
@@ -162,11 +165,11 @@ export class AccountManager {
     deactivated,
     refreshJwt,
   }: {
-    did: string
-    handle: string
+    did: DidString
+    handle: HandleString
     email?: string
     password?: string
-    repoCid: CID
+    repoCid: Cid
     repoRev: string
     inviteCode?: string
     deactivated?: boolean
@@ -207,11 +210,11 @@ export class AccountManager {
   }
 
   async createAccountAndSession(opts: {
-    did: string
-    handle: string
+    did: DidString
+    handle: HandleString
     email?: string
     password?: string
-    repoCid: CID
+    repoCid: Cid
     repoRev: string
     inviteCode?: string
     deactivated?: boolean
@@ -230,15 +233,18 @@ export class AccountManager {
 
   // @NOTE should always be paired with a sequenceHandle().
   // the token output from this method should be passed to sequenceHandle().
-  async updateHandle(did: string, handle: string) {
+  async updateHandle(did: DidString, handle: HandleString) {
     return account.updateHandle(this.db, did, handle)
   }
 
-  async deleteAccount(did: string) {
+  async deleteAccount(did: DidString) {
     return account.deleteAccount(this.db, did)
   }
 
-  async takedownAccount(did: string, takedown: StatusAttr) {
+  async takedownAccount(
+    did: DidString,
+    takedown: com.atproto.admin.defs.StatusAttr,
+  ) {
     await this.db.transaction(async (dbTxn) =>
       Promise.all([
         account.updateAccountTakedownStatus(dbTxn, did, takedown),
@@ -248,19 +254,19 @@ export class AccountManager {
     )
   }
 
-  async getAccountAdminStatus(did: string) {
+  async getAccountAdminStatus(did: DidString) {
     return account.getAccountAdminStatus(this.db, did)
   }
 
-  async updateRepoRoot(did: string, cid: CID, rev: string) {
+  async updateRepoRoot(did: DidString, cid: Cid, rev: string) {
     return repo.updateRoot(this.db, did, cid, rev)
   }
 
-  async deactivateAccount(did: string, deleteAfter: string | null) {
+  async deactivateAccount(did: DidString, deleteAfter: string | null) {
     return account.deactivateAccount(this.db, did, deleteAfter)
   }
 
-  async activateAccount(did: string) {
+  async activateAccount(did: DidString) {
     return account.activateAccount(this.db, did)
   }
 
@@ -268,7 +274,7 @@ export class AccountManager {
   // ----------
 
   async createSession(
-    did: string,
+    did: DidString,
     appPassword: password.AppPassDescript | null,
     isSoftDeleted = false,
   ) {
@@ -369,10 +375,12 @@ export class AccountManager {
             includeDeactivated: true,
             includeTakenDown: true,
           })
-        : await this.getAccount(identifierNormalized, {
-            includeDeactivated: true,
-            includeTakenDown: true,
-          })
+        : isAtIdentifierString(identifierNormalized)
+          ? await this.getAccount(identifierNormalized, {
+              includeDeactivated: true,
+              includeTakenDown: true,
+            })
+          : null
 
       if (!user) {
         throw new AuthRequiredError('Invalid identifier or password')
@@ -405,29 +413,29 @@ export class AccountManager {
   // Passwords
   // ----------
 
-  async createAppPassword(did: string, name: string, privileged: boolean) {
+  async createAppPassword(did: DidString, name: string, privileged: boolean) {
     return password.createAppPassword(this.db, did, name, privileged)
   }
 
-  async listAppPasswords(did: string) {
+  async listAppPasswords(did: DidString) {
     return password.listAppPasswords(this.db, did)
   }
 
   async verifyAccountPassword(
-    did: string,
+    did: DidString,
     passwordStr: string,
   ): Promise<boolean> {
     return password.verifyAccountPassword(this.db, did, passwordStr)
   }
 
   async verifyAppPassword(
-    did: string,
+    did: DidString,
     passwordStr: string,
   ): Promise<password.AppPassDescript | null> {
     return password.verifyAppPassword(this.db, did, passwordStr)
   }
 
-  async revokeAppPassword(did: string, name: string) {
+  async revokeAppPassword(did: DidString, name: string) {
     await this.db.transaction(async (dbTxn) =>
       Promise.all([
         password.deleteAppPassword(dbTxn, did, name),
@@ -465,16 +473,16 @@ export class AccountManager {
     )
   }
 
-  async getAccountInvitesCodes(did: string) {
+  async getAccountInvitesCodes(did: DidString) {
     const inviteCodes = await invite.getAccountsInviteCodes(this.db, [did])
     return inviteCodes.get(did) ?? []
   }
 
-  async getAccountsInvitesCodes(dids: string[]) {
+  async getAccountsInvitesCodes(dids: DidString[]) {
     return invite.getAccountsInviteCodes(this.db, dids)
   }
 
-  async getInvitedByForAccounts(dids: string[]) {
+  async getInvitedByForAccounts(dids: DidString[]) {
     return invite.getInvitedByForAccounts(this.db, dids)
   }
 
@@ -482,7 +490,7 @@ export class AccountManager {
     return invite.getInviteCodesUses(this.db, codes)
   }
 
-  async setAccountInvitesDisabled(did: string, disabled: boolean) {
+  async setAccountInvitesDisabled(did: DidString, disabled: boolean) {
     return invite.setAccountInvitesDisabled(this.db, did, disabled)
   }
 
@@ -493,12 +501,12 @@ export class AccountManager {
   // Email Tokens
   // ----------
 
-  async createEmailToken(did: string, purpose: EmailTokenPurpose) {
+  async createEmailToken(did: DidString, purpose: EmailTokenPurpose) {
     return emailToken.createEmailToken(this.db, did, purpose)
   }
 
   async assertValidEmailToken(
-    did: string,
+    did: DidString,
     purpose: EmailTokenPurpose,
     token: string,
   ) {
@@ -506,7 +514,7 @@ export class AccountManager {
   }
 
   async assertValidEmailTokenAndCleanup(
-    did: string,
+    did: DidString,
     purpose: EmailTokenPurpose,
     token: string,
   ) {
@@ -514,7 +522,7 @@ export class AccountManager {
     await emailToken.deleteEmailToken(this.db, did, purpose)
   }
 
-  async confirmEmail(opts: { did: string; token: string }) {
+  async confirmEmail(opts: { did: DidString; token: string }) {
     const { did, token } = opts
     await emailToken.assertValidToken(this.db, did, 'confirm_email', token)
     const now = new Date().toISOString()
@@ -526,7 +534,7 @@ export class AccountManager {
     )
   }
 
-  async updateEmail(opts: { did: string; email: string }) {
+  async updateEmail(opts: { did: DidString; email: string }) {
     const { did, email } = opts
     await this.db.transaction((dbTxn) =>
       Promise.all([
@@ -547,7 +555,7 @@ export class AccountManager {
     return did
   }
 
-  async updateAccountPassword(opts: { did: string; password: string }) {
+  async updateAccountPassword(opts: { did: DidString; password: string }) {
     const { did } = opts
     const passwordScrypt = await scrypt.genSaltAndHash(opts.password)
     await this.db.transaction(async (dbTxn) =>

@@ -23,7 +23,7 @@ import {
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { isAccessPrivileged } from './auth-scope'
 import { AppContext } from './context'
-import { ids } from './lexicon/lexicons'
+import { chat, com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
@@ -533,47 +533,47 @@ export function normalizeLxm(lxm: string) {
 }
 
 export const CHAT_BSKY_METHODS = new LxmSet([
-  ids.ChatBskyActorDeleteAccount,
-  ids.ChatBskyActorExportAccountData,
-  ids.ChatBskyConvoDeleteMessageForSelf,
-  ids.ChatBskyConvoGetConvo,
-  ids.ChatBskyConvoGetConvoForMembers,
-  ids.ChatBskyConvoGetLog,
-  ids.ChatBskyConvoGetMessages,
-  ids.ChatBskyConvoLeaveConvo,
-  ids.ChatBskyConvoListConvos,
-  ids.ChatBskyConvoMuteConvo,
-  ids.ChatBskyConvoSendMessage,
-  ids.ChatBskyConvoSendMessageBatch,
-  ids.ChatBskyConvoUnmuteConvo,
-  ids.ChatBskyConvoUpdateRead,
+  chat.bsky.actor.deleteAccount.$lxm,
+  chat.bsky.actor.exportAccountData.$lxm,
+  chat.bsky.convo.deleteMessageForSelf.$lxm,
+  chat.bsky.convo.getConvo.$lxm,
+  chat.bsky.convo.getConvoForMembers.$lxm,
+  chat.bsky.convo.getLog.$lxm,
+  chat.bsky.convo.getMessages.$lxm,
+  chat.bsky.convo.leaveConvo.$lxm,
+  chat.bsky.convo.listConvos.$lxm,
+  chat.bsky.convo.muteConvo.$lxm,
+  chat.bsky.convo.sendMessage.$lxm,
+  chat.bsky.convo.sendMessageBatch.$lxm,
+  chat.bsky.convo.unmuteConvo.$lxm,
+  chat.bsky.convo.updateRead.$lxm,
 ])
 
 export const PRIVILEGED_METHODS = new LxmSet([
   ...CHAT_BSKY_METHODS,
-  ids.ComAtprotoServerCreateAccount,
+  com.atproto.server.createAccount.$lxm,
 ])
 
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
 export const PROTECTED_METHODS = new LxmSet([
-  ids.ComAtprotoAdminSendEmail,
-  ids.ComAtprotoIdentityRequestPlcOperationSignature,
-  ids.ComAtprotoIdentitySignPlcOperation,
-  ids.ComAtprotoIdentityUpdateHandle,
-  ids.ComAtprotoServerActivateAccount,
-  ids.ComAtprotoServerConfirmEmail,
-  ids.ComAtprotoServerCreateAppPassword,
-  ids.ComAtprotoServerDeactivateAccount,
-  ids.ComAtprotoServerGetAccountInviteCodes,
-  ids.ComAtprotoServerGetSession,
-  ids.ComAtprotoServerListAppPasswords,
-  ids.ComAtprotoServerRequestAccountDelete,
-  ids.ComAtprotoServerRequestEmailConfirmation,
-  ids.ComAtprotoServerRequestEmailUpdate,
-  ids.ComAtprotoServerRevokeAppPassword,
-  ids.ComAtprotoServerUpdateEmail,
+  com.atproto.admin.sendEmail.$lxm,
+  com.atproto.identity.requestPlcOperationSignature.$lxm,
+  com.atproto.identity.signPlcOperation.$lxm,
+  com.atproto.identity.updateHandle.$lxm,
+  com.atproto.server.activateAccount.$lxm,
+  com.atproto.server.confirmEmail.$lxm,
+  com.atproto.server.createAppPassword.$lxm,
+  com.atproto.server.deactivateAccount.$lxm,
+  com.atproto.server.getAccountInviteCodes.$lxm,
+  com.atproto.server.getSession.$lxm,
+  com.atproto.server.listAppPasswords.$lxm,
+  com.atproto.server.requestAccountDelete.$lxm,
+  com.atproto.server.requestEmailConfirmation.$lxm,
+  com.atproto.server.requestEmailUpdate.$lxm,
+  com.atproto.server.revokeAppPassword.$lxm,
+  com.atproto.server.updateEmail.$lxm,
 ])
 
 const defaultService = (
@@ -584,38 +584,38 @@ const defaultService = (
   serviceInfo: { url: string; did: string } | null
 } => {
   switch (nsid) {
-    case ids.ToolsOzoneTeamAddMember:
-    case ids.ToolsOzoneTeamDeleteMember:
-    case ids.ToolsOzoneTeamUpdateMember:
-    case ids.ToolsOzoneTeamListMembers:
-    case ids.ToolsOzoneCommunicationCreateTemplate:
-    case ids.ToolsOzoneCommunicationDeleteTemplate:
-    case ids.ToolsOzoneCommunicationUpdateTemplate:
-    case ids.ToolsOzoneCommunicationListTemplates:
-    case ids.ToolsOzoneModerationEmitEvent:
-    case ids.ToolsOzoneModerationGetEvent:
-    case ids.ToolsOzoneModerationGetRecord:
-    case ids.ToolsOzoneModerationGetRepo:
-    case ids.ToolsOzoneModerationQueryEvents:
-    case ids.ToolsOzoneModerationQueryStatuses:
-    case ids.ToolsOzoneModerationSearchRepos:
-    case ids.ToolsOzoneModerationGetAccountTimeline:
-    case ids.ToolsOzoneVerificationListVerifications:
-    case ids.ToolsOzoneVerificationGrantVerifications:
-    case ids.ToolsOzoneVerificationRevokeVerifications:
-    case ids.ToolsOzoneSafelinkAddRule:
-    case ids.ToolsOzoneSafelinkUpdateRule:
-    case ids.ToolsOzoneSafelinkRemoveRule:
-    case ids.ToolsOzoneSafelinkQueryEvents:
-    case ids.ToolsOzoneSafelinkQueryRules:
-    case ids.ToolsOzoneModerationListScheduledActions:
-    case ids.ToolsOzoneModerationCancelScheduledActions:
-    case ids.ToolsOzoneModerationScheduleAction:
+    case tools.ozone.communication.createTemplate.$lxm:
+    case tools.ozone.communication.deleteTemplate.$lxm:
+    case tools.ozone.communication.listTemplates.$lxm:
+    case tools.ozone.communication.updateTemplate.$lxm:
+    case tools.ozone.moderation.cancelScheduledActions.$lxm:
+    case tools.ozone.moderation.emitEvent.$lxm:
+    case tools.ozone.moderation.getAccountTimeline.$lxm:
+    case tools.ozone.moderation.getEvent.$lxm:
+    case tools.ozone.moderation.getRecord.$lxm:
+    case tools.ozone.moderation.getRepo.$lxm:
+    case tools.ozone.moderation.listScheduledActions.$lxm:
+    case tools.ozone.moderation.queryEvents.$lxm:
+    case tools.ozone.moderation.queryStatuses.$lxm:
+    case tools.ozone.moderation.scheduleAction.$lxm:
+    case tools.ozone.moderation.searchRepos.$lxm:
+    case tools.ozone.safelink.addRule.$lxm:
+    case tools.ozone.safelink.queryEvents.$lxm:
+    case tools.ozone.safelink.queryRules.$lxm:
+    case tools.ozone.safelink.removeRule.$lxm:
+    case tools.ozone.safelink.updateRule.$lxm:
+    case tools.ozone.team.addMember.$lxm:
+    case tools.ozone.team.deleteMember.$lxm:
+    case tools.ozone.team.listMembers.$lxm:
+    case tools.ozone.team.updateMember.$lxm:
+    case tools.ozone.verification.grantVerifications.$lxm:
+    case tools.ozone.verification.listVerifications.$lxm:
+    case tools.ozone.verification.revokeVerifications.$lxm:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.modService,
       }
-    case ids.ComAtprotoModerationCreateReport:
+    case com.atproto.moderation.createReport.$lxm:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.reportService,

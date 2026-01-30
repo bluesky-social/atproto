@@ -49,13 +49,14 @@ export function ensureValidDid<I extends string>(
 }
 
 const DID_REGEX = /^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/
+const MIN_DID_LENGTH = 7 // 'did:a:b'.length
 
 export function ensureValidDidRegex<I extends string>(
   input: I,
 ): asserts input is I & DidString {
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
-  if (!DID_REGEX.test(input)) {
+  if (input.length < MIN_DID_LENGTH || !DID_REGEX.test(input)) {
     throw new InvalidDidError("DID didn't validate via regex")
   }
 
@@ -65,7 +66,11 @@ export function ensureValidDidRegex<I extends string>(
 }
 
 export function isValidDid<I extends string>(input: I): input is I & DidString {
-  return input.length <= 2048 && DID_REGEX.test(input)
+  return (
+    input.length >= MIN_DID_LENGTH &&
+    input.length <= 2048 &&
+    DID_REGEX.test(input)
+  )
 }
 
 export class InvalidDidError extends Error {}

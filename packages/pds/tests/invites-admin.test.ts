@@ -15,7 +15,7 @@ describe('pds admin invite views', () => {
         inviteInterval: 1,
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
   })
 

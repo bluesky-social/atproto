@@ -1,2 +1,4 @@
-# @atproto/lex-cli
-src/client
+# @atproto/lex-cli (legacy)
+src/lexicon
+# @atproto/lex
+src/lexicons

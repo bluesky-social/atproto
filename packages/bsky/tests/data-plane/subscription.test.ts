@@ -1,9 +1,8 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ids } from '@atproto/api'
 import { cborDecode, cborEncode } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { CommitDataWithOps, sequencer } from '@atproto/pds'
 import { DatabaseSchemaType } from '../../src/data-plane/server/db/database-schema'
-import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
@@ -17,7 +16,7 @@ describe('sync', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_subscription_repo',
     })
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
   })

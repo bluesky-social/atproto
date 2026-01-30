@@ -1,5 +1,5 @@
 import { format } from 'node:util'
-import { AtpAgent } from '@atproto/api'
+import { Client } from '@atproto/lex'
 
 export type AppViewOptions = {
   url: string
@@ -10,13 +10,13 @@ export type AppViewOptions = {
 export class BskyAppView {
   public did: string
   public url: string
-  public agent: AtpAgent
+  public client: Client
   private cdnUrlPattern?: string
 
   constructor(options: AppViewOptions) {
     this.did = options.did
     this.url = options.url
-    this.agent = new AtpAgent({ service: options.url })
+    this.client = new Client({ service: options.url })
     this.cdnUrlPattern = options.cdnUrlPattern
   }
 

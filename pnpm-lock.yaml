@@ -196,9 +196,15 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
-      '@atproto/lexicon':
+      '@atproto/lex':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex/lex-json
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
@@ -271,9 +277,6 @@ importers:
       leo-profanity:
         specifier: ^1.8.0
         version: 1.8.0
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       murmurhash:
         specifier: ^2.0.1
         version: 2.0.1
@@ -308,15 +311,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
-      '@atproto/lex-cli':
-        specifier: workspace:^
-        version: link:../lex-cli
       '@atproto/pds':
         specifier: workspace:^
         version: link:../pds
-      '@atproto/xrpc':
-        specifier: workspace:^
-        version: link:../xrpc
       '@bufbuild/buf':
         specifier: ^1.28.1
         version: 1.28.1
@@ -426,9 +423,6 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
-      iso-datestring-validator:
-        specifier: ^2.2.2
-        version: 2.2.2
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -510,6 +504,9 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
@@ -1084,6 +1081,9 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex-cbor
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex-data
@@ -1106,9 +1106,6 @@ importers:
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex
-      '@atproto/lex-client':
-        specifier: workspace:^
-        version: link:../lex-client
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
@@ -1152,28 +1149,22 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
-      '@atproto/lexicon':
+      '@atproto/lex':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex
+      '@atproto/lex-document':
+        specifier: workspace:^
+        version: link:../lex/lex-document
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
-      '@atproto/xrpc':
-        specifier: workspace:^
-        version: link:../xrpc
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
     devDependencies:
-      '@atproto/common':
+      '@atproto/lex-cbor':
         specifier: workspace:^
-        version: link:../common
-      '@atproto/lex-cli':
-        specifier: workspace:^
-        version: link:../lex-cli
+        version: link:../lex/lex-cbor
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
@@ -1853,9 +1844,6 @@ importers:
       '@atproto-labs/xrpc-utils':
         specifier: workspace:^
         version: link:../internal/xrpc-utils
-      '@atproto/api':
-        specifier: workspace:^
-        version: link:../api
       '@atproto/aws':
         specifier: workspace:^
         version: link:../aws
@@ -1868,15 +1856,18 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
-      '@atproto/lexicon':
+      '@atproto/lex-json':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex-json
       '@atproto/oauth-provider':
         specifier: workspace:^
         version: link:../oauth/oauth-provider
@@ -1904,9 +1895,6 @@ importers:
       better-sqlite3:
         specifier: ^10.0.0
         version: 10.0.0
-      bytes:
-        specifier: ^3.1.2
-        version: 3.1.2
       compression:
         specifier: ^1.7.4
         version: 1.7.4
@@ -1946,9 +1934,6 @@ importers:
       kysely:
         specifier: ^0.22.0
         version: 0.22.0
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       nodemailer:
         specifier: ^6.8.0
         version: 6.8.0
@@ -1977,12 +1962,15 @@ importers:
         specifier: ^3.23.8
         version: 3.24.2
     devDependencies:
+      '@atproto/api':
+        specifier: workspace:^
+        version: link:../api
       '@atproto/bsky':
         specifier: workspace:^
         version: link:../bsky
-      '@atproto/lex-cli':
+      '@atproto/lex-document':
         specifier: workspace:^
-        version: link:../lex-cli
+        version: link:../lex/lex-document
       '@atproto/oauth-client-browser-example':
         specifier: workspace:^
         version: link:../oauth/oauth-client-browser-example
@@ -2043,18 +2031,15 @@ importers:
       '@atproto/crypto':
         specifier: workspace:^
         version: link:../crypto
-      '@atproto/lexicon':
+      '@atproto/lex-cbor':
         specifier: workspace:^
-        version: link:../lexicon
-      '@ipld/dag-cbor':
-        specifier: ^7.0.0
-        version: 7.0.3
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
-      uint8arrays:
-        specifier: 3.0.0
-        version: 3.0.0
+        version: link:../lex/lex-cbor
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
       varint:
         specifier: ^6.0.0
         version: 6.0.0
@@ -2077,9 +2062,9 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
-      '@atproto/lexicon':
+      '@atproto/lex':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
@@ -2089,9 +2074,6 @@ importers:
       '@atproto/xrpc-server':
         specifier: workspace:^
         version: link:../xrpc-server
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       p-queue:
         specifier: ^6.6.2
         version: 6.6.2
@@ -2205,9 +2187,18 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex/lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex/lex-json
+      '@atproto/lex-schema':
+        specifier: workspace:^
+        version: link:../lex/lex-schema
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
@@ -2232,10 +2223,13 @@ importers:
       ws:
         specifier: ^8.12.0
         version: 8.12.0
-      zod:
-        specifier: ^3.23.8
-        version: 3.24.2
     devDependencies:
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
+      '@atproto/lex-document':
+        specifier: workspace:^
+        version: link:../lex/lex-document
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13
@@ -13386,7 +13380,7 @@ packages:
       array-union: 2.1.0
       dir-glob: 3.0.1
       fast-glob: 3.3.2
-      ignore: 5.2.4
+      ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
     dev: true

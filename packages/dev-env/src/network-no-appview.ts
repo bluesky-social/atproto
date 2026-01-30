@@ -36,8 +36,9 @@ export class TestNetworkNoAppView {
   }
 
   getSeedClient(): SeedClient<typeof this> {
-    const agent = this.pds.getClient()
-    return new SeedClient(this, agent)
+    const agent = this.pds.getAgent()
+    const client = this.pds.getClient()
+    return new SeedClient(this, agent, client)
   }
 
   async processAll() {

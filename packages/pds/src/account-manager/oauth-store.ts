@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { HandleString, isDidString, isHandleString } from '@atproto/lex'
 import {
   Account,
   AccountStore,
@@ -125,6 +126,8 @@ export class OAuthStore
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
     // @NOTE Password strength & length already enforced by the OAuthProvider
 
+    assert(isHandleString(handle), 'Handle must be a valid HandleString')
+
     await Promise.all([
       this.verifyEmailAvailability(email),
       this.verifyHandleAvailability(handle),
@@ -148,6 +151,7 @@ export class OAuthStore
     })
 
     const { did, op } = plcCreate
+    assert(isDidString(did), 'Generated DID is not a valid DidString')
 
     try {
       await this.actorStore.create(did, signingKey)
@@ -374,7 +378,7 @@ export class OAuthStore
     }
   }
 
-  async verifyHandleAvailability(handle: string): Promise<void> {
+  async verifyHandleAvailability(handle: HandleString): Promise<void> {
     // @NOTE Handle validity & normalization already enforced by the OAuthProvider
     try {
       const normalized =

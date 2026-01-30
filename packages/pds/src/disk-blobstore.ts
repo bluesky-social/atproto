@@ -2,7 +2,6 @@ import fsSync from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import stream from 'node:stream'
-import { CID } from 'multiformats/cid'
 import {
   aggregateErrors,
   chunkArray,
@@ -11,6 +10,7 @@ import {
   rmIfExists,
 } from '@atproto/common'
 import { randomStr } from '@atproto/crypto'
+import { Cid } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 import { blobStoreLogger as log } from './logger'
 
@@ -56,11 +56,11 @@ export class DiskBlobStore implements BlobStore {
     return path.join(this.tmpLocation, this.did, key)
   }
 
-  getStoredPath(cid: CID): string {
+  getStoredPath(cid: Cid): string {
     return path.join(this.location, this.did, cid.toString())
   }
 
-  getQuarantinePath(cid: CID): string {
+  getQuarantinePath(cid: Cid): string {
     return path.join(this.quarantineLocation, this.did, cid.toString())
   }
 
@@ -68,7 +68,7 @@ export class DiskBlobStore implements BlobStore {
     return fileExists(this.getTmpPath(key))
   }
 
-  async hasStored(cid: CID): Promise<boolean> {
+  async hasStored(cid: Cid): Promise<boolean> {
     return fileExists(this.getStoredPath(cid))
   }
 
@@ -79,7 +79,7 @@ export class DiskBlobStore implements BlobStore {
     return key
   }
 
-  async makePermanent(key: string, cid: CID): Promise<void> {
+  async makePermanent(key: string, cid: Cid): Promise<void> {
     await this.ensureDir()
     const tmpPath = this.getTmpPath(key)
     const storedPath = this.getStoredPath(cid)
@@ -96,14 +96,14 @@ export class DiskBlobStore implements BlobStore {
   }
 
   async putPermanent(
-    cid: CID,
+    cid: Cid,
     bytes: Uint8Array | stream.Readable,
   ): Promise<void> {
     await this.ensureDir()
     await fs.writeFile(this.getStoredPath(cid), bytes)
   }
 
-  async quarantine(cid: CID): Promise<void> {
+  async quarantine(cid: Cid): Promise<void> {
     await this.ensureQuarantine()
     try {
       await fs.rename(this.getStoredPath(cid), this.getQuarantinePath(cid))
@@ -112,7 +112,7 @@ export class DiskBlobStore implements BlobStore {
     }
   }
 
-  async unquarantine(cid: CID): Promise<void> {
+  async unquarantine(cid: Cid): Promise<void> {
     await this.ensureDir()
     try {
       await fs.rename(this.getQuarantinePath(cid), this.getStoredPath(cid))
@@ -121,7 +121,7 @@ export class DiskBlobStore implements BlobStore {
     }
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array> {
+  async getBytes(cid: Cid): Promise<Uint8Array> {
     try {
       return await fs.readFile(this.getStoredPath(cid))
     } catch (err) {
@@ -129,7 +129,7 @@ export class DiskBlobStore implements BlobStore {
     }
   }
 
-  async getStream(cid: CID): Promise<stream.Readable> {
+  async getStream(cid: Cid): Promise<stream.Readable> {
     const path = this.getStoredPath(cid)
     const exists = await fileExists(path)
     if (!exists) {
@@ -138,11 +138,11 @@ export class DiskBlobStore implements BlobStore {
     return fsSync.createReadStream(path)
   }
 
-  async delete(cid: CID): Promise<void> {
+  async delete(cid: Cid): Promise<void> {
     await rmIfExists(this.getStoredPath(cid))
   }
 
-  async deleteMany(cids: CID[]): Promise<void> {
+  async deleteMany(cids: Cid[]): Promise<void> {
     const errors: unknown[] = []
     for (const chunk of chunkArray(cids, 500)) {
       await Promise.all(

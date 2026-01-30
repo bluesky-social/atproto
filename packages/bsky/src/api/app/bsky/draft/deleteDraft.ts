@@ -1,9 +1,10 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { app } from '../../../../lexicons'
 import { Namespaces } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.draft.deleteDraft({
+  server.add(app.bsky.draft.deleteDraft, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss

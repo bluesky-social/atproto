@@ -12,7 +12,7 @@ describe('get-config', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_server_config',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()

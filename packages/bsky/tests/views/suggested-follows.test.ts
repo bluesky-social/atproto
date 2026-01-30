@@ -1,6 +1,5 @@
-import { AtUri, AtpAgent } from '@atproto/api'
+import { AtUri, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('suggested follows', () => {
   let network: TestNetwork
@@ -12,8 +11,8 @@ describe('suggested follows', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_suggested_follows',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await likesSeed(sc)
     await network.processAll()
@@ -52,7 +51,7 @@ describe('suggested follows', () => {
     expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
     expect(
       result.data.suggestions.find((sug) => {
-        return [sc.dids.alice, sc.dids.carol].includes(sug.did)
+        return ([sc.dids.alice, sc.dids.carol] as string[]).includes(sug.did)
       }),
     ).toBeFalsy() // not actor or viewer
   })
@@ -73,7 +72,7 @@ describe('suggested follows', () => {
     expect(result.data.suggestions.length).toBe(4) // backfilled with 2 NPCs
     expect(
       result.data.suggestions.find((sug) => {
-        return [sc.dids.fred, sc.dids.alice].includes(sug.did)
+        return ([sc.dids.fred, sc.dids.alice] as string[]).includes(sug.did)
       }),
     ).toBeFalsy() // not actor or viewer or followed
   })
@@ -97,7 +96,9 @@ describe('suggested follows', () => {
 
     expect(
       result.data.suggestions.find((sug) => {
-        return [sc.dids.alice, sc.dids.carol, sc.dids.bob].includes(sug.did)
+        return (
+          [sc.dids.alice, sc.dids.carol, sc.dids.bob] as string[]
+        ).includes(sug.did)
       }),
     ).toBeFalsy() // not actor or viewer or muted
 
@@ -127,7 +128,9 @@ describe('suggested follows', () => {
 
     expect(
       result.data.suggestions.find((sug) => {
-        return [sc.dids.alice, sc.dids.carol, sc.dids.bob].includes(sug.did)
+        return (
+          [sc.dids.alice, sc.dids.carol, sc.dids.bob] as string[]
+        ).includes(sug.did)
       }),
     ).toBeFalsy() // not actor or viewer or muted
 
@@ -157,7 +160,9 @@ describe('suggested follows', () => {
 
     expect(
       result.data.suggestions.find((sug) => {
-        return [sc.dids.alice, sc.dids.carol, sc.dids.bob].includes(sug.did)
+        return (
+          [sc.dids.alice, sc.dids.carol, sc.dids.bob] as string[]
+        ).includes(sug.did)
       }),
     ).toBeFalsy() // not actor or viewer or muted
 
