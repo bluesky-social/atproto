@@ -137,13 +137,16 @@ import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo.js'
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos.js'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes.js'
+import * as ComAtprotoAdminGetNeuroLink from './types/com/atproto/admin/getNeuroLink.js'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus.js'
+import * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
 import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
 import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
+import * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
@@ -2148,6 +2151,18 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminGetNeuroLink.QueryParams,
+      ComAtprotoAdminGetNeuroLink.HandlerInput,
+      ComAtprotoAdminGetNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getNeuroLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSubjectStatus<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2157,6 +2172,18 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listNeuroAccounts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminListNeuroAccounts.QueryParams,
+      ComAtprotoAdminListNeuroAccounts.HandlerInput,
+      ComAtprotoAdminListNeuroAccounts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.listNeuroAccounts' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2229,6 +2256,18 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateAccountSigningKey' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminUpdateNeuroLink.QueryParams,
+      ComAtprotoAdminUpdateNeuroLink.HandlerInput,
+      ComAtprotoAdminUpdateNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateNeuroLink' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

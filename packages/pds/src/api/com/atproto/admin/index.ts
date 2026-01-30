@@ -7,11 +7,14 @@ import enableAccountInvites from './enableAccountInvites'
 import getAccountInfo from './getAccountInfo'
 import getAccountInfos from './getAccountInfos'
 import getInviteCodes from './getInviteCodes'
+import getNeuroLink from './getNeuroLink'
 import getSubjectStatus from './getSubjectStatus'
+import listNeuroAccounts from './listNeuroAccounts'
 import sendEmail from './sendEmail'
 import updateAccountEmail from './updateAccountEmail'
 import updateAccountHandle from './updateAccountHandle'
 import updateAccountPassword from './updateAccountPassword'
+import updateNeuroLink from './updateNeuroLink'
 import updateSubjectStatus from './updateSubjectStatus'
 
 export default function (server: Server, ctx: AppContext) {
@@ -28,4 +31,7 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountPassword(server, ctx)
   sendEmail(server, ctx)
   deleteAccount(server, ctx)
+  getNeuroLink(server, ctx)
+  listNeuroAccounts(server, ctx)
+  updateNeuroLink(server, ctx)
 }

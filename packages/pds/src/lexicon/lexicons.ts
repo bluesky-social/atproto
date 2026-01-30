@@ -10410,6 +10410,58 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetNeuroLink: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getNeuroLink',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get Neuro/W ID link for an account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the account.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+              },
+              email: {
+                type: 'string',
+              },
+              neuroJid: {
+                type: 'string',
+                description: 'Neuro Legal ID (W ID)',
+              },
+              linkedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+              lastLoginAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.getSubjectStatus',
@@ -10458,6 +10510,79 @@ export const schemaDict = {
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminListNeuroAccounts: {
+    lexicon: 1,
+    id: 'com.atproto.admin.listNeuroAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all accounts with their Neuro/W ID links.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 100,
+              description: 'Maximum number of accounts to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.listNeuroAccounts#neuroAccountView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      neuroAccountView: {
+        type: 'object',
+        required: ['did', 'handle'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+          },
+          email: {
+            type: 'string',
+          },
+          neuroJid: {
+            type: 'string',
+            description: 'Neuro Legal ID (W ID)',
+          },
+          linkedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastLoginAt: {
+            type: 'string',
+            format: 'datetime',
           },
         },
       },
@@ -10666,6 +10791,73 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ComAtprotoAdminUpdateNeuroLink: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update the Neuro/W ID link for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'newLegalId'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account.',
+              },
+              newLegalId: {
+                type: 'string',
+                description:
+                  'The new Neuro Legal ID (W ID) to link to this account.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'did', 'newLegalId', 'updatedAt'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              oldLegalId: {
+                type: 'string',
+                description: 'Previous Legal ID (if any)',
+              },
+              newLegalId: {
+                type: 'string',
+              },
+              updatedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+          {
+            name: 'InvalidLegalId',
+          },
+          {
+            name: 'LegalIdInUse',
+          },
+        ],
       },
     },
   },
@@ -20468,7 +20660,9 @@ export const ids = {
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
+  ComAtprotoAdminGetNeuroLink: 'com.atproto.admin.getNeuroLink',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
+  ComAtprotoAdminListNeuroAccounts: 'com.atproto.admin.listNeuroAccounts',
   ComAtprotoAdminSearchAccounts: 'com.atproto.admin.searchAccounts',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
@@ -20477,6 +20671,7 @@ export const ids = {
     'com.atproto.admin.updateAccountPassword',
   ComAtprotoAdminUpdateAccountSigningKey:
     'com.atproto.admin.updateAccountSigningKey',
+  ComAtprotoAdminUpdateNeuroLink: 'com.atproto.admin.updateNeuroLink',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
   ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:
