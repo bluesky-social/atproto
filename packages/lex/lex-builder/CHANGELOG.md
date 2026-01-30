@@ -1,5 +1,13 @@
 # @atproto/lex-builder
 
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-document@0.0.12
+  - @atproto/lex-schema@0.0.11
+
 ## 0.0.12
 
 ### Patch Changes
