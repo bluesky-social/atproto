@@ -196,6 +196,7 @@ export class AppContext {
       cfg.service.hostname,
       cfg.crawlers,
       backgroundQueue,
+      cfg.service.devMode,
     )
     const sequencer = new Sequencer(
       cfg.db.sequencerDbLoc,
