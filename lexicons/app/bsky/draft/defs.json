@@ -29,11 +29,7 @@
         },
         "platform": {
           "type": "string",
-          "knownValues": [
-            "web",
-            "ios",
-            "android"
-          ],
+          "knownValues": ["web", "ios", "android"],
           "description": "Platform on which the draft was created."
         },
         "posts": {
