@@ -17,7 +17,7 @@ describe('bsky account deactivation', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
-    const pdsAgent = network.pds.getClient()
+    const pdsAgent = network.pds.getAgent()
     await pdsAgent.com.atproto.server.deactivateAccount(
       {},
       { encoding: 'application/json', headers: sc.getHeaders(alice) },

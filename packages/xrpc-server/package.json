@@ -27,6 +27,7 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/ws-client": "workspace:^",
     "@atproto/xrpc": "workspace:^",

@@ -3,10 +3,9 @@ import * as plc from '@did-plc/lib'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { $Typed } from '@atproto/lex'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
-import { ids } from '../src/lexicon/lexicons'
-import { RepoRef, isRepoRef } from '../src/lexicon/types/com/atproto/admin/defs'
-import { $Typed } from '../src/lexicon/util'
+import { com } from '../src/lexicons/index.js'
 import usersSeed from './seeds/users'
 
 describe('moderator auth', () => {
@@ -14,7 +13,7 @@ describe('moderator auth', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let repoSubject: $Typed<RepoRef>
+  let repoSubject: $Typed<com.atproto.admin.defs.RepoRef>
 
   let modServiceDid: string
   let altModDid: string
@@ -61,7 +60,7 @@ describe('moderator auth', () => {
     await plcClient.sendOperation(modServiceInfo.did, modServiceInfo.op)
     await plcClient.sendOperation(altModInfo.did, altModInfo.op)
 
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -79,7 +78,7 @@ describe('moderator auth', () => {
     const updateHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -96,7 +95,7 @@ describe('moderator auth', () => {
     const getHeaders = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
-      lxm: ids.ComAtprotoAdminGetSubjectStatus,
+      lxm: com.atproto.admin.getSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     const res = await agent.api.com.atproto.admin.getSubjectStatus(
@@ -105,7 +104,7 @@ describe('moderator auth', () => {
       },
       getHeaders,
     )
-    assert(isRepoRef(res.data.subject))
+    assert(com.atproto.admin.defs.repoRef.$matches(res.data.subject))
     expect(res.data.subject.did).toBe(repoSubject.did)
     expect(res.data.takedown?.applied).toBe(true)
   })
@@ -114,7 +113,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: altModDid,
       aud: pdsDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -135,7 +134,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: pdsDid,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: badKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(
@@ -158,7 +157,7 @@ describe('moderator auth', () => {
     const headers = await createServiceAuthHeaders({
       iss: modServiceDid,
       aud: sc.dids.alice,
-      lxm: ids.ComAtprotoAdminUpdateSubjectStatus,
+      lxm: com.atproto.admin.updateSubjectStatus.$lxm,
       keypair: modServiceKey,
     })
     const attempt = agent.api.com.atproto.admin.updateSubjectStatus(

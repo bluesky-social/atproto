@@ -33,7 +33,7 @@ describe('pds thread views', () => {
       dbPostgresSchema: 'bsky_views_feed_view_post',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

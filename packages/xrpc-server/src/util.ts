@@ -81,26 +81,32 @@ export function decodeQueryParam(
   }
 }
 
+export function getSearchParams(url = ''): URLSearchParams | undefined {
+  const queryStringIdx = url.indexOf('?')
+  if (queryStringIdx === -1) return undefined
+
+  const queryString = url.slice(queryStringIdx + 1)
+  if (queryString.length === 0) return undefined
+
+  return new URLSearchParams(queryString)
+}
+
 export type QueryParams = Record<string, undefined | string | string[]>
 export function getQueryParams(url = ''): QueryParams {
   const result: QueryParams = Object.create(null)
 
-  const queryStringIdx = url.indexOf('?')
-  if (queryStringIdx === -1) return result
+  const searchParams = getSearchParams(url)
+  if (!searchParams) return result
 
-  const queryString = url.slice(queryStringIdx + 1)
-  if (queryString === '') return result
+  if (searchParams.has('__proto__')) {
+    // Prevent prototype pollution
+    throw new InvalidRequestError(
+      `Invalid query parameter: __proto__`,
+      'InvalidQueryParameter',
+    )
+  }
 
-  const searchParams = new URLSearchParams(queryString)
   for (const key of searchParams.keys()) {
-    if (key === '__proto__') {
-      // Prevent prototype pollution
-      throw new InvalidRequestError(
-        `Invalid query parameter: ${key}`,
-        'InvalidQueryParameter',
-      )
-    }
-
     const values = searchParams.getAll(key)
     result[key] = values.length === 1 ? values[0] : values
   }

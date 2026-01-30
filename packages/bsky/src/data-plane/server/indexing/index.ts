@@ -1,9 +1,8 @@
 import { Selectable, sql } from 'kysely'
-import { CID } from 'multiformats/cid'
-import { AtpAgent, ComAtprotoSyncGetLatestCommit } from '@atproto/api'
 import { DAY, HOUR } from '@atproto/common'
 import { IdResolver, getPds } from '@atproto/identity'
-import { ValidationError } from '@atproto/lexicon'
+import { Client, XrpcResponseError, l } from '@atproto/lex'
+import { Cid, parseCid } from '@atproto/lex-data'
 import {
   VerifiedRepo,
   WriteOpAction,
@@ -11,7 +10,8 @@ import {
   readCarWithRoot,
   verifyRepo,
 } from '@atproto/repo'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString } from '@atproto/syntax'
+import { com } from '../../../lexicons'
 import { subLogger } from '../../../logger'
 import { retryXrpc } from '../../../util/retry'
 import { BackgroundQueue } from '../background'
@@ -36,7 +36,6 @@ import * as StarterPack from './plugins/starter-pack'
 import * as Status from './plugins/status'
 import * as Threadgate from './plugins/thread-gate'
 import * as Verification from './plugins/verification'
-import { RecordProcessor } from './processor'
 
 export class IndexingService {
   records: {
@@ -96,7 +95,7 @@ export class IndexingService {
 
   async indexRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     action: WriteOpAction.Create | WriteOpAction.Update,
     timestamp: string,
@@ -168,17 +167,17 @@ export class IndexingService {
       .executeTakeFirst()
   }
 
-  async indexRepo(did: string, commit?: string) {
+  async indexRepo(did: DidString, commit?: string) {
     this.db.assertNotTransaction()
     const now = new Date().toISOString()
     const { pds, signingKey } = await this.idResolver.did.resolveAtprotoData(
       did,
       true,
     )
-    const { api } = new AtpAgent({ service: pds })
+    const client = new Client({ service: pds })
 
-    const { data: car } = await retryXrpc(() =>
-      api.com.atproto.sync.getRepo({ did }),
+    const car = await retryXrpc(() =>
+      client.call(com.atproto.sync.getRepo, { did }),
     )
     const { root, blocks } = await readCarWithRoot(car)
     const verifiedRepo = await verifyRepo(blocks, root, did, signingKey)
@@ -204,7 +203,7 @@ export class IndexingService {
             )
           }
         } catch (err) {
-          if (err instanceof ValidationError) {
+          if (err instanceof l.ValidationError) {
             subLogger.warn(
               { did, commit, uri: uri.toString(), cid: cid.toString() },
               'skipping indexing of invalid record',
@@ -230,15 +229,15 @@ export class IndexingService {
       (acc, cur) => {
         acc[cur.uri] = {
           uri: new AtUri(cur.uri),
-          cid: CID.parse(cur.cid),
+          cid: parseCid(cur.cid),
         }
         return acc
       },
-      {} as Record<string, { uri: AtUri; cid: CID }>,
+      {} as Record<string, { uri: AtUri; cid: Cid }>,
     )
   }
 
-  async setCommitLastSeen(did: string, commit: CID, rev: string) {
+  async setCommitLastSeen(did: string, commit: Cid, rev: string) {
     const { ref } = this.db.db.dynamic
     await this.db.db
       .insertInto('actor_sync')
@@ -258,13 +257,18 @@ export class IndexingService {
   }
 
   findIndexerForCollection(collection: string) {
-    const indexers = Object.values(
-      this.records as Record<string, RecordProcessor<unknown, unknown>>,
-    )
-    return indexers.find((indexer) => indexer.collection === collection)
+    for (const indexer of Object.values(this.records)) {
+      if (indexer.collection === collection) {
+        return indexer
+      }
+    }
   }
 
-  async updateActorStatus(did: string, active: boolean, status: string = '') {
+  async updateActorStatus(
+    did: DidString,
+    active: boolean,
+    status: string = '',
+  ) {
     let upstreamStatus: string | null
     if (active) {
       upstreamStatus = null
@@ -280,7 +284,7 @@ export class IndexingService {
       .execute()
   }
 
-  async deleteActor(did: string) {
+  async deleteActor(did: DidString) {
     this.db.assertNotTransaction()
     const actorIsHosted = await this.getActorIsHosted(did)
     if (actorIsHosted === false) {
@@ -293,23 +297,25 @@ export class IndexingService {
     }
   }
 
-  private async getActorIsHosted(did: string) {
+  private async getActorIsHosted(did: DidString) {
     const doc = await this.idResolver.did.resolve(did, true)
     const pds = doc && getPds(doc)
     if (!pds) return false
-    const { api } = new AtpAgent({ service: pds })
+    const client = new Client({ service: pds })
     try {
-      await retryXrpc(() => api.com.atproto.sync.getLatestCommit({ did }))
+      await retryXrpc(() =>
+        client.call(com.atproto.sync.getLatestCommit, { did }),
+      )
       return true
     } catch (err) {
-      if (err instanceof ComAtprotoSyncGetLatestCommit.RepoNotFoundError) {
+      if (err instanceof XrpcResponseError && err.error === 'RepoNotFound') {
         return false
       }
       return null
     }
   }
 
-  async unindexActor(did: string) {
+  async unindexActor(did: DidString) {
     this.db.assertNotTransaction()
     // per-record-type indexes
     await this.db.db.deleteFrom('profile').where('creator', '=', did).execute()
@@ -384,7 +390,7 @@ export class IndexingService {
 
 type UriAndCid = {
   uri: AtUri
-  cid: CID
+  cid: Cid
 }
 
 type IndexOp =

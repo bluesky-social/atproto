@@ -1,13 +1,9 @@
 import { mapDefined } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AtUriString, DidString } from '@atproto/lex'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import {
-  CURATELIST,
-  MODLIST,
-} from '../../../../lexicon/types/app/bsky/graph/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getListsWithMembership'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -18,6 +14,9 @@ import {
 import { Views } from '../../../../views'
 import { clearlyBadCursor, resHeaders } from '../../../util'
 
+const CURATELIST = app.bsky.graph.defs.curatelist.value
+const MODLIST = app.bsky.graph.defs.modlist.value
+
 export default function (server: Server, ctx: AppContext) {
   const getListsWithMembership = createPipeline(
     skeleton,
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     filterPurposes,
     presentation,
   )
-  server.app.bsky.graph.getListsWithMembership({
+  server.add(app.bsky.graph.getListsWithMembership, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -64,7 +63,11 @@ const skeleton = async (
     cursor: params.cursor,
     limit: params.limit,
   })
-  return { actorDid, listUris, cursor: cursor || undefined }
+  return {
+    actorDid,
+    listUris: listUris as AtUriString[],
+    cursor: cursor || undefined,
+  }
 }
 
 const hydration = async (
@@ -128,12 +131,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getListsWithMembership.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  actorDid: string
-  listUris: string[]
+  actorDid: DidString
+  listUris: AtUriString[]
   cursor?: string
 }

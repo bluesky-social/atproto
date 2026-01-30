@@ -1,10 +1,10 @@
-import { AppBskyFeedGetFeedSkeleton, AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { ResponseType, XRPCError } from '@atproto/xrpc'
+import { Client } from '@atproto/lex'
 import {
+  Headers as HeadersMap,
   InvalidRequestError,
+  Server,
   ServerTimer,
-  UpstreamFailureError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -16,11 +16,7 @@ import {
 } from '../../../../data-plane'
 import { FeedItem } from '../../../../hydration/feed'
 import { HydrateCtx } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { isSkeletonReasonRepost } from '../../../../lexicon/types/app/bsky/feed/defs'
-import { QueryParams as GetFeedParams } from '../../../../lexicon/types/app/bsky/feed/getFeed'
-import { OutputSchema as SkeletonOutput } from '../../../../lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -38,12 +34,12 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.feed.getFeed({
+  server.add(app.bsky.feed.getFeed, {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         return (
-          method === ids.AppBskyFeedGetFeedSkeleton ||
-          method === ids.AppBskyFeedGetFeed
+          method === app.bsky.feed.getFeedSkeleton.$lxm ||
+          method === app.bsky.feed.getFeed.$lxm
         )
       },
       skipAudCheck: true,
@@ -158,16 +154,16 @@ const presentation = (
 
 type Context = AppContext
 
-type Params = GetFeedParams & {
+type Params = app.bsky.feed.getFeed.Params & {
   hydrateCtx: HydrateCtx
-  headers: Record<string, string>
+  headers: HeadersMap
 }
 
 type Skeleton = {
   items: AlgoResponseItem[]
   reqId?: string
   passthrough: Record<string, unknown> // pass through additional items in feedgen response
-  resHeaders?: Record<string, string>
+  resHeaders?: HeadersMap
   cursor?: string
   timerSkele: ServerTimer
   timerHydr: ServerTimer
@@ -205,58 +201,35 @@ const skeletonFromFeedGen = async (
     )
   }
 
-  const agent = new AtpAgent({ service: fgEndpoint })
+  const client = new Client({ service: fgEndpoint })
 
-  let skeleton: SkeletonOutput
-  let resHeaders: Record<string, string> | undefined = undefined
-  try {
-    // @TODO currently passthrough auth headers from pds
-    const result = await agent.api.app.bsky.feed.getFeedSkeleton(
-      {
-        feed: params.feed,
-        // The feedgen is not guaranteed to honor the limit, but we try it.
-        limit: params.limit,
-        cursor: params.cursor,
-      },
-      {
-        headers,
-      },
-    )
+  const resHeaders: HeadersMap = {}
 
-    skeleton = result.data
+  // @TODO currently passthrough auth headers from pds
+  const result = await client.xrpc(app.bsky.feed.getFeedSkeleton, {
+    headers,
+    params: {
+      feed: params.feed,
+      // The feedgen is not guaranteed to honor the limit, but we try it.
+      limit: params.limit,
+      cursor: params.cursor,
+    },
+  })
 
-    if (result.data.cursor === params.cursor) {
-      // Prevents loops if the custom feed echoes the input cursor back.
-      skeleton.cursor = undefined
-    }
+  const skeleton: app.bsky.feed.getFeedSkeleton.OutputBody = result.body
 
-    if (result.headers['content-language']) {
-      resHeaders = {
-        'content-language': result.headers['content-language'],
-      }
-    }
-  } catch (err) {
-    if (err instanceof AppBskyFeedGetFeedSkeleton.UnknownFeedError) {
-      throw new InvalidRequestError(err.message, 'UnknownFeed')
-    }
-    if (err instanceof XRPCError) {
-      if (err.status === ResponseType.Unknown) {
-        throw new UpstreamFailureError('feed unavailable')
-      }
-      if (err.status === ResponseType.InvalidResponse) {
-        throw new UpstreamFailureError(
-          'feed provided an invalid response',
-          'InvalidFeedResponse',
-        )
-      }
-    }
-    throw err
+  if (result.body.cursor === params.cursor) {
+    // Prevents loops if the custom feed echoes the input cursor back.
+    skeleton.cursor = undefined
   }
+
+  const contentLang = result.headers.get('content-language')
+  if (contentLang) resHeaders['content-language'] = contentLang
 
   const { feed: feedSkele, ...skele } = skeleton
   const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
     post: { uri: item.post },
-    repost: isSkeletonReasonRepost(item.reason)
+    repost: app.bsky.feed.defs.skeletonReasonRepost.$matches(item.reason)
       ? { uri: item.reason.repost }
       : undefined,
     feedContext: item.feedContext,
@@ -267,7 +240,7 @@ const skeletonFromFeedGen = async (
 
 export type AlgoResponse = {
   feedItems: AlgoResponseItem[]
-  resHeaders?: Record<string, string>
+  resHeaders: HeadersMap
   cursor?: string
   reqId?: string
 }

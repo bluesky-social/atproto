@@ -1,5 +1,4 @@
-import { CID } from 'multiformats/cid'
-import { RepoRecord } from '@atproto/lexicon'
+import { Cid, LexMap } from '@atproto/lex-data'
 import { MissingBlocksError } from './error'
 import log from './logger'
 import { MST } from './mst'
@@ -12,14 +11,14 @@ type Params = {
   storage: ReadableBlockstore
   data: MST
   commit: Commit
-  cid: CID
+  cid: Cid
 }
 
 export class ReadableRepo {
   storage: ReadableBlockstore
   data: MST
   commit: Commit
-  cid: CID
+  cid: Cid
 
   constructor(params: Params) {
     this.storage = params.storage
@@ -28,7 +27,7 @@ export class ReadableRepo {
     this.cid = params.cid
   }
 
-  static async load(storage: ReadableBlockstore, commitCid: CID) {
+  static async load(storage: ReadableBlockstore, commitCid: Cid) {
     const commit = await storage.readObj(commitCid, def.versionedCommit)
     const data = await MST.load(storage, commit.data)
     log.info({ did: commit.did }, 'loaded repo for')
@@ -51,8 +50,8 @@ export class ReadableRepo {
   async *walkRecords(from?: string): AsyncIterable<{
     collection: string
     rkey: string
-    cid: CID
-    record: RepoRecord
+    cid: Cid
+    record: LexMap
   }> {
     for await (const leaf of this.data.walkLeavesFrom(from ?? '')) {
       const { collection, rkey } = util.parseDataKey(leaf.key)

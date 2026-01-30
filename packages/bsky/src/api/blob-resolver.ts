@@ -1,7 +1,6 @@
 import { Duplex, Transform, Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import createError, { isHttpError } from 'http-errors'
-import { CID } from 'multiformats/cid'
 import { Dispatcher } from 'undici'
 import {
   VerifyCidError,
@@ -9,6 +8,7 @@ import {
   createDecoders,
 } from '@atproto/common'
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
+import { Cid } from '@atproto/lex-data'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,
@@ -159,7 +159,7 @@ export type StreamBlobFactory = (
   info: {
     url: URL
     did: AtprotoDid
-    cid: CID
+    cid: Cid
   },
 ) => Writable
 
@@ -244,7 +244,7 @@ function parseBlobParams(params: { cid: string; did: string }) {
 async function getBlobUrl(
   dataplane: DataPlaneClient,
   did: string,
-  cid: CID,
+  cid: Cid,
 ): Promise<URL> {
   const pds = await getBlobPds(dataplane, did, cid)
 
@@ -258,7 +258,7 @@ async function getBlobUrl(
 async function getBlobPds(
   dataplane: DataPlaneClient,
   did: string,
-  cid: CID,
+  cid: Cid,
 ): Promise<string> {
   const [identity, { takenDown }] = await Promise.all([
     dataplane.getIdentityByDid({ did }).catch((err) => {
@@ -321,7 +321,7 @@ function getBlobHeaders(
  * If you need the un-compressed data, you should use a decompress + verify
  * pipeline instead.
  */
-function createCidVerifier(cid: CID, encoding?: string | string[]): Duplex {
+function createCidVerifier(cid: Cid, encoding?: string | string[]): Duplex {
   // If the upstream content is compressed, we do not want to return a
   // de-compressed stream here. Indeed, the "compression" middleware will
   // compress the response before it is sent downstream, if it is not already

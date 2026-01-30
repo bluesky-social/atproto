@@ -1,7 +1,12 @@
 import { chunkArray } from '@atproto/common'
+import { DatetimeString, DidString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll } from '../../db'
+import { com } from '../../lexicons/index.js'
 import { AccountDb, InviteCode } from '../db'
+
+export type CodeDetail = com.atproto.server.defs.InviteCode
+export type CodeUse = com.atproto.server.defs.InviteCodeUse
 
 export const createInviteCodes = async (
   db: AccountDb,
@@ -35,15 +40,14 @@ export const createAccountInviteCodes = async (
 ): Promise<CodeDetail[]> => {
   const now = new Date().toISOString()
   const rows = codes.map(
-    (code) =>
-      ({
-        code,
-        availableUses: 1,
-        disabled,
-        forAccount,
-        createdBy: forAccount,
-        createdAt: now,
-      }) as InviteCode,
+    (code): InviteCode => ({
+      code,
+      availableUses: 1,
+      disabled,
+      forAccount,
+      createdBy: forAccount,
+      createdAt: now,
+    }),
   )
   await db.executeWithRetry(db.db.insertInto('invite_code').values(rows))
 
@@ -60,12 +64,15 @@ export const createAccountInviteCodes = async (
     )
   }
 
-  return rows.map((row) => ({
-    ...row,
-    available: 1,
-    disabled: row.disabled === 1,
-    uses: [],
-  }))
+  return rows.map(
+    ({ disabled, createdAt, ...row }): com.atproto.server.defs.InviteCode => ({
+      ...row,
+      createdAt: createdAt as DatetimeString,
+      available: 1,
+      disabled: disabled === 1,
+      uses: [],
+    }),
+  )
 }
 
 export const recordInviteUse = async (
@@ -156,7 +163,7 @@ export const getAccountsInviteCodes = async (
     results.set(row.forAccount, [
       ...existing,
       {
-        ...row,
+        ...(row as Omit<CodeDetail, 'uses' | 'disabled'>),
         uses: uses[row.code] ?? [],
         disabled: row.disabled === 1,
       },
@@ -180,7 +187,10 @@ export const getInviteCodesUses = async (
     for (const use of usesRes) {
       const { code, usedBy, usedAt } = use
       uses[code] ??= []
-      uses[code].push({ usedBy, usedAt })
+      uses[code].push({
+        usedBy: usedBy as DidString,
+        usedAt: usedAt as DatetimeString,
+      })
     }
   }
   return uses
@@ -204,11 +214,15 @@ export const getInvitedByForAccounts = async (
     db,
     codeDetailsRes.map((row) => row.code),
   )
-  const codeDetails = codeDetailsRes.map((row) => ({
-    ...row,
-    uses: uses[row.code] ?? [],
-    disabled: row.disabled === 1,
-  }))
+  const codeDetails = codeDetailsRes.map(
+    ({ uses: _, disabled, createdAt, ...row }): CodeDetail => ({
+      ...row,
+      createdAt: createdAt as DatetimeString,
+      uses: uses[row.code] ?? [],
+      disabled: disabled === 1,
+    }),
+  )
+
   return codeDetails.reduce(
     (acc, cur) => {
       for (const use of cur.uses) {
@@ -254,19 +268,4 @@ export const setAccountInvitesDisabled = async (
       .where('did', '=', did)
       .set({ invitesDisabled: disabled ? 1 : 0 }),
   )
-}
-
-export type CodeDetail = {
-  code: string
-  available: number
-  disabled: boolean
-  forAccount: string
-  createdBy: string
-  createdAt: string
-  uses: CodeUse[]
-}
-
-type CodeUse = {
-  usedBy: string
-  usedAt: string
 }

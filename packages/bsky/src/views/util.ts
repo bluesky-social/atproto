@@ -1,18 +1,18 @@
 import * as util from 'node:util'
-import { BlobRef } from '@atproto/lexicon'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { UriString } from '@atproto/lex'
+import { BlobRef } from '@atproto/lex-data'
+import { AtUriString, DidString } from '@atproto/syntax'
 import {
-  Record as PostgateRecord,
-  isDisableRule as isPostgateDisableRule,
-} from '../lexicon/types/app/bsky/feed/postgate'
-import {
-  Record as GateRecord,
+  GateRecord,
+  PostRecord,
+  PostgateRecord,
   isFollowerRule,
   isFollowingRule,
   isListRule,
+  isMentionFacet,
   isMentionRule,
-} from '../lexicon/types/app/bsky/feed/threadgate'
-import { isMention } from '../lexicon/types/app/bsky/richtext/facet'
+  isPostgateDisableRule,
+} from './types.js'
 
 export const parseThreadGate = (
   replierDid: string,
@@ -31,13 +31,15 @@ export const parseThreadGate = (
   const allowMentions = gate.allow.some(isMentionRule)
   const allowFollower = gate.allow.some(isFollowerRule)
   const allowFollowing = gate.allow.some(isFollowingRule)
-  const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
+  const allowListUris = gate.allow
+    .map((item) => (isListRule(item) ? item.list : undefined))
+    .filter((v) => v != null)
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {
     const isMentioned = rootPost?.facets?.some((facet) => {
       return facet.features.some(
-        (item) => isMention(item) && item.did === replierDid,
+        (item) => isMentionFacet(item) && item.did === replierDid,
       )
     })
     if (isMentioned) {
@@ -58,18 +60,11 @@ type ParsedThreadGate = {
   allowMentions?: boolean
   allowFollower?: boolean
   allowFollowing?: boolean
-  allowListUris?: string[]
+  allowListUris?: AtUriString[]
 }
 
-export const cidFromBlobJson = (json: BlobRef) => {
-  if (json instanceof BlobRef) {
-    return json.ref.toString()
-  }
-  // @NOTE below handles the fact that parseRecordBytes() produces raw json rather than lexicon values
-  if (json['$type'] === 'blob') {
-    return (json['ref']?.['$link'] ?? '') as string
-  }
-  return (json['cid'] ?? '') as string
+export const cidFromBlobJson = (json: BlobRef): string => {
+  return json.ref.toString()
 }
 
 export const parsePostgate = ({
@@ -110,18 +105,18 @@ export class VideoUriBuilder {
       thumbnailUrlPattern: string // e.g. https://hostname/vid/%s/%s/thumbnail.jpg
     },
   ) {}
-  playlist({ did, cid }: { did: string; cid: string }) {
+  playlist({ did, cid }: { did: DidString; cid: string }): UriString {
     return util.format(
       this.opts.playlistUrlPattern,
       encodeURIComponent(did),
       encodeURIComponent(cid),
-    )
+    ) as UriString
   }
-  thumbnail({ did, cid }: { did: string; cid: string }) {
+  thumbnail({ did, cid }: { did: DidString; cid: string }): UriString {
     return util.format(
       this.opts.thumbnailUrlPattern,
       encodeURIComponent(did),
       encodeURIComponent(cid),
-    )
+    ) as UriString
   }
 }

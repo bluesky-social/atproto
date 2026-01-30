@@ -1,25 +1,25 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
+import { app } from '../../../../lexicons/index.js'
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getProfile = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.actor.getProfiles({
+  server.add(app.bsky.actor.getProfiles, {
     auth: ctx.authVerifier.standardOptionalParameterized({
       lxmCheck: (method) => {
         if (!method) return false
         return (
-          method === ids.AppBskyActorGetProfiles ||
+          method === app.bsky.actor.getProfiles.$lxm ||
           method.startsWith('chat.bsky.')
         )
       },
@@ -85,8 +85,8 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.actor.getProfiles.Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { dids: string[] }
+type SkeletonState = { dids: DidString[] }
