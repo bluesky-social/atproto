@@ -25,7 +25,6 @@
       "properties": {
         "deviceId": {
           "type": "string",
-          "format": "uuid",
           "description": "UUIDv4 identifier of the device that created this draft."
         },
         "platform": {
