@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.18.20
+
+### Patch Changes
+
+- [#4591](https://github.com/bluesky-social/atproto/pull/4591) [`4f5c400`](https://github.com/bluesky-social/atproto/commit/4f5c4001271bbf38b30506efd30ebdabb969878f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `platform` to `deviceName` on `draft` view, add maxLength.
+
 ## 0.18.19
 
 ### Patch Changes
