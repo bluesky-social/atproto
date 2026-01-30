@@ -1,11 +1,11 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { Client, DidString } from '@atproto/lex'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/actor/searchActors'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -23,7 +23,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.actor.searchActors({
+  server.add(app.bsky.actor.searchActors, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -43,24 +43,28 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const term = params.q ?? params.term ?? ''
 
   // @TODO
   // add hits total
 
-  if (ctx.searchAgent) {
+  if (ctx.searchClient) {
     // @NOTE cursors won't change on appview swap
-    const { data: res } =
-      await ctx.searchAgent.app.bsky.unspecced.searchActorsSkeleton({
+    const res = await ctx.searchClient.call(
+      app.bsky.unspecced.searchActorsSkeleton,
+      {
         q: term,
         cursor: params.cursor,
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
-      })
+      },
+    )
     return {
-      dids: res.actors.map(({ did }) => did),
+      dids: res.actors.map(({ did }) => did as DidString),
       cursor: parseString(res.cursor),
     }
   }
@@ -71,7 +75,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     cursor: params.cursor,
   })
   return {
-    dids: res.dids,
+    dids: res.dids as DidString[],
     cursor: parseString(res.cursor),
   }
 }
@@ -108,13 +112,13 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchClient?: Client
 }
 
-type Params = QueryParams & { hydrateCtx: HydrateCtx }
+type Params = app.bsky.actor.searchActors.Params & { hydrateCtx: HydrateCtx }
 
 type Skeleton = {
-  dids: string[]
+  dids: DidString[]
   hitsTotal?: number
   cursor?: string
 }

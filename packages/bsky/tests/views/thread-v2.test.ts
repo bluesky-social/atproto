@@ -1,20 +1,21 @@
 import assert from 'node:assert'
-import { AppBskyUnspeccedDefs, AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { ThreadItemPost } from '../../src/lexicon/types/app/bsky/unspecced/defs'
-import { OutputSchema as OutputSchemaHiddenThread } from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
 import {
-  OutputSchema as OutputSchemaThread,
-  QueryParams as QueryParamsThread,
-} from '../../src/lexicon/types/app/bsky/unspecced/getPostThreadV2'
+  AppBskyUnspeccedDefs,
+  AppBskyUnspeccedGetPostThreadOtherV2,
+  AppBskyUnspeccedGetPostThreadV2,
+  AtpAgent,
+} from '@atproto/api'
+import { SeedClient, TestNetwork, seedThreadV2 } from '@atproto/dev-env'
 import {
   ThreadItemValuePost,
   ThreadOtherItemValuePost,
 } from '../../src/views/threads-v2'
 import { forSnapshot } from '../_util'
 
-type PostProps = Pick<ThreadItemPost, 'moreReplies' | 'opThread'>
+type PostProps = Pick<
+  AppBskyUnspeccedDefs.ThreadItemPost,
+  'moreReplies' | 'opThread'
+>
 const props = (overrides: Partial<PostProps> = {}): PostProps => ({
   moreReplies: 0,
   opThread: false,
@@ -22,7 +23,7 @@ const props = (overrides: Partial<PostProps> = {}): PostProps => ({
 })
 
 type PostPropsHidden = Pick<
-  ThreadItemPost,
+  AppBskyUnspeccedDefs.ThreadItemPost,
   'hiddenByThreadgate' | 'mutedByViewer'
 >
 const propsHidden = (
@@ -48,7 +49,7 @@ describe('appview thread views v2', () => {
       },
       dbPostgresSchema: 'bsky_views_thread_v_two',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     labelerDid = network.bsky.ctx.cfg.modServiceDid
     await network.processAll()
@@ -90,7 +91,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -116,7 +117,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -138,7 +139,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -160,7 +161,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -181,7 +182,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -203,7 +204,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -225,7 +226,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -284,7 +285,7 @@ describe('appview thread views v2', () => {
             {
               headers: await network.serviceHeaders(
                 seed.users.op.did,
-                ids.AppBskyUnspeccedGetPostThreadV2,
+                'app.bsky.unspecced.getPostThreadV2',
               ),
             },
           )
@@ -327,7 +328,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -361,7 +362,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -388,7 +389,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -411,7 +412,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -440,12 +441,12 @@ describe('appview thread views v2', () => {
     type Case =
       | {
           branchingFactor: number
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           postKeys: string[]
         }
       | {
           branchingFactor: number
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           // For higher branching factors it gets too verbose to write all posts.
           length: number
         }
@@ -587,7 +588,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -626,7 +627,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -774,7 +775,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -782,7 +783,7 @@ describe('appview thread views v2', () => {
 
         assertPosts(t)
         expect(hasOtherReplies).toBe(false)
-        const opThreadPostsUris = new Set(
+        const opThreadPostsUris = new Set<string>(
           opThreadPosts.map((k) =>
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
           ),
@@ -806,7 +807,7 @@ describe('appview thread views v2', () => {
       })
 
       type Case = {
-        sort: QueryParamsThread['sort']
+        sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
         postKeys: string[]
       }
 
@@ -878,7 +879,7 @@ describe('appview thread views v2', () => {
             {
               headers: await network.serviceHeaders(
                 seed.users.op.did,
-                ids.AppBskyUnspeccedGetPostThreadV2,
+                'app.bsky.unspecced.getPostThreadV2',
               ),
             },
           )
@@ -905,7 +906,7 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           postKeys: string[]
         }
 
@@ -931,7 +932,7 @@ describe('appview thread views v2', () => {
               {
                 headers: await network.serviceHeaders(
                   seed.users.viewer.did,
-                  ids.AppBskyUnspeccedGetPostThreadV2,
+                  'app.bsky.unspecced.getPostThreadV2',
                 ),
               },
             )
@@ -957,7 +958,7 @@ describe('appview thread views v2', () => {
         })
 
         type Case = {
-          sort: QueryParamsThread['sort']
+          sort: AppBskyUnspeccedGetPostThreadV2.QueryParams['sort']
           postKeys: string[]
         }
 
@@ -1083,7 +1084,7 @@ describe('appview thread views v2', () => {
               {
                 headers: await network.serviceHeaders(
                   seed.users.viewer.did,
-                  ids.AppBskyUnspeccedGetPostThreadV2,
+                  'app.bsky.unspecced.getPostThreadV2',
                 ),
               },
             )
@@ -1117,7 +1118,7 @@ describe('appview thread views v2', () => {
             {
               headers: await network.serviceHeaders(
                 viewer,
-                ids.AppBskyUnspeccedGetPostThreadV2,
+                'app.bsky.unspecced.getPostThreadV2',
               ),
             },
           )
@@ -1178,7 +1179,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
               seed.users.blocked.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1201,7 +1202,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
               seed.users.blocked.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1226,7 +1227,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `blocked`, who was blocked by `blocker`, author of '0'.
               seed.users.blocked.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1260,7 +1261,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
               seed.users.alice.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1285,7 +1286,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
               seed.users.alice.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1325,7 +1326,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
               seed.users.alice.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1357,7 +1358,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Use `alice` who is a 3rd party between `op` and `opBlocked`.
               seed.users.alice.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1397,7 +1398,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1421,7 +1422,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1577,7 +1578,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Fetching as `op` mutes `opMuted`.
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1609,7 +1610,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Fetching as `op` mutes `opMuted`.
               seed.users.op.did,
-              ids.AppBskyUnspeccedGetPostThreadOtherV2,
+              'app.bsky.unspecced.getPostThreadOtherV2',
             ),
           },
         )
@@ -1636,7 +1637,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Fetching as `muter` mutes `muted`.
               seed.users.muter.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1668,7 +1669,7 @@ describe('appview thread views v2', () => {
             headers: await network.serviceHeaders(
               // Fetching as `muter` mutes `muted`.
               seed.users.muter.did,
-              ids.AppBskyUnspeccedGetPostThreadOtherV2,
+              'app.bsky.unspecced.getPostThreadOtherV2',
             ),
           },
         )
@@ -1692,7 +1693,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.opMuted.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1720,7 +1721,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -1756,7 +1757,7 @@ describe('appview thread views v2', () => {
         {
           headers: await network.serviceHeaders(
             seed.users.op.did,
-            ids.AppBskyUnspeccedGetPostThreadOtherV2,
+            'app.bsky.unspecced.getPostThreadOtherV2',
           ),
         },
       )
@@ -1787,7 +1788,7 @@ describe('appview thread views v2', () => {
           headers: await network.serviceHeaders(
             // `alice` does not get its own reply as hidden.
             seed.users.alice.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -1850,7 +1851,7 @@ describe('appview thread views v2', () => {
           headers: await network.serviceHeaders(
             // `viewer` also gets the replies as hidden.
             seed.users.viewer.did,
-            ids.AppBskyUnspeccedGetPostThreadV2,
+            'app.bsky.unspecced.getPostThreadV2',
           ),
         },
       )
@@ -1893,7 +1894,7 @@ describe('appview thread views v2', () => {
           headers: await network.serviceHeaders(
             // `viewer` also gets the replies as hidden.
             seed.users.viewer.did,
-            ids.AppBskyUnspeccedGetPostThreadOtherV2,
+            'app.bsky.unspecced.getPostThreadOtherV2',
           ),
         },
       )
@@ -1930,7 +1931,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.viewer.did,
-              ids.AppBskyUnspeccedGetPostThreadV2,
+              'app.bsky.unspecced.getPostThreadV2',
             ),
           },
         )
@@ -1965,7 +1966,7 @@ describe('appview thread views v2', () => {
           {
             headers: await network.serviceHeaders(
               seed.users.viewer.did,
-              ids.AppBskyUnspeccedGetPostThreadOtherV2,
+              'app.bsky.unspecced.getPostThreadOtherV2',
             ),
           },
         )
@@ -1982,7 +1983,7 @@ describe('appview thread views v2', () => {
 })
 
 function assertPosts(
-  t: OutputSchemaThread['thread'],
+  t: AppBskyUnspeccedGetPostThreadV2.OutputSchema['thread'],
 ): asserts t is ThreadItemValuePost[] {
   t.forEach((i) => {
     assert(
@@ -1993,7 +1994,7 @@ function assertPosts(
 }
 
 function assertHiddenPosts(
-  t: OutputSchemaHiddenThread['thread'],
+  t: AppBskyUnspeccedGetPostThreadOtherV2.OutputSchema['thread'],
 ): asserts t is ThreadOtherItemValuePost[] {
   t.forEach((i) => {
     assert(

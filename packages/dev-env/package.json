@@ -30,6 +30,7 @@
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/ozone": "workspace:^",
     "@atproto/pds": "workspace:^",

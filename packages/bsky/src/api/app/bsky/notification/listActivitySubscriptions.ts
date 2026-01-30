@@ -1,8 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { DidString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/notification/listActivitySubscriptions'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -20,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocks,
     presentation,
   )
-  server.app.bsky.notification.listActivitySubscriptions({
+  server.add(app.bsky.notification.listActivitySubscriptions, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -44,7 +45,9 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actorDid = params.hydrateCtx.viewer
   if (clearlyBadCursor(params.cursor)) {
@@ -58,7 +61,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     })
   return {
     actorDid,
-    dids,
+    dids: dids as DidString[],
     cursor: cursor || undefined,
   }
 }
@@ -99,12 +102,12 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.notification.listActivitySubscriptions.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  actorDid: string
-  dids: string[]
+  actorDid: DidString
+  dids: DidString[]
   cursor?: string
 }

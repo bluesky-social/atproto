@@ -286,15 +286,15 @@ export class LexDefBuilder {
     if (def.type === 'procedure') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Input',
-        type: `l.InferMethodInput<typeof ${ref.varName}>`,
+        name: 'Input<B = l.BinaryData>',
+        type: `l.InferMethodInput<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.input?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'InputBody',
-        type: `l.InferMethodInputBody<typeof ${ref.varName}>`,
+        name: 'InputBody<B = l.BinaryData>',
+        type: `l.InferMethodInputBody<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.input?.description),
       })
     }
@@ -302,15 +302,15 @@ export class LexDefBuilder {
     if (def.type === 'procedure' || def.type === 'query') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Output',
-        type: `l.InferMethodOutput<typeof ${ref.varName}>`,
+        name: 'Output<B = l.BinaryData>',
+        type: `l.InferMethodOutput<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.output?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'OutputBody',
-        type: `l.InferMethodOutputBody<typeof ${ref.varName}>`,
+        name: 'OutputBody<B = l.BinaryData>',
+        type: `l.InferMethodOutputBody<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.output?.description),
       })
     }

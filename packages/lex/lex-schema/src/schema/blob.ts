@@ -32,6 +32,7 @@ export type BlobSchemaOptions = BlobRefCheckOptions & {
 }
 
 export type { BlobRef, LegacyBlobRef }
+export { isBlobRef, isLegacyBlobRef }
 
 /**
  * Schema for validating blob references in AT Protocol.

@@ -1,37 +1,40 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { OutputSchema } from '../../../../lexicon/types/app/bsky/actor/getProfiles'
+import { app } from '../../../../lexicons/index.js'
 import { computeProxyTo } from '../../../../pipethrough'
 import {
-  LocalRecords,
-  LocalViewer,
+  MungeFn,
   pipethroughReadAfterWrite,
 } from '../../../../read-after-write'
 
 export default function (server: Server, ctx: AppContext) {
   if (!ctx.bskyAppView) return
 
-  server.app.bsky.actor.getProfiles({
+  server.add(app.bsky.actor.getProfiles, {
     auth: ctx.authVerifier.authorization({
       authorize: (permissions, { req }) => {
-        const lxm = ids.AppBskyActorGetProfiles
+        const lxm = app.bsky.actor.getProfiles.$lxm
         const aud = computeProxyTo(ctx, req, lxm)
         permissions.assertRpc({ aud, lxm })
       },
     }),
     handler: async (reqCtx) => {
-      return pipethroughReadAfterWrite(ctx, reqCtx, getProfilesMunge)
+      return pipethroughReadAfterWrite(
+        ctx,
+        reqCtx,
+        app.bsky.actor.getProfiles,
+        getProfilesMunge,
+      )
     },
   })
 }
 
-const getProfilesMunge = async (
-  localViewer: LocalViewer,
-  original: OutputSchema,
-  local: LocalRecords,
-  requester: string,
-): Promise<OutputSchema> => {
+const getProfilesMunge: MungeFn<app.bsky.actor.getProfiles.OutputBody> = async (
+  localViewer,
+  original,
+  local,
+  requester,
+) => {
   const localProf = local.profile
   if (!localProf) return original
 

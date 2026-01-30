@@ -77,10 +77,11 @@ jobs:
             packages/oauth/*/src/locales/*/messages.ts
             packages/api/src/moderation/const/labels.ts
             packages/api/src/client
-            packages/bsky/src/lexicon
-            packages/lexicon-resolver/src/client
             packages/ozone/src/lexicon
-            packages/pds/src/lexicon
+            packages/bsky/src/lexicons
+            packages/lexicon-resolver/src/lexicons
+            packages/pds/src/lexicons
+            packages/sync/src/lexicons
           retention-days: 1
   test:
     name: Test

@@ -1,7 +1,6 @@
 import assert from 'node:assert'
 import { AppBskyFeedDefs, AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 /**
  * The frontend computes feed slices for display using at-most one
@@ -32,8 +31,8 @@ describe('pds thread views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_feed_view_post',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -73,7 +72,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -116,7 +115,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -161,7 +160,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -198,7 +197,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -236,7 +235,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -280,7 +279,7 @@ describe('pds thread views', () => {
     const timeline = await agent.api.app.bsky.feed.getTimeline(
       { limit: LIMIT },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
 
@@ -325,7 +324,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -372,7 +371,7 @@ describe('pds thread views', () => {
     const timeline = await agent.api.app.bsky.feed.getTimeline(
       { limit: LIMIT },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
 
@@ -421,7 +420,7 @@ describe('pds thread views', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -474,7 +473,7 @@ describe('pds thread views', () => {
     const timeline = await agent.api.app.bsky.feed.getTimeline(
       { limit: LIMIT },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
 
