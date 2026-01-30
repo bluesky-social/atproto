@@ -1,12 +1,11 @@
 import { TID } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { DraftWithId } from '../../../../lexicon/types/app/bsky/draft/defs'
+import { app } from '../../../../lexicons/index.js'
 import { Namespaces } from '../../../../stash'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.draft.createDraft({
+  server.add(app.bsky.draft.createDraft, {
     auth: ctx.authVerifier.standard,
     handler: async ({ input, auth }) => {
       const actorDid = auth.credentials.iss
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const draftId = TID.nextStr()
-      const draftWithId: DraftWithId = {
+      const draftWithId: app.bsky.draft.defs.DraftWithId = {
         id: draftId,
         draft,
       }

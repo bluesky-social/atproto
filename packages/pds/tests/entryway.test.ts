@@ -56,7 +56,7 @@ describe('entryway', () => {
         weight: 1,
       })
       .execute()
-    pdsAgent = pds.getClient()
+    pdsAgent = pds.getAgent()
     entrywayAgent = new AtpAgent({
       service: entryway.ctx.cfg.service.publicUrl,
     })

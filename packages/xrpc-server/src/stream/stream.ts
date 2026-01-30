@@ -30,10 +30,13 @@ export function ensureChunkIsMessage(chunk: Uint8Array): MessageFrame {
   if (frame.isMessage()) {
     return frame
   } else if (frame.isError()) {
-    // @TODO work -1 error code into XRPCError
-    // @ts-ignore
-    throw new XRPCError(-1, frame.code, frame.message)
+    const type = ResponseType[frame.code] ?? ResponseType.UpstreamFailure
+    throw new XRPCError(type, frame.code, frame.message)
   } else {
-    throw new XRPCError(ResponseType.Unknown, undefined, 'Unknown frame type')
+    throw new XRPCError(
+      ResponseType.InvalidResponse,
+      undefined,
+      'Unknown frame type',
+    )
   }
 }

@@ -1,5 +1,12 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
+import {
+  AppBskyFeedDefs,
+  AppBskyFeedGetActorFeeds,
+  AppBskyFeedGetFeed,
+  AtUri,
+  AtpAgent,
+  XRPCError,
+} from '@atproto/api'
 import { TID } from '@atproto/common'
 import {
   RecordRef,
@@ -8,16 +15,8 @@ import {
   TestNetwork,
   basicSeed,
 } from '@atproto/dev-env'
-import { XRPCError } from '@atproto/xrpc'
-import { AuthRequiredError, MethodHandler } from '@atproto/xrpc-server'
-import { ids } from '../src/lexicon/lexicons'
-import {
-  FeedViewPost,
-  SkeletonFeedPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
-import { OutputSchema as GetActorFeedsOutputSchema } from '../src/lexicon/types/app/bsky/feed/getActorFeeds'
-import { OutputSchema as GetFeedOutputSchema } from '../src/lexicon/types/app/bsky/feed/getFeed'
-import * as AppBskyFeedGetFeedSkeleton from '../src/lexicon/types/app/bsky/feed/getFeedSkeleton'
+import { SkeletonHandler, app } from '@atproto/pds'
+import { AuthRequiredError } from '@atproto/xrpc-server'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('feed generation', () => {
@@ -45,8 +44,8 @@ describe('feed generation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_feed_generation',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -230,7 +229,7 @@ describe('feed generation', () => {
     await pdsAgent.api.com.atproto.repo.putRecord(
       {
         repo: alice,
-        collection: ids.AppBskyFeedGenerator,
+        collection: 'app.bsky.feed.generator',
         rkey: 'odd',
         record: {
           did: gen.did,
@@ -250,7 +249,7 @@ describe('feed generation', () => {
     await sc.like(sc.dids.carol, feedUriAllRef)
     await network.processAll()
 
-    const results = (results: GetActorFeedsOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetActorFeeds.OutputSchema[]) =>
       results.flatMap((res) => res.feeds)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getActorFeeds(
@@ -258,7 +257,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetActorFeeds,
+            'app.bsky.feed.getActorFeeds',
           ),
         },
       )
@@ -299,7 +298,7 @@ describe('feed generation', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -326,7 +325,7 @@ describe('feed generation', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -385,7 +384,7 @@ describe('feed generation', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -415,7 +414,7 @@ describe('feed generation', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -430,7 +429,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetFeedGenerator,
+            'app.bsky.feed.getFeedGenerator',
           ),
         },
       )
@@ -445,7 +444,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetFeedGenerator,
+            'app.bsky.feed.getFeedGenerator',
           ),
         },
       )
@@ -462,7 +461,7 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               sc.dids.bob,
-              ids.AppBskyFeedGetFeedGenerator,
+              'app.bsky.feed.getFeedGenerator',
             ),
           },
         )
@@ -476,7 +475,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetFeedGenerator,
+            'app.bsky.feed.getFeedGenerator',
           ),
         },
       )
@@ -490,7 +489,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetFeedGenerator,
+            'app.bsky.feed.getFeedGenerator',
           ),
         },
       )
@@ -532,7 +531,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyFeedGetFeedGenerator,
+            'app.bsky.feed.getFeedGenerator',
           ),
         },
       )
@@ -548,7 +547,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetFeedGenerators,
+            'app.bsky.feed.getFeedGenerators',
           ),
         },
       )
@@ -564,7 +563,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyFeedGetSuggestedFeeds,
+            'app.bsky.feed.getSuggestedFeeds',
           ),
         },
       )
@@ -580,7 +579,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyUnspeccedGetPopularFeedGenerators,
+            'app.bsky.unspecced.getPopularFeedGenerators',
           ),
         },
       )
@@ -598,7 +597,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyUnspeccedGetPopularFeedGenerators,
+            'app.bsky.unspecced.getPopularFeedGenerators',
           ),
         },
       )
@@ -612,7 +611,7 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               sc.dids.bob,
-              ids.AppBskyUnspeccedGetPopularFeedGenerators,
+              'app.bsky.unspecced.getPopularFeedGenerators',
             ),
           },
         )
@@ -622,7 +621,7 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               sc.dids.bob,
-              ids.AppBskyUnspeccedGetPopularFeedGenerators,
+              'app.bsky.unspecced.getPopularFeedGenerators',
             ),
           },
         )
@@ -632,7 +631,7 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               sc.dids.bob,
-              ids.AppBskyUnspeccedGetPopularFeedGenerators,
+              'app.bsky.unspecced.getPopularFeedGenerators',
             ),
           },
         )
@@ -649,7 +648,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            'app.bsky.feed.getFeed',
             gen.did,
           ),
         },
@@ -673,7 +672,7 @@ describe('feed generation', () => {
     })
 
     it('paginates, handling replies and reposts.', async () => {
-      const results = (results: GetFeedOutputSchema[]) =>
+      const results = (results: AppBskyFeedGetFeed.OutputSchema[]) =>
         results.flatMap((res) => res.feed)
       const paginator = async (cursor?: string) => {
         const res = await agent.api.app.bsky.feed.getFeed(
@@ -681,7 +680,7 @@ describe('feed generation', () => {
           {
             headers: await network.serviceHeaders(
               alice,
-              ids.AppBskyFeedGetFeed,
+              'app.bsky.feed.getFeed',
               gen.did,
             ),
           },
@@ -689,7 +688,9 @@ describe('feed generation', () => {
         return res.data
       }
 
-      const paginatedAll: FeedViewPost[] = results(await paginateAll(paginator))
+      const paginatedAll: AppBskyFeedDefs.FeedViewPost[] = results(
+        await paginateAll(paginator),
+      )
 
       // Unknown post uri is omitted
       expect(paginatedAll.map((item) => item.post.uri)).toEqual([
@@ -708,7 +709,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            'app.bsky.feed.getFeed',
             gen.did,
           ),
         },
@@ -729,7 +730,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            'app.bsky.feed.getFeed',
             gen.did,
           ),
         },
@@ -745,7 +746,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            'app.bsky.feed.getFeed',
             gen.did,
           ),
         },
@@ -759,7 +760,7 @@ describe('feed generation', () => {
       const tryGetFeed = agent.api.app.bsky.feed.getFeed(
         { feed: feedUriPrime },
         {
-          headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetFeed),
+          headers: await network.serviceHeaders(alice, 'app.bsky.feed.getFeed'),
         },
       )
       await expect(tryGetFeed).resolves.toBeDefined()
@@ -771,7 +772,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeedSkeleton,
+            'app.bsky.feed.getFeedSkeleton',
             gen.did,
           ),
         },
@@ -779,7 +780,7 @@ describe('feed generation', () => {
       expect(feed.data['$auth']?.['aud']).toEqual(gen.did)
       expect(feed.data['$auth']?.['iss']).toEqual(alice)
       expect(feed.data['$auth']?.['lxm']).toEqual(
-        ids.AppBskyFeedGetFeedSkeleton,
+        'app.bsky.feed.getFeedSkeleton',
       )
     })
 
@@ -799,7 +800,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            'app.bsky.feed.getFeed',
             gen.did,
           ),
         },
@@ -816,7 +817,7 @@ describe('feed generation', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyFeedGetFeed,
+            'app.bsky.feed.getFeed',
             gen.did,
           ),
         },
@@ -835,18 +836,13 @@ describe('feed generation', () => {
         | 'bad-pagination-cursor'
         | 'needs-auth'
         | 'accepts-interactions',
-    ): MethodHandler<
-      void,
-      AppBskyFeedGetFeedSkeleton.QueryParams,
-      AppBskyFeedGetFeedSkeleton.HandlerInput,
-      AppBskyFeedGetFeedSkeleton.HandlerOutput
-    > =>
+    ): SkeletonHandler =>
     async ({ req, params }) => {
       if (feedName === 'needs-auth' && !req.headers.authorization) {
         throw new AuthRequiredError('This feed requires auth')
       }
-      const { limit, cursor } = params
-      const candidates: SkeletonFeedPost[] = [
+      const { limit = 50, cursor } = params
+      const candidates: app.bsky.feed.defs.SkeletonFeedPost[] = [
         { post: sc.posts[sc.dids.alice][0].ref.uriStr },
         { post: sc.posts[sc.dids.bob][0].ref.uriStr },
         { post: sc.posts[sc.dids.carol][0].ref.uriStr },
@@ -868,9 +864,17 @@ describe('feed generation', () => {
             repost: sc.reposts[sc.dids.carol][0].uriStr,
           },
         },
-      ].map((item, i) => ({ ...item, feedContext: `item-${i}` })) // add a deterministic context to test passthrough
+      ]
+
+      const candidatesWithContext = candidates.map(
+        <I>(item: I, i: number): I & { feedContext: string } => ({
+          ...item,
+          feedContext: `item-${i}`,
+        }),
+      ) // add a deterministic context to test passthrough
+
       const offset = cursor ? parseInt(cursor, 10) : 0
-      const fullFeed = candidates.filter((_, i) => {
+      const fullFeed = candidatesWithContext.filter((_, i) => {
         if (feedName === 'even') {
           return i % 2 === 0
         }
@@ -891,14 +895,17 @@ describe('feed generation', () => {
             ? (fullFeed.indexOf(lastResult) + 1).toString()
             : undefined
 
+      const body: app.bsky.feed.getFeedSkeleton.$OutputBody = {
+        feed: feedResults,
+        cursor: cursorResult,
+        reqId: 'req-id-abc-def-ghi',
+        // @ts-expect-error for testing purposes
+        $auth: jwtBody(req.headers.authorization),
+      }
+
       return {
         encoding: 'application/json',
-        body: {
-          feed: feedResults,
-          cursor: cursorResult,
-          reqId: 'req-id-abc-def-ghi',
-          $auth: jwtBody(req.headers.authorization), // for testing purposes
-        },
+        body,
       }
     }
 })

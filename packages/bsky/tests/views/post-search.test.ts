@@ -1,8 +1,6 @@
-import { AtpAgent } from '@atproto/api'
-import { QueryParams as SearchPostsQueryParams } from '@atproto/api/src/client/types/app/bsky/feed/searchPosts'
+import { AppBskyFeedSearchPosts, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { DatabaseSchema } from '../../src'
-import { ids } from '../../src/lexicon/lexicons'
 
 const TAG_HIDE = 'hide'
 
@@ -29,9 +27,9 @@ describe('appview search', () => {
         searchTagsHide: new Set([TAG_HIDE]),
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
-    ozoneAgent = network.ozone.getClient()
+    ozoneAgent = network.ozone.getAgent()
     await basicSeed(sc)
 
     alice = sc.dids.alice
@@ -64,7 +62,7 @@ describe('appview search', () => {
     type TestCase = {
       name: string
       viewer: () => string
-      queryParams: () => SearchPostsQueryParams
+      queryParams: () => AppBskyFeedSearchPosts.QueryParams
       expectedPostUris: () => string[]
     }
 
@@ -162,7 +160,7 @@ describe('appview search', () => {
         const res = await agent.app.bsky.feed.searchPosts(queryParams(), {
           headers: await network.serviceHeaders(
             viewer(),
-            ids.AppBskyFeedSearchPosts,
+            'app.bsky.feed.searchPosts',
           ),
         })
         expect(res.data.posts.map((p) => p.uri)).toStrictEqual(
@@ -174,11 +172,15 @@ describe('appview search', () => {
     it('mod service finds even tagged posts', async () => {
       const resTop = await ozoneAgent.app.bsky.feed.searchPosts(
         { q: 'doggo', sort: 'top' },
-        { headers: await network.ozone.modHeaders(ids.AppBskyFeedSearchPosts) },
+        {
+          headers: await network.ozone.modHeaders('app.bsky.feed.searchPosts'),
+        },
       )
       const resLatest = await ozoneAgent.app.bsky.feed.searchPosts(
         { q: 'doggo', sort: 'latest' },
-        { headers: await network.ozone.modHeaders(ids.AppBskyFeedSearchPosts) },
+        {
+          headers: await network.ozone.modHeaders('app.bsky.feed.searchPosts'),
+        },
       )
 
       expect(resTop.data.posts.map((p) => p.uri)).toStrictEqual(allResults)

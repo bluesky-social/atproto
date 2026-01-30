@@ -1,7 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('handle invalidation', () => {
   let network: TestNetwork
@@ -17,8 +16,8 @@ describe('handle invalidation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_handle_invalidation',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -66,7 +65,7 @@ describe('handle invalidation', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -86,7 +85,7 @@ describe('handle invalidation', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -106,7 +105,7 @@ describe('handle invalidation', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -131,7 +130,7 @@ describe('handle invalidation', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -142,7 +141,7 @@ describe('handle invalidation', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )

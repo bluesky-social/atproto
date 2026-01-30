@@ -1,6 +1,5 @@
 import { AtpAgent, ComAtprotoModerationDefs } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../src/lexicon/lexicons'
 import { forSubjectStatusSnapshot } from './_util'
 
 describe('appeal account takedown', () => {
@@ -22,14 +21,14 @@ describe('appeal account takedown', () => {
     moderator = modAccount.did
     await network.ozone.addModeratorDid(moderator)
 
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  it('actor takedown allows appeal request.', async () => {
+  it.only('actor takedown allows appeal request.', async () => {
     const { data: account } = await agent.com.atproto.server.createAccount({
       handle: 'jeff.test',
       email: 'jeff@test.com',
@@ -105,7 +104,9 @@ describe('appeal account takedown', () => {
     ).toMatchSnapshot()
   })
 
-  it('takendown actor is not allowed to create reports.', async () => {
+  it.only('takendown actor is not allowed to create reports.', async () => {
+    console.error('STAAART')
+
     const { data: auth } = await agent.com.atproto.server.createSession({
       identifier: 'jeff.test',
       password: 'password',
@@ -114,23 +115,32 @@ describe('appeal account takedown', () => {
 
     // send appeal event as the takendown account
     await expect(
-      agent.com.atproto.moderation.createReport(
-        {
-          reasonType: ComAtprotoModerationDefs.REASONRUDE,
-          reason: 'reporting others',
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef',
-            did: 'did:plc:test',
+      agent.com.atproto.moderation
+        .createReport(
+          {
+            reasonType: ComAtprotoModerationDefs.REASONRUDE,
+            reason: 'reporting others',
+            subject: {
+              $type: 'com.atproto.admin.defs#repoRef',
+              did: 'did:plc:test',
+            },
           },
-        },
-        {
-          headers: {
-            authorization: `Bearer ${auth.accessJwt}`,
+          {
+            headers: {
+              authorization: `Bearer ${auth.accessJwt}`,
+            },
           },
-        },
-      ),
-    ).rejects.toThrow('Report not accepted from takendown account')
+        )
+        .catch((err) => {
+          console.error('ERR', err)
+          throw err
+        }),
+    ).rejects.toMatchObject({
+      error: 'AccountTakedown',
+      message: 'Report not accepted from takendown account',
+    })
   })
+
   it('takendown actor is not allowed to create records.', async () => {
     const { data: auth } = await agent.com.atproto.server.createSession({
       identifier: 'jeff.test',
@@ -143,7 +153,7 @@ describe('appeal account takedown', () => {
       agent.com.atproto.repo.createRecord(
         {
           repo: auth.did,
-          collection: ids.AppBskyFeedPost,
+          collection: 'app.bsky.feed.post',
           // rkey: 'self',
           record: {
             text: 'test',

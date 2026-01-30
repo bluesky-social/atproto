@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 import { knownFollowersSeed } from '../seed/known-followers'
 
 describe('known followers (social proof)', () => {
@@ -15,8 +14,8 @@ describe('known followers (social proof)', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_known_followers',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     seedClient = network.getSeedClient()
 
     await knownFollowersSeed(seedClient)
@@ -73,7 +72,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.base_view,
-          ids.AppBskyGraphGetFollows,
+          'app.bsky.graph.getFollows',
         ),
       },
     )
@@ -88,7 +87,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.base_view,
-          ids.AppBskyGraphGetKnownFollowers,
+          'app.bsky.graph.getKnownFollowers',
         ),
       },
     )
@@ -104,7 +103,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.base_view,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -121,7 +120,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.fp_block_view,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -137,7 +136,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.sp_block_view,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -153,7 +152,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.sp_block_view,
-          ids.AppBskyActorGetProfiles,
+          'app.bsky.actor.getProfiles',
         ),
       },
     )
@@ -171,7 +170,7 @@ describe('known followers (social proof)', () => {
       {
         headers: await network.serviceHeaders(
           dids.mix_view,
-          ids.AppBskyActorGetProfiles,
+          'app.bsky.actor.getProfiles',
         ),
       },
     )

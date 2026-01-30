@@ -316,7 +316,7 @@ export abstract class Schema<
    *
    * @see {@link assert}
    */
-  $assert(input: unknown): asserts input is InferInput<this> {
+  $assert = (input: unknown): asserts input is InferInput<this> => {
     return this.assert(input)
   }
 
@@ -325,7 +325,7 @@ export abstract class Schema<
    *
    * @see {@link check}
    */
-  $check(input: unknown): void {
+  $check = (input: unknown): void => {
     return this.check(input)
   }
 
@@ -334,7 +334,7 @@ export abstract class Schema<
    *
    * @see {@link cast}
    */
-  $cast<I>(input: I): I & InferInput<this> {
+  $cast = <I>(input: I): I & InferInput<this> => {
     return this.cast(input)
   }
 
@@ -343,7 +343,7 @@ export abstract class Schema<
    *
    * @see {@link matches}
    */
-  $matches(input: unknown): input is InferInput<this> {
+  $matches = (input: unknown): input is InferInput<this> => {
     return this.matches(input)
   }
 
@@ -352,7 +352,7 @@ export abstract class Schema<
    *
    * @see {@link ifMatches}
    */
-  $ifMatches<I>(input: I): (I & InferInput<this>) | undefined {
+  $ifMatches = <I>(input: I): (I & InferInput<this>) | undefined => {
     return this.ifMatches(input)
   }
 
@@ -361,7 +361,7 @@ export abstract class Schema<
    *
    * @see {@link parse}
    */
-  $parse(input: unknown, options?: ValidateOptions): InferOutput<this> {
+  $parse = (input: unknown, options?: ValidateOptions): InferOutput<this> => {
     return this.parse(input, options)
   }
 
@@ -370,10 +370,10 @@ export abstract class Schema<
    *
    * @see {@link safeParse}
    */
-  $safeParse(
+  $safeParse = (
     input: unknown,
     options?: ValidateOptions,
-  ): ValidationResult<InferOutput<this>> {
+  ): ValidationResult<InferOutput<this>> => {
     return this.safeParse(input, options)
   }
 
@@ -382,7 +382,10 @@ export abstract class Schema<
    *
    * @see {@link validate}
    */
-  $validate<I>(input: I, options?: ValidateOptions): I & InferInput<this> {
+  $validate = <I>(
+    input: I,
+    options?: ValidateOptions,
+  ): I & InferInput<this> => {
     return this.validate(input, options)
   }
 
@@ -391,10 +394,10 @@ export abstract class Schema<
    *
    * @see {@link safeValidate}
    */
-  $safeValidate<I>(
+  $safeValidate = <I>(
     input: I,
     options?: ValidateOptions,
-  ): ValidationResult<I & InferInput<this>> {
+  ): ValidationResult<I & InferInput<this>> => {
     return this.safeValidate(input, options)
   }
 }

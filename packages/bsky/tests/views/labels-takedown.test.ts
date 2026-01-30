@@ -1,7 +1,6 @@
 import assert from 'node:assert'
 import { AppBskyLabelerDefs, AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky takedown labels', () => {
   let network: TestNetwork
@@ -21,8 +20,8 @@ describe('bsky takedown labels', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_takedown_labels',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
 
@@ -73,7 +72,7 @@ describe('bsky takedown labels', () => {
     await sc.agent.api.com.atproto.repo.createRecord(
       {
         repo: sc.dids.labeler1,
-        collection: ids.AppBskyLabelerService,
+        collection: 'app.bsky.labeler.service',
         rkey: 'self',
         record: {
           policies: { labelValues: ['spam'] },
@@ -93,7 +92,7 @@ describe('bsky takedown labels', () => {
     await sc.agent.api.com.atproto.repo.createRecord(
       {
         repo: sc.dids.labeler2,
-        collection: ids.AppBskyLabelerService,
+        collection: 'app.bsky.labeler.service',
         rkey: 'self',
         record: {
           policies: { labelValues: ['spam'] },
@@ -191,7 +190,7 @@ describe('bsky takedown labels', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -210,7 +209,7 @@ describe('bsky takedown labels', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )

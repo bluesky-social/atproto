@@ -1,12 +1,5 @@
 import { Generated } from 'kysely'
-import {
-  REASONMISLEADING,
-  REASONOTHER,
-  REASONRUDE,
-  REASONSEXUAL,
-  REASONSPAM,
-  REASONVIOLATION,
-} from '../../lexicon/types/com/atproto/moderation/defs'
+import { com } from '../../lexicons/index.js'
 
 export const actionTableName = 'moderation_action'
 export const actionSubjectBlobTableName = 'moderation_action_subject_blob'
@@ -61,12 +54,12 @@ export interface ModerationReport {
   subjectUri: string | null
   subjectCid: string | null
   reasonType:
-    | typeof REASONSPAM
-    | typeof REASONOTHER
-    | typeof REASONMISLEADING
-    | typeof REASONRUDE
-    | typeof REASONSEXUAL
-    | typeof REASONVIOLATION
+    | com.atproto.moderation.defs.ReasonSpam
+    | com.atproto.moderation.defs.ReasonOther
+    | com.atproto.moderation.defs.ReasonMisleading
+    | com.atproto.moderation.defs.ReasonRude
+    | com.atproto.moderation.defs.ReasonSexual
+    | com.atproto.moderation.defs.ReasonViolation
   reason: string | null
   reportedByDid: string
   createdAt: string

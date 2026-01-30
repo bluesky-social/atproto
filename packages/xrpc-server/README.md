@@ -36,7 +36,7 @@ const server = xrpc.createServer(lexicons)
 
 function ping(ctx: {
   auth: xrpc.HandlerAuth | undefined
-  params: xrpc.Params
+  params: xrpc.$Params
   input: xrpc.HandlerInput | undefined
   req: express.Request
   res: express.Response

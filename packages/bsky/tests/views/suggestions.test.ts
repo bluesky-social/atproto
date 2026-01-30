@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 import { stripViewer } from '../_util'
 
 describe('pds user search views', () => {
@@ -12,7 +11,7 @@ describe('pds user search views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_suggestions',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -40,7 +39,7 @@ describe('pds user search views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -59,7 +58,7 @@ describe('pds user search views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -74,7 +73,7 @@ describe('pds user search views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -86,7 +85,7 @@ describe('pds user search views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -98,7 +97,7 @@ describe('pds user search views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -112,7 +111,7 @@ describe('pds user search views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.carol,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )

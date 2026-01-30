@@ -2,10 +2,11 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
-import AtpAgent from '@atproto/api'
+import {
+  AppBskyUnspeccedGetSuggestedUsersSkeleton,
+  AtpAgent,
+} from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSuggestedUsersSkeleton'
 
 type User = {
   id: string
@@ -75,7 +76,7 @@ describe('getSuggestedOnboardingUsers', () => {
         topicsApiKey: 'test',
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     const result = await seed(sc)
@@ -103,7 +104,7 @@ describe('getSuggestedOnboardingUsers', () => {
         await agent.app.bsky.unspecced.getSuggestedOnboardingUsers(undefined, {
           headers: await network.serviceHeaders(
             seededUsers.viewer.did,
-            ids.AppBskyUnspeccedGetSuggestedOnboardingUsers,
+            'app.bsky.unspecced.getSuggestedOnboardingUsers',
           ),
         })
       const actor = data.actors.find(
@@ -117,7 +118,7 @@ describe('getSuggestedOnboardingUsers', () => {
         await agent.app.bsky.unspecced.getSuggestedOnboardingUsers(undefined, {
           headers: await network.serviceHeaders(
             seededUsers.viewerBlocker.did,
-            ids.AppBskyUnspeccedGetSuggestedOnboardingUsers,
+            'app.bsky.unspecced.getSuggestedOnboardingUsers',
           ),
         })
       const actor = data.actors.find(
@@ -132,7 +133,7 @@ describe('getSuggestedOnboardingUsers', () => {
         await agent.app.bsky.unspecced.getSuggestedOnboardingUsers(undefined, {
           headers: await network.serviceHeaders(
             seededUsers.viewer.did,
-            ids.AppBskyUnspeccedGetSuggestedOnboardingUsers,
+            'app.bsky.unspecced.getSuggestedOnboardingUsers',
           ),
         })
       const actor = data.actors.find(
@@ -175,9 +176,10 @@ class MockServer {
     app.get(
       '/xrpc/app.bsky.unspecced.getSuggestedUsersSkeleton',
       (req, res) => {
-        const skeleton: OutputSchema = {
-          dids: Array.from(this.mockedDids.values()),
-        }
+        const skeleton: AppBskyUnspeccedGetSuggestedUsersSkeleton.OutputSchema =
+          {
+            dids: Array.from(this.mockedDids.values()),
+          }
         return res.json(skeleton)
       },
     )

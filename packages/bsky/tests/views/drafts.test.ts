@@ -1,13 +1,11 @@
-import { AppBskyDraftCreateDraft, AtpAgent } from '@atproto/api'
+import {
+  AppBskyDraftCreateDraft,
+  AppBskyDraftDefs,
+  AppBskyDraftGetDrafts,
+  AtpAgent,
+} from '@atproto/api'
 import { TID } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import {
-  Draft,
-  DraftView,
-  DraftWithId,
-} from '../../src/lexicon/types/app/bsky/draft/defs'
-import { OutputSchema as GetDraftsOutputSchema } from '../../src/lexicon/types/app/bsky/draft/getDrafts'
 import { paginateAll } from '../_util'
 
 type Database = TestNetwork['bsky']['db']
@@ -32,7 +30,7 @@ describe('appview drafts views', () => {
       },
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -50,7 +48,7 @@ describe('appview drafts views', () => {
     await network.close()
   })
 
-  const makeDraft = (): Draft => ({
+  const makeDraft = (): AppBskyDraftDefs.Draft => ({
     posts: [{ text: 'Hello, world!' }],
   })
 
@@ -58,28 +56,34 @@ describe('appview drafts views', () => {
     agent.app.bsky.draft.getDrafts(
       { limit, cursor },
       {
-        headers: await network.serviceHeaders(actor, ids.AppBskyDraftGetDrafts),
+        headers: await network.serviceHeaders(
+          actor,
+          'app.bsky.draft.getDrafts',
+        ),
       },
     )
 
-  const create = async (actor: string, draft: Draft) =>
+  const create = async (actor: string, draft: AppBskyDraftDefs.Draft) =>
     agent.app.bsky.draft.createDraft(
       { draft },
       {
         headers: await network.serviceHeaders(
           actor,
-          ids.AppBskyDraftCreateDraft,
+          'app.bsky.draft.createDraft',
         ),
       },
     )
 
-  const update = async (actor: string, draftWithId: DraftWithId) =>
+  const update = async (
+    actor: string,
+    draftWithId: AppBskyDraftDefs.DraftWithId,
+  ) =>
     agent.app.bsky.draft.updateDraft(
       { draft: draftWithId },
       {
         headers: await network.serviceHeaders(
           actor,
-          ids.AppBskyDraftUpdateDraft,
+          'app.bsky.draft.updateDraft',
         ),
       },
     )
@@ -90,7 +94,7 @@ describe('appview drafts views', () => {
       {
         headers: await network.serviceHeaders(
           actor,
-          ids.AppBskyDraftDeleteDraft,
+          'app.bsky.draft.deleteDraft',
         ),
       },
     )
@@ -117,7 +121,7 @@ describe('appview drafts views', () => {
     })
 
     it('creates drafts with multiple posts (threads)', async () => {
-      const draft: Draft = {
+      const draft: AppBskyDraftDefs.Draft = {
         posts: [
           { text: 'First post in thread' },
           { text: 'Second post in thread' },
@@ -149,7 +153,9 @@ describe('appview drafts views', () => {
 
   describe('update', () => {
     it('updates an existing draft', async () => {
-      const draft1: Draft = { posts: [{ text: 'First version' }] }
+      const draft1: AppBskyDraftDefs.Draft = {
+        posts: [{ text: 'First version' }],
+      }
 
       await create(alice, draft1)
       const { data: data0 } = await get(alice)
@@ -157,7 +163,7 @@ describe('appview drafts views', () => {
       expect(data0.drafts[0].draft.posts[0].text).toBe('First version')
 
       const draftId = data0.drafts[0].id
-      const draft2: DraftWithId = {
+      const draft2: AppBskyDraftDefs.DraftWithId = {
         id: draftId,
         draft: { posts: [{ text: 'Updated version' }] },
       }
@@ -169,7 +175,7 @@ describe('appview drafts views', () => {
     })
 
     it('silently ignores updates to non-existing drafts', async () => {
-      const nonExistingDraft: DraftWithId = {
+      const nonExistingDraft: AppBskyDraftDefs.DraftWithId = {
         id: TID.nextStr(),
         draft: { posts: [{ text: 'This draft does not exist' }] },
       }
@@ -258,7 +264,7 @@ describe('appview drafts views', () => {
         await create(alice, makeDraft())
       }
 
-      const results = (out: GetDraftsOutputSchema[]) =>
+      const results = (out: AppBskyDraftGetDrafts.OutputSchema[]) =>
         out.flatMap((res) => res.drafts)
 
       const paginator = async (cursor?: string) => {
@@ -278,7 +284,10 @@ describe('appview drafts views', () => {
       const paginated = results(paginatedRes)
 
       // Check items are the same.
-      const sort = (a: DraftView, b: DraftView) => (a.id > b.id ? 1 : -1)
+      const sort = (
+        a: AppBskyDraftDefs.DraftView,
+        b: AppBskyDraftDefs.DraftView,
+      ) => (a.id > b.id ? 1 : -1)
       expect([...paginated].sort(sort)).toEqual([...full].sort(sort))
 
       // Check pagination ordering (most recent first).

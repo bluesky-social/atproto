@@ -1,6 +1,5 @@
 import { AtUri, AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 
 describe('pds views with blocking from block lists', () => {
@@ -19,8 +18,8 @@ describe('pds views with blocking from block lists', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'views_block_lists',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -113,7 +112,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -129,7 +128,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -149,7 +148,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -163,7 +162,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -177,7 +176,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -190,7 +189,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyFeedGetAuthorFeed,
+          'app.bsky.feed.getAuthorFeed',
         ),
       },
     )
@@ -203,7 +202,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetAuthorFeed,
+          'app.bsky.feed.getAuthorFeed',
         ),
       },
     )
@@ -218,7 +217,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -229,7 +228,7 @@ describe('pds views with blocking from block lists', () => {
     const resDan = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
     expect(
@@ -245,7 +244,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -256,7 +255,7 @@ describe('pds views with blocking from block lists', () => {
     const resDan = await agent.api.app.bsky.actor.getProfile(
       { actor: carol },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+        headers: await network.serviceHeaders(dan, 'app.bsky.actor.getProfile'),
       },
     )
     expect(resDan.data.viewer?.blocking).toBeDefined()
@@ -272,7 +271,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyActorGetProfiles,
+          'app.bsky.actor.getProfiles',
         ),
       },
     )
@@ -286,7 +285,10 @@ describe('pds views with blocking from block lists', () => {
     const resDan = await agent.api.app.bsky.actor.getProfiles(
       { actors: [alice, carol] },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfiles),
+        headers: await network.serviceHeaders(
+          dan,
+          'app.bsky.actor.getProfiles',
+        ),
       },
     )
     expect(resDan.data.profiles[0].viewer?.blocking).toBeUndefined()
@@ -303,7 +305,7 @@ describe('pds views with blocking from block lists', () => {
     const res = await agent.api.app.bsky.actor.getProfile(
       { actor: dan }, // dan subscribes to list that contains himself
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyActorGetProfile),
+        headers: await network.serviceHeaders(dan, 'app.bsky.actor.getProfile'),
       },
     )
     expect(res.data.viewer?.blocking).toBeUndefined()
@@ -319,7 +321,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -334,7 +336,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -351,7 +353,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyActorSearchActors,
+          'app.bsky.actor.searchActors',
         ),
       },
     )
@@ -364,7 +366,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyActorSearchActors,
+          'app.bsky.actor.searchActors',
         ),
       },
     )
@@ -379,7 +381,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyActorSearchActorsTypeahead,
+          'app.bsky.actor.searchActorsTypeahead',
         ),
       },
     )
@@ -392,7 +394,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyActorSearchActorsTypeahead,
+          'app.bsky.actor.searchActorsTypeahead',
         ),
       },
     )
@@ -407,7 +409,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyActorSearchActorsTypeahead,
+          'app.bsky.actor.searchActorsTypeahead',
         ),
       },
     )
@@ -420,7 +422,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyActorSearchActorsTypeahead,
+          'app.bsky.actor.searchActorsTypeahead',
         ),
       },
     )
@@ -440,7 +442,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -453,7 +455,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -463,7 +465,7 @@ describe('pds views with blocking from block lists', () => {
   it('returns the contents of a list', async () => {
     const res = await agent.api.app.bsky.graph.getList(
       { list: listUri },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getList') },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
@@ -471,15 +473,15 @@ describe('pds views with blocking from block lists', () => {
   it('paginates getList', async () => {
     const full = await agent.api.app.bsky.graph.getList(
       { list: listUri },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getList') },
     )
     const first = await agent.api.app.bsky.graph.getList(
       { list: listUri, limit: 1 },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getList') },
     )
     const second = await agent.api.app.bsky.graph.getList(
       { list: listUri, cursor: first.data.cursor },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetList) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getList') },
     )
     const combined = [...first.data.items, ...second.data.items]
     expect(combined).toEqual(full.data.items)
@@ -503,7 +505,7 @@ describe('pds views with blocking from block lists', () => {
 
     const res = await agent.api.app.bsky.graph.getLists(
       { actor: alice },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getLists') },
     )
     expect(forSnapshot(res.data)).toMatchSnapshot()
   })
@@ -511,15 +513,15 @@ describe('pds views with blocking from block lists', () => {
   it('paginates getLists', async () => {
     const full = await agent.api.app.bsky.graph.getLists(
       { actor: alice },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getLists') },
     )
     const first = await agent.api.app.bsky.graph.getLists(
       { actor: alice, limit: 1 },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getLists') },
     )
     const second = await agent.api.app.bsky.graph.getLists(
       { actor: alice, cursor: first.data.cursor },
-      { headers: await network.serviceHeaders(dan, ids.AppBskyGraphGetLists) },
+      { headers: await network.serviceHeaders(dan, 'app.bsky.graph.getLists') },
     )
     const combined = [...first.data.lists, ...second.data.lists]
     expect(combined).toEqual(full.data.lists)
@@ -541,7 +543,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyGraphGetListBlocks,
+          'app.bsky.graph.getListBlocks',
         ),
       },
     )
@@ -554,7 +556,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyGraphGetListBlocks,
+          'app.bsky.graph.getListBlocks',
         ),
       },
     )
@@ -563,7 +565,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyGraphGetListBlocks,
+          'app.bsky.graph.getListBlocks',
         ),
       },
     )
@@ -572,7 +574,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyGraphGetListBlocks,
+          'app.bsky.graph.getListBlocks',
         ),
       },
     )
@@ -602,7 +604,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -613,7 +615,7 @@ describe('pds views with blocking from block lists', () => {
     const resDan = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
     expect(
@@ -639,7 +641,7 @@ describe('pds views with blocking from block lists', () => {
       {
         headers: await network.serviceHeaders(
           carol,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -650,7 +652,7 @@ describe('pds views with blocking from block lists', () => {
     const resDan = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
     expect(

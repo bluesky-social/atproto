@@ -2,10 +2,7 @@ import crypto from 'node:crypto'
 import express from 'express'
 import { TID } from '@atproto/common'
 import { AppContext } from '../../context'
-import {
-  AgeAssuranceEvent,
-  AgeAssuranceState,
-} from '../../lexicon/types/app/bsky/unspecced/defs'
+import { app } from '../../lexicons/index.js'
 import { Namespaces } from '../../stash'
 import {
   KwsExternalPayload,
@@ -33,10 +30,10 @@ export const createStashEvent = async (
     initUa?: string
     completeIp?: string
     completeUa?: string
-    status: AgeAssuranceState['status']
+    status: app.bsky.unspecced.defs.AgeAssuranceState['status']
   },
 ) => {
-  const stashPayload: AgeAssuranceEvent = {
+  const stashPayload: app.bsky.unspecced.defs.AgeAssuranceEvent = {
     createdAt: new Date().toISOString(),
     email,
     status,

@@ -14,7 +14,6 @@ import {
   parseExternalPayload,
   serializeExternalPayload,
 } from '../../src/api/kws/util'
-import { ids } from '../../src/lexicon/lexicons'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -62,7 +61,7 @@ describe('age assurance views', () => {
       },
     })
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -104,7 +103,7 @@ describe('age assurance views', () => {
       {
         headers: await network.serviceHeaders(
           did,
-          ids.AppBskyUnspeccedGetAgeAssuranceState,
+          'app.bsky.unspecced.getAgeAssuranceState',
         ),
       },
     )
@@ -121,7 +120,7 @@ describe('age assurance views', () => {
       {
         headers: await network.serviceHeaders(
           did,
-          ids.AppBskyUnspeccedInitAgeAssurance,
+          'app.bsky.unspecced.initAgeAssurance',
         ),
       },
     )

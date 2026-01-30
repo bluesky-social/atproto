@@ -12,7 +12,7 @@ describe('user preferences', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'preferences',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     const appPass = await network.pds.ctx.accountManager.createAppPassword(
@@ -55,7 +55,10 @@ describe('user preferences', () => {
   it('only gets preferences in app.bsky namespace.', async () => {
     await network.pds.ctx.actorStore.transact(sc.dids.alice, (store) =>
       store.pref.putPreferences(
-        [{ $type: 'com.atproto.server.defs#unknown' }],
+        [
+          // @ts-expect-error unspecced pref
+          { $type: 'com.atproto.server.defs#unknown' },
+        ],
         'com.atproto',
         {
           hasAccessFull: true,
@@ -193,9 +196,12 @@ describe('user preferences', () => {
       },
       { headers: sc.getHeaders(sc.dids.alice), encoding: 'application/json' },
     )
-    await expect(tryPut).rejects.toThrow(
-      'Input/preferences/1 must be an object which includes the "$type" property',
-    )
+    await expect(tryPut).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining(
+        'object which includes the "$type" property',
+      ),
+    })
   })
 
   it('does not read permissioned preferences with an app password', async () => {
