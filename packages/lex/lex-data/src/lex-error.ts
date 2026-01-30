@@ -1,4 +1,4 @@
-export type LexErrorCode = string
+export type LexErrorCode = string & NonNullable<unknown>
 
 export type LexErrorData<N extends LexErrorCode = LexErrorCode> = {
   error: N
@@ -10,7 +10,7 @@ export class LexError<N extends LexErrorCode = LexErrorCode> extends Error {
 
   constructor(
     readonly error: N,
-    message?: string,
+    message?: string, // Defaults to empty string in Error constructor
     options?: ErrorOptions,
   ) {
     super(message, options)
@@ -22,7 +22,7 @@ export class LexError<N extends LexErrorCode = LexErrorCode> extends Error {
 
   toJSON(): LexErrorData<N> {
     const { error, message } = this
-    return { error, message: message ?? undefined }
+    return { error, message: message || undefined }
   }
 
   /**
