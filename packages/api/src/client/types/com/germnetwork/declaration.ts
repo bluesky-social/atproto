@@ -12,11 +12,15 @@ const id = 'com.germnetwork.declaration'
 
 export interface Main {
   $type: 'com.germnetwork.declaration'
-  version: string
-  currentKey: Uint8Array
-  messageMe?: MessageMe
-  keyPackage?: Uint8Array
+  /** Array of opaque values to allow for key rolling */
   continuityProofs?: Uint8Array[]
+  /** Opaque value, an ed25519 public key prefixed with a byte enum */
+  currentKey: Uint8Array
+  /** Opaque value, contains MLS KeyPackage(s), and other signature data, and is signed by the currentKey */
+  keyPackage?: Uint8Array
+  messageMe?: MessageMe
+  /** Semver version number, without pre-release or build information, for the format of opaque content */
+  version: string
   [k: string]: unknown
 }
 
@@ -38,7 +42,9 @@ export {
 
 export interface MessageMe {
   $type?: 'com.germnetwork.declaration#messageMe'
+  /** A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other */
   messageMeUrl: string
+  /** The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer. */
   showButtonTo: 'usersIFollow' | 'everyone' | (string & {})
 }
 

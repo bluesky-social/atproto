@@ -15341,54 +15341,73 @@ export const schemaDict = {
     },
   },
   ComGermnetworkDeclaration: {
-    lexicon: 1,
-    id: 'com.germnetwork.declaration',
     defs: {
       main: {
-        type: 'record',
-        description: 'A delegate messaging id',
+        description: 'A declaration of a Germ Network account',
         key: 'literal:self',
         record: {
-          type: 'object',
-          required: ['version', 'currentKey'],
           properties: {
-            version: {
-              type: 'string',
-            },
-            currentKey: {
-              type: 'bytes',
-            },
-            messageMe: {
-              type: 'ref',
-              ref: 'lex:com.germnetwork.declaration#messageMe',
-            },
-            keyPackage: {
-              type: 'bytes',
-            },
             continuityProofs: {
-              type: 'array',
+              description: 'Array of opaque values to allow for key rolling',
               items: {
                 type: 'bytes',
               },
+              maxLength: 1000,
+              type: 'array',
+            },
+            currentKey: {
+              description:
+                'Opaque value, an ed25519 public key prefixed with a byte enum',
+              type: 'bytes',
+            },
+            keyPackage: {
+              description:
+                'Opaque value, contains MLS KeyPackage(s), and other signature data, and is signed by the currentKey',
+              type: 'bytes',
+            },
+            messageMe: {
+              description: 'Controls who can message this account',
+              ref: 'lex:com.germnetwork.declaration#messageMe',
+              type: 'ref',
+            },
+            version: {
+              description:
+                'Semver version number, without pre-release or build information, for the format of opaque content',
+              maxLength: 14,
+              minLength: 5,
+              type: 'string',
             },
           },
+          required: ['version', 'currentKey'],
+          type: 'object',
         },
+        type: 'record',
       },
       messageMe: {
-        type: 'object',
-        required: ['showButtonTo', 'messageMeUrl'],
         properties: {
           messageMeUrl: {
-            type: 'string',
+            description:
+              'A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other',
             format: 'uri',
+            maxLength: 2047,
+            minLength: 1,
+            type: 'string',
           },
           showButtonTo: {
-            type: 'string',
+            description:
+              "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
             knownValues: ['usersIFollow', 'everyone'],
+            maxLength: 100,
+            minLength: 1,
+            type: 'string',
           },
         },
+        required: ['showButtonTo', 'messageMeUrl'],
+        type: 'object',
       },
     },
+    id: 'com.germnetwork.declaration',
+    lexicon: 1,
   },
   ToolsOzoneCommunicationCreateTemplate: {
     lexicon: 1,
