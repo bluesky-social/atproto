@@ -7,6 +7,7 @@ import {
   ResultSuccess,
 } from '@atproto/lex-schema'
 import {
+  XrpcAuthenticationError,
   XrpcResponseError,
   XrpcUpstreamError,
   isXrpcErrorPayload,
@@ -26,7 +27,7 @@ export type XrpcResponsePayload<M extends Procedure | Query> =
  *
  * @implements {ResultSuccess<XrpcResponse<M>>} for convenience in result handling contexts.
  */
-export class XrpcResponse<const M extends Procedure | Query>
+export class XrpcResponse<M extends Procedure | Query>
   implements ResultSuccess<XrpcResponse<M>>
 {
   /** @see {@link ResultSuccess.success} */
@@ -63,7 +64,8 @@ export class XrpcResponse<const M extends Procedure | Query>
   /**
    * @throws {XrpcResponseError} in case of (valid) XRPC error responses. Use
    * {@link XrpcResponseError.matchesSchema} to narrow the error type based on
-   * the method's declared error schema.
+   * the method's declared error schema. This can be narrowed further as a
+   * {@link XrpcAuthenticationError} if the error is an authentication error.
    * @throws {XrpcUpstreamError} when the response is not a valid XRPC
    * response, or if the response does not conform to the method's schema.
    */
@@ -79,39 +81,49 @@ export class XrpcResponse<const M extends Procedure | Query>
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
       // Always parse json for error responses
-      const payload = await readPayload(response, { parse: true })
+      const payload = await readPayload(response, { parse: true }).catch(
+        (cause) => {
+          throw new XrpcUpstreamError(
+            method,
+            response,
+            null,
+            'Unable to parse response payload',
+            { cause },
+          )
+        },
+      )
 
+      // Properly formatted XRPC error response ?
       if (response.status >= 400 && isXrpcErrorPayload(payload)) {
-        throw new XrpcResponseError(
-          method,
-          response.status,
-          response.headers,
-          payload,
-        )
+        throw response.status === 401
+          ? new XrpcAuthenticationError<M>(method, response, payload)
+          : new XrpcResponseError<M>(method, response, payload)
       }
 
-      if (response.status >= 500) {
-        throw new XrpcUpstreamError(
-          'UpstreamFailure',
-          `Upstream server encountered an error`,
-          response,
-          payload,
-        )
-      }
-
+      // Invalid XRPC response (we probably did not hit an XRPC implementation)
       throw new XrpcUpstreamError(
-        'InvalidResponse',
-        response.status >= 400
-          ? `Upstream server returned an invalid response payload`
-          : `Upstream server returned an invalid status code`,
+        method,
         response,
         payload,
+        response.status >= 500
+          ? 'Upstream server encountered an error'
+          : response.status >= 400
+            ? 'Invalid response payload'
+            : 'Invalid response status code',
       )
     }
 
     // Only parse json if the schema expects it
     const payload = await readPayload(response, {
       parse: shouldParse(method),
+    }).catch((cause) => {
+      throw new XrpcUpstreamError(
+        method,
+        response,
+        null,
+        'Unable to parse response payload',
+        { cause },
+      )
     })
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
@@ -119,22 +131,22 @@ export class XrpcResponse<const M extends Procedure | Query>
       // Schema expects no payload
       if (payload) {
         throw new XrpcUpstreamError(
-          'InvalidResponse',
-          `Expected response with no body, got ${payload.encoding}`,
+          method,
           response,
           payload,
+          `Expected response with no body, got ${payload.encoding}`,
         )
       }
     } else {
       // Schema expects a payload
       if (!payload || !method.output.matchesEncoding(payload.encoding)) {
         throw new XrpcUpstreamError(
-          'InvalidResponse',
+          method,
+          response,
+          payload,
           payload
             ? `Expected ${method.output.encoding} response, got ${payload.encoding}`
             : `Expected non-empty response with content-type ${method.output.encoding}`,
-          response,
-          payload,
         )
       }
 
@@ -144,10 +156,10 @@ export class XrpcResponse<const M extends Procedure | Query>
 
         if (!result.success) {
           throw new XrpcUpstreamError(
-            'InvalidResponse',
-            `Response validation failed: ${result.reason.message}`,
+            method,
             response,
             payload,
+            `Response validation failed: ${result.reason.message}`,
             { cause: result.reason },
           )
         }
@@ -204,22 +216,12 @@ async function readPayload(
     // to @ipld/dag-json)
     const text = await response.text()
 
-    try {
-      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
-      // using a reviver function during JSON.parse should be faster than
-      // parsing to JSON then converting to Lex (?)
+    // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
+    // using a reviver function during JSON.parse should be faster than
+    // parsing to JSON then converting to Lex (?)
 
-      // @TODO verify statement above
-      return { encoding, body: lexParse(text) }
-    } catch (cause) {
-      throw new XrpcUpstreamError(
-        'InvalidResponse',
-        'Invalid JSON response body',
-        response,
-        null,
-        { cause },
-      )
-    }
+    // @TODO verify statement above
+    return { encoding, body: lexParse(text) }
   }
 
   return { encoding, body: new Uint8Array(await response.arrayBuffer()) }

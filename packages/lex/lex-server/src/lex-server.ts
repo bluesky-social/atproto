@@ -130,7 +130,7 @@ export type LexRouterOptions = {
 }
 
 export class LexRouter {
-  private handlers: Map<NsidString, FetchHandler> = new Map()
+  readonly handlers: Map<NsidString, FetchHandler> = new Map()
 
   constructor(readonly options: LexRouterOptions = {}) {}
 

@@ -1,13 +1,13 @@
 import {
   Agent,
-  XrpcError,
   XrpcFailure,
   buildAgent,
+  xrpc,
   xrpcSafe,
 } from '@atproto/lex-client'
 import { LexAuthFactorError } from './error.js'
 import { com } from './lexicons/index.js'
-import { extractPdsUrl, extractXrpcErrorCode, noop } from './util.js'
+import { extractPdsUrl, extractXrpcErrorCode } from './util.js'
 
 export type RefreshFailure = XrpcFailure<
   typeof com.atproto.server.refreshSession.main
@@ -37,7 +37,7 @@ export type PasswordSessionOptions = {
    *
    * @note this function **must** not throw
    */
-  onUpdated: (this: PasswordSession, data: SessionData) => void | Promise<void>
+  onUpdated?: (this: PasswordSession, data: SessionData) => void | Promise<void>
 
   /**
    * Called whenever the session update fails due to an expected error, such as
@@ -61,7 +61,7 @@ export type PasswordSessionOptions = {
    *
    * @note this function **must** not throw
    */
-  onDeleted: (this: PasswordSession, data: SessionData) => void | Promise<void>
+  onDeleted?: (this: PasswordSession, data: SessionData) => void | Promise<void>
 
   /**
    * Called whenever a session deletion fails due to an unexpected error, such
@@ -96,7 +96,7 @@ export class PasswordSession implements Agent {
 
   constructor(
     sessionData: SessionData,
-    protected readonly options: PasswordSessionOptions,
+    protected readonly options: PasswordSessionOptions = {},
   ) {
     this.#serviceAgent = buildAgent({
       service: sessionData.service,
@@ -117,7 +117,7 @@ export class PasswordSession implements Agent {
 
   get session() {
     if (this.#sessionData) return this.#sessionData
-    throw new XrpcError('AuthenticationRequired', 'Logged out')
+    throw new Error('Logged out')
   }
 
   get destroyed(): boolean {
@@ -200,7 +200,7 @@ export class PasswordSession implements Agent {
 
       if (!response.success && response.matchesSchema()) {
         // Expected errors that indicate the session is no longer valid
-        await this.options.onDeleted.call(this, sessionData)
+        await this.options.onDeleted?.call(this, sessionData)
 
         // Update the session promise to a rejected state
         this.#sessionData = null
@@ -208,6 +208,10 @@ export class PasswordSession implements Agent {
       }
 
       if (!response.success) {
+        response.error
+        if (response.matchesSchema()) {
+          response.error
+        }
         // We failed to refresh the token, assume the session might still be
         // valid by returning the existing session.
         await this.options.onUpdateFailure?.call(this, sessionData, response)
@@ -238,7 +242,7 @@ export class PasswordSession implements Agent {
         service: sessionData.service,
       }
 
-      await this.options.onUpdated.call(this, newSession)
+      await this.options.onUpdated?.call(this, newSession)
 
       return (this.#sessionData = newSession)
     })
@@ -257,11 +261,11 @@ export class PasswordSession implements Agent {
       )
 
       if (result.success || result.matchesSchema()) {
-        await this.options.onDeleted.call(this, sessionData)
+        await this.options.onDeleted?.call(this, sessionData)
 
         // Update the session promise to a rejected state
         this.#sessionData = null
-        throw new XrpcError('AuthenticationRequired', 'Logged out')
+        throw new Error('Logged out')
       } else {
         // Capture the reason for the failure to re-throw in the outer promise
         reason = result
@@ -286,6 +290,33 @@ export class PasswordSession implements Agent {
     )
   }
 
+  static async createAccount(
+    body: com.atproto.server.createAccount.InputBody,
+    {
+      service,
+      headers,
+      ...options
+    }: PasswordSessionOptions & {
+      headers?: HeadersInit
+      service: string | URL
+    },
+  ): Promise<PasswordSession> {
+    const response = await xrpc(
+      buildAgent({ service, headers, fetch: options.fetch }),
+      com.atproto.server.createAccount.main,
+      { body },
+    )
+
+    const data: SessionData = {
+      ...response.body,
+      service: String(service),
+    }
+
+    const agent = new PasswordSession(data, options)
+    await options.onUpdated?.call(agent, data)
+    return agent
+  }
+
   /**
    * @note It is **not** recommended to use {@link PasswordSession} with main
    * account credentials. Instead, it is strongly advised to use OAuth based
@@ -302,7 +333,7 @@ export class PasswordSession implements Agent {
    *
    * ```ts
    * try {
-   *   const session = await PasswordSession.create({
+   *   const session = await PasswordSession.login({
    *     service: 'https://example.com',
    *     identifier: 'alice',
    *     password: 'correct horse battery staple',
@@ -314,7 +345,7 @@ export class PasswordSession implements Agent {
    * }
    * ```
    */
-  static async create({
+  static async login({
     service,
     identifier,
     password,
@@ -352,7 +383,7 @@ export class PasswordSession implements Agent {
     }
 
     const agent = new PasswordSession(data, options)
-    await options.onUpdated.call(agent, data)
+    await options.onUpdated?.call(agent, data)
     return agent
   }
 
@@ -387,13 +418,9 @@ export class PasswordSession implements Agent {
    */
   static async delete(
     data: SessionData,
-    options?: Partial<PasswordSessionOptions>,
+    options?: PasswordSessionOptions,
   ): Promise<void> {
-    const agent = new PasswordSession(data, {
-      ...options,
-      onUpdated: options?.onUpdated ?? noop,
-      onDeleted: options?.onDeleted ?? noop,
-    })
+    const agent = new PasswordSession(data, options)
     await agent.logout()
   }
 }

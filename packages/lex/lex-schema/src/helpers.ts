@@ -69,7 +69,12 @@ export type InferMethodMessage<
   ? LexValue & InferOutput<M['message']>
   : undefined
 
-export const lexErrorData = object({
+export type InferMethodError<
+  //
+  M extends Procedure | Query | Subscription,
+> = M extends { errors: readonly (infer E extends string)[] } ? E : never
+
+export const lexErrorDataSchema = object({
   error: string({ minLength: 1 }),
   message: optional(string()),
 }) satisfies Schema<LexErrorData>
