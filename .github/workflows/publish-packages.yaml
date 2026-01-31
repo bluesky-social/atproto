@@ -41,7 +41,7 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@sokaa'
+          scope: '@sokaa-converge'
 
       - name: Enable Corepack
         run: corepack enable
@@ -64,7 +64,7 @@ jobs:
       - name: Publish to GitHub Packages
         if: inputs.dry_run != 'true'
         run: |
-          pnpm --filter @sokaa/atproto-custom-api publish --no-git-checks --access restricted
+          pnpm --filter @sokaa-converge/atproto-custom-api publish --no-git-checks --access restricted
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -72,5 +72,5 @@ jobs:
         if: inputs.dry_run == 'true'
         run: |
           echo "🏃 Dry run complete. Package was built but not published."
-          echo "Package: @sokaa/atproto-custom-api"
+          echo "Package: @sokaa-converge/atproto-custom-api"
           cd packages/api && echo "Version: $(node -p "require('./package.json').version")"

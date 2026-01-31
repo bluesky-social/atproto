@@ -61,7 +61,7 @@
   "pnpm": {
     "overrides": {
       "cookie": "^0.7.2",
-      "@atproto/api": "workspace:@sokaa/atproto-custom-api@*"
+      "@atproto/api": "workspace:@sokaa-converge/atproto-custom-api@*"
     }
   },
   "workspace": [

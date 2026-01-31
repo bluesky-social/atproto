@@ -1,5 +1,5 @@
 {
-  "name": "@sokaa/atproto-custom-api",
+  "name": "@sokaa-converge/atproto-custom-api",
   "version": "0.18.15",
   "license": "MIT",
   "description": "Client library for atproto and Bluesky",

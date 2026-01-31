@@ -48,7 +48,7 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "prebuild": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema -- ignore additional npm args",
+    "prebuild": "node ./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema -- ignore additional npm args",
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }
