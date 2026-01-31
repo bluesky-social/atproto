@@ -11171,6 +11171,76 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminValidateMigrationTarget: {
+    lexicon: 1,
+    id: 'com.atproto.admin.validateMigrationTarget',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Validate that target PDS can accept account migration. Pre-flight check. Admin only.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'DID to migrate',
+            },
+            neuroJid: {
+              type: 'string',
+              description: 'W ID (Neuro Legal ID) if account has one',
+            },
+            targetHandle: {
+              type: 'string',
+              description: 'New handle on target (if changing)',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canAccept'],
+            properties: {
+              canAccept: {
+                type: 'boolean',
+                description: 'Whether target PDS can accept this migration',
+              },
+              checks: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.validateMigrationTarget#validationChecks',
+                description: 'Detailed validation results',
+              },
+              error: {
+                type: 'string',
+                description: 'Error message if canAccept is false',
+              },
+            },
+          },
+        },
+      },
+      validationChecks: {
+        type: 'object',
+        description: 'Detailed validation check results',
+        properties: {
+          didAvailable: {
+            type: 'boolean',
+            description: 'True if DID does not exist on target',
+          },
+          neuroJidAvailable: {
+            type: 'boolean',
+            description: 'True if W ID is not linked to another account',
+          },
+          handleAvailable: {
+            type: 'boolean',
+            description: 'True if handle is available on target',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoIdentityDefs: {
     lexicon: 1,
     id: 'com.atproto.identity.defs',
@@ -15561,6 +15631,8 @@ export const ids = {
     'com.atproto.admin.updateAccountSigningKey',
   ComAtprotoAdminUpdateNeuroLink: 'com.atproto.admin.updateNeuroLink',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoAdminValidateMigrationTarget:
+    'com.atproto.admin.validateMigrationTarget',
   ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:
     'com.atproto.identity.getRecommendedDidCredentials',

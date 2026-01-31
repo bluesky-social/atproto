@@ -187,6 +187,7 @@ import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin
 import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+import * as ComAtprotoAdminValidateMigrationTarget from './types/com/atproto/admin/validateMigrationTarget.js'
 import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
@@ -499,6 +500,7 @@ export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin
 export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 export * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+export * as ComAtprotoAdminValidateMigrationTarget from './types/com/atproto/admin/validateMigrationTarget.js'
 export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 export * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
@@ -4085,6 +4087,18 @@ export class ComAtprotoAdminNS {
       'com.atproto.admin.updateSubjectStatus',
       opts?.qp,
       data,
+      opts,
+    )
+  }
+
+  validateMigrationTarget(
+    params?: ComAtprotoAdminValidateMigrationTarget.QueryParams,
+    opts?: ComAtprotoAdminValidateMigrationTarget.CallOptions,
+  ): Promise<ComAtprotoAdminValidateMigrationTarget.Response> {
+    return this._client.call(
+      'com.atproto.admin.validateMigrationTarget',
+      params,
+      undefined,
       opts,
     )
   }
