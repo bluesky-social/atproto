@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
           email: contactEmailAddress,
         },
         imports: {
-          aceepted: acceptingImports,
+          accepted: acceptingImports,
           maxSize: maxImportSize,
         },
       },
