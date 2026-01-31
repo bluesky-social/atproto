@@ -139,7 +139,9 @@ import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAc
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes.js'
 import * as ComAtprotoAdminGetNeuroLink from './types/com/atproto/admin/getNeuroLink.js'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus.js'
+import * as ComAtprotoAdminImportAccount from './types/com/atproto/admin/importAccount.js'
 import * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
+import * as ComAtprotoAdminMigrateAccount from './types/com/atproto/admin/migrateAccount.js'
 import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
@@ -148,6 +150,7 @@ import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin
 import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
 import * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+import * as ComAtprotoAdminValidateMigrationTarget from './types/com/atproto/admin/validateMigrationTarget.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
 import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature.js'
@@ -2175,6 +2178,18 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  importAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminImportAccount.QueryParams,
+      ComAtprotoAdminImportAccount.HandlerInput,
+      ComAtprotoAdminImportAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.importAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listNeuroAccounts<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2184,6 +2199,18 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.listNeuroAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  migrateAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminMigrateAccount.QueryParams,
+      ComAtprotoAdminMigrateAccount.HandlerInput,
+      ComAtprotoAdminMigrateAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.migrateAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2280,6 +2307,18 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  validateMigrationTarget<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminValidateMigrationTarget.QueryParams,
+      ComAtprotoAdminValidateMigrationTarget.HandlerInput,
+      ComAtprotoAdminValidateMigrationTarget.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.validateMigrationTarget' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

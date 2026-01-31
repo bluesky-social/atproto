@@ -120,9 +120,12 @@ cmd_show() {
 
   echo "Fetching account details for: $did"
   local response
-  if ! response=$(api_call "GET" "com.atproto.admin.getNeuroLink?did=$did"); then
+  response=$(api_call "GET" "com.atproto.admin.getNeuroLink?did=$did")
+
+  # Check for errors
+  if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
     echo "ERROR: Failed to fetch account details"
-    echo "$response"
+    echo "$response" | jq -r '.message // .error'
     exit 1
   fi
 
@@ -169,7 +172,7 @@ cmd_update_wid() {
 
   local response
   response=$(api_call "POST" "com.atproto.admin.updateNeuroLink" "$data")
-  
+
   # Check if response contains an error
   if echo "$response" | jq -e '.error' > /dev/null 2>&1; then
     echo "ERROR: Failed to update W ID"
