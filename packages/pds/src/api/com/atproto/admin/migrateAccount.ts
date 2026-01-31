@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 // Allowed target PDS domains for W Social infrastructure
 const ALLOWED_TARGET_DOMAINS = [
@@ -14,13 +14,13 @@ function validateTargetDomain(targetPdsUrl: string): void {
   const domain = url.hostname
 
   const isAllowed = ALLOWED_TARGET_DOMAINS.some((allowed) =>
-    domain.endsWith(allowed)
+    domain.endsWith(allowed),
   )
 
   if (!isAllowed) {
     throw new InvalidRequestError(
       `Target PDS domain not allowed. Must end with one of: ${ALLOWED_TARGET_DOMAINS.join(', ')}`,
-      'InvalidTargetDomain'
+      'InvalidTargetDomain',
     )
   }
 }
@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
 
       req.log.info(
         { did, targetPdsUrl, targetHandle, skipDeactivation },
-        'Starting admin account migration'
+        'Starting admin account migration',
       )
 
       // Validate target domain whitelist
@@ -50,7 +50,7 @@ export default function (server: Server, ctx: AppContext) {
 
       throw new InvalidRequestError(
         'Migration flow not yet implemented. Phase 1 validation complete.',
-        'NotImplemented'
+        'NotImplemented',
       )
     },
   })

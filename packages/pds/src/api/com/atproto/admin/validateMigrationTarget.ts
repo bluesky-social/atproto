@@ -1,6 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Server } from '../../../../lexicon'
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.validateMigrationTarget({
@@ -8,7 +8,10 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, req }) => {
       const { did, neuroJid, targetHandle } = params
 
-      req.log.info({ did, neuroJid, targetHandle }, 'Validating migration target')
+      req.log.info(
+        { did, neuroJid, targetHandle },
+        'Validating migration target',
+      )
 
       const checks = {
         didAvailable: false,
@@ -74,7 +77,7 @@ export default function (server: Server, ctx: AppContext) {
 
         req.log.info(
           { did, canAccept, checks },
-          'Migration target validation completed'
+          'Migration target validation completed',
         )
 
         return {
@@ -89,7 +92,7 @@ export default function (server: Server, ctx: AppContext) {
         req.log.error({ did, err }, 'Migration target validation failed')
         throw new InvalidRequestError(
           'Failed to validate migration target',
-          'ValidationFailed'
+          'ValidationFailed',
         )
       }
     },

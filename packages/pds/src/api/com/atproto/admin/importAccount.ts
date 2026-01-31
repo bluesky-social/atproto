@@ -1,7 +1,7 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { Server } from '../../../../lexicon'
+import { InvalidRequestError } from '@atproto/xrpc-server'
 import AppContext from '../../../../context'
+import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.importAccount({
@@ -11,8 +11,14 @@ export default function (server: Server, ctx: AppContext) {
         input.body
 
       req.log.info(
-        { did, handle, email, hasNeuroLink: !!neuroLink, appPasswordCount: appPasswords?.length || 0 },
-        'Importing account from another PDS'
+        {
+          did,
+          handle,
+          email,
+          hasNeuroLink: !!neuroLink,
+          appPasswordCount: appPasswords?.length || 0,
+        },
+        'Importing account from another PDS',
       )
 
       // Pre-flight validation: Check if DID already exists
@@ -25,7 +31,7 @@ export default function (server: Server, ctx: AppContext) {
       if (existingActor) {
         throw new InvalidRequestError(
           'Account with this DID already exists on target PDS',
-          'AccountExists'
+          'AccountExists',
         )
       }
 
@@ -40,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
         if (existingLink && existingLink.did !== did) {
           throw new InvalidRequestError(
             `W ID ${neuroLink.neuroJid} is already linked to a different account`,
-            'DuplicateNeuroId'
+            'DuplicateNeuroId',
           )
         }
       }
@@ -55,7 +61,7 @@ export default function (server: Server, ctx: AppContext) {
       if (handleTaken) {
         throw new InvalidRequestError(
           `Handle ${handle} is not available`,
-          'HandleTaken'
+          'HandleTaken',
         )
       }
 
@@ -111,7 +117,7 @@ export default function (server: Server, ctx: AppContext) {
           neuroLinkRestored = true
           req.log.info(
             { did, neuroJid: neuroLink.neuroJid },
-            'Neuro identity link restored'
+            'Neuro identity link restored',
           )
         }
 
@@ -136,7 +142,7 @@ export default function (server: Server, ctx: AppContext) {
 
           req.log.info(
             { did, count: appPasswordsRestored },
-            'App passwords restored'
+            'App passwords restored',
           )
         }
 
@@ -173,12 +179,15 @@ export default function (server: Server, ctx: AppContext) {
 
           req.log.info({ did }, 'Cleaned up partial account creation')
         } catch (cleanupErr) {
-          req.log.error({ did, cleanupErr }, 'Failed to cleanup partial account')
+          req.log.error(
+            { did, cleanupErr },
+            'Failed to cleanup partial account',
+          )
         }
 
         throw new InvalidRequestError(
           'Failed to import account',
-          'ImportFailed'
+          'ImportFailed',
         )
       }
     },
