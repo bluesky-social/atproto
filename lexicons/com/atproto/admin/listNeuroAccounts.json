@@ -1,0 +1,73 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.listNeuroAccounts",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List all accounts with their Neuro/W ID links.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of accounts to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["accounts"],
+          "properties": {
+            "accounts": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#neuroAccountView"
+              }
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "neuroAccountView": {
+      "type": "object",
+      "required": ["did", "handle"],
+      "properties": {
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "handle": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "neuroJid": {
+          "type": "string",
+          "description": "Neuro Legal ID (W ID)"
+        },
+        "linkedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    }
+  }
+}
