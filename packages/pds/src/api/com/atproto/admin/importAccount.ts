@@ -5,7 +5,7 @@ import { Server } from '../../../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.importAccount({
-    auth: ctx.authVerifier.adminToken,
+    auth: ctx.authVerifier.userServiceAuth,
     handler: async ({ input, req }) => {
       const { did, handle, email, emailConfirmed, neuroLink, appPasswords } =
         input.body
