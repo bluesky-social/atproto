@@ -23,6 +23,16 @@
       "type": "object",
       "required": ["posts"],
       "properties": {
+        "deviceId": {
+          "type": "string",
+          "description": "UUIDv4 identifier of the device that created this draft.",
+          "maxLength": 100
+        },
+        "deviceName": {
+          "type": "string",
+          "description": "The device and/or platform on which the draft was created.",
+          "maxLength": 100
+        },
         "posts": {
           "description": "Array of draft posts that compose this draft.",
           "type": "array",

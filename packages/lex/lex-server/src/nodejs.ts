@@ -106,7 +106,7 @@ function handleWebSocketUpgrade(
   })
 }
 
-async function sendResponse(
+export async function sendResponse(
   req: IncomingMessage,
   res: ServerResponse,
   response: Response,
@@ -124,7 +124,7 @@ async function sendResponse(
   res.statusMessage = response.statusText
 
   for (const [key, value] of response.headers) {
-    res.appendHeader(key, value)
+    res.setHeader(key, value)
   }
 
   if (response.body != null && req.method !== 'HEAD') {

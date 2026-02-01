@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cbor",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in CBOR format",
   "keywords": [

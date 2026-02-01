@@ -1,14 +1,13 @@
-import { LexError, XrpcResponseError } from '@atproto/lex-client'
-import { com } from './lexicons'
+import { LexError, XrpcFailure } from '@atproto/lex-client'
 
 export class LexAuthFactorError extends LexError {
   name = 'LexAuthFactorError'
 
-  constructor(
-    readonly response: XrpcResponseError<
-      typeof com.atproto.server.createSession.main
-    >,
-  ) {
-    super(response.error, response.message, { cause: response.reason })
+  constructor(readonly cause: XrpcFailure) {
+    super(cause.error, cause.message ?? 'Auth factor token required', { cause })
+  }
+
+  override toResponse(): Response {
+    return Response.json({ error: 'InternalServerError' }, { status: 500 })
   }
 }

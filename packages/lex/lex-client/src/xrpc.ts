@@ -13,11 +13,7 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent } from './agent.js'
-import {
-  XrpcResponseError,
-  XrpcUnexpectedError,
-  XrpcUpstreamError,
-} from './errors.js'
+import { XrpcFailure, asXrpcFailure } from './errors.js'
 import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
 import {
@@ -49,32 +45,6 @@ export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
     XrpcInputOptions<XrpcRequestPayload<M>> &
     XrpcParamsOptions<XrpcRequestParams<M>>
 
-export type XrpcFailure<M extends Procedure | Query> =
-  // The server returned a valid XRPC error response
-  | XrpcResponseError<M>
-  // The response was not a valid XRPC response, or it does not match the schema
-  | XrpcUpstreamError
-  // Something went wrong (network error, etc.)
-  | XrpcUnexpectedError
-
-export type XrpcResult<M extends Procedure | Query> =
-  | XrpcResponse<M>
-  | XrpcFailure<M>
-
-/**
- * Utility method to type cast the error thrown by {@link xrpc} to an
- * {@link XrpcFailure} matching the provided method. Only use this function
- * inside a catch block right after calling {@link xrpc}, and use the same
- * method type parameter as used in the {@link xrpc} call.
- */
-export function asXrpcFailure<M extends Procedure | Query = Procedure | Query>(
-  err: unknown,
-): XrpcFailure<M> {
-  if (err instanceof XrpcResponseError) return err
-  if (err instanceof XrpcUpstreamError) return err
-  return XrpcUnexpectedError.from(err)
-}
-
 /**
  * @throws XrpcFailure<M>
  */
@@ -94,12 +64,14 @@ export async function xrpc<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResponse<M>> {
-  try {
-    return await lexRpcRequest<M>(agent, ns, options)
-  } catch (err) {
-    throw asXrpcFailure<M>(err)
-  }
+  const response = await xrpcSafe<M>(agent, ns, options)
+  if (response.success) return response
+  else throw response
 }
+
+export type XrpcResult<M extends Procedure | Query> =
+  | XrpcResponse<M>
+  | XrpcFailure<M>
 
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
@@ -117,20 +89,16 @@ export async function xrpcSafe<const M extends Query | Procedure>(
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
-  return lexRpcRequest<M>(agent, ns, options).catch(asXrpcFailure<M>)
-}
-
-async function lexRpcRequest<const M extends Query | Procedure>(
-  agent: Agent,
-  ns: Main<M>,
-  options: XrpcOptions<M> = {} as XrpcOptions<M>,
-): Promise<XrpcResponse<M>> {
-  const method = getMain(ns)
   options.signal?.throwIfAborted()
-  const url = xrpcRequestUrl(method, options)
-  const request = xrpcRequestInit(method, options)
-  const response = await agent.fetchHandler(url, request)
-  return XrpcResponse.fromFetchResponse<M>(method, response, options)
+  const method: M = getMain(ns)
+  try {
+    const url = xrpcRequestUrl(method, options)
+    const request = xrpcRequestInit(method, options)
+    const response = await agent.fetchHandler(url, request)
+    return await XrpcResponse.fromFetchResponse<M>(method, response, options)
+  } catch (cause) {
+    return asXrpcFailure(method, cause)
+  }
 }
 
 function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
