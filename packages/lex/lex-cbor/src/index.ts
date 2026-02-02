@@ -14,6 +14,30 @@ export {
   encodeOptions,
 } from './encoding.js'
 
+/**
+ * Computes a CID (Content Identifier) for a given LexValue.
+ *
+ * This function first encodes the value to CBOR bytes using the ATProto
+ * data model constraints, then computes the CID hash of those bytes. The
+ * resulting CID can be used to uniquely identify and reference the content.
+ *
+ * @param value - The LexValue to compute a CID for
+ * @returns A promise that resolves to the CID for the CBOR-encoded value
+ *
+ * @example
+ * ```typescript
+ * import { cidForLex } from '@atproto/lex-cbor'
+ *
+ * const record = {
+ *   $type: 'app.bsky.feed.post',
+ *   text: 'Hello, ATProto!',
+ *   createdAt: new Date().toISOString(),
+ * }
+ *
+ * const cid = await cidForLex(record)
+ * console.log(cid.toString()) // e.g., 'bafyreih...'
+ * ```
+ */
 export async function cidForLex(value: LexValue): Promise<CborCid> {
   return cidForCbor(encode(value))
 }

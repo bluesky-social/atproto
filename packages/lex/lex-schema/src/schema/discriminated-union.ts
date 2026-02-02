@@ -11,9 +11,22 @@ import { EnumSchema } from './enum.js'
 import { LiteralSchema } from './literal.js'
 import { ObjectSchema } from './object.js'
 
+/**
+ * Type representing a single variant in a discriminated union.
+ *
+ * Must be an ObjectSchema with the discriminator property using either
+ * a LiteralSchema or EnumSchema.
+ *
+ * @template Discriminator - The discriminator property name
+ */
 export type DiscriminatedUnionVariant<Discriminator extends string = string> =
   ObjectSchema<Record<Discriminator, EnumSchema<any> | LiteralSchema<any>>>
 
+/**
+ * Type representing a non-empty tuple of discriminated union variants.
+ *
+ * @template TDiscriminator - The discriminator property name
+ */
 export type DiscriminatedUnionVariants<TDiscriminator extends string> =
   readonly [
     DiscriminatedUnionVariant<TDiscriminator>,
@@ -37,9 +50,26 @@ type DiscriminatedUnionSchemaOutput<TVariants extends readonly Validator[]> =
     : never
 
 /**
+ * Schema for validating discriminated unions of objects.
+ *
+ * More efficient than regular union schemas when discriminating on a known
+ * property. Looks up the correct variant schema directly based on the
+ * discriminator value instead of trying each variant in sequence.
+ *
  * @note There is no discriminated union in Lexicon schemas. This is a custom
  * extension to allow optimized validation of union of objects when using the
  * lex library programmatically (i.e. not code generated from a lexicon schema).
+ *
+ * @template TDiscriminator - The discriminator property name
+ * @template TVariants - Tuple type of the variant schemas
+ *
+ * @example
+ * ```ts
+ * const schema = new DiscriminatedUnionSchema('type', [
+ *   l.object({ type: l.literal('text'), content: l.string() }),
+ *   l.object({ type: l.literal('image'), url: l.string() }),
+ * ])
+ * ```
  */
 export class DiscriminatedUnionSchema<
   const TDiscriminator extends string,
@@ -124,6 +154,34 @@ function buildVariantsMap<Discriminator extends string>(
   return variantsMap
 }
 
+/**
+ * Creates a discriminated union schema for efficient object type switching.
+ *
+ * Unlike regular `union()`, this schema uses a discriminator property to
+ * directly look up the correct variant, providing O(1) validation instead
+ * of trying each variant sequentially.
+ *
+ * @param discriminator - Property name to discriminate on
+ * @param variants - Non-empty array of object schemas with the discriminator property
+ * @returns A new {@link DiscriminatedUnionSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Message types discriminated by 'kind'
+ * const messageSchema = l.discriminatedUnion('kind', [
+ *   l.object({ kind: l.literal('text'), text: l.string() }),
+ *   l.object({ kind: l.literal('image'), url: l.string(), alt: l.optional(l.string()) }),
+ *   l.object({ kind: l.literal('video'), url: l.string(), duration: l.integer() }),
+ * ])
+ *
+ * // Using enums for multiple values mapping to same variant
+ * const statusSchema = l.discriminatedUnion('status', [
+ *   l.object({ status: l.enum(['pending', 'processing']), startedAt: l.string() }),
+ *   l.object({ status: l.literal('completed'), completedAt: l.string() }),
+ *   l.object({ status: l.literal('failed'), error: l.string() }),
+ * ])
+ * ```
+ */
 /*@__NO_SIDE_EFFECTS__*/
 export function discriminatedUnion<
   const Discriminator extends string,

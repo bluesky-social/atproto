@@ -18,7 +18,7 @@ npm install @atproto/lex-server
 
 **What is this?**
 
-Building AT Protocol servers requires handling XRPC requests, validating inputs against Lexicon schemas, managing authentication, and supporting real-time subscriptions. `@atproto/lex-server` automates this by:
+Building ATProto servers requires handling XRPC requests, validating inputs against Lexicon schemas, managing authentication, and supporting real-time subscriptions. `@atproto/lex-server` automates this by:
 
 1. Routing requests to type-safe handlers based on Lexicon schemas
 2. Automatically validating request parameters and bodies

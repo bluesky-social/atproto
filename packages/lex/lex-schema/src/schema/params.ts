@@ -19,13 +19,30 @@ import { StringSchema, string } from './string.js'
 import { union } from './union.js'
 import { WithDefaultSchema } from './with-default.js'
 
+/**
+ * Scalar types allowed in URL parameters: boolean, integer, or string.
+ */
 export type ParamScalar = Infer<typeof paramScalarSchema>
 const paramScalarSchema = union([boolean(), integer(), string()])
 
+/**
+ * A single parameter value: scalar or array of scalars.
+ */
 export type Param = Infer<typeof paramSchema>
+
+/**
+ * Schema for validating individual parameter values.
+ */
 export const paramSchema = union([paramScalarSchema, array(paramScalarSchema)])
 
+/**
+ * Type for a params object with string keys and optional param values.
+ */
 export type Params = Infer<typeof paramsSchema>
+
+/**
+ * Schema for validating arbitrary params objects.
+ */
 export const paramsSchema = dict(string(), optional(paramSchema))
 
 // @NOTE In order to properly coerce URLSearchParams, we need to distinguish
@@ -41,10 +58,34 @@ type ParamValidator =
   | OptionalSchema<WithDefaultSchema<ParamValueValidator>>
   | WithDefaultSchema<ParamValueValidator>
 
+/**
+ * Type representing the shape of a params schema definition.
+ *
+ * Maps parameter names to their validators (must be Param or undefined).
+ */
 export type ParamsSchemaShape = {
   [x: string]: ParamValidator
 }
 
+/**
+ * Schema for validating URL query parameters in Lexicon endpoints.
+ *
+ * Params are the query string parameters passed to queries, procedures,
+ * and subscriptions. Values must be scalars (boolean, integer, string)
+ * or arrays of scalars, as they need to be serializable to URL format.
+ *
+ * Provides methods for converting to/from URLSearchParams.
+ *
+ * @template TShape - The params shape type mapping names to validators
+ *
+ * @example
+ * ```ts
+ * const schema = new ParamsSchema({
+ *   limit: l.optional(l.integer({ minimum: 1, maximum: 100 })),
+ *   cursor: l.optional(l.string()),
+ * })
+ * ```
+ */
 export class ParamsSchema<
   const TShape extends ParamsSchemaShape = ParamsSchemaShape,
 > extends Schema<
@@ -181,6 +222,41 @@ export class ParamsSchema<
   }
 }
 
+/**
+ * Creates a params schema for URL query parameters.
+ *
+ * Params schemas validate query string parameters for Lexicon endpoints.
+ * Values must be boolean, integer, string, or arrays of those types.
+ *
+ * @param properties - Object mapping parameter names to their validators
+ * @returns A new {@link ParamsSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Simple pagination params
+ * const paginationParams = l.params({
+ *   limit: l.optional(l.withDefault(l.integer({ minimum: 1, maximum: 100 }), 50)),
+ *   cursor: l.optional(l.string()),
+ * })
+ *
+ * // Required parameter
+ * const actorParams = l.params({
+ *   actor: l.string({ format: 'at-identifier' }),
+ * })
+ *
+ * // Array parameter (multiple values)
+ * const filterParams = l.params({
+ *   tags: l.optional(l.array(l.string())),
+ * })
+ *
+ * // Convert from URL
+ * const urlParams = new URLSearchParams('limit=25&cursor=abc')
+ * const validated = paginationParams.fromURLSearchParams(urlParams)
+ *
+ * // Convert to URL
+ * const searchParams = paginationParams.toURLSearchParams({ limit: 25 })
+ * ```
+ */
 export const params = /*#__PURE__*/ memoizedOptions(function params<
   const TShape extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: TShape = {} as TShape) {

@@ -3,10 +3,10 @@ import { sha256, sha512 } from 'multiformats/hashes/sha2'
 import { describe, expect, it } from 'vitest'
 import { BytesCid, createCustomCid } from './cid-implementation.test.js'
 import {
+  CBOR_DATA_CODEC,
   Cid,
-  DAG_CBOR_MULTICODEC,
-  RAW_MULTICODEC,
-  SHA256_MULTIHASH,
+  RAW_DATA_CODEC,
+  SHA256_HASH_CODE,
   asMultiformatsCID,
   cidForRawHash,
   decodeCid,
@@ -28,8 +28,8 @@ const rawCid = parseCid(rawCidStr, { flavor: 'raw' })
 
 const rawCidLike: Cid = createCustomCid(
   1,
-  RAW_MULTICODEC,
-  SHA256_MULTIHASH,
+  RAW_DATA_CODEC,
+  SHA256_HASH_CODE,
   rawCid.multihash.digest,
 )
 const rawBytesCid = new BytesCid(rawCid.bytes)
@@ -49,7 +49,7 @@ describe(isCid, () => {
     it('returns true for CID v0 and v1', async () => {
       const digest = await sha256.digest(Buffer.from('hello world'))
       const cidV0 = CID.createV0(digest)
-      const cidV1 = CID.createV1(RAW_MULTICODEC, digest)
+      const cidV1 = CID.createV1(RAW_DATA_CODEC, digest)
       expect(isCid(cidV0)).toBe(true)
       expect(isCid(cidV1)).toBe(true)
     })
@@ -65,13 +65,13 @@ describe(isCid, () => {
     describe('raw', () => {
       it('validated "raw" cids', async () => {
         const digest = await sha256.digest(Buffer.from('hello world'))
-        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        const cid = CID.createV1(RAW_DATA_CODEC, digest)
         expect(isCid(cid, { flavor: 'raw' })).toBe(true)
       })
 
       it('allows other hash algorithms', async () => {
         const digest = await sha512.digest(Buffer.from('hello world'))
-        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        const cid = CID.createV1(RAW_DATA_CODEC, digest)
         expect(isCid(cid, { flavor: 'raw' })).toBe(true)
       })
 
@@ -91,13 +91,13 @@ describe(isCid, () => {
     describe('cbor', () => {
       it('validated "cbor" cids', async () => {
         const digest = await sha256.digest(Buffer.from('hello world'))
-        const cid = CID.createV1(DAG_CBOR_MULTICODEC, digest)
+        const cid = CID.createV1(CBOR_DATA_CODEC, digest)
         expect(isCid(cid, { flavor: 'cbor' })).toBe(true)
       })
 
       it('rejects CIDs with invalid hash algorithm', async () => {
         const digest = await sha512.digest(Buffer.from('hello world'))
-        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        const cid = CID.createV1(RAW_DATA_CODEC, digest)
         expect(isCid(cid, { flavor: 'cbor' })).toBe(false)
       })
 
@@ -266,7 +266,7 @@ describe(isCidForBytes, () => {
       for (const hasher of [sha256, sha512]) {
         const data = new TextEncoder().encode('hello world')
         const digest = await hasher.digest(data)
-        const cid = CID.createV1(RAW_MULTICODEC, digest)
+        const cid = CID.createV1(RAW_DATA_CODEC, digest)
         expect(await isCidForBytes(cid, data)).toBe(true)
 
         data[0] = data[0] ^ 0xff
@@ -281,7 +281,7 @@ describe(isCidForBytes, () => {
         // @NOTE this is not valid CBOR, but sufficient for testing the hash
         const data = new TextEncoder().encode('hello world')
         const digest = await hasher.digest(data)
-        const cid = CID.createV1(DAG_CBOR_MULTICODEC, digest)
+        const cid = CID.createV1(CBOR_DATA_CODEC, digest)
         expect(await isCidForBytes(cid, data)).toBe(true)
 
         data[0] = data[0] ^ 0xff
@@ -318,8 +318,8 @@ describe(cidForRawHash, () => {
   it('creates a RawCid from a SHA-256 hash', () => {
     const hash = new Uint8Array(32)
     const cid = cidForRawHash(hash)
-    expect(cid.code).toBe(RAW_MULTICODEC)
-    expect(cid.multihash.code).toBe(SHA256_MULTIHASH)
+    expect(cid.code).toBe(RAW_DATA_CODEC)
+    expect(cid.multihash.code).toBe(SHA256_HASH_CODE)
     expect(ui8Equals(cid.multihash.digest, hash)).toBe(true)
   })
 

@@ -24,51 +24,229 @@ import {
 import { LexResolverError } from './lex-resolver-error.js'
 import { com } from './lexicons/index.js'
 
+/**
+ * Result returned when successfully resolving a lexicon document.
+ *
+ * Contains the full AT URI where the lexicon was found, the content-addressed
+ * identifier (CID) for integrity verification, and the parsed lexicon document.
+ */
 export type LexResolverResult = {
+  /** The AT URI where the lexicon document was found */
   uri: AtUri
+  /** Content identifier (CID) of the lexicon record for integrity verification */
   cid: Cid
+  /** The parsed and validated lexicon document */
   lexicon: LexiconDocument
 }
 
+/**
+ * Result returned when fetching a lexicon document from a specific URI.
+ *
+ * This is a subset of {@link LexResolverResult} used internally and by hooks,
+ * containing only the CID and lexicon document (without the URI, which is
+ * already known from the fetch request).
+ */
 export type LexResolverFetchResult = {
+  /** Content identifier (CID) of the lexicon record */
   cid: Cid
+  /** The parsed and validated lexicon document */
   lexicon: LexiconDocument
 }
 
-type Awaitable<T> = T | Promise<T>
+export type Awaitable<T> = T | Promise<T>
 
+/**
+ * Callback hooks for customizing the lexicon resolution process.
+ *
+ * Hooks allow you to intercept, cache, or override the default resolution
+ * behavior at various stages. Each hook can be synchronous or asynchronous.
+ *
+ * @example Implementing a cache with hooks
+ * ```typescript
+ * import { LexResolver, LexResolverHooks, LexResolverFetchResult } from '@atproto/lex-resolver'
+ * import { AtUri } from '@atproto/syntax'
+ *
+ * const cache = new Map<string, LexResolverFetchResult>()
+ *
+ * const hooks: LexResolverHooks = {
+ *   // Return cached result if available, bypassing network fetch
+ *   onFetch({ uri }) {
+ *     return cache.get(uri.toString())
+ *   },
+ *   // Cache successful fetches
+ *   onFetchResult({ uri, cid, lexicon }) {
+ *     cache.set(uri.toString(), { cid, lexicon })
+ *   },
+ *   // Log errors for monitoring
+ *   onFetchError({ uri, err }) {
+ *     console.error(`Failed to fetch ${uri}:`, err)
+ *   }
+ * }
+ *
+ * const resolver = new LexResolver({ hooks })
+ * ```
+ *
+ * @example Overriding authority resolution for testing
+ * ```typescript
+ * const hooks: LexResolverHooks = {
+ *   // Always resolve to a test DID
+ *   onResolveAuthority({ nsid }) {
+ *     if (nsid.authority === 'test.example') {
+ *       return 'did:plc:test123'
+ *     }
+ *     // Return undefined to use default resolution
+ *   }
+ * }
+ * ```
+ */
 export type LexResolverHooks = {
   /**
    * Hook called before resolving a lexicon authority DID. If a DID is returned,
    * it will be used instead of performing the default resolution. In that case,
    * the `onResolveAuthorityResult` and `onResolveAuthorityError` hooks will
    * not be called.
+   *
+   * @param data - Object containing the NSID being resolved
+   * @returns A DID to use instead of default resolution, or void/undefined to proceed normally
    */
   onResolveAuthority?(data: { nsid: NSID }): Awaitable<void | Did>
+
+  /**
+   * Hook called after successfully resolving a lexicon authority DID.
+   *
+   * @param data - Object containing the NSID and resolved DID
+   */
   onResolveAuthorityResult?(data: { nsid: NSID; did: Did }): Awaitable<void>
+
+  /**
+   * Hook called when authority resolution fails.
+   *
+   * @param data - Object containing the NSID and error that occurred
+   */
   onResolveAuthorityError?(data: { nsid: NSID; err: unknown }): Awaitable<void>
 
   /**
    * Hook called before fetching a lexicon URI. If a result is returned, it will
    * be used instead of performing the default fetch. In that case, the
    * `onFetchResult` and `onFetchError` hooks will not be called.
+   *
+   * @param data - Object containing the URI being fetched
+   * @returns A fetch result to use instead of default fetch, or void/undefined to proceed normally
    */
   onFetch?(data: { uri: AtUri }): Awaitable<void | LexResolverFetchResult>
+
+  /**
+   * Hook called after successfully fetching a lexicon document.
+   *
+   * @param data - Object containing the URI, CID, and parsed lexicon document
+   */
   onFetchResult?(data: {
     uri: AtUri
     cid: Cid
     lexicon: LexiconDocument
   }): Awaitable<void>
+
+  /**
+   * Hook called when fetching fails.
+   *
+   * @param data - Object containing the URI and error that occurred
+   */
   onFetchError?(data: { uri: AtUri; err: unknown }): Awaitable<void>
 }
 
+/**
+ * Configuration options for the {@link LexResolver}.
+ *
+ * Extends DID resolver options with lexicon-specific hooks for customizing
+ * the resolution process.
+ *
+ * @see {@link CreateDidResolverOptions} for DID resolver configuration
+ */
 export type LexResolverOptions = CreateDidResolverOptions & {
+  /**
+   * Optional hooks for customizing the resolution process.
+   * See {@link LexResolverHooks} for available callbacks.
+   */
   hooks?: LexResolverHooks
 }
 
 export { AtUri, type Cid, NSID }
 export type { LexiconDocument, ResolveDidOptions }
 
+/**
+ * Resolves Lexicon documents from the ATProto network.
+ *
+ * The {@link LexResolver} handles the complete process of resolving a lexicon
+ * by NSID:
+ * 1. **Authority Resolution**: Looks up the `_lexicon.<authority>` DNS TXT record
+ *    to find the DID that controls lexicons for that namespace
+ * 2. **DID Resolution**: Resolves the DID document to find the PDS endpoint and
+ *    signing key
+ * 3. **Record Fetch**: Fetches the lexicon record from the PDS with cryptographic
+ *    proof verification
+ * 4. **Validation**: Validates the lexicon document structure
+ *
+ * @example Basic usage - resolve a lexicon by NSID
+ * ```typescript
+ * import { LexResolver } from '@atproto/lex-resolver'
+ *
+ * const resolver = new LexResolver({})
+ *
+ * // Get a lexicon document by its NSID
+ * const result = await resolver.get('app.bsky.feed.post')
+ * console.log(result.lexicon) // The parsed lexicon document
+ * console.log(result.uri)     // AT URI where it was found
+ * console.log(result.cid)     // Content identifier for verification
+ * ```
+ *
+ * @example Two-step resolution for more control
+ * ```typescript
+ * import { LexResolver } from '@atproto/lex-resolver'
+ *
+ * const resolver = new LexResolver({})
+ *
+ * // Step 1: Resolve the authority to get the AT URI
+ * const uri = await resolver.resolve('app.bsky.feed.post')
+ * console.log(uri.toString()) // 'at://did:plc:xxx/com.atproto.lexicon.schema/app.bsky.feed.post'
+ *
+ * // Step 2: Fetch the lexicon from the URI
+ * const result = await resolver.fetch(uri)
+ * console.log(result.lexicon)
+ * ```
+ *
+ * @example Using hooks for caching
+ * ```typescript
+ * import { LexResolver, LexResolverFetchResult } from '@atproto/lex-resolver'
+ *
+ * const cache = new Map<string, LexResolverFetchResult>()
+ *
+ * const resolver = new LexResolver({
+ *   hooks: {
+ *     onFetch({ uri }) {
+ *       return cache.get(uri.toString())
+ *     },
+ *     onFetchResult({ uri, cid, lexicon }) {
+ *       cache.set(uri.toString(), { cid, lexicon })
+ *     }
+ *   }
+ * })
+ * ```
+ *
+ * @example Error handling
+ * ```typescript
+ * import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
+ *
+ * const resolver = new LexResolver({})
+ *
+ * try {
+ *   const result = await resolver.get('com.example.unknown')
+ * } catch (error) {
+ *   if (error instanceof LexResolverError) {
+ *     console.error(`Failed to resolve ${error.nsid}: ${error.description}`)
+ *   }
+ * }
+ * ```
+ */
 export class LexResolver {
   protected readonly didResolver: DidResolver<'plc' | 'web'>
 
@@ -76,6 +254,35 @@ export class LexResolver {
     this.didResolver = createDidResolver(options)
   }
 
+  /**
+   * Gets a lexicon document by its NSID.
+   *
+   * This is the primary method for resolving lexicons. It combines
+   * {@link resolve} and {@link fetch} into a single operation, handling
+   * authority resolution, DID lookup, and record fetching.
+   *
+   * @param nsidStr - The NSID to resolve, either as a string or NSID object
+   * @param options - Optional DID resolution options (e.g., signal for cancellation)
+   * @returns The resolved lexicon result containing URI, CID, and lexicon document
+   * @throws {LexResolverError} If resolution fails at any stage
+   *
+   * @example
+   * ```typescript
+   * // Resolve using string NSID
+   * const result = await resolver.get('app.bsky.feed.post')
+   *
+   * // Resolve using NSID object
+   * import { NSID } from '@atproto/syntax'
+   * const nsid = NSID.from('app.bsky.feed.post')
+   * const result = await resolver.get(nsid)
+   *
+   * // With abort signal for cancellation
+   * const controller = new AbortController()
+   * const result = await resolver.get('app.bsky.feed.post', {
+   *   signal: controller.signal
+   * })
+   * ```
+   */
   async get(
     nsidStr: NSID | string,
     options?: ResolveDidOptions,
@@ -84,6 +291,33 @@ export class LexResolver {
     return this.fetch(uri, options)
   }
 
+  /**
+   * Resolves the authority for an NSID and returns the AT URI for the lexicon.
+   *
+   * This method performs the first stage of lexicon resolution:
+   * 1. Parses the NSID to extract the authority domain
+   * 2. Looks up the `_lexicon.<authority>` DNS TXT record
+   * 3. Extracts the DID from the TXT record (format: `did=<did>`)
+   * 4. Constructs the AT URI for the lexicon record
+   *
+   * Use this when you need the URI without fetching the actual document,
+   * or when you want to implement custom fetching logic.
+   *
+   * @param nsidStr - The NSID to resolve, either as a string or NSID object
+   * @returns The AT URI pointing to the lexicon record
+   * @throws {LexResolverError} If authority resolution fails (e.g., DNS lookup fails)
+   *
+   * @example
+   * ```typescript
+   * // Resolve to get the AT URI
+   * const uri = await resolver.resolve('app.bsky.feed.post')
+   * console.log(uri.toString())
+   * // Output: 'at://did:plc:z72i7hdynmk6r22z27h6tvur/com.atproto.lexicon.schema/app.bsky.feed.post'
+   *
+   * // The URI can then be used with fetch() or stored for later use
+   * const result = await resolver.fetch(uri)
+   * ```
+   */
   async resolve(nsidStr: NSID | string): Promise<AtUri> {
     const nsid = NSID.from(nsidStr)
 
@@ -119,6 +353,39 @@ export class LexResolver {
     }
   }
 
+  /**
+   * Fetches a lexicon document from a specific AT URI.
+   *
+   * This method performs the second stage of lexicon resolution:
+   * 1. Resolves the DID from the URI to find the PDS endpoint
+   * 2. Fetches the record from the PDS using `com.atproto.sync.getRecord`
+   * 3. Verifies the cryptographic proof (commit signature)
+   * 4. Validates the lexicon document structure
+   * 5. Ensures the document ID matches the URI rkey
+   *
+   * Use this when you already have an AT URI (e.g., from {@link resolve})
+   * and want to fetch the lexicon document.
+   *
+   * @param uriStr - The AT URI to fetch, either as a string or AtUri object
+   * @param options - Optional DID resolution options (e.g., signal for cancellation, noCache)
+   * @returns The resolved lexicon result containing URI, CID, and lexicon document
+   * @throws {LexResolverError} If fetching or validation fails
+   *
+   * @example
+   * ```typescript
+   * // Fetch from a known URI
+   * const result = await resolver.fetch(
+   *   'at://did:plc:xyz/com.atproto.lexicon.schema/app.bsky.feed.post'
+   * )
+   *
+   * // Fetch with no-cache to bypass any upstream caching
+   * const result = await resolver.fetch(uri, { noCache: true })
+   *
+   * // Fetch with abort signal
+   * const controller = new AbortController()
+   * const result = await resolver.fetch(uri, { signal: controller.signal })
+   * ```
+   */
   async fetch(
     uriStr: AtUri | string,
     options?: ResolveDidOptions,

@@ -23,12 +23,84 @@ import {
 import { NsidMap } from './nsid-map.js'
 import { NsidSet } from './nsid-set.js'
 
+/**
+ * Configuration options for the {@link LexInstaller} class.
+ *
+ * Extends {@link LexResolverOptions} with paths for lexicon storage
+ * and manifest management.
+ *
+ * @example
+ * ```typescript
+ * const options: LexInstallerOptions = {
+ *   lexicons: './lexicons',
+ *   manifest: './lexicons.manifest.json',
+ *   update: false,
+ * }
+ * ```
+ */
 export type LexInstallerOptions = LexResolverOptions & {
+  /**
+   * Path to the directory where lexicon JSON files will be stored.
+   * The directory structure mirrors the NSID hierarchy
+   * (e.g., 'app.bsky.feed.post' becomes 'app/bsky/feed/post.json').
+   */
   lexicons: string
+
+  /**
+   * Path to the manifest file that tracks installed lexicons and their resolutions.
+   */
   manifest: string
+
+  /**
+   * When `true`, forces re-fetching of lexicons from the network even if they
+   * already exist locally. Useful for updating to newer versions.
+   * @default false
+   */
   update?: boolean
 }
 
+/**
+ * Manages the installation of Lexicon schemas from the ATProto network.
+ *
+ * The `LexInstaller` class handles fetching, caching, and organizing lexicon
+ * documents. It tracks dependencies between lexicons and ensures all referenced
+ * schemas are installed. The class implements `AsyncDisposable` for proper
+ * resource cleanup.
+ *
+ * @example
+ * Basic usage with async disposal:
+ * ```typescript
+ * import { LexInstaller } from '@atproto/lex-installer'
+ *
+ * await using installer = new LexInstaller({
+ *   lexicons: './lexicons',
+ *   manifest: './lexicons.manifest.json',
+ * })
+ *
+ * await installer.install({
+ *   additions: ['app.bsky.feed.post'],
+ * })
+ *
+ * await installer.save()
+ * // Resources automatically cleaned up when block exits
+ * ```
+ *
+ * @example
+ * Manual disposal:
+ * ```typescript
+ * const installer = new LexInstaller({
+ *   lexicons: './lexicons',
+ *   manifest: './lexicons.manifest.json',
+ * })
+ *
+ * try {
+ *   await installer.install({ additions: ['app.bsky.actor.profile'] })
+ *   await installer.save()
+ * } finally {
+ *   await installer[Symbol.asyncDispose]()
+ * }
+ * ```
+ */
 export class LexInstaller implements AsyncDisposable {
   protected readonly lexiconResolver: LexResolver
   protected readonly indexer: LexiconDirectoryIndexer
@@ -50,6 +122,15 @@ export class LexInstaller implements AsyncDisposable {
     await this.indexer[Symbol.asyncDispose]()
   }
 
+  /**
+   * Compares the current manifest state with another manifest for equality.
+   *
+   * Both manifests are normalized before comparison to ensure consistent
+   * ordering of entries. Useful for detecting changes during CI verification.
+   *
+   * @param manifest - The manifest to compare against
+   * @returns `true` if the manifests are equivalent, `false` otherwise
+   */
   equals(manifest: LexiconsManifest): boolean {
     return lexEquals(
       normalizeLexiconsManifest(manifest),
@@ -57,6 +138,47 @@ export class LexInstaller implements AsyncDisposable {
     )
   }
 
+  /**
+   * Installs lexicons and their dependencies.
+   *
+   * This method processes explicit additions and restores entries from an
+   * existing manifest. It recursively resolves and installs all referenced
+   * lexicons to ensure complete dependency trees.
+   *
+   * @param options - Installation options
+   * @param options.additions - Iterable of lexicon identifiers to add.
+   *   Can be NSID strings or AT URIs.
+   * @param options.manifest - Existing manifest to use as a baseline.
+   *   Previously resolved URIs are preserved unless explicitly overridden.
+   *
+   * @example
+   * Install new lexicons:
+   * ```typescript
+   * await installer.install({
+   *   additions: ['app.bsky.feed.post', 'app.bsky.actor.profile'],
+   * })
+   * ```
+   *
+   * @example
+   * Install with existing manifest as hint:
+   * ```typescript
+   * const existingManifest = await readJsonFile('./lexicons.manifest.json')
+   * await installer.install({
+   *   additions: ['com.example.newLexicon'],
+   *   manifest: existingManifest,
+   * })
+   * ```
+   *
+   * @example
+   * Install from specific AT URIs:
+   * ```typescript
+   * await installer.install({
+   *   additions: [
+   *     'at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post',
+   *   ],
+   * })
+   * ```
+   */
   async install({
     additions,
     manifest,
@@ -183,6 +305,15 @@ export class LexInstaller implements AsyncDisposable {
     return { lexicon, uri }
   }
 
+  /**
+   * Fetches a lexicon document from the network and saves it locally.
+   *
+   * The lexicon is retrieved from the specified AT URI, written to the
+   * local lexicons directory, and its metadata is recorded for the manifest.
+   *
+   * @param uri - The AT URI pointing to the lexicon document
+   * @returns An object containing the fetched lexicon document and its CID
+   */
   async fetch(uri: AtUri): Promise<{ lexicon: LexiconDocument; cid: Cid }> {
     console.debug(`Fetching lexicon from ${uri}...`)
 
@@ -196,6 +327,12 @@ export class LexInstaller implements AsyncDisposable {
     return { lexicon, cid }
   }
 
+  /**
+   * Saves the current manifest to disk.
+   *
+   * The manifest is normalized before saving to ensure consistent ordering
+   * of entries, making it suitable for version control.
+   */
   async save(): Promise<void> {
     await writeJsonFile(
       this.options.manifest,

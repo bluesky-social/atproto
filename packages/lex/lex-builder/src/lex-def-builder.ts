@@ -38,14 +38,50 @@ import {
 } from './ref-resolver.js'
 import { asNamespaceExport } from './ts-lang.js'
 
+/**
+ * Configuration options for the {@link LexDefBuilder} class.
+ *
+ * @see {@link RefResolverOptions} for reference resolution options
+ */
 export type LexDefBuilderOptions = RefResolverOptions & {
+  /**
+   * The module specifier to use for importing the lexicon schema library.
+   *
+   * @default '@atproto/lex-schema'
+   */
   lib?: string
+  /**
+   * Whether to allow legacy blob references in the generated schemas.
+   *
+   * When `true`, blob types will accept both modern `BlobRef` and legacy
+   * `LegacyBlobRef` formats.
+   *
+   * @default false
+   */
   allowLegacyBlobs?: boolean
+  /**
+   * Whether to add `#__PURE__` annotations to function calls.
+   *
+   * These annotations help bundlers with tree-shaking by marking
+   * side-effect-free function calls.
+   *
+   * @default false
+   */
   pureAnnotations?: boolean
 }
 
 /**
- * Utility class to build a TypeScript source file from a lexicon document.
+ * Builds TypeScript type definitions and runtime schemas from a single
+ * Lexicon document.
+ *
+ * This class is responsible for generating the `.defs.ts` files that contain:
+ * - Type aliases for each lexicon definition
+ * - Runtime schema validators using `@atproto/lex-schema`
+ * - Utility functions for type checking and validation
+ * - Proper import statements for cross-references
+ *
+ * Each lexicon definition type (record, object, query, procedure, etc.)
+ * is handled with specialized code generation logic.
  */
 export class LexDefBuilder {
   private readonly refResolver: RefResolver

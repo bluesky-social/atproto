@@ -6,13 +6,37 @@ import {
   Query,
 } from '@atproto/lex-schema'
 
+/**
+ * The body type of an XRPC response, inferred from the method's output schema.
+ *
+ * For JSON responses, this is the parsed LexValue. For binary responses,
+ * this is a Uint8Array.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ */
 export type XrpcResponseBody<M extends Procedure | Query = Procedure | Query> =
   InferMethodOutputBody<M, Uint8Array>
 
+/**
+ * The full payload type of an XRPC response, including body and encoding.
+ *
+ * Returns `null` for methods that have no output.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ */
 export type XrpcResponsePayload<
   M extends Procedure | Query = Procedure | Query,
 > = InferMethodOutput<M, Uint8Array>
 
+/**
+ * Type guard to check if a value is {@link Blob}-like.
+ *
+ * Handles both native Blobs and polyfilled Blob implementations
+ * (e.g., fetch-blob from node-fetch).
+ *
+ * @param value - The value to check
+ * @returns `true` if the value is a Blob or Blob-like object
+ */
 export function isBlobLike(value: unknown): value is Blob {
   if (value == null) return false
   if (typeof value !== 'object') return false
@@ -40,6 +64,19 @@ export function isAsyncIterable<T>(
   )
 }
 
+/**
+ * Builds HTTP headers for ATProto requests.
+ *
+ * Adds the following headers when applicable:
+ * - `atproto-proxy`: Service routing header (if service is specified)
+ * - `atproto-accept-labelers`: Comma-separated list of labeler DIDs
+ *
+ * @param options - Header building options
+ * @param options.headers - Base headers to include
+ * @param options.service - Service proxy identifier
+ * @param options.labelers - Labeler DIDs to request labels from
+ * @returns A new Headers object with ATProto headers added
+ */
 export function buildAtprotoHeaders(options: {
   headers?: HeadersInit
   service?: `${DidString}#${string}`
