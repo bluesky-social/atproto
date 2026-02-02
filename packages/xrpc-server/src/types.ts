@@ -2,6 +2,7 @@ import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
 import { z } from 'zod'
+import { l } from '@atproto/lex-schema'
 import { ErrorResult, XRPCError } from './errors'
 import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
 
@@ -111,13 +112,7 @@ export type HandlerContext<
   I extends Input = Input,
 > = MethodAuthContext<P> & {
   auth: A
-  // input: I
-  input: I extends HandlerInput
-    ? {
-        encoding: I['encoding']
-        body: I['body']
-      }
-    : I
+  input: I
   resetRouteRateLimits: () => Promise<void>
 }
 
@@ -227,6 +222,21 @@ export type StreamAuthContext<P extends Params = Params> = {
   params: P
   req: IncomingMessage
 }
+
+export type LexMethodConfig<
+  M extends l.Procedure | l.Query,
+  A extends Auth = Auth,
+> = MethodConfig<
+  A,
+  l.InferMethodParams<M>,
+  l.InferMethodInput<M, Readable>,
+  l.InferMethodOutput<M, Readable>
+>
+
+export type LexSubscriptionConfig<
+  M extends l.Subscription,
+  A extends Auth = Auth,
+> = StreamConfig<A, l.InferMethodParams<M>, l.InferMethodMessage<M>>
 
 export type StreamAuthVerifier<
   A extends AuthResult = AuthResult,

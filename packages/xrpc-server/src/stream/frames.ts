@@ -1,4 +1,5 @@
-import { LexValue, decodeAll, encode } from '@atproto/lex-cbor'
+import { decodeAll, encode } from '@atproto/lex-cbor'
+import { LexValue, isPlainObject } from '@atproto/lex-data'
 import {
   ErrorFrameBody,
   ErrorFrameHeader,
@@ -69,6 +70,29 @@ export class MessageFrame<T extends LexValue = LexValue> extends Frame<T> {
   }
   get type() {
     return this.header.t
+  }
+
+  static fromLexValue(data: LexValue, nsid: string) {
+    if (!isPlainObject(data)) {
+      return new MessageFrame(data)
+    }
+
+    const $type = data?.['$type']
+    if (typeof $type !== 'string') {
+      return new MessageFrame(data)
+    }
+
+    let type: string
+
+    const split = $type.split('#')
+    if (split.length === 2 && (split[0] === '' || split[0] === nsid)) {
+      type = `#${split[1]}`
+    } else {
+      type = $type
+    }
+
+    const { $type: _, ...clone } = data
+    return new MessageFrame(clone, { type })
   }
 }
 

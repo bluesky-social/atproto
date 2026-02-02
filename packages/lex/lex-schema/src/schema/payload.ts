@@ -2,15 +2,19 @@ import { LexValue } from '@atproto/lex-data'
 import { Infer, Schema } from '../core.js'
 import { ObjectSchema, ObjectSchemaShape, object } from './object.js'
 
-export type InferPayload<
-  TPayload extends Payload,
-  TBody,
-> = TPayload['encoding'] extends infer E extends string
-  ? {
-      encoding: SchemaEncodingToDataEncoding<E>
-      body: InferPayloadBody<TPayload, TBody>
-    }
-  : void | undefined
+export type InferPayload<TPayload extends Payload, TBinary> =
+  TPayload extends Payload<infer TEncoding, infer TBody>
+    ? TEncoding extends string
+      ? {
+          encoding: SchemaEncodingToDataEncoding<TEncoding>
+          body: TBody extends Schema
+            ? Infer<TBody>
+            : TEncoding extends `application/json`
+              ? LexValue
+              : TBinary
+        }
+      : undefined
+    : never
 
 export type SchemaEncodingToDataEncoding<E extends string> = E extends '*/*'
   ? `${string}/${string}`
@@ -23,16 +27,8 @@ export type InferPayloadEncoding<TPayload extends Payload> =
     ? SchemaEncodingToDataEncoding<TPayload['encoding']>
     : undefined
 
-export type InferPayloadBody<
-  TPayload extends Payload,
-  TBody,
-> = TPayload['encoding'] extends undefined
-  ? undefined // No encoding, no payload
-  : TPayload['schema'] extends Schema
-    ? Infer<TPayload['schema']>
-    : TPayload['encoding'] extends `application/json`
-      ? LexValue
-      : TBody
+export type InferPayloadBody<TPayload extends Payload, TBody> =
+  InferPayload<TPayload, TBody> extends { body: infer B } ? B : undefined
 
 export type PayloadShape<E extends string | undefined> = E extends undefined
   ? undefined
@@ -40,11 +36,11 @@ export type PayloadShape<E extends string | undefined> = E extends undefined
 
 export class Payload<
   const TEncoding extends string | undefined = string | undefined,
-  const TPayload extends PayloadShape<TEncoding> = PayloadShape<TEncoding>,
+  const TBody extends PayloadShape<TEncoding> = PayloadShape<TEncoding>,
 > {
   constructor(
     readonly encoding: TEncoding,
-    readonly schema: TPayload,
+    readonly schema: TBody,
   ) {
     if (encoding === undefined && schema !== undefined) {
       throw new TypeError('schema cannot be defined when encoding is undefined')
