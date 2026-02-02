@@ -70,7 +70,7 @@ export function buildRedirectParams(
 }
 
 export type OAuthRedirectOptions = {
-  mode: OAuthResponseMode
+  mode: OAuthResponseMode | 'form_get'
   redirectUri: string
   params: Iterable<[string, string]>
 }
@@ -87,7 +87,9 @@ export function sendRedirect(
     case 'fragment':
       return writeFragment(res, uri, params)
     case 'form_post':
-      return writeFormPost(res, uri, params)
+      return writeFormRedirect(res, uri, params, 'post')
+    case 'form_get':
+      return writeFormRedirect(res, uri, params, 'get')
   }
 
   // @ts-expect-error fool proof
@@ -116,10 +118,11 @@ function writeFragment(
   res.writeHead(REDIRECT_STATUS_CODE, { Location: url.href }).end()
 }
 
-function writeFormPost(
+function writeFormRedirect(
   res: ServerResponse,
   uri: string,
   params: Iterable<[string, string]>,
+  method: 'post' | 'get' = 'post',
 ): void {
   // Prevent the Chrome from caching this page
   // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
@@ -130,7 +133,7 @@ function writeFormPost(
   return sendWebPage(res, {
     htmlAttrs: { lang: 'en' },
     body: html`
-      <form method="post" action="${uri}">
+      <form method="${method}" action="${uri}">
         ${Array.from(params, ([key, value]) => [
           html`<input type="hidden" name="${key}" value="${value}" />`,
         ])}

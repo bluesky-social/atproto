@@ -74,6 +74,18 @@ export function createAuthorizationPageMiddleware<
 
       const deviceInfo = await server.deviceManager.load(req, res)
 
+      if (isIosWebView(req) && deviceInfo.isFresh) {
+        // @NOTE iOS WebViews have various issues with handling redirects with
+        // cookies. To work around these issues, we use a redirect so that
+        // cookies are properly set. We need to use a javascript redirect since
+        // a 302 redirect would have the same issues.
+        return sendRedirect(res, {
+          mode: 'form_get',
+          redirectUri: this.url.href,
+          params: [],
+        })
+      }
+
       try {
         const result = await server.authorize(
           clientCredentials,
@@ -168,4 +180,9 @@ function sendAuthorizeRedirect(
   const mode = buildRedirectMode(parameters)
   const params = buildRedirectParams(issuer, parameters, redirect)
   return sendRedirect(res, { mode, redirectUri, params })
+}
+
+function isIosWebView(_req: IncomingMessage): boolean {
+  // @TODO actually implement this
+  return false
 }
