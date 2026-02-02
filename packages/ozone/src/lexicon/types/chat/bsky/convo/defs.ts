@@ -11,6 +11,7 @@ import {
 } from '../../../../util'
 import type * as AppBskyRichtextFacet from '../../../app/bsky/richtext/facet.js'
 import type * as AppBskyEmbedRecord from '../../../app/bsky/embed/record.js'
+import type * as AppBskyEmbedImages from '../../../app/bsky/embed/images.js'
 import type * as ChatBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
@@ -39,7 +40,10 @@ export interface MessageInput {
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
-  embed?: $Typed<AppBskyEmbedRecord.Main> | { $type: string }
+  embed?:
+    | $Typed<AppBskyEmbedRecord.Main>
+    | $Typed<AppBskyEmbedImages.Main>
+    | { $type: string }
 }
 
 const hashMessageInput = 'messageInput'
@@ -59,7 +63,10 @@ export interface MessageView {
   text: string
   /** Annotations of text (mentions, URLs, hashtags, etc) */
   facets?: AppBskyRichtextFacet.Main[]
-  embed?: $Typed<AppBskyEmbedRecord.View> | { $type: string }
+  embed?:
+    | $Typed<AppBskyEmbedRecord.View>
+    | $Typed<AppBskyEmbedImages.View>
+    | { $type: string }
   /** Reactions to this message, in ascending order of creation time. */
   reactions?: ReactionView[]
   sender: MessageViewSender
