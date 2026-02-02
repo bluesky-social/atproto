@@ -1,12 +1,13 @@
 import { dedupeStrs, mapDefined } from '@atproto/common'
+import { AtUriString } from '@atproto/lex'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   HydrationState,
   Hydrator,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getStarterPacks'
+import { app } from '../../../../lexicons/index.js'
 import { createPipeline, noRules } from '../../../../pipeline'
 import { Views } from '../../../../views'
 import { resHeaders } from '../../../util'
@@ -18,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
     noRules,
     presentation,
   )
-  server.app.bsky.graph.getStarterPacks({
+  server.add(app.bsky.graph.getStarterPacks, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
@@ -74,8 +75,10 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getStarterPacks.Params & {
   hydrateCtx: HydrateCtx
 }
 
-type SkeletonState = { uris: string[] }
+type SkeletonState = {
+  uris: AtUriString[]
+}

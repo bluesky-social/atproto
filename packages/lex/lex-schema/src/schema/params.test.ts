@@ -257,6 +257,26 @@ describe('ParamsSchema', () => {
         const result = schema.safeParse({ tags: ['tag1', 123] })
         expect(result.success).toBe(false)
       })
+
+      it('coerces single values into arrays in parse mode', () => {
+        const result = schema.safeParse({ tags: 'tag1' })
+        expect(result).toEqual({
+          success: true,
+          value: { tags: ['tag1'] },
+        })
+      })
+
+      it('does not coerce single values in validate mode', () => {
+        const result = schema.safeValidate({ tags: 'tag1' })
+        expect(result).toMatchObject({
+          success: false,
+          reason: expect.objectContaining({
+            message: expect.stringContaining(
+              'Expected array value type at $.tags (got string)',
+            ),
+          }),
+        })
+      })
     })
   })
 

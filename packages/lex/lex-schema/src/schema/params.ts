@@ -54,7 +54,6 @@ export class ParamsSchema<
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    // @TODO BETTER SUPPORT Input/Output
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }

@@ -5,7 +5,7 @@ import {
   InferPayload,
   Main,
   Params,
-  Payload,
+  TBinary,
   Procedure,
   Query,
   Restricted,
@@ -219,7 +219,7 @@ function xrpcProcedureInput(
 }
 
 function buildPayload(
-  schema: Payload,
+  schema: TBinary,
   body: undefined | BodyInit,
   encodingHint?: string,
 ): null | XrpcPayload<BodyInit> {
@@ -244,7 +244,7 @@ function buildPayload(
   return { encoding, body }
 }
 
-function buildEncoding(schema: Payload, encodingHint?: string): string {
+function buildEncoding(schema: TBinary, encodingHint?: string): string {
   // Should never happen (required for type safety)
   if (!schema.encoding) {
     throw new TypeError('Unexpected payload')

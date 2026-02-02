@@ -15,7 +15,7 @@ describe('feed hidden replies', () => {
       dbPostgresSchema: 'bsky_tests_feed_hidden_replies',
     })
     agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
 
     const result = await feedHiddenRepliesSeed(sc)

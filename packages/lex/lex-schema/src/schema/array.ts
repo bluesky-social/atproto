@@ -24,39 +24,46 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    if (!Array.isArray(input)) {
+    let array: unknown[]
+
+    if (Array.isArray(input)) {
+      array = input
+    } else if (input !== undefined && ctx.options.mode === 'parse') {
+      // Coerce single values into arrays in "parse" mode
+      array = [input]
+    } else {
       return ctx.issueInvalidType(input, 'array')
     }
 
     const { minLength, maxLength } = this.options
 
-    if (minLength != null && input.length < minLength) {
-      return ctx.issueTooSmall(input, 'array', minLength, input.length)
+    if (minLength != null && array.length < minLength) {
+      return ctx.issueTooSmall(array, 'array', minLength, array.length)
     }
 
-    if (maxLength != null && input.length > maxLength) {
-      return ctx.issueTooBig(input, 'array', maxLength, input.length)
+    if (maxLength != null && array.length > maxLength) {
+      return ctx.issueTooBig(array, 'array', maxLength, array.length)
     }
 
     let copy: undefined | unknown[]
 
-    for (let i = 0; i < input.length; i++) {
-      const result = ctx.validateChild(input, i, this.validator)
+    for (let i = 0; i < array.length; i++) {
+      const result = ctx.validateChild(array, i, this.validator)
       if (!result.success) return result
 
-      if (result.value !== input[i]) {
+      if (result.value !== array[i]) {
         if (ctx.options.mode === 'validate') {
           // In "validate" mode, we can't modify the input, so we issue an error
-          return ctx.issueInvalidPropertyValue(input, i, [result.value])
+          return ctx.issueInvalidPropertyValue(array, i, [result.value])
         }
 
         // Copy on write (but only if we did not already make a copy)
-        copy ??= Array.from(input)
+        copy ??= Array.from(array)
         copy[i] = result.value
       }
     }
 
-    return ctx.success(copy ?? input)
+    return ctx.success(copy ?? array)
   }
 }
 

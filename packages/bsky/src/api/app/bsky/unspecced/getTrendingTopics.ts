@@ -1,11 +1,9 @@
-import AtpAgent from '@atproto/api'
 import { noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { Client } from '@atproto/lex'
+import { InternalServerError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { TrendingTopic } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -22,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrMutes,
     presentation,
   )
-  server.app.bsky.unspecced.getTrendingTopics({
+  server.add(app.bsky.unspecced.getTrendingTopics, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -49,8 +47,9 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (ctx.topicsAgent) {
-    const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendingTopics(
+  if (ctx.topicsClient) {
+    return ctx.topicsClient.call(
+      app.bsky.unspecced.getTrendingTopics,
       {
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
@@ -59,7 +58,6 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
         headers: params.headers,
       },
     )
-    return res.data
   } else {
     throw new InternalServerError('Topics agent not available')
   }
@@ -88,15 +86,15 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
 }
 
-type Params = Omit<QueryParams, 'viewer'> & {
+type Params = Omit<app.bsky.unspecced.getTrendingTopics.Params, 'viewer'> & {
   hydrateCtx: HydrateCtx
   headers: Record<string, string>
 }
 
 type SkeletonState = {
-  topics: TrendingTopic[]
-  suggested: TrendingTopic[]
+  topics: app.bsky.unspecced.defs.TrendingTopic[]
+  suggested: app.bsky.unspecced.defs.TrendingTopic[]
 }

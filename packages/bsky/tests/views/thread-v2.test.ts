@@ -782,7 +782,7 @@ describe('appview thread views v2', () => {
 
         assertPosts(t)
         expect(hasOtherReplies).toBe(false)
-        const opThreadPostsUris = new Set(
+        const opThreadPostsUris = new Set<string>(
           opThreadPosts.map((k) =>
             k === 'root' ? seed.root.ref.uriStr : seed.r[k].ref.uriStr,
           ),

@@ -1,9 +1,15 @@
 import assert from 'node:assert'
 import { IncomingMessage, OutgoingMessage } from 'node:http'
 import { Duplex, Readable, pipeline } from 'node:stream'
-import { Request, Response, json, text } from 'express'
+import {
+  Request as ExpressRequest,
+  Response as ExpressResponse,
+  json,
+  text,
+} from 'express'
 import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
+import { l } from '@atproto/lex-schema'
 import {
   LexXrpcBody,
   LexXrpcProcedure,
@@ -13,16 +19,39 @@ import {
   jsonToLex,
 } from '@atproto/lexicon'
 import { ResponseType } from '@atproto/xrpc'
-import { InternalServerError, InvalidRequestError, XRPCError } from './errors'
 import {
-  Awaitable,
+  ErrorResult,
+  InternalServerError,
+  InvalidRequestError,
+  XRPCError,
+} from './errors'
+import {
+  Auth,
   HandlerSuccess,
   Input,
+  Output,
   Params,
   RouteOptions,
   UndecodedParams,
   handlerSuccess,
 } from './types'
+
+export type ParamsVerifierInternal<P extends Params = Params> = (
+  req: IncomingMessage | ExpressRequest,
+) => P
+
+export type AuthVerifierInternal<C, A extends Auth = Auth> = (
+  ctx: C,
+) => Promise<Exclude<A, ErrorResult>>
+
+export type InputVerifierInternal<I extends Input = Input> = (
+  req: ExpressRequest,
+  res: ExpressResponse,
+) => Promise<I>
+
+export type OutputVerifierInternal<O extends Output = Output> = (
+  output: Exclude<O, ErrorResult>,
+) => void
 
 export const asArray = <T>(arr: T | T[]): T[] =>
   Array.isArray(arr) ? arr : [arr]
@@ -38,7 +67,7 @@ export function setHeaders(
   }
 }
 
-export function decodeQueryParams(
+function decodeQueryParams(
   def: LexXrpcProcedure | LexXrpcQuery | LexXrpcSubscription,
   params: UndecodedParams,
 ): Params {
@@ -81,26 +110,37 @@ export function decodeQueryParam(
   }
 }
 
-export type QueryParams = Record<string, undefined | string | string[]>
-export function getQueryParams(url = ''): QueryParams {
-  const result: QueryParams = Object.create(null)
+export function getSearchParams(url?: string): URLSearchParams | undefined {
+  if (!url) return undefined
 
   const queryStringIdx = url.indexOf('?')
-  if (queryStringIdx === -1) return result
+  if (queryStringIdx === -1) return undefined
 
   const queryString = url.slice(queryStringIdx + 1)
-  if (queryString === '') return result
+  if (queryString.length === 0) return undefined
 
-  const searchParams = new URLSearchParams(queryString)
+  return new URLSearchParams(queryString)
+}
+
+export function getQueryParams(
+  req: IncomingMessage | ExpressRequest,
+): UndecodedParams {
+  if ('query' in req) return req.query
+
+  const result: UndecodedParams = Object.create(null)
+
+  const searchParams = getSearchParams(req.url)
+  if (!searchParams) return result
+
+  if (searchParams.has('__proto__')) {
+    // Prevent prototype pollution
+    throw new InvalidRequestError(
+      `Invalid query parameter: __proto__`,
+      'InvalidQueryParameter',
+    )
+  }
+
   for (const key of searchParams.keys()) {
-    if (key === '__proto__') {
-      // Prevent prototype pollution
-      throw new InvalidRequestError(
-        `Invalid query parameter: ${key}`,
-        'InvalidQueryParameter',
-      )
-    }
-
     const values = searchParams.getAll(key)
     result[key] = values.length === 1 ? values[0] : values
   }
@@ -108,14 +148,44 @@ export function getQueryParams(url = ''): QueryParams {
   return result
 }
 
-export function createInputVerifier(
+export function createParamsVerifier<P extends Params = Params>(
+  nsid: string,
+  def: LexXrpcQuery | LexXrpcProcedure | LexXrpcSubscription,
+  lexicons: Lexicons,
+): ParamsVerifierInternal<P> {
+  return (req) => {
+    try {
+      const queryParams = getQueryParams(req)
+      const params = decodeQueryParams(def, queryParams)
+      return lexicons.assertValidXrpcParams(nsid, params) as P
+    } catch (e) {
+      throw new InvalidRequestError(String(e))
+    }
+  }
+}
+
+export function createSchemaParamsVerifier<
+  M extends l.Procedure | l.Query | l.Subscription,
+>(ns: l.Main<M>): ParamsVerifierInternal<l.InferMethodParams<M>> {
+  const schema = l.getMain(ns)
+  return (req) => {
+    try {
+      const queryParams = getQueryParams(req)
+      return schema.parameters.parse(queryParams)
+    } catch (err) {
+      throw new InvalidRequestError(String(err))
+    }
+  }
+}
+
+export function createInputVerifier<I extends Input = Input>(
   nsid: string,
   def: LexXrpcProcedure | LexXrpcQuery,
   options: RouteOptions,
   lexicons: Lexicons,
-): (req: Request, res: Response) => Awaitable<Input> {
+): InputVerifierInternal<I> {
   if (def.type === 'query' || !def.input) {
-    return (req) => {
+    return async (req) => {
       // @NOTE We allow (and ignore) "empty" bodies
       if (getBodyPresence(req) === 'present') {
         throw new InvalidRequestError(
@@ -123,7 +193,7 @@ export function createInputVerifier(
         )
       }
 
-      return undefined
+      return undefined as I
     }
   }
 
@@ -172,7 +242,48 @@ export function createInputVerifier(
     // otherwise, we pass along a decoded readable stream
     const body = req.readableEnded ? req.body : decodeBodyStream(req, blobLimit)
 
-    return { encoding: reqEncoding, body }
+    return { encoding: reqEncoding, body } as I
+  }
+}
+
+export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
+  ns: l.Main<M>,
+  options: RouteOptions,
+): InputVerifierInternal<l.InferMethodInput<M, Readable>> {
+  const schema = l.getMain(ns)
+  const { blobLimit } = options
+
+  const bodyParser = createBodyParser(schema.input.encoding, options)
+
+  return async (req, res) => {
+    if (getBodyPresence(req) === 'missing') {
+      throw new InvalidRequestError(
+        `A request body is expected but none was provided`,
+      )
+    }
+
+    const reqEncoding = parseReqEncoding(req)
+    const allowedEncodings = parseDefEncoding(schema.input)
+    if (
+      !allowedEncodings.includes(ENCODING_ANY) &&
+      !allowedEncodings.includes(reqEncoding)
+    ) {
+      throw new InvalidRequestError(
+        `Wrong request encoding (Content-Type): ${reqEncoding}`,
+      )
+    }
+
+    if (bodyParser) {
+      await bodyParser(req, res)
+    }
+
+    const bodyStream = decodeBodyStream(req, blobLimit)
+    return schema.input.schema
+      ? schema.input.schema.parseAsync({
+          encoding: reqEncoding,
+          body: bodyStream,
+        })
+      : { encoding: reqEncoding, body: bodyStream }
   }
 }
 
@@ -277,7 +388,7 @@ function createBodyParser(inputEncoding: string, options: RouteOptions) {
   const jsonParser = json({ limit: jsonLimit })
   const textParser = text({ limit: textLimit })
   // Transform json and text parser middlewares into a single function
-  return (req: Request, res: Response) => {
+  return (req: ExpressRequest, res: ExpressResponse) => {
     return new Promise<void>((resolve, reject) => {
       jsonParser(req, res, (err) => {
         if (err) return reject(XRPCError.fromError(err))
@@ -377,7 +488,7 @@ export interface ServerTiming {
   description?: string
 }
 
-export const parseReqNsid = (req: Request | IncomingMessage) =>
+export const parseReqNsid = (req: ExpressRequest | IncomingMessage) =>
   parseUrlNsid('originalUrl' in req ? req.originalUrl : req.url || '/')
 
 /**

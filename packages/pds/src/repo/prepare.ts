@@ -1,39 +1,31 @@
-import { CID } from 'multiformats/cid'
-import { TID, check, dataToCborBlock } from '@atproto/common'
+import { TID } from '@atproto/common'
+import { RecordSchema } from '@atproto/lex'
+import { encode } from '@atproto/lex-cbor'
 import {
   BlobRef,
-  LexValue,
-  LexiconDefNotFoundError,
-  RepoRecord,
-  ValidationError,
-  lexToIpld,
-  untypedJsonBlobRef,
-} from '@atproto/lexicon'
+  Cid,
+  LexMap,
+  TypedLexMap,
+  cidForCbor,
+  enumBlobRefs,
+} from '@atproto/lex-data'
 import {
   RecordCreateOp,
   RecordDeleteOp,
   RecordUpdateOp,
   RecordWriteOp,
   WriteOpAction,
-  cborToLex,
 } from '@atproto/repo'
 import {
   AtUri,
-  ensureValidDatetime,
-  ensureValidRecordKey,
+  NsidString,
+  RecordKeyString,
+  isValidRecordKey,
 } from '@atproto/syntax'
 import { hasExplicitSlur } from '../handle/explicit-slurs'
-import * as lex from '../lexicon/lexicons'
-import * as AppBskyActorProfile from '../lexicon/types/app/bsky/actor/profile'
-import * as AppBskyFeedGenerator from '../lexicon/types/app/bsky/feed/generator'
-import * as AppBskyFeedPost from '../lexicon/types/app/bsky/feed/post'
-import * as AppBskyGraphList from '../lexicon/types/app/bsky/graph/list'
-import * as AppBskyGraphStarterpack from '../lexicon/types/app/bsky/graph/starterpack'
-import { isTag } from '../lexicon/types/app/bsky/richtext/facet'
-import { asPredicate } from '../lexicon/util'
+import { app, chat, com } from '../lexicons/index.js'
 import {
   InvalidRecordError,
-  PreparedBlobRef,
   PreparedCreate,
   PreparedDelete,
   PreparedUpdate,
@@ -41,138 +33,167 @@ import {
   ValidationStatus,
 } from './types'
 
-const isValidFeedGenerator = asPredicate(AppBskyFeedGenerator.validateRecord)
-const isValidStarterPack = asPredicate(AppBskyGraphStarterpack.validateRecord)
-const isValidPost = asPredicate(AppBskyFeedPost.validateRecord)
-const isValidList = asPredicate(AppBskyGraphList.validateRecord)
-const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
+// @TODO replace this with automatically fetched (& built) schemas
+const knownSchemas = new Map<string, RecordSchema>(
+  [
+    app.bsky.actor.profile.main,
+    app.bsky.actor.status.main,
+    app.bsky.feed.generator.main,
+    app.bsky.feed.like.main,
+    app.bsky.feed.post.main,
+    app.bsky.feed.postgate.main,
+    app.bsky.feed.repost.main,
+    app.bsky.feed.threadgate.main,
+    app.bsky.graph.block.main,
+    app.bsky.graph.follow.main,
+    app.bsky.graph.list.main,
+    app.bsky.graph.listblock.main,
+    app.bsky.graph.listitem.main,
+    app.bsky.graph.starterpack.main,
+    app.bsky.graph.verification.main,
+    app.bsky.labeler.service.main,
+    app.bsky.notification.declaration.main,
+    chat.bsky.actor.declaration.main,
+    com.atproto.lexicon.schema.main,
+    com.germnetwork.declaration.main,
+  ].map((schema: RecordSchema) => [schema.$type, schema]),
+)
 
-export const assertValidRecordWithStatus = (
-  record: Record<string, unknown>,
-  opts: { requireLexicon: boolean },
-): ValidationStatus => {
-  if (typeof record.$type !== 'string') {
-    throw new InvalidRecordError('No $type provided')
+const validateRecord = (
+  record: TypedLexMap,
+  rkey: RecordKeyString,
+  opts: { validate?: boolean },
+): undefined | ValidationStatus => {
+  // If validation is explicitly disabled, skip it
+  if (opts.validate === false) {
+    return undefined
   }
-  try {
-    lex.lexicons.assertValidRecord(record.$type, record)
-    assertValidCreatedAt(record)
-  } catch (e) {
-    if (e instanceof LexiconDefNotFoundError) {
-      if (opts.requireLexicon) {
-        throw new InvalidRecordError(e.message)
-      } else {
-        return 'unknown'
-      }
+
+  // @TODO add support for lexicon resolution to fetch the schema dynamically
+  const schema = knownSchemas.get(record.$type)
+  if (!schema) {
+    // If validation is explicitly requested, throw if unable to validate
+    if (opts.validate === true) {
+      throw new InvalidRecordError(`Unknown lexicon type: ${record.$type}`)
+    } else {
+      return 'unknown'
     }
+  }
+
+  const rkeyResult = schema.keySchema.safeValidate(rkey)
+  if (!rkeyResult.success) {
     throw new InvalidRecordError(
-      `Invalid ${record.$type} record: ${
-        e instanceof Error ? e.message : String(e)
-      }`,
+      `Invalid record key for ${record.$type}: ${rkeyResult.reason.message}`,
+      { cause: rkeyResult.reason },
     )
   }
+
+  const recordResult = schema.safeValidate(record)
+  if (!recordResult.success) {
+    throw new InvalidRecordError(
+      `Invalid ${record.$type} record: ${recordResult.reason.message}`,
+      { cause: recordResult.reason },
+    )
+  }
+
   return 'valid'
-}
-
-// additional more rigorous check on datetimes
-// this check will eventually be in the lex sdk, but this will stop the bleed until then
-export const assertValidCreatedAt = (record: Record<string, unknown>) => {
-  const createdAt = record['createdAt']
-  if (typeof createdAt !== 'string') {
-    return
-  }
-  try {
-    ensureValidDatetime(createdAt)
-  } catch {
-    throw new ValidationError(
-      'createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
-    )
-  }
-}
-
-export const setCollectionName = (
-  collection: string,
-  record: RepoRecord,
-  validate: boolean,
-) => {
-  if (!record.$type) {
-    record.$type = collection
-  }
-  if (validate && record.$type !== collection) {
-    throw new InvalidRecordError(
-      `Invalid $type: expected ${collection}, got ${record.$type}`,
-    )
-  }
-  return record
 }
 
 export const prepareCreate = async (opts: {
   did: string
-  collection: string
-  rkey?: string
-  swapCid?: CID | null
-  record: RepoRecord
+  collection: NsidString
+  rkey?: RecordKeyString
+  swapCid?: Cid | null
+  record: LexMap
   validate?: boolean
 }): Promise<PreparedCreate> => {
-  const { did, collection, swapCid, validate } = opts
-  const maybeValidate = validate !== false
-  const record = setCollectionName(collection, opts.record, maybeValidate)
-  let validationStatus: ValidationStatus
-  if (maybeValidate) {
-    validationStatus = assertValidRecordWithStatus(record, {
-      requireLexicon: validate === true,
-    })
-  }
-  const nextRkey = TID.next()
-  const rkey = opts.rkey || nextRkey.toString()
-  // @TODO: validate against Lexicon record 'key' type, not just overall recordkey syntax
-  ensureValidRecordKey(rkey)
-  assertNoExplicitSlurs(rkey, record)
+  const { cid, uri, record, blobs, validationStatus } = await prepareWrite(opts)
+
   return {
     action: WriteOpAction.Create,
-    uri: AtUri.make(did, collection, rkey),
-    cid: await cidForSafeRecord(record),
-    swapCid,
+    uri,
+    cid,
+    swapCid: opts.swapCid,
     record,
-    blobs: blobsForWrite(record, maybeValidate),
+    blobs,
     validationStatus,
   }
 }
 
 export const prepareUpdate = async (opts: {
   did: string
-  collection: string
-  rkey: string
-  swapCid?: CID | null
-  record: RepoRecord
+  collection: NsidString
+  rkey: RecordKeyString
+  swapCid?: Cid | null
+  record: LexMap
   validate?: boolean
 }): Promise<PreparedUpdate> => {
-  const { did, collection, rkey, swapCid, validate } = opts
-  const maybeValidate = validate !== false
-  const record = setCollectionName(collection, opts.record, maybeValidate)
-  let validationStatus: ValidationStatus
-  if (maybeValidate) {
-    validationStatus = assertValidRecordWithStatus(record, {
-      requireLexicon: validate === true,
-    })
-  }
-  assertNoExplicitSlurs(rkey, record)
+  const { cid, uri, record, blobs, validationStatus } = await prepareWrite(opts)
+
   return {
     action: WriteOpAction.Update,
-    uri: AtUri.make(did, collection, rkey),
-    cid: await cidForSafeRecord(record),
-    swapCid,
+    uri,
+    cid,
+    swapCid: opts.swapCid,
     record,
-    blobs: blobsForWrite(record, maybeValidate),
+    blobs,
     validationStatus,
+  }
+}
+
+async function prepareWrite(opts: {
+  did: string
+  collection: NsidString
+  rkey?: RecordKeyString
+  record: LexMap
+  validate?: boolean
+}): Promise<{
+  record: TypedLexMap
+  blobs: BlobRef[]
+  validationStatus?: ValidationStatus
+  uri: AtUri
+  cid: Cid
+}> {
+  const record: null | TypedLexMap =
+    opts.record.$type === undefined
+      ? { ...opts.record, $type: opts.collection }
+      : opts.record.$type === opts.collection
+        ? (opts.record as TypedLexMap)
+        : null
+
+  if (!record) {
+    throw new InvalidRecordError(
+      `Invalid $type: expected ${opts.collection}, got ${opts.record.$type}`,
+    )
+  }
+
+  // @NOTE the rkey will be validated against the schema later
+  if (opts.rkey != null) {
+    if (!isValidRecordKey(opts.rkey)) {
+      throw new InvalidRecordError(`Invalid record key: ${opts.rkey}`)
+    }
+    if (hasExplicitSlur(opts.rkey)) {
+      throw new InvalidRecordError('Unacceptable slur in record key')
+    }
+  }
+
+  const nextRkey = TID.next()
+  const rkey = opts.rkey || nextRkey.toString()
+
+  return {
+    record,
+    blobs: Array.from(enumBlobRefs(record)),
+    validationStatus: validateRecord(record, rkey, opts),
+    uri: AtUri.make(opts.did, opts.collection, rkey),
+    cid: await cidForCbor(encode(record)),
   }
 }
 
 export const prepareDelete = (opts: {
   did: string
-  collection: string
-  rkey: string
-  swapCid?: CID | null
+  collection: NsidString
+  rkey: RecordKeyString
+  swapCid?: Cid | null
 }): PreparedDelete => {
   const { did, collection, rkey, swapCid } = opts
   return {
@@ -213,138 +234,4 @@ export const writeToOp = (write: PreparedWrite): RecordWriteOp => {
     default:
       throw new Error(`Unrecognized action: ${write}`)
   }
-}
-
-async function cidForSafeRecord(record: RepoRecord) {
-  try {
-    const block = await dataToCborBlock(lexToIpld(record))
-    cborToLex(block.bytes)
-    return block.cid
-  } catch (err) {
-    // Block does not properly transform between lex and cbor
-    const badRecordErr = new InvalidRecordError('Bad record')
-    badRecordErr.cause = err
-    throw badRecordErr
-  }
-}
-
-function assertNoExplicitSlurs(rkey: string, record: RepoRecord) {
-  const toCheck: string[] = []
-
-  if (isValidProfile(record)) {
-    if (record.displayName) toCheck.push(record.displayName)
-  } else if (isValidList(record)) {
-    toCheck.push(record.name)
-  } else if (isValidStarterPack(record)) {
-    toCheck.push(record.name)
-  } else if (isValidFeedGenerator(record)) {
-    toCheck.push(rkey)
-    toCheck.push(record.displayName)
-  } else if (isValidPost(record)) {
-    if (record.tags) {
-      toCheck.push(...record.tags)
-    }
-
-    for (const facet of record.facets || []) {
-      for (const feat of facet.features) {
-        if (isTag(feat)) {
-          toCheck.push(feat.tag)
-        }
-      }
-    }
-  }
-  if (hasExplicitSlur(toCheck.join(' '))) {
-    throw new InvalidRecordError('Unacceptable slur in record')
-  }
-}
-
-type FoundBlobRef = {
-  ref: BlobRef
-  path: string[]
-}
-
-export const blobsForWrite = (
-  record: RepoRecord,
-  validate: boolean,
-): PreparedBlobRef[] => {
-  const refs = findBlobRefs(record)
-  const recordType =
-    typeof record['$type'] === 'string' ? record['$type'] : undefined
-
-  for (const ref of refs) {
-    if (check.is(ref.ref.original, untypedJsonBlobRef)) {
-      throw new InvalidRecordError(`Legacy blob ref at '${ref.path.join('/')}'`)
-    }
-  }
-
-  return refs.map(({ ref, path }) => ({
-    size: ref.size,
-    cid: ref.ref,
-    mimeType: ref.mimeType,
-    constraints:
-      validate && recordType
-        ? CONSTRAINTS[recordType]?.[path.join('/')] ?? {}
-        : {},
-  }))
-}
-
-export const findBlobRefs = (
-  val: LexValue,
-  path: string[] = [],
-  layer = 0,
-): FoundBlobRef[] => {
-  if (layer > 32) {
-    return []
-  }
-  // walk arrays
-  if (Array.isArray(val)) {
-    return val.flatMap((item) => findBlobRefs(item, path, layer + 1))
-  }
-  // objects
-  if (val && typeof val === 'object') {
-    // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
-    if (val instanceof BlobRef) {
-      return [
-        {
-          ref: val,
-          path,
-        },
-      ]
-    }
-    // retain cids & bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
-      return []
-    }
-    return Object.entries(val).flatMap(([key, item]) =>
-      findBlobRefs(item, [...path, key], layer + 1),
-    )
-  }
-  // pass through
-  return []
-}
-
-const CONSTRAINTS = {
-  [lex.ids.AppBskyActorProfile]: {
-    avatar:
-      lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.avatar,
-    banner:
-      lex.schemaDict.AppBskyActorProfile.defs.main.record.properties.banner,
-  },
-  [lex.ids.AppBskyFeedGenerator]: {
-    avatar:
-      lex.schemaDict.AppBskyFeedGenerator.defs.main.record.properties.avatar,
-  },
-  [lex.ids.AppBskyGraphList]: {
-    avatar: lex.schemaDict.AppBskyGraphList.defs.main.record.properties.avatar,
-  },
-  [lex.ids.AppBskyFeedPost]: {
-    'embed/images/image':
-      lex.schemaDict.AppBskyEmbedImages.defs.image.properties.image,
-    'embed/external/thumb':
-      lex.schemaDict.AppBskyEmbedExternal.defs.external.properties.thumb,
-    'embed/media/images/image':
-      lex.schemaDict.AppBskyEmbedImages.defs.image.properties.image,
-    'embed/media/external/thumb':
-      lex.schemaDict.AppBskyEmbedExternal.defs.external.properties.thumb,
-  },
 }

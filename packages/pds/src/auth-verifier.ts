@@ -14,6 +14,7 @@ import {
   ScopePermissions,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
+import { DidString, ensureValidDid } from '@atproto/syntax'
 import {
   AuthRequiredError,
   Awaitable,
@@ -149,7 +150,7 @@ export class AuthVerifier {
     return {
       credentials: {
         type: 'mod_service',
-        did: payload.iss,
+        did: payload.iss as DidString,
       },
     }
   }
@@ -183,15 +184,15 @@ export class AuthVerifier {
     return async (ctx) => {
       setAuthHeaders(ctx.res)
 
-      const { sub: did, scope } = await this.verifyBearerJwt(
+      const { sub, scope } = await this.verifyBearerJwt(
         ctx.req,
         verifyJwtOptions,
       )
 
-      await this.verifyStatus(did, statusOptions)
+      await this.verifyStatus(sub, statusOptions)
 
       return {
-        credentials: { type: 'access', did, scope },
+        credentials: { type: 'access', did: sub as DidString, scope },
       }
     }
   }
@@ -223,7 +224,7 @@ export class AuthVerifier {
       return {
         credentials: {
           type: 'refresh',
-          did: result.sub,
+          did: result.sub as DidString,
           scope: result.scope,
           tokenId,
         },
@@ -298,7 +299,7 @@ export class AuthVerifier {
     return {
       credentials: {
         type: 'user_service_auth',
-        did: payload.iss,
+        did: payload.iss as DidString,
       },
     }
   }
@@ -382,8 +383,12 @@ export class AuthVerifier {
           throw err
         })
 
-      if (typeof did !== 'string' || !did.startsWith('did:')) {
-        throw new InvalidRequestError('Malformed token', 'InvalidToken')
+      try {
+        ensureValidDid(did)
+      } catch (cause) {
+        throw new InvalidRequestError('Malformed token', 'InvalidToken', {
+          cause,
+        })
       }
 
       await this.verifyStatus(did, verifyStatusOptions)

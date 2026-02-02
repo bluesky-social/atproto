@@ -1,4 +1,4 @@
-import { CID } from 'multiformats'
+import { parseCid } from '@atproto/lex-data'
 import { BlockMap } from '../src'
 import { MST } from '../src/mst'
 import { MemoryBlockstore } from '../src/storage'
@@ -8,7 +8,7 @@ describe('commit proofs', () => {
   for (const fixture of fixtures) {
     it(fixture.comment, async () => {
       const { leafValue, keys, adds, dels } = fixture
-      const leaf = CID.parse(leafValue)
+      const leaf = parseCid(leafValue)
 
       const storage = new MemoryBlockstore()
       let mst = await MST.create(storage)
@@ -31,7 +31,7 @@ describe('commit proofs', () => {
         [...adds, ...dels].map((key) => mst.getCoveringProof(key)),
       )
       const proof = proofs.reduce((acc, cur) => acc.addMap(cur), new BlockMap())
-      const blocksInProof = fixture.blocksInProof.map((cid) => CID.parse(cid))
+      const blocksInProof = fixture.blocksInProof.map(parseCid)
       for (const cid of blocksInProof) {
         expect(proof.has(cid)).toBe(true)
       }

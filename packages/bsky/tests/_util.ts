@@ -1,31 +1,14 @@
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
-import { CID } from 'multiformats/cid'
-import { AppBskyFeedGetPostThread } from '@atproto/api'
-import { lexToJson } from '@atproto/lexicon'
+import { $Typed } from '@atproto/lex'
+import { asCid, parseCid } from '@atproto/lex-data'
+import { lexToJson } from '@atproto/lex-json'
 import { AtUri } from '@atproto/syntax'
-import {
-  isView as isEmbedRecordView,
-  isViewRecord,
-} from '../src/lexicon/types/app/bsky/embed/record'
-import { isView as isEmbedRecordWithMediaView } from '../src/lexicon/types/app/bsky/embed/recordWithMedia'
-import {
-  FeedViewPost,
-  PostView,
-  isPostView,
-  isReasonRepost,
-  isThreadViewPost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
-import {
-  LabelerView,
-  isLabelerView,
-  isLabelerViewDetailed,
-} from '../src/lexicon/types/app/bsky/labeler/defs'
-import { $Typed } from '../src/lexicon/util'
+import { app } from '../src/lexicons'
 
 type ThreadViewPost = Extract<
-  AppBskyFeedGetPostThread.OutputSchema['thread'],
+  app.bsky.feed.getPostThread.OutputBody['thread'],
   { post: { uri: string } }
 >
 
@@ -39,17 +22,18 @@ export function assertIsThreadViewPost(
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
-export const forSnapshot = (obj: unknown) => {
+export const forSnapshot = (obj: any) => {
   const records = { [kTake]: 'record' }
   const collections = { [kTake]: 'collection' }
   const users = { [kTake]: 'user' }
   const cids = { [kTake]: 'cids' }
   const unknown = { [kTake]: 'unknown' }
-  const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
+  const toWalk = lexToJson(obj) // remove any cids
   return mapLeafValues(toWalk, (item) => {
-    const asCid = CID.asCID(item)
-    if (asCid !== null) {
-      return take(cids, asCid.toString())
+    // @TODO this should never happen since lexToJson removes cids
+    const cid = asCid(item)
+    if (cid !== null) {
+      return take(cids, cid.toString())
     }
     if (typeof item !== 'string') {
       return item
@@ -100,7 +84,7 @@ export const forSnapshot = (obj: unknown) => {
     }
     let isCid: boolean
     try {
-      CID.parse(str)
+      parseCid(str)
       isCid = true
     } catch (_err) {
       isCid = false
@@ -114,8 +98,8 @@ export const forSnapshot = (obj: unknown) => {
 
 // Feed testing utils
 
-export const getOriginator = (item: FeedViewPost) => {
-  if (isReasonRepost(item.reason)) {
+export const getOriginator = (item: app.bsky.feed.defs.FeedViewPost) => {
+  if (app.bsky.feed.defs.reasonRepost.$matches(item.reason)) {
     return item.reason.by.did
   } else {
     return item.post.author.did
@@ -195,19 +179,22 @@ export const stripViewer = <T extends { viewer?: unknown }>(
 export function stripViewerFromPost(
   postUnknown: object,
   withType?: false,
-): PostView
+): app.bsky.feed.defs.PostView
 export function stripViewerFromPost(
   postUnknown: object,
   withType: true,
-): $Typed<PostView>
+): $Typed<app.bsky.feed.defs.PostView>
 export function stripViewerFromPost(
   postUnknown: object,
   withType = false,
-): PostView {
-  if ('$type' in postUnknown && !isPostView(postUnknown)) {
+): app.bsky.feed.defs.PostView {
+  if (
+    '$type' in postUnknown &&
+    !app.bsky.feed.defs.postView.$matches(postUnknown)
+  ) {
     throw new Error('Expected post view')
   }
-  const post = postUnknown as PostView
+  const post = postUnknown as app.bsky.feed.defs.PostView
   if (withType) {
     post.$type = 'app.bsky.feed.defs#postView'
   } else {
@@ -229,28 +216,28 @@ export function stripViewerFromPost(
   return stripViewer(post)
 }
 
-const extractRecordEmbed = (embed: PostView['embed']) =>
-  isEmbedRecordView(embed)
-    ? isViewRecord(embed.record)
+const extractRecordEmbed = (embed: app.bsky.feed.defs.PostView['embed']) =>
+  app.bsky.embed.record.view.$matches(embed)
+    ? app.bsky.embed.record.viewRecord.$matches(embed.record)
       ? embed.record
       : undefined
-    : isEmbedRecordWithMediaView(embed)
-      ? isViewRecord(embed.record.record)
+    : app.bsky.embed.recordWithMedia.view.$matches(embed)
+      ? app.bsky.embed.record.viewRecord.$matches(embed.record.record)
         ? embed.record.record
         : undefined
       : undefined
 
 // @NOTE mutates
-export const stripViewerFromThread = <T>(threadUnknown: T): T => {
-  if (!isThreadViewPost(threadUnknown)) return threadUnknown
-
-  const thread = threadUnknown as typeof threadUnknown & ThreadViewPost
+export const stripViewerFromThread = <T>(thread: T): T => {
+  if (!app.bsky.feed.defs.threadViewPost.$matches(thread)) {
+    return thread
+  }
 
   // @ts-expect-error "viewer" does not exist on type 'ThreadViewPost'
   delete thread.viewer
 
   thread.post = stripViewerFromPost(thread.post)
-  if (isThreadViewPost(thread.parent)) {
+  if (app.bsky.feed.defs.threadViewPost.$matches(thread.parent)) {
     thread.parent = stripViewerFromThread(thread.parent)
   }
   if (thread.replies) {
@@ -260,15 +247,17 @@ export const stripViewerFromThread = <T>(threadUnknown: T): T => {
 }
 
 // @NOTE mutates
-export const stripViewerFromLabeler = (serviceUnknown: object): LabelerView => {
+export const stripViewerFromLabeler = (
+  serviceUnknown: object,
+): app.bsky.labeler.defs.LabelerView => {
   if (
     '$type' in serviceUnknown &&
-    !isLabelerView(serviceUnknown) &&
-    !isLabelerViewDetailed(serviceUnknown)
+    !app.bsky.labeler.defs.labelerView.$matches(serviceUnknown) &&
+    !app.bsky.labeler.defs.labelerViewDetailed.$matches(serviceUnknown)
   ) {
     throw new Error('Expected mod service view')
   }
-  const labeler = serviceUnknown as LabelerView
+  const labeler = serviceUnknown as app.bsky.labeler.defs.LabelerView
   labeler.creator = stripViewer(labeler.creator)
   return stripViewer(labeler)
 }
