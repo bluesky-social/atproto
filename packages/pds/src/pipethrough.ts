@@ -57,9 +57,12 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       }
 
       const proxy = await parseProxyInfo(ctx, req, lxm)
-      const aud = serviceAud(proxy)
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+      const authResult = await performAuth({
+        req,
+        res,
+        params: { lxm, aud: serviceProxyTo(proxy) },
+      })
 
       const { credentials } = excludeErrorResult(authResult)
 
@@ -81,7 +84,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, serviceJwtAud(proxy), lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -158,7 +161,6 @@ export async function pipethrough(
   const lxm = parseReqNsid(req)
 
   const proxy = await parseProxyInfo(ctx, req, lxm)
-  const aud = serviceAud(proxy)
 
   const dispatchOptions: Dispatcher.RequestOptions = {
     origin: proxy.serviceInfo.url,
@@ -180,7 +182,7 @@ export async function pipethrough(
       ),
 
       authorization: options?.iss
-        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
+        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? serviceJwtAud(proxy), options.lxm ?? lxm)}`
         : undefined,
     },
 
@@ -211,7 +213,7 @@ export function computeProxyTo(
   if (proxyToHeader) return proxyToHeader
 
   const service = defaultService(ctx, lxm)
-  if (service) return serviceAud(service)
+  if (service) return serviceProxyTo(service)
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -283,8 +285,14 @@ export const parseProxyHeader = async (
   return { serviceId, serviceInfo: { did, url } }
 }
 
-function serviceAud(details: ServiceDetails): string {
+// proxy header or audience for rpc scope check
+export function serviceProxyTo(details: ServiceDetails): string {
   return `${details.serviceInfo.did}#${details.serviceId}`
+}
+
+// audience for service token creation
+export function serviceJwtAud(details: ServiceDetails): string {
+  return details.serviceInfo.did
 }
 
 /**
