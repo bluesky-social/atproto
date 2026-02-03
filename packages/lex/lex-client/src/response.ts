@@ -1,5 +1,6 @@
 import { lexParse } from '@atproto/lex-json'
 import {
+  InferMethodOutput,
   InferMethodOutputBody,
   InferMethodOutputEncoding,
   Procedure,
@@ -18,8 +19,8 @@ export type XrpcResponseBody<M extends Procedure | Query> =
   InferMethodOutputBody<M, Uint8Array>
 
 export type XrpcResponsePayload<M extends Procedure | Query> =
-  InferMethodOutputEncoding<M> extends infer E extends string
-    ? XrpcPayload<XrpcResponseBody<M>, E>
+  InferMethodOutput<M, Uint8Array> extends infer P extends XrpcPayload
+    ? P
     : null
 
 /**

@@ -62,7 +62,7 @@ describe('InferMethodParams', () => {
         l.params({
           cursor: l.optional(l.integer()),
         }),
-        l.unknown(),
+        l.unknownObject(),
       )
 
       type Params = l.InferMethodParams<typeof subscription>
@@ -474,13 +474,14 @@ describe('InferMethodMessage', () => {
       const subscription = l.subscription(
         'com.example.subscribe',
         l.params(),
-        l.unknown(),
+        l.integer(),
       )
 
       type Message = l.InferMethodMessage<typeof subscription>
 
       // @ts-expect-error "unknown" is turned into LexValue
       expectType<Message>(undefined)
+      // @ts-expect-error Not a LexValue
       expectType<Message>({ any: 'value' })
       expectType<Message>(123)
     })
