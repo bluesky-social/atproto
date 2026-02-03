@@ -262,13 +262,10 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
-  const serviceId = proxyTo.slice(hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
 
   // Special case a configured appview, while still proxying correctly any other appview
-  if (
-    ctx.cfg.bskyAppView &&
-    proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
-  ) {
+  if (serviceId === 'bsky_appview' && did === ctx.cfg.bskyAppView?.did) {
     return { serviceId, serviceInfo: ctx.cfg.bskyAppView }
   }
 
