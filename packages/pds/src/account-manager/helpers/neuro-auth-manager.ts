@@ -536,4 +536,19 @@ export class NeuroAuthManager {
       .where('expiresAt', '<', now)
       .execute()
   }
+
+  /**
+   * Cleanup all sessions and timers (for shutdown/tests)
+   */
+  cleanup(): void {
+    // Clear all timeouts to prevent them from firing after shutdown
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.timeout) {
+        clearTimeout(session.timeout)
+      }
+      // Remove all listeners to prevent memory leaks
+      session.emitter.removeAllListeners()
+    }
+    this.sessions.clear()
+  }
 }
