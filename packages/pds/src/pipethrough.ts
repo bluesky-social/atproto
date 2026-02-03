@@ -8,7 +8,11 @@ import {
   omit,
   streamToNodeBuffer,
 } from '@atproto/common'
-import { RpcPermissionMatch } from '@atproto/oauth-scopes'
+import {
+  DidString,
+  RpcPermissionMatch,
+  isValidDid,
+} from '@atproto/oauth-scopes'
 import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
@@ -61,7 +65,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
       const authResult = await performAuth({
         req,
         res,
-        params: { lxm, aud: serviceProxyTo(proxy) },
+        params: { lxm, aud: serviceJwtAud(proxy) },
       })
 
       const { credentials } = excludeErrorResult(authResult)
@@ -208,12 +212,12 @@ export function computeProxyTo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): string {
+): DidString {
   const proxyToHeader = req.header('atproto-proxy')
-  if (proxyToHeader) return proxyToHeader
+  if (proxyToHeader) return parseProxyTo(proxyToHeader).did
 
   const service = defaultService(ctx, lxm)
-  if (service) return serviceProxyTo(service)
+  if (service) return service.serviceInfo.did
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -222,7 +226,10 @@ export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): Promise<{ serviceId: string; serviceInfo: { url: string; did: string } }> {
+): Promise<{
+  serviceId: string
+  serviceInfo: { url: string; did: DidString }
+}> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
@@ -234,13 +241,11 @@ export async function parseProxyInfo(
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
 
-export const parseProxyHeader = async (
-  // Using subset of AppContext for testing purposes
-  ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
-  proxyTo: string,
-): Promise<ServiceDetails> => {
+function parseProxyTo(proxyTo: string): {
+  did: DidString
+  serviceId: string
+} {
   // /!\ Hot path
-
   const hashIndex = proxyTo.indexOf('#')
 
   if (hashIndex === 0) {
@@ -262,7 +267,22 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+  if (!isValidDid(did)) {
+    throw new InvalidRequestError('invalid did in proxy header')
+  }
+
   const serviceId = proxyTo.slice(hashIndex + 1)
+
+  return { did, serviceId }
+}
+
+export const parseProxyHeader = async (
+  // Using subset of AppContext for testing purposes
+  ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
+  proxyTo: string,
+): Promise<ServiceDetails> => {
+  // /!\ Hot path
+  const { did, serviceId } = parseProxyTo(proxyTo)
 
   // Special case a configured appview, while still proxying correctly any other appview
   if (serviceId === 'bsky_appview' && did === ctx.cfg.bskyAppView?.did) {
@@ -288,7 +308,7 @@ export function serviceProxyTo(details: ServiceDetails): string {
 }
 
 // audience for service token creation
-export function serviceJwtAud(details: ServiceDetails): string {
+export function serviceJwtAud(details: ServiceDetails): DidString {
   return details.serviceInfo.did
 }
 
@@ -624,5 +644,5 @@ function logResponseError(this: ServerResponse, err: unknown): void {
 
 type ServiceDetails = {
   serviceId: string
-  serviceInfo: { url: string; did: string }
+  serviceInfo: { url: string; did: DidString }
 }

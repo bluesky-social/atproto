@@ -1,4 +1,5 @@
 import { HOUR, MINUTE } from '@atproto/common'
+import { DidString, NsidString } from '@atproto/syntax'
 import { InvalidRequestError, createServiceJwt } from '@atproto/xrpc-server'
 import {
   AuthScope,
@@ -15,8 +16,11 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.authorization({
       additional: [AuthScope.Takendown],
       authorize: (permissions, ctx) => {
-        const { aud, lxm = '*' } = ctx.params
-        permissions.assertRpc({ aud, lxm })
+        const { aud, lxm } = ctx.params
+        permissions.assertRpc({
+          aud: aud as DidString, // Validated by lexicon
+          lxm: lxm == null ? '*' : (lxm as NsidString),
+        })
       },
     }),
     handler: async ({ params, auth }) => {

@@ -1,5 +1,5 @@
 import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { Nsid } from '@atproto/oauth-scopes'
+import { NsidString } from '@atproto/oauth-scopes'
 import { CachedGetter } from '@atproto-labs/simple-store'
 import { LEXICON_REFRESH_FREQUENCY } from '../constants.js'
 import { LexiconData, LexiconStore } from './lexicon-store.js'
@@ -11,7 +11,7 @@ import { LexiconData, LexiconStore } from './lexicon-store.js'
  *
  * @private
  */
-export class LexiconGetter extends CachedGetter<Nsid, LexiconData> {
+export class LexiconGetter extends CachedGetter<NsidString, LexiconData> {
   constructor(store: LexiconStore, lexResolver: LexResolver) {
     super(
       async (input, options, storedData) => {

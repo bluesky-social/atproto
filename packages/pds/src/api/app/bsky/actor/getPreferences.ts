@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       authorize: (permissions, { req }) => {
         const lxm = ids.AppBskyActorGetPreferences
         const aud = computeProxyTo(ctx, req, lxm)
-        permissions.assertRpc({ aud, lxm })
+        permissions.assertRpc({ lxm, aud })
       },
     }),
     handler: async ({ auth, req }) => {
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
       // @TODO This behavior should not be implemented as part of the XRPC framework
       const lxm = ids.AppBskyActorGetPreferences
       const aud = computeProxyTo(ctx, req, lxm)
-      if (aud !== `${bskyAppView.did}#bsky_appview`) {
+      if (aud !== bskyAppView.did) {
         return pipethrough(ctx, req, { iss: did, aud, lxm })
       }
 

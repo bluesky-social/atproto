@@ -13,6 +13,7 @@ import {
   jsonToLex,
 } from '@atproto/lexicon'
 import { ResponseType } from '@atproto/xrpc'
+import { NsidString } from '../../syntax/dist'
 import { InternalServerError, InvalidRequestError, XRPCError } from './errors'
 import {
   Awaitable,
@@ -383,13 +384,13 @@ export const parseReqNsid = (req: Request | IncomingMessage) =>
 /**
  * Validates and extracts the nsid from an xrpc path
  */
-export const parseUrlNsid = (url: string): string => {
+export const parseUrlNsid = (url: string): NsidString => {
   const nsid = extractUrlNsid(url)
   if (nsid) return nsid
   throw new InvalidRequestError('invalid xrpc path')
 }
 
-export const extractUrlNsid = (url: string): string | undefined => {
+export const extractUrlNsid = (url: string): NsidString | undefined => {
   // /!\ Hot path
 
   if (
@@ -448,5 +449,5 @@ export const extractUrlNsid = (url: string): string | undefined => {
 
   // @TODO check max length of nsid
 
-  return url.slice(startOfNsid, curr)
+  return url.slice(startOfNsid, curr) as NsidString
 }

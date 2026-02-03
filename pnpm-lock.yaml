@@ -1697,9 +1697,6 @@ importers:
 
   packages/oauth/oauth-scopes:
     dependencies:
-      '@atproto/did':
-        specifier: workspace:^
-        version: link:../../did
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../../syntax

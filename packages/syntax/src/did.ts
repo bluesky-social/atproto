@@ -14,9 +14,11 @@
 
 export type DidString<M extends string = string> = `did:${M}:${string}`
 
-export function ensureValidDid<I extends string>(
-  input: I,
-): asserts input is I & DidString {
+export function ensureValidDid<I>(input: I): asserts input is I & DidString {
+  if (typeof input !== 'string') {
+    throw new InvalidDidError('DID must be a string')
+  }
+
   if (!input.startsWith('did:')) {
     throw new InvalidDidError('DID requires "did:" prefix')
   }
@@ -50,9 +52,13 @@ export function ensureValidDid<I extends string>(
 
 const DID_REGEX = /^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/
 
-export function ensureValidDidRegex<I extends string>(
+export function ensureValidDidRegex<I>(
   input: I,
 ): asserts input is I & DidString {
+  if (typeof input !== 'string') {
+    throw new InvalidDidError('DID must be a string')
+  }
+
   // simple regex to enforce most constraints via just regex and length.
   // hand wrote this regex based on above constraints
   if (!DID_REGEX.test(input)) {
@@ -64,8 +70,10 @@ export function ensureValidDidRegex<I extends string>(
   }
 }
 
-export function isValidDid<I extends string>(input: I): input is I & DidString {
-  return input.length <= 2048 && DID_REGEX.test(input)
+export function isValidDid<I>(input: I): input is I & DidString {
+  return (
+    typeof input === 'string' && input.length <= 2048 && DID_REGEX.test(input)
+  )
 }
 
 export class InvalidDidError extends Error {}

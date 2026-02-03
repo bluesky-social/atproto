@@ -1,6 +1,6 @@
 import { LexiconPermissionSet } from '@atproto/lex-document'
 import { LexResolver, LexResolverError } from '@atproto/lex-resolver'
-import { IncludeScope, Nsid } from '@atproto/oauth-scopes'
+import { IncludeScope, NsidString } from '@atproto/oauth-scopes'
 import { LexiconGetter } from './lexicon-getter.js'
 import { LexiconStore } from './lexicon-store.js'
 
@@ -46,20 +46,22 @@ export class LexiconManager {
     return this.getPermissionSets(nsids)
   }
 
-  protected async getPermissionSets(nsids: Set<Nsid>) {
+  protected async getPermissionSets(nsids: Set<NsidString>) {
     return new Map<string, LexiconPermissionSet>(
       await Promise.all(Array.from(nsids, this.getPermissionSetEntry, this)),
     )
   }
 
   protected async getPermissionSetEntry(
-    nsid: Nsid,
-  ): Promise<[nsid: Nsid, permissionSet: LexiconPermissionSet]> {
+    nsid: NsidString,
+  ): Promise<[nsid: NsidString, permissionSet: LexiconPermissionSet]> {
     const permissionSet = await this.getPermissionSet(nsid)
     return [nsid, permissionSet]
   }
 
-  protected async getPermissionSet(nsid: Nsid): Promise<LexiconPermissionSet> {
+  protected async getPermissionSet(
+    nsid: NsidString,
+  ): Promise<LexiconPermissionSet> {
     const { lexicon } = await this.lexiconGetter.get(nsid)
 
     if (!lexicon) {
@@ -96,11 +98,11 @@ function parseScope(scope?: string) {
   }
 }
 
-function extractNsids(includeScopes: IncludeScope[]): Set<Nsid> {
+function extractNsids(includeScopes: IncludeScope[]): Set<NsidString> {
   return new Set(Array.from(includeScopes, extractNsid))
 }
 
-function extractNsid(nsidScope: IncludeScope): Nsid {
+function extractNsid(nsidScope: IncludeScope): NsidString {
   return nsidScope.nsid
 }
 

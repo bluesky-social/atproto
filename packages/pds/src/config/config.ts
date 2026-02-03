@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import path from 'node:path'
 import { DAY, HOUR, SECOND } from '@atproto/common'
 import { BrandingInput, HcaptchaConfig } from '@atproto/oauth-provider'
-import { ensureValidDid } from '@atproto/syntax'
+import { DidString, ensureValidDid, isValidDid } from '@atproto/syntax'
 import { ServerEnvironment } from './env'
 
 // off-config but still from env:
@@ -178,7 +178,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   let bskyAppViewCfg: ServerConfig['bskyAppView'] = null
   if (env.bskyAppViewUrl) {
     assert(
-      env.bskyAppViewDid,
+      isValidDid(env.bskyAppViewDid),
       'if bsky appview service url is configured, must configure its did as well.',
     )
     bskyAppViewCfg = {
@@ -191,9 +191,10 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   let modServiceCfg: ServerConfig['modService'] = null
   if (env.modServiceUrl) {
     assert(
-      env.modServiceDid,
+      isValidDid(env.modServiceDid),
       'if mod service url is configured, must configure its did as well.',
     )
+
     modServiceCfg = {
       url: env.modServiceUrl,
       did: env.modServiceDid,
@@ -203,7 +204,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
   let reportServiceCfg: ServerConfig['reportService'] = null
   if (env.reportServiceUrl) {
     assert(
-      env.reportServiceDid,
+      isValidDid(env.reportServiceDid),
       'if report service url is configured, must configure its did as well.',
     )
     reportServiceCfg = {
@@ -511,16 +512,16 @@ export type RateLimitsConfig =
 
 export type BksyAppViewConfig = {
   url: string
-  did: string
+  did: DidString
   cdnUrlPattern?: string
 }
 
 export type ModServiceConfig = {
   url: string
-  did: string
+  did: DidString
 }
 
 export type ReportServiceConfig = {
   url: string
-  did: string
+  did: DidString
 }

@@ -60,22 +60,18 @@ export class NSID {
   }
 }
 
-export function ensureValidNsid<I extends string>(
-  input: I,
-): asserts input is I & NsidString {
+export function ensureValidNsid<I>(input: I): asserts input is I & NsidString {
   const result = validateNsid(input)
   if (!result.success) throw new InvalidNsidError(result.message)
 }
 
-export function parseNsid(nsid: string): string[] {
+export function parseNsid(nsid: unknown): string[] {
   const result = validateNsid(nsid)
   if (!result.success) throw new InvalidNsidError(result.message)
   return result.value
 }
 
-export function isValidNsid<I extends string>(
-  input: I,
-): input is I & NsidString {
+export function isValidNsid<I>(input: I): input is I & NsidString {
   // Since the regex version is more performant for valid NSIDs, we use it when
   // we don't care about error details.
   return validateNsidRegex(input).success
@@ -88,7 +84,14 @@ type ValidateResult<T> =
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
-export function validateNsid(input: string): ValidateResult<string[]> {
+export function validateNsid(input: unknown): ValidateResult<string[]> {
+  if (typeof input !== 'string') {
+    return {
+      success: false,
+      message: 'NSID must be a string',
+    }
+  }
+
   if (input.length > 253 + 1 + 63) {
     return {
       success: false,
@@ -179,7 +182,9 @@ function isValidIdentifier(v: string) {
  * {@link parseNsid}/{@link NSID.parse} if you need the parsed segments, or
  * {@link isValidNsid} if you just want a boolean.
  */
-export function ensureValidNsidRegex(nsid: string): asserts nsid is NsidString {
+export function ensureValidNsidRegex(
+  nsid: unknown,
+): asserts nsid is NsidString {
   const result = validateNsidRegex(nsid)
   if (!result.success) throw new InvalidNsidError(result.message)
 }
@@ -188,7 +193,14 @@ export function ensureValidNsidRegex(nsid: string): asserts nsid is NsidString {
  * Regexp based validation that behaves identically to the previous code but
  * provides less detailed error messages (while being 20% to 50% faster).
  */
-export function validateNsidRegex(value: string): ValidateResult<NsidString> {
+export function validateNsidRegex(value: unknown): ValidateResult<NsidString> {
+  if (typeof value !== 'string') {
+    return {
+      success: false,
+      message: 'NSID must be a string',
+    }
+  }
+
   if (value.length > 253 + 1 + 63) {
     return {
       success: false,

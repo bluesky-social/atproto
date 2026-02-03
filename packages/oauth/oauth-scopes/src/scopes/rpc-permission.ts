@@ -1,37 +1,36 @@
-import { AtprotoAudience, isAtprotoAudience } from '@atproto/did'
-import { Nsid, isNsid } from '../lib/nsid.js'
+import { DidString, NsidString, isValidDid, isValidNsid } from '@atproto/syntax'
 import { Parser } from '../lib/parser.js'
 import { ResourcePermission } from '../lib/resource-permission.js'
 import { ScopeStringSyntax } from '../lib/syntax-string.js'
 import { NeRoArray, ScopeSyntax, isScopeStringFor } from '../lib/syntax.js'
 
-export { type AtprotoAudience, type Nsid, isAtprotoAudience, isNsid }
+export { type DidString, type NsidString, isValidDid, isValidNsid }
 
-export type LxmParam = '*' | Nsid
+export type LxmParam = '*' | NsidString
 export const isLxmParam = (value: unknown): value is LxmParam =>
-  value === '*' || isNsid(value)
-export type AudParam = '*' | AtprotoAudience
+  value === '*' || isValidNsid(value)
+export type AudParam = '*' | DidString
 export const isAudParam = (value: unknown): value is AudParam =>
-  value === '*' || isAtprotoAudience(value)
+  value === '*' || isValidDid(value)
 
 export type RpcPermissionMatch = {
-  lxm: string
-  aud: string
+  lxm: NsidString | '*'
+  aud: DidString
 }
 
 export class RpcPermission
   implements ResourcePermission<'rpc', RpcPermissionMatch>
 {
   constructor(
-    public readonly aud: '*' | AtprotoAudience,
-    public readonly lxm: NeRoArray<'*' | Nsid>,
+    public readonly aud: '*' | DidString,
+    public readonly lxm: NeRoArray<'*' | NsidString>,
   ) {}
 
   matches(options: RpcPermissionMatch) {
     const { aud, lxm } = this
     return (
       (aud === '*' || aud === options.aud) &&
-      (lxm.includes('*') || (lxm as readonly string[]).includes(options.lxm))
+      (lxm.includes('*') || lxm.includes(options.lxm))
     )
   }
 
@@ -49,7 +48,7 @@ export class RpcPermission
         normalize: (value) =>
           value.length > 1 && value.includes('*')
             ? (['*'] as const)
-            : ([...new Set(value)].sort() as [Nsid, ...Nsid[]]),
+            : ([...new Set(value)].sort() as [NsidString, ...NsidString[]]),
       },
       aud: {
         multiple: false,
@@ -78,8 +77,8 @@ export class RpcPermission
 
   static scopeNeededFor(options: RpcPermissionMatch): string {
     return RpcPermission.parser.format({
-      aud: options.aud as AtprotoAudience,
-      lxm: [options.lxm as Nsid],
+      aud: options.aud,
+      lxm: [options.lxm],
     })
   }
 }

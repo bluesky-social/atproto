@@ -11,3 +11,11 @@ export * from './scopes/identity-permission.js'
 export * from './scopes/include-scope.js'
 export * from './scopes/repo-permission.js'
 export * from './scopes/rpc-permission.js'
+
+// Legacy
+export type {
+  /** @deprecated use {@link NsidString} instead */
+  NsidString as Nsid,
+  /** @deprecated use {@link isValidNsid} instead */
+  isValidNsid as isNsid,
+} from '@atproto/syntax'
