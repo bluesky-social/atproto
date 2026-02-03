@@ -38,9 +38,8 @@ describe('InferMethodParams', () => {
       const procedure = l.procedure(
         'com.example.list',
         l.params({ limit: l.string() }),
-        l.payload(undefined, undefined),
-        l.payload(undefined, undefined),
-        undefined,
+        l.payload(),
+        l.payload(),
       )
 
       type Params = l.InferMethodParams<typeof procedure>
@@ -82,9 +81,8 @@ describe('InferMethodInput', () => {
       const procedure = l.procedure(
         'com.example.create',
         l.params(),
-        l.payload('application/json', l.object({ text: l.string() })),
-        l.payload(undefined, undefined),
-        undefined,
+        l.jsonPayload({ text: l.string() }),
+        l.payload(),
       )
 
       type Input = l.InferMethodInput<typeof procedure, BinaryValue>
@@ -105,8 +103,7 @@ describe('InferMethodInput', () => {
         'com.example.create',
         l.params(),
         l.payload('*/*', undefined),
-        l.payload(undefined, undefined),
-        undefined,
+        l.payload(),
       )
 
       type Input = l.InferMethodInput<typeof procedure, BinaryValue>
@@ -128,9 +125,8 @@ describe('InferMethodInputBody', () => {
       const procedure = l.procedure(
         'com.example.create',
         l.params(),
-        l.payload('application/json', l.object({ text: l.string() })),
-        l.payload(undefined, undefined),
-        undefined,
+        l.jsonPayload({ text: l.string() }),
+        l.payload(),
       )
 
       type InputBody = l.InferMethodInputBody<typeof procedure, BinaryValue>
@@ -147,8 +143,7 @@ describe('InferMethodInputBody', () => {
         'com.example.upload',
         l.params(),
         l.payload('*/*', undefined),
-        l.payload(undefined, undefined),
-        undefined,
+        l.payload(),
       )
 
       type InputBody = l.InferMethodInputBody<typeof procedure, BinaryValue>
@@ -168,9 +163,8 @@ describe('InferMethodInputEncoding', () => {
       const procedure = l.procedure(
         'com.example.create',
         l.params(),
-        l.payload('application/json', l.object({ text: l.string() })),
-        l.payload(undefined, undefined),
-        undefined,
+        l.jsonPayload({ text: l.string() }),
+        l.payload(),
       )
 
       type InputEncoding = l.InferMethodInputEncoding<typeof procedure>
@@ -187,8 +181,7 @@ describe('InferMethodInputEncoding', () => {
         'com.example.upload',
         l.params(),
         l.payload('*/*', undefined),
-        l.payload(undefined, undefined),
-        undefined,
+        l.payload(),
       )
 
       type InputEncoding = l.InferMethodInputEncoding<typeof procedure>
@@ -207,7 +200,7 @@ describe('InferMethodOutput', () => {
       const query = l.query(
         'com.example.query',
         l.params(),
-        l.payload('application/json', l.object({ items: l.array(l.string()) })),
+        l.jsonPayload({ items: l.array(l.string()) }),
       )
 
       type Output = l.InferMethodOutput<typeof query, BinaryValue>
@@ -241,7 +234,7 @@ describe('InferMethodOutput', () => {
       const procedure = l.procedure(
         'com.example.create',
         l.params(),
-        l.payload(undefined, undefined),
+        l.payload(),
         l.payload(
           'application/json',
           l.object({ uri: l.string({ format: 'at-uri' }) }),
@@ -267,7 +260,7 @@ describe('InferMethodOutput', () => {
       const procedure = l.procedure(
         'com.example.export',
         l.params(),
-        l.payload(undefined, undefined),
+        l.payload(),
         l.payload('*/*', undefined),
         undefined,
       )
@@ -338,7 +331,7 @@ describe('InferMethodOutputBody', () => {
       const procedure = l.procedure(
         'com.example.get',
         l.params(),
-        l.payload(undefined, undefined),
+        l.payload(),
         l.payload(
           'application/json',
           l.object({ uri: l.string({ format: 'at-uri' }) }),
@@ -359,7 +352,7 @@ describe('InferMethodOutputBody', () => {
       const procedure = l.procedure(
         'com.example.export',
         l.params(),
-        l.payload(undefined, undefined),
+        l.payload(),
         l.payload('*/*', undefined),
         undefined,
       )
@@ -381,7 +374,7 @@ describe('InferMethodOutputEncoding', () => {
       const query = l.query(
         'com.example.query',
         l.params(),
-        l.payload('application/json', l.object({ data: l.string() })),
+        l.jsonPayload({ data: l.string() }),
       )
 
       type OutputEncoding = l.InferMethodOutputEncoding<typeof query>
@@ -414,8 +407,8 @@ describe('InferMethodOutputEncoding', () => {
       const procedure = l.procedure(
         'com.example.create',
         l.params(),
-        l.payload(undefined, undefined),
-        l.payload('application/json', l.object({ id: l.string() })),
+        l.payload(),
+        l.jsonPayload({ id: l.string() }),
         undefined,
       )
 
@@ -432,7 +425,7 @@ describe('InferMethodOutputEncoding', () => {
       const procedure = l.procedure(
         'com.example.export',
         l.params(),
-        l.payload(undefined, undefined),
+        l.payload(),
         l.payload('*/*', undefined),
         undefined,
       )
