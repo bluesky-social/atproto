@@ -2,6 +2,8 @@ import { LexValue } from '@atproto/lex-data'
 import { Infer, Schema, Validator } from '../core.js'
 import { ObjectSchema, object } from './object.js'
 
+export type { LexValue }
+
 export type InferPayload<TPayload extends Payload, TBinary> =
   TPayload extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
@@ -27,8 +29,16 @@ export type InferPayloadEncoding<TPayload extends Payload> =
     ? SchemaEncodingToDataEncoding<TPayload['encoding']>
     : undefined
 
-export type InferPayloadBody<TPayload extends Payload, TSchema> =
-  InferPayload<TPayload, TSchema> extends { body: infer B } ? B : undefined
+export type InferPayloadBody<TPayload extends Payload, TBinary> =
+  TPayload extends Payload<infer TEncoding, infer TSchema>
+    ? TEncoding extends string
+      ? TSchema extends Schema
+        ? Infer<TSchema>
+        : TEncoding extends `application/json`
+          ? LexValue
+          : TBinary
+      : undefined
+    : never
 
 export type PayloadSchema<E extends string | undefined> = E extends undefined
   ? undefined

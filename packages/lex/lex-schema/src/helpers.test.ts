@@ -91,6 +91,8 @@ describe('InferMethodInput', () => {
       // @ts-expect-error
       expectType<Input>({ encoding: 'application/json', body: { text: 123 } })
       // @ts-expect-error
+      expectType<Input>({ encoding: 'text/plain', body: { text: 'hi' } })
+      // @ts-expect-error
       expectType<Input>({ encoding: 'text/plain', body: 'hello' })
       // @ts-expect-error
       expectType<Input>({ encoding: 'text/plain', body: new Uint8Array() })
@@ -196,6 +198,37 @@ describe('InferMethodInputEncoding', () => {
 
 describe('InferMethodOutput', () => {
   describe('query', () => {
+    test('generic output', () => {
+      const query = l.query(
+        'com.example.query',
+        l.params(),
+        l.payload(),
+      ) as unknown as l.Query
+      const unknownValue = {} as unknown
+      const lexValue = {} as l.LexValue
+
+      type Output = l.InferMethodOutput<typeof query, BinaryValue>
+
+      expectType<Output>(undefined)
+      expectType<Output>({ body: binaryValue, encoding: 'text/plain' })
+      expectType<Output>({ body: lexValue, encoding: 'application/json' })
+
+      expectType<Output>({
+        // @ts-expect-error
+        body: unknownValue,
+        encoding: 'application/octet-stream',
+      })
+
+      class Foo {
+        constructor(readonly field: number = 3) {}
+      }
+      expectType<Output>({
+        // @ts-expect-error
+        body: new Foo(),
+        encoding: 'application/octet-stream',
+      })
+    })
+
     test('with payload schema', () => {
       const query = l.query(
         'com.example.query',
@@ -230,6 +263,39 @@ describe('InferMethodOutput', () => {
   })
 
   describe('procedure', () => {
+    test('generic output', () => {
+      const procedure = l.procedure(
+        'com.example.procedure',
+        l.params(),
+        l.payload(),
+        l.payload(),
+      ) as unknown as l.Procedure
+      const unknownValue = {} as unknown
+      const lexValue = {} as l.LexValue
+
+      type Output = l.InferMethodOutput<typeof procedure, BinaryValue>
+
+      expectType<Output>(undefined)
+      expectType<Output>({ body: binaryValue, encoding: 'text/plain' })
+      expectType<Output>({ body: lexValue, encoding: 'application/json' })
+      expectType<Output>({ body: { foo: 'bar' }, encoding: 'application/json' })
+
+      expectType<Output>({
+        // @ts-expect-error
+        body: unknownValue,
+        encoding: 'application/octet-stream',
+      })
+
+      class Foo {
+        constructor(readonly field: number = 3) {}
+      }
+      expectType<Output>({
+        // @ts-expect-error
+        body: new Foo(),
+        encoding: 'application/octet-stream',
+      })
+    })
+
     test('with payload schema', () => {
       const procedure = l.procedure(
         'com.example.create',
@@ -284,6 +350,27 @@ describe('InferMethodOutput', () => {
 
 describe('InferMethodOutputBody', () => {
   describe('query', () => {
+    test('generic output', () => {
+      const query = l.query(
+        'com.example.query',
+        l.params(),
+        l.payload(),
+      ) as unknown as l.Query
+      const lexValue = {} as l.LexValue
+
+      type OutputBody = l.InferMethodOutputBody<typeof query, BinaryValue>
+
+      expectType<OutputBody>(undefined)
+      expectType<OutputBody>(binaryValue)
+      expectType<OutputBody>(lexValue)
+
+      class Foo {
+        constructor(readonly field: number = 3) {}
+      }
+      // @ts-expect-error
+      expectType<OutputBody>(new Foo())
+    })
+
     test('with payload schema', () => {
       const query = l.query(
         'com.example.query',
