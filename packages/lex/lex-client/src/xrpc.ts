@@ -17,7 +17,6 @@ import { XrpcFailure, asXrpcFailure } from './errors.js'
 import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
 import {
-  XrpcPayload,
   buildAtprotoHeaders,
   isAsyncIterable,
   isBlobLike,
@@ -173,7 +172,7 @@ function xrpcProcedureInput(
   method: Procedure,
   options: CallOptions & { body?: LexValue | BinaryBodyInit },
   encodingHint?: string,
-): null | XrpcPayload<BodyInit> {
+): null | { body: BodyInit; encoding: string } {
   const { input } = method
   const { body } = options
 
@@ -222,7 +221,7 @@ function buildPayload(
   schema: Payload,
   body: undefined | BodyInit,
   encodingHint?: string,
-): null | XrpcPayload<BodyInit> {
+): null | { body: BodyInit; encoding: string } {
   if (schema.encoding === undefined) {
     if (body !== undefined) {
       throw new TypeError(

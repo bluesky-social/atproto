@@ -1,4 +1,11 @@
-import { l } from '@atproto/lex-schema'
+import {
+  ArraySchema,
+  BooleanSchema,
+  IntegerSchema,
+  StringSchema,
+  l,
+} from '@atproto/lex-schema'
+import { LexValue } from '../../lex-data/dist/lex.js'
 import {
   LexiconArray,
   LexiconArrayItems,
@@ -29,7 +36,7 @@ export class LexiconSchemaBuilder {
   static async build(
     indexer: LexiconIndexer,
     fullRef: string,
-  ): Promise<l.Validator<unknown>> {
+  ): Promise<l.Schema<LexValue>> {
     const ctx = new LexiconSchemaBuilder(indexer)
     try {
       const result = await ctx.buildFullRef(fullRef)
@@ -46,7 +53,7 @@ export class LexiconSchemaBuilder {
     const builder = new LexiconSchemaBuilder(indexer)
     const schemas = new Map<
       string,
-      | l.Validator<unknown>
+      | l.Schema<LexValue>
       | l.Query
       | l.Subscription
       | l.Procedure
@@ -85,8 +92,8 @@ export class LexiconSchemaBuilder {
     return this.compileDef(doc, hash)
   })
 
-  protected buildRefGetter(fullRef: string): () => l.Validator<unknown> {
-    let validator: l.Validator<unknown>
+  protected buildRefGetter(fullRef: string): () => l.Schema<LexValue> {
+    let validator: l.Schema<LexValue>
 
     this.#asyncTasks.add(
       this.buildFullRef(fullRef).then((v) => {
@@ -178,7 +185,7 @@ export class LexiconSchemaBuilder {
   protected compileLeaf(
     doc: LexiconDocument,
     def: LexiconArray | LexiconArrayItems,
-  ): l.Validator<unknown> {
+  ): l.Schema<LexValue> {
     if (
       'const' in def &&
       'enum' in def &&
@@ -232,7 +239,7 @@ export class LexiconSchemaBuilder {
       case 'bytes':
         return l.bytes(def)
       case 'unknown':
-        return l.unknown()
+        return l.unknownObject()
       case 'array':
         return l.array(this.compileLeaf(doc, def.items), def)
       default:
@@ -243,7 +250,7 @@ export class LexiconSchemaBuilder {
   protected compileRef(
     doc: LexiconDocument,
     def: LexiconRef | LexiconRefUnion,
-  ) {
+  ): l.Schema<LexValue> {
     switch (def.type) {
       case 'ref':
         return l.ref(this.buildRefGetter(buildFullRef(doc, def.ref)))
@@ -260,18 +267,18 @@ export class LexiconSchemaBuilder {
     }
   }
 
-  protected compileObject(
-    doc: LexiconDocument,
-    def: LexiconObject,
-  ): l.ObjectSchema {
-    const props: Record<string, l.Validator> = {}
+  protected compileObject(doc: LexiconDocument, def: LexiconObject) {
+    const props: Record<string, l.Schema<undefined | LexValue>> = {}
     for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
 
       const isNullable = def.nullable?.includes(key)
       const isRequired = def.required?.includes(key)
 
-      let schema = this.compileLeaf(doc, propDef)
+      let schema: l.Schema<undefined | LexValue> = this.compileLeaf(
+        doc,
+        propDef,
+      )
 
       if (isNullable) {
         schema = l.nullable(schema)
@@ -289,7 +296,7 @@ export class LexiconSchemaBuilder {
   protected compilePayload(
     doc: LexiconDocument,
     def: LexiconPayload | undefined,
-  ): l.Payload {
+  ) {
     return l.payload(
       def?.encoding,
       def?.schema ? this.compilePayloadSchema(doc, def.schema) : undefined,
@@ -306,7 +313,7 @@ export class LexiconSchemaBuilder {
   protected compilePayloadSchema(
     doc: LexiconDocument,
     def: LexiconObject | LexiconRef | LexiconRefUnion,
-  ) {
+  ): l.Schema<LexValue, LexValue> {
     switch (def.type) {
       case 'object':
         return this.compileObject(doc, def)
@@ -324,7 +331,11 @@ export class LexiconSchemaBuilder {
 
       const isRequired = def.required?.includes(paramName)
 
-      const propSchema = this.compileLeaf(doc, paramDef) as l.Validator<l.Param>
+      const propSchema = this.compileLeaf(doc, paramDef) as
+        | StringSchema
+        | BooleanSchema
+        | IntegerSchema
+        | ArraySchema<StringSchema | BooleanSchema | IntegerSchema>
 
       shape[paramName] = isRequired ? propSchema : l.optional(propSchema)
     }

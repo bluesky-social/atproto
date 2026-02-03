@@ -265,6 +265,9 @@ describe('ParamsSchema', () => {
       name: string(),
       age: optional(integer()),
       active: optional(boolean()),
+      tags: optional(array(string())),
+      ids: optional(array(integer())),
+      bools: optional(array(boolean())),
     })
 
     it('parses string parameters', () => {
@@ -310,9 +313,9 @@ describe('ParamsSchema', () => {
     })
 
     it('parses multiple values as array', () => {
-      const urlParams = new URLSearchParams('name=Alice&tag=one&tag=two')
+      const urlParams = new URLSearchParams('name=Alice&tags=one&tags=two')
       const result = schema.fromURLSearchParams(urlParams)
-      expect(result).toEqual({ name: 'Alice', tag: ['one', 'two'] })
+      expect(result).toEqual({ name: 'Alice', tags: ['one', 'two'] })
     })
 
     it('coerces array values correctly', () => {
@@ -345,6 +348,59 @@ describe('ParamsSchema', () => {
         active: true,
         extra: 'value',
       })
+    })
+
+    it('coerces single values into arrays in parse mode', () => {
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['tags', 'tag1'],
+        ]),
+      ).toEqual({ name: 'Alice', tags: ['tag1'] })
+
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['tags', 'true'],
+        ]),
+      ).toEqual({ name: 'Alice', tags: ['true'] })
+
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['tags', '1'],
+        ]),
+      ).toEqual({ name: 'Alice', tags: ['1'] })
+    })
+
+    it('coerces single boolean values into arrays in parse mode', () => {
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', 'true'],
+        ]),
+      ).toEqual({ name: 'Alice', bools: [true] })
+
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', 'false'],
+        ]),
+      ).toEqual({ name: 'Alice', bools: [false] })
+
+      expect(() =>
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', 'notabool'],
+        ]),
+      ).toThrow('Expected boolean value type at $.bools[0] (got string)')
+
+      expect(() =>
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', '2'],
+        ]),
+      ).toThrow('Expected boolean value type at $.bools[0] (got integer)')
     })
   })
 

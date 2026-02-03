@@ -6,7 +6,7 @@ import {
   ResultFailure,
   lexErrorDataSchema,
 } from '@atproto/lex-schema'
-import { XrpcPayload } from './util.js'
+import { XrpcResponsePayload } from './util.js'
 import {
   WWWAuthenticate,
   parseWWWAuthenticateHeader,
@@ -19,8 +19,10 @@ export const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
 export { LexError }
 export type { LexErrorCode, LexErrorData }
 
-export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> =
-  XrpcPayload<LexErrorData<N>, 'application/json'>
+export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> = {
+  body: LexErrorData<N>
+  encoding: 'application/json'
+}
 
 /**
  * All unsuccessful responses should follow a standard error response
@@ -35,10 +37,10 @@ export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> =
  * This function checks whether a given payload matches this schema.
  */
 export function isXrpcErrorPayload(
-  payload: XrpcPayload | null,
+  payload: XrpcResponsePayload | null | undefined,
 ): payload is XrpcErrorPayload {
   return (
-    payload !== null &&
+    payload != null &&
     payload.encoding === 'application/json' &&
     lexErrorDataSchema.matches(payload.body)
   )
@@ -166,7 +168,7 @@ export class XrpcUpstreamError<
   constructor(
     method: M,
     readonly response: Response,
-    readonly payload: XrpcPayload | null,
+    readonly payload: XrpcResponsePayload | null = null,
     message: string = `Unexpected upstream XRPC response`,
     options?: ErrorOptions,
   ) {
