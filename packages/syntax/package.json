@@ -1,6 +1,6 @@
 {
   "name": "@atproto/syntax",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "license": "MIT",
   "description": "Validation for atproto identifiers and formats: DID, handle, NSID, AT URI, etc",
   "keywords": [
@@ -18,12 +18,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest",
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"
   },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  },
   "devDependencies": {
-    "jest": "^28.1.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^4.0.16"
   },
   "browser": {
     "dns/promises": false

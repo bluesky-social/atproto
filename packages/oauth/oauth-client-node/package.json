@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-node",
-  "version": "0.3.15",
+  "version": "0.3.16",
   "license": "MIT",
   "description": "ATPROTO OAuth client for the NodeJS",
   "keywords": [
@@ -31,15 +31,15 @@
     "dist"
   ],
   "dependencies": {
-    "@atproto-labs/did-resolver": "workspace:*",
-    "@atproto-labs/handle-resolver-node": "workspace:*",
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto/did": "workspace:*",
-    "@atproto/jwk": "workspace:*",
-    "@atproto/jwk-jose": "workspace:*",
-    "@atproto/jwk-webcrypto": "workspace:*",
-    "@atproto/oauth-client": "workspace:*",
-    "@atproto/oauth-types": "workspace:*"
+    "@atproto-labs/did-resolver": "workspace:^",
+    "@atproto-labs/handle-resolver-node": "workspace:^",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto/did": "workspace:^",
+    "@atproto/jwk": "workspace:^",
+    "@atproto/jwk-jose": "workspace:^",
+    "@atproto/jwk-webcrypto": "workspace:^",
+    "@atproto/oauth-client": "workspace:^",
+    "@atproto/oauth-types": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/handle-resolver",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "license": "MIT",
   "description": "Isomorphic ATProto handle to DID resolver",
   "keywords": [
@@ -28,9 +28,9 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto-labs/simple-store-memory": "workspace:*",
-    "@atproto/did": "workspace:*",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto-labs/simple-store-memory": "workspace:^",
+    "@atproto/did": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {

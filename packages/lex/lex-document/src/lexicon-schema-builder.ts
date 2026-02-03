@@ -198,13 +198,12 @@ export class LexiconSchemaBuilder {
 
         const result =
           def.const != null
-            ? l.literal(def.const, def)
+            ? l.literal(def.const)
             : def.enum != null
-              ? l.enum(def.enum, def)
+              ? l.enum(def.enum)
               : schema
 
-        if (def.default != null) result.check(def.default)
-        return result
+        return def.default != null ? l.withDefault(result, def.default) : result
       }
       case 'integer': {
         const schema = l.integer(def)
@@ -214,25 +213,22 @@ export class LexiconSchemaBuilder {
 
         const result =
           def.const != null
-            ? l.literal(def.const, def)
+            ? l.literal(def.const)
             : def.enum != null
-              ? l.enum(def.enum, def)
+              ? l.enum(def.enum)
               : schema
 
-        if (def.default != null) result.check(def.default)
-        return result
+        return def.default != null ? l.withDefault(result, def.default) : result
       }
       case 'boolean': {
-        const result =
-          def.const != null ? l.literal(def.const, def) : l.boolean(def)
+        const result = def.const != null ? l.literal(def.const) : l.boolean()
 
-        if (def.default != null) result.check(def.default)
-        return result
+        return def.default != null ? l.withDefault(result, def.default) : result
       }
       case 'blob':
         return l.blob(def)
       case 'cid-link':
-        return l.cidLink()
+        return l.cid()
       case 'bytes':
         return l.bytes(def)
       case 'unknown':
@@ -322,21 +318,18 @@ export class LexiconSchemaBuilder {
   protected compileParams(doc: LexiconDocument, def?: LexiconParameters) {
     if (!def) return l.params()
 
-    const props: Record<string, l.Validator> = {}
-    for (const [key, propDef] of Object.entries(def.properties)) {
-      if (propDef === undefined) continue
+    const shape: l.ParamsSchemaShape = {}
+    for (const [paramName, paramDef] of Object.entries(def.properties)) {
+      if (paramDef === undefined) continue
 
-      const isRequired = def.required?.includes(key)
+      const isRequired = def.required?.includes(paramName)
 
-      let schema = this.compileLeaf(doc, propDef)
+      const propSchema = this.compileLeaf(doc, paramDef) as l.Validator<l.Param>
 
-      if (!isRequired) {
-        schema = l.optional(schema)
-      }
-
-      props[key] = schema
+      shape[paramName] = isRequired ? propSchema : l.optional(propSchema)
     }
-    return l.params(props)
+
+    return l.params(shape)
   }
 }
 

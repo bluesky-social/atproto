@@ -81,7 +81,14 @@ export function isJsKeyword(word: string) {
   return JS_KEYWORDS.has(word)
 }
 
-const WELL_KNOWN_GLOBALS = new Set([
+// Only important to list var/type names that are likely to be used in the
+// generated code files.
+const GLOBAL_IDENTIFIERS = new Set([
+  // import { l } from "@atproto/lex-schema"
+  'l',
+  // JS Globals
+  'self',
+  'globalThis',
   // ESM
   'import',
   // CommonJS
@@ -90,20 +97,7 @@ const WELL_KNOWN_GLOBALS = new Set([
   'require',
   'module',
   'exports',
-  // Jest
-  'afterAll',
-  'afterEach',
-  'assert',
-  'beforeAll',
-  'beforeEach',
-  'describe',
-  'expect',
-  'it',
-  'test',
-])
-
-const TYPE_SCRIPT_GLOBALS = new Set([
-  // Primitives
+  // TS Primitives
   'any',
   'bigint',
   'boolean',
@@ -117,7 +111,7 @@ const TYPE_SCRIPT_GLOBALS = new Set([
   'undefined',
   'unknown',
   'void',
-  // Utility types
+  // TS Utility types
   'Record',
   'Partial',
   'Readonly',
@@ -136,40 +130,21 @@ const TYPE_SCRIPT_GLOBALS = new Set([
 ])
 
 export function isGlobalIdentifier(word: string) {
+  return GLOBAL_IDENTIFIERS.has(word)
+}
+
+export function isSafeLocalIdentifier(name: string) {
+  return !isGlobalIdentifier(name) && isValidJsIdentifier(name)
+}
+
+export function isValidJsIdentifier(name: string) {
   return (
-    // Should cover most common globals
-    word in globalThis ||
-    WELL_KNOWN_GLOBALS.has(word) ||
-    TYPE_SCRIPT_GLOBALS.has(word)
+    name.length > 0 &&
+    !isJsKeyword(name) &&
+    /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
   )
 }
 
-export function isReservedWord(word: string) {
-  return isJsKeyword(word) || isGlobalIdentifier(word)
-}
-
-type SafeIdentifierOptions = {
-  /** Defaults to `false` */
-  allowGlobal?: boolean
-}
-
-export function isSafeIdentifier(
-  name: string,
-  options?: SafeIdentifierOptions,
-) {
-  if (!options?.allowGlobal && isGlobalIdentifier(name)) {
-    return false
-  }
-
-  return isValidJsIdentifier(name)
-}
-
-function isValidJsIdentifier(name: string) {
-  return !isJsKeyword(name) && /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(name)
-}
-
 export function asNamespaceExport(name: string) {
-  return isSafeIdentifier(name, { allowGlobal: true })
-    ? name
-    : JSON.stringify(name)
+  return isValidJsIdentifier(name) ? name : JSON.stringify(name)
 }

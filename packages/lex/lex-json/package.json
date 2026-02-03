@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-json",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in JSON format",
   "keywords": [
@@ -38,7 +38,7 @@
     }
   },
   "dependencies": {
-    "@atproto/lex-data": "workspace:*",
+    "@atproto/lex-data": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

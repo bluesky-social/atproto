@@ -9,7 +9,7 @@ import {
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
 import { SkeletonTrend } from '../../../../lexicon/types/app/bsky/unspecced/defs'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrends'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -33,11 +33,10 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getTrends(
+      const result = await getTrends(
         {
           ...params,
-          viewer: viewer ?? undefined,
-          hydrateCtx: hydrateCtx.copy({ viewer }),
+          hydrateCtx,
           headers,
         },
         ctx,
@@ -56,7 +55,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
     const res = await ctx.topicsAgent.app.bsky.unspecced.getTrendsSkeleton(
       {
         limit: params.limit,
-        viewer: params.viewer,
+        viewer: params.hydrateCtx.viewer ?? undefined,
       },
       {
         headers: params.headers,
@@ -78,8 +77,9 @@ const hydration = async (
   }
   dids = dedupeStrs(dids)
   const pairs: Map<string, string[]> = new Map()
-  if (params.viewer) {
-    pairs.set(params.viewer, dids)
+  const viewer = params.hydrateCtx.viewer
+  if (viewer) {
+    pairs.set(viewer, dids)
   }
   const [profileState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateProfilesBasic(dids, params.hydrateCtx),
@@ -91,12 +91,12 @@ const hydration = async (
 
 const noBlocks = (input: RulesFnInput<Context, Params, SkeletonState>) => {
   const { skeleton, params, hydration } = input
-
-  if (!params.viewer) {
+  const viewer = params.hydrateCtx.viewer
+  if (!viewer) {
     return skeleton
   }
 
-  const blocks = hydration.bidirectionalBlocks?.get(params.viewer)
+  const blocks = hydration.bidirectionalBlocks?.get(viewer)
   const filteredSkeleton: SkeletonState = {
     trends: skeleton.trends.map((t) => ({
       ...t,

@@ -1,5 +1,49 @@
 # @atproto/oauth-provider
 
+## 0.15.6
+
+### Patch Changes
+
+- Updated dependencies [[`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/did@0.3.0
+  - @atproto/oauth-scopes@0.3.1
+  - @atproto/oauth-types@0.6.2
+  - @atproto/lex-resolver@0.0.12
+  - @atproto/oauth-provider-ui@0.4.2
+  - @atproto/oauth-provider-api@0.3.7
+  - @atproto/oauth-provider-frontend@0.2.8
+
+## 0.15.5
+
+### Patch Changes
+
+- [#4569](https://github.com/bluesky-social/atproto/pull/4569) [`fa4ef5e`](https://github.com/bluesky-social/atproto/commit/fa4ef5e8150b6ae7fabdc90b847370481e1a6b33) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix oauth response when using `prompt=select_account` and no session are available
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/lex-document@0.0.11
+  - @atproto/lex-resolver@0.0.11
+  - @atproto/oauth-provider-frontend@0.2.7
+  - @atproto/common@0.5.9
+
+## 0.15.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.5.8
+  - @atproto/lex-document@0.0.10
+  - @atproto/lex-resolver@0.0.10
+
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.5.7
+  - @atproto/lex-document@0.0.9
+  - @atproto/lex-resolver@0.0.9
+
 ## 0.15.2
 
 ### Patch Changes

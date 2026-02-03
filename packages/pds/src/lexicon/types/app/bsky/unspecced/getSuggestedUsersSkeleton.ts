@@ -25,6 +25,8 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   dids: string[]
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recId?: string
 }
 
 export type HandlerInput = void

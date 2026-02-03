@@ -88,8 +88,6 @@ describe('file uploads', () => {
     expect(found?.mimeType).toBe('image/jpeg')
     expect(found?.size).toBe(smallFile.length)
     expect(found?.tempKey).toBeDefined()
-    expect(found?.width).toBe(87)
-    expect(found?.height).toBe(150)
     const hasKey = await ctx.blobstore(alice).hasTemp(found?.tempKey as string)
     expect(hasKey).toBeTruthy()
   })
@@ -230,8 +228,6 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/jpeg')
-    expect(found?.width).toBe(1280)
-    expect(found?.height).toBe(742)
   })
 
   it('handles pngs', async () => {
@@ -248,8 +244,6 @@ describe('file uploads', () => {
       .executeTakeFirst()
 
     expect(found?.mimeType).toBe('image/png')
-    expect(found?.width).toBe(554)
-    expect(found?.height).toBe(532)
   })
 
   it('handles unknown mimetypes', async () => {

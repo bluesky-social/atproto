@@ -5,6 +5,7 @@ import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile
 import { Record as StatusRecord } from '../lexicon/types/app/bsky/actor/status'
 import { Record as NotificationDeclarationRecord } from '../lexicon/types/app/bsky/notification/declaration'
 import { Record as ChatDeclarationRecord } from '../lexicon/types/chat/bsky/actor/declaration'
+import { Record as GermDeclarationRecord } from '../lexicon/types/com/germnetwork/declaration'
 import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   HydrationMap,
@@ -37,6 +38,7 @@ export type Actor = {
   trustedVerifier?: boolean
   verifications: VerificationHydrationState[]
   status?: RecordInfo<StatusRecord>
+  germ?: RecordInfo<GermDeclarationRecord>
   allowActivitySubscriptionsFrom: AllowActivitySubscriptions
   /**
    * Debug information for internal development
@@ -62,10 +64,12 @@ export type VerificationMetaRequired = Required<VerificationMeta>
 export type Actors = HydrationMap<Actor>
 
 export type ChatDeclaration = RecordInfo<ChatDeclarationRecord>
-
 export type ChatDeclarations = HydrationMap<ChatDeclaration>
-export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
 
+export type GermDeclaration = RecordInfo<GermDeclarationRecord>
+export type GermDeclarations = HydrationMap<GermDeclaration>
+
+export type NotificationDeclaration = RecordInfo<NotificationDeclarationRecord>
 export type NotificationDeclarations = HydrationMap<NotificationDeclaration>
 
 export type Status = RecordInfo<StatusRecord>
@@ -184,7 +188,18 @@ export class ActorHydrator {
         : undefined
 
       const status = actor.statusRecord
-        ? parseRecord<StatusRecord>(actor.statusRecord, includeTakedowns)
+        ? parseRecord<StatusRecord>(
+            actor.statusRecord,
+            /*
+             * Always true, we filter this out in the `Views.status()`. If we
+             * ever remove that filter, we'll want to reinstate this here.
+             */
+            true,
+          )
+        : undefined
+
+      const germ = actor.germRecord
+        ? parseRecord<GermDeclarationRecord>(actor.germRecord, includeTakedowns)
         : undefined
 
       const verifications = mapDefined(
@@ -245,6 +260,7 @@ export class ActorHydrator {
         trustedVerifier: actor.trustedVerifier,
         verifications,
         status: status,
+        germ: germ,
         allowActivitySubscriptionsFrom: allowActivitySubscriptionsFrom(
           actor.allowActivitySubscriptionsFrom,
         ),
@@ -266,6 +282,21 @@ export class ActorHydrator {
       )
       return acc.set(uri, record ?? null)
     }, new HydrationMap<ChatDeclaration>())
+  }
+
+  async getGermDeclarations(
+    uris: string[],
+    includeTakedowns = false,
+  ): Promise<GermDeclarations> {
+    if (!uris.length) return new HydrationMap<GermDeclaration>()
+    const res = await this.dataplane.getGermDeclarationRecords({ uris })
+    return uris.reduce((acc, uri, i) => {
+      const record = parseRecord<GermDeclarationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      return acc.set(uri, record ?? null)
+    }, new HydrationMap<GermDeclaration>())
   }
 
   async getNotificationDeclarations(

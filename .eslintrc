@@ -22,7 +22,7 @@
     "import/extensions": ["off", "ignorePackages"],
     "import/export": "off",
     "import/namespace": "off",
-    "import/no-deprecated": "error",
+    "import/no-deprecated": "off",
     "import/no-absolute-path": "error",
     "import/no-dynamic-require": "error",
     "import/no-self-import": "error",

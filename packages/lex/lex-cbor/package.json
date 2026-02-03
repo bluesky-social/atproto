@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cbor",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in CBOR format",
   "keywords": [
@@ -37,13 +37,12 @@
     }
   },
   "dependencies": {
-    "@atproto/lex-data": "workspace:*",
-    "multiformats": "^9.9.0",
+    "@atproto/lex-data": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@atproto/lex-json": "workspace:*",
-    "cborg": "^4.3.0",
+    "@atproto/lex-json": "workspace:^",
+    "cborg": "^4.5.8",
     "vite": "^6.2.0",
     "vitest": "^4.0.16"
   },

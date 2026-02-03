@@ -1,16 +1,17 @@
 import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import { Payload } from './util.js'
+import { XrpcPayload } from './util.js'
 
-export type LexRpcErrorPayload<N extends LexErrorCode = LexErrorCode> = Payload<
-  LexErrorData<N>,
-  'application/json'
->
+export { LexError }
+export type { LexErrorCode, LexErrorData }
 
-export class LexRpcError<
+export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> =
+  XrpcPayload<LexErrorData<N>, 'application/json'>
+
+export class XrpcError<
   N extends LexErrorCode = LexErrorCode,
 > extends LexError<N> {
-  name = 'LexRpcError'
+  name = 'XrpcError'
 
   constructor(
     error: N,
@@ -33,9 +34,9 @@ export class LexRpcError<
  *
  * This function checks whether a given payload matches this schema.
  */
-export function isLexRpcErrorPayload(
-  payload: Payload | null,
-): payload is LexRpcErrorPayload {
+export function isXrpcErrorPayload(
+  payload: XrpcPayload | null,
+): payload is XrpcErrorPayload {
   return (
     payload !== null &&
     payload.encoding === 'application/json' &&
@@ -56,20 +57,20 @@ type LexRpcFailureResult<N extends LexErrorCode, E> = l.ResultFailure<E> & {
  * Class used to represent an HTTP request that resulted in an XRPC method error
  * That is, a non-2xx response with a valid XRPC error payload.
  */
-export class LexRpcResponseError<
+export class XrpcResponseError<
     M extends l.Procedure | l.Query = l.Procedure | l.Query,
     N extends LexErrorCode = LexErrorCode,
   >
-  extends LexRpcError<N>
-  implements LexRpcFailureResult<N, LexRpcResponseError<M, N>>
+  extends XrpcError<N>
+  implements LexRpcFailureResult<N, XrpcResponseError<M, N>>
 {
-  name = 'LexRpcResponseError'
+  name = 'XrpcResponseError'
 
   constructor(
     readonly method: M,
     readonly status: number,
     readonly headers: Headers,
-    readonly payload: LexRpcErrorPayload<N>,
+    readonly payload: XrpcErrorPayload<N>,
     options?: ErrorOptions,
   ) {
     const { error, message } = payload.body
@@ -89,7 +90,7 @@ export class LexRpcResponseError<
   matchesSchema(): this is M extends {
     errors: readonly (infer E extends string)[]
   }
-    ? LexRpcResponseError<M, E>
+    ? XrpcResponseError<M, E>
     : never {
     return this.method.errors?.includes(this.error) ?? false
   }
@@ -114,28 +115,28 @@ export class LexRpcResponseError<
 /**
  * This class represents an invalid XRPC response from the server.
  */
-export class LexRpcUpstreamError<
+export class XrpcUpstreamError<
     N extends 'InvalidResponse' | 'UpstreamFailure' =
       | 'InvalidResponse'
       | 'UpstreamFailure',
   >
-  extends LexRpcError<N>
-  implements LexRpcFailureResult<N, LexRpcUpstreamError<N>>
+  extends XrpcError<N>
+  implements LexRpcFailureResult<N, XrpcUpstreamError<N>>
 {
-  name = 'LexRpcUpstreamError' as const
+  name = 'XrpcUpstreamError' as const
 
   // For debugging purposes, we keep the response details here
   readonly response: {
     status: number
     headers: Headers
-    payload: Payload | null
+    payload: XrpcPayload | null
   }
 
   constructor(
     error: N,
     message: string,
     response: { status: number; headers: Headers },
-    payload: Payload | null,
+    payload: XrpcPayload | null,
     options?: ErrorOptions,
   ) {
     super(error, message, { cause: options?.cause })
@@ -166,11 +167,11 @@ export class LexRpcUpstreamError<
   }
 }
 
-export class LexRpcUnexpectedError
-  extends LexRpcError<'InternalServerError'>
+export class XrpcUnexpectedError
+  extends XrpcError<'InternalServerError'>
   implements LexRpcFailureResult<'InternalServerError', unknown>
 {
-  name = 'LexRpcUnexpectedError' as const
+  name = 'XrpcUnexpectedError' as const
 
   protected constructor(message: string, options: Required<ErrorOptions>) {
     super('InternalServerError', message, options)
@@ -199,8 +200,8 @@ export class LexRpcUnexpectedError
     message: string = cause instanceof LexError
       ? cause.message
       : 'XRPC request failed',
-  ): LexRpcUnexpectedError {
-    if (cause instanceof LexRpcUnexpectedError) return cause
-    return new LexRpcUnexpectedError(message, { cause })
+  ): XrpcUnexpectedError {
+    if (cause instanceof XrpcUnexpectedError) return cause
+    return new XrpcUnexpectedError(message, { cause })
   }
 }

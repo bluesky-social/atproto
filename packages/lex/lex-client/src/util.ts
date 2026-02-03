@@ -1,6 +1,6 @@
 import { DidString } from '@atproto/lex-schema'
 
-export type Payload<B = unknown, E extends string = string> = {
+export type XrpcPayload<B = unknown, E extends string = string> = {
   body: B
   encoding: E
 }

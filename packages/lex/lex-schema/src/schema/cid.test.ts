@@ -1,45 +1,46 @@
 import { describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
-import { CidSchema } from './cid.js'
+import { cid } from './cid.js'
+
+const cborCid = parseCid(
+  'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+  { flavor: 'cbor' },
+)
+
+const rawCid = parseCid(
+  'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4',
+  { flavor: 'raw' },
+)
+
+const v0Cid = parseCid('QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB')
+
+// Using git-raw codec (0x78) instead of DAG-CBOR or raw binary
+const gitRawCid = parseCid(
+  'bafybeigvgzoolc3drupxhlevdp2ugqcrbcsqfmcek2zxiw5wctk3xjpjwy',
+)
+
+// Using SHA-512 (0x13) instead of SHA-256
+const sha512Cid = parseCid(
+  'bafybgqfcn3rz4mdzywp2jb6mjvpdq24rxjvbmdcmizrjdgx2ujjpvj4kxf4d62ywrzm6njk44cxhha4pj3bkvqz2esfgrm7mdkdcqcxjibf7c',
+)
 
 describe('CidSchema', () => {
   describe('default mode (non-strict)', () => {
-    const schema = new CidSchema()
+    const schema = cid({})
 
     it('validates CID v1 with DAG-CBOR codec and SHA-256', () => {
-      const cid = parseCid(
-        'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-      )
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(cborCid)
       expect(result.success).toBe(true)
     })
 
     it('validates CID v1 with raw binary codec', () => {
-      const cid = parseCid(
-        'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4',
-      )
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(rawCid)
       expect(result.success).toBe(true)
     })
 
     it('validates CID v0', () => {
-      const cid = parseCid('QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB')
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(v0Cid)
       expect(result.success).toBe(true)
-    })
-
-    it('validates multiple different CIDs', () => {
-      const cids = [
-        parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
-        parseCid('bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q'),
-        parseCid('bafyreiaizynclnqiolq7byfpjjtgqzn4sfrsgn7z2hhf6bo4utdwkin7ke'),
-        parseCid('bafyreifd4w4tcr5tluxz7osjtnofffvtsmgdqcfrfi6evjde4pl27lrjpy'),
-      ]
-
-      for (const cid of cids) {
-        const result = schema.safeParse(cid)
-        expect(result.success).toBe(true)
-      }
     })
 
     it('rejects non-CID objects', () => {
@@ -48,9 +49,7 @@ describe('CidSchema', () => {
     })
 
     it('rejects strings', () => {
-      const result = schema.safeParse(
-        'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-      )
+      const result = schema.safeParse(cborCid.toString())
       expect(result.success).toBe(false)
     })
 
@@ -81,45 +80,30 @@ describe('CidSchema', () => {
   })
 
   describe('strict mode', () => {
-    const schema = new CidSchema({ strict: true })
+    const schema = cid({ flavor: 'dasl' })
 
     it('validates CID v1 with DAG-CBOR codec and SHA-256', () => {
-      const cid = parseCid(
-        'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-      )
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(cborCid)
       expect(result.success).toBe(true)
     })
 
     it('validates CID v1 with raw binary codec and SHA-256', () => {
-      const cid = parseCid(
-        'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4',
-      )
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(rawCid)
       expect(result.success).toBe(true)
     })
 
     it('rejects CID v0', () => {
-      const cid = parseCid('QmPZ9gcCEpqKTo6aq61g2nXGUhM4iCL3ewB6LDXZCtioEB')
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(v0Cid)
       expect(result.success).toBe(false)
     })
 
     it('rejects CID v1 with non-standard codec', () => {
-      // Using git-raw codec (0x78) instead of DAG-CBOR or raw binary
-      const cid = parseCid(
-        'bafybeigvgzoolc3drupxhlevdp2ugqcrbcsqfmcek2zxiw5wctk3xjpjwy',
-      )
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(gitRawCid)
       expect(result.success).toBe(false)
     })
 
     it('rejects CID v1 with non-SHA-256 hash', () => {
-      // Using SHA-512 (0x13) instead of SHA-256
-      const cid = parseCid(
-        'bafybgqfcn3rz4mdzywp2jb6mjvpdq24rxjvbmdcmizrjdgx2ujjpvj4kxf4d62ywrzm6njk44cxhha4pj3bkvqz2esfgrm7mdkdcqcxjibf7c',
-      )
-      const result = schema.safeParse(cid)
+      const result = schema.safeParse(sha512Cid)
       expect(result.success).toBe(false)
     })
 
@@ -129,28 +113,13 @@ describe('CidSchema', () => {
     })
 
     it('rejects strings', () => {
-      const result = schema.safeParse(
-        'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
-      )
+      const result = schema.safeParse(cborCid.toString())
       expect(result.success).toBe(false)
     })
 
     it('rejects null', () => {
       const result = schema.safeParse(null)
       expect(result.success).toBe(false)
-    })
-  })
-
-  describe('options', () => {
-    it('stores the provided options', () => {
-      const options = { strict: true }
-      const schema = new CidSchema(options)
-      expect(schema.options).toEqual(options)
-    })
-
-    it('defaults to empty options', () => {
-      const schema = new CidSchema()
-      expect(schema.options).toEqual({})
     })
   })
 })

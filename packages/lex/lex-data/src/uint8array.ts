@@ -28,8 +28,8 @@ export const toBase64: (
   alphabet?: Base64Alphabet,
 ) => string =
   /* v8 ignore next -- @preserve */ toBase64Native ??
-  /* v8 ignore next -- @preserve */ toBase64Node ??
-  /* v8 ignore next -- @preserve */ toBase64Ponyfill
+  toBase64Node ??
+  toBase64Ponyfill
 
 /**
  * Decodes a base64 string into a Uint8Array. This function supports both padded
@@ -43,8 +43,8 @@ export const fromBase64: (
   alphabet?: Base64Alphabet,
 ) => Uint8Array =
   /* v8 ignore next -- @preserve */ fromBase64Native ??
-  /* v8 ignore next -- @preserve */ fromBase64Node ??
-  /* v8 ignore next -- @preserve */ fromBase64Ponyfill
+  fromBase64Node ??
+  fromBase64Ponyfill
 
 /* v8 ignore next -- @preserve */
 if (toBase64 === toBase64Ponyfill || fromBase64 === fromBase64Ponyfill) {
@@ -52,6 +52,14 @@ if (toBase64 === toBase64Ponyfill || fromBase64 === fromBase64Ponyfill) {
   console.warn(
     '[@atproto/lex-data]: Uint8Array.fromBase64 / Uint8Array.prototype.toBase64 not available in this environment. Falling back to ponyfill implementation.',
   )
+}
+
+export function ifUint8Array(input: unknown): Uint8Array | undefined {
+  if (input instanceof Uint8Array) {
+    return input
+  }
+
+  return undefined
 }
 
 /**
@@ -94,5 +102,4 @@ export function ui8Equals(a: Uint8Array, b: Uint8Array): boolean {
 }
 
 export const ui8Concat =
-  /* v8 ignore next -- @preserve */ ui8ConcatNode ??
-  /* v8 ignore next -- @preserve */ ui8ConcatPonyfill
+  /* v8 ignore next -- @preserve */ ui8ConcatNode ?? ui8ConcatPonyfill

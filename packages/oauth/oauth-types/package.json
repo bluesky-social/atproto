@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-types",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "MIT",
   "description": "OAuth typing & validation library",
   "keywords": [
@@ -25,8 +25,8 @@
     }
   },
   "dependencies": {
-    "@atproto/did": "workspace:*",
-    "@atproto/jwk": "workspace:*",
+    "@atproto/did": "workspace:^",
+    "@atproto/jwk": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {

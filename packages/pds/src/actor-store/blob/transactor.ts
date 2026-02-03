@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import crypto from 'node:crypto'
 import stream from 'node:stream'
 import bytes from 'bytes'
@@ -17,7 +15,6 @@ import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { BackgroundQueue } from '../../background'
-import * as img from '../../image'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { blobStoreLogger as log } from '../../logger'
 import { PreparedBlobRef, PreparedWrite } from '../../repo/types'
@@ -29,8 +26,6 @@ export type BlobMetadata = {
   size: number
   cid: CID
   mimeType: string
-  width: number | null
-  height: number | null
 }
 
 export class BlobTransactor extends BlobReader {
@@ -61,11 +56,10 @@ export class BlobTransactor extends BlobReader {
     userSuggestedMime: string,
     blobStream: stream.Readable,
   ): Promise<BlobMetadata> {
-    const [tempKey, size, sha256, imgInfo, sniffedMime] = await Promise.all([
+    const [tempKey, size, sha256, sniffedMime] = await Promise.all([
       this.blobstore.putTemp(cloneStream(blobStream)),
       streamSize(cloneStream(blobStream)),
       sha256Stream(cloneStream(blobStream)),
-      img.maybeGetInfo(cloneStream(blobStream)),
       mimeTypeFromStream(cloneStream(blobStream)),
     ])
 
@@ -77,13 +71,11 @@ export class BlobTransactor extends BlobReader {
       size,
       cid,
       mimeType,
-      width: imgInfo?.width ?? null,
-      height: imgInfo?.height ?? null,
     }
   }
 
   async trackUntetheredBlob(metadata: BlobMetadata) {
-    const { tempKey, size, cid, mimeType, width, height } = metadata
+    const { tempKey, size, cid, mimeType } = metadata
     const found = await this.db.db
       .selectFrom('blob')
       .selectAll()
@@ -100,8 +92,6 @@ export class BlobTransactor extends BlobReader {
         mimeType,
         size,
         tempKey,
-        width,
-        height,
         createdAt: new Date().toISOString(),
       })
       .onConflict((oc) =>

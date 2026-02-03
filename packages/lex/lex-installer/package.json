@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-installer",
-  "version": "0.0.9",
+  "version": "0.0.13",
   "license": "MIT",
   "description": "Lexicon document packet manager for AT Lexicons",
   "keywords": [
@@ -36,13 +36,13 @@
     }
   },
   "dependencies": {
-    "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-cbor": "workspace:*",
-    "@atproto/lex-data": "workspace:*",
-    "@atproto/lex-document": "workspace:*",
-    "@atproto/lex-resolver": "workspace:*",
-    "@atproto/lex-schema": "workspace:*",
-    "@atproto/syntax": "workspace:*",
+    "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-document": "workspace:^",
+    "@atproto/lex-resolver": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 import { Infer, Main, RecordSchema, getMain } from '@atproto/lex'
-import { AtUri } from '@atproto/syntax'
+import { AtUriString, NsidString } from '@atproto/syntax'
 import { HandlerOpts, TapHandler } from './channel'
 import { IdentityEvent, RecordEvent, TapEvent } from './types'
 
@@ -73,12 +73,15 @@ export class LexIndexer implements TapHandler {
   private identityHandler: IdentityHandler | undefined
   private errorHandler: ErrorHandler | undefined
 
-  private handlerKey(collection: string, action: string): string {
+  private handlerKey(
+    collection: NsidString,
+    action: RecordEvent['action'],
+  ): string {
     return `${collection}:${action}`
   }
 
   private register<const T extends RecordSchema>(
-    action: string,
+    action: RecordEvent['action'],
     ns: Main<T>,
     handler: RecordHandler<Infer<T>>,
   ): this {
@@ -117,7 +120,8 @@ export class LexIndexer implements TapHandler {
     handler: PutHandler<Infer<T>>,
   ): this {
     this.register('create', ns, handler)
-    return this.register('update', ns, handler)
+    this.register('update', ns, handler)
+    return this
   }
 
   other(fn: UntypedHandler): this {
@@ -167,10 +171,12 @@ export class LexIndexer implements TapHandler {
     }
 
     if (action === 'create' || action === 'update') {
-      const match = registered.schema.matches(evt.record)
-      if (!match) {
-        const uriStr = AtUri.make(evt.did, evt.collection, evt.rkey).toString()
-        throw new Error(`Record validation failed for ${uriStr}`)
+      const match = registered.schema.safeValidate(evt.record)
+      if (!match.success) {
+        const uriStr: AtUriString = `at://${evt.did}/${evt.collection}/${evt.rkey}`
+        throw new Error(`Record validation failed for ${uriStr}`, {
+          cause: match.reason,
+        })
       }
     }
 

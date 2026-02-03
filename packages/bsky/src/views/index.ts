@@ -297,6 +297,12 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
+        germ: actor.germ?.record.messageMe
+          ? {
+              showButtonTo: actor.germ.record.messageMe.showButtonTo,
+              messageMeUrl: actor.germ.record.messageMe.messageMeUrl,
+            }
+          : undefined,
       },
       joinedViaStarterPack: actor.profile?.joinedViaStarterPack
         ? this.starterPackBasic(actor.profile.joinedViaStarterPack.uri, state)
@@ -366,6 +372,12 @@ export class Views {
           ? { allowIncoming: actor.allowIncomingChatsFrom }
           : undefined,
         activitySubscription: this.profileAssociatedActivitySubscription(actor),
+        germ: actor.germ?.record.messageMe
+          ? {
+              showButtonTo: actor.germ.record.messageMe.showButtonTo,
+              messageMeUrl: actor.germ.record.messageMe.messageMeUrl,
+            }
+          : undefined,
       },
       viewer: this.profileViewer(did, state),
       labels,
@@ -544,8 +556,21 @@ export class Views {
     const actor = state.actors?.get(did)
     if (!actor?.status) return
 
+    const isViewerStatusOwner = did === state.ctx?.viewer
     const { status } = actor
-    const { record, sortedAt } = status
+    const { record, sortedAt, cid, takedownRef } = status
+    const isTakenDown = !!takedownRef
+
+    /*
+     * Manual filter for takendown status records. If this is ever removed, we
+     * need to reinstate `includeTakedowns` handling in the `Actor.getActors`
+     * hydrator.
+     */
+    if (isTakenDown && !isViewerStatusOwner) {
+      return undefined
+    }
+
+    const uri = AtUri.make(did, ids.AppBskyActorStatus, 'self').toString()
 
     const minDuration = 5 * MINUTE
     const maxDuration = 4 * HOUR
@@ -563,7 +588,9 @@ export class Views {
 
     const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
 
-    return {
+    const response: StatusView = {
+      uri,
+      cid,
       record: record,
       status: record.status,
       embed: isExternalEmbed(record.embed)
@@ -572,6 +599,12 @@ export class Views {
       expiresAt,
       isActive,
     }
+
+    if (isViewerStatusOwner) {
+      response.isDisabled = isTakenDown
+    }
+
+    return response
   }
 
   blockedProfileViewer(
@@ -1384,7 +1417,7 @@ export class Views {
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
       state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       ),
     )
 
@@ -1757,7 +1790,7 @@ export class Views {
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
       state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       ),
     )
   }
@@ -1955,7 +1988,7 @@ export class Views {
     let hiddenByTag = false
     if (
       state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsV2ReplyRankingExploration,
+        FeatureGateID.ThreadsReplyRankingExplorationEnable,
       )
     ) {
       hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
@@ -2058,6 +2091,7 @@ export class Views {
       thumbnail: this.videoUriBuilder.thumbnail({ did, cid }),
       alt: embed.alt,
       aspectRatio: embed.aspectRatio,
+      presentation: embed.presentation,
     }
   }
 

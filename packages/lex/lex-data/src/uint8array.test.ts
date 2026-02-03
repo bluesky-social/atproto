@@ -5,12 +5,13 @@ import { describe, expect, it } from 'vitest'
 import {
   asUint8Array,
   fromBase64,
+  ifUint8Array,
   toBase64,
   ui8Concat,
   ui8Equals,
 } from './uint8array.js'
 
-describe('toBase64', () => {
+describe(toBase64, () => {
   it('encodes empty Uint8Array', () => {
     const encoded = toBase64(new Uint8Array(0))
     expect(typeof encoded).toBe('string')
@@ -49,7 +50,7 @@ describe('toBase64', () => {
   })
 })
 
-describe('fromBase64', () => {
+describe(fromBase64, () => {
   it('decodes empty string', () => {
     const decoded = fromBase64('')
     expect(decoded).toBeInstanceOf(Uint8Array)
@@ -133,7 +134,7 @@ describe('roundtrip toBase64 <-> fromBase64', () => {
   })
 })
 
-describe('asUint8Array', () => {
+describe(asUint8Array, () => {
   describe('Uint8Array input', () => {
     it('returns same Uint8Array instance', () => {
       const input = new Uint8Array([1, 2, 3])
@@ -294,7 +295,7 @@ describe('asUint8Array', () => {
   })
 })
 
-describe('ui8Equals', () => {
+describe(ui8Equals, () => {
   describe('equal arrays', () => {
     it('returns true for identical arrays', () => {
       const a = new Uint8Array([1, 2, 3])
@@ -434,7 +435,25 @@ describe('ui8Equals', () => {
   })
 })
 
-describe('ui8Concat', () => {
+describe(ifUint8Array, () => {
+  it('returns the input if it is a Uint8Array', () => {
+    const input = new Uint8Array([1, 2, 3])
+    const result = ifUint8Array(input)
+    expect(result).toBe(input)
+  })
+
+  it('returns undefined for non-Uint8Array inputs', () => {
+    expect(ifUint8Array(null)).toBeUndefined()
+    expect(ifUint8Array(undefined)).toBeUndefined()
+    expect(ifUint8Array({})).toBeUndefined()
+    expect(ifUint8Array([])).toBeUndefined()
+    expect(ifUint8Array('string')).toBeUndefined()
+    expect(ifUint8Array(123)).toBeUndefined()
+    expect(ifUint8Array(true)).toBeUndefined()
+  })
+})
+
+describe(ui8Concat, () => {
   it('concatenates empty array', () => {
     const result = ui8Concat([])
     expect(result).toBeInstanceOf(Uint8Array)

@@ -1,9 +1,9 @@
 import {
-  Infer,
+  InferInput,
+  InferOutput,
   Schema,
   Simplify,
-  ValidationResult,
-  ValidatorContext,
+  ValidationContext,
 } from '../core.js'
 import { DictSchema } from './dict.js'
 import { ObjectSchema } from './object.js'
@@ -24,15 +24,13 @@ export type Intersect<A, B> = B[keyof B] extends never
       // index signature could return a value from either A or B
       A & { [K in keyof B]: B[K] | A[keyof A & K] }
 
-export type IntersectionSchemaOutput<
-  Left extends ObjectSchema,
-  Right extends DictSchema,
-> = Simplify<Intersect<Infer<Left>, Infer<Right>>>
-
 export class IntersectionSchema<
   const Left extends ObjectSchema = any,
   const Right extends DictSchema = any,
-> extends Schema<IntersectionSchemaOutput<Left, Right>> {
+> extends Schema<
+  Simplify<Intersect<InferInput<Left>, InferInput<Right>>>,
+  Simplify<Intersect<InferOutput<Left>, InferOutput<Right>>>
+> {
   constructor(
     protected readonly left: Left,
     protected readonly right: Right,
@@ -40,15 +38,20 @@ export class IntersectionSchema<
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<IntersectionSchemaOutput<Left, Right>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const leftResult = ctx.validate(input, this.left)
     if (!leftResult.success) return leftResult
 
     return this.right.validateInContext(leftResult.value, ctx, {
       ignoredKeys: this.left.validatorsMap,
-    }) as ValidationResult<IntersectionSchemaOutput<Left, Right>>
+    })
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function intersection<
+  const Left extends ObjectSchema,
+  const Right extends DictSchema,
+>(left: Left, right: Right) {
+  return new IntersectionSchema<Left, Right>(left, right)
 }

@@ -13,11 +13,17 @@ export class Crawlers {
     public hostname: string,
     public crawlers: string[],
     public backgroundQueue: BackgroundQueue,
+    public devMode: boolean = false,
   ) {
     this.agents = crawlers.map((service) => new AtpAgent({ service }))
   }
 
   async notifyOfUpdate() {
+    // Skip crawl notifications in development mode to prevent sending dev data to production servers
+    if (this.devMode) {
+      return
+    }
+
     const now = Date.now()
     if (now - this.lastNotified < NOTIFY_THRESHOLD) {
       return

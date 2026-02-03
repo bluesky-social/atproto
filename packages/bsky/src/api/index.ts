@@ -19,6 +19,10 @@ import removeData from './app/bsky/contact/removeData'
 import sendNotification from './app/bsky/contact/sendNotification'
 import startPhoneVerification from './app/bsky/contact/startPhoneVerification'
 import verifyPhone from './app/bsky/contact/verifyPhone'
+import createDraft from './app/bsky/draft/createDraft'
+import deleteDraft from './app/bsky/draft/deleteDraft'
+import getDrafts from './app/bsky/draft/getDrafts'
+import updateDraft from './app/bsky/draft/updateDraft'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
@@ -66,6 +70,7 @@ import putActivitySubscription from './app/bsky/notification/putActivitySubscrip
 import putPreferences from './app/bsky/notification/putPreferences'
 import putPreferencesV2 from './app/bsky/notification/putPreferencesV2'
 import registerPush from './app/bsky/notification/registerPush'
+import unregisterPush from './app/bsky/notification/unregisterPush'
 import updateSeen from './app/bsky/notification/updateSeen'
 import getAgeAssuranceState from './app/bsky/unspecced/getAgeAssuranceState'
 import getConfig from './app/bsky/unspecced/getConfig'
@@ -104,6 +109,10 @@ export default function (server: Server, ctx: AppContext) {
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
   getBookmarks(server, ctx)
+  createDraft(server, ctx)
+  deleteDraft(server, ctx)
+  getDrafts(server, ctx)
+  updateDraft(server, ctx)
   dismissMatch(server, ctx)
   getMatches(server, ctx)
   getSyncStatus(server, ctx)
@@ -172,6 +181,7 @@ export default function (server: Server, ctx: AppContext) {
   putPreferences(server, ctx)
   putPreferencesV2(server, ctx)
   registerPush(server, ctx)
+  unregisterPush(server, ctx)
   getConfig(server, ctx)
   getPopularFeedGenerators(server, ctx)
   getTaggedSuggestions(server, ctx)

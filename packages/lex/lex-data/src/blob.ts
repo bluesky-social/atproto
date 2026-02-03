@@ -1,24 +1,18 @@
-import {
-  Cid,
-  RAW_BIN_MULTICODEC,
-  SHA2_256_MULTIHASH_CODE,
-  asCid,
-  parseCid,
-} from './cid.js'
+import { Cid, RawCid, ifCid, validateCidString } from './cid.js'
 import { LexValue } from './lex.js'
 import { isPlainObject, isPlainProto } from './object.js'
 
 /**
  * @note {@link BlobRef} is just a {@link LexMap} with a specific shape.
  */
-export type BlobRef = {
+export type BlobRef<Ref extends Cid = Cid> = {
   $type: 'blob'
   mimeType: string
-  ref: Cid
+  ref: Ref
   size: number
 }
 
-export type BlobRefValidationOptions = {
+export type BlobRefCheckOptions = {
   /**
    * If `false`, skips strict CID validation of {@link BlobRef.ref}, allowing
    * any valid CID. Otherwise, validates that the CID is v1, uses the raw
@@ -29,9 +23,25 @@ export type BlobRefValidationOptions = {
   strict?: boolean
 }
 
+export type InferCheckedBlobRef<TOptions extends BlobRefCheckOptions> =
+  TOptions extends { strict: false }
+    ? BlobRef
+    : { strict: boolean } extends TOptions
+      ? BlobRef
+      : BlobRef<RawCid>
+
+export function isBlobRef(input: unknown): input is BlobRef<RawCid>
+export function isBlobRef<TOptions extends BlobRefCheckOptions>(
+  input: unknown,
+  options: TOptions,
+): input is InferCheckedBlobRef<TOptions>
 export function isBlobRef(
   input: unknown,
-  options?: BlobRefValidationOptions,
+  options?: BlobRefCheckOptions,
+): input is BlobRef
+export function isBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
 ): input is BlobRef {
   if (!isPlainObject(input)) {
     return false
@@ -66,21 +76,13 @@ export function isBlobRef(
     }
   }
 
-  const cid = asCid(ref)
+  const cid = ifCid(
+    ref,
+    // Strict unless explicitly disabled
+    options?.strict === false ? undefined : { flavor: 'raw' },
+  )
   if (!cid) {
     return false
-  }
-
-  if (options?.strict !== false) {
-    if (cid.version !== 1) {
-      return false
-    }
-    if (cid.code !== RAW_BIN_MULTICODEC) {
-      return false
-    }
-    if (cid.multihash.code !== SHA2_256_MULTIHASH_CODE) {
-      return false
-    }
   }
 
   return true
@@ -114,21 +116,26 @@ export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
     }
   }
 
-  try {
-    parseCid(cid)
-  } catch {
+  if (!validateCidString(cid)) {
     return false
   }
 
   return true
 }
 
-export type EnumBlobRefsOptions = BlobRefValidationOptions & {
+export type EnumBlobRefsOptions = BlobRefCheckOptions & {
   /**
    * @defaults to `false`
    */
   allowLegacy?: boolean
 }
+
+export type InferEnumBlobRefs<TOptions extends EnumBlobRefsOptions> =
+  TOptions extends { allowLegacy: true }
+    ? InferCheckedBlobRef<TOptions> | LegacyBlobRef
+    : { allowLegacy: boolean } extends TOptions
+      ? InferCheckedBlobRef<TOptions> | LegacyBlobRef
+      : InferCheckedBlobRef<TOptions>
 
 /**
  * Enumerates all {@link BlobRef}s (and, optionally, {@link LegacyBlobRef}s)
@@ -136,12 +143,11 @@ export type EnumBlobRefsOptions = BlobRefValidationOptions & {
  */
 export function enumBlobRefs(
   input: LexValue,
-  options: EnumBlobRefsOptions & { allowLegacy: true },
-): Generator<BlobRef | LegacyBlobRef, void, unknown>
-export function enumBlobRefs(
+): Generator<BlobRef<RawCid>, void, unknown>
+export function enumBlobRefs<TOptions extends EnumBlobRefsOptions>(
   input: LexValue,
-  options?: EnumBlobRefsOptions & { allowLegacy?: false },
-): Generator<BlobRef, void, unknown>
+  options: TOptions,
+): Generator<InferEnumBlobRefs<TOptions>, void, unknown>
 export function enumBlobRefs(
   input: LexValue,
   options?: EnumBlobRefsOptions,
@@ -150,6 +156,7 @@ export function* enumBlobRefs(
   input: LexValue,
   options?: EnumBlobRefsOptions,
 ): Generator<BlobRef | LegacyBlobRef, void, unknown> {
+  // LegacyBlobRef not included by default
   const includeLegacy = options?.allowLegacy === true
 
   // Using a stack to avoid recursion depth issues.

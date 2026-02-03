@@ -24,8 +24,8 @@
     }
   },
   "dependencies": {
-    "@atproto/jwk": "workspace:*",
-    "@atproto/jwk-jose": "workspace:*",
+    "@atproto/jwk": "workspace:^",
+    "@atproto/jwk-jose": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {

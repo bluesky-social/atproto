@@ -4,7 +4,7 @@ import { InternalServerError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getSuggestedFeeds'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -28,11 +28,10 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getFeeds(
+      const result = await getFeeds(
         {
           ...params,
-          viewer: viewer ?? undefined,
-          hydrateCtx: hydrateCtx.copy({ viewer }),
+          hydrateCtx,
           headers,
         },
         ctx,
@@ -52,7 +51,7 @@ const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
       await ctx.topicsAgent.app.bsky.unspecced.getSuggestedFeedsSkeleton(
         {
           limit: params.limit,
-          viewer: params.viewer,
+          viewer: params.hydrateCtx.viewer ?? undefined,
         },
         {
           headers: params.headers,

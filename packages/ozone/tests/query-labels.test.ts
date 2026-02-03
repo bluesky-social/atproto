@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { AtpAgent } from '@atproto/api'
 import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'

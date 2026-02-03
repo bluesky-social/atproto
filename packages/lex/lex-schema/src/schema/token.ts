@@ -1,14 +1,13 @@
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
+import { $type, NsidString, Schema, ValidationContext } from '../core.js'
 
-export class TokenSchema<V extends string = any> extends Schema<V> {
-  constructor(protected readonly value: V) {
+export class TokenSchema<
+  const TValue extends string = string,
+> extends Schema<TValue> {
+  constructor(readonly value: TValue) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<V> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (input === this.value) {
       return ctx.success(this.value)
     }
@@ -36,4 +35,12 @@ export class TokenSchema<V extends string = any> extends Schema<V> {
   toString(): string {
     return this.value
   }
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+export function token<
+  const N extends NsidString,
+  const H extends string = 'main',
+>(nsid: N, hash: H = 'main' as H) {
+  return new TokenSchema($type(nsid, hash))
 }

@@ -1,13 +1,14 @@
 import {
   BlobRef,
-  BlobRefValidationOptions,
+  BlobRefCheckOptions,
   LegacyBlobRef,
   isBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
-import { Schema, ValidationResult, ValidatorContext } from '../core.js'
+import { Schema, ValidationContext } from '../core.js'
+import { memoizedOptions } from '../util/memoize.js'
 
-export type BlobSchemaOptions = BlobRefValidationOptions & {
+export type BlobSchemaOptions = BlobRefCheckOptions & {
   /**
    * Whether to allow legacy blob references format
    * @see {@link LegacyBlobRef}
@@ -25,27 +26,22 @@ export type BlobSchemaOptions = BlobRefValidationOptions & {
 
 export type { BlobRef, LegacyBlobRef }
 
-export type BlobSchemaOutput<Options> = Options extends { allowLegacy: true }
-  ? BlobRef | LegacyBlobRef
-  : BlobRef
-
-export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
-  BlobSchemaOutput<O>
+export class BlobSchema<
+  const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
+> extends Schema<
+  TOptions extends { allowLegacy: true } ? BlobRef | LegacyBlobRef : BlobRef
 > {
-  constructor(readonly options: O) {
+  constructor(readonly options?: TOptions) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<BlobSchemaOutput<O>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const blob: null | BlobRef | LegacyBlobRef =
       (input as any)?.$type !== undefined
         ? isBlobRef(input, this.options)
           ? input
           : null
-        : this.options.allowLegacy === true && isLegacyBlobRef(input)
+        : this.options?.allowLegacy === true && isLegacyBlobRef(input)
           ? input
           : null
 
@@ -53,21 +49,21 @@ export class BlobSchema<O extends BlobSchemaOptions> extends Schema<
       return ctx.issueInvalidType(input, 'blob')
     }
 
-    const { accept } = this.options
+    const accept = this.options?.accept
     if (accept && !matchesMime(blob.mimeType, accept)) {
       return ctx.issueInvalidPropertyValue(blob, 'mimeType', accept)
     }
 
-    const { maxSize } = this.options
+    const maxSize = this.options?.maxSize
     if (maxSize != null && 'size' in blob && blob.size > maxSize) {
       return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
     }
 
-    return ctx.success(blob as BlobSchemaOutput<O>)
+    return ctx.success(blob)
   }
 
   matchesMime(mime: string): boolean {
-    const { accept } = this.options
+    const accept = this.options?.accept
     if (!accept) return true
     return matchesMime(mime, accept)
   }
@@ -83,3 +79,9 @@ function matchesMime(mime: string, accepted: string[]): boolean {
   }
   return false
 }
+
+export const blob = /*#__PURE__*/ memoizedOptions(function <
+  O extends BlobSchemaOptions = { allowLegacy?: false },
+>(options?: O) {
+  return new BlobSchema(options)
+})

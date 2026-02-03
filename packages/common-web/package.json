@@ -1,6 +1,6 @@
 {
   "name": "@atproto/common-web",
-  "version": "0.4.10",
+  "version": "0.4.14",
   "license": "MIT",
   "description": "Shared web-platform-friendly code for atproto libraries",
   "keywords": [
@@ -19,8 +19,9 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "@atproto/lex-data": "workspace:*",
-    "@atproto/lex-json": "workspace:*",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
+    "@atproto/syntax": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {

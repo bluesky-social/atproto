@@ -176,10 +176,10 @@ importers:
   packages/bsky:
     dependencies:
       '@atproto-labs/fetch-node':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/fetch-node
       '@atproto-labs/xrpc-utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/xrpc-utils
       '@atproto/api':
         specifier: workspace:^
@@ -226,6 +226,9 @@ importers:
       '@did-plc/lib':
         specifier: ^0.0.1
         version: 0.0.1
+      '@growthbook/growthbook':
+        specifier: ^1.6.2
+        version: 1.6.2
       '@hapi/address':
         specifier: ^5.1.1
         version: 5.1.1
@@ -289,9 +292,6 @@ importers:
       sharp:
         specifier: ^0.33.5
         version: 0.33.5
-      statsig-node:
-        specifier: ^5.23.1
-        version: 5.23.1
       structured-headers:
         specifier: ^1.0.1
         version: 1.0.1
@@ -421,10 +421,10 @@ importers:
         specifier: workspace:^
         version: link:../common-web
       '@atproto/lex-cbor':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex/lex-cbor
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex/lex-data
       iso-datestring-validator:
         specifier: ^2.2.2
@@ -449,11 +449,14 @@ importers:
   packages/common-web:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex/lex-data
       '@atproto/lex-json':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex/lex-json
+      '@atproto/syntax':
+        specifier: workspace:^
+        version: link:../syntax
       zod:
         specifier: ^3.23.8
         version: 3.24.2
@@ -607,19 +610,19 @@ importers:
   packages/internal/did-resolver:
     dependencies:
       '@atproto-labs/fetch':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../fetch
       '@atproto-labs/pipe':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../pipe
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../simple-store
       '@atproto-labs/simple-store-memory':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../simple-store-memory
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       zod:
         specifier: ^3.23.8
@@ -632,7 +635,7 @@ importers:
   packages/internal/fetch:
     dependencies:
       '@atproto-labs/pipe':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../pipe
     devDependencies:
       typescript:
@@ -642,10 +645,10 @@ importers:
   packages/internal/fetch-node:
     dependencies:
       '@atproto-labs/fetch':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../fetch
       '@atproto-labs/pipe':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../pipe
       ipaddr.js:
         specifier: ^2.1.0
@@ -661,13 +664,13 @@ importers:
   packages/internal/handle-resolver:
     dependencies:
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../simple-store
       '@atproto-labs/simple-store-memory':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../simple-store-memory
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       zod:
         specifier: ^3.23.8
@@ -680,13 +683,13 @@ importers:
   packages/internal/handle-resolver-node:
     dependencies:
       '@atproto-labs/fetch-node':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../fetch-node
       '@atproto-labs/handle-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../handle-resolver
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
     devDependencies:
       typescript:
@@ -696,10 +699,10 @@ importers:
   packages/internal/identity-resolver:
     dependencies:
       '@atproto-labs/did-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../did-resolver
       '@atproto-labs/handle-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../handle-resolver
     devDependencies:
       typescript:
@@ -734,7 +737,7 @@ importers:
   packages/internal/simple-store-memory:
     dependencies:
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../simple-store
       lru-cache:
         specifier: ^10.2.0
@@ -747,7 +750,7 @@ importers:
   packages/internal/simple-store-redis:
     dependencies:
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../simple-store
       ioredis:
         specifier: ^5.3.2
@@ -804,22 +807,22 @@ importers:
   packages/lex/lex:
     dependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       '@atproto/lex-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-client
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-installer':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-installer
       '@atproto/lex-json':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-json
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       tslib:
         specifier: ^2.8.1
@@ -838,10 +841,10 @@ importers:
   packages/lex/lex-builder:
     dependencies:
       '@atproto/lex-document':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-document
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       prettier:
         specifier: ^3.2.5
@@ -863,21 +866,18 @@ importers:
   packages/lex/lex-cbor:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
       '@atproto/lex-json':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-json
       cborg:
-        specifier: ^4.3.0
-        version: 4.3.0
+        specifier: ^4.5.8
+        version: 4.5.8
       vite:
         specifier: ^6.2.0
         version: 6.2.0(@types/node@18.19.67)
@@ -888,23 +888,23 @@ importers:
   packages/lex/lex-client:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-json':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-json
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       '@atproto/lex-cbor':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-cbor
       vitest:
         specifier: ^4.0.16
@@ -912,9 +912,6 @@ importers:
 
   packages/lex/lex-data:
     dependencies:
-      '@atproto/syntax':
-        specifier: workspace:*
-        version: link:../../syntax
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
@@ -938,7 +935,7 @@ importers:
   packages/lex/lex-document:
     dependencies:
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       core-js:
         specifier: ^3
@@ -948,7 +945,7 @@ importers:
         version: 2.8.1
     devDependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       vitest:
         specifier: ^4.0.16
@@ -957,25 +954,25 @@ importers:
   packages/lex/lex-installer:
     dependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       '@atproto/lex-cbor':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-cbor
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-document':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-document
       '@atproto/lex-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-resolver
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       tslib:
         specifier: ^2.8.1
@@ -988,7 +985,7 @@ importers:
   packages/lex/lex-json:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       tslib:
         specifier: ^2.8.1
@@ -998,23 +995,23 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@18.19.67)
 
-  packages/lex/lex-password-agent:
+  packages/lex/lex-password-session:
     dependencies:
       '@atproto/lex-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-client
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       '@atproto/lex-server':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-server
       vitest:
         specifier: ^4.0.16
@@ -1023,35 +1020,35 @@ importers:
   packages/lex/lex-resolver:
     dependencies:
       '@atproto-labs/did-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/did-resolver
       '@atproto/crypto':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../crypto
       '@atproto/lex-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-client
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-document':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-document
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       '@atproto/repo':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../repo
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
     devDependencies:
       '@atproto/lex-builder':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-builder
       vitest:
         specifier: ^4.0.16
@@ -1060,10 +1057,10 @@ importers:
   packages/lex/lex-schema:
     dependencies:
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       tslib:
         specifier: ^2.8.1
@@ -1076,25 +1073,25 @@ importers:
   packages/lex/lex-server:
     dependencies:
       '@atproto-labs/did-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/did-resolver
       '@atproto/crypto':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../crypto
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       '@atproto/lex-cbor':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-cbor
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-data
       '@atproto/lex-json':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-json
       '@atproto/lex-schema':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-schema
       http-terminator:
         specifier: ^3.2.0
@@ -1107,10 +1104,10 @@ importers:
         version: 8.18.3
     devDependencies:
       '@atproto/lex':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex
       '@atproto/lex-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex-client
       '@types/ws':
         specifier: ^8.18.1
@@ -1200,7 +1197,7 @@ importers:
   packages/oauth/jwk-jose:
     dependencies:
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       jose:
         specifier: ^5.2.0
@@ -1213,10 +1210,10 @@ importers:
   packages/oauth/jwk-webcrypto:
     dependencies:
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       '@atproto/jwk-jose':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk-jose
       zod:
         specifier: ^3.23.8
@@ -1229,34 +1226,34 @@ importers:
   packages/oauth/oauth-client:
     dependencies:
       '@atproto-labs/did-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/did-resolver
       '@atproto-labs/fetch':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/fetch
       '@atproto-labs/handle-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/handle-resolver
       '@atproto-labs/identity-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/identity-resolver
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store
       '@atproto-labs/simple-store-memory':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store-memory
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
       '@atproto/xrpc':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../xrpc
       core-js:
         specifier: ^3
@@ -1275,28 +1272,28 @@ importers:
   packages/oauth/oauth-client-browser:
     dependencies:
       '@atproto-labs/did-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/did-resolver
       '@atproto-labs/handle-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/handle-resolver
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       '@atproto/jwk-webcrypto':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk-webcrypto
       '@atproto/oauth-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-client
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
       core-js:
         specifier: ^3
@@ -1309,13 +1306,13 @@ importers:
   packages/oauth/oauth-client-browser-example:
     devDependencies:
       '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto/lex':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../lex/lex
       '@atproto/oauth-client-browser':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-client-browser
       '@tailwindcss/vite':
         specifier: ^4.1.3
@@ -1351,13 +1348,13 @@ importers:
   packages/oauth/oauth-client-expo:
     dependencies:
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store
       '@atproto/oauth-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-client
       '@atproto/oauth-client-browser':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-client-browser
       core-js:
         specifier: ^3
@@ -1384,31 +1381,31 @@ importers:
   packages/oauth/oauth-client-node:
     dependencies:
       '@atproto-labs/did-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/did-resolver
       '@atproto-labs/handle-resolver-node':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/handle-resolver-node
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       '@atproto/jwk-jose':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk-jose
       '@atproto/jwk-webcrypto':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk-webcrypto
       '@atproto/oauth-client':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-client
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
     devDependencies:
       typescript:
@@ -1418,55 +1415,55 @@ importers:
   packages/oauth/oauth-provider:
     dependencies:
       '@atproto-labs/fetch':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/fetch
       '@atproto-labs/fetch-node':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/fetch-node
       '@atproto-labs/pipe':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/pipe
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store
       '@atproto-labs/simple-store-memory':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/simple-store-memory
       '@atproto/common':
         specifier: workspace:^
         version: link:../../common
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       '@atproto/jwk-jose':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk-jose
       '@atproto/lex-document':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../lex/lex-document
       '@atproto/lex-resolver':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../lex/lex-resolver
       '@atproto/oauth-provider-api':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-provider-api
       '@atproto/oauth-provider-frontend':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-provider-frontend
       '@atproto/oauth-provider-ui':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-provider-ui
       '@atproto/oauth-scopes':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-scopes
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       '@hapi/accept':
         specifier: ^6.0.3
@@ -1503,7 +1500,7 @@ importers:
         version: 3.24.2
     devDependencies:
       '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/rollup-plugin-bundle-manifest
       '@types/cookie':
         specifier: ^0.6.0
@@ -1521,10 +1518,10 @@ importers:
   packages/oauth/oauth-provider-api:
     dependencies:
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
     devDependencies:
       typescript:
@@ -1534,20 +1531,20 @@ importers:
   packages/oauth/oauth-provider-frontend:
     optionalDependencies:
       '@atproto/oauth-provider-api':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-provider-api
     devDependencies:
       '@atproto-labs/fetch':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/fetch
       '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
       '@atproto/syntax':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../syntax
       '@lingui/cli':
         specifier: ^5.2.0
@@ -1628,20 +1625,20 @@ importers:
   packages/oauth/oauth-provider-ui:
     optionalDependencies:
       '@atproto/oauth-provider-api':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-provider-api
     devDependencies:
       '@atproto-labs/fetch':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/fetch
       '@atproto-labs/rollup-plugin-bundle-manifest':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../internal/rollup-plugin-bundle-manifest
       '@atproto/oauth-scopes':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-scopes
       '@atproto/oauth-types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth-types
       '@hcaptcha/react-hcaptcha':
         specifier: ^1.11.2
@@ -1717,10 +1714,10 @@ importers:
   packages/oauth/oauth-types:
     dependencies:
       '@atproto/did':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../did
       '@atproto/jwk':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../jwk
       zod:
         specifier: ^3.23.8
@@ -1845,19 +1842,19 @@ importers:
   packages/pds:
     dependencies:
       '@atproto-labs/fetch-node':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/fetch-node
       '@atproto-labs/simple-store':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/simple-store
       '@atproto-labs/simple-store-memory':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/simple-store-memory
       '@atproto-labs/simple-store-redis':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/simple-store-redis
       '@atproto-labs/xrpc-utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../internal/xrpc-utils
       '@atproto/api':
         specifier: workspace:^
@@ -1970,9 +1967,6 @@ importers:
       pino-http:
         specifier: ^8.2.1
         version: 8.6.1
-      sharp:
-        specifier: ^0.33.5
-        version: 0.33.5
       typed-emitter:
         specifier: ^2.1.0
         version: 2.1.0
@@ -1996,7 +1990,7 @@ importers:
         specifier: workspace:^
         version: link:../lex-cli
       '@atproto/oauth-client-browser-example':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../oauth/oauth-client-browser-example
       '@atproto/pds-entryway':
         specifier: npm:@atproto/pds@0.3.0-entryway.3
@@ -2122,13 +2116,17 @@ importers:
         version: 5.8.2
 
   packages/syntax:
+    dependencies:
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
     devDependencies:
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.2
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/tap:
     dependencies:
@@ -2147,9 +2145,6 @@ importers:
       ws:
         specifier: ^8.12.0
         version: 8.18.3
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
     devDependencies:
       '@types/express':
         specifier: ^4.17.17
@@ -2157,18 +2152,18 @@ importers:
       '@types/ws':
         specifier: ^8.5.4
         version: 8.5.4
+      '@vitest/coverage-v8':
+        specifier: 4.0.16
+        version: 4.0.16(vitest@4.0.16)
       express:
         specifier: ^4.18.2
         version: 4.18.2
-      get-port:
-        specifier: ^6.1.2
-        version: 6.1.2
-      jest:
-        specifier: ^28.1.2
-        version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
       typescript:
         specifier: ^5.6.3
         version: 5.8.3
+      vitest:
+        specifier: ^4.0.16
+        version: 4.0.16(@types/node@18.19.67)
 
   packages/ws-client:
     dependencies:
@@ -2214,10 +2209,10 @@ importers:
         specifier: workspace:^
         version: link:../crypto
       '@atproto/lex-cbor':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex/lex-cbor
       '@atproto/lex-data':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../lex/lex-data
       '@atproto/lexicon':
         specifier: workspace:^
@@ -5797,6 +5792,13 @@ packages:
   /@gar/promisify@1.1.3:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
+
+  /@growthbook/growthbook@1.6.2:
+    resolution: {integrity: sha512-x3sK6Lff4BVusIzcdBeHZqA3B4kLs3kM/pJ7vvLTJwb6N/+Yn99EF1yc0XU6cfDVqFq6uFkvIFhMwDWUaKD73g==}
+    engines: {node: '>=10'}
+    dependencies:
+      dom-mutator: 0.6.0
+    dev: false
 
   /@grpc/grpc-js@1.12.5:
     resolution: {integrity: sha512-d3iiHxdpg5+ZcJ6jnDSOT8Z0O0VMVGy34jAnYLUX8yd36b1qn8f1TwOA/Lc7TsOh03IkPJ38eGI5qD2EjNkoEA==}
@@ -10610,8 +10612,8 @@ packages:
     resolution: {integrity: sha512-b3tFPA9pUr2zCUiCfRd2+wok2/LBSNUMKOuRRok+WlvvAgEt/PlbgPTsZUcwCOs53IJvLgTp0eotwtosE6njug==}
     hasBin: true
 
-  /cborg@4.3.0:
-    resolution: {integrity: sha512-vOXo1pB4mdeBw3LbpoynQlZNw/H3kZVHLtPYlp8kFMreL/2YfT54F70BM1s3iDoCtQ+3C9QmiRF4rfCSSTlhBw==}
+  /cborg@4.5.8:
+    resolution: {integrity: sha512-6/viltD51JklRhq4L7jC3zgy6gryuG5xfZ3kzpE+PravtyeQLeQmCYLREhQH7pWENg5pY4Yu/XCd6a7dKScVlw==}
     hasBin: true
     dev: true
 
@@ -11445,6 +11447,11 @@ packages:
     dependencies:
       esutils: 2.0.3
     dev: true
+
+  /dom-mutator@0.6.0:
+    resolution: {integrity: sha512-iCt9o0aYfXMUkz/43ZOAUFQYotjGB+GNbYJiJdz4TgXkyToXbbRy5S6FbTp72lRBtfpUMwEc1KmpFEU4CZeoNg==}
+    engines: {node: '>=10'}
+    dev: false
 
   /dom-serializer@1.4.1:
     resolution: {integrity: sha512-VHwB3KfrcOOkelEG2ZOfxqLZdfkil8PtJi4P8N2MMXucZq2yLp75ClViUlOVwyoHEDjYU433Aq+5zWP61+RGag==}
@@ -13747,10 +13754,6 @@ packages:
       jsbn: 1.1.0
       sprintf-js: 1.1.3
     dev: true
-
-  /ip3country@5.0.0:
-    resolution: {integrity: sha512-lcFLMFU4eO1Z7tIpbVFZkaZ5ltqpeaRx7L9NsAbA9uA7/O/rj3RF8+evE5gDitooaTTIqjdzZrenFO/OOxQ2ew==}
-    dev: false
 
   /ip@2.0.0:
     resolution: {integrity: sha512-WKa+XuLG1A1R0UWhl2+1XQSi+fZWMsYKffMZTTYsiZaUD8k2yDAj5atimTUD2TZkyCkNEeYE5NhFZmupOGtjYQ==}
@@ -16085,6 +16088,7 @@ packages:
         optional: true
     dependencies:
       whatwg-url: 5.0.0
+    dev: true
 
   /node-forge@1.3.1:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
@@ -18286,17 +18290,6 @@ packages:
   /standard-as-callback@2.1.0:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
 
-  /statsig-node@5.23.1:
-    resolution: {integrity: sha512-rawn+KsPibyngB6NNFgnOfxz8DZHKaAMRv60COsSvNktIJP/MFeYqvFqaUGaengImXQ3JX91jo7lOvIQ8keb/A==}
-    dependencies:
-      ip3country: 5.0.0
-      node-fetch: 2.7.0
-      ua-parser-js: 1.0.38
-      uuid: 8.3.2
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
@@ -18751,6 +18744,7 @@ packages:
 
   /tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+    dev: true
 
   /tr46@1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
@@ -19023,6 +19017,7 @@ packages:
 
   /ua-parser-js@1.0.38:
     resolution: {integrity: sha512-Aq5ppTOfvrCMgAPneW1HfWj66Xi7XL+/mIy996R1/CLS/rcyJQm6QZdsKrUeivDFQ+Oc9Wyuwor8Ze8peEoUoQ==}
+    dev: true
 
   /ua-parser-js@2.0.3:
     resolution: {integrity: sha512-LZyXZdNttONW8LjzEH3Z8+6TE7RfrEiJqDKyh0R11p/kxvrV2o9DrT2FGZO+KVNs3k+drcIQ6C3En6wLnzJGpw==}
@@ -19289,11 +19284,6 @@ packages:
     hasBin: true
     dev: false
 
-  /uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    hasBin: true
-    dev: false
-
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
@@ -19471,6 +19461,7 @@ packages:
 
   /webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+    dev: true
 
   /webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
@@ -19503,6 +19494,7 @@ packages:
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
+    dev: true
 
   /whatwg-url@7.1.0:
     resolution: {integrity: sha512-WUu7Rg1DroM7oQvGWfOiAK21n74Gg+T4elXEQYkOhtyLeWiJFoOGLXPKI/9gzIie9CtwVLm8wtw6YJdKyxSjeg==}

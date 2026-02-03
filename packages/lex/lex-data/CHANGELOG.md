@@ -1,5 +1,37 @@
 # @atproto/lex-data
 
+## 0.0.9
+
+### Patch Changes
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ifUint8Array` utility function
+
+- [#4571](https://github.com/bluesky-social/atproto/pull/4571) [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `isLanguageString` to `validateLanguage`
+
+- [#4571](https://github.com/bluesky-social/atproto/pull/4571) [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve code coverage of tests
+
+## 0.0.8
+
+### Patch Changes
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `asMultiformatsCID` utility for improved compatibility between `Cid` interface and legacy use of multiformat's `CID`
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the `Cid` interface stricter to allow for better futur proofing.
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `isCid`, `ifCid` and `asCid` now always return the input value instead a potentially different instance.
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `createCid` utility
+
+## 0.0.7
+
+### Patch Changes
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **breaking**: replace `strict` options with `flavor` checking when parsing/decoding/validating `Cid` values
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose CID creation and validation utilities
+
+- [#4512](https://github.com/bluesky-social/atproto/pull/4512) [`d78484f`](https://github.com/bluesky-social/atproto/commit/d78484f94d8ba1352ec66030115000d515c9dafe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - **breaking**: `asCid` now throws if the input cannot be cast into a `Cid`
+
 ## 0.0.6
 
 ### Patch Changes
