@@ -4,39 +4,43 @@ import { ObjectSchema, object } from './object.js'
 
 export type { LexValue }
 
+type ToBodyMime<TEncoding extends string> = TEncoding extends '*/*'
+  ? `${string}/${string}`
+  : TEncoding extends `${infer T extends string}/*`
+    ? `${T}/${string}`
+    : TEncoding
+
+type ToBodyType<
+  TEncoding extends string,
+  TSchema,
+  TBinary,
+> = TSchema extends Schema
+  ? Infer<TSchema>
+  : TEncoding extends `application/json`
+    ? LexValue
+    : TBinary
+
 export type InferPayload<TPayload extends Payload, TBinary> =
   TPayload extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
       ? {
-          encoding: SchemaEncodingToDataEncoding<TEncoding>
-          body: TSchema extends Schema
-            ? Infer<TSchema>
-            : TEncoding extends `application/json`
-              ? LexValue
-              : TBinary
+          encoding: ToBodyMime<TEncoding>
+          body: ToBodyType<TEncoding, TSchema, TBinary>
         }
       : undefined
     : never
 
-export type SchemaEncodingToDataEncoding<E extends string> = E extends '*/*'
-  ? `${string}/${string}`
-  : E extends `${infer T extends string}/*`
-    ? `${T}/${string}`
-    : E
-
 export type InferPayloadEncoding<TPayload extends Payload> =
-  TPayload['encoding'] extends string
-    ? SchemaEncodingToDataEncoding<TPayload['encoding']>
-    : undefined
+  TPayload extends Payload<infer TEncoding, any>
+    ? TEncoding extends string
+      ? ToBodyMime<TEncoding>
+      : undefined
+    : never
 
 export type InferPayloadBody<TPayload extends Payload, TBinary> =
   TPayload extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
-      ? TSchema extends Schema
-        ? Infer<TSchema>
-        : TEncoding extends `application/json`
-          ? LexValue
-          : TBinary
+      ? ToBodyType<TEncoding, TSchema, TBinary>
       : undefined
     : never
 
