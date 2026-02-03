@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Neuro Admin Script - Manage W ID (Neuro Legal ID) links for W Social accounts
-# Usage: ./neuro-admin.sh <command> [args...]
+# WID Admin Script - Manage W ID (Legal ID) links for W Social accounts
+# Usage: ./pds-wid-admin.sh <command> [args...]
 #
 # Required environment variables:
 #   PDS_HOST - The PDS hostname (e.g., https://pds-stage.wsocial.eu)
@@ -28,9 +28,9 @@ check_env() {
 # Print usage information
 usage() {
   cat <<EOF
-W Social Neuro Admin Tool
+W Social WID Admin Tool
 
-Manage W ID (Neuro Legal ID) links for W Social accounts.
+Manage W ID (Legal ID) links for W Social accounts.
 
 Usage: $0 <command> [args...]
 

@@ -8,6 +8,7 @@ const ALLOWED_TARGET_DOMAINS = [
   'wsocial.eu',
   'wsocial.network',
   'wsocial.cloud',
+  'wsocial.dev',
 ]
 
 function validateTargetDomain(targetPdsUrl: string): void {
