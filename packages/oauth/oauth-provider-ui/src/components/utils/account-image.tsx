@@ -18,7 +18,7 @@ export function AccountImage({ src, alt }: AccountIconProps) {
       aria-hidden
       src={src}
       alt={alt}
-      className="-ml-1 h-6 w-6 rounded-full"
+      className="h-6 w-6 rounded-full"
       onError={() => setErrored(true)}
     />
   ) : (
