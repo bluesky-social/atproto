@@ -1,10 +1,9 @@
-import { LexErrorData, LexValue } from '@atproto/lex-data'
+import { LexErrorData } from '@atproto/lex-data'
 import { InferOutput, Restricted, Schema } from './core.js'
 import {
   InferPayload,
   InferPayloadBody,
   InferPayloadEncoding,
-  Payload,
   Procedure,
   Query,
   Subscription,
@@ -35,39 +34,35 @@ export type InferMethodParams<M extends Procedure | Query | Subscription> =
 export type InferMethodInput<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { input: Payload } ? InferPayload<M['input'], B> : undefined
+> = M extends Procedure ? InferPayload<M['input'], B> : undefined
 
 export type InferMethodInputBody<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { input: Payload } ? InferPayloadBody<M['input'], B> : undefined
+> = M extends Procedure ? InferPayloadBody<M['input'], B> : undefined
 
 export type InferMethodInputEncoding<
   M extends Procedure | Query | Subscription,
-> = M extends { input: Payload } ? InferPayloadEncoding<M['input']> : undefined
+> = M extends Procedure ? InferPayloadEncoding<M['input']> : undefined
 
 export type InferMethodOutput<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { output: Payload } ? InferPayload<M['output'], B> : undefined
+> = M extends Procedure | Query ? InferPayload<M['output'], B> : undefined
 
 export type InferMethodOutputBody<
   M extends Procedure | Query | Subscription,
   B = BinaryData,
-> = M extends { output: Payload } ? InferPayloadBody<M['output'], B> : undefined
+> = M extends Procedure | Query ? InferPayloadBody<M['output'], B> : undefined
 
 export type InferMethodOutputEncoding<
   M extends Procedure | Query | Subscription,
-> = M extends { output: Payload }
-  ? InferPayloadEncoding<M['output']>
-  : undefined
+> = M extends Procedure | Query ? InferPayloadEncoding<M['output']> : undefined
 
 export type InferMethodMessage<
   //
-  M extends Procedure | Query | Subscription,
-> = M extends { message: Schema }
-  ? LexValue & InferOutput<M['message']>
-  : undefined
+  M extends Subscription,
+> = M extends Subscription ? InferOutput<M['message']> : undefined
 
 export type InferMethodError<
   //

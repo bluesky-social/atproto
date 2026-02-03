@@ -1,9 +1,17 @@
-import { DidString } from '@atproto/lex-schema'
+import {
+  DidString,
+  InferMethodOutput,
+  InferMethodOutputBody,
+  Procedure,
+  Query,
+} from '@atproto/lex-schema'
 
-export type XrpcPayload<B = unknown, E extends string = string> = {
-  body: B
-  encoding: E
-}
+export type XrpcResponseBody<M extends Procedure | Query = Procedure | Query> =
+  InferMethodOutputBody<M, Uint8Array>
+
+export type XrpcResponsePayload<
+  M extends Procedure | Query = Procedure | Query,
+> = InferMethodOutput<M, Uint8Array>
 
 export function isBlobLike(value: unknown): value is Blob {
   if (value == null) return false

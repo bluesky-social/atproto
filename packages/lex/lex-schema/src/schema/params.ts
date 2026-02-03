@@ -10,13 +10,14 @@ import {
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import { memoizedOptions } from '../util/memoize.js'
-import { array } from './array.js'
-import { boolean } from './boolean.js'
+import { ArraySchema, array } from './array.js'
+import { BooleanSchema, boolean } from './boolean.js'
 import { dict } from './dict.js'
-import { integer } from './integer.js'
-import { optional } from './optional.js'
+import { IntegerSchema, integer } from './integer.js'
+import { OptionalSchema, optional } from './optional.js'
 import { StringSchema, string } from './string.js'
 import { union } from './union.js'
+import { WithDefaultSchema } from './with-default.js'
 
 export type ParamScalar = Infer<typeof paramScalarSchema>
 const paramScalarSchema = union([boolean(), integer(), string()])
@@ -27,14 +28,25 @@ export const paramSchema = union([paramScalarSchema, array(paramScalarSchema)])
 export type Params = Infer<typeof paramsSchema>
 export const paramsSchema = dict(string(), optional(paramSchema))
 
+// @NOTE In order to properly coerce URLSearchParams, we need to distinguish
+// between scalar and array validators, requiring to be able to detect which
+// schema types are being used, restricting the allowed param validators here.
+type ParamScalarValidator = StringSchema | BooleanSchema | IntegerSchema
+type ParamValueValidator =
+  | ParamScalarValidator
+  | ArraySchema<ParamScalarValidator>
+type ParamValidator =
+  | ParamValueValidator
+  | OptionalSchema<ParamValueValidator>
+  | OptionalSchema<WithDefaultSchema<ParamValueValidator>>
+  | WithDefaultSchema<ParamValueValidator>
+
 export type ParamsSchemaShape = {
-  [x: string]: Validator<Param | undefined>
+  [x: string]: ParamValidator
 }
 
 export class ParamsSchema<
-  const TShape extends ParamsSchemaShape = {
-    [x: string]: Validator<Param | undefined>
-  },
+  const TShape extends ParamsSchemaShape = ParamsSchemaShape,
 > extends Schema<
   WithOptionalProperties<{
     [K in keyof TShape]: InferInput<TShape[K]>
@@ -47,14 +59,13 @@ export class ParamsSchema<
     super()
   }
 
-  get shapeValidators(): Map<string, Validator<Param | undefined>> {
+  get shapeValidators(): Map<string, ParamValidator> {
     const map = new Map(Object.entries(this.shape))
 
     return lazyProperty(this, 'shapeValidators', map)
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    // @TODO BETTER SUPPORT Input/Output
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -111,14 +122,22 @@ export class ParamsSchema<
     return ctx.success(copy ?? input)
   }
 
-  fromURLSearchParams(urlSearchParams: URLSearchParams): InferOutput<this> {
+  fromURLSearchParams(iterable: Iterable<[string, string]>): InferOutput<this> {
     const params: Record<string, Param> = {}
 
-    for (const [key, value] of urlSearchParams.entries()) {
-      const validator = this.shapeValidators.get(key)
+    // Compatibility with URLSearchParams not being iterable in some environments
+    const entries =
+      iterable instanceof URLSearchParams ? iterable.entries() : iterable
+
+    for (const [key, value] of entries) {
+      const validator = unwrapValidator(this.shapeValidators.get(key))
+      const expectsArray = validator instanceof ArraySchema
+      const scalarValidator = expectsArray
+        ? unwrapValidator(validator.validator)
+        : validator
 
       const coerced: ParamScalar =
-        validator instanceof StringSchema
+        scalarValidator instanceof StringSchema
           ? value
           : value === 'true'
             ? true
@@ -128,12 +147,13 @@ export class ParamsSchema<
                 ? Number(value)
                 : value
 
-      if (params[key] === undefined) {
-        params[key] = coerced
-      } else if (Array.isArray(params[key])) {
-        params[key].push(coerced)
+      const currentParam = params[key]
+      if (currentParam === undefined) {
+        params[key] = expectsArray ? [coerced] : coerced
+      } else if (Array.isArray(currentParam)) {
+        currentParam.push(coerced)
       } else {
-        params[key] = [params[key] as ParamScalar, coerced]
+        params[key] = [currentParam, coerced]
       }
     }
 
@@ -166,3 +186,13 @@ export const params = /*#__PURE__*/ memoizedOptions(function params<
 >(properties: TShape = {} as TShape) {
   return new ParamsSchema<TShape>(properties)
 })
+
+function unwrapValidator(schema?: Validator): Validator | undefined {
+  while (
+    schema instanceof OptionalSchema ||
+    schema instanceof WithDefaultSchema
+  ) {
+    schema = schema.validator
+  }
+  return schema
+}
