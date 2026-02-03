@@ -6,7 +6,11 @@ import { Server } from '../../lexicon'
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.label.queryLabels(async ({ params }) => {
     const { uriPatterns, sources, limit, cursor } = params
-    let builder = ctx.db.db.selectFrom('label').selectAll().limit(limit)
+    let builder = ctx.db.db
+      .selectFrom('label')
+      .selectAll()
+      .orderBy('id', 'asc')
+      .limit(limit)
     // if includes '*', then we don't need a where clause
     if (!uriPatterns.includes('*')) {
       builder = builder.where((qb) => {
