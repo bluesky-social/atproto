@@ -1,7 +1,5 @@
 import { lexParse } from '@atproto/lex-json'
 import {
-  InferMethodOutput,
-  InferMethodOutputBody,
   InferMethodOutputEncoding,
   Procedure,
   Query,
@@ -13,15 +11,12 @@ import {
   XrpcUpstreamError,
   isXrpcErrorPayload,
 } from './errors.js'
-import { XrpcPayload } from './util.js'
+import { XrpcResponseBody, XrpcResponsePayload } from './util.js'
 
-export type XrpcResponseBody<M extends Procedure | Query> =
-  InferMethodOutputBody<M, Uint8Array>
+const CONTENT_TYPE_BINARY = 'application/octet-stream'
+const CONTENT_TYPE_JSON = 'application/json'
 
-export type XrpcResponsePayload<M extends Procedure | Query> =
-  InferMethodOutput<M, Uint8Array> extends infer P extends XrpcPayload
-    ? P
-    : null
+export type { XrpcResponseBody, XrpcResponsePayload }
 
 /**
  * Small container for XRPC response data.
@@ -51,7 +46,7 @@ export class XrpcResponse<M extends Procedure | Query>
    * in binary form {@link Uint8Array} (`false`).
    */
   get isParsed() {
-    return this.encoding === 'application/json' && shouldParse(this.method)
+    return this.method.output.encoding === CONTENT_TYPE_JSON
   }
 
   get encoding() {
@@ -116,7 +111,7 @@ export class XrpcResponse<M extends Procedure | Query>
 
     // Only parse json if the schema expects it
     const payload = await readPayload(response, {
-      parse: shouldParse(method),
+      parse: method.output.encoding === CONTENT_TYPE_JSON,
     }).catch((cause) => {
       throw new XrpcUpstreamError(
         method,
@@ -176,17 +171,13 @@ export class XrpcResponse<M extends Procedure | Query>
   }
 }
 
-function shouldParse(method: Procedure | Query) {
-  return method.output.encoding === 'application/json'
-}
-
 /**
  * @note this function always consumes the response body
  */
 async function readPayload(
   response: Response,
   options?: { parse?: boolean },
-): Promise<XrpcPayload | null> {
+): Promise<XrpcResponsePayload> {
   // @TODO Should we limit the maximum response size here (this could also be
   // done by the FetchHandler)?
 
@@ -198,18 +189,18 @@ async function readPayload(
 
   // Response content-type is undefined
   if (!encoding) {
-    // If the body is empty, return null (= no payload)
+    // If the body is empty, return undefined (= no payload)
     const body = await response.arrayBuffer()
-    if (body.byteLength === 0) return null
+    if (body.byteLength === 0) return undefined
 
     // If we got data despite no content-type, treat it as binary
     return {
-      encoding: 'application/octet-stream',
+      encoding: CONTENT_TYPE_BINARY,
       body: new Uint8Array(body),
     }
   }
 
-  if (options?.parse && encoding === 'application/json') {
+  if (options?.parse && encoding === CONTENT_TYPE_JSON) {
     // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
     // perform the lex parsing using cborg/json, allowing to do
     // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
