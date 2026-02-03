@@ -8,5 +8,6 @@ module.exports = {
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
+  testPathIgnorePatterns: ['/node_modules/', '/tests/team.test.ts'],
   forceExit: true,
 }

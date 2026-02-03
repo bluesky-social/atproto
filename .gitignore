@@ -20,3 +20,4 @@ test-*-local.*
 old/
 .claude/
 coverage
+packages/lex/lex-password-agent
