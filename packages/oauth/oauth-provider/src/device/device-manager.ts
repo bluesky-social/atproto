@@ -86,6 +86,7 @@ type CookieValue = {
 export type DeviceInfo = {
   deviceId: DeviceId
   deviceMetadata: RequestMetadata
+  isFresh: boolean
 }
 
 /**
@@ -141,7 +142,7 @@ export class DeviceManager {
 
     await this.setCookies(req, res, { deviceId, sessionId })
 
-    return { deviceId, deviceMetadata }
+    return { deviceId, deviceMetadata, isFresh: true }
   }
 
   private async refresh(
@@ -170,19 +171,20 @@ export class DeviceManager {
 
     const deviceMetadata = this.getRequestMetadata(req)
 
-    if (
+    const shouldRotate =
       forceRotate ||
       deviceMetadata.ipAddress !== data.ipAddress ||
       deviceMetadata.userAgent !== data.userAgent ||
       age > this.options.rotationRate
-    ) {
+
+    if (shouldRotate) {
       await this.rotate(req, res, deviceId, {
         ipAddress: deviceMetadata.ipAddress,
         userAgent: deviceMetadata.userAgent || data.userAgent,
       })
     }
 
-    return { deviceId, deviceMetadata }
+    return { deviceId, deviceMetadata, isFresh: shouldRotate }
   }
 
   private async rotate(
