@@ -131,19 +131,23 @@ export class OAuthStore
     // @NOTE Password strength & length already enforced by the OAuthProvider
 
     // Check if this is a RemoteLogin signup (no password + Legal ID format)
-    if (!password && emailOtp && emailOtp.includes('@legal.') && this.neuroRemoteLoginManager) {
+    if (
+      !password &&
+      emailOtp &&
+      emailOtp.includes('@legal.') &&
+      this.neuroRemoteLoginManager
+    ) {
       const legalId = emailOtp // Treat emailOtp as Legal ID when it matches pattern
 
       // Initiate RemoteLogin petition
       const purpose = `Sign up for @${handle}`
-      const { petitionId } = await this.neuroRemoteLoginManager.initiatePetition(
-        legalId,
-        purpose,
-      )
+      const { petitionId } =
+        await this.neuroRemoteLoginManager.initiatePetition(legalId, purpose)
 
       // Wait for user approval (with timeout)
       try {
-        const approval = await this.neuroRemoteLoginManager.waitForApproval(petitionId)
+        const approval =
+          await this.neuroRemoteLoginManager.waitForApproval(petitionId)
 
         return this.createAccountWithNeuroRemoteLogin({
           handle,
@@ -296,10 +300,8 @@ export class OAuthStore
       const legalId = password
       const purpose = `Sign in as ${identifier}`
 
-      const { petitionId } = await this.neuroRemoteLoginManager.initiatePetition(
-        legalId,
-        purpose,
-      )
+      const { petitionId } =
+        await this.neuroRemoteLoginManager.initiatePetition(legalId, purpose)
 
       // Wait for user approval (with timeout)
       try {
@@ -313,13 +315,14 @@ export class OAuthStore
           .executeTakeFirst()
 
         if (!accountLink) {
-          throw new InvalidRequestError(
-            'No account linked to this Legal ID',
-          )
+          throw new InvalidRequestError('No account linked to this Legal ID')
         }
 
         // Get full account object
-        const accountData = await accountHelper.getAccount(this.db, accountLink.did)
+        const accountData = await accountHelper.getAccount(
+          this.db,
+          accountLink.did,
+        )
         if (!accountData) {
           throw new InvalidRequestError('Account not found')
         }
@@ -334,9 +337,7 @@ export class OAuthStore
           )
         }
         if (error.message?.includes('rejected')) {
-          throw new InvalidRequestError(
-            'Authentication was rejected.',
-          )
+          throw new InvalidRequestError('Authentication was rejected.')
         }
         // Re-throw to preserve other errors
         throw err
@@ -373,8 +374,9 @@ export class OAuthStore
         }
 
         // Look up account by Neuro JID
-        const accountLink =
-          await this.neuroAuthManager.findAccountByNeuroJid(identity.jid)
+        const accountLink = await this.neuroAuthManager.findAccountByNeuroJid(
+          identity.jid,
+        )
 
         if (!accountLink) {
           throw new InvalidRequestError(
@@ -817,8 +819,9 @@ This will authenticate you with your Neuro identity.`
     const { identity } = data
 
     // Check if already linked
-    const existing =
-      await this.neuroAuthManager.findAccountByNeuroJid(identity.jid)
+    const existing = await this.neuroAuthManager.findAccountByNeuroJid(
+      identity.jid,
+    )
 
     if (existing) {
       throw new InvalidRequestError(

@@ -16,7 +16,8 @@ app.use(express.json())
 const PORT = process.env.PORT || 8080
 const CALLBACK_DELAY_MS = parseInt(process.env.CALLBACK_DELAY_MS || '2000')
 const AUTO_APPROVE = process.env.AUTO_APPROVE !== 'false'
-const MOCK_LEGAL_ID = process.env.MOCK_LEGAL_ID || 'test-guid@legal.lab.tagroot.io'
+const MOCK_LEGAL_ID =
+  process.env.MOCK_LEGAL_ID || 'test-guid@legal.lab.tagroot.io'
 const MOCK_JID = process.env.MOCK_JID || 'testuser@lab.tagroot.io'
 
 // In-memory petition storage
@@ -33,13 +34,13 @@ async function generateNeuroJWT(legalId, audience, seconds = 300) {
 
   const jwt = await new SignJWT({})
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-    .setJti(crypto.randomBytes(16).toString('hex'))           // JWT ID
-    .setIssuer('lab.tagroot.io')                               // Issuer (Neuron domain)
-    .setSubject(legalId)                                       // Subject (Legal ID)
-    .setAudience(audience)                                     // Audience (PDS domain)
-    .setIssuedAt(now)                                          // Issued at
-    .setExpirationTime(now + seconds)                          // Expiration
-    .claim('client_id', legalId)                               // Client ID (same as subject)
+    .setJti(crypto.randomBytes(16).toString('hex')) // JWT ID
+    .setIssuer('lab.tagroot.io') // Issuer (Neuron domain)
+    .setSubject(legalId) // Subject (Legal ID)
+    .setAudience(audience) // Audience (PDS domain)
+    .setIssuedAt(now) // Issued at
+    .setExpirationTime(now + seconds) // Expiration
+    .claim('client_id', legalId) // Client ID (same as subject)
     .sign(JWT_SECRET)
 
   return jwt
@@ -66,13 +67,13 @@ async function sendCallback(callbackUrl, petitionId, approved = true) {
     const token = await generateNeuroJWT(
       petition.address,
       petition.audience,
-      petition.seconds
+      petition.seconds,
     )
 
     payload = {
       PetitionId: petitionId,
       Rejected: false,
-      Token: token
+      Token: token,
     }
 
     console.log(`   ✅ Token generated (${token.substring(0, 50)}...)`)
@@ -80,7 +81,7 @@ async function sendCallback(callbackUrl, petitionId, approved = true) {
     payload = {
       PetitionId: petitionId,
       Rejected: true,
-      Token: ''
+      Token: '',
     }
 
     console.log(`   ❌ Petition rejected`)
@@ -121,7 +122,7 @@ app.post('/QuickLogin', async (req, res) => {
   if (!callbackUrl || !sessionId) {
     console.error('❌ Missing required fields')
     return res.status(400).json({
-      error: 'Missing required fields: callbackUrl, sessionId'
+      error: 'Missing required fields: callbackUrl, sessionId',
     })
   }
 
@@ -138,7 +139,7 @@ app.post('/QuickLogin', async (req, res) => {
     sessionId,
     callbackUrl,
     createdAt: Date.now(),
-    type: 'QuickLogin'
+    type: 'QuickLogin',
   })
 
   // Return service ID immediately
@@ -146,7 +147,9 @@ app.post('/QuickLogin', async (req, res) => {
 
   // Schedule automatic callback if enabled
   if (AUTO_APPROVE) {
-    console.log(`⏱️  Scheduling automatic QuickLogin callback in ${CALLBACK_DELAY_MS}ms...`)
+    console.log(
+      `⏱️  Scheduling automatic QuickLogin callback in ${CALLBACK_DELAY_MS}ms...`,
+    )
     setTimeout(async () => {
       console.log(`\n📞 Sending QuickLogin callback to: ${callbackUrl}`)
 
@@ -161,7 +164,7 @@ app.post('/QuickLogin', async (req, res) => {
         firstName: 'Test',
         lastName: 'User',
         profilePictureUrl: null,
-        publicKey: null
+        publicKey: null,
       }
 
       console.log('   Identity:', JSON.stringify(identity, null, 2))
@@ -176,17 +179,23 @@ app.post('/QuickLogin', async (req, res) => {
         })
 
         if (response.ok) {
-          console.log(`   ✅ QuickLogin callback sent successfully (${response.status})`)
+          console.log(
+            `   ✅ QuickLogin callback sent successfully (${response.status})`,
+          )
         } else {
           const text = await response.text()
-          console.error(`   ❌ QuickLogin callback failed (${response.status}): ${text}`)
+          console.error(
+            `   ❌ QuickLogin callback failed (${response.status}): ${text}`,
+          )
         }
       } catch (error) {
         console.error(`   ❌ QuickLogin callback error: ${error.message}`)
       }
     }, CALLBACK_DELAY_MS)
   } else {
-    console.log(`⏸️  Auto-approve disabled. Use POST /mock/qr-scan/${sessionId} to trigger callback manually.`)
+    console.log(
+      `⏸️  Auto-approve disabled. Use POST /mock/qr-scan/${sessionId} to trigger callback manually.`,
+    )
   }
 })
 
@@ -220,7 +229,7 @@ app.post('/mock/qr-scan/:sessionId', async (req, res) => {
     firstName: req.body.firstName || 'Test',
     lastName: req.body.lastName || 'User',
     profilePictureUrl: req.body.profilePictureUrl || null,
-    publicKey: req.body.publicKey || null
+    publicKey: req.body.publicKey || null,
   }
 
   console.log('   Sending identity:', JSON.stringify(identity, null, 2))
@@ -263,14 +272,14 @@ app.post('/RemoteLogin', async (req, res) => {
     ResponseMethod,
     CallbackURL,
     Seconds = 300,
-    Purpose
+    Purpose,
   } = req.body
 
   // Validate required fields
   if (!AddressType || !Address || !ResponseMethod) {
     console.error('❌ Missing required fields')
     return res.status(400).json({
-      error: 'Missing required fields: AddressType, Address, ResponseMethod'
+      error: 'Missing required fields: AddressType, Address, ResponseMethod',
     })
   }
 
@@ -278,14 +287,14 @@ app.post('/RemoteLogin', async (req, res) => {
   if (ResponseMethod !== 'Callback') {
     console.error(`❌ Unsupported response method: ${ResponseMethod}`)
     return res.status(400).json({
-      error: 'Only ResponseMethod=Callback is supported in mock server'
+      error: 'Only ResponseMethod=Callback is supported in mock server',
     })
   }
 
   if (!CallbackURL) {
     console.error('❌ CallbackURL required for Callback response method')
     return res.status(400).json({
-      error: 'CallbackURL is required when ResponseMethod=Callback'
+      error: 'CallbackURL is required when ResponseMethod=Callback',
     })
   }
 
@@ -309,7 +318,7 @@ app.post('/RemoteLogin', async (req, res) => {
     seconds: Seconds,
     purpose: Purpose,
     audience: audience,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   })
 
   console.log(`✅ Petition created: ${petitionId}`)
@@ -324,12 +333,16 @@ app.post('/RemoteLogin', async (req, res) => {
 
   // Schedule automatic callback if enabled
   if (AUTO_APPROVE) {
-    console.log(`⏱️  Scheduling automatic approval in ${CALLBACK_DELAY_MS}ms...`)
+    console.log(
+      `⏱️  Scheduling automatic approval in ${CALLBACK_DELAY_MS}ms...`,
+    )
     setTimeout(() => {
       sendCallback(CallbackURL, petitionId, true)
     }, CALLBACK_DELAY_MS)
   } else {
-    console.log(`⏸️  Auto-approve disabled. Use POST /mock/approve/${petitionId} to approve manually.`)
+    console.log(
+      `⏸️  Auto-approve disabled. Use POST /mock/approve/${petitionId} to approve manually.`,
+    )
   }
 })
 
@@ -381,12 +394,12 @@ app.post('/mock/reject/:petitionId', async (req, res) => {
 app.get('/mock/petitions', (req, res) => {
   const petitionList = Array.from(petitions.entries()).map(([id, data]) => ({
     petitionId: id,
-    ...data
+    ...data,
   }))
 
   res.json({
     count: petitionList.length,
-    petitions: petitionList
+    petitions: petitionList,
   })
 })
 
@@ -401,8 +414,8 @@ app.get('/health', (req, res) => {
       autoApprove: AUTO_APPROVE,
       callbackDelayMs: CALLBACK_DELAY_MS,
       mockLegalId: MOCK_LEGAL_ID,
-      mockJid: MOCK_JID
-    }
+      mockJid: MOCK_JID,
+    },
   })
 })
 
@@ -418,7 +431,9 @@ app.listen(PORT, () => {
   console.log(`   - Mock Legal ID: ${MOCK_LEGAL_ID}`)
   console.log(`   - Mock JID: ${MOCK_JID}`)
   console.log(`\n📚 Available Endpoints:`)
-  console.log(`   POST /QuickLogin            - Create QuickLogin session (legacy)`)
+  console.log(
+    `   POST /QuickLogin            - Create QuickLogin session (legacy)`,
+  )
   console.log(`   POST /mock/qr-scan/:id      - Trigger QuickLogin callback`)
   console.log(`   POST /RemoteLogin           - Create RemoteLogin petition`)
   console.log(`   POST /mock/approve/:id      - Manually approve a petition`)

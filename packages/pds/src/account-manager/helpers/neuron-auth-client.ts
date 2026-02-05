@@ -53,10 +53,7 @@ export class NeuronAuthClient {
   /**
    * Get fetch options with authentication headers
    */
-  getAuthenticatedFetchOptions(
-    method: string,
-    body?: object,
-  ): RequestInit {
+  getAuthenticatedFetchOptions(method: string, body?: object): RequestInit {
     const options: RequestInit = {
       method,
       headers: {

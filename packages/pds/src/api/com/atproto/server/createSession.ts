@@ -38,11 +38,18 @@ export default function (server: Server, ctx: AppContext) {
       // 3. Otherwise → Traditional app password authentication
 
       const password = input.body.password || ''
-      const isRemoteLoginTrigger = password.toLowerCase() === 'wid' || password.includes('@legal.')
+      const isRemoteLoginTrigger =
+        password.toLowerCase() === 'wid' || password.includes('@legal.')
 
       // REMOTELOGIN FLOW (triggered by "wid" or Legal ID password)
       if (isRemoteLoginTrigger && ctx.neuroRemoteLoginManager) {
-        req.log.info({ identifier: input.body.identifier, trigger: password === 'wid' ? 'wid' : 'legalId' }, 'RemoteLogin flow triggered')
+        req.log.info(
+          {
+            identifier: input.body.identifier,
+            trigger: password === 'wid' ? 'wid' : 'legalId',
+          },
+          'RemoteLogin flow triggered',
+        )
 
         let legalId: string | undefined
         let userForRemoteLogin: any
@@ -60,10 +67,13 @@ export default function (server: Server, ctx: AppContext) {
             .executeTakeFirst()
 
           if (accountLink) {
-            userForRemoteLogin = await ctx.accountManager.getAccount(accountLink.did, {
-              includeDeactivated: true,
-              includeTakenDown: true,
-            })
+            userForRemoteLogin = await ctx.accountManager.getAccount(
+              accountLink.did,
+              {
+                includeDeactivated: true,
+                includeTakenDown: true,
+              },
+            )
           }
 
           if (!userForRemoteLogin) {
@@ -72,22 +82,35 @@ export default function (server: Server, ctx: AppContext) {
         }
         // Otherwise (password = "wid"), look up account by identifier, then get Legal ID
         else {
-          req.log.info({ identifier: input.body.identifier }, 'Looking up account by identifier for RemoteLogin')
+          req.log.info(
+            { identifier: input.body.identifier },
+            'Looking up account by identifier for RemoteLogin',
+          )
 
           // Check if identifier is an email address
-          const isEmail = input.body.identifier.includes('@') && !input.body.identifier.startsWith('did:')
+          const isEmail =
+            input.body.identifier.includes('@') &&
+            !input.body.identifier.startsWith('did:')
 
-          req.log.info({
-            identifier: input.body.identifier,
-            isEmail,
-            lookupMethod: isEmail ? 'getAccountByEmail' : 'getAccount (handle/DID)'
-          }, 'Determining lookup method')
+          req.log.info(
+            {
+              identifier: input.body.identifier,
+              isEmail,
+              lookupMethod: isEmail
+                ? 'getAccountByEmail'
+                : 'getAccount (handle/DID)',
+            },
+            'Determining lookup method',
+          )
 
           const account = isEmail
-            ? await ctx.accountManager.getAccountByEmail(input.body.identifier, {
-                includeDeactivated: true,
-                includeTakenDown: true,
-              })
+            ? await ctx.accountManager.getAccountByEmail(
+                input.body.identifier,
+                {
+                  includeDeactivated: true,
+                  includeTakenDown: true,
+                },
+              )
             : await ctx.accountManager.getAccount(input.body.identifier, {
                 includeDeactivated: true,
                 includeTakenDown: true,
@@ -107,11 +130,14 @@ export default function (server: Server, ctx: AppContext) {
           if (!accountLink) {
             throw new AuthRequiredError(
               'This account does not have a linked Neuro Legal ID. ' +
-              'Use your app password instead, or set up Neuro authentication.'
+                'Use your app password instead, or set up Neuro authentication.',
             )
           }
 
-          req.log.info({ did: account.did, legalId: accountLink.neuroJid }, 'Found linked Legal ID for account')
+          req.log.info(
+            { did: account.did, legalId: accountLink.neuroJid },
+            'Found linked Legal ID for account',
+          )
           legalId = accountLink.neuroJid
           userForRemoteLogin = account
         }
@@ -126,27 +152,41 @@ export default function (server: Server, ctx: AppContext) {
         let approval
         try {
           // Initiate RemoteLogin petition
-          const { petitionId } = await ctx.neuroRemoteLoginManager.initiatePetition(
-            legalId,
-            purpose,
+          const { petitionId } =
+            await ctx.neuroRemoteLoginManager.initiatePetition(legalId, purpose)
+
+          req.log.info(
+            { petitionId, legalId },
+            'RemoteLogin petition initiated - waiting for approval',
           )
 
-          req.log.info({ petitionId, legalId }, 'RemoteLogin petition initiated - waiting for approval')
-
           // Wait for user approval
-          approval = await ctx.neuroRemoteLoginManager.waitForApproval(petitionId)
+          approval =
+            await ctx.neuroRemoteLoginManager.waitForApproval(petitionId)
 
-          req.log.info({ approved: approval, petitionId }, 'RemoteLogin approved')
+          req.log.info(
+            { approved: approval, petitionId },
+            'RemoteLogin approved',
+          )
         } catch (err) {
           const errorMsg = err instanceof Error ? err.message : String(err)
-          req.log.warn({ error: errorMsg, legalId }, 'RemoteLogin petition failed')
+          req.log.warn(
+            { error: errorMsg, legalId },
+            'RemoteLogin petition failed',
+          )
 
           // Convert petition errors to user-friendly messages
-          if (errorMsg.includes('timeout') || errorMsg.includes('did not respond')) {
+          if (
+            errorMsg.includes('timeout') ||
+            errorMsg.includes('did not respond')
+          ) {
             throw new AuthRequiredError(
               'Authentication request timed out. Please approve the login request on your device and try again.',
             )
-          } else if (errorMsg.includes('rejected') || errorMsg.includes('denied')) {
+          } else if (
+            errorMsg.includes('rejected') ||
+            errorMsg.includes('denied')
+          ) {
             throw new AuthRequiredError(
               'Authentication request was rejected. Please try again.',
             )
@@ -175,7 +215,11 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
-          ctx.accountManager.createSession(user.did, appPassword, isSoftDeleted),
+          ctx.accountManager.createSession(
+            user.did,
+            appPassword,
+            isSoftDeleted,
+          ),
           didDocForSession(ctx, user.did),
         ])
 
@@ -199,7 +243,10 @@ export default function (server: Server, ctx: AppContext) {
 
       // TRADITIONAL APP PASSWORD AUTHENTICATION
       // Used by third-party apps and when password is not "wid" or Legal ID
-      req.log.info({ identifier: input.body.identifier }, 'Using traditional password authentication')
+      req.log.info(
+        { identifier: input.body.identifier },
+        'Using traditional password authentication',
+      )
 
       if (password.length > OLD_PASSWORD_MAX_LENGTH) {
         throw new AuthRequiredError(

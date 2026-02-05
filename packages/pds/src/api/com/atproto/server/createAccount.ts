@@ -67,20 +67,27 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
 
-        req.log.info({ legalId: password, handle }, 'Verifying Legal ID ownership during account creation')
+        req.log.info(
+          { legalId: password, handle },
+          'Verifying Legal ID ownership during account creation',
+        )
 
         const purpose = `Create account: ${handle}`
-        const { petitionId } = await ctx.neuroRemoteLoginManager.initiatePetition(
-          password,
-          purpose,
-        )
+        const { petitionId } =
+          await ctx.neuroRemoteLoginManager.initiatePetition(password, purpose)
 
         // Wait for user approval on Neuro app
         try {
           await ctx.neuroRemoteLoginManager.waitForApproval(petitionId)
-          req.log.info({ legalId: password, handle }, 'Legal ID ownership verified')
+          req.log.info(
+            { legalId: password, handle },
+            'Legal ID ownership verified',
+          )
         } catch (err) {
-          req.log.error({ err, legalId: password, handle }, 'Failed to verify Legal ID ownership')
+          req.log.error(
+            { err, legalId: password, handle },
+            'Failed to verify Legal ID ownership',
+          )
           throw new InvalidRequestError(
             'Failed to verify ownership of Neuro Legal ID. Please approve the login request on your Neuro app.',
           )
@@ -131,10 +138,16 @@ export default function (server: Server, ctx: AppContext) {
           }
 
           try {
-            req.log.info({ did, legalId: password }, 'Linking Neuro identity during account creation')
+            req.log.info(
+              { did, legalId: password },
+              'Linking Neuro identity during account creation',
+            )
             await ctx.neuroAuthManager.linkIdentity(password, did, email)
           } catch (err) {
-            req.log.error({ err, did, legalId: password }, 'Failed to link Neuro identity')
+            req.log.error(
+              { err, did, legalId: password },
+              'Failed to link Neuro identity',
+            )
             const errorMsg = err instanceof Error ? err.message : String(err)
 
             if (errorMsg.includes('UNIQUE constraint failed')) {

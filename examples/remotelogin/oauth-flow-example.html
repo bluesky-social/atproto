@@ -1,226 +1,251 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>RemoteLogin Authentication Example</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            max-width: 700px;
-            margin: 50px auto;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .section {
-            margin: 30px 0;
-            padding: 25px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #fafafa;
-        }
-        .section h2 {
-            margin-top: 0;
-            color: #333;
-        }
-        label {
-            display: block;
-            margin: 15px 0 5px 0;
-            font-weight: 500;
-            color: #555;
-        }
-        input, button {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin: 5px 0 15px 0;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        input {
-            background: white;
-        }
-        input::placeholder {
-            color: #999;
-        }
-        button {
-            background: #0085ff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: #0066cc;
-        }
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        .result {
-            margin-top: 20px;
-        }
-        .info {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 14px;
-            word-break: break-all;
-            white-space: pre-wrap;
-        }
-        .success {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-            color: #155724;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        .error {
-            background: #f8d7da;
-            border-left: 4px solid #dc3545;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        .warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 10px 0;
-        }
-        code {
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
-        }
-        .instructions {
-            background: #fff;
-            padding: 20px;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-        .instructions ol {
-            margin: 10px 0;
-            padding-left: 25px;
-        }
-        .instructions li {
-            margin: 8px 0;
-        }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 700px;
+        margin: 50px auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .section {
+        margin: 30px 0;
+        padding: 25px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: #fafafa;
+      }
+      .section h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      label {
+        display: block;
+        margin: 15px 0 5px 0;
+        font-weight: 500;
+        color: #555;
+      }
+      input,
+      button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        margin: 5px 0 15px 0;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      input {
+        background: white;
+      }
+      input::placeholder {
+        color: #999;
+      }
+      button {
+        background: #0085ff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+      button:hover {
+        background: #0066cc;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .result {
+        margin-top: 20px;
+      }
+      .info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-all;
+        white-space: pre-wrap;
+      }
+      .success {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        color: #155724;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .error {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .warning {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        color: #856404;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      code {
+        background: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: monospace;
+      }
+      .instructions {
+        background: #fff;
+        padding: 20px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+      .instructions ol {
+        margin: 10px 0;
+        padding-left: 25px;
+      }
+      .instructions li {
+        margin: 8px 0;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1>🔐 Neuro RemoteLogin Test</h1>
-        <p>Test authentication using Neuro Legal ID</p>
+      <h1>🔐 Neuro RemoteLogin Test</h1>
+      <p>Test authentication using Neuro Legal ID</p>
     </div>
 
     <div class="section">
-        <h2>Configuration</h2>
-        <p>Configure your PDS and test credentials below:</p>
+      <h2>Configuration</h2>
+      <p>Configure your PDS and test credentials below:</p>
 
-        <label>PDS URL:</label>
-        <input type="text" id="pdsUrl" placeholder="https://your-pds.example.com">
+      <label>PDS URL:</label>
+      <input
+        type="text"
+        id="pdsUrl"
+        placeholder="https://your-pds.example.com"
+      />
 
-        <label>Your Handle:</label>
-        <input type="text" id="handle" placeholder="yourhandle.example.com">
+      <label>Your Handle:</label>
+      <input type="text" id="handle" placeholder="yourhandle.example.com" />
 
-        <label>Your Legal ID:</label>
-        <input type="text" id="legalId" placeholder="12345678-1234-1234-1234-123456789abc@legal.example.com">
+      <label>Your Legal ID:</label>
+      <input
+        type="text"
+        id="legalId"
+        placeholder="12345678-1234-1234-1234-123456789abc@legal.example.com"
+      />
 
-        <div class="warning">
-            ⚠️ <strong>Security Note:</strong> This page stores no data. All information stays in your browser.
-            Do not commit this file with real credentials.
-        </div>
+      <div class="warning">
+        ⚠️ <strong>Security Note:</strong> This page stores no data. All
+        information stays in your browser. Do not commit this file with real
+        credentials.
+      </div>
     </div>
 
     <div class="section">
-        <h2>Test RemoteLogin Authentication</h2>
+      <h2>Test RemoteLogin Authentication</h2>
 
-        <div class="instructions">
-            <h3>How it works:</h3>
-            <ol>
-                <li>Click the button below to initiate a RemoteLogin petition</li>
-                <li>A request will be sent to your Neuro app</li>
-                <li>Open your Neuro app and approve the petition</li>
-                <li>The page will automatically receive and display the session tokens</li>
-            </ol>
-        </div>
+      <div class="instructions">
+        <h3>How it works:</h3>
+        <ol>
+          <li>Click the button below to initiate a RemoteLogin petition</li>
+          <li>A request will be sent to your Neuro app</li>
+          <li>Open your Neuro app and approve the petition</li>
+          <li>
+            The page will automatically receive and display the session tokens
+          </li>
+        </ol>
+      </div>
 
-        <button onclick="testRemoteLogin()" id="testBtn">Sign In with RemoteLogin</button>
+      <button onclick="testRemoteLogin()" id="testBtn">
+        Sign In with RemoteLogin
+      </button>
 
-        <div id="authResult"></div>
+      <div id="authResult"></div>
     </div>
 
     <script>
-        // Load saved configuration from localStorage
-        window.onload = function() {
-            document.getElementById('pdsUrl').value = localStorage.getItem('pdsUrl') || '';
-            document.getElementById('handle').value = localStorage.getItem('handle') || '';
-            document.getElementById('legalId').value = localStorage.getItem('legalId') || '';
-        };
+      // Load saved configuration from localStorage
+      window.onload = function () {
+        document.getElementById('pdsUrl').value =
+          localStorage.getItem('pdsUrl') || ''
+        document.getElementById('handle').value =
+          localStorage.getItem('handle') || ''
+        document.getElementById('legalId').value =
+          localStorage.getItem('legalId') || ''
+      }
 
-        async function testRemoteLogin() {
-            const pdsUrl = document.getElementById('pdsUrl').value.trim();
-            const handle = document.getElementById('handle').value.trim();
-            const legalId = document.getElementById('legalId').value.trim();
-            const resultDiv = document.getElementById('authResult');
-            const testBtn = document.getElementById('testBtn');
+      async function testRemoteLogin() {
+        const pdsUrl = document.getElementById('pdsUrl').value.trim()
+        const handle = document.getElementById('handle').value.trim()
+        const legalId = document.getElementById('legalId').value.trim()
+        const resultDiv = document.getElementById('authResult')
+        const testBtn = document.getElementById('testBtn')
 
-            // Validation
-            if (!pdsUrl || !handle || !legalId) {
-                resultDiv.innerHTML = '<div class="error">❌ Please fill in all fields</div>';
-                return;
-            }
+        // Validation
+        if (!pdsUrl || !handle || !legalId) {
+          resultDiv.innerHTML =
+            '<div class="error">❌ Please fill in all fields</div>'
+          return
+        }
 
-            if (!legalId.includes('@legal.')) {
-                resultDiv.innerHTML = '<div class="error">❌ Legal ID must contain "@legal." (e.g., guid@legal.example.com)</div>';
-                return;
-            }
+        if (!legalId.includes('@legal.')) {
+          resultDiv.innerHTML =
+            '<div class="error">❌ Legal ID must contain "@legal." (e.g., guid@legal.example.com)</div>'
+          return
+        }
 
-            // Save configuration
-            localStorage.setItem('pdsUrl', pdsUrl);
-            localStorage.setItem('handle', handle);
-            localStorage.setItem('legalId', legalId);
+        // Save configuration
+        localStorage.setItem('pdsUrl', pdsUrl)
+        localStorage.setItem('handle', handle)
+        localStorage.setItem('legalId', legalId)
 
-            // Disable button and show waiting state
-            testBtn.disabled = true;
-            resultDiv.innerHTML = `
+        // Disable button and show waiting state
+        testBtn.disabled = true
+        resultDiv.innerHTML = `
                 <div class="info">📱 Petition sent to your Neuro app!
 
 Please approve the petition in your Neuro mobile app.
 
 ⏳ Waiting for approval (timeout: 5 minutes)...</div>
-            `;
+            `
 
-            try {
-                const response = await fetch(`${pdsUrl}/xrpc/com.atproto.server.createSession`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        identifier: handle,
-                        password: legalId  // Legal ID goes in password field
-                    })
-                });
+        try {
+          const response = await fetch(
+            `${pdsUrl}/xrpc/com.atproto.server.createSession`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                identifier: handle,
+                password: legalId, // Legal ID goes in password field
+              }),
+            },
+          )
 
-                const data = await response.json();
+          const data = await response.json()
 
-                if (response.ok) {
-                    resultDiv.innerHTML = `
+          if (response.ok) {
+            resultDiv.innerHTML = `
                         <div class="success">✅ Authentication successful!</div>
                         <div class="info"><strong>DID:</strong> ${data.did}
 <strong>Handle:</strong> ${data.handle}
@@ -233,25 +258,25 @@ ${data.refreshJwt.substring(0, 80)}...
 
 <strong>Email:</strong> ${data.email || 'Not set'}
 <strong>Email Confirmed:</strong> ${data.emailConfirmed ? 'Yes' : 'No'}</div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `
+                    `
+          } else {
+            resultDiv.innerHTML = `
                         <div class="error">❌ Authentication failed: ${data.error || 'Unknown error'}</div>
                         <div class="info">${data.message || JSON.stringify(data, null, 2)}</div>
-                    `;
-                }
-            } catch (error) {
-                resultDiv.innerHTML = `
+                    `
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `
                     <div class="error">❌ Network error: ${error.message}</div>
                     <div class="info">Check that:
 • Your PDS is running and accessible
 • The PDS URL is correct
 • CORS is enabled if testing from a different domain</div>
-                `;
-            } finally {
-                testBtn.disabled = false;
-            }
+                `
+        } finally {
+          testBtn.disabled = false
         }
+      }
     </script>
-</body>
+  </body>
 </html>

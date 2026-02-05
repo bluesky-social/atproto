@@ -50,6 +50,7 @@ MOCK_JID="testuser@lab.tagroot.io" npm start
 Create a new petition (mimics Neuro RemoteLogin API).
 
 **Request:**
+
 ```json
 {
   "AddressType": "LegalId",
@@ -62,6 +63,7 @@ Create a new petition (mimics Neuro RemoteLogin API).
 ```
 
 **Response:**
+
 ```json
 {
   "PetitionId": "mock-petition-abc123..."
@@ -73,6 +75,7 @@ Create a new petition (mimics Neuro RemoteLogin API).
 Manually approve a petition (useful when `AUTO_APPROVE=false`).
 
 **Example:**
+
 ```bash
 curl -X POST http://localhost:8080/mock/approve/mock-petition-abc123
 ```
@@ -82,6 +85,7 @@ curl -X POST http://localhost:8080/mock/approve/mock-petition-abc123
 Manually reject a petition.
 
 **Example:**
+
 ```bash
 curl -X POST http://localhost:8080/mock/reject/mock-petition-abc123
 ```
@@ -91,6 +95,7 @@ curl -X POST http://localhost:8080/mock/reject/mock-petition-abc123
 List all active petitions (debugging).
 
 **Response:**
+
 ```json
 {
   "count": 2,
@@ -142,6 +147,7 @@ pnpm start
 ### 4. Watch the Logs
 
 **Terminal 1 (Mock Server):**
+
 ```
 🔐 POST /RemoteLogin
 Request body: {
@@ -160,6 +166,7 @@ Request body: {
 ```
 
 **Terminal 2 (PDS):**
+
 ```
 Neuro callback received: mock-petition-abc123
 JWT parsed: {
@@ -240,15 +247,18 @@ MOCK_LEGAL_ID="user123@legal.lab.tagroot.io" npm start
 ## Debugging Tips
 
 1. **Check petition list**
+
    ```bash
    curl http://localhost:8080/mock/petitions
    ```
 
 2. **Verify callback URL is reachable**
+
    - Make sure PDS is running on the callback URL
    - Check firewall/network settings
 
 3. **Inspect JWT tokens**
+
    - Copy token from logs
    - Decode at https://jwt.io
    - Verify claims match expectations

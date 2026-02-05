@@ -21,7 +21,13 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["sessionId", "sessionToken", "serviceId", "expiresAt", "providerBaseUrl"],
+          "required": [
+            "sessionId",
+            "sessionToken",
+            "serviceId",
+            "expiresAt",
+            "providerBaseUrl"
+          ],
           "properties": {
             "sessionId": {
               "type": "string",
