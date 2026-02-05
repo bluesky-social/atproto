@@ -1,6 +1,5 @@
-import { safeFetchWrap } from '@atproto-labs/fetch-node'
-import { SimpleStore } from '@atproto-labs/simple-store'
-import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+import { createHash } from 'node:crypto'
+import type { Redis, RedisOptions } from 'ioredis'
 import { Jwks, Keyset } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -24,8 +23,9 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
-import type { Redis, RedisOptions } from 'ioredis'
-import { createHash } from 'node:crypto'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { SimpleStore } from '@atproto-labs/simple-store'
+import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
