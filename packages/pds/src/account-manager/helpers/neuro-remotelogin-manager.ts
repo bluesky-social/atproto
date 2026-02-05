@@ -1,6 +1,6 @@
-import EventEmitter from 'events'
-import http from 'http'
 import https from 'https'
+import EventEmitter from 'node:events'
+import http from 'node:http'
 import { NeuroConfig } from '../../config'
 import { NeuronAuthClient } from './neuron-auth-client'
 
@@ -129,11 +129,18 @@ export class NeuroRemoteLoginManager {
 
           const httpModule = protocol === 'https' ? https : http
           const req = httpModule.request(options, (res) => {
-            this.logger?.info({ statusCode: res.statusCode }, 'RemoteLogin API response received')
+            this.logger?.info(
+              { statusCode: res.statusCode },
+              'RemoteLogin API response received',
+            )
             let data = ''
             res.on('data', (chunk) => (data += chunk))
             res.on('end', () => {
-              if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              if (
+                res.statusCode &&
+                res.statusCode >= 200 &&
+                res.statusCode < 300
+              ) {
                 try {
                   resolve(JSON.parse(data))
                 } catch (e) {
@@ -150,7 +157,10 @@ export class NeuroRemoteLoginManager {
           })
 
           req.on('error', (e) => {
-            this.logger?.error({ error: e.message }, 'RemoteLogin request error')
+            this.logger?.error(
+              { error: e.message },
+              'RemoteLogin request error',
+            )
             reject(e)
           })
 
@@ -298,9 +308,7 @@ export class NeuroRemoteLoginManager {
   /**
    * Wait for petition to be approved or rejected
    */
-  async waitForApproval(
-    petitionId: string,
-  ): Promise<{
+  async waitForApproval(petitionId: string): Promise<{
     legalId: string
     claims: JWTClaims
     token: string
@@ -411,9 +419,7 @@ export class NeuroRemoteLoginManager {
                   }
                 } else {
                   rejectHttp(
-                    new Error(
-                      `Poll API error (${res.statusCode}): ${data}`,
-                    ),
+                    new Error(`Poll API error (${res.statusCode}): ${data}`),
                   )
                 }
               })
@@ -509,7 +515,9 @@ export class NeuroRemoteLoginManager {
       return claims
     } catch (error) {
       this.logger?.error({ error }, 'Failed to parse JWT')
-      throw new Error(`Failed to parse JWT token: ${error instanceof Error ? error.message : String(error)}`)
+      throw new Error(
+        `Failed to parse JWT token: ${error instanceof Error ? error.message : String(error)}`,
+      )
     }
   }
 
@@ -530,12 +538,21 @@ export class NeuroRemoteLoginManager {
   }
 
   /**
+   * Cleanup all petitions (for shutdown/tests)
+   */
+  cleanup(): void {
+    // Remove all listeners and clear petition map to prevent memory leaks
+    for (const [, petition] of this.petitions.entries()) {
+      petition.emitter.removeAllListeners()
+    }
+    this.petitions.clear()
+  }
+
+  /**
    * Find account by Legal ID
    * This would typically query the database for a user linked to this Legal ID
    */
-  async findAccountByLegalId(
-    legalId: string,
-  ): Promise<{ did: string } | null> {
+  async findAccountByLegalId(legalId: string): Promise<{ did: string } | null> {
     // This is a placeholder - in production, this would query the database
     // For now, return null to indicate no account found
     // The actual implementation should be in the oauth-store or account-manager

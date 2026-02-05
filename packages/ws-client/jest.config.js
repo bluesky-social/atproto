@@ -5,4 +5,5 @@ module.exports = {
   transformIgnorePatterns: ['/node_modules/.pnpm/(?!(get-port)@)'],
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
+  forceExit: true,
 }

@@ -46,6 +46,13 @@ export class TestNetworkNoAppView {
 
   async close() {
     await Promise.all(this.feedGens.map((fg) => fg.close()))
+    // Cleanup Neuro managers to clear timeouts and event listeners
+    if (this.pds.ctx.neuroAuthManager) {
+      this.pds.ctx.neuroAuthManager.cleanup?.()
+    }
+    if (this.pds.ctx.neuroRemoteLoginManager) {
+      this.pds.ctx.neuroRemoteLoginManager.cleanup?.()
+    }
     await this.pds.close()
     await this.plc.close()
   }
