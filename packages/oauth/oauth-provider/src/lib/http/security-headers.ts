@@ -50,37 +50,49 @@ export type SecurityHeadersOptions = {
   hsts?: HTTPStrictTransportSecurityConfig | false
 }
 
-export function setSecurityHeaders(
-  res: ServerResponse,
-  {
-    csp = { 'default-src': ["'none'"] },
-    coep = CrossOriginEmbedderPolicy.requireCorp,
-    corp = CrossOriginResourcePolicy.sameOrigin,
-    coop = CrossOriginOpenerPolicy.sameOrigin,
-    hsts = { maxAge: 63072000 },
-  }: SecurityHeadersOptions,
-): void {
+export function* buildSecurityHeaders({
+  csp = { 'default-src': ["'none'"] },
+  coep = CrossOriginEmbedderPolicy.requireCorp,
+  corp = CrossOriginResourcePolicy.sameOrigin,
+  coop = CrossOriginOpenerPolicy.sameOrigin,
+  // @NOTE Setting HSTS headers on a localhost endpoint will basically break
+  // localhost on Safari. In an attempt to avoid being bitten by this, we
+  // disable HSTS in development by default.
+  hsts = process.env.NODE_ENV === 'development' ? false : { maxAge: 63072000 },
+}: SecurityHeadersOptions): Generator<[string, string], void, unknown> {
   // @NOTE Never set CSP through http-equiv meta as not all directives will
   // be honored. Always set it through the Content-Security-Policy header.
   const cspString = buildCsp(csp)
   if (cspString) {
-    res.setHeader('Content-Security-Policy', cspString)
+    yield ['Content-Security-Policy', cspString]
   }
 
-  res.setHeader('Cross-Origin-Embedder-Policy', coep)
-  res.setHeader('Cross-Origin-Resource-Policy', corp)
-  res.setHeader('Cross-Origin-Opener-Policy', coop)
+  yield ['Cross-Origin-Embedder-Policy', coep]
+  yield ['Cross-Origin-Resource-Policy', corp]
+  yield ['Cross-Origin-Opener-Policy', coop]
 
   if (hsts) {
-    res.setHeader('Strict-Transport-Security', buildHstsValue(hsts))
+    yield ['Strict-Transport-Security', buildHstsValue(hsts)]
   }
 
   // @TODO make these headers configurable (?)
-  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
-  res.setHeader('Referrer-Policy', 'same-origin')
-  res.setHeader('X-Frame-Options', 'DENY')
-  res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('X-XSS-Protection', '0')
+  yield ['Permissions-Policy', 'otp-credentials=*, document-domain=()']
+  yield ['Referrer-Policy', 'same-origin']
+  yield ['X-Frame-Options', 'DENY']
+  yield ['X-Content-Type-Options', 'nosniff']
+  yield ['X-XSS-Protection', '0']
+}
+
+export function setSecurityHeaders(
+  res: ServerResponse,
+  options: SecurityHeadersOptions,
+): void {
+  for (const [header, value] of buildSecurityHeaders(options)) {
+    // Only set the header if it is not already set
+    if (!res.hasHeader(header)) {
+      res.setHeader(header, value)
+    }
+  }
 }
 
 function buildHstsValue(config: HTTPStrictTransportSecurityConfig): string {

@@ -3,10 +3,12 @@ import {
   OAuthAuthorizationRequestParameters,
   OAuthResponseMode,
 } from '@atproto/oauth-types'
-import { AuthorizationError } from '../errors/authorization-error.js'
-import { html, js } from '../lib/html/index.js'
-import { sendWebPage } from '../lib/send-web-page.js'
-import { AuthorizationRedirectParameters } from '../result/authorization-redirect-parameters.js'
+import { AuthorizationError } from '../../errors/authorization-error.js'
+import {
+  WriteFormRedirectOptions,
+  writeFormRedirect,
+} from '../../lib/write-form-redirect.js'
+import { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
@@ -77,17 +79,19 @@ export type OAuthRedirectOptions = {
 
 export function sendRedirect(
   res: ServerResponse,
-  { mode, redirectUri: uri, params }: OAuthRedirectOptions,
+  redirect: OAuthRedirectOptions,
+  options?: Omit<WriteFormRedirectOptions, 'method'>,
 ): void {
   res.setHeader('Cache-Control', 'no-store')
 
+  const { mode, redirectUri: uri, params } = redirect
   switch (mode) {
     case 'query':
       return writeQuery(res, uri, params)
     case 'fragment':
       return writeFragment(res, uri, params)
     case 'form_post':
-      return writeFormPost(res, uri, params)
+      return writeFormRedirect(res, uri, params, { ...options, method: 'post' })
   }
 
   // @ts-expect-error fool proof
@@ -114,29 +118,4 @@ function writeFragment(
   for (const [key, value] of params) searchParams.set(key, value)
   url.hash = searchParams.toString()
   res.writeHead(REDIRECT_STATUS_CODE, { Location: url.href }).end()
-}
-
-function writeFormPost(
-  res: ServerResponse,
-  uri: string,
-  params: Iterable<[string, string]>,
-): void {
-  // Prevent the Chrome from caching this page
-  // see: https://latesthackingnews.com/2023/12/12/google-updates-chrome-bfcache-for-faster-page-viewing/
-  res.setHeader('Set-Cookie', `bfCacheBypass=foo; max-age=1; SameSite=Lax`)
-  res.setHeader('Cache-Control', 'no-store')
-  res.setHeader('Permissions-Policy', 'otp-credentials=*, document-domain=()')
-
-  return sendWebPage(res, {
-    htmlAttrs: { lang: 'en' },
-    body: html`
-      <form method="post" action="${uri}">
-        ${Array.from(params, ([key, value]) => [
-          html`<input type="hidden" name="${key}" value="${value}" />`,
-        ])}
-        <input type="submit" value="Continue" />
-      </form>
-    `,
-    scripts: [js`document.forms[0].submit();`],
-  })
 }

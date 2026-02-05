@@ -1,5 +1,6 @@
-import { createHash } from 'node:crypto'
-import type { Redis, RedisOptions } from 'ioredis'
+import { safeFetchWrap } from '@atproto-labs/fetch-node'
+import { SimpleStore } from '@atproto-labs/simple-store'
+import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
 import { Jwks, Keyset } from '@atproto/jwk'
 import { LexResolver } from '@atproto/lex-resolver'
 import type { Account } from '@atproto/oauth-provider-api'
@@ -13,7 +14,6 @@ import {
   OAuthAuthorizationRequestQuery,
   OAuthAuthorizationServerMetadata,
   OAuthClientCredentials,
-  OAuthClientCredentialsNone,
   OAuthClientMetadata,
   OAuthParResponse,
   OAuthRefreshTokenGrantTokenRequest,
@@ -24,9 +24,8 @@ import {
   atprotoLoopbackClientMetadata,
   oauthAuthorizationRequestParametersSchema,
 } from '@atproto/oauth-types'
-import { safeFetchWrap } from '@atproto-labs/fetch-node'
-import { SimpleStore } from '@atproto-labs/simple-store'
-import { SimpleStoreMemory } from '@atproto-labs/simple-store-memory'
+import type { Redis, RedisOptions } from 'ioredis'
+import { createHash } from 'node:crypto'
 import { AccessTokenMode } from './access-token/access-token-mode.js'
 import { AccountManager } from './account/account-manager.js'
 import {
@@ -59,9 +58,9 @@ import {
 } from './customization/customization.js'
 import { DeviceId } from './device/device-id.js'
 import {
+  DeviceInfo,
   DeviceManager,
   DeviceManagerOptions,
-  deviceManagerOptionsSchema,
 } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
@@ -91,7 +90,7 @@ import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStore, asRequestStore } from './request/request-store.js'
-import { requestUriSchema } from './request/request-uri.js'
+import { parseRequestUri } from './request/request-uri.js'
 import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
 import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
@@ -291,9 +290,6 @@ export class OAuthProvider extends OAuthVerifier {
     // Customization
     ...rest
   }: OAuthProviderOptions) {
-    const deviceManagerOptions: DeviceManagerOptions =
-      deviceManagerOptionsSchema.parse(rest)
-
     super({ replayStore, ...rest })
 
     // @NOTE: hooks don't really need a type parser, as all zod can actually
@@ -308,7 +304,13 @@ export class OAuthProvider extends OAuthVerifier {
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
     this.customization = customizationSchema.parse(rest)
 
-    this.deviceManager = new DeviceManager(deviceStore, deviceManagerOptions)
+    this.deviceManager = new DeviceManager(deviceStore, {
+      ...rest,
+      cookie: {
+        ...rest.cookie,
+        secure: !this.issuer.startsWith('http:'),
+      },
+    })
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
@@ -431,7 +433,7 @@ export class OAuthProvider extends OAuthVerifier {
     return { client, clientAuth }
   }
 
-  protected async decodeJAR(
+  async decodeJAR(
     client: Client,
     input: OAuthAuthorizationRequestJar,
   ): Promise<OAuthAuthorizationRequestParameters> {
@@ -538,13 +540,9 @@ export class OAuthProvider extends OAuthVerifier {
   ) {
     // PAR
     if ('request_uri' in query) {
-      const requestUri = await requestUriSchema
-        .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
-        .catch((err) => {
-          const msg = formatError(err, 'Invalid "request_uri" query parameter')
-          throw new InvalidRequestError(msg, err)
-        })
-
+      const requestUri = parseRequestUri(query.request_uri, {
+        path: ['query', 'request_uri'],
+      })
       return this.requestManager.get(requestUri, deviceId, client.id)
     }
 
@@ -584,10 +582,8 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
    */
   public async authorize(
-    clientCredentials: OAuthClientCredentialsNone,
     query: OAuthAuthorizationRequestQuery,
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
+    { deviceId, deviceMetadata }: DeviceInfo,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorizePage> {
     const { issuer } = this
 
@@ -602,7 +598,7 @@ export class OAuthProvider extends OAuthVerifier {
         : null
 
     const client = await this.clientManager
-      .getClient(clientCredentials.client_id)
+      .getClient(query.client_id)
       .catch(throwAuthorizationError)
 
     const { parameters, requestUri } = await this.processAuthorizationRequest(

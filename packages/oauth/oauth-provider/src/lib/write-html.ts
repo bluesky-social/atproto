@@ -1,38 +1,50 @@
 import { createHash } from 'node:crypto'
 import type { ServerResponse } from 'node:http'
-import { CspConfig, CspValue, mergeCsp } from './csp/index.js'
+import { CspValue, mergeCsp } from './csp/index.js'
 import {
   AssetRef,
   BuildDocumentOptions,
   Html,
   buildDocument,
 } from './html/index.js'
-import { WriteHtmlOptions, writeHtml } from './http/response.js'
+import { WriteResponseOptions, writeBuffer } from './http/response.js'
+import {
+  SecurityHeadersOptions,
+  setSecurityHeaders,
+} from './http/security-headers.js'
 
-export const DEFAULT_CSP: CspConfig = {
-  'upgrade-insecure-requests': true,
-  'default-src': ["'none'"],
-}
+export type WriteHtmlOptions = BuildDocumentOptions &
+  WriteResponseOptions &
+  SecurityHeadersOptions
 
-export type SendWebPageOptions = BuildDocumentOptions & WriteHtmlOptions
-
-export function sendWebPage(
+export function writeHtml(
   res: ServerResponse,
-  { csp: inputCsp, ...options }: SendWebPageOptions,
+  options: WriteHtmlOptions,
 ): void {
   // @NOTE the csp string might be quite long. In that case it might be tempting
   // to set it through the http-equiv <meta> in the HTML. However, some
   // directives cannot be enforced by browsers when set through the meta tag
   // (e.g. 'frame-ancestors'). Therefore, it's better to set the CSP through the
   // HTTP header.
-  const csp = mergeCsp(DEFAULT_CSP, inputCsp, {
-    'base-uri': options.base?.origin as undefined | `https://${string}`,
-    'script-src': options.scripts?.map(assetToCsp).filter((v) => v != null),
-    'style-src': options.styles?.map(assetToCsp).filter((v) => v != null),
-  })
+  const csp = mergeCsp(
+    {
+      'upgrade-insecure-requests': options.hsts !== false,
+      'default-src': ["'none'"],
+      'base-uri': options.base?.origin as undefined | `https://${string}`,
+      'script-src': options.scripts?.map(assetToCsp).filter((v) => v != null),
+      'style-src': options.styles?.map(assetToCsp).filter((v) => v != null),
+    },
+    options.csp,
+  )
 
   const html = buildDocument(options).toString()
-  writeHtml(res, html, { ...options, csp })
+
+  // HTML pages should always be served with safety protection headers
+  setSecurityHeaders(res, { ...options, csp })
+  writeBuffer(res, html, {
+    ...options,
+    contentType: options?.contentType ?? 'text/html; charset=utf-8',
+  })
 }
 
 function assetToCsp(asset?: Html | AssetRef): undefined | CspValue {

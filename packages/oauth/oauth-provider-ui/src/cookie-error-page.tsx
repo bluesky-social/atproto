@@ -4,20 +4,23 @@ import type { HydrationData } from '#/hydration-data.d.ts'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { LocaleProvider } from './locales/locale-provider.tsx'
-import { ErrorView } from './views/error/error-view.tsx'
+import { CookieErrorView } from './views/error/cookie-error-view.tsx'
 
 const {
   //
-  __errorData: errorData,
+  __continueUrl: continueUrl,
   __customizationData: customizationData,
-} = window as typeof window & HydrationData['error-page']
+} = window as typeof window & HydrationData['cookie-error-page']
 
 const container = document.getElementById('root')!
 
 createRoot(container).render(
   <StrictMode>
     <LocaleProvider>
-      <ErrorView error={errorData} customizationData={customizationData} />
+      <CookieErrorView
+        continueUrl={continueUrl}
+        customizationData={customizationData}
+      />
     </LocaleProvider>
   </StrictMode>,
 )

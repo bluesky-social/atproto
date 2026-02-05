@@ -8,12 +8,7 @@ import {
   setCookie,
 } from '../lib/http/request.js'
 import { DeviceData } from './device-data.js'
-import {
-  DeviceId,
-  deviceIdSchema,
-  generateDeviceId,
-  isDeviceId,
-} from './device-id.js'
+import { DeviceId, deviceIdSchema, generateDeviceId } from './device-id.js'
 import { DeviceStore } from './device-store.js'
 import { generateSessionId, sessionIdSchema } from './session-id.js'
 
@@ -94,7 +89,7 @@ export type DeviceInfo = {
  * identify the session.
  */
 export class DeviceManager {
-  private readonly options: z.infer<typeof deviceManagerOptionsSchema>
+  private readonly options: z.output<typeof deviceManagerOptionsSchema>
 
   constructor(
     private readonly store: DeviceStore,
@@ -103,12 +98,17 @@ export class DeviceManager {
     this.options = deviceManagerOptionsSchema.parse(options)
   }
 
+  public async hasSession(req: IncomingMessage): Promise<boolean> {
+    const cookies = await this.getCookies(req)
+    return cookies !== null
+  }
+
   public async load(
     req: IncomingMessage,
     res: ServerResponse,
     forceRotate = false,
   ): Promise<DeviceInfo> {
-    const cookie = await this.getCookies(req, res)
+    const cookie = await this.getCookies(req)
     if (cookie) {
       return this.refresh(
         req,
@@ -170,12 +170,13 @@ export class DeviceManager {
 
     const deviceMetadata = this.getRequestMetadata(req)
 
-    if (
+    const shouldRotate =
       forceRotate ||
       deviceMetadata.ipAddress !== data.ipAddress ||
       deviceMetadata.userAgent !== data.userAgent ||
       age > this.options.rotationRate
-    ) {
+
+    if (shouldRotate) {
       await this.rotate(req, res, deviceId, {
         ipAddress: deviceMetadata.ipAddress,
         userAgent: deviceMetadata.userAgent || data.userAgent,
@@ -204,44 +205,18 @@ export class DeviceManager {
 
   private async getCookies(
     req: IncomingMessage,
-    res: ServerResponse,
   ): Promise<{ value: CookieValue; mustRotate: boolean } | null> {
     const cookies = parseHttpCookies(req)
 
-    // Old cookies were set for the "/oauth/authorize" path while new cookies
-    // need to be set for the "/" path (in order to be valid on the api,
-    // authorization page and account page). This means that if a user has both
-    // cookies set, the browser would use the old cookie for the
-    // "/oauth/authorize" path and the new cookie for all other paths. Because
-    // of this, different "phantom" sessions would be created for the same
-    // device. To avoid this, we needed to change the cookie name. We can still
-    // attempt to read the old cookie in order to carry over the session from
-    // the "/oauth/authorize" path to the "/" path. This will only work if the
-    // user visits the "/oauth/authorize" path first.
-
-    const device =
-      this.parseCookie(cookies, `dev-id`, deviceIdSchema) ||
-      this.parseCookie(cookies, 'device-id', deviceIdSchema)
-    const session =
-      this.parseCookie(cookies, `ses-id`, sessionIdSchema) ||
-      this.parseCookie(cookies, 'session-id', sessionIdSchema)
+    const device = this.parseCookie(cookies, `dev-id`, deviceIdSchema)
+    const session = this.parseCookie(cookies, `ses-id`, sessionIdSchema)
 
     const deviceId = device?.value
     const sessionId = session?.value
 
-    // Clear the legacy cookies, if they are set.
-    if (isDeviceId(cookies['device-id']) && cookies['device-id'] !== deviceId) {
-      await this.store.deleteDevice(cookies['device-id'])
-    }
-    if (cookies['device-id'] || cookies['session-id']) {
-      const options = { path: '/oauth/authorize', maxAge: 0 } as const
-      setCookie(res, 'device-id', '', options)
-      setCookie(res, 'session-id', '', options)
-    }
-
     // Silently ignore invalid cookies
     if (!deviceId || !sessionId) {
-      // If the device cookie is valid, let's cleanup the DB
+      // If the device cookie is still present, let's cleanup the DB
       if (deviceId) await this.store.deleteDevice(deviceId)
 
       return null

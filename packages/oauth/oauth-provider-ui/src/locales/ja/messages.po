@@ -21,11 +21,11 @@ msgstr "２要素認証の確認"
 msgid "A second authentication factor is required"
 msgstr "２番目の認証要素が必要です"
 
-#: src/components/utils/scope-description.tsx:851
+#: src/components/utils/scope-description.tsx:848
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "<0>{domain}</0> によって管理されているサービス"
 
-#: src/components/utils/scope-description.tsx:282
+#: src/components/utils/scope-description.tsx:279
 msgid "Account"
 msgstr "アカウント"
 
@@ -45,21 +45,21 @@ msgstr "何らかのエラーが発生しました"
 msgid "Another account"
 msgstr "他のアカウント"
 
-#: src/components/utils/scope-description.tsx:879
+#: src/components/utils/scope-description.tsx:876
 msgid "Any collection"
 msgstr "すべてのコレクション"
 
-#: src/components/utils/scope-description.tsx:821
+#: src/components/utils/scope-description.tsx:818
 msgid "Any method"
 msgstr "すべてのメソッド"
 
-#: src/components/utils/scope-description.tsx:860
+#: src/components/utils/scope-description.tsx:857
 msgid "Any service"
 msgstr "すべてのサービス"
 
 #: src/views/authorize/welcome/welcome-view.tsx:28
-#: src/components/utils/scope-description.tsx:458
-#: src/components/utils/scope-description.tsx:478
+#: src/components/utils/scope-description.tsx:455
+#: src/components/utils/scope-description.tsx:475
 msgid "Authenticate"
 msgstr "認証"
 
@@ -86,15 +86,15 @@ msgstr "戻る"
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "{minLength} 文字以上 {maxLength} 文字以下"
 
-#: src/components/utils/scope-description.tsx:745
+#: src/components/utils/scope-description.tsx:742
 msgid "Blob storage"
 msgstr "Blobストレージ"
 
-#: src/components/utils/scope-description.tsx:836
+#: src/components/utils/scope-description.tsx:833
 msgid "Bluesky App services"
 msgstr "Blueksyアプリサービス"
 
-#: src/components/utils/scope-description.tsx:843
+#: src/components/utils/scope-description.tsx:840
 msgid "Bluesky Chat services"
 msgstr "Blueskyチャットサービス"
 
@@ -109,22 +109,22 @@ msgstr "<0>承認する</0>をクリックすると、<1>利用規約</1>と<2>�
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "アカウントを作成することで、このサービスの {0} および {1} に同意したものとみなされます。"
 
-#: src/components/utils/scope-description.tsx:553
+#: src/components/utils/scope-description.tsx:550
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "呼び出し"
 
-#: src/views/authorize/authorize-view.tsx:151
+#: src/views/authorize/authorize-view.tsx:176
 #: src/views/authorize/welcome/welcome-view.tsx:51
 #: src/components/forms/form-card-async.tsx:85
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: src/components/utils/scope-description.tsx:434
+#: src/components/utils/scope-description.tsx:431
 msgid "Change your <0>@handle</0>"
 msgstr "<0>@handle</0> を変更"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/components/utils/scope-description.tsx:391
 msgid "Chat"
 msgstr "チャット"
 
@@ -146,7 +146,7 @@ msgstr "コード"
 msgid "Collapse details"
 msgstr "詳細を閉じる"
 
-#: src/components/utils/scope-description.tsx:713
+#: src/components/utils/scope-description.tsx:710
 msgid "Collection"
 msgstr "コレクション"
 
@@ -163,7 +163,15 @@ msgstr "続けるにはパスワードを確認してください"
 msgid "Confirmation code"
 msgstr "確認コード"
 
-#: src/components/utils/scope-description.tsx:714
+#: src/views/error/cookie-error-view.tsx:34
+msgid "Continue"
+msgstr ""
+
+#: src/views/error/cookie-error-view.tsx:30
+msgid "Cookie Error"
+msgstr ""
+
+#: src/components/utils/scope-description.tsx:711
 msgid "Create"
 msgstr "作成"
 
@@ -175,11 +183,11 @@ msgstr "新規アカウントの作成"
 msgid "Create Account"
 msgstr "アカウントを作成"
 
-#: src/components/utils/scope-description.tsx:599
+#: src/components/utils/scope-description.tsx:596
 msgid "Create, update, and delete any public record"
 msgstr "すべての公開レコードの作成、更新、削除"
 
-#: src/components/utils/scope-description.tsx:716
+#: src/components/utils/scope-description.tsx:713
 msgid "Delete"
 msgstr "削除"
 
@@ -192,7 +200,7 @@ msgid "Description"
 msgstr "説明"
 
 #: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:242
+#: src/components/utils/scope-description.tsx:239
 msgid "Email"
 msgstr "メールアドレス"
 
@@ -231,7 +239,7 @@ msgstr "パスワードを入力"
 msgid "Enter your username and password"
 msgstr "ユーザー名とパスワードを入力してください"
 
-#: src/views/error/error-view.tsx:27
+#: src/views/error/error-view.tsx:28
 msgid "Error"
 msgstr "エラー"
 
@@ -278,7 +286,7 @@ msgstr "ホーム"
 msgid "Identifier"
 msgstr "識別子"
 
-#: src/components/utils/scope-description.tsx:427
+#: src/components/utils/scope-description.tsx:424
 msgid "Identity"
 msgstr "識別情報"
 
@@ -295,11 +303,16 @@ msgstr "無効"
 msgid "Invite code"
 msgstr "招待コード"
 
+#. placeholder {0}: url.hostname
+#: src/views/error/cookie-error-view.tsx:40
+msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
+msgstr ""
+
 #: src/views/authorize/reset-password/reset-password-view.tsx:55
 msgid "Let's get your password reset!"
 msgstr "パスワードをリセットしましょう！"
 
-#: src/views/authorize/authorize-view.tsx:190
+#: src/views/authorize/authorize-view.tsx:215
 msgid "Login complete"
 msgstr "ログイン完了"
 
@@ -307,7 +320,7 @@ msgstr "ログイン完了"
 msgid "Login to account that is not listed"
 msgstr "リストにないアカウントにログイン"
 
-#: src/components/layouts/layout-welcome.tsx:50
+#: src/components/layouts/layout-welcome.tsx:48
 msgid "Logo"
 msgstr "ロゴ"
 
@@ -319,15 +332,15 @@ msgstr "{example} みたいなもの"
 msgid "Make visible"
 msgstr "表示する"
 
-#: src/components/utils/scope-description.tsx:430
+#: src/components/utils/scope-description.tsx:427
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "あなたの <1>@handle</1> を含む <0>すべての識別情報</0> を管理する"
 
-#: src/components/utils/scope-description.tsx:365
+#: src/components/utils/scope-description.tsx:362
 msgid "Manage your profile, posts, likes and follows"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理"
 
-#: src/components/utils/scope-description.tsx:360
+#: src/components/utils/scope-description.tsx:357
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "あなたのプロフィール、投稿、いいね、フォローを管理し、あなたのプライベートな設定を読み取る"
 
@@ -387,11 +400,11 @@ msgstr "パスワードが更新されました！"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "パスワードは {MIN_PASSWORD_LENGTH} 文字以上"
 
-#: src/components/utils/scope-description.tsx:479
+#: src/components/utils/scope-description.tsx:476
 msgid "Perform actions on your behalf"
 msgstr "あなたに代わってアクションを実行する"
 
-#: src/components/utils/scope-description.tsx:460
+#: src/components/utils/scope-description.tsx:457
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "あなたに代わって認証されたアクションを <0>任意のサービス</0> が実行する"
 
@@ -405,19 +418,19 @@ msgstr "パスワードを入力する前に、ウェブサイトのドメイン
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
 
-#: src/components/utils/scope-description.tsx:620
+#: src/components/utils/scope-description.tsx:617
 msgid "Publish changes"
 msgstr "公開された変更"
 
-#: src/components/utils/scope-description.tsx:395
+#: src/components/utils/scope-description.tsx:392
 msgid "Read and send messages"
 msgstr "メッセージの読み取りと送信"
 
-#: src/components/utils/scope-description.tsx:245
+#: src/components/utils/scope-description.tsx:242
 msgid "Read and update your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取り、更新する"
 
-#: src/components/utils/scope-description.tsx:247
+#: src/components/utils/scope-description.tsx:244
 msgid "Read your account's email address"
 msgstr "あなたのアカウントのメールアドレスを読み取る"
 
@@ -426,8 +439,8 @@ msgstr "あなたのアカウントのメールアドレスを読み取る"
 msgid "Remember this account on this device"
 msgstr "このアカウントをこのデバイスに記憶する"
 
-#: src/components/utils/scope-description.tsx:598
-#: src/components/utils/scope-description.tsx:619
+#: src/components/utils/scope-description.tsx:595
+#: src/components/utils/scope-description.tsx:616
 msgid "Repository"
 msgstr "リポジトリ"
 
@@ -496,7 +509,7 @@ msgstr "サポート"
 msgid "Technical details"
 msgstr "技術的な詳細"
 
-#: src/components/utils/scope-description.tsx:283
+#: src/components/utils/scope-description.tsx:280
 msgid "Temporarily activate or deactivate your account"
 msgstr "一時的にアカウントを有効化または無効化する"
 
@@ -510,21 +523,21 @@ msgstr "利用規約"
 msgid "That handle cannot be used"
 msgstr "そのハンドルは使用できません"
 
-#: src/components/utils/scope-description.tsx:205
+#: src/components/utils/scope-description.tsx:202
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "アプリは、あなたのネットワーク識別情報を完全に制御することを求めています。つまり、アカウントを <0>永久に壊す</0> ことや、<1>乗っ取る</1> ことさえ可能です。この権限は、本当に信頼できるアプリにのみ付与してください。"
 
-#: src/components/utils/scope-description.tsx:605
+#: src/components/utils/scope-description.tsx:602
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
 msgstr "アプリは、あなたのリポジトリから <0>あらゆるデータ</0> を作成、更新、削除できるように求めています。"
 
-#: src/components/utils/scope-description.tsx:172
-#: src/components/utils/scope-description.tsx:485
-#: src/components/utils/scope-description.tsx:626
+#: src/components/utils/scope-description.tsx:169
+#: src/components/utils/scope-description.tsx:482
+#: src/components/utils/scope-description.tsx:623
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "アプリは、あなたに代わって次のアクションを実行するために必要な権限を要求しています："
 
-#: src/components/utils/scope-description.tsx:500
+#: src/components/utils/scope-description.tsx:497
 msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
 msgstr "ATProtoネットワークは、外部サービスと通信する際にユーザーを一意に識別できる認証メカニズムを使用しています。これは通常、フィードやモデレーションコンテンツなど、あなたのアカウントにリンクされたデータを取得または更新するために使用されます。"
 
@@ -572,7 +585,7 @@ msgstr "このハンドルは予約されています"
 msgid "This sign-in session has expired"
 msgstr "このサインインセッションの有効期限が切れました"
 
-#: src/components/utils/scope-description.tsx:556
+#: src/components/utils/scope-description.tsx:553
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "対象"
@@ -585,11 +598,11 @@ msgstr "希望するユーザー名をタイプしてください"
 msgid "Unexpected server response"
 msgstr "予期しないサーバー応答"
 
-#: src/components/utils/scope-description.tsx:715
+#: src/components/utils/scope-description.tsx:712
 msgid "Update"
 msgstr "更新"
 
-#: src/components/utils/scope-description.tsx:748
+#: src/components/utils/scope-description.tsx:745
 msgid "Upload files"
 msgstr "ファイルのアップロード"
 
@@ -629,7 +642,7 @@ msgstr "弱い"
 msgid "Wrong identifier or password"
 msgstr "識別子またはパスワードが間違っています"
 
-#: src/views/authorize/authorize-view.tsx:191
+#: src/views/authorize/authorize-view.tsx:216
 msgid "You are being redirected..."
 msgstr "リダイレクトしています…"
 
@@ -658,6 +671,6 @@ msgstr "あなたのフルユーザー名： {0}"
 msgid "Your password has been updated!"
 msgstr "パスワードが変更されました！"
 
-#: src/components/utils/scope-description.tsx:641
+#: src/components/utils/scope-description.tsx:638
 msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
 msgstr "あなたのリポジトリには、Blueskyの投稿、いいね、フォローなど、ATProtoネットワークで公開されているすべてのデータが含まれています。また、このアカウントを使用してサインインした他のアプリを通じて作成されたデータも含まれています。"
