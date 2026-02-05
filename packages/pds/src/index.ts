@@ -27,9 +27,10 @@ import { AppContext, AppContextOptions } from './context'
 import * as error from './error'
 import { createServer } from './lexicon'
 import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
-import { loggerMiddleware } from './logger'
+import { httpLogger, loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
 import compression from './util/compression'
+import { BUILD_HASH, BUILD_TIME } from './version'
 import * as wellKnown from './well-known'
 
 export { createSecretKeyObject } from './auth-verifier'
@@ -221,12 +222,21 @@ export class PDS {
   }
 
   async start(): Promise<http.Server> {
+    httpLogger.info(
+      {
+        buildHash: BUILD_HASH,
+        buildTime: BUILD_TIME,
+        port: this.ctx.cfg.service.port,
+      },
+      'PDS starting',
+    )
     await this.ctx.sequencer.start()
     const server = this.app.listen(this.ctx.cfg.service.port)
     this.server = server
     this.server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
     await events.once(server, 'listening')
+    httpLogger.info({ port: this.ctx.cfg.service.port }, 'PDS listening')
     return server
   }
 
