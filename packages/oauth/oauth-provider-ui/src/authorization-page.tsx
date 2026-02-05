@@ -22,9 +22,13 @@ if (
   url.pathname === '/oauth/authorize' &&
   !url.searchParams.has('request_uri')
 ) {
+  const domainHandle = url.searchParams.get('domain_handle')
   url.search = ''
   url.searchParams.set('client_id', authorizeData.clientId)
   url.searchParams.set('request_uri', authorizeData.requestUri)
+  if (domainHandle) {
+    url.searchParams.set('domain_handle', domainHandle)
+  }
   window.history.replaceState(history.state, '', url.pathname + url.search)
 }
 

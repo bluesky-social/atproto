@@ -33,6 +33,11 @@ export function sendAuthorizePageFactory(customization: Customization) {
   ): Promise<void> {
     await setupCsrfToken(req, res)
 
+    const domainHandle = getDomainHandle(
+      data.parameters.domain_handle,
+      customizationData.availableUserDomains,
+    )
+
     const script = declareHydrationData<HydrationData['authorization-page']>({
       __customizationData: customizationData,
       __authorizeData: {
@@ -47,6 +52,7 @@ export function sendAuthorizePageFactory(customization: Customization) {
         uiLocales: data.parameters.ui_locales,
         loginHint: data.parameters.login_hint,
         promptMode: data.parameters.prompt,
+        domainHandle,
         permissionSets: Object.fromEntries(data.permissionSets),
       },
       __sessions: data.sessions,
@@ -64,4 +70,17 @@ export function sendAuthorizePageFactory(customization: Customization) {
       styles: [...styles, customizationCss],
     })
   }
+}
+
+function getDomainHandle(
+  domainHandle: string | undefined,
+  availableDomains?: readonly string[],
+): string | undefined {
+  const value = domainHandle?.toLowerCase()
+
+  if (!value || !value.startsWith('.') || value.endsWith('.')) return undefined
+  if (!availableDomains?.length) return undefined
+  if (!availableDomains.includes(value)) return undefined
+
+  return value
 }

@@ -17,6 +17,7 @@ export type AuthorizeData = {
   loginHint?: string
   uiLocales?: string
   promptMode?: OAuthPromptMode
+  domainHandle?: string
   permissionSets: PermissionSets
 }
 

@@ -74,6 +74,7 @@ export type SignUpHandleFormProps = Override<
   >,
   {
     domains: string[]
+    domainHandle?: string
 
     onNext: (signal: AbortSignal) => void | PromiseLike<void>
     nextLabel?: ReactNode
@@ -88,6 +89,7 @@ export type SignUpHandleFormProps = Override<
 
 export function SignUpHandleForm({
   domains: availableDomains,
+  domainHandle,
 
   onNext,
   nextLabel,
@@ -111,7 +113,13 @@ export function SignUpHandleForm({
 
   const [domainIdx, setDomainIdx] = useState(() => {
     const idx = domains.findIndex((d) => handleInit?.endsWith(d))
-    return idx === -1 ? 0 : idx
+    if (idx !== -1) return idx
+
+    const normalized = domainHandle?.toLowerCase()
+    const preferredIdx =
+      normalized != null ? domains.findIndex((d) => d === normalized) : -1
+
+    return preferredIdx === -1 ? 0 : preferredIdx
   })
   const [segment, setSegment] = useState(() => handleInit?.split('.')[0] || '')
 

@@ -21,6 +21,8 @@ export type SignUpViewProps = Override<
   {
     customizationData?: CustomizationData
 
+    domainHandle?: string
+
     onBack?: () => void
     backLabel?: ReactNode
     onValidateNewHandle: (
@@ -45,6 +47,7 @@ export function SignUpView({
     links,
   } = {},
 
+  domainHandle,
   onValidateNewHandle,
   onDone,
   onBack,
@@ -102,6 +105,7 @@ export function SignUpView({
                 className="grow"
                 invalid={invalid}
                 domains={availableUserDomains}
+                domainHandle={domainHandle}
                 handle={handle}
                 onHandle={setHandle}
                 prevLabel={prevLabel}

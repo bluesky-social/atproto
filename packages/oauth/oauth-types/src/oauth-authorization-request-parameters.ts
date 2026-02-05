@@ -86,6 +86,12 @@ export const oauthAuthorizationRequestParametersSchema = z.object({
   // How the AS should prompt the user for authorization:
   prompt: oauthPromptModeSchema.optional(),
 
+  // atproto extension: preferred handle domain for account creation
+  domain_handle: z
+    .string()
+    .regex(/^\.[a-z0-9-]+(\.[a-z0-9-]+)*$/)
+    .optional(),
+
   // https://datatracker.ietf.org/doc/html/rfc9396
   authorization_details: z
     .preprocess(jsonObjectPreprocess, oauthAuthorizationDetailsSchema)
