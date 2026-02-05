@@ -1,6 +1,5 @@
 import * as plc from '@did-plc/lib'
 import { Secp256k1Keypair } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountStatus } from '../../../../account-manager/account-manager'
 import { AppContext } from '../../../../context'
 import { QuickLoginResult } from './store'
@@ -61,15 +60,24 @@ export function extractUserName(
 }
 
 /**
- * Derive available handle from email or fallback to timestamp
+ * Derive available handle from email or preferred handle
+ * Priority: preferredHandle → email-based → timestamp
  */
 export async function deriveAvailableHandle(
   ctx: AppContext,
   email?: string,
+  preferredHandle?: string | null,
 ): Promise<string> {
   let baseName: string
 
-  if (email) {
+  if (preferredHandle) {
+    // Use preferred handle if provided
+    baseName = preferredHandle
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-') // Replace non-alphanumeric with dash
+      .replace(/-+/g, '-') // Collapse multiple dashes
+      .replace(/^-|-$/g, '') // Remove leading/trailing dashes
+  } else if (email) {
     // Extract username from email (e.g., "john.doe@example.com" → "john-doe")
     const emailUsername = email.split('@')[0]
     baseName = emailUsername
@@ -112,14 +120,13 @@ export async function deriveAvailableHandle(
  */
 export async function createAccountViaQuickLogin(
   ctx: AppContext,
-  params: {
-    handle: string
-    neuroJid: string
-    email?: string
-    userName?: string
-  },
+  neuroJid: string,
+  email?: string,
+  userName?: string,
+  preferredHandle?: string | null,
 ): Promise<QuickLoginResult> {
-  const { handle, neuroJid, email, userName } = params
+  // Derive handle from preferred handle, email, or fallback
+  const handle = await deriveAvailableHandle(ctx, email, preferredHandle)
 
   // Generate signing keypair
   const signingKey = await Secp256k1Keypair.create({ exportable: true })

@@ -77,6 +77,7 @@ export type AppContextOptions = {
   neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
   neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
   quickloginStore: QuickLoginSessionStore
+  invitationManager: import('./account-manager/invitation-manager').InvitationManager
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -107,6 +108,7 @@ export class AppContext {
   public oauthProvider?: OAuthProvider
   public neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
   public quickloginStore: QuickLoginSessionStore
+  public invitationManager: import('./account-manager/invitation-manager').InvitationManager
   public neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
@@ -135,6 +137,7 @@ export class AppContext {
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.quickloginStore = opts.quickloginStore
+    this.invitationManager = opts.invitationManager
     this.neuroAuthManager = opts.neuroAuthManager
     this.neuroRemoteLoginManager = opts.neuroRemoteLoginManager
     this.plcRotationKey = opts.plcRotationKey
@@ -503,6 +506,12 @@ export class AppContext {
     // Create QuickLogin session store
     const quickloginStore = new QuickLoginSessionStore()
 
+    // Create InvitationManager
+    const { InvitationManager } = await import(
+      './account-manager/invitation-manager'
+    )
+    const invitationManager = new InvitationManager(accountManager.db)
+
     return new AppContext({
       actorStore,
       blobstore,
@@ -529,6 +538,7 @@ export class AppContext {
       neuroAuthManager,
       neuroRemoteLoginManager,
       quickloginStore,
+      invitationManager,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),

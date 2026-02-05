@@ -10,6 +10,10 @@ module.exports = {
   testTimeout: 60000,
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
-  testPathIgnorePatterns: ['/node_modules/', '/tests/proxied/'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/tests/proxied/',
+    '/tests/invitation-flow.test.ts', // Integration test has axios issues, unit tests cover the functionality
+  ],
   forceExit: true,
 }

@@ -13,6 +13,108 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
     const eventId = payload.EventId
     const state = payload.Tags?.State
 
+    // Handle UserInvitation events (invitation system)
+    if (eventId === 'UserInvitation') {
+      req.log.info({ invitation: payload }, 'Processing UserInvitation event')
+
+      // Step 1: Validate admin authentication
+      // Support two methods:
+      // 1. X-API-Key header with admin password
+      // 2. Basic Auth with username 'admin' and admin password
+
+      const apiKey = req.headers['x-api-key'] as string
+      const adminPassword = process.env.PDS_ADMIN_PASSWORD
+
+      let authenticated = false
+
+      // Method 1: Check X-API-Key header
+      if (apiKey && adminPassword && apiKey === adminPassword) {
+        authenticated = true
+        req.log.debug('Authenticated via X-API-Key header')
+      }
+
+      // Method 2: Check Basic Auth
+      if (!authenticated) {
+        try {
+          await ctx.authVerifier.adminToken({
+            req,
+            res,
+            params: {},
+          })
+          authenticated = true
+          req.log.debug('Authenticated via Basic Auth')
+        } catch (err) {
+          // Not authenticated via Basic Auth, will check below
+        }
+      }
+
+      if (!authenticated) {
+        req.log.warn('Unauthorized UserInvitation request - invalid auth')
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message:
+            'Admin authentication required. Use X-API-Key header or Basic Auth.',
+        })
+      }
+
+      // Step 2: Extract and validate required fields
+      const email = payload.Tags?.EMAIL?.trim()
+      if (!email) {
+        return res.status(400).json({
+          error: 'InvalidRequest',
+          message: 'Missing required field: Tags.EMAIL',
+        })
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          error: 'InvalidEmail',
+          message: 'Tags.EMAIL must be a valid email address',
+        })
+      }
+
+      // Step 3: Extract optional preferred handle from Handle field
+      const preferredHandle = payload.Handle?.trim() || null
+
+      // Step 4: Extract timestamp (required)
+      const timestamp = payload.Timestamp
+      if (!timestamp) {
+        return res.status(400).json({
+          error: 'InvalidRequest',
+          message: 'Missing required field: Timestamp',
+        })
+      }
+
+      // Step 5: Create or update invitation
+      try {
+        await ctx.invitationManager.createInvitation(
+          email,
+          preferredHandle,
+          timestamp,
+        )
+
+        req.log.info(
+          { email: ctx.invitationManager.hashEmail(email), preferredHandle },
+          'Invitation created successfully',
+        )
+
+        return res.status(201).json({
+          success: true,
+          message: 'Invitation created',
+          email,
+          preferredHandle,
+        })
+      } catch (err) {
+        req.log.error({ error: err, email }, 'Failed to create invitation')
+        return res.status(500).json({
+          error: 'InvitationFailed',
+          message: err instanceof Error ? err.message : 'Unknown error',
+        })
+      }
+    }
+
     // Step 1: Filter events - only process LegalIdUpdated with State=Approved
     if (eventId === 'AccountCreated') {
       req.log.debug(
