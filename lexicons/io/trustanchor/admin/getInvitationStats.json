@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.admin.getInvitationStats",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get invitation statistics. Admin only.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "since": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Calculate consumed count since this timestamp (ISO 8601)"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["pending", "consumed", "expired", "revoked"],
+          "properties": {
+            "pending": {
+              "type": "integer",
+              "description": "Number of pending invitations"
+            },
+            "consumed": {
+              "type": "integer",
+              "description": "Total number of consumed invitations"
+            },
+            "expired": {
+              "type": "integer",
+              "description": "Number of expired invitations"
+            },
+            "revoked": {
+              "type": "integer",
+              "description": "Number of revoked invitations"
+            },
+            "consumedSince": {
+              "type": "integer",
+              "description": "Number consumed since the 'since' parameter (if provided)"
+            },
+            "conversionRate": {
+              "type": "string",
+              "description": "Ratio of consumed to total (consumed + expired) as string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

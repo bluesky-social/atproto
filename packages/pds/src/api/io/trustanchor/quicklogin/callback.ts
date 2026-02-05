@@ -210,9 +210,9 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
           accessJwt = result.accessJwt
           refreshJwt = result.refreshJwt
 
-          // Delete the invitation after successful account creation
+          // Mark the invitation as consumed
           if (invitation) {
-            await ctx.invitationManager.deleteInvitation(invitation.id)
+            await ctx.invitationManager.consumeInvitation(email, did, handle)
             req.log.info(
               { email: ctx.invitationManager.hashEmail(email) },
               'Invitation consumed',

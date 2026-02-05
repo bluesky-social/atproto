@@ -1,0 +1,49 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.admin.purgeInvitations",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Purge (hard delete) invitations by status. Admin only. Applies 1-second safety buffer to prevent race conditions.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Status of invitations to purge",
+              "enum": ["consumed", "expired", "revoked"]
+            },
+            "before": {
+              "type": "string",
+              "format": "datetime",
+              "description": "Purge invitations before this timestamp (ISO 8601)"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["deletedCount", "status"],
+          "properties": {
+            "deletedCount": {
+              "type": "integer",
+              "description": "Number of invitations deleted"
+            },
+            "status": {
+              "type": "string"
+            },
+            "before": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      }
+    }
+  }
+}

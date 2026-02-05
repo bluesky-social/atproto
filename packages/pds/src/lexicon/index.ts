@@ -226,6 +226,10 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as IoTrustanchorAdminDeleteInvitation from './types/io/trustanchor/admin/deleteInvitation.js'
+import * as IoTrustanchorAdminGetInvitationStats from './types/io/trustanchor/admin/getInvitationStats.js'
+import * as IoTrustanchorAdminListInvitations from './types/io/trustanchor/admin/listInvitations.js'
+import * as IoTrustanchorAdminPurgeInvitations from './types/io/trustanchor/admin/purgeInvitations.js'
 import * as IoTrustanchorQuickloginCallback from './types/io/trustanchor/quicklogin/callback.js'
 import * as IoTrustanchorQuickloginInit from './types/io/trustanchor/quicklogin/init.js'
 import * as IoTrustanchorQuickloginStatus from './types/io/trustanchor/quicklogin/status.js'
@@ -3311,11 +3315,69 @@ export class IoNS {
 
 export class IoTrustanchorNS {
   _server: Server
+  admin: IoTrustanchorAdminNS
   quicklogin: IoTrustanchorQuickloginNS
 
   constructor(server: Server) {
     this._server = server
+    this.admin = new IoTrustanchorAdminNS(server)
     this.quicklogin = new IoTrustanchorQuickloginNS(server)
+  }
+}
+
+export class IoTrustanchorAdminNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteInvitation<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorAdminDeleteInvitation.QueryParams,
+      IoTrustanchorAdminDeleteInvitation.HandlerInput,
+      IoTrustanchorAdminDeleteInvitation.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.admin.deleteInvitation' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getInvitationStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorAdminGetInvitationStats.QueryParams,
+      IoTrustanchorAdminGetInvitationStats.HandlerInput,
+      IoTrustanchorAdminGetInvitationStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.admin.getInvitationStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listInvitations<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorAdminListInvitations.QueryParams,
+      IoTrustanchorAdminListInvitations.HandlerInput,
+      IoTrustanchorAdminListInvitations.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.admin.listInvitations' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  purgeInvitations<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorAdminPurgeInvitations.QueryParams,
+      IoTrustanchorAdminPurgeInvitations.HandlerInput,
+      IoTrustanchorAdminPurgeInvitations.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.admin.purgeInvitations' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 }
 

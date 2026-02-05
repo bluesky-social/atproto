@@ -9,6 +9,7 @@ import * as mig008 from './008-neuro-identity'
 import * as mig009 from './009-nullable-password'
 import * as mig010 from './010-neuro-provision-nonce'
 import * as mig011 from './011-pending-invitations'
+import * as mig012 from './012-invitation-tracking'
 
 export default {
   '001': mig001,
@@ -22,4 +23,5 @@ export default {
   '009': mig009,
   '010': mig010,
   '011': mig011,
+  '012': mig012,
 }

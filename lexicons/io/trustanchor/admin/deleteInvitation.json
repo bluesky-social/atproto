@@ -1,0 +1,48 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.admin.deleteInvitation",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete or revoke an invitation. Admin only. Pending invitations are revoked (soft delete), others are hard deleted.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "email": {
+              "type": "string",
+              "description": "Email of invitation to delete"
+            },
+            "id": {
+              "type": "integer",
+              "description": "ID of invitation to delete"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "revoked": {
+              "type": "boolean",
+              "description": "True if invitation was revoked (soft delete)"
+            },
+            "deleted": {
+              "type": "boolean",
+              "description": "True if invitation was hard deleted"
+            },
+            "email": {
+              "type": "string"
+            },
+            "id": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

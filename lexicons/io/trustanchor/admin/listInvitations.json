@@ -1,0 +1,96 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.admin.listInvitations",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List invitations with optional filtering. Admin only.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Filter by invitation status",
+            "default": "pending",
+            "enum": ["pending", "consumed", "expired", "revoked", "all"]
+          },
+          "before": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Filter invitations before this timestamp (ISO 8601)"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "default": 50,
+            "description": "Maximum number of results"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["invitations"],
+          "properties": {
+            "invitations": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#invitation"
+              }
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "invitation": {
+      "type": "object",
+      "required": ["id", "email", "status", "createdAt", "expiresAt"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "email": {
+          "type": "string"
+        },
+        "preferredHandle": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "consumed", "expired", "revoked"]
+        },
+        "invitationTimestamp": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "consumedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "consumingDid": {
+          "type": "string"
+        },
+        "consumingHandle": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

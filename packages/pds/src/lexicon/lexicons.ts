@@ -15843,6 +15843,259 @@ export const schemaDict = {
       },
     },
   },
+  IoTrustanchorAdminDeleteInvitation: {
+    lexicon: 1,
+    id: 'io.trustanchor.admin.deleteInvitation',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Delete or revoke an invitation. Admin only. Pending invitations are revoked (soft delete), others are hard deleted.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              email: {
+                type: 'string',
+                description: 'Email of invitation to delete',
+              },
+              id: {
+                type: 'integer',
+                description: 'ID of invitation to delete',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              revoked: {
+                type: 'boolean',
+                description: 'True if invitation was revoked (soft delete)',
+              },
+              deleted: {
+                type: 'boolean',
+                description: 'True if invitation was hard deleted',
+              },
+              email: {
+                type: 'string',
+              },
+              id: {
+                type: 'integer',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorAdminGetInvitationStats: {
+    lexicon: 1,
+    id: 'io.trustanchor.admin.getInvitationStats',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get invitation statistics. Admin only.',
+        parameters: {
+          type: 'params',
+          properties: {
+            since: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Calculate consumed count since this timestamp (ISO 8601)',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['pending', 'consumed', 'expired', 'revoked'],
+            properties: {
+              pending: {
+                type: 'integer',
+                description: 'Number of pending invitations',
+              },
+              consumed: {
+                type: 'integer',
+                description: 'Total number of consumed invitations',
+              },
+              expired: {
+                type: 'integer',
+                description: 'Number of expired invitations',
+              },
+              revoked: {
+                type: 'integer',
+                description: 'Number of revoked invitations',
+              },
+              consumedSince: {
+                type: 'integer',
+                description:
+                  "Number consumed since the 'since' parameter (if provided)",
+              },
+              conversionRate: {
+                type: 'string',
+                description:
+                  'Ratio of consumed to total (consumed + expired) as string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorAdminListInvitations: {
+    lexicon: 1,
+    id: 'io.trustanchor.admin.listInvitations',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List invitations with optional filtering. Admin only.',
+        parameters: {
+          type: 'params',
+          properties: {
+            status: {
+              type: 'string',
+              description: 'Filter by invitation status',
+              default: 'pending',
+              enum: ['pending', 'consumed', 'expired', 'revoked', 'all'],
+            },
+            before: {
+              type: 'string',
+              format: 'datetime',
+              description:
+                'Filter invitations before this timestamp (ISO 8601)',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 500,
+              default: 50,
+              description: 'Maximum number of results',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['invitations'],
+            properties: {
+              invitations: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:io.trustanchor.admin.listInvitations#invitation',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      invitation: {
+        type: 'object',
+        required: ['id', 'email', 'status', 'createdAt', 'expiresAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          email: {
+            type: 'string',
+          },
+          preferredHandle: {
+            type: 'string',
+          },
+          status: {
+            type: 'string',
+            enum: ['pending', 'consumed', 'expired', 'revoked'],
+          },
+          invitationTimestamp: {
+            type: 'integer',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          expiresAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          consumedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          consumingDid: {
+            type: 'string',
+          },
+          consumingHandle: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorAdminPurgeInvitations: {
+    lexicon: 1,
+    id: 'io.trustanchor.admin.purgeInvitations',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Purge (hard delete) invitations by status. Admin only. Applies 1-second safety buffer to prevent race conditions.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['status'],
+            properties: {
+              status: {
+                type: 'string',
+                description: 'Status of invitations to purge',
+                enum: ['consumed', 'expired', 'revoked'],
+              },
+              before: {
+                type: 'string',
+                format: 'datetime',
+                description:
+                  'Purge invitations before this timestamp (ISO 8601)',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['deletedCount', 'status'],
+            properties: {
+              deletedCount: {
+                type: 'integer',
+                description: 'Number of invitations deleted',
+              },
+              status: {
+                type: 'string',
+              },
+              before: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   IoTrustanchorQuickloginCallback: {
     lexicon: 1,
     id: 'io.trustanchor.quicklogin.callback',
@@ -21539,6 +21792,11 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  IoTrustanchorAdminDeleteInvitation: 'io.trustanchor.admin.deleteInvitation',
+  IoTrustanchorAdminGetInvitationStats:
+    'io.trustanchor.admin.getInvitationStats',
+  IoTrustanchorAdminListInvitations: 'io.trustanchor.admin.listInvitations',
+  IoTrustanchorAdminPurgeInvitations: 'io.trustanchor.admin.purgeInvitations',
   IoTrustanchorQuickloginCallback: 'io.trustanchor.quicklogin.callback',
   IoTrustanchorQuickloginInit: 'io.trustanchor.quicklogin.init',
   IoTrustanchorQuickloginStatus: 'io.trustanchor.quicklogin.status',
