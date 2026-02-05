@@ -116,11 +116,12 @@ export function createAuthorizationPageMiddleware<
           // 3) And send an auto-submit form redirecting back to ourselves
           return writeFormRedirect(
             res,
+            'get',
             this.url.href,
             // 4) We add an extra query parameter to trigger the test logic after
             // the redirect occurred.
             [...this.url.searchParams, ['redirect-test', '1']],
-            { method: 'get', hsts: false },
+            securityOptions,
           )
         } else {
           // 5) We just got redirected back to ourselves. Verify that the

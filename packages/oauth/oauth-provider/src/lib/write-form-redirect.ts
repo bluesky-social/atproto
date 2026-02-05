@@ -4,9 +4,7 @@ import { setCookie } from './http/request.js'
 import { SecurityHeadersOptions } from './http/security-headers.js'
 import { writeHtml } from './write-html.js'
 
-export type WriteFormRedirectOptions = SecurityHeadersOptions & {
-  method: 'post' | 'get'
-}
+export type WriteFormRedirectOptions = SecurityHeadersOptions
 
 const SCRIPT = js`
 const form = document.forms[0];
@@ -35,9 +33,10 @@ form.addEventListener('error', (event) => {
 
 export function writeFormRedirect(
   res: ServerResponse,
+  method: 'post' | 'get',
   uri: string,
   params: Iterable<[string, string]>,
-  options: WriteFormRedirectOptions,
+  options?: WriteFormRedirectOptions,
 ): void {
   res.setHeader('Cache-Control', 'no-store')
 
@@ -50,7 +49,7 @@ export function writeFormRedirect(
     htmlAttrs: { lang: 'en' },
     scripts: [SCRIPT],
     body: html`
-      <form method="${options.method}" action="${uri}">
+      <form method="${method}" action="${uri}">
         ${Array.from(params, ([key, value]) => [
           html`<input type="hidden" name="${key}" value="${value}" />`,
         ])}

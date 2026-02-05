@@ -80,7 +80,7 @@ export type OAuthRedirectOptions = {
 export function sendRedirect(
   res: ServerResponse,
   redirect: OAuthRedirectOptions,
-  options?: Omit<WriteFormRedirectOptions, 'method'>,
+  options?: WriteFormRedirectOptions,
 ): void {
   res.setHeader('Cache-Control', 'no-store')
 
@@ -91,7 +91,7 @@ export function sendRedirect(
     case 'fragment':
       return writeFragment(res, uri, params)
     case 'form_post':
-      return writeFormRedirect(res, uri, params, { ...options, method: 'post' })
+      return writeFormRedirect(res, 'post', uri, params, options)
   }
 
   // @ts-expect-error fool proof
