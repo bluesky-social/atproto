@@ -55,10 +55,7 @@ export function* buildSecurityHeaders({
   coep = CrossOriginEmbedderPolicy.requireCorp,
   corp = CrossOriginResourcePolicy.sameOrigin,
   coop = CrossOriginOpenerPolicy.sameOrigin,
-  // @NOTE Setting HSTS headers on a localhost endpoint will basically break
-  // localhost on Safari. In an attempt to avoid being bitten by this, we
-  // disable HSTS in development by default.
-  hsts = process.env.NODE_ENV === 'development' ? false : { maxAge: 63072000 },
+  hsts = { maxAge: 63072000 },
 }: SecurityHeadersOptions): Generator<[string, string], void, unknown> {
   // @NOTE Never set CSP through http-equiv meta as not all directives will
   // be honored. Always set it through the Content-Security-Policy header.

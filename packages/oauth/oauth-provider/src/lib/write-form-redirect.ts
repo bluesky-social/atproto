@@ -6,6 +6,8 @@ import { writeHtml } from './write-html.js'
 
 export type WriteFormRedirectOptions = SecurityHeadersOptions
 
+// We prevent the user from coming "back" to this page and resubmitting the form
+// repeatedly by disabling the submit button after the first submission.
 const SCRIPT = js`
 const form = document.forms[0];
 
@@ -29,7 +31,7 @@ form.addEventListener('error', (event) => {
 `
 
 // @NOTE If translations and design are needed, consider replacing this with a
-// proper web app page.
+// web app page.
 
 export function writeFormRedirect(
   res: ServerResponse,

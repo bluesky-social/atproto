@@ -73,6 +73,11 @@ export function createAuthorizationPageMiddleware<
       res.setHeader('Cache-Control', 'no-store')
       res.setHeader('Pragma', 'no-cache')
 
+      // "same-origin" is required to support the redirect test logic below (as
+      // well as refreshing the authorization page).
+
+      // @TODO Consider removing this altogether to allow hosting PDS and app on
+      // the same site but different origins (different subdomains).
       validateFetchSite(req, ['same-origin', 'cross-site', 'none'])
       validateFetchMode(req, ['navigate'])
       validateFetchDest(req, ['document'])

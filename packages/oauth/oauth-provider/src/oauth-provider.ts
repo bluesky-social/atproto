@@ -308,6 +308,10 @@ export class OAuthProvider extends OAuthVerifier {
       ...rest,
       cookie: {
         ...rest.cookie,
+        // secure defaults to true in DeviceManager. For the oauth routes to
+        // work from localhost on Safari, we need to explicitly set secure to
+        // false for localhost usage. This is not really an issue with Chrome
+        // and Firefox, but Safari enforces it strictly.
         secure: !this.issuer.startsWith('http:'),
       },
     })

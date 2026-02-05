@@ -28,6 +28,10 @@ export function writeHtml(
   // HTTP header.
   const csp = mergeCsp(
     {
+      // Keep "upgrade-insecure-requests" in sync with HSTS setting. HSTS is
+      // typically set to false for localhost endpoints. Chrome and FF will
+      // ignore "upgrade-insecure-requests" from localhost, but Safari will
+      // enforce it, requiring to be explicitly disable it for localhost.
       'upgrade-insecure-requests': options.hsts !== false,
       'default-src': ["'none'"],
       'base-uri': options.base?.origin as undefined | `https://${string}`,
