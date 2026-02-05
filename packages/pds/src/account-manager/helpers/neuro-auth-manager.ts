@@ -109,7 +109,10 @@ export class NeuroAuthManager {
     this.logger = logger || console
 
     // Configure storage backend
-    if (config.storageBackend === 'database' && !(storageBackend instanceof Redis)) {
+    if (
+      config.storageBackend === 'database' &&
+      !(storageBackend instanceof Redis)
+    ) {
       this.db = storageBackend as AccountDb
     } else if (config.storageBackend === 'redis') {
       this.redis = storageBackend as Redis
@@ -138,7 +141,9 @@ export class NeuroAuthManager {
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         // Use http:// for localhost, https:// for everything else
-        const protocol = this.config.domain.startsWith('localhost') ? 'http' : 'https'
+        const protocol = this.config.domain.startsWith('localhost')
+          ? 'http'
+          : 'https'
         const fetchResponse = await fetch(
           `${protocol}://${this.config.domain}/QuickLogin`,
           {
@@ -205,13 +210,16 @@ export class NeuroAuthManager {
     const emitter = new EventEmitter()
 
     // Auto-expire after 5 minutes
-    const timeout = setTimeout(() => {
-      const session = this.sessions.get(sessionId)
-      if (session) {
-        session.emitter.emit('error', new Error('Session expired'))
-        this.sessions.delete(sessionId)
-      }
-    }, 5 * 60 * 1000)
+    const timeout = setTimeout(
+      () => {
+        const session = this.sessions.get(sessionId)
+        if (session) {
+          session.emitter.emit('error', new Error('Session expired'))
+          this.sessions.delete(sessionId)
+        }
+      },
+      5 * 60 * 1000,
+    )
 
     // Store session in memory
     this.sessions.set(sessionId, {
@@ -226,9 +234,19 @@ export class NeuroAuthManager {
 
     // Store in persistent backend
     if (this.db) {
-      await this.storePendingSessionDb(sessionId, serviceId, requestUri, deviceId)
+      await this.storePendingSessionDb(
+        sessionId,
+        serviceId,
+        requestUri,
+        deviceId,
+      )
     } else if (this.redis) {
-      await this.storePendingSessionRedis(sessionId, serviceId, requestUri, deviceId)
+      await this.storePendingSessionRedis(
+        sessionId,
+        serviceId,
+        requestUri,
+        deviceId,
+      )
     }
 
     // Generate 6-digit verification code
@@ -307,12 +325,17 @@ export class NeuroAuthManager {
   /**
    * Wait for user to scan QR code and receive identity
    */
-  async waitForIdentity(sessionId: string, timeoutMs = 5 * 60 * 1000): Promise<NeuroIdentity> {
+  async waitForIdentity(
+    sessionId: string,
+    timeoutMs = 5 * 60 * 1000,
+  ): Promise<NeuroIdentity> {
     const session = this.sessions.get(sessionId)
 
     if (!session) {
       this.logger.warn({ sessionId }, 'Attempted to wait for unknown session')
-      throw new Error('Authentication session not found or expired. Please try again.')
+      throw new Error(
+        'Authentication session not found or expired. Please try again.',
+      )
     }
 
     return new Promise<NeuroIdentity>((resolve, reject) => {

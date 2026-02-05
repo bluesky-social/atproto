@@ -84,23 +84,29 @@ export class PDS {
 
     // Setup invitation cleanup interval (daily at 3 AM UTC)
     // For simplicity, run every hour and skip if not close to 3 AM
-    this.invitationCleanupInterval = setInterval(async () => {
-      const hour = new Date().getUTCHours()
-      // Run between 3:00 and 3:59 UTC
-      if (hour === 3) {
-        try {
-          const deletedCount = await opts.ctx.invitationManager.deleteExpiredInvitations()
-          console.log(`Deleted ${deletedCount} expired invitations`)
+    this.invitationCleanupInterval = setInterval(
+      async () => {
+        const hour = new Date().getUTCHours()
+        // Run between 3:00 and 3:59 UTC
+        if (hour === 3) {
+          try {
+            const deletedCount =
+              await opts.ctx.invitationManager.deleteExpiredInvitations()
+            console.log(`Deleted ${deletedCount} expired invitations`)
 
-          // Log warning if many invitations expired (potential issue)
-          if (deletedCount > 100) {
-            console.warn(`High number of expired invitations: ${deletedCount}`)
+            // Log warning if many invitations expired (potential issue)
+            if (deletedCount > 100) {
+              console.warn(
+                `High number of expired invitations: ${deletedCount}`,
+              )
+            }
+          } catch (err) {
+            console.error('Invitation cleanup failed:', err)
           }
-        } catch (err) {
-          console.error('Invitation cleanup failed:', err)
         }
-      }
-    }, 60 * 60 * 1000) // Check every hour
+      },
+      60 * 60 * 1000,
+    ) // Check every hour
 
     // Allow Node to exit even if this timer is still active
     this.invitationCleanupInterval.unref()

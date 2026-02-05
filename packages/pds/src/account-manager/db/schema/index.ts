@@ -51,5 +51,8 @@ export type { InviteCode, InviteCodeUse } from './invite-code'
 export type { EmailToken, EmailTokenPurpose } from './email-token'
 export type { NeuroIdentityLink } from './neuro-identity-link'
 export type { NeuroPendingSession } from './neuro-pending-session'
-export type { PendingInvitation, PendingInvitationEntry } from './pending-invitations'
+export type {
+  PendingInvitation,
+  PendingInvitationEntry,
+} from './pending-invitations'
 export type { NeuroProvisionNonce } from './neuro-provision-nonce'

@@ -9,11 +9,13 @@ RemoteLogin allows users to authenticate using their Neuro Legal ID instead of a
 ## Prerequisites
 
 1. **Neuro Account**: You need a Neuro account with:
+
    - A Legal ID (format: `{GUID}@legal.{domain}`)
    - RemoteLogin privileges granted by your domain administrator
    - The Neuro mobile app installed
 
 2. **PDS Configuration**: Your PDS must be configured with:
+
    - `PDS_NEURO_ENABLED=true`
    - `PDS_NEURO_API_TYPE=remotelogin` (or `both`)
    - `PDS_NEURO_DOMAIN` set to your Neuron server
@@ -27,6 +29,7 @@ RemoteLogin allows users to authenticate using their Neuro Legal ID instead of a
 ### 1. Browser-Based Testing
 
 Open `oauth-flow-example.html` in your browser and follow the on-screen instructions. This demonstrates:
+
 - Initiating a RemoteLogin petition
 - Waiting for user approval in the Neuro app
 - Receiving session tokens upon successful authentication
@@ -48,6 +51,7 @@ export TEST_HANDLE="testuser.example.com"
 ```
 
 The script will:
+
 1. Call the `createSession` endpoint with your Legal ID
 2. Wait for you to approve the petition in your Neuro app
 3. Display the authentication result
@@ -90,22 +94,26 @@ The script will:
 ## Troubleshooting
 
 ### "No account linked to this Legal ID"
+
 - Verify the account is linked in the `neuro_identity_link` table
 - Check that the Legal ID format is correct
 - Ensure the database is accessible
 
 ### Petition timeout
+
 - Default timeout is 5 minutes (configurable via `PDS_NEURO_PETITION_TIMEOUT`)
 - Make sure the Neuro app is running and connected
 - Check that push notifications are enabled
 
 ### Callback not received
+
 - Verify `PDS_NEURO_CALLBACK_BASE_URL` is publicly accessible
 - Check firewall/network settings
 - Ensure the callback route `/neuro/remotelogin/callback` is working
 - Test with a tool like ngrok for local development
 
 ### Authentication credentials invalid
+
 - Verify `PDS_NEURO_AUTH_METHOD` matches your Neuron configuration
 - Check username/password for Basic auth
 - Verify token hasn't expired for Bearer auth

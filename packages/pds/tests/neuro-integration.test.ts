@@ -3,7 +3,10 @@ import express from 'express'
 import getPort from 'get-port'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { AtpAgent } from '@atproto/api'
-import { NeuroAuthManager, NeuroIdentity } from '../src/account-manager/helpers/neuro-auth-manager'
+import {
+  NeuroAuthManager,
+  NeuroIdentity,
+} from '../src/account-manager/helpers/neuro-auth-manager'
 
 /**
  * Neuro Quick Login Integration Tests
@@ -30,13 +33,16 @@ describe('Neuro Quick Login Integration', () => {
   let mockNeuroUrl: string | null = null
 
   // Mock Neuro API state
-  const mockSessions = new Map<string, {
-    sessionId: string
-    serviceId: string
-    callbackUrl: string
-    completed: boolean
-    identity?: NeuroIdentity
-  }>()
+  const mockSessions = new Map<
+    string,
+    {
+      sessionId: string
+      serviceId: string
+      callbackUrl: string
+      completed: boolean
+      identity?: NeuroIdentity
+    }
+  >()
 
   beforeAll(async () => {
     // Set up mock Neuro server if not using real API
@@ -52,7 +58,10 @@ describe('Neuro Quick Login Integration', () => {
         const { callbackUrl, sessionId } = req.body
         const serviceId = `mock-service-${Date.now()}`
 
-        console.log('🧪 Mock Neuro: Session initiated', { sessionId, serviceId })
+        console.log('🧪 Mock Neuro: Session initiated', {
+          sessionId,
+          serviceId,
+        })
 
         mockSessions.set(sessionId, {
           sessionId,
@@ -84,7 +93,9 @@ describe('Neuro Quick Login Integration', () => {
         session.identity = identity
         session.completed = true
 
-        console.log('🧪 Mock Neuro: QR scanned, sending callback', { sessionId })
+        console.log('🧪 Mock Neuro: QR scanned, sending callback', {
+          sessionId,
+        })
 
         // Send callback to PDS
         try {
@@ -145,7 +156,7 @@ describe('Neuro Quick Login Integration', () => {
     await network?.close()
 
     // Give a moment for cleanup to complete
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
   })
 
   describe('NeuroAuthManager', () => {
@@ -244,7 +255,8 @@ describe('Neuro Quick Login Integration', () => {
       const manager = ctx.neuroAuthManager!
 
       // Step 1: Initiate session
-      const { sessionId, verificationCode, qrCodeUrl } = await manager.initiateSession()
+      const { sessionId, verificationCode, qrCodeUrl } =
+        await manager.initiateSession()
 
       console.log('📱 Signup: QR Code:', qrCodeUrl)
       console.log('📱 Signup: Verification Code:', verificationCode)
@@ -266,7 +278,9 @@ describe('Neuro Quick Login Integration', () => {
         // Wait for callback to be processed
         await new Promise((resolve) => setTimeout(resolve, 100))
       } else {
-        console.log('⏸️  REAL API MODE: Please scan the QR code with your Neuro app')
+        console.log(
+          '⏸️  REAL API MODE: Please scan the QR code with your Neuro app',
+        )
         console.log('⏸️  Waiting 60 seconds for QR scan...')
 
         // Wait for real QR scan
@@ -352,7 +366,8 @@ describe('Neuro Quick Login Integration', () => {
       const manager = ctx.neuroAuthManager!
 
       // Step 1: Initiate login session
-      const { sessionId, verificationCode, qrCodeUrl } = await manager.initiateSession()
+      const { sessionId, verificationCode, qrCodeUrl } =
+        await manager.initiateSession()
 
       console.log('📱 Login: QR Code:', qrCodeUrl)
       console.log('📱 Login: Verification Code:', verificationCode)

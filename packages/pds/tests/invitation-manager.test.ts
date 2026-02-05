@@ -231,13 +231,13 @@ describe('Invitation Manager', () => {
 
       const deletedCount =
         await ctx().invitationManager.deleteExpiredInvitations()
-      expect(deletedCount).toBeGreaterThanOrEqual(2)
+      expect(deletedCount).toBe(0) // No longer deletes, just marks
 
-      // Verify expired are gone
+      // Verify expired are marked (not deleted)
       const exp1 = await ctx().invitationManager.getInvitationByEmail(
         'expired1@example.com',
       )
-      expect(exp1).toBeNull()
+      expect(exp1).toBeNull() // Not returned by getInvitationByEmail (only returns pending)
 
       // Verify valid remains
       const valid = await ctx().invitationManager.getInvitationByEmail(
@@ -296,6 +296,367 @@ describe('Invitation Manager', () => {
       expect(hash).not.toContain('@')
       expect(hash).not.toContain('sensitive')
       expect(hash.length).toBeGreaterThanOrEqual(8)
+    })
+  })
+
+  describe('Phase 2: Status Tracking', () => {
+    describe('consumeInvitation', () => {
+      it('marks invitation as consumed with DID and handle', async () => {
+        const email = 'consume@example.com'
+        const timestamp = Math.floor(Date.now() / 1000)
+        const did = 'did:plc:test123'
+        const handle = 'testuser.bsky.social'
+
+        await ctx().invitationManager.createInvitation(
+          email,
+          'testuser',
+          timestamp,
+        )
+
+        await ctx().invitationManager.consumeInvitation(email, did, handle)
+
+        const invitation =
+          await ctx().invitationManager.getInvitationByEmail(email)
+        expect(invitation).toBeNull() // No longer pending
+
+        // Verify via direct DB query
+        const consumed = await ctx()
+          .accountManager.db.db.selectFrom('pending_invitations')
+          .selectAll()
+          .where('email', '=', email.toLowerCase())
+          .executeTakeFirst()
+
+        expect(consumed?.status).toBe('consumed')
+        expect(consumed?.consuming_did).toBe(did)
+        expect(consumed?.consuming_handle).toBe(handle)
+        expect(consumed?.consumed_at).toBeDefined()
+      })
+
+      it('handles non-existent invitation gracefully', async () => {
+        // consumeInvitation doesn't throw - it just updates 0 rows
+        await ctx().invitationManager.consumeInvitation(
+          'nonexistent@example.com',
+          'did:plc:test',
+          'handle',
+        )
+        // Should not throw
+      })
+    })
+
+    describe('revokeInvitation', () => {
+      it('revokes invitation by email', async () => {
+        const email = 'revoke-email@example.com'
+        const timestamp = Math.floor(Date.now() / 1000)
+
+        await ctx().invitationManager.createInvitation(email, null, timestamp)
+
+        await ctx().invitationManager.revokeInvitation(email)
+
+        const invitation =
+          await ctx().invitationManager.getInvitationByEmail(email)
+        expect(invitation).toBeNull()
+
+        // Verify status in DB
+        const revoked = await ctx()
+          .accountManager.db.db.selectFrom('pending_invitations')
+          .selectAll()
+          .where('email', '=', email.toLowerCase())
+          .executeTakeFirst()
+
+        expect(revoked?.status).toBe('revoked')
+      })
+
+      it('revokes invitation by ID', async () => {
+        const email = 'revoke-id@example.com'
+        const timestamp = Math.floor(Date.now() / 1000)
+
+        await ctx().invitationManager.createInvitation(email, null, timestamp)
+
+        const invitation =
+          await ctx().invitationManager.getInvitationByEmail(email)
+        const id = invitation!.id
+
+        await ctx().invitationManager.revokeInvitation(id)
+
+        const afterRevoke =
+          await ctx().invitationManager.getInvitationByEmail(email)
+        expect(afterRevoke).toBeNull()
+      })
+
+      it('throws error when revoking non-existent invitation', async () => {
+        await expect(
+          ctx().invitationManager.revokeInvitation('nonexistent@example.com'),
+        ).rejects.toThrow('Invitation not found')
+      })
+    })
+
+    describe('purgeInvitations', () => {
+      it('purges consumed invitations older than timestamp', async () => {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const oldDate = new Date(Date.now() - 2 * DAY).toISOString()
+
+        // Create and consume an old invitation
+        await ctx()
+          .accountManager.db.db.insertInto('pending_invitations')
+          .values({
+            email: 'old-consumed@example.com',
+            preferred_handle: null,
+            invitation_timestamp: timestamp - 2 * 86400,
+            created_at: oldDate,
+            expires_at: oldDate,
+            status: 'consumed',
+            consumed_at: oldDate,
+            consuming_did: 'did:plc:old',
+            consuming_handle: 'old.user',
+          })
+          .execute()
+
+        // Create a recent consumed invitation (should not be purged due to 1s buffer)
+        const recentDate = new Date(Date.now() - 10).toISOString()
+        await ctx()
+          .accountManager.db.db.insertInto('pending_invitations')
+          .values({
+            email: 'recent-consumed@example.com',
+            preferred_handle: null,
+            invitation_timestamp: timestamp,
+            created_at: recentDate,
+            expires_at: new Date(Date.now() + DAY).toISOString(),
+            status: 'consumed',
+            consumed_at: recentDate,
+            consuming_did: 'did:plc:recent',
+            consuming_handle: 'recent.user',
+          })
+          .execute()
+
+        const beforeTimestamp = new Date(Date.now() - DAY).toISOString()
+        const deletedCount = await ctx().invitationManager.purgeInvitations(
+          'consumed',
+          beforeTimestamp,
+        )
+
+        expect(deletedCount).toBeGreaterThanOrEqual(1)
+
+        // Verify old is gone
+        const old = await ctx()
+          .accountManager.db.db.selectFrom('pending_invitations')
+          .selectAll()
+          .where('email', '=', 'old-consumed@example.com')
+          .executeTakeFirst()
+        expect(old).toBeUndefined()
+
+        // Verify recent still exists (within 1s buffer)
+        const recent = await ctx()
+          .accountManager.db.db.selectFrom('pending_invitations')
+          .selectAll()
+          .where('email', '=', 'recent-consumed@example.com')
+          .executeTakeFirst()
+        expect(recent).toBeDefined()
+      })
+
+      it('purges all non-pending statuses when status is null', async () => {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const oldDate = new Date(Date.now() - 2 * DAY).toISOString()
+
+        await ctx()
+          .accountManager.db.db.insertInto('pending_invitations')
+          .values([
+            {
+              email: 'purge-consumed@example.com',
+              preferred_handle: null,
+              invitation_timestamp: timestamp,
+              created_at: oldDate,
+              expires_at: oldDate,
+              status: 'consumed',
+              consumed_at: oldDate,
+            },
+            {
+              email: 'purge-revoked@example.com',
+              preferred_handle: null,
+              invitation_timestamp: timestamp,
+              created_at: oldDate,
+              expires_at: oldDate,
+              status: 'revoked',
+            },
+            {
+              email: 'purge-expired@example.com',
+              preferred_handle: null,
+              invitation_timestamp: timestamp,
+              created_at: oldDate,
+              expires_at: oldDate,
+              status: 'expired',
+            },
+          ])
+          .execute()
+
+        const beforeTimestamp = new Date(Date.now() - DAY).toISOString()
+        // Purge each status separately since API requires specific status
+        let deletedCount = 0
+        deletedCount += await ctx().invitationManager.purgeInvitations(
+          'consumed',
+          beforeTimestamp,
+        )
+        deletedCount += await ctx().invitationManager.purgeInvitations(
+          'revoked',
+          beforeTimestamp,
+        )
+        deletedCount += await ctx().invitationManager.purgeInvitations(
+          'expired',
+          beforeTimestamp,
+        )
+
+        expect(deletedCount).toBeGreaterThanOrEqual(3)
+      })
+    })
+
+    describe('getInvitations', () => {
+      it('returns paginated invitations with filters', async () => {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const oldDate = new Date(Date.now() - 2 * DAY).toISOString()
+
+        // Create old invitations that pass the 1-second safety buffer
+        await ctx()
+          .accountManager.db.db.insertInto('pending_invitations')
+          .values([
+            {
+              email: 'page1@example.com',
+              preferred_handle: 'user1',
+              invitation_timestamp: timestamp,
+              created_at: oldDate,
+              expires_at: new Date(Date.now() + DAY).toISOString(),
+              status: 'pending',
+            },
+            {
+              email: 'page2@example.com',
+              preferred_handle: 'user2',
+              invitation_timestamp: timestamp,
+              created_at: oldDate,
+              expires_at: new Date(Date.now() + DAY).toISOString(),
+              status: 'pending',
+            },
+          ])
+          .execute()
+
+        const result = await ctx().invitationManager.getInvitations({
+          status: 'pending',
+          limit: 10,
+        })
+
+        expect(result.length).toBeGreaterThanOrEqual(2)
+        expect(result[0].status).toBe('pending')
+      })
+
+      it('filters by status', async () => {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const oldDate = new Date(Date.now() - 2 * DAY).toISOString()
+
+        await ctx()
+          .accountManager.db.db.insertInto('pending_invitations')
+          .values({
+            email: 'filter-consumed@example.com',
+            preferred_handle: null,
+            invitation_timestamp: timestamp,
+            created_at: oldDate,
+            expires_at: oldDate,
+            status: 'consumed',
+            consumed_at: oldDate,
+          })
+          .execute()
+
+        const result = await ctx().invitationManager.getInvitations({
+          status: 'consumed',
+          limit: 10,
+        })
+
+        expect(
+          result.some((inv) => inv.email === 'filter-consumed@example.com'),
+        ).toBe(true)
+        expect(result.every((inv) => inv.status === 'consumed')).toBe(true)
+      })
+
+      it('supports pagination with offset', async () => {
+        const page1 = await ctx().invitationManager.getInvitations({
+          status: 'all',
+          limit: 2,
+          offset: 0,
+        })
+
+        const page2 = await ctx().invitationManager.getInvitations({
+          status: 'all',
+          limit: 2,
+          offset: 2,
+        })
+
+        expect(Array.isArray(page2)).toBe(true)
+      })
+    })
+
+    describe('getStats', () => {
+      it('returns invitation statistics', async () => {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const sinceDate = new Date(Date.now() - DAY).toISOString()
+
+        const stats = await ctx().invitationManager.getStats(sinceDate)
+
+        expect(stats).toHaveProperty('pending')
+        expect(stats).toHaveProperty('consumed')
+        expect(stats).toHaveProperty('revoked')
+        expect(stats).toHaveProperty('expired')
+        expect(stats).toHaveProperty('consumedSince')
+        expect(stats).toHaveProperty('conversionRate')
+
+        expect(typeof stats.pending).toBe('number')
+        expect(typeof stats.consumed).toBe('number')
+        expect(typeof stats.conversionRate).toBe('string')
+      })
+
+      it('calculates conversion rate correctly', async () => {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const testDate = new Date(Date.now() - DAY).toISOString()
+
+        // Create test data
+        await ctx()
+          .accountManager.db.db.insertInto('pending_invitations')
+          .values([
+            {
+              email: 'stats1@example.com',
+              preferred_handle: null,
+              invitation_timestamp: timestamp,
+              created_at: testDate,
+              expires_at: new Date(Date.now() + DAY).toISOString(),
+              status: 'consumed',
+              consumed_at: testDate,
+            },
+            {
+              email: 'stats2@example.com',
+              preferred_handle: null,
+              invitation_timestamp: timestamp,
+              created_at: testDate,
+              expires_at: new Date(Date.now() + DAY).toISOString(),
+              status: 'consumed',
+              consumed_at: testDate,
+            },
+            {
+              email: 'stats3@example.com',
+              preferred_handle: null,
+              invitation_timestamp: timestamp,
+              created_at: testDate,
+              expires_at: new Date(Date.now() + DAY).toISOString(),
+              status: 'pending',
+            },
+          ])
+          .execute()
+
+        const stats = await ctx().invitationManager.getStats(testDate)
+
+        expect(stats.consumed).toBeGreaterThanOrEqual(2)
+        expect(stats.consumedSince).toBeGreaterThanOrEqual(2)
+
+        if (stats.conversionRate) {
+          const rate = parseFloat(stats.conversionRate)
+          expect(rate).toBeGreaterThanOrEqual(0)
+          expect(rate).toBeLessThanOrEqual(100)
+        }
+      })
     })
   })
 })

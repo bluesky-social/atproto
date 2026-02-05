@@ -141,8 +141,7 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
         > = null
 
         if (inviteRequired) {
-          invitation =
-            await ctx.invitationManager.getInvitationByEmail(email)
+          invitation = await ctx.invitationManager.getInvitationByEmail(email)
 
           if (!invitation) {
             req.log.warn(
@@ -180,10 +179,7 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
           // Account doesn't exist yet
           if (inviteRequired && !invitation) {
             // Should never reach here due to earlier check, but defensive
-            req.log.error(
-              { jid, email },
-              'No invitation and account not found',
-            )
+            req.log.error({ jid, email }, 'No invitation and account not found')
             ctx.quickloginStore.updateSession(session.sessionId, {
               status: 'failed',
               error: 'Invitation required',
@@ -214,9 +210,9 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
           accessJwt = result.accessJwt
           refreshJwt = result.refreshJwt
 
-          // Delete the invitation after successful account creation
+          // Mark the invitation as consumed
           if (invitation) {
-            await ctx.invitationManager.deleteInvitation(invitation.id)
+            await ctx.invitationManager.consumeInvitation(email, did, handle)
             req.log.info(
               { email: ctx.invitationManager.hashEmail(email) },
               'Invitation consumed',
@@ -246,7 +242,11 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
             .execute()
 
           // Create session
-          const tokens = await ctx.accountManager.createSession(did, null, false)
+          const tokens = await ctx.accountManager.createSession(
+            did,
+            null,
+            false,
+          )
           accessJwt = tokens.accessJwt
           refreshJwt = tokens.refreshJwt
 
