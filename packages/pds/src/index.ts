@@ -60,6 +60,7 @@ export class PDS {
   private dbStatsInterval?: NodeJS.Timeout
   private sequencerStatsInterval?: NodeJS.Timeout
   private neuroCleanupInterval?: NodeJS.Timeout
+  private invitationCleanupInterval?: NodeJS.Timeout
 
   constructor(opts: { ctx: AppContext; app: express.Application }) {
     this.ctx = opts.ctx
@@ -80,6 +81,29 @@ export class PDS {
       // This is important for test environments where destroy() is called
       this.neuroCleanupInterval.unref()
     }
+
+    // Setup invitation cleanup interval (daily at 3 AM UTC)
+    // For simplicity, run every hour and skip if not close to 3 AM
+    this.invitationCleanupInterval = setInterval(async () => {
+      const hour = new Date().getUTCHours()
+      // Run between 3:00 and 3:59 UTC
+      if (hour === 3) {
+        try {
+          const deletedCount = await opts.ctx.invitationManager.deleteExpiredInvitations()
+          console.log(`Deleted ${deletedCount} expired invitations`)
+
+          // Log warning if many invitations expired (potential issue)
+          if (deletedCount > 100) {
+            console.warn(`High number of expired invitations: ${deletedCount}`)
+          }
+        } catch (err) {
+          console.error('Invitation cleanup failed:', err)
+        }
+      }
+    }, 60 * 60 * 1000) // Check every hour
+
+    // Allow Node to exit even if this timer is still active
+    this.invitationCleanupInterval.unref()
   }
 
   static async create(
@@ -210,6 +234,7 @@ export class PDS {
     clearInterval(this.dbStatsInterval)
     clearInterval(this.sequencerStatsInterval)
     clearInterval(this.neuroCleanupInterval)
+    clearInterval(this.invitationCleanupInterval)
   }
 }
 

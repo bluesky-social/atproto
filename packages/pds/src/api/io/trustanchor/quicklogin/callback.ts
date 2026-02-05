@@ -134,6 +134,41 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
           return res.status(400).json({ error: 'Email required' })
         }
 
+        // Check if invitation is required and exists
+        const inviteRequired = ctx.cfg.invites?.required ?? false
+        let invitation: Awaited<
+          ReturnType<typeof ctx.invitationManager.getInvitationByEmail>
+        > = null
+
+        if (inviteRequired) {
+          invitation =
+            await ctx.invitationManager.getInvitationByEmail(email)
+
+          if (!invitation) {
+            req.log.warn(
+              { email: ctx.invitationManager.hashEmail(email), jid },
+              'No invitation found - access denied',
+            )
+            ctx.quickloginStore.updateSession(session.sessionId, {
+              status: 'failed',
+              error: 'Invitation required',
+            })
+            return res.status(403).json({
+              error: 'InvitationRequired',
+              message:
+                'An invitation is required to create an account. Please contact support.',
+            })
+          }
+
+          req.log.info(
+            {
+              email: ctx.invitationManager.hashEmail(email),
+              preferredHandle: invitation.preferred_handle,
+            },
+            'Valid invitation found',
+          )
+        }
+
         // Find the existing account by email
         const existingAccount = await ctx.accountManager.db.db
           .selectFrom('account')
@@ -142,48 +177,88 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
           .executeTakeFirst()
 
         if (!existingAccount) {
-          // This should never happen given W ID app behavior
-          req.log.error(
-            { jid, email },
-            'Account not found - user scanned QR before account provisioning completed',
+          // Account doesn't exist yet
+          if (inviteRequired && !invitation) {
+            // Should never reach here due to earlier check, but defensive
+            req.log.error(
+              { jid, email },
+              'No invitation and account not found',
+            )
+            ctx.quickloginStore.updateSession(session.sessionId, {
+              status: 'failed',
+              error: 'Invitation required',
+            })
+            return res.status(403).json({
+              error: 'InvitationRequired',
+              message: 'An invitation is required to create an account.',
+            })
+          }
+
+          // Create new account with invitation (if available)
+          req.log.info(
+            { jid, email, preferredHandle: invitation?.preferred_handle },
+            'Creating new account via QuickLogin',
           )
-          ctx.quickloginStore.updateSession(session.sessionId, {
-            status: 'failed',
-            error:
-              'Account not found. Please ensure your account is fully set up.',
-          })
-          return res.status(400).json({
-            error:
-              'Account not found. Please ensure your account is fully set up.',
-          })
+
+          const preferredHandle = invitation?.preferred_handle || null
+          const result = await createAccountViaQuickLogin(
+            ctx,
+            jid,
+            email,
+            userName,
+            preferredHandle,
+          )
+
+          did = result.did
+          handle = result.handle
+          accessJwt = result.accessJwt
+          refreshJwt = result.refreshJwt
+
+          // Delete the invitation after successful account creation
+          if (invitation) {
+            await ctx.invitationManager.deleteInvitation(invitation.id)
+            req.log.info(
+              { email: ctx.invitationManager.hashEmail(email) },
+              'Invitation consumed',
+            )
+          }
+        } else {
+          // Account exists - create the link
+          req.log.info(
+            { jid, email, did: existingAccount.did },
+            'Creating Neuro identity link for existing account',
+          )
+
+          did = existingAccount.did
+          handle = await getHandleForDid(ctx, did)
+
+          // Create the neuro_identity_link
+          await ctx.accountManager.db.db
+            .insertInto('neuro_identity_link')
+            .values({
+              neuroJid: jid,
+              did,
+              email: email || null,
+              userName: userName || null,
+              linkedAt: new Date().toISOString(),
+              lastLoginAt: new Date().toISOString(),
+            })
+            .execute()
+
+          // Create session
+          const tokens = await ctx.accountManager.createSession(did, null, false)
+          accessJwt = tokens.accessJwt
+          refreshJwt = tokens.refreshJwt
+
+          // Delete the invitation if it exists (account already created via other means)
+          if (invitation) {
+            await ctx.invitationManager.deleteInvitation(invitation.id)
+            req.log.info(
+              { email: ctx.invitationManager.hashEmail(email) },
+              'Invitation consumed for existing account',
+            )
+          }
         }
-
-        // Account exists - create the link
-        req.log.info(
-          { jid, email, did: existingAccount.did },
-          'Creating Neuro identity link for existing account',
-        )
-
-        did = existingAccount.did
-        handle = await getHandleForDid(ctx, did)
-
-        // Create the neuro_identity_link
-        await ctx.accountManager.db.db
-          .insertInto('neuro_identity_link')
-          .values({
-            neuroJid: jid,
-            did,
-            email: email || null,
-            userName: userName || null,
-            linkedAt: new Date().toISOString(),
-            lastLoginAt: new Date().toISOString(),
-          })
-          .execute()
-
-        // Create session
-        const tokens = await ctx.accountManager.createSession(did, null, false)
-        accessJwt = tokens.accessJwt
-        refreshJwt = tokens.refreshJwt
       }
 
       // Update session with success
