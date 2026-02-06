@@ -172,7 +172,11 @@ export function createAuthorizationPageMiddleware<
                 const requestUri = parseRequestUri(query.request_uri, {
                   path: ['query', 'request_uri'],
                 })
-                const data = await server.requestManager.get(requestUri)
+                const data = await server.requestManager.get(
+                  requestUri,
+                  undefined,
+                  query.client_id,
+                )
                 await server.requestManager.delete(requestUri)
                 throw new AuthorizationError(data.parameters, message)
               } else if ('request' in query) {
