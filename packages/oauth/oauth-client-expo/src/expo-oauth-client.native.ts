@@ -81,11 +81,10 @@ export class ExpoOAuthClient
       display: options?.display ?? 'touch',
     })
 
-    console.debug('openAuthSessionAsync', { url, redirectUri })
-
-    const result = await openAuthSessionAsync(url.toString(), redirectUri)
-
-    console.debug('AUTH SESSION RESULT', result)
+    const result = await openAuthSessionAsync(url.toString(), redirectUri, {
+      dismissButtonStyle: 'cancel', // iOS only
+      preferEphemeralSession: false, // iOS only
+    })
 
     if (result.type === 'success') {
       const callbackUrl = new URL(result.url)

@@ -52,6 +52,15 @@ export const jsonCode = (value: unknown) =>
   Html.dangerouslyCreate(jsonEscaper(value))
 
 /**
+ * Creates an HTML safe CSS code block.
+ */
+export const css = (tpl: TemplateStringsArray, ...val: readonly number[]) =>
+  tpl.length === 1 && val.length === 0
+    ? // Optimization for static CSS, avoid creating an iterable
+      cssCode(tpl[0])
+    : cssCode(String.raw({ raw: tpl }, ...val.map(jsonEscaper)))
+
+/**
  * Escapes a value to be uses as CSS styles inside a `<style>` tag.
  */
 export const cssCode = (code?: string) =>
