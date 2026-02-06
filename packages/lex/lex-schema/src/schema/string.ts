@@ -9,6 +9,15 @@ import {
 import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
 
+/**
+ * Configuration options for string schema validation.
+ *
+ * @property format - Expected string format (e.g., 'datetime', 'uri', 'at-uri', 'did', 'handle', 'nsid', 'cid', 'tid', 'record-key', 'at-identifier', 'language')
+ * @property minLength - Minimum length in UTF-8 bytes
+ * @property maxLength - Maximum length in UTF-8 bytes
+ * @property minGraphemes - Minimum number of grapheme clusters
+ * @property maxGraphemes - Maximum number of grapheme clusters
+ */
 export type StringSchemaOptions = {
   format?: StringFormat
   minLength?: number
@@ -17,6 +26,20 @@ export type StringSchemaOptions = {
   maxGraphemes?: number
 }
 
+/**
+ * Schema for validating string values with optional format and length constraints.
+ *
+ * Supports various string formats defined in the Lexicon specification, as well as
+ * length constraints measured in UTF-8 bytes or grapheme clusters.
+ *
+ * @template TOptions - The configuration options type
+ *
+ * @example
+ * ```ts
+ * const schema = new StringSchema({ format: 'datetime', maxLength: 64 })
+ * const result = schema.validate('2024-01-15T10:30:00Z')
+ * ```
+ */
 export class StringSchema<
   const TOptions extends StringSchemaOptions = StringSchemaOptions,
 > extends Schema<
@@ -123,6 +146,33 @@ export function coerceToString(input: unknown): string | null {
   }
 }
 
+/**
+ * Creates a string schema with optional format and length constraints.
+ *
+ * Strings can be validated against various formats (datetime, uri, did, handle, etc.)
+ * and constrained by length in UTF-8 bytes or grapheme clusters.
+ *
+ * @param options - Optional configuration for format and length constraints
+ * @returns A new {@link StringSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Basic string
+ * const nameSchema = l.string()
+ *
+ * // With format validation
+ * const dateSchema = l.string({ format: 'datetime' })
+ *
+ * // With length constraints (UTF-8 bytes)
+ * const bioSchema = l.string({ maxLength: 256 })
+ *
+ * // With grapheme constraints (user-perceived characters)
+ * const displayNameSchema = l.string({ maxGraphemes: 64 })
+ *
+ * // Combining constraints
+ * const handleSchema = l.string({ format: 'handle', minLength: 3, maxLength: 253 })
+ * ```
+ */
 export const string = /*#__PURE__*/ memoizedOptions(function <
   const O extends StringSchemaOptions = NonNullable<unknown>,
 >(options?: StringSchemaOptions & O) {

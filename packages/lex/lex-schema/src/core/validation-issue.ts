@@ -1,6 +1,17 @@
 import { ifCid, isPlainObject } from '@atproto/lex-data'
 import { PropertyKey } from './property-key.js'
 
+/**
+ * Abstract base class for all validation issues.
+ *
+ * An issue represents a single validation failure, containing:
+ * - A code identifying the type of issue
+ * - The path to the invalid value in the data structure
+ * - The actual input value that failed validation
+ *
+ * Subclasses add specific properties relevant to each issue type and
+ * implement the {@link toString} method for human-readable error messages.
+ */
 export abstract class Issue {
   constructor(
     readonly code: string,
@@ -8,8 +19,16 @@ export abstract class Issue {
     readonly input: unknown,
   ) {}
 
+  /**
+   * Returns a human-readable description of the validation issue.
+   */
   abstract toString(): string
 
+  /**
+   * Converts the issue to a JSON-serializable object.
+   *
+   * @returns An object containing the issue code, path, and message
+   */
   toJSON() {
     return {
       code: this.code,
@@ -19,6 +38,11 @@ export abstract class Issue {
   }
 }
 
+/**
+ * A custom validation issue with a user-defined message.
+ *
+ * Use this for validation rules that don't fit into the standard issue categories.
+ */
 export class IssueCustom extends Issue {
   constructor(
     readonly path: readonly PropertyKey[],
@@ -33,6 +57,11 @@ export class IssueCustom extends Issue {
   }
 }
 
+/**
+ * Issue for string values that don't match an expected format.
+ *
+ * Used for AT Protocol specific formats like DID, handle, NSID, AT-URI, etc.
+ */
 export class IssueInvalidFormat extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -54,6 +83,7 @@ export class IssueInvalidFormat extends Issue {
     }
   }
 
+  /** Returns a human-readable description of the expected format. */
   get formatDescription(): string {
     switch (this.format) {
       case 'at-identifier':
@@ -74,6 +104,12 @@ export class IssueInvalidFormat extends Issue {
   }
 }
 
+/**
+ * Issue for values that have an unexpected type.
+ *
+ * This is one of the most common validation issues, occurring when the
+ * runtime type of a value doesn't match the expected schema type.
+ */
 export class IssueInvalidType extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -95,6 +131,12 @@ export class IssueInvalidType extends Issue {
   }
 }
 
+/**
+ * Issue for values that don't match any of the expected literal values.
+ *
+ * Used when a value must be one of a specific set of allowed values
+ * (e.g., enum-like constraints).
+ */
 export class IssueInvalidValue extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -116,6 +158,9 @@ export class IssueInvalidValue extends Issue {
   }
 }
 
+/**
+ * Issue for missing required object properties.
+ */
 export class IssueRequiredKey extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -137,6 +182,16 @@ export class IssueRequiredKey extends Issue {
   }
 }
 
+/**
+ * The type of measurement for size constraint issues.
+ *
+ * - `'array'` - Array length
+ * - `'string'` - String length in characters
+ * - `'integer'` - Numeric value
+ * - `'grapheme'` - String length in grapheme clusters
+ * - `'bytes'` - Byte length
+ * - `'blob'` - Blob size
+ */
 export type MeasurableType =
   | 'array'
   | 'string'
@@ -145,6 +200,9 @@ export type MeasurableType =
   | 'bytes'
   | 'blob'
 
+/**
+ * Issue for values that exceed a maximum constraint.
+ */
 export class IssueTooBig extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -169,6 +227,9 @@ export class IssueTooBig extends Issue {
   }
 }
 
+/**
+ * Issue for values that are below a minimum constraint.
+ */
 export class IssueTooSmall extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -192,6 +253,10 @@ export class IssueTooSmall extends Issue {
     }
   }
 }
+
+// -----------------------------------------------------------------------------
+// Helper functions for formatting error messages
+// -----------------------------------------------------------------------------
 
 function stringifyExpectedType(expected: string): string {
   if (expected === '$typed') {

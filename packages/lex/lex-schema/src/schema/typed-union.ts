@@ -7,10 +7,32 @@ import {
   ValidationContext,
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
+import { TypedObjectSchema } from './typed-object.js'
 import { TypedRefSchema } from './typed-ref.js'
 
+/**
+ * Schema for Lexicon typed unions (unions discriminated by $type).
+ *
+ * Typed unions are collections of typed objects identified by their `$type`
+ * field. Can be "open" (accept unknown types) or "closed" (only accept
+ * known types).
+ *
+ * @template TValidators - Tuple of {@link TypedRefSchema} or {@link TypedObjectSchema} instances
+ * @template TClosed - Whether the union is closed (rejects unknown $types)
+ *
+ * @example
+ * ```ts
+ * const embedUnion = new TypedUnionSchema([
+ *   l.typedRef(() => imageSchema),
+ *   l.typedRef(() => videoSchema),
+ * ], true) // closed - only accepts images and videos
+ * ```
+ */
 export class TypedUnionSchema<
-  const TValidators extends readonly TypedRefSchema[] = [],
+  const TValidators extends readonly (
+    | TypedRefSchema
+    | TypedObjectSchema
+  )[] = [],
   const TClosed extends boolean = boolean,
 > extends Schema<
   TClosed extends true
@@ -26,7 +48,8 @@ export class TypedUnionSchema<
   ) {
     // @NOTE In order to avoid circular dependency issues, we don't access the
     // refs's schema (or $type) here. Instead, we access them lazily when first
-    // needed.
+    // needed. The biggest issue with this strategy is that we can't throw
+    // early if the refs contain multiple refs with the same $type.
 
     super()
   }
@@ -66,6 +89,36 @@ export class TypedUnionSchema<
   }
 }
 
+/**
+ * Creates a typed union schema for Lexicon unions.
+ *
+ * Typed unions discriminate variants by their `$type` field. Can be open
+ * (accepts unknown types, useful for extensibility) or closed (strict).
+ *
+ * @param refs - Array of typed refs for the union variants
+ * @param closed - Whether to reject unknown $type values
+ * @returns A new {@link TypedUnionSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Closed union - only accepts known types
+ * const embedSchema = l.typedUnion([
+ *   l.typedRef(() => imageViewSchema),
+ *   l.typedRef(() => videoViewSchema),
+ *   l.typedRef(() => externalViewSchema),
+ * ], true)
+ *
+ * // Open union - accepts unknown types for forward compatibility
+ * const feedItemSchema = l.typedUnion([
+ *   l.typedRef(() => postSchema),
+ *   l.typedRef(() => repostSchema),
+ * ], false) // unknown types pass through
+ *
+ * // Get all known $types
+ * console.log(embedSchema.$types)
+ * // ['app.bsky.embed.images#view', 'app.bsky.embed.video#view', ...]
+ * ```
+ */
 /*@__NO_SIDE_EFFECTS__*/
 export function typedUnion<
   const R extends readonly TypedRefSchema[],

@@ -49,10 +49,21 @@ export class XrpcResponse<M extends Procedure | Query>
     return this.method.output.encoding === CONTENT_TYPE_JSON
   }
 
+  /**
+   * The Content-Type encoding of the response (e.g., 'application/json').
+   * Returns `undefined` if the response has no body.
+   */
   get encoding() {
     return this.payload?.encoding as InferMethodOutputEncoding<M>
   }
 
+  /**
+   * The parsed response body.
+   *
+   * For 'application/json' responses, this is the parsed and validated LexValue.
+   * For binary responses, this is a Uint8Array.
+   * Returns `undefined` if the response has no body.
+   */
   get body() {
     return this.payload?.body as XrpcResponseBody<M>
   }

@@ -12,6 +12,20 @@ import {
   parseWWWAuthenticateHeader,
 } from './www-authenticate.js'
 
+/**
+ * HTTP status codes that indicate a transient error that may succeed on retry.
+ *
+ * Includes:
+ * - 408 Request Timeout
+ * - 425 Too Early
+ * - 429 Too Many Requests (rate limited)
+ * - 500 Internal Server Error
+ * - 502 Bad Gateway
+ * - 503 Service Unavailable
+ * - 504 Gateway Timeout
+ * - 522 Connection Timed Out (Cloudflare)
+ * - 524 A Timeout Occurred (Cloudflare)
+ */
 export const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
   408, 425, 429, 500, 502, 503, 504, 522, 524,
 ])
@@ -19,6 +33,13 @@ export const RETRYABLE_HTTP_STATUS_CODES: ReadonlySet<number> = new Set([
 export { LexError }
 export type { LexErrorCode, LexErrorData }
 
+/**
+ * The payload structure for XRPC error responses.
+ *
+ * All XRPC errors return JSON with an `error` code and optional `message`.
+ *
+ * @typeParam N - The specific error code type
+ */
 export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> = {
   body: LexErrorData<N>
   encoding: 'application/json'
@@ -46,6 +67,20 @@ export function isXrpcErrorPayload(
   )
 }
 
+/**
+ * Abstract base class for all XRPC errors.
+ *
+ * Extends {@link LexError} and implements {@link ResultFailure} for use with
+ * safe/result-based error handling patterns.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ * @typeParam N - The error code type
+ * @typeParam TReason - The reason type for ResultFailure
+ *
+ * @see {@link XrpcResponseError} - For valid XRPC error responses
+ * @see {@link XrpcUpstreamError} - For invalid/unexpected responses
+ * @see {@link XrpcInternalError} - For network/internal errors
+ */
 export abstract class XrpcError<
     M extends Procedure | Query = Procedure | Query,
     N extends LexErrorCode = LexErrorCode,
@@ -86,8 +121,28 @@ export abstract class XrpcError<
 }
 
 /**
- * Class used to represent an HTTP request that resulted in an XRPC method
- * error. That is, a non-2xx response with a valid XRPC error payload.
+ * Error class for valid XRPC error responses from the server.
+ *
+ * This represents a properly formatted XRPC error where the server returned
+ * a non-2xx status with a valid JSON error payload containing `error` and
+ * optional `message` fields.
+ *
+ * Use {@link matchesSchema} to check if the error matches the method's declared
+ * error types for type-safe error handling.
+ *
+ * @typeParam M - The XRPC method type
+ * @typeParam N - The error code type (inferred from method or generic)
+ *
+ * @example Handling specific errors
+ * ```typescript
+ * try {
+ *   await client.xrpc(someMethod, options)
+ * } catch (err) {
+ *   if (err instanceof XrpcResponseError && err.error === 'RecordNotFound') {
+ *     // Handle not found case
+ *   }
+ * }
+ * ```
  */
 export class XrpcResponseError<
   M extends Procedure | Query = Procedure | Query,
@@ -137,6 +192,33 @@ export class XrpcResponseError<
 }
 
 export type { WWWAuthenticate }
+
+/**
+ * Error class for 401 Unauthorized XRPC responses.
+ *
+ * Extends {@link XrpcResponseError} with access to parsed WWW-Authenticate header
+ * information, useful for implementing authentication flows.
+ *
+ * Authentication errors are never retryable as they require user intervention
+ * (e.g., re-authentication, token refresh).
+ *
+ * @typeParam M - The XRPC method type
+ * @typeParam N - The error code type
+ *
+ * @example Handling authentication errors
+ * ```typescript
+ * try {
+ *   await client.xrpc(someMethod, options)
+ * } catch (err) {
+ *   if (err instanceof XrpcAuthenticationError) {
+ *     const { DPoP } = err.wwwAuthenticate
+ *     if (DPoP?.error === 'use_dpop_nonce') {
+ *       // Handle DPoP nonce requirement
+ *     }
+ *   }
+ * }
+ * ```
+ */
 export class XrpcAuthenticationError<
   M extends Procedure | Query = Procedure | Query,
   N extends LexErrorCode = LexErrorCode,
@@ -147,9 +229,13 @@ export class XrpcAuthenticationError<
     return false
   }
 
-  #wwwAuthenticate?: WWWAuthenticate
+  #wwwAuthenticateCached?: WWWAuthenticate
+  /**
+   * Parsed WWW-Authenticate header from the response.
+   * Contains authentication scheme parameters (e.g., Bearer realm, DPoP nonce).
+   */
   get wwwAuthenticate(): WWWAuthenticate {
-    return (this.#wwwAuthenticate ??=
+    return (this.#wwwAuthenticateCached ??=
       parseWWWAuthenticateHeader(
         this.response.headers.get('www-authenticate'),
       ) ?? {})
@@ -157,8 +243,19 @@ export class XrpcAuthenticationError<
 }
 
 /**
- * This class represents invalid or unprocessable XRPC response from the
- * upstream server.
+ * Error class for invalid or unprocessable XRPC responses from upstream servers.
+ *
+ * This occurs when the server returns a response that doesn't conform to the
+ * XRPC protocol, such as:
+ * - Missing or invalid Content-Type header
+ * - Response body that doesn't match the method's output schema
+ * - Non-JSON error responses
+ * - Responses from non-XRPC endpoints
+ *
+ * The error code is always 'UpstreamFailure' and maps to HTTP 502 Bad Gateway
+ * when converted to a response.
+ *
+ * @typeParam M - The XRPC method type
  */
 export class XrpcUpstreamError<
   M extends Procedure | Query = Procedure | Query,
@@ -188,6 +285,21 @@ export class XrpcUpstreamError<
   }
 }
 
+/**
+ * Error class for internal/client-side errors during XRPC requests.
+ *
+ * This represents errors that occur before or during the request that are not
+ * server responses, such as:
+ * - Network errors (connection refused, DNS failure)
+ * - Request timeouts
+ * - Request aborted via AbortSignal
+ * - Invalid request construction
+ *
+ * The error code is always 'InternalServerError' and these errors are
+ * optimistically considered retryable.
+ *
+ * @typeParam M - The XRPC method type
+ */
 export class XrpcInternalError<
   M extends Procedure | Query = Procedure | Query,
 > extends XrpcError<M, 'InternalServerError', XrpcInternalError<M>> {
@@ -220,6 +332,25 @@ export class XrpcInternalError<
   }
 }
 
+/**
+ * Union type of all possible XRPC failure types.
+ *
+ * Used as the return type for safe/non-throwing XRPC methods. Check the
+ * `success` property to distinguish between success and failure:
+ *
+ * @typeParam M - The XRPC method type
+ *
+ * @example
+ * ```typescript
+ * const result = await client.xrpcSafe(someMethod, options)
+ * if (result.success) {
+ *   console.log(result.body) // XrpcResponse
+ * } else {
+ *   // result is XrpcFailure (XrpcResponseError | XrpcUpstreamError | XrpcInternalError)
+ *   console.error(result.error, result.message)
+ * }
+ * ```
+ */
 export type XrpcFailure<M extends Procedure | Query = Procedure | Query> =
   // The server returned a valid XRPC error response
   | XrpcResponseError<M>
@@ -228,6 +359,26 @@ export type XrpcFailure<M extends Procedure | Query = Procedure | Query> =
   // Something went wrong (network error, etc.)
   | XrpcInternalError<M>
 
+/**
+ * Converts an unknown error into an appropriate {@link XrpcFailure} type.
+ *
+ * If the error is already an XrpcFailure for the given method, returns it as-is.
+ * Otherwise, wraps it in an {@link XrpcInternalError}.
+ *
+ * @param method - The XRPC method that was called
+ * @param cause - The error to convert
+ * @returns An XrpcFailure instance
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const response = await fetch(...)
+ *   // ... process response
+ * } catch (err) {
+ *   return asXrpcFailure(method, err)
+ * }
+ * ```
+ */
 export function asXrpcFailure<M extends Procedure | Query>(
   method: M,
   cause: unknown,

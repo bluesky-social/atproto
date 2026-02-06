@@ -27,6 +27,11 @@ import {
 type XrpcParamsOptions<P extends Params> =
   NonNullable<unknown> extends P ? { params?: P } : { params: P }
 
+/**
+ * The query/path parameters type for an XRPC method, inferred from its schema.
+ *
+ * @typeParam M - The XRPC method type (Procedure, Query, or Subscription)
+ */
 export type XrpcRequestParams<M extends Procedure | Query | Subscription> =
   InferInput<M['parameters']>
 
@@ -39,13 +44,54 @@ type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
     { body: B; encoding?: E }
   : { body?: undefined; encoding?: undefined }
 
+/**
+ * Options for making an XRPC request.
+ *
+ * Combines {@link CallOptions} with method-specific params and body requirements.
+ * The type system ensures required params/body are provided based on the method schema.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ * @see {@link CallOptions} for general request options like signal and validateRequest
+ * @see {@link XrpcParamsOptions} for method-specific query parameters
+ * @see {@link XrpcInputOptions} for method-specific body and encoding requirements
+ *
+ * @example Query with params
+ * ```typescript
+ * const options: XrpcOptions<typeof app.bsky.feed.getTimeline.main> = {
+ *   params: { limit: 50 }
+ * }
+ * ```
+ *
+ * @example Procedure with body
+ * ```typescript
+ * const options: XrpcOptions<typeof com.atproto.repo.createRecord.main> = {
+ *   body: { repo: did, collection: 'app.bsky.feed.post', record: { ... } }
+ * }
+ * ```
+ */
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
   CallOptions &
     XrpcInputOptions<XrpcRequestPayload<M>> &
     XrpcParamsOptions<XrpcRequestParams<M>>
 
 /**
- * @throws XrpcFailure<M>
+ * Makes an XRPC request and throws on failure.
+ *
+ * This is the low-level function for making XRPC calls. For most use cases,
+ * prefer using {@link Client.xrpc} which provides a more ergonomic API.
+ *
+ * @param agent - The {@link Agent} to use for making the request
+ * @param ns - The lexicon method definition
+ * @param options - Request {@link XrpcOptions options} (params, body, headers, etc.)
+ * @returns The successful {@link XrpcResponse}
+ * @throws {XrpcFailure} When the request fails
+ *
+ * @example
+ * ```typescript
+ * const response = await xrpc(agent, app.bsky.feed.getTimeline.main, {
+ *   params: { limit: 50 }
+ * })
+ * ```
  */
 export async function xrpc<const M extends Query | Procedure>(
   agent: Agent,
@@ -68,10 +114,44 @@ export async function xrpc<const M extends Query | Procedure>(
   else throw response
 }
 
+/**
+ * Union type representing either a successful response or a failure.
+ *
+ * Both {@link XrpcResponse} and {@link XrpcFailure} have a `success` property
+ * that can be used to discriminate between them.
+ *
+ * @typeParam M - The XRPC method type
+ */
 export type XrpcResult<M extends Procedure | Query> =
   | XrpcResponse<M>
   | XrpcFailure<M>
 
+/**
+ * Makes an XRPC request without throwing on failure.
+ *
+ * Returns a discriminated union that can be checked via the `success` property.
+ * This is useful for handling errors without try/catch blocks. This also allow
+ * failure results to be typed with the method schema, which can provide better
+ * type safety when handling errors (e.g. checking for specific error codes).
+ *
+ * @param agent - The {@link Agent} to use for making the request
+ * @param ns - The lexicon method definition
+ * @param options - Request {@link XrpcOptions options} (params, body, headers, etc.)
+ * @returns Either a successful {@link XrpcResponse} or an {@link XrpcFailure}
+ *
+ * @example
+ * ```typescript
+ * const result = await xrpcSafe(agent, app.bsky.actor.getProfile.main, {
+ *   params: { actor: 'alice.bsky.social' }
+ * })
+ *
+ * if (result.success) {
+ *   console.log(result.body.displayName)
+ * } else {
+ *   console.error('Request failed:', result.error)
+ * }
+ * ```
+ */
 export async function xrpcSafe<const M extends Query | Procedure>(
   agent: Agent,
   ns: NonNullable<unknown> extends XrpcOptions<M>

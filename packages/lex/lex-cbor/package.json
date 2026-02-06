@@ -26,14 +26,16 @@
     "./CHANGELOG.md"
   ],
   "sideEffects": false,
+  "type": "commonjs",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": "./dist/index.mjs",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "default": "./dist/index.cjs"
     }
   },
   "dependencies": {
