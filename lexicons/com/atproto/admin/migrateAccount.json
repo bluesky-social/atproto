@@ -1,0 +1,112 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.migrateAccount",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Migrate an account to a different PDS. Admin only. Transfers all account data, blobs, and W ID links.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "targetPdsUrl"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of account to migrate"
+            },
+            "targetPdsUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "URL of destination PDS (e.g., https://pds2.wsocial.eu)"
+            },
+            "targetHandle": {
+              "type": "string",
+              "description": "Optional: New handle on target PDS (default: keep existing)"
+            },
+            "skipDeactivation": {
+              "type": "boolean",
+              "description": "If true, don't deactivate account on source PDS after migration"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "sourcePds", "targetPds", "status", "migratedAt"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "sourcePds": {
+              "type": "string",
+              "description": "Source PDS hostname"
+            },
+            "targetPds": {
+              "type": "string",
+              "description": "Target PDS URL"
+            },
+            "status": {
+              "type": "string",
+              "description": "Migration status: completed, partial, failed"
+            },
+            "migratedAt": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "details": {
+              "type": "ref",
+              "ref": "#migrationDetails"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "AccountNotFound"
+        },
+        {
+          "name": "InvalidTargetPds"
+        },
+        {
+          "name": "MigrationFailed"
+        }
+      ]
+    },
+    "migrationDetails": {
+      "type": "object",
+      "properties": {
+        "repoBlocks": {
+          "type": "integer",
+          "description": "Number of repo blocks migrated"
+        },
+        "blobsTransferred": {
+          "type": "integer",
+          "description": "Number of blobs successfully transferred"
+        },
+        "blobsFailed": {
+          "type": "integer",
+          "description": "Number of blobs that failed to transfer"
+        },
+        "neuroLinkMigrated": {
+          "type": "boolean",
+          "description": "Whether W ID link was migrated"
+        },
+        "appPasswordsMigrated": {
+          "type": "integer",
+          "description": "Number of app passwords migrated"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

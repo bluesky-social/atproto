@@ -179,14 +179,20 @@ import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo.js'
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos.js'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes.js'
+import * as ComAtprotoAdminGetNeuroLink from './types/com/atproto/admin/getNeuroLink.js'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus.js'
+import * as ComAtprotoAdminImportAccount from './types/com/atproto/admin/importAccount.js'
+import * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
+import * as ComAtprotoAdminMigrateAccount from './types/com/atproto/admin/migrateAccount.js'
 import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
 import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
+import * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+import * as ComAtprotoAdminValidateMigrationTarget from './types/com/atproto/admin/validateMigrationTarget.js'
 import * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
@@ -492,14 +498,20 @@ export * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/
 export * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo.js'
 export * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos.js'
 export * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes.js'
+export * as ComAtprotoAdminGetNeuroLink from './types/com/atproto/admin/getNeuroLink.js'
 export * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus.js'
+export * as ComAtprotoAdminImportAccount from './types/com/atproto/admin/importAccount.js'
+export * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
+export * as ComAtprotoAdminMigrateAccount from './types/com/atproto/admin/migrateAccount.js'
 export * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 export * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 export * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 export * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 export * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
 export * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
+export * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 export * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+export * as ComAtprotoAdminValidateMigrationTarget from './types/com/atproto/admin/validateMigrationTarget.js'
 export * as ComAtprotoIdentityDefs from './types/com/atproto/identity/defs.js'
 export * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 export * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
@@ -3987,6 +3999,18 @@ export class ComAtprotoAdminNS {
     )
   }
 
+  getNeuroLink(
+    params?: ComAtprotoAdminGetNeuroLink.QueryParams,
+    opts?: ComAtprotoAdminGetNeuroLink.CallOptions,
+  ): Promise<ComAtprotoAdminGetNeuroLink.Response> {
+    return this._client.call(
+      'com.atproto.admin.getNeuroLink',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getSubjectStatus(
     params?: ComAtprotoAdminGetSubjectStatus.QueryParams,
     opts?: ComAtprotoAdminGetSubjectStatus.CallOptions,
@@ -3997,6 +4021,40 @@ export class ComAtprotoAdminNS {
       undefined,
       opts,
     )
+  }
+
+  importAccount(
+    data?: ComAtprotoAdminImportAccount.InputSchema,
+    opts?: ComAtprotoAdminImportAccount.CallOptions,
+  ): Promise<ComAtprotoAdminImportAccount.Response> {
+    return this._client
+      .call('com.atproto.admin.importAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminImportAccount.toKnownErr(e)
+      })
+  }
+
+  listNeuroAccounts(
+    params?: ComAtprotoAdminListNeuroAccounts.QueryParams,
+    opts?: ComAtprotoAdminListNeuroAccounts.CallOptions,
+  ): Promise<ComAtprotoAdminListNeuroAccounts.Response> {
+    return this._client.call(
+      'com.atproto.admin.listNeuroAccounts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  migrateAccount(
+    data?: ComAtprotoAdminMigrateAccount.InputSchema,
+    opts?: ComAtprotoAdminMigrateAccount.CallOptions,
+  ): Promise<ComAtprotoAdminMigrateAccount.Response> {
+    return this._client
+      .call('com.atproto.admin.migrateAccount', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminMigrateAccount.toKnownErr(e)
+      })
   }
 
   searchAccounts(
@@ -4071,6 +4129,17 @@ export class ComAtprotoAdminNS {
     )
   }
 
+  updateNeuroLink(
+    data?: ComAtprotoAdminUpdateNeuroLink.InputSchema,
+    opts?: ComAtprotoAdminUpdateNeuroLink.CallOptions,
+  ): Promise<ComAtprotoAdminUpdateNeuroLink.Response> {
+    return this._client
+      .call('com.atproto.admin.updateNeuroLink', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoAdminUpdateNeuroLink.toKnownErr(e)
+      })
+  }
+
   updateSubjectStatus(
     data?: ComAtprotoAdminUpdateSubjectStatus.InputSchema,
     opts?: ComAtprotoAdminUpdateSubjectStatus.CallOptions,
@@ -4079,6 +4148,18 @@ export class ComAtprotoAdminNS {
       'com.atproto.admin.updateSubjectStatus',
       opts?.qp,
       data,
+      opts,
+    )
+  }
+
+  validateMigrationTarget(
+    params?: ComAtprotoAdminValidateMigrationTarget.QueryParams,
+    opts?: ComAtprotoAdminValidateMigrationTarget.CallOptions,
+  ): Promise<ComAtprotoAdminValidateMigrationTarget.Response> {
+    return this._client.call(
+      'com.atproto.admin.validateMigrationTarget',
+      params,
+      undefined,
       opts,
     )
   }

@@ -167,6 +167,9 @@ export const deleteAccount = async (
     db.db.deleteFrom('refresh_token').where('did', '=', did),
   )
   await db.executeWithRetry(
+    db.db.deleteFrom('neuro_identity_link').where('did', '=', did),
+  )
+  await db.executeWithRetry(
     db.db.deleteFrom('account').where('account.did', '=', did),
   )
   await db.executeWithRetry(
