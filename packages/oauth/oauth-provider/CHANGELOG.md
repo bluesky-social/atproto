@@ -1,5 +1,14 @@
 # @atproto/oauth-provider
 
+## 0.15.9
+
+### Patch Changes
+
+- [#4620](https://github.com/bluesky-social/atproto/pull/4620) [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that the `client_id` query param is correct when cancelling an authentication request
+
+- Updated dependencies [[`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0), [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0)]:
+  - @atproto/oauth-types@0.6.3
+
 ## 0.15.8
 
 ### Patch Changes

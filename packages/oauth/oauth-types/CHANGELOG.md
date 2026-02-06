@@ -1,5 +1,13 @@
 # @atproto/oauth-types
 
+## 0.6.3
+
+### Patch Changes
+
+- [#4620](https://github.com/bluesky-social/atproto/pull/4620) [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that `OAuthAuthorizationRequestQuery` always contains a `client_id`
+
+- [#4620](https://github.com/bluesky-social/atproto/pull/4620) [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `oauthRequestUriSchema` to require min length
+
 ## 0.6.2
 
 ### Patch Changes
