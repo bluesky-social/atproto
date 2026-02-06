@@ -133,7 +133,10 @@ The `login()` method throws on failure. For expected errors like invalid credent
 If the account has 2FA enabled, login will throw a `LexAuthFactorError`:
 
 ```typescript
-import { PasswordSession, LexAuthFactorError } from '@atproto/lex-password-session'
+import {
+  PasswordSession,
+  LexAuthFactorError,
+} from '@atproto/lex-password-session'
 
 async function loginWith2FA(
   identifier: string,

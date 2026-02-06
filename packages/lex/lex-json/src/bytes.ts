@@ -27,9 +27,9 @@ import { JsonValue } from './json.js'
  * // invalid is undefined
  * ```
  */
-export function parseLexBytes(input?: {
-  $bytes?: unknown
-}): Uint8Array | undefined {
+export function parseLexBytes(
+  input?: Record<string, unknown>,
+): Uint8Array | undefined {
   if (!input || !('$bytes' in input)) {
     return undefined
   }

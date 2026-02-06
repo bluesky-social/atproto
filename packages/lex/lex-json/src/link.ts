@@ -60,22 +60,22 @@ export function parseLexLink(
   const { $link } = input
 
   if (typeof $link !== 'string') {
-    throw new TypeError('$link must be a base32-encoded CID string')
+    return undefined
   }
 
   if ($link.length === 0) {
-    throw new TypeError('CID string in $link cannot be empty')
+    return undefined
   }
 
   // Arbitrary limit to prevent DoS via extremely long CIDs
   if ($link.length > 2048) {
-    throw new TypeError('CID string in $link is too long')
+    return undefined
   }
 
   try {
     return parseCid($link, options)
   } catch (cause) {
-    throw new TypeError('Invalid CID string in $link', { cause })
+    return undefined
   }
 }
 
