@@ -871,6 +871,13 @@ export const schemaDict = {
             description: 'An optional embed associated with the status.',
             refs: ['lex:app.bsky.embed.external#view'],
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           expiresAt: {
             type: 'string',
             description:
