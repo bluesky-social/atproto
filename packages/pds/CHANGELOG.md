@@ -1,5 +1,17 @@
 # @atproto/pds
 
+## 0.4.208
+
+### Patch Changes
+
+- Updated dependencies [[`a2e4e95`](https://github.com/bluesky-social/atproto/commit/a2e4e9584730c1742aca7c1fcc59533a7c159740), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`00e6dbd`](https://github.com/bluesky-social/atproto/commit/00e6dbdcea295cfa3dff7eb7517420039cc3e821), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b)]:
+  - @atproto/oauth-provider@0.15.8
+  - @atproto/lex-cbor@0.0.11
+  - @atproto/lex-data@0.0.11
+  - @atproto/identity@0.4.11
+  - @atproto/common@0.5.11
+  - @atproto/xrpc-server@0.10.12
+
 ## 0.4.207
 
 ### Patch Changes

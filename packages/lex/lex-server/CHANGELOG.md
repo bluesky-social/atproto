@@ -1,5 +1,21 @@
 # @atproto/lex-server
 
+## 0.0.9
+
+### Patch Changes
+
+- [#4603](https://github.com/bluesky-social/atproto/pull/4603) [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix flaky test
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `exports` field in package.json
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add JSDoc
+
+- Updated dependencies [[`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015)]:
+  - @atproto/lex-schema@0.0.12
+  - @atproto/lex-json@0.0.11
+  - @atproto/lex-cbor@0.0.11
+  - @atproto/lex-data@0.0.11
+
 ## 0.0.8
 
 ### Patch Changes
