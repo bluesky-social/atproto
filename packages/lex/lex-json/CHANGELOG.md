@@ -1,5 +1,18 @@
 # @atproto/lex-json
 
+## 0.0.11
+
+### Patch Changes
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Prevent `jsonToLex` from throwing in non-strict mode
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `exports` field in package.json
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add JSDoc
+
+- Updated dependencies [[`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015)]:
+  - @atproto/lex-data@0.0.11
+
 ## 0.0.10
 
 ### Patch Changes
