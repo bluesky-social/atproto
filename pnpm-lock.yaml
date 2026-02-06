@@ -1448,13 +1448,13 @@ importers:
         specifier: workspace:^
         version: link:../../lex/lex-resolver
       '@atproto/oauth-provider-api':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../oauth-provider-api
       '@atproto/oauth-provider-frontend':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../oauth-provider-frontend
       '@atproto/oauth-provider-ui':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../oauth-provider-ui
       '@atproto/oauth-scopes':
         specifier: workspace:^
@@ -1531,7 +1531,7 @@ importers:
   packages/oauth/oauth-provider-frontend:
     optionalDependencies:
       '@atproto/oauth-provider-api':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../oauth-provider-api
     devDependencies:
       '@atproto-labs/fetch':
@@ -1625,7 +1625,7 @@ importers:
   packages/oauth/oauth-provider-ui:
     optionalDependencies:
       '@atproto/oauth-provider-api':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../oauth-provider-api
     devDependencies:
       '@atproto-labs/fetch':
