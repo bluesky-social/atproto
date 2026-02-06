@@ -15,6 +15,13 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.report.defs'
 
 export type ReasonType =
+  | 'com.atproto.moderation.defs#reasonSpam'
+  | 'com.atproto.moderation.defs#reasonViolation'
+  | 'com.atproto.moderation.defs#reasonMisleading'
+  | 'com.atproto.moderation.defs#reasonSexual'
+  | 'com.atproto.moderation.defs#reasonRude'
+  | 'com.atproto.moderation.defs#reasonOther'
+  | 'com.atproto.moderation.defs#reasonAppeal'
   | 'tools.ozone.report.defs#reasonAppeal'
   | 'tools.ozone.report.defs#reasonOther'
   | 'tools.ozone.report.defs#reasonViolenceAnimal'
