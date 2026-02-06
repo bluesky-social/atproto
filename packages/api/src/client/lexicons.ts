@@ -15346,7 +15346,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A delegate messaging id',
+        description: 'A declaration of a Germ Network account',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -15354,22 +15354,33 @@ export const schemaDict = {
           properties: {
             version: {
               type: 'string',
+              description:
+                'Semver version number, without pre-release or build information, for the format of opaque content',
+              minLength: 5,
+              maxLength: 14,
             },
             currentKey: {
               type: 'bytes',
+              description:
+                'Opaque value, an ed25519 public key prefixed with a byte enum',
             },
             messageMe: {
               type: 'ref',
+              description: 'Controls who can message this account',
               ref: 'lex:com.germnetwork.declaration#messageMe',
             },
             keyPackage: {
               type: 'bytes',
+              description:
+                'Opaque value, contains MLS KeyPackage(s), and other signature data, and is signed by the currentKey',
             },
             continuityProofs: {
               type: 'array',
+              description: 'Array of opaque values to allow for key rolling',
               items: {
                 type: 'bytes',
               },
+              maxLength: 1000,
             },
           },
         },
@@ -15380,11 +15391,19 @@ export const schemaDict = {
         properties: {
           messageMeUrl: {
             type: 'string',
+            description:
+              'A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other',
             format: 'uri',
+            minLength: 1,
+            maxLength: 2047,
           },
           showButtonTo: {
             type: 'string',
             knownValues: ['usersIFollow', 'everyone'],
+            description:
+              "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
+            minLength: 1,
+            maxLength: 100,
           },
         },
       },
