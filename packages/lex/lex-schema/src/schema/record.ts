@@ -23,9 +23,9 @@ export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
 
 /**
- * Schema for ATProto records with a type identifier and key constraints.
+ * Schema for AT Protocol records with a type identifier and key constraints.
  *
- * Records are the primary data unit in ATProto. Each record has a `$type`
+ * Records are the primary data unit in AT Protocol. Each record has a `$type`
  * field identifying its Lexicon schema, and is stored at a specific key
  * (TID, NSID, or other format) in a repository.
  *
@@ -140,9 +140,9 @@ function recordKey<Key extends LexiconRecordKey>(
 type AsNsid<T> = T extends `${string}#${string}` ? never : T
 
 /**
- * Creates a record schema for ATProto records.
+ * Creates a record schema for AT Protocol records.
  *
- * Records are the primary data unit in ATProto repositories. They have
+ * Records are the primary data unit in AT Protocol repositories. They have
  * a `$type` field identifying their Lexicon schema, and are stored at keys
  * following a specific format (TID, NSID, etc.).
  *

@@ -2,7 +2,7 @@
  * Primitive JSON values: string, number, boolean, or null.
  *
  * These are the scalar (non-composite) types that can appear in JSON data.
- * In the context of the ATProto:
+ * In the context of the AT Protocol:
  * - `string` - Text values, including special encoded types like `$link` and `$bytes`
  * - `number` - Numeric values (note: Lex only supports safe integers)
  * - `boolean` - True/false values

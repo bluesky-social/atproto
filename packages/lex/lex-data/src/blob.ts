@@ -3,7 +3,7 @@ import { LexValue } from './lex.js'
 import { isPlainObject, isPlainProto } from './object.js'
 
 /**
- * Reference to binary data (like images, videos, etc.) in the ATProto data model.
+ * Reference to binary data (like images, videos, etc.) in the AT Protocol data model.
  *
  * A BlobRef is a {@link LexMap} with a specific structure that identifies binary
  * content by its content hash (CID), along with metadata about the content type
@@ -146,7 +146,7 @@ export function isBlobRef(
 }
 
 /**
- * Legacy format for blob references used in older ATProto data.
+ * Legacy format for blob references used in older AT Protocol data.
  *
  * This is the older format that stores the CID as a string rather than
  * as a structured CID object. New code should use {@link BlobRef} instead.

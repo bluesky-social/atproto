@@ -14,7 +14,7 @@ import { encodeLexLink, parseLexLink } from './link.js'
 /**
  * Serialize a Lex value to a JSON string.
  *
- * This function serializes ATProto data model values to JSON, automatically
+ * This function serializes AT Protocol data model values to JSON, automatically
  * encoding special types:
  * - `Cid` instances are encoded as `{$link: string}`
  * - `Uint8Array` instances are encoded as `{$bytes: string}` (base64)
@@ -63,7 +63,7 @@ export type LexParseOptions = {
 /**
  * Parses a JSON string into Lex values.
  *
- * This function parses JSON and automatically decodes ATProto special types:
+ * This function parses JSON and automatically decodes AT Protocol special types:
  * - `{$link: string}` objects are decoded to `Cid` instances
  * - `{$bytes: string}` objects are decoded to `Uint8Array` instances
  * - `{$type: 'blob'}` objects are validated
@@ -121,7 +121,7 @@ export function lexParse<T extends LexValue = LexValue>(
  * Converts a parsed JSON representation of Lexicon value to a {@link LexValue}.
  *
  * This function transforms already-parsed JSON objects into Lex values by
- * decoding ATProto special types:
+ * decoding AT Protocol special types:
  * - `{$link: string}` objects are converted to `Cid` instances
  * - `{$bytes: string}` objects are converted to `Uint8Array` instances
  *

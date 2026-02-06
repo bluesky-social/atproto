@@ -368,7 +368,7 @@ export type LexiconRecordKey = l.LexiconRecordKey
  * Schema for validating Lexicon record type definitions.
  *
  * Validates record definitions which define the structure of data
- * stored in ATProto repositories. Records have a key type
+ * stored in AT Protocol repositories. Records have a key type
  * and an object schema defining the record's data structure.
  */
 export const lexiconRecordSchema = l.object({

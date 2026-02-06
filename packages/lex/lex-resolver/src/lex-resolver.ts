@@ -174,7 +174,7 @@ export { AtUri, type Cid, NSID }
 export type { LexiconDocument, ResolveDidOptions }
 
 /**
- * Resolves Lexicon documents from the ATProto network.
+ * Resolves Lexicon documents from the AT Protocol network.
  *
  * The {@link LexResolver} handles the complete process of resolving a lexicon
  * by NSID:

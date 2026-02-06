@@ -178,7 +178,7 @@ Options:
 
 ## TypeScript Schemas
 
-After installing Lexicon JSON files, use the `lex build` command to generate TypeScript schemas. These generated schemas provide type-safe validation, type guards, and builder utilities for working with ATProto data structures.
+After installing Lexicon JSON files, use the `lex build` command to generate TypeScript schemas. These generated schemas provide type-safe validation, type guards, and builder utilities for working with AT Protocol data structures.
 
 ```bash
 lex build --lexicons ./lexicons --out ./src/lexicons
@@ -382,7 +382,7 @@ if (app.bsky.feed.post.$isTypeOf(data)) {
 
 ## Data Model
 
-The ATProto uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional data structures: **CIDs** (content-addressed links) and **bytes** (for raw data). This data model can be encoded either as JSON for XRPC (HTTP API) or as [CBOR](https://dasl.ing/drisl.html) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
+The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional data structures: **CIDs** (content-addressed links) and **bytes** (for raw data). This data model can be encoded either as JSON for XRPC (HTTP API) or as [CBOR](https://dasl.ing/drisl.html) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
 
 ### Types
 
@@ -889,7 +889,7 @@ This will make the generated code more easily tree-shakeable from places that im
 
 ### Blob references
 
-In ATProto, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
 
 ```typescript
 import { BlobRef, isBlobRef } from '@atproto/lex'
@@ -1184,7 +1184,7 @@ export const post: Action<PostInput, { uri: string; cid: string }> = async (
 
 // Usage
 await client.call(post, {
-  text: 'Hello, ATProto!',
+  text: 'Hello, AT Protocol!',
   langs: ['en'],
 })
 ```

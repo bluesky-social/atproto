@@ -1,6 +1,6 @@
 # @atproto/lex-password-session
 
-Password-based session authentication for ATProto Lexicons. See the [Changelog](./CHANGELOG.md) for version history.
+Password-based session authentication for AT Protocol Lexicons. See the [Changelog](./CHANGELOG.md) for version history.
 
 ```bash
 npm install @atproto/lex-password-session
@@ -17,7 +17,7 @@ npm install @atproto/lex-password-session
 
 **What is this?**
 
-`@atproto/lex-password-session` provides a `PasswordSession` class that implements the `Agent` interface from `@atproto/lex-client`. It handles password-based authentication with ATProto services, including:
+`@atproto/lex-password-session` provides a `PasswordSession` class that implements the `Agent` interface from `@atproto/lex-client`. It handles password-based authentication with AT Protocol services, including:
 
 1. Creating sessions with username/password credentials
 2. Automatic token refresh when access tokens expire

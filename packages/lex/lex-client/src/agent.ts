@@ -25,7 +25,7 @@ export type FetchHandler = (
 /**
  * Core interface for making XRPC requests.
  *
- * An Agent encapsulates an identity and request handling for ATProto
+ * An Agent encapsulates an identity and request handling for AT Protocol
  * operations. It can represent an authenticated user session or an
  * unauthenticated service client.
  *

@@ -361,7 +361,7 @@ export type LexRouterAuthContext<Method extends LexMethod = LexMethod> = {
  *   return { userId }
  * }
  *
- * // Using with serviceAuth for ATProto service authentication
+ * // Using with serviceAuth for AT Protocol service authentication
  * import { serviceAuth } from '@atproto/lex-server'
  * const auth = serviceAuth({ audience: 'did:web:example.com', unique: checkNonce })
  * ```
@@ -451,7 +451,7 @@ export type LexRouterOptions = {
 }
 
 /**
- * XRPC router for handling ATProto Lexicon methods.
+ * XRPC router for handling AT Protocol Lexicon methods.
  *
  * The router handles HTTP routing, parameter parsing, input validation,
  * authentication, and response serialization for XRPC methods. It supports

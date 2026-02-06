@@ -15,7 +15,7 @@ import {
  * expected vs what was received.
  *
  * Extends {@link LexError} with the error name "InvalidRequest" for
- * consistency with the ATProto error handling conventions.
+ * consistency with the AT Protocol error handling conventions.
  *
  * @example
  * ```typescript

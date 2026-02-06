@@ -19,7 +19,7 @@ import { Cid, LexValue, decodeCid, ifCid } from '@atproto/lex-data'
 const CID_CBOR_TAG = 42
 
 /**
- * Configuration options for CBOR encoding that enforces ATProto data model
+ * Configuration options for CBOR encoding that enforces AT Protocol data model
  * constraints.
  *
  * This configuration ensures:
@@ -69,7 +69,7 @@ export const encodeOptions = Object.freeze<EncodeOptions>({
 })
 
 /**
- * Configuration options for CBOR decoding that enforces ATProto data model
+ * Configuration options for CBOR decoding that enforces AT Protocol data model
  * constraints.
  */
 export const decodeOptions = /*#__PURE__*/ Object.freeze<DecodeOptions>({
@@ -95,7 +95,7 @@ export const decodeOptions = /*#__PURE__*/ Object.freeze<DecodeOptions>({
 })
 
 /**
- * Encodes a LexValue to CBOR bytes using the ATProto data model (DRISL format).
+ * Encodes a LexValue to CBOR bytes using the AT Protocol data model (DRISL format).
  *
  * @param data - The LexValue to encode
  * @returns The CBOR-encoded bytes
@@ -108,10 +108,10 @@ export const decodeOptions = /*#__PURE__*/ Object.freeze<DecodeOptions>({
  * // Encode a simple object
  * const bytes = encode({ text: 'Hello', count: 42 })
  *
- * // Encode an ATProto record
+ * // Encode an AT Protocol record
  * const recordBytes = encode({
  *   $type: 'app.bsky.feed.post',
- *   text: 'Hello from ATProto!',
+ *   text: 'Hello from AT Protocol!',
  *   createdAt: new Date().toISOString(),
  * })
  * ```
@@ -121,12 +121,12 @@ export function encode<T extends LexValue = LexValue>(data: T): Uint8Array {
 }
 
 /**
- * Decodes CBOR bytes to a LexValue using the ATProto data model (DRISL format).
+ * Decodes CBOR bytes to a LexValue using the AT Protocol data model (DRISL format).
  *
  * @typeParam T - Allows casting the decoded values to a specific LexValue subtype
  * @param bytes - The CBOR bytes to decode
  * @returns The decoded LexValue
- * @throws {Error} If the bytes are not valid CBOR or violate ATProto constraints
+ * @throws {Error} If the bytes are not valid CBOR or violate AT Protocol constraints
  *
  * @example
  * ```typescript
@@ -161,7 +161,7 @@ export function decode<T extends LexValue = LexValue>(bytes: Uint8Array): T {
  * @typeParam T - Allows casting the decoded values to a specific LexValue subtype
  * @param data - The buffer containing one or more CBOR-encoded values
  * @yields Decoded LexValues one at a time
- * @throws {Error} If any value in the buffer is not valid CBOR or violates ATProto constraints
+ * @throws {Error} If any value in the buffer is not valid CBOR or violates AT Protocol constraints
  *
  * @example
  * ```typescript

@@ -17,7 +17,7 @@ export type PermissionSetOptions = {
 }
 
 /**
- * Represents a collection of related permissions in ATProto.
+ * Represents a collection of related permissions in AT Protocol.
  *
  * Permission sets group permissions together with metadata for OAuth
  * authorization flows. They are identified by an NSID.

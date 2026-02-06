@@ -4,7 +4,7 @@ import { JsonValue } from './json.js'
 /**
  * Parses a `{$bytes: string}` JSON object into a `Uint8Array`.
  *
- * In the ATProto data model, binary data is represented in JSON as an object
+ * In the AT Protocol data model, binary data is represented in JSON as an object
  * with a single `$bytes` property containing a base64-encoded string. This function
  * decodes that representation back into raw bytes.
  *
@@ -54,7 +54,7 @@ export function parseLexBytes(
 /**
  * Encodes a `Uint8Array` into a `{$bytes: string}` JSON representation.
  *
- * In the ATProto data model, binary data is represented in JSON as an object
+ * In the AT Protocol data model, binary data is represented in JSON as an object
  * with a single `$bytes` property containing a base64-encoded string. This function
  * performs that encoding.
  *

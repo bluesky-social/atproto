@@ -106,12 +106,12 @@ export type PasswordSessionOptions = {
 }
 
 /**
- * Password-based authentication session for ATProto services.
+ * Password-based authentication session for AT Protocol services.
  *
  * This class provides session management for CLI tools, scripts, and bots that
- * need to authenticate with ATProto services using password credentials.
+ * need to authenticate with AT Protocol services using password credentials.
  * It implements the {@link Agent} interface, allowing it to be used directly
- * with ATProto clients.
+ * with AT Protocol clients.
  *
  * **Security Warning:** It is strongly recommended to use app passwords instead
  * of main account credentials. App passwords provide limited access and can be
@@ -209,7 +209,7 @@ export class PasswordSession implements Agent {
    * Handles authenticated fetch requests to the user's PDS.
    *
    * This method implements the {@link Agent} interface and is called by
-   * ATProto clients to make authenticated requests. It automatically:
+   * AT Protocol clients to make authenticated requests. It automatically:
    * - Adds the access token to request headers
    * - Detects expired tokens and triggers refresh
    * - Retries requests after successful token refresh
@@ -480,7 +480,7 @@ export class PasswordSession implements Agent {
    * browser-based applications, use OAuth-based authentication instead.
    *
    * @param options - Login options including service URL, identifier, and password
-   * @param options.service - The ATProto service URL (e.g., 'https://bsky.social')
+   * @param options.service - The AT Protocol service URL (e.g., 'https://bsky.social')
    * @param options.identifier - The user's handle or DID
    * @param options.password - The user's password or app password
    * @param options.allowTakendown - If true, allow login to takendown accounts

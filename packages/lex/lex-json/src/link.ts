@@ -9,7 +9,7 @@ import { JsonValue } from './json.js'
 /**
  * Parses a `{$link: string}` JSON object into a {@link Cid} instance.
  *
- * In the ATProto data model, CID references are represented in JSON as an
+ * In the AT Protocol data model, CID references are represented in JSON as an
  * object with a single `$link` property containing a base32-encoded CID string,
  * prefixed with "b". This function decodes that representation into a `Cid`
  * object.
@@ -82,7 +82,7 @@ export function parseLexLink(
 /**
  * Encodes a {@link Cid} instance into a `{$link: string}` JSON representation.
  *
- * In the ATProto data model, CID references are represented in JSON as an
+ * In the AT Protocol data model, CID references are represented in JSON as an
  * object with a single `$link` property containing a base32-encoded CID string,
  * prefixed with "b". This function performs that encoding.
  *

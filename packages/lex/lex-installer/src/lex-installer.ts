@@ -60,7 +60,7 @@ export type LexInstallerOptions = LexResolverOptions & {
 }
 
 /**
- * Manages the installation of Lexicon schemas from the ATProto network.
+ * Manages the installation of Lexicon schemas from the AT Protocol network.
  *
  * The `LexInstaller` class handles fetching, caching, and organizing lexicon
  * documents. It tracks dependencies between lexicons and ensures all referenced

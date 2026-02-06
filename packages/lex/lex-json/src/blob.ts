@@ -9,7 +9,7 @@ import { parseLexLink } from './link.js'
 /**
  * Parses a blob reference from a JSON object.
  *
- * In the ATProto, blobs are referenced using a specific object structure
+ * In the AT Protocol, blobs are referenced using a specific object structure
  * with `$type: 'blob'`, a `ref` property containing a CID link, and metadata
  * like `mimeType` and `size`. This function validates and parses such objects
  * into `BlobRef` instances.

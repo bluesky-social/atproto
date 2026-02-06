@@ -106,7 +106,7 @@ export type InferActionOutput<A extends Action> =
   A extends Action<any, infer O> ? O : never
 
 /**
- * Options for creating a record in an ATProto repository.
+ * Options for creating a record in an AT Protocol repository.
  *
  * @see {@link Client.createRecord}
  */
@@ -120,7 +120,7 @@ export type CreateRecordOptions = CallOptions & {
 }
 
 /**
- * Options for deleting a record from an ATProto repository.
+ * Options for deleting a record from an AT Protocol repository.
  *
  * @see {@link Client.deleteRecord}
  */
@@ -134,7 +134,7 @@ export type DeleteRecordOptions = CallOptions & {
 }
 
 /**
- * Options for retrieving a record from an ATProto repository.
+ * Options for retrieving a record from an AT Protocol repository.
  *
  * @see {@link Client.getRecord}
  */
@@ -144,7 +144,7 @@ export type GetRecordOptions = CallOptions & {
 }
 
 /**
- * Options for creating or updating a record in an ATProto repository.
+ * Options for creating or updating a record in an AT Protocol repository.
  *
  * @see {@link Client.putRecord}
  */
@@ -160,7 +160,7 @@ export type PutRecordOptions = CallOptions & {
 }
 
 /**
- * Options for listing records in an ATProto repository collection.
+ * Options for listing records in an AT Protocol repository collection.
  *
  * @see {@link Client.listRecords}
  */
@@ -278,7 +278,7 @@ export type ListRecord<Value extends LexMap> =
   }
 
 /**
- * The Client class is the primary interface for interacting with ATProto
+ * The Client class is the primary interface for interacting with AT Protocol
  * services. It provides type-safe methods for XRPC calls, record operations,
  * and blob handling.
  *
@@ -489,7 +489,7 @@ export class Client implements Agent {
   }
 
   /**
-   * Creates a new record in an ATProto repository.
+   * Creates a new record in an AT Protocol repository.
    *
    * @param record - The record to create, must include an {@link NsidString} `$type`
    * @param rkey - Optional record key; if omitted, server generates a TID
@@ -527,7 +527,7 @@ export class Client implements Agent {
   }
 
   /**
-   * Deletes a record from an ATProto repository.
+   * Deletes a record from an AT Protocol repository.
    *
    * @param collection - The collection NSID
    * @param rkey - The record key
@@ -553,7 +553,7 @@ export class Client implements Agent {
   }
 
   /**
-   * Retrieves a record from an ATProto repository.
+   * Retrieves a record from an AT Protocol repository.
    *
    * @param collection - The collection NSID
    * @param rkey - The record key
@@ -626,7 +626,7 @@ export class Client implements Agent {
   }
 
   /**
-   * Uploads a blob to an ATProto repository.
+   * Uploads a blob to an AT Protocol repository.
    *
    * @param body - The blob data (Uint8Array, ReadableStream, Blob, etc.)
    * @param options - Upload options including encoding hint

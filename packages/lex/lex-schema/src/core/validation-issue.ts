@@ -60,7 +60,7 @@ export class IssueCustom extends Issue {
 /**
  * Issue for string values that don't match an expected format.
  *
- * Used for ATProto specific formats like DID, handle, NSID, AT-URI, etc.
+ * Used for AT Protocol specific formats like DID, handle, NSID, AT-URI, etc.
  */
 export class IssueInvalidFormat extends Issue {
   constructor(

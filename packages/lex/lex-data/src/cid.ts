@@ -7,7 +7,7 @@ import { ui8Equals } from './uint8array.js'
 /**
  * Codec code that indicates the CID references a CBOR-encoded data structure.
  *
- * Used when encoding structured data in ATProto repositories.
+ * Used when encoding structured data in AT Protocol repositories.
  *
  * @see {@link https://dasl.ing/cid.html Content IDs (DASL)}
  */
@@ -143,7 +143,7 @@ export function asMultiformatsCID<
 /**
  * Content Identifier (CID) for addressing content by its hash.
  *
- * CIDs are self-describing content addresses used throughout ATProto for
+ * CIDs are self-describing content addresses used throughout AT Protocol for
  * linking to data by its cryptographic hash. This interface provides a
  * stable API that is compatible with the `multiformats` library but avoids
  * direct dependency issues.
@@ -179,7 +179,7 @@ export interface Cid<
   // @NOTE This interface is compatible with multiformats' CID implementation
   // which we are using under the hood.
 
-  /** CID version (0 or 1). ATProto uses CIDv1. */
+  /** CID version (0 or 1). AT Protocol uses CIDv1. */
   readonly version: TVersion
   /** Coded (e.g., {@link CBOR_DATA_CODEC}, {@link RAW_DATA_CODEC}). */
   readonly code: TCodec
@@ -210,7 +210,7 @@ export interface Cid<
  *
  * The use of {@link SHA256_HASH_CODE} is recommended but not required for raw CIDs.
  *
- * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats ATProto Data Model - Link and CID Formats}
+ * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats AT Protocol Data Model - Link and CID Formats}
  */
 export type RawCid = Cid<1, RAW_DATA_CODEC>
 
@@ -250,11 +250,11 @@ export function isDaslCid(cid: Cid): cid is DaslCid {
 }
 
 /**
- * Represents the CID of ATProto DAG-CBOR data (like repository MST nodes).
+ * Represents the CID of AT Protocol DAG-CBOR data (like repository MST nodes).
  *
  * CBOR CIDs are version 1 CIDs using DAG-CBOR multicodec with SHA-256 multihash.
  *
- * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats ATProto Data Model - Link and CID Formats}
+ * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats AT Protocol Data Model - Link and CID Formats}
  */
 export type CborCid = Cid<1, CBOR_DATA_CODEC, SHA256_HASH_CODE>
 

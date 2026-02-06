@@ -17,7 +17,7 @@ export {
 /**
  * Computes a CID (Content Identifier) for a given LexValue.
  *
- * This function first encodes the value to CBOR bytes using the ATProto
+ * This function first encodes the value to CBOR bytes using the AT Protocol
  * data model constraints, then computes the CID hash of those bytes. The
  * resulting CID can be used to uniquely identify and reference the content.
  *
@@ -30,7 +30,7 @@ export {
  *
  * const record = {
  *   $type: 'app.bsky.feed.post',
- *   text: 'Hello, ATProto!',
+ *   text: 'Hello, AT Protocol!',
  *   createdAt: new Date().toISOString(),
  * }
  *

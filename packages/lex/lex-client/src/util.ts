@@ -65,7 +65,7 @@ export function isAsyncIterable<T>(
 }
 
 /**
- * Builds HTTP headers for ATProto requests.
+ * Builds HTTP headers for AT Protocol requests.
  *
  * Adds the following headers when applicable:
  * - `atproto-proxy`: Service routing header (if service is specified)
@@ -75,7 +75,7 @@ export function isAsyncIterable<T>(
  * @param options.headers - Base headers to include
  * @param options.service - Service proxy identifier
  * @param options.labelers - Labeler DIDs to request labels from
- * @returns A new Headers object with ATProto headers added
+ * @returns A new Headers object with AT Protocol headers added
  */
 export function buildAtprotoHeaders(options: {
   headers?: HeadersInit

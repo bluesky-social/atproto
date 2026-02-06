@@ -15,7 +15,7 @@ export type LexErrorCode = string & NonNullable<unknown>
 /**
  * JSON-serializable error data structure.
  *
- * This is the standard format for error responses in the ATProto XRPC protocol.
+ * This is the standard format for error responses in the AT Protocol XRPC protocol.
  *
  * @typeParam N - The specific error code type
  *
@@ -39,7 +39,7 @@ export type LexErrorData<N extends LexErrorCode = LexErrorCode> = {
 /**
  * Error class for Lexicon-related errors.
  *
- * LexError extends the standard JavaScript {@link Error} with ATProto-specific
+ * LexError extends the standard JavaScript {@link Error} with AT Protocol-specific
  * functionality including:
  * - An error code for programmatic error handling
  * - JSON serialization for API responses

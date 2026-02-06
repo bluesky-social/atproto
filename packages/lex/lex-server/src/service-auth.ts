@@ -44,9 +44,9 @@ const BEARER_PREFIX = 'Bearer '
 export type UniqueNonceChecker = (nonce: string) => Promise<boolean>
 
 /**
- * Configuration options for ATProto service authentication.
+ * Configuration options for AT Protocol service authentication.
  *
- * Service auth is used for server-to-server communication in the ATProto,
+ * Service auth is used for server-to-server communication in the AT Protocol,
  * where one service authenticates to another using signed JWT tokens tied to
  * the caller's DID.
  *
@@ -111,7 +111,7 @@ export type ServiceAuthOptions = CreateDidResolverOptions & {
  * ```
  */
 export type ServiceAuthCredentials = {
-  /** The verified ATProto DID of the caller. */
+  /** The verified AT Protocol DID of the caller. */
   did: AtprotoDid
   /** The resolved DID document of the caller. */
   didDocument: AtprotoDidDocument
@@ -120,10 +120,10 @@ export type ServiceAuthCredentials = {
 }
 
 /**
- * Creates an authentication handler for verifying ATProto service auth JWTs.
+ * Creates an authentication handler for verifying AT Protocol service auth JWTs.
  *
  * Service auth is the standard authentication mechanism for server-to-server
- * communication in the ATProto. It uses JWT bearer tokens signed by the
+ * communication in the AT Protocol. It uses JWT bearer tokens signed by the
  * caller's DID signing key, with the signature verified against the public
  * key in the caller's DID document.
  *

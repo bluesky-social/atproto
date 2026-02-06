@@ -6,7 +6,7 @@ import { Params } from './params.js'
 export type PermissionOptions = Params
 
 /**
- * Represents a single permission in an ATProto permission set.
+ * Represents a single permission in an AT Protocol permission set.
  *
  * Permissions define access rights to specific resources with optional
  * parameters for fine-grained control.
@@ -30,7 +30,7 @@ export class Permission<
 }
 
 /**
- * Creates a permission definition for ATProto authorization.
+ * Creates a permission definition for AT Protocol authorization.
  *
  * Permissions specify what resources an application can access.
  * Used in permission sets to define OAuth scopes.

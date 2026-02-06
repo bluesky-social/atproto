@@ -51,7 +51,7 @@ export type {
 export const isAtUriString: CheckFn<AtUriString> = isValidAtUri
 export type {
   /**
-   * An AT URI string pointing to a resource in the ATProto network.
+   * An AT URI string pointing to a resource in the AT Protocol network.
    *
    * @example `"at://did:plc:1234.../app.bsky.feed.post/3k2..."`
    */

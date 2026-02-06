@@ -4,7 +4,7 @@ import { isPlainObject, isPlainProto } from './object.js'
 /**
  * Primitive values in the Lexicon data model.
  *
- * Represents the basic scalar types that can appear in ATProto data:
+ * Represents the basic scalar types that can appear in AT Protocol data:
  * - `number` - Integer values only (no floats)
  * - `string` - UTF-8 text
  * - `boolean` - true or false
@@ -19,7 +19,7 @@ export type LexScalar = number | string | boolean | null | Cid | Uint8Array
 /**
  * Any valid Lexicon value (recursive type).
  *
- * This is the union of all types that can appear in ATProto Lexicon data:
+ * This is the union of all types that can appear in AT Protocol Lexicon data:
  * - {@link LexScalar} - Primitive values (number, string, boolean, null, Cid, Uint8Array)
  * - `LexValue[]` - Arrays of LexValues
  * - `{ [key: string]?: LexValue }` - Objects with string keys and LexValue values

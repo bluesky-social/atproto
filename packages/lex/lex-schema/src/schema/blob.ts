@@ -34,7 +34,7 @@ export type BlobSchemaOptions = BlobRefCheckOptions & {
 export type { BlobRef, LegacyBlobRef }
 
 /**
- * Schema for validating blob references in ATProto.
+ * Schema for validating blob references in AT Protocol.
  *
  * Validates BlobRef objects which contain a CID reference to binary data,
  * along with metadata like MIME type and size. Can optionally accept
@@ -105,7 +105,7 @@ function matchesMime(mime: string, accepted: string[]): boolean {
 /**
  * Creates a blob schema for validating blob references with optional constraints.
  *
- * Blob references are used in ATProto to reference binary data stored
+ * Blob references are used in AT Protocol to reference binary data stored
  * separately from records. They contain a CID, MIME type, and size information.
  *
  * @param options - Optional configuration for MIME type filtering and size limits

@@ -78,7 +78,7 @@ export function $type<N extends NsidString, H extends string>(
  * Represents an object with a required `$type` property.
  *
  * This type adds a `$type` property to an existing object type, useful for
- * representing typed ATProto objects.
+ * representing typed AT Protocol objects.
  *
  * @typeParam V - The base object type
  * @typeParam T - The `$type` string literal type
