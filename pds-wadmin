@@ -1,29 +1,58 @@
 #!/bin/bash
 #
 # W Social PDS Admin Tool
-# Unified admin script for W ID, Migration, and Invitation management
+# Unified W admin script for W ID, Migration, and Invitation management
 #
-# Usage: ./pds-wadmin.sh <category> <command> [args...]
+# Usage: pds-wadmin <category> <command> [args...]
+#        pds-wadmin-dev <category> <command> [args...]
+#        pds-wadmin-stage <category> <command> [args...]
+#        pds-wadmin-prod <category> <command> [args...]
 #
-# Required environment variables:
-#   PDS_HOST - The PDS hostname (e.g., https://pds-stage.wsocial.eu)
+# When called as 'pds-wadmin', requires environment variables:
+#   PDS_HOST - The PDS hostname (e.g., https://pds-stage.wsocial.dev)
 #   PDS_ADMIN_PASSWORD - Admin password for authentication
+#
+# When called via symlinks (pds-wadmin-dev, pds-wadmin-stage, pds-wadmin-prod),
+# automatically fetches credentials from Vault based on the environment name.
 #
 
 set -euo pipefail
 
 # Check required environment variables
 check_env() {
-  if [ -z "${PDS_HOST:-}" ]; then
-    echo "ERROR: PDS_HOST environment variable is not set"
-    echo "Example: export PDS_HOST=https://pds-stage.wsocial.eu"
-    exit 1
-  fi
 
-  if [ -z "${PDS_ADMIN_PASSWORD:-}" ]; then
-    echo "ERROR: PDS_ADMIN_PASSWORD environment variable is not set"
-    echo "Example: export PDS_ADMIN_PASSWORD=your-admin-password"
-    exit 1
+  # Extract the tail-end of the name of the script, e.g. "pds-wadmin-dev" -> "dev"
+  SCRIPT_NAME="$(basename "$0")"
+  ENV="${SCRIPT_NAME##*-}"
+
+  # If ENV equals SCRIPT_NAME, there's no suffix (called as 'pds-wadmin')
+  if [ "$ENV" = "wadmin" ]; then
+    ENV=""
+
+    if [ -z "${PDS_HOST:-}" ]; then
+      echo "ERROR: PDS_HOST environment variable is not set"
+      echo "Example: export PDS_HOST=https://pds-stage.wsocial.dev"
+      exit 1
+    fi
+
+    if [ -z "${PDS_ADMIN_PASSWORD:-}" ]; then
+      echo "ERROR: PDS_ADMIN_PASSWORD environment variable is not set"
+      echo "Example: export PDS_ADMIN_PASSWORD=your-admin-password"
+      exit 1
+    fi
+    echo "Using ${PDS_HOST}"
+  else
+    # Called via symlink (dev/stage/prod) - fetch from vault
+    PDS_ENV="pds/${ENV}"
+    echo "Using ${PDS_ENV}"
+
+    # Login to vault, if needed
+    export VAULT_ADDR=https://vault.wsocial.cloud
+    vault token lookup >/dev/null 2>&1 || vault login -method=github -path=github
+
+    # Set up env vars from vault
+    export PDS_ADMIN_PASSWORD="$(vault kv get -mount=secret -field ADMIN_PASSWORD $PDS_ENV)"
+    export PDS_HOST="https://$(vault kv get -mount=secret -field HOSTNAME $PDS_ENV)"
   fi
 }
 
@@ -63,27 +92,25 @@ Invitation Commands:
 Invitation Status Values:
   pending, consumed, expired, revoked, all
 
-Environment Variables:
-  PDS_HOST                  PDS hostname (e.g., https://pds-stage.wsocial.eu)
+Environment Variables (only when called as 'pds-wadmin'):
+  PDS_HOST                  PDS hostname (e.g., https://pds-stage.wsocial.dev)
   PDS_ADMIN_PASSWORD        Admin password
 
 Examples:
   # WID management
-  export PDS_HOST=https://pds-stage.wsocial.eu
-  export PDS_ADMIN_PASSWORD=your-password
-  pds-wadmin.sh wid list
-  pds-wadmin.sh wid show did:plc:abc123
-  pds-wadmin.sh wid update did:plc:abc123 uuid@legal.lab.tagroot.io
+  $0 wid list
+  $0 wid show did:plc:abc123
+  $0 wid update did:plc:abc123 uuid@legal.lab.tagroot.io
 
   # Account migration
-  pds-wadmin.sh migration migrate did:plc:abc123 https://pds2.wsocial.eu
+  $0 migration migrate did:plc:abc123 https://pds2.wsocial.dev
 
   # Invitation management
-  pds-wadmin.sh invitation list --status=pending
-  pds-wadmin.sh invitation stats --since=2026-02-01T00:00:00Z
-  pds-wadmin.sh invitation show user@example.com
-  pds-wadmin.sh invitation revoke user@example.com
-  pds-wadmin.sh invitation purge --status=consumed --before=2026-01-01T00:00:00Z
+  $0 invitation list --status=pending
+  $0 invitation stats --since=2026-02-01T00:00:00Z
+  $0 invitation show user@example.com
+  $0 invitation revoke user@example.com
+  $0 invitation purge --status=consumed --before=2026-01-01T00:00:00Z
 
 EOF
   exit 1
@@ -136,7 +163,7 @@ cmd_wid_show() {
 
   if [ -z "$did" ]; then
     echo "ERROR: DID is required"
-    echo "Usage: pds-wadmin.sh wid show <did>"
+    echo "Usage: $0 wid show <did>"
     exit 1
   fi
 
@@ -167,7 +194,7 @@ cmd_wid_update() {
 
   if [ -z "$did" ] || [ -z "$new_legal_id" ]; then
     echo "ERROR: Both DID and new Legal ID are required"
-    echo "Usage: pds-wadmin.sh wid update <did> <legal-id>"
+    echo "Usage: $0 wid update <did> <legal-id>"
     exit 1
   fi
 
@@ -213,7 +240,7 @@ cmd_migration_migrate() {
 
   if [ -z "$did" ] || [ -z "$target_pds" ]; then
     echo "ERROR: DID and target PDS URL are required"
-    echo "Usage: pds-wadmin.sh migration migrate <did> <target-pds-url> [handle]"
+    echo "Usage: $0 migration migrate <did> <target-pds-url> [handle]"
     exit 1
   fi
 
@@ -379,7 +406,7 @@ cmd_invitation_show() {
 
   if [ -z "$identifier" ]; then
     echo "ERROR: Email or ID is required"
-    echo "Usage: pds-wadmin.sh invitation show <email|id>"
+    echo "Usage: $0 invitation show <email|id>"
     exit 1
   fi
 
@@ -428,7 +455,7 @@ cmd_invitation_revoke() {
 
   if [ -z "$identifier" ]; then
     echo "ERROR: Email or ID is required"
-    echo "Usage: pds-wadmin.sh invitation revoke <email|id>"
+    echo "Usage: $0 invitation revoke <email|id>"
     exit 1
   fi
 
@@ -480,7 +507,7 @@ cmd_invitation_purge() {
 
   if [ -z "$status" ]; then
     echo "ERROR: --status is required"
-    echo "Usage: pds-wadmin.sh invitation purge --status=STATUS [--before=TIMESTAMP]"
+    echo "Usage: $0 invitation purge --status=STATUS [--before=TIMESTAMP]"
     echo "Status must be: consumed, expired, or revoked"
     exit 1
   fi

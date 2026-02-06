@@ -21,3 +21,4 @@ old/
 .claude/
 coverage
 packages/lex/lex-password-agent
+packages/pds/src/version.ts
