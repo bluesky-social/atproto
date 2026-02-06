@@ -9,6 +9,7 @@ import {
   writeFormRedirect,
 } from '../../lib/write-form-redirect.js'
 import { AuthorizationRedirectParameters } from '../../result/authorization-redirect-parameters.js'
+import { AuthorizationResultRedirect } from '../../result/authorization-result-redirect.js'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-7.5.4
 const REDIRECT_STATUS_CODE = 303
@@ -69,6 +70,24 @@ export function buildRedirectParams(
   }
 
   return params
+}
+
+export function sendAuthorizationResultRedirect(
+  res: ServerResponse,
+  result: AuthorizationResultRedirect,
+  options?: WriteFormRedirectOptions,
+) {
+  const { issuer, parameters, redirect } = result
+
+  return sendRedirect(
+    res,
+    {
+      redirectUri: buildRedirectUri(parameters),
+      mode: buildRedirectMode(parameters),
+      params: buildRedirectParams(issuer, parameters, redirect),
+    },
+    options,
+  )
 }
 
 export type OAuthRedirectOptions = {

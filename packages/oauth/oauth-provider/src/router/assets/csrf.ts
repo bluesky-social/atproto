@@ -28,7 +28,7 @@ async function generateCsrfToken() {
 export async function setupCsrfToken(
   req: IncomingMessage,
   res: ServerResponse,
-) {
+): Promise<void> {
   const token = getCookieCsrf(req) || (await generateCsrfToken())
 
   // Refresh cookie (See Chrome's "Lax+POST" behavior)

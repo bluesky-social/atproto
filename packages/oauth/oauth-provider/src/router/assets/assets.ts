@@ -13,8 +13,9 @@ import {
   CrossOriginEmbedderPolicy,
   SecurityHeadersOptions,
 } from '../../lib/http/security-headers.js'
+import { mergeDefaults } from '../../lib/util/object.js'
 import { Simplify } from '../../lib/util/type.js'
-import { writeHtml } from '../../lib/write-html.js'
+import { WriteHtmlOptions, writeHtml } from '../../lib/write-html.js'
 import { parseAssetsManifest } from './assets-manifest.js'
 import { setupCsrfToken } from './csrf.js'
 
@@ -71,7 +72,7 @@ export type SendWebAppOptions = SecurityHeadersOptions & WriteResponseOptions
 export function sendWebAppFactory<P extends keyof HydrationData>(
   page: P,
   customization: Customization,
-  defaults?: SendWebAppOptions,
+  defaults: SendWebAppOptions = {},
 ) {
   // Pre-computed options:
   const customizationData = buildCustomizationData(customization)
@@ -97,18 +98,20 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
       __customizationData: customizationData,
     })
 
-    return writeHtml(res, {
-      ...defaults,
-      ...options,
-      bodyAttrs: {
-        class: 'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
-      },
-      csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
-      coep: options?.coep ?? CrossOriginEmbedderPolicy.credentialless,
-      meta: [{ name: 'robots', content: 'noindex' }],
-      body: html`<div id="root"></div>`,
-      scripts: [script, ...scripts],
-      styles: [...styles, customizationCss],
-    })
+    return writeHtml(
+      res,
+      mergeDefaults<WriteHtmlOptions>(defaults, options, {
+        bodyAttrs: {
+          class:
+            'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
+        },
+        csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
+        coep: options?.coep ?? CrossOriginEmbedderPolicy.credentialless,
+        meta: [{ name: 'robots', content: 'noindex' }],
+        body: html`<div id="root"></div>`,
+        scripts: [script, ...scripts],
+        styles: [...styles, customizationCss],
+      }),
+    )
   }
 }

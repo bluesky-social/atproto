@@ -23,15 +23,11 @@ import type { Awaitable } from '../lib/util/type.js'
 import { writeFormRedirect } from '../lib/write-form-redirect.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { parseRequestUri, requestUriSchema } from '../request/request-uri.js'
-import { AuthorizationResultRedirect } from '../result/authorization-result-redirect.js'
 import { sendAuthorizePageFactory } from './assets/send-authorization-page.js'
 import { sendCookieErrorPageFactory } from './assets/send-cookie-error-page.js'
 import { sendErrorPageFactory } from './assets/send-error-page.js'
 import {
-  OAuthRedirectOptions,
-  buildRedirectMode,
-  buildRedirectParams,
-  buildRedirectUri,
+  sendAuthorizationResultRedirect,
   sendRedirect,
 } from './assets/send-redirect.js'
 import { parseRedirectUrl } from './create-api-middleware.js'
@@ -199,7 +195,7 @@ export function createAuthorizationPageMiddleware<
       const result = await server.authorize(query, device)
 
       if ('redirect' in result) {
-        return sendAuthorizeRedirect(res, result)
+        return sendAuthorizationResultRedirect(res, result, securityOptions)
       } else {
         return sendAuthorizePage(req, res, result)
       }
@@ -240,42 +236,27 @@ export function createAuthorizationPageMiddleware<
       try {
         await handler.call(this, req, res)
       } catch (err) {
-        return errorRouteHandler(err, req, res)
+        onError?.(req, res, err, `Authorization Request Error`)
+
+        if (!res.headersSent) {
+          if (err instanceof AuthorizationError) {
+            return sendAuthorizationResultRedirect(
+              res,
+              {
+                issuer: server.issuer,
+                parameters: err.parameters,
+                redirect: err.toJSON(),
+              },
+              securityOptions,
+            )
+          } else {
+            return sendErrorPage(req, res, err)
+          }
+        } else if (!res.destroyed) {
+          res.end()
+        }
       }
     }
-  }
-
-  async function errorRouteHandler(err: unknown, req: Req, res: Res) {
-    onError?.(req, res, err, `Authorization Request Error`)
-
-    if (!res.headersSent) {
-      if (err instanceof AuthorizationError) {
-        return sendAuthorizeRedirect(res, {
-          issuer: server.issuer,
-          parameters: err.parameters,
-          redirect: err.toJSON(),
-        })
-      } else {
-        return sendErrorPage(req, res, err)
-      }
-    } else if (!res.destroyed) {
-      res.end()
-    }
-  }
-
-  function sendAuthorizeRedirect(
-    res: ServerResponse,
-    result: AuthorizationResultRedirect,
-  ) {
-    const { issuer, parameters, redirect } = result
-
-    const redirectOptions: OAuthRedirectOptions = {
-      redirectUri: buildRedirectUri(parameters),
-      mode: buildRedirectMode(parameters),
-      params: buildRedirectParams(issuer, parameters, redirect),
-    }
-
-    return sendRedirect(res, redirectOptions, securityOptions)
   }
 }
 

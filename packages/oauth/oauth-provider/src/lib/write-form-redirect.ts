@@ -11,10 +11,6 @@ export type WriteFormRedirectOptions = SecurityHeadersOptions
 const SCRIPT = js`
 const form = document.forms[0];
 
-setTimeout(() => {
-  form.submit();
-}, 1);
-
 let canSubmit = true;
 
 form.addEventListener('submit', (event) => {
@@ -25,9 +21,9 @@ form.addEventListener('submit', (event) => {
   }
 });
 
-form.addEventListener('error', (event) => {
-  canSubmit = true;
-});
+setTimeout(() => {
+  form.submit();
+}, 1);
 `
 
 // @NOTE If translations and design are needed, consider replacing this with a

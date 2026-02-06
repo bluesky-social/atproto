@@ -16,7 +16,7 @@ export function sendErrorPageFactory(
     req: IncomingMessage,
     res: ServerResponse,
     err: unknown,
-  ) {
+  ): Promise<void> {
     return sendApp(req, res, {
       status: buildErrorStatus(err),
       data: { __errorData: buildErrorPayload(err) },
