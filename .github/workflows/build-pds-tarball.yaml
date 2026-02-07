@@ -7,14 +7,6 @@ on:
       - develop
     tags:
       - 'v*.*.*'
-    paths:
-      - 'packages/pds/**'
-      - 'packages/common/**'
-      - 'packages/common-web/**'
-      - 'packages/api/**'
-      - 'packages/xrpc-server/**'
-      - 'packages/oauth-provider/**'
-      - 'pnpm-lock.yaml'
   workflow_dispatch:
     inputs:
       environment:
