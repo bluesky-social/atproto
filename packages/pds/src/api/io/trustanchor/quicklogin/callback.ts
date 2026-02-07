@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import express, { Router } from 'express'
 import { AppContext } from '../../../../context'
 import {
   NeuroCallbackPayload,
@@ -10,7 +10,7 @@ import {
 } from './helpers'
 
 export function callbackQuickLogin(router: Router, ctx: AppContext) {
-  router.post('/api/quicklogin/callback', async (req, res) => {
+  router.post('/api/quicklogin/callback', express.json(), async (req, res) => {
     try {
       if (!ctx.cfg.quicklogin) {
         return res.status(400).json({ error: 'QuickLogin not enabled' })
