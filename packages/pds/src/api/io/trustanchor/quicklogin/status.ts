@@ -1,5 +1,4 @@
-import { Router } from 'express'
-import express from 'express'
+import express, { Router } from 'express'
 import { AppContext } from '../../../../context'
 
 export function statusQuickLogin(router: Router, ctx: AppContext) {

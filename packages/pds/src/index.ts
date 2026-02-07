@@ -204,132 +204,14 @@ export class PDS {
       // e.g. trust x-forwarded-for via entryway ip
       ...getTrustedIps(cfg),
     ])
-    // Middleware to track body consumption
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'before-logger',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(loggerMiddleware)
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-logger',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(compression())
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-compression',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(authRoutes.createRouter(ctx)) // Before CORS
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-authRoutes',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(cors({ maxAge: DAY / SECOND }))
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-cors',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(basicRoutes.createRouter(ctx))
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-basicRoutes',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(wellKnown.createRouter(ctx))
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-wellKnown',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     // QuickLogin API routes (using /api/quicklogin/* instead of /xrpc/* to avoid XRPC router)
     app.use(ioTrustanchor(ctx))
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'after-ioTrustanchor',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
-    app.use((req, res, next) => {
-      if (req.method === 'POST' && req.url?.includes('/xrpc/app.bsky.')) {
-        httpLogger.info(
-          {
-            url: req.url,
-            readable: req.readable,
-            stage: 'before-xrpc',
-          },
-          'Body state checkpoint',
-        )
-      }
-      next()
-    })
     app.use(server.xrpc.router)
     app.use(error.handler)
 
