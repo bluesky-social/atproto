@@ -15399,7 +15399,7 @@ export const schemaDict = {
           },
           showButtonTo: {
             type: 'string',
-            knownValues: ['usersIFollow', 'everyone'],
+            knownValues: ['none', 'usersIFollow', 'everyone'],
             description:
               "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
             minLength: 1,
