@@ -39,6 +39,10 @@ export function validateDraftWithId<V>(v: V) {
 /** A draft containing an array of draft posts. */
 export interface Draft {
   $type?: 'app.bsky.draft.defs#draft'
+  /** UUIDv4 identifier of the device that created this draft. */
+  deviceId?: string
+  /** The device and/or platform on which the draft was created. */
+  deviceName?: string
   /** Array of draft posts that compose this draft. */
   posts: DraftPost[]
   /** Indicates human language of posts primary text content. */

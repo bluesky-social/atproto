@@ -7,11 +7,31 @@ import {
 } from '../core.js'
 import { memoizedTransformer } from '../util/memoize.js'
 
+/**
+ * Configuration options for array schema validation.
+ *
+ * @property minLength - Minimum number of items in the array
+ * @property maxLength - Maximum number of items in the array
+ */
 export type ArraySchemaOptions = {
   minLength?: number
   maxLength?: number
 }
 
+/**
+ * Schema for validating arrays where all items match a given schema.
+ *
+ * Validates that the input is an array, checks length constraints, and
+ * validates each item against the provided item schema.
+ *
+ * @template TItem - The validator type for array items
+ *
+ * @example
+ * ```ts
+ * const schema = new ArraySchema(l.string(), { maxLength: 10 })
+ * const result = schema.validate(['a', 'b', 'c'])
+ * ```
+ */
 export class ArraySchema<const TItem extends Validator> extends Schema<
   Array<InferInput<TItem>>,
   Array<InferOutput<TItem>>
@@ -60,6 +80,31 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
   }
 }
 
+/**
+ * Creates an array schema that validates each item against the provided schema.
+ *
+ * @param items - Schema to validate each array item against
+ * @param options - Optional length constraints
+ * @returns A new {@link ArraySchema} instance
+ *
+ * @example
+ * ```ts
+ * // Array of strings
+ * const tagsSchema = l.array(l.string())
+ *
+ * // Array with length constraints
+ * const limitedSchema = l.array(l.integer(), { maxLength: 100 })
+ *
+ * // Array of objects
+ * const usersSchema = l.array(l.object({
+ *   name: l.string(),
+ *   age: l.integer(),
+ * }))
+ *
+ * // Non-empty array
+ * const nonEmptySchema = l.array(l.string(), { minLength: 1 })
+ * ```
+ */
 /*@__NO_SIDE_EFFECTS__*/
 function arraySchema<const TValidator extends Validator>(
   items: TValidator,

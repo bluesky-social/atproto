@@ -1,9 +1,9 @@
 import './style.css'
 
+import type { HydrationData } from '#/hydration-data.d.ts'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
-import type { HydrationData } from './hydration-data.d.ts'
 import { LocaleProvider } from './locales/locale-provider.tsx'
 import { AuthorizeView } from './views/authorize/authorize-view.tsx'
 import { ErrorView } from './views/error/error-view.tsx'

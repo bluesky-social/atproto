@@ -1,5 +1,16 @@
 # @atproto/ozone
 
+## 0.1.163
+
+### Patch Changes
+
+- [#4608](https://github.com/bluesky-social/atproto/pull/4608) [`9fdfb8a`](https://github.com/bluesky-social/atproto/commit/9fdfb8a3ad656b158fa54f5d2a79f45cb6d16f4d) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Prevent tools.ozone.verification.grantVerification from verifying handle.invalid
+
+- Updated dependencies [[`00e6dbd`](https://github.com/bluesky-social/atproto/commit/00e6dbdcea295cfa3dff7eb7517420039cc3e821)]:
+  - @atproto/identity@0.4.11
+  - @atproto/common@0.5.11
+  - @atproto/xrpc-server@0.10.12
+
 ## 0.1.162
 
 ### Patch Changes

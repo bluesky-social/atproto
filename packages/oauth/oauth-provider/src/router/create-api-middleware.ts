@@ -58,7 +58,6 @@ import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
 import { newPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
-import type { MiddlewareOptions } from './middleware-options.js'
 import {
   ERROR_REDIRECT_KEYS,
   OAuthRedirectOptions,
@@ -67,7 +66,8 @@ import {
   buildRedirectMode,
   buildRedirectParams,
   buildRedirectUri,
-} from './send-redirect.js'
+} from './assets/send-redirect.js'
+import type { MiddlewareOptions } from './middleware-options.js'
 
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
 

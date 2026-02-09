@@ -10,27 +10,82 @@ import {
 } from '../core.js'
 import { lazyProperty } from '../util/lazy-property.js'
 import { memoizedOptions } from '../util/memoize.js'
-import { array } from './array.js'
-import { boolean } from './boolean.js'
+import { ArraySchema, array } from './array.js'
+import { BooleanSchema, boolean } from './boolean.js'
 import { dict } from './dict.js'
-import { integer } from './integer.js'
-import { optional } from './optional.js'
+import { IntegerSchema, integer } from './integer.js'
+import { OptionalSchema, optional } from './optional.js'
 import { StringSchema, string } from './string.js'
 import { union } from './union.js'
+import { WithDefaultSchema } from './with-default.js'
 
+/**
+ * Scalar types allowed in URL parameters: boolean, integer, or string.
+ */
 export type ParamScalar = Infer<typeof paramScalarSchema>
 const paramScalarSchema = union([boolean(), integer(), string()])
 
+/**
+ * A single parameter value: scalar or array of scalars.
+ */
 export type Param = Infer<typeof paramSchema>
+
+/**
+ * Schema for validating individual parameter values.
+ */
 export const paramSchema = union([paramScalarSchema, array(paramScalarSchema)])
 
+/**
+ * Type for a params object with string keys and optional param values.
+ */
 export type Params = Infer<typeof paramsSchema>
+
+/**
+ * Schema for validating arbitrary params objects.
+ */
 export const paramsSchema = dict(string(), optional(paramSchema))
 
+// @NOTE In order to properly coerce URLSearchParams, we need to distinguish
+// between scalar and array validators, requiring to be able to detect which
+// schema types are being used, restricting the allowed param validators here.
+type ParamScalarValidator = StringSchema | BooleanSchema | IntegerSchema
+type ParamValueValidator =
+  | ParamScalarValidator
+  | ArraySchema<ParamScalarValidator>
+type ParamValidator =
+  | ParamValueValidator
+  | OptionalSchema<ParamValueValidator>
+  | OptionalSchema<WithDefaultSchema<ParamValueValidator>>
+  | WithDefaultSchema<ParamValueValidator>
+
+/**
+ * Type representing the shape of a params schema definition.
+ *
+ * Maps parameter names to their validators (must be Param or undefined).
+ */
 export type ParamsSchemaShape = {
-  [x: string]: Validator<Param | undefined>
+  [x: string]: ParamValidator
 }
 
+/**
+ * Schema for validating URL query parameters in Lexicon endpoints.
+ *
+ * Params are the query string parameters passed to queries, procedures,
+ * and subscriptions. Values must be scalars (boolean, integer, string)
+ * or arrays of scalars, as they need to be serializable to URL format.
+ *
+ * Provides methods for converting to/from URLSearchParams.
+ *
+ * @template TShape - The params shape type mapping names to validators
+ *
+ * @example
+ * ```ts
+ * const schema = new ParamsSchema({
+ *   limit: l.optional(l.integer({ minimum: 1, maximum: 100 })),
+ *   cursor: l.optional(l.string()),
+ * })
+ * ```
+ */
 export class ParamsSchema<
   const TShape extends ParamsSchemaShape = ParamsSchemaShape,
 > extends Schema<
@@ -45,14 +100,13 @@ export class ParamsSchema<
     super()
   }
 
-  get shapeValidators(): Map<string, Validator<Param | undefined>> {
+  get shapeValidators(): Map<string, ParamValidator> {
     const map = new Map(Object.entries(this.shape))
 
     return lazyProperty(this, 'shapeValidators', map)
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    // @TODO BETTER SUPPORT Input/Output
     if (!isPlainObject(input)) {
       return ctx.issueInvalidType(input, 'object')
     }
@@ -109,14 +163,22 @@ export class ParamsSchema<
     return ctx.success(copy ?? input)
   }
 
-  fromURLSearchParams(urlSearchParams: URLSearchParams): InferOutput<this> {
+  fromURLSearchParams(iterable: Iterable<[string, string]>): InferOutput<this> {
     const params: Record<string, Param> = {}
 
-    for (const [key, value] of urlSearchParams.entries()) {
-      const validator = this.shapeValidators.get(key)
+    // Compatibility with URLSearchParams not being iterable in some environments
+    const entries =
+      iterable instanceof URLSearchParams ? iterable.entries() : iterable
+
+    for (const [key, value] of entries) {
+      const validator = unwrapValidator(this.shapeValidators.get(key))
+      const expectsArray = validator instanceof ArraySchema
+      const scalarValidator = expectsArray
+        ? unwrapValidator(validator.validator)
+        : validator
 
       const coerced: ParamScalar =
-        validator instanceof StringSchema
+        scalarValidator instanceof StringSchema
           ? value
           : value === 'true'
             ? true
@@ -126,12 +188,13 @@ export class ParamsSchema<
                 ? Number(value)
                 : value
 
-      if (params[key] === undefined) {
-        params[key] = coerced
-      } else if (Array.isArray(params[key])) {
-        params[key].push(coerced)
+      const currentParam = params[key]
+      if (currentParam === undefined) {
+        params[key] = expectsArray ? [coerced] : coerced
+      } else if (Array.isArray(currentParam)) {
+        currentParam.push(coerced)
       } else {
-        params[key] = [params[key] as ParamScalar, coerced]
+        params[key] = [currentParam, coerced]
       }
     }
 
@@ -159,8 +222,53 @@ export class ParamsSchema<
   }
 }
 
+/**
+ * Creates a params schema for URL query parameters.
+ *
+ * Params schemas validate query string parameters for Lexicon endpoints.
+ * Values must be boolean, integer, string, or arrays of those types.
+ *
+ * @param properties - Object mapping parameter names to their validators
+ * @returns A new {@link ParamsSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Simple pagination params
+ * const paginationParams = l.params({
+ *   limit: l.optional(l.withDefault(l.integer({ minimum: 1, maximum: 100 }), 50)),
+ *   cursor: l.optional(l.string()),
+ * })
+ *
+ * // Required parameter
+ * const actorParams = l.params({
+ *   actor: l.string({ format: 'at-identifier' }),
+ * })
+ *
+ * // Array parameter (multiple values)
+ * const filterParams = l.params({
+ *   tags: l.optional(l.array(l.string())),
+ * })
+ *
+ * // Convert from URL
+ * const urlParams = new URLSearchParams('limit=25&cursor=abc')
+ * const validated = paginationParams.fromURLSearchParams(urlParams)
+ *
+ * // Convert to URL
+ * const searchParams = paginationParams.toURLSearchParams({ limit: 25 })
+ * ```
+ */
 export const params = /*#__PURE__*/ memoizedOptions(function params<
   const TShape extends ParamsSchemaShape = NonNullable<unknown>,
 >(properties: TShape = {} as TShape) {
   return new ParamsSchema<TShape>(properties)
 })
+
+function unwrapValidator(schema?: Validator): Validator | undefined {
+  while (
+    schema instanceof OptionalSchema ||
+    schema instanceof WithDefaultSchema
+  ) {
+    schema = schema.validator
+  }
+  return schema
+}

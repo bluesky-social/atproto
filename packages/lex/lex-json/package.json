@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-json",
-  "version": "0.0.9",
+  "version": "0.0.11",
   "license": "MIT",
   "description": "Lexicon encoding utilities for AT Lexicon data in JSON format",
   "keywords": [
@@ -34,7 +34,7 @@
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {

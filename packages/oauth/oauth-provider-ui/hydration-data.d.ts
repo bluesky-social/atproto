@@ -34,11 +34,18 @@ export type HydrationData = {
     __authorizeData: AuthorizeData
     __sessions: readonly Session[]
   }
+  /**
+   * Matches the variables needed by `error-page.tsx`
+   */
   'error-page': {
-    /**
-     * Matches the variables needed by `error-page.tsx`
-     */
     __customizationData: CustomizationData
     __errorData: ErrorData
+  }
+  /**
+   * Matches the variables needed by `cookie-error-page.tsx`
+   */
+  'cookie-error-page': {
+    __customizationData: CustomizationData
+    __continueUrl: string
   }
 }

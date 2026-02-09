@@ -17,18 +17,67 @@ import {
   ucFirst,
 } from './util.js'
 
+/**
+ * Configuration options for the {@link RefResolver} class.
+ */
 export type RefResolverOptions = {
+  /**
+   * The file extension to use for import specifiers when resolving
+   * external references.
+   *
+   * @default '.js'
+   */
   importExt?: string
 }
 
+/**
+ * Represents a resolved lexicon reference as TypeScript identifiers.
+ *
+ * Contains the variable name (for runtime schema) and type name (for
+ * TypeScript type) that can be used to reference a lexicon definition.
+ */
 export type ResolvedRef = {
+  /**
+   * The variable name for the runtime schema.
+   *
+   * For local definitions, this is a simple identifier.
+   * For external definitions, this may be a qualified name like `ns.varName`
+   * or bracket notation like `ns["varName"]` for unsafe identifiers.
+   */
   varName: string
+  /**
+   * The type name for the TypeScript type alias.
+   *
+   * Always a valid TypeScript identifier, either simple or qualified.
+   */
   typeName: string
 }
 
 /**
- * Utility class to resolve lexicon references to TypeScript identifiers,
- * generating "import" statements as needed.
+ * Resolves lexicon references to TypeScript identifiers.
+ *
+ * This class handles the resolution of `ref` types in lexicon documents,
+ * converting lexicon reference strings (like `com.example.foo#bar`) into
+ * valid TypeScript identifiers. It automatically manages:
+ *
+ * - Local references within the same document
+ * - External references to other lexicon documents
+ * - Import statement generation for external references
+ * - Conflict avoidance with keywords, globals, and existing declarations
+ *
+ * Results are memoized to ensure consistent identifiers for the same
+ * reference throughout a file.
+ *
+ * @example
+ * ```ts
+ * const resolver = new RefResolver(doc, sourceFile, indexer, options)
+ *
+ * // Resolve a local reference
+ * const local = await resolver.resolve('#myDef')
+ *
+ * // Resolve an external reference
+ * const external = await resolver.resolve('com.example.other#def')
+ * ```
  */
 export class RefResolver {
   constructor(
@@ -79,6 +128,19 @@ export class RefResolver {
   }
 
   /**
+   * Resolves a local definition hash to TypeScript identifiers.
+   *
+   * This method generates safe, non-conflicting identifiers for definitions
+   * within the current document. It handles edge cases like:
+   * - Hash names that are JavaScript keywords
+   * - Hash names that conflict with global identifiers
+   * - Multiple hashes that would produce the same identifier
+   *
+   * @param hash - The definition hash (e.g., 'main', 'record', 'myType')
+   * @returns A promise resolving to the TypeScript identifiers
+   * @throws Error if the hash does not exist in the document
+   * @throws Error if conflicting type names are detected
+   *
    * @note The returned `typeName` and `varName` are *both* guaranteed to be
    * valid TypeScript identifiers.
    */
@@ -324,6 +386,13 @@ function nsidToIdentifier(nsid: string) {
 
 /**
  * Generates predictable public identifiers for a given definition hash.
+ *
+ * This function creates the "public" names that will be exported from
+ * generated files. The variable name uses the original hash, while the
+ * type name is converted to PascalCase.
+ *
+ * @param hash - The definition hash (e.g., 'main', 'myType')
+ * @returns The public identifiers for the definition
  *
  * @note The returned `typeName` is guaranteed to be a valid TypeScript
  * identifier. `varName` may not be a valid identifier (eg. if the hash contains
