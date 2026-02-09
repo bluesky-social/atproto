@@ -55,7 +55,7 @@ describe('oauth', () => {
       handle_resolver: network.pds.url,
       sign_up_url: network.pds.url,
       env: 'test',
-      scope: `atproto account:email identity:* repo:* rpc:app.bsky.actor.getPreferences?aud=*`,
+      scope: `account:email identity:* repo:*`,
     })}`
   })
 
