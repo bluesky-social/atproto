@@ -11,7 +11,17 @@ import {
 } from './constants.ts'
 
 export const clientMetadata = buildAtprotoLoopbackClientMetadata({
-  scope: OAUTH_SCOPE,
+  scope: Array.from(
+    // Strip duplicate values from env
+    new Set([
+      // Always required
+      'atproto',
+      // Required by this app to setup labelers
+      'rpc:app.bsky.actor.getPreferences?aud=*',
+      // Additional scopes from env
+      ...OAUTH_SCOPE.split(' ').filter(Boolean),
+    ]),
+  ).join(' '),
   redirect_uris: [LOOPBACK_CANONICAL_LOCATION],
 })
 
