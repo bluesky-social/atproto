@@ -129,6 +129,8 @@ import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/unspecced/getSuggestedOnboardingUsers.js'
+import * as AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton from './types/app/bsky/unspecced/getSuggestedOnboardingUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
@@ -442,6 +444,8 @@ export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/unspecced/getSuggestedOnboardingUsers.js'
+export * as AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton from './types/app/bsky/unspecced/getSuggestedOnboardingUsersSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
@@ -3275,6 +3279,30 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetSuggestedFeedsSkeleton.Response> {
     return this._client.call(
       'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedOnboardingUsers(
+    params?: AppBskyUnspeccedGetSuggestedOnboardingUsers.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedOnboardingUsers.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedOnboardingUsers.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedOnboardingUsers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedOnboardingUsersSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton',
       params,
       undefined,
       opts,

@@ -34,6 +34,7 @@ export enum FeatureGateID {
    */
   _ = '',
   SuggestedUsersDiscoverAgentEnable = 'suggested_users:discover_agent:enable',
+  SuggestedOnboardingUsersDiscoverAgentEnable = 'suggested_onboarding_users:discover_agent:enable',
   ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
 }
