@@ -81,9 +81,9 @@
       "properties": {
         "text": {
           "type": "string",
-          "maxLength": 3000,
-          "maxGraphemes": 300,
-          "description": "The primary post content."
+          "maxLength": 10000,
+          "maxGraphemes": 1000,
+          "description": "The primary post content. It has a higher limit than post contents to allow storing a larger text that can later be refined into smaller posts."
         },
         "labels": {
           "type": "union",

@@ -75,7 +75,7 @@ export function validateDraft<V>(v: V) {
 /** One of the posts that compose a draft. */
 export interface DraftPost {
   $type?: 'app.bsky.draft.defs#draftPost'
-  /** The primary post content. */
+  /** The primary post content. It has a higher limit than post contents to allow storing a larger text that can later be refined into smaller posts. */
   text: string
   labels?: $Typed<ComAtprotoLabelDefs.SelfLabels> | { $type: string }
   embedImages?: DraftEmbedImage[]
