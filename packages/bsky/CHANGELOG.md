@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.215
+
+### Patch Changes
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - update germ networks lexicon
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - add `none` to germ declaration record
+
+- Updated dependencies [[`60f84eb`](https://github.com/bluesky-social/atproto/commit/60f84ebe47016828add07b143c403e331c58ee78), [`50dfbec`](https://github.com/bluesky-social/atproto/commit/50dfbec512682d35e8108b952e8f0533da71beef), [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317), [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317)]:
+  - @atproto/api@0.18.21
+
 ## 0.0.214
 
 ### Patch Changes
