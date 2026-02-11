@@ -19,8 +19,8 @@ export class ActorStoreReader {
   ) {
     const blobstore = resources.blobstore(did)
 
-    this.repo = new RepoReader(db, blobstore)
-    this.record = new RecordReader(db)
+    this.repo = new RepoReader(db, blobstore, did)
+    this.record = new RecordReader(db, did)
     this.pref = new PreferenceReader(db)
 
     // Invoke "keypair" once. Also avoids leaking "this" as keypair context.
