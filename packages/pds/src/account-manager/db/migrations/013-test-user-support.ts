@@ -19,6 +19,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('isTestUser', 'integer', (col) => col.notNull().defaultTo(0))
     .execute()
 
+  // 2c. Rename neuroJid to jid in neuro_pending_session table for consistency
+  await db.schema
+    .alterTable('neuro_pending_session')
+    .renameColumn('neuroJid', 'jid')
+    .execute()
+
   // 3. Create indexes for new columns
   await db.schema
     .createIndex('neuro_identity_link_jid_idx')
@@ -45,6 +51,12 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .alterTable('neuro_identity_link')
     .dropColumn('isTestUser')
+    .execute()
+
+  // Rename jid back to neuroJid in neuro_pending_session table
+  await db.schema
+    .alterTable('neuro_pending_session')
+    .renameColumn('jid', 'neuroJid')
     .execute()
 
   // Rename back to neuroJid

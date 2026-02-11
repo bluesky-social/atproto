@@ -10889,9 +10889,17 @@ export const schemaDict = {
               email: {
                 type: 'string',
               },
-              neuroJid: {
+              legalId: {
                 type: 'string',
-                description: 'Neuro Legal ID (W ID)',
+                description: 'Neuro Legal ID (W ID) for real users',
+              },
+              jid: {
+                type: 'string',
+                description: 'Neuro JID for test users',
+              },
+              isTestUser: {
+                type: 'boolean',
+                description: 'Whether this is a test user account',
               },
               linkedAt: {
                 type: 'string',
@@ -11038,9 +11046,9 @@ export const schemaDict = {
       },
       neuroLinkData: {
         type: 'object',
-        required: ['neuroJid'],
+        required: ['legalId'],
         properties: {
-          neuroJid: {
+          legalId: {
             type: 'string',
             description: 'Neuro Legal ID (W ID) in format: uuid@legal.domain',
           },
@@ -11154,9 +11162,17 @@ export const schemaDict = {
           email: {
             type: 'string',
           },
-          neuroJid: {
+          legalId: {
             type: 'string',
-            description: 'Neuro Legal ID (W ID)',
+            description: 'Neuro Legal ID (W ID) for real users',
+          },
+          jid: {
+            type: 'string',
+            description: 'Neuro JID for test users',
+          },
+          isTestUser: {
+            type: 'boolean',
+            description: 'Whether this is a test user account',
           },
           linkedAt: {
             type: 'string',
@@ -11633,7 +11649,7 @@ export const schemaDict = {
               format: 'did',
               description: 'DID to migrate',
             },
-            neuroJid: {
+            legalId: {
               type: 'string',
               description: 'W ID (Neuro Legal ID) if account has one',
             },
@@ -11674,7 +11690,7 @@ export const schemaDict = {
             type: 'boolean',
             description: 'True if DID does not exist on target',
           },
-          neuroJidAvailable: {
+          legalIdAvailable: {
             type: 'boolean',
             description: 'True if W ID is not linked to another account',
           },

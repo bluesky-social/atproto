@@ -301,7 +301,7 @@ describe('Neuro Quick Login Integration', () => {
 
       // Step 4: Complete signup via OAuth (this would normally be done by OAuth UI)
       // For now, we verify the account was created
-      const accountLink = await manager.findAccountByNeuroJid(identity!.jid)
+      const accountLink = await manager.findAccountByLegalIdOrJid(identity!.jid)
 
       if (accountLink) {
         console.log('✅ Account created and linked:', accountLink.did)
@@ -396,7 +396,7 @@ describe('Neuro Quick Login Integration', () => {
       expect(identity?.jid).toBe(testJid)
 
       // Step 4: Verify account lookup works
-      const accountLink = await manager.findAccountByNeuroJid(testJid)
+      const accountLink = await manager.findAccountByLegalIdOrJid(testJid)
       expect(accountLink).toBeDefined()
       expect(accountLink?.did).toBe(testDid)
 

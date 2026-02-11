@@ -19,7 +19,7 @@ export type QueryParams = {
   /** DID to migrate */
   did: string
   /** W ID (Neuro Legal ID) if account has one */
-  neuroJid?: string
+  legalId?: string
   /** New handle on target (if changing) */
   targetHandle?: string
 }
@@ -54,7 +54,7 @@ export interface ValidationChecks {
   /** True if DID does not exist on target */
   didAvailable?: boolean
   /** True if W ID is not linked to another account */
-  neuroJidAvailable?: boolean
+  legalIdAvailable?: boolean
   /** True if handle is available on target */
   handleAvailable?: boolean
 }

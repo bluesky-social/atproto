@@ -48,8 +48,12 @@ export interface NeuroAccountView {
   did: string
   handle: string
   email?: string
-  /** Neuro Legal ID (W ID) */
-  neuroJid?: string
+  /** Neuro Legal ID (W ID) for real users */
+  legalId?: string
+  /** Neuro JID for test users */
+  jid?: string
+  /** Whether this is a test user account */
+  isTestUser?: boolean
   linkedAt?: string
   lastLoginAt?: string
 }

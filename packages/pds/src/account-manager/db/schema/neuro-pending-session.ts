@@ -8,7 +8,7 @@ export interface NeuroPendingSession {
   createdAt: Generated<string> // ISO timestamp
   expiresAt: string // ISO timestamp (5 minutes from creation)
   completedAt: string | null // ISO timestamp when identity received
-  neuroJid: string | null // Set when callback received
+  jid: string | null // Neuro JID - set when callback received
 }
 
 export type NeuroPendingSessionEntry = Selectable<NeuroPendingSession>

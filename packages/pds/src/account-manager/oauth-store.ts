@@ -374,9 +374,8 @@ export class OAuthStore
         }
 
         // Look up account by Neuro JID
-        const accountLink = await this.neuroAuthManager.findAccountByNeuroJid(
-          identity.jid,
-        )
+        const accountLink =
+          await this.neuroAuthManager.findAccountByLegalIdOrJid(identity.jid)
 
         if (!accountLink) {
           throw new InvalidRequestError(
@@ -819,7 +818,7 @@ This will authenticate you with your Neuro identity.`
     const { identity } = data
 
     // Check if already linked
-    const existing = await this.neuroAuthManager.findAccountByNeuroJid(
+    const existing = await this.neuroAuthManager.findAccountByLegalIdOrJid(
       identity.jid,
     )
 

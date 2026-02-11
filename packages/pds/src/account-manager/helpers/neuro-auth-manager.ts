@@ -446,7 +446,7 @@ export class NeuroAuthManager {
         createdAt: now.toISOString(),
         expiresAt: expiresAt.toISOString(),
         completedAt: null,
-        neuroJid: null,
+        jid: null,
       })
       .execute()
   }
@@ -475,9 +475,11 @@ export class NeuroAuthManager {
   }
 
   /**
-   * Find account by Neuro JID (searches both Legal ID and JID columns)
+   * Find account by Legal ID or JID (searches both columns)
    */
-  async findAccountByNeuroJid(jid: string): Promise<{ did: string } | null> {
+  async findAccountByLegalIdOrJid(
+    jid: string,
+  ): Promise<{ did: string } | null> {
     if (!this.db) {
       this.logger.error({}, 'Database not configured for Neuro authentication')
       throw new Error('Server configuration error. Please contact support.')
