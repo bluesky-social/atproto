@@ -503,6 +503,7 @@ export class Views {
   ): VerificationState | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
+    if (actor.handle === INVALID_HANDLE) return
 
     const isImpersonation = state.labels?.get(did)?.isImpersonation
 

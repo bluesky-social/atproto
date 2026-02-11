@@ -1,6 +1,8 @@
+import { INVALID_HANDLE } from '@atproto/syntax'
+import { TestNetwork } from '../network'
 import { SeedClient } from './client'
 
-export default async (sc: SeedClient) => {
+export default async (sc: SeedClient<TestNetwork>) => {
   await sc.createAccount('alice', users.alice)
   await sc.createAccount('bob', users.bob)
   await sc.createAccount('carol', users.carol)
@@ -20,6 +22,8 @@ export default async (sc: SeedClient) => {
   await sc.createAccount('verifier2', users.verifier2)
   // This user should be set a label 'impersonation` in the tests.
   await sc.createAccount('verifier3', users.verifier3)
+
+  await sc.createAccount('handleinvalid', users.handleinvalid)
 
   for (const name in sc.dids) {
     await sc.createProfile(sc.dids[name], `display-${name}`, `descript-${name}`)
@@ -108,6 +112,24 @@ export default async (sc: SeedClient) => {
   // verifier2: is verifier and has no verification by other verifier.
   // NOOP
 
+  // handleinvalid: has verification but handle is set to invalid.
+  await sc.verify(
+    sc.dids.verifier1,
+    sc.dids.handleinvalid,
+    sc.accounts[sc.dids.handleinvalid].handle,
+    sc.profiles[sc.dids.handleinvalid].displayName,
+  )
+
+  // Process all events to sync actors to appview before modifying the DB
+  await sc.network.processAll()
+
+  // Set handle to invalid directly in the database
+  await sc.network.bsky.db.db
+    .updateTable('actor')
+    .set({ handle: INVALID_HANDLE })
+    .where('did', '=', sc.dids.handleinvalid)
+    .execute()
+
   return sc
 }
 
@@ -171,5 +193,10 @@ const users = {
     email: 'nonverifier@test.com',
     handle: 'nonverifier.test',
     password: 'nonverifier-pass',
+  },
+  handleinvalid: {
+    email: 'handleinvalid@test.com',
+    handle: 'handleinvalid.test',
+    password: 'handleinvalid-pass',
   },
 }

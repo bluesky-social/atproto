@@ -31,6 +31,7 @@ describe('verification views', () => {
   let verifier1: string
   let verifier2: string
   let verifier3: string
+  let handleinvalid: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -67,6 +68,7 @@ describe('verification views', () => {
     verifier1 = sc.dids.verifier1
     verifier2 = sc.dids.verifier2
     verifier3 = sc.dids.verifier3
+    handleinvalid = sc.dids.handleinvalid
 
     await network.bsky.db.db
       .updateTable('actor')
@@ -240,6 +242,12 @@ describe('verification views', () => {
         getExpectedUrisPrefixes: () => [
           `at://${verifier1}/app.bsky.graph.verification/`,
         ],
+      },
+      {
+        description:
+          'returns undefined for user with invalid handle even if they have verifications',
+        getDid: () => handleinvalid,
+        getExpected: () => undefined,
       },
     ]
 
