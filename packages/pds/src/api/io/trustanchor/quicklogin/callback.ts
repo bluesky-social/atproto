@@ -1,13 +1,7 @@
 import express, { Router } from 'express'
 import { AppContext } from '../../../../context'
-import {
-  NeuroCallbackPayload,
-  createAccountViaQuickLogin,
-  deriveAvailableHandle,
-  extractEmail,
-  extractUserName,
-  getHandleForDid,
-} from './helpers'
+import { handleQuickLoginCallback } from './callback-handler'
+import { NeuroCallbackPayload } from './helpers'
 
 export function callbackQuickLogin(router: Router, ctx: AppContext) {
   router.post('/api/quicklogin/callback', express.json(), async (req, res) => {
@@ -18,280 +12,37 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
 
       const payload = req.body as NeuroCallbackPayload
 
-      req.log.info(
-        {
-          sessionId: payload.SessionId,
-          key: payload.Key,
-          state: payload.State,
-        },
-        'QuickLogin callback received',
-      )
-
-      // The provider sends back its own SessionId, but we need to look up by Key (serviceId)
-      const serviceId = payload.Key
-      if (!serviceId) {
-        req.log.warn({ payload }, 'Missing Key/serviceId in callback')
-        return res.status(400).json({ error: 'Missing Key' })
-      }
-
-      // Find session by serviceId
-      const session = ctx.quickloginStore.getSessionByServiceId(serviceId)
-      if (!session) {
-        req.log.warn({ serviceId }, 'Session not found for serviceId')
-        return res.status(404).json({ error: 'Session not found' })
-      }
-
-      // Check if session expired
-      if (new Date() > new Date(session.expiresAt)) {
-        req.log.warn({ sessionId: payload.SessionId }, 'Session expired')
-        return res.status(400).json({ error: 'Session expired' })
-      }
-
-      // Validate state (mTLS handles signature verification)
-      if (payload.State !== 'Approved') {
-        req.log.info(
-          { sessionId: session.sessionId, state: payload.State },
-          'QuickLogin not approved',
-        )
-        ctx.quickloginStore.updateSession(session.sessionId, {
-          status: 'failed',
-          error: `QuickLogin ${payload.State}`,
-        })
-        return res.status(400).json({ error: `QuickLogin ${payload.State}` })
-      }
-
-      // Extract JID from payload
-      const jid = payload.JID
-      if (!jid) {
-        req.log.error({ payload }, 'JID missing from callback')
-        ctx.quickloginStore.updateSession(session.sessionId, {
-          status: 'failed',
-          error: 'JID missing',
-        })
-        return res.status(400).json({ error: 'JID missing from callback' })
-      }
-
-      req.log.info({ jid }, 'Processing QuickLogin for JID')
-
-      // Check if this Neuro identity is already linked (try Legal ID first, then JID)
-      let existingLink = await ctx.accountManager.db.db
-        .selectFrom('neuro_identity_link')
-        .selectAll()
-        .where('legalId', '=', jid)
-        .executeTakeFirst()
-
-      // Fallback to JID column (for test users)
-      if (!existingLink) {
-        existingLink = await ctx.accountManager.db.db
-          .selectFrom('neuro_identity_link')
-          .selectAll()
-          .where('jid', '=', jid)
-          .executeTakeFirst()
-      }
-
-      let did: string
-      let accessJwt: string
-      let refreshJwt: string
-      let handle: string
-
-      if (existingLink) {
-        // User has logged in via QuickLogin before - use existing link
-        req.log.info(
-          { jid, did: existingLink.did },
-          'Existing Neuro identity link found',
-        )
-
-        did = existingLink.did
-        handle = await getHandleForDid(ctx, did)
-
-        // Update last login
-        await ctx.accountManager.db.db
-          .updateTable('neuro_identity_link')
-          .set({ lastLoginAt: new Date().toISOString() })
-          .where((eb) => eb.where('legalId', '=', jid).orWhere('jid', '=', jid))
-          .execute()
-
-        // Create session
-        const account = await ctx.accountManager.getAccount(did)
-        if (!account) {
-          req.log.error({ did }, 'Account not found for linked DID')
-          return res.status(500).json({ error: 'Account not found' })
-        }
-
-        const tokens = await ctx.accountManager.createSession(did, null, false)
-        accessJwt = tokens.accessJwt
-        refreshJwt = tokens.refreshJwt
-      } else {
-        // No existing link - this is user's first QuickLogin (but account should exist)
-        //
-        // IMPORTANT: QuickLogin is ONLY for login, not account creation.
-        // The W ID app enforces that users cannot scan QR codes until both their
-        // W ID account AND W Social account have been provisioned. Account provisioning
-        // happens via the /neuro/provision/account endpoint when Neuro sends a
-        // LegalIdUpdated notification. Therefore, when we reach this code, the account
-        // must already exist - we just need to create the neuro_identity_link.
-
-        const email = extractEmail(payload.Properties)
-        const userName = extractUserName(payload.Properties)
-
-        if (!email) {
-          req.log.error({ jid }, 'No email found in QuickLogin payload')
-          ctx.quickloginStore.updateSession(session.sessionId, {
-            status: 'failed',
-            error: 'Email required',
-          })
-          return res.status(400).json({ error: 'Email required' })
-        }
-
-        // Check if invitation is required and exists
-        const inviteRequired = ctx.cfg.invites?.required ?? false
-        let invitation: Awaited<
-          ReturnType<typeof ctx.invitationManager.getInvitationByEmail>
-        > = null
-
-        if (inviteRequired) {
-          invitation = await ctx.invitationManager.getInvitationByEmail(email)
-
-          if (!invitation) {
-            req.log.warn(
-              { email: ctx.invitationManager.hashEmail(email), jid },
-              'No invitation found - access denied',
-            )
-            ctx.quickloginStore.updateSession(session.sessionId, {
-              status: 'failed',
-              error: 'Invitation required',
-            })
-            return res.status(403).json({
-              error: 'InvitationRequired',
-              message:
-                'An invitation is required to create an account. Please contact support.',
-            })
-          }
-
-          req.log.info(
-            {
-              email: ctx.invitationManager.hashEmail(email),
-              preferredHandle: invitation.preferred_handle,
-            },
-            'Valid invitation found',
-          )
-        }
-
-        // Find the existing account by email
-        const existingAccount = await ctx.accountManager.db.db
-          .selectFrom('account')
-          .selectAll()
-          .where('email', '=', email.toLowerCase())
-          .executeTakeFirst()
-
-        if (!existingAccount) {
-          // Account doesn't exist yet
-          if (inviteRequired && !invitation) {
-            // Should never reach here due to earlier check, but defensive
-            req.log.error({ jid, email }, 'No invitation and account not found')
-            ctx.quickloginStore.updateSession(session.sessionId, {
-              status: 'failed',
-              error: 'Invitation required',
-            })
-            return res.status(403).json({
-              error: 'InvitationRequired',
-              message: 'An invitation is required to create an account.',
-            })
-          }
-
-          // Create new account with invitation (if available)
-          req.log.info(
-            { jid, email, preferredHandle: invitation?.preferred_handle },
-            'Creating new account via QuickLogin',
-          )
-
-          const preferredHandle = invitation?.preferred_handle || null
-          const result = await createAccountViaQuickLogin(
-            ctx,
-            jid,
-            email,
-            userName,
-            preferredHandle,
-          )
-
-          did = result.did
-          handle = result.handle
-          accessJwt = result.accessJwt
-          refreshJwt = result.refreshJwt
-
-          // Mark the invitation as consumed
-          if (invitation) {
-            await ctx.invitationManager.consumeInvitation(email, did, handle)
-            req.log.info(
-              { email: ctx.invitationManager.hashEmail(email) },
-              'Invitation consumed',
-            )
-          }
-        } else {
-          // Account exists - create the link
-          req.log.info(
-            { jid, email, did: existingAccount.did },
-            'Creating Neuro identity link for existing account',
-          )
-
-          did = existingAccount.did
-          handle = await getHandleForDid(ctx, did)
-
-          // Create the neuro_identity_link (QuickLogin is for real users, not test users)
-          await ctx.accountManager.db.db
-            .insertInto('neuro_identity_link')
-            .values({
-              legalId: jid, // Real users use Legal ID
-              jid: null, // NULL for real users
-              did,
-              email: email || null,
-              userName: userName || null,
-              isTestUser: 0,
-              linkedAt: new Date().toISOString(),
-              lastLoginAt: new Date().toISOString(),
-            })
-            .execute()
-
-          // Create session
-          const tokens = await ctx.accountManager.createSession(
-            did,
-            null,
-            false,
-          )
-          accessJwt = tokens.accessJwt
-          refreshJwt = tokens.refreshJwt
-
-          // Delete the invitation if it exists (account already created via other means)
-          if (invitation) {
-            await ctx.invitationManager.deleteInvitation(invitation.id)
-            req.log.info(
-              { email: ctx.invitationManager.hashEmail(email) },
-              'Invitation consumed for existing account',
-            )
-          }
-        }
-      }
-
-      // Update session with success
-      ctx.quickloginStore.updateSession(session.sessionId, {
-        status: 'completed',
-        result: {
-          did,
-          handle,
-          accessJwt,
-          refreshJwt,
-          created: !existingLink,
-        },
-      })
-
-      req.log.info(
-        { sessionId: session.sessionId, did, handle },
-        'QuickLogin completed successfully',
-      )
+      // Call shared handler
+      await handleQuickLoginCallback(payload, ctx, req.log)
 
       // Return success to provider
       return res.json({ success: true })
     } catch (error) {
+      // Check for specific error codes
+      const err = error as any
+      if (err.code === 'InvitationRequired') {
+        return res.status(403).json({
+          error: 'InvitationRequired',
+          message: err.message,
+        })
+      }
+
+      // Handle known error messages
+      if (err.message === 'Session not found') {
+        return res.status(404).json({ error: err.message })
+      }
+
+      if (
+        err.message === 'Missing Key' ||
+        err.message === 'Session expired' ||
+        err.message?.startsWith('QuickLogin ') ||
+        err.message === 'JID missing from callback' ||
+        err.message === 'Email required' ||
+        err.message === 'Account not found'
+      ) {
+        return res.status(400).json({ error: err.message })
+      }
+
       req.log.error(
         {
           error:
