@@ -151,7 +151,7 @@ cmd_wid_list() {
         .did,
         .handle,
         (.email // "-"),
-        (.neuroJid // "-"),
+        (.legalId // "-"),
         (.linkedAt // "-")
       ]
     ) | @tsv
@@ -181,7 +181,7 @@ cmd_wid_show() {
       "DID": .did,
       "Handle": .handle,
       "Email": (.email // "N/A"),
-      "W ID (Legal ID)": (.neuroJid // "Not linked"),
+      "W ID (Legal ID)": (.legalId // "Not linked"),
       "Linked At": (.linkedAt // "N/A"),
       "Last Login": (.lastLoginAt // "N/A")
     }
