@@ -120,6 +120,15 @@ export class PDS {
   ): Promise<PDS> {
     const ctx = await AppContext.fromConfig(cfg, secrets, overrides)
 
+    // Warn if test user creation is enabled
+    if (ctx.cfg.allowTestUserCreation) {
+      console.warn('━'.repeat(60))
+      console.warn('⚠️  TEST USER CREATION ENABLED')
+      console.warn('⚠️  This server will accept NEW test user accounts')
+      console.warn('⚠️  Set PDS_ALLOW_TEST_USER_CREATION=false for production')
+      console.warn('━'.repeat(60))
+    }
+
     const { rateLimits } = ctx.cfg
 
     const server = createServer({

@@ -51,7 +51,7 @@ export default function (server: Server, ctx: AppContext) {
         const existingLink = await ctx.accountManager.db.db
           .selectFrom('neuro_identity_link')
           .select('did')
-          .where('neuroJid', '=', password)
+          .where('legalId', '=', password)
           .executeTakeFirst()
 
         if (existingLink) {

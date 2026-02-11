@@ -413,7 +413,7 @@ describe('Neuro Quick Login Integration', () => {
       const beforeUpdate = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
         .select('lastLoginAt')
-        .where('neuroJid', '=', testJid)
+        .where('legalId', '=', testJid)
         .executeTakeFirst()
 
       await manager.updateLastLogin(testJid)
@@ -421,7 +421,7 @@ describe('Neuro Quick Login Integration', () => {
       const afterUpdate = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
         .select('lastLoginAt')
-        .where('neuroJid', '=', testJid)
+        .where('legalId', '=', testJid)
         .executeTakeFirst()
 
       expect(afterUpdate?.lastLoginAt).toBeTruthy()

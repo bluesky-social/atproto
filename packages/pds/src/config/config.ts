@@ -356,6 +356,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
           apiBaseUrl: env.quickloginApiBaseUrl || 'https://lab.tagroot.io',
         }
       : null,
+    allowTestUserCreation: env.allowTestUserCreation ?? false, // DEFAULT: false (fail-safe)
   }
 }
 
@@ -382,6 +383,7 @@ export type ServerConfig = {
   lexicon: LexiconResolverConfig
   neuro: NeuroConfig | null
   quicklogin: QuickLoginConfig | null
+  allowTestUserCreation: boolean
 }
 
 export type ServiceConfig = {

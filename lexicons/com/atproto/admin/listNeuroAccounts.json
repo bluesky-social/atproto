@@ -55,9 +55,17 @@
         "email": {
           "type": "string"
         },
-        "neuroJid": {
+        "legalId": {
           "type": "string",
-          "description": "Neuro Legal ID (W ID)"
+          "description": "Neuro Legal ID (W ID) for real users"
+        },
+        "jid": {
+          "type": "string",
+          "description": "Neuro JID for test users"
+        },
+        "isTestUser": {
+          "type": "boolean",
+          "description": "Whether this is a test user account"
         },
         "linkedAt": {
           "type": "string",

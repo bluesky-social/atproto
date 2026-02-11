@@ -310,8 +310,8 @@ export class OAuthStore
         // Look up account by Legal ID in neuro_identity_link table
         const accountLink = await this.db.db
           .selectFrom('neuro_identity_link')
-          .select(['did', 'neuroJid'])
-          .where('neuroJid', '=', legalId)
+          .select(['did', 'legalId'])
+          .where('legalId', '=', legalId)
           .executeTakeFirst()
 
         if (!accountLink) {

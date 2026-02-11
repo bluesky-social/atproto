@@ -203,6 +203,9 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
     // Step 6: Handle email (use Neuro's email or fallback to noreply)
     const email = emailFromNeuro || 'noreply@wsocial.eu'
 
+    // Step 6a: Detect test users
+    const isTestUser = !emailFromNeuro // Test users don't have EMAIL tag from Neuro
+
     req.log.info(
       {
         legalId,
@@ -212,6 +215,7 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
         phone,
         jidRef,
         country: payload.Tags?.COUNTRY,
+        isTestUser, // Log test user flag
         nonce,
         eventId,
         timestamp,
@@ -221,6 +225,18 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
       },
       'Received LegalIdUpdated (Approved) - provisioning account',
     )
+
+    // Step 6b: Check if test user creation is allowed
+    if (isTestUser && !ctx.cfg.allowTestUserCreation) {
+      req.log.warn(
+        { legalId, userName, jid: jidRef },
+        'Test user provisioning rejected - PDS_ALLOW_TEST_USER_CREATION=false',
+      )
+      return res.status(403).json({
+        error: 'TestUserCreationDisabled',
+        message: 'Test user creation is disabled on this server',
+      })
+    }
 
     // Step 7: Check for nonce reuse (replay protection)
     const nonceExists = await ctx.accountManager.db.db
@@ -237,17 +253,31 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
       })
     }
 
-    // Step 8: Check if Legal ID already linked (before any provisioning)
-    const existingLink = await ctx.accountManager.db.db
-      .selectFrom('neuro_identity_link')
-      .select(['did', 'neuroJid'])
-      .where('neuroJid', '=', legalId)
-      .executeTakeFirst()
+    // Step 8: Check if identity already linked (check both Legal ID and JID)
+    let existingLink:
+      | { did: string; legalId: string | null; jid: string | null }
+      | undefined
+
+    if (isTestUser && jidRef) {
+      // For test users, check JID
+      existingLink = await ctx.accountManager.db.db
+        .selectFrom('neuro_identity_link')
+        .select(['did', 'legalId', 'jid'])
+        .where('jid', '=', jidRef)
+        .executeTakeFirst()
+    } else {
+      // For real users, check Legal ID
+      existingLink = await ctx.accountManager.db.db
+        .selectFrom('neuro_identity_link')
+        .select(['did', 'legalId', 'jid'])
+        .where('legalId', '=', legalId)
+        .executeTakeFirst()
+    }
 
     if (existingLink) {
       req.log.info(
-        { legalId, did: existingLink.did },
-        'Account already provisioned for this Legal ID',
+        { legalId, jid: jidRef, did: existingLink.did, isTestUser },
+        'Account already provisioned for this identity',
       )
 
       // Idempotent: return existing account info
@@ -361,8 +391,30 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
           repoRev: commit.rev,
         })
 
-        // Step 12: Link Neuro identity
-        await ctx.neuroAuthManager!.linkIdentity(legalId, did, email, userName)
+        // Step 12: Link Neuro identity (test users use JID, real users use Legal ID)
+        await ctx.accountManager.db.db
+          .insertInto('neuro_identity_link')
+          .values({
+            did,
+            legalId: isTestUser ? null : legalId, // NULL for test users
+            jid: isTestUser ? jidRef : null, // JID for test users, NULL for real users
+            email: email || null,
+            userName: userName || null,
+            isTestUser: isTestUser ? 1 : 0, // 1 for test users, 0 for real users
+            linkedAt: new Date().toISOString(),
+            lastLoginAt: null,
+          })
+          .execute()
+
+        req.log.info(
+          {
+            did,
+            legalId: isTestUser ? null : legalId,
+            jid: isTestUser ? jidRef : null,
+            isTestUser,
+          },
+          'Neuro identity link created',
+        )
 
         // Step 13: Sequence events
         await ctx.sequencer.sequenceIdentityEvt(did, handle)
@@ -407,6 +459,17 @@ export const createProvisionAccountRoute = (ctx: AppContext): Router => {
           legalId,
         })
       } catch (err) {
+        // Log full error for debugging
+        req.log.error(
+          {
+            error: err,
+            errorType: err instanceof Error ? err.constructor.name : typeof err,
+            errorMessage: err instanceof Error ? err.message : String(err),
+            errorStack: err instanceof Error ? err.stack : undefined,
+          },
+          'Account creation failed',
+        )
+
         // Check error type
         const errorMsg = err instanceof Error ? err.message.toLowerCase() : ''
         const errorType =

@@ -73,12 +73,21 @@ export default function (server: Server, ctx: AppContext) {
 
       req.log.info({ jid }, 'Processing QuickLogin for JID')
 
-      // Check if this Neuro identity is already linked
-      const existingLink = await ctx.accountManager.db.db
+      // Check if this Neuro identity is already linked (check Legal ID first for real users, then JID for test users)
+      let existingLink = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
         .selectAll()
-        .where('neuroJid', '=', jid)
+        .where('legalId', '=', jid)
         .executeTakeFirst()
+
+      // Fallback: check JID column for test users
+      if (!existingLink) {
+        existingLink = await ctx.accountManager.db.db
+          .selectFrom('neuro_identity_link')
+          .selectAll()
+          .where('jid', '=', jid)
+          .executeTakeFirst()
+      }
 
       let did: string
       let accessJwt: string
@@ -99,7 +108,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.db.db
           .updateTable('neuro_identity_link')
           .set({ lastLoginAt: new Date().toISOString() })
-          .where('neuroJid', '=', jid)
+          .where((eb) =>
+            eb.where('legalId', '=', jid).orWhere('jid', '=', jid)
+          )
           .execute()
 
         // Create session
@@ -222,7 +233,9 @@ export default function (server: Server, ctx: AppContext) {
           await ctx.accountManager.db.db
             .insertInto('neuro_identity_link')
             .values({
-              neuroJid: jid,
+              legalId: jid, // Real users (QuickLogin provides Legal ID as jid)
+              jid: null,    // Not a test user
+              isTestUser: 0,
               did,
               email: email || null,
               userName: userName || null,

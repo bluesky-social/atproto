@@ -1,5 +1,5 @@
-import { randomBytes } from 'crypto'
-import EventEmitter from 'events'
+import { randomBytes } from 'node:crypto'
+import EventEmitter from 'node:events'
 import { Redis } from 'ioredis'
 import { AccountDb } from '../db'
 
@@ -475,7 +475,7 @@ export class NeuroAuthManager {
   }
 
   /**
-   * Find account by Neuro JID
+   * Find account by Neuro JID (searches both Legal ID and JID columns)
    */
   async findAccountByNeuroJid(jid: string): Promise<{ did: string } | null> {
     if (!this.db) {
@@ -483,11 +483,21 @@ export class NeuroAuthManager {
       throw new Error('Server configuration error. Please contact support.')
     }
 
-    const result = await this.db.db
+    // First try Legal ID (real users)
+    let result = await this.db.db
       .selectFrom('neuro_identity_link')
       .select('did')
-      .where('neuroJid', '=', jid)
+      .where('legalId', '=', jid)
       .executeTakeFirst()
+
+    // Fallback to JID column (test users)
+    if (!result) {
+      result = await this.db.db
+        .selectFrom('neuro_identity_link')
+        .select('did')
+        .where('jid', '=', jid)
+        .executeTakeFirst()
+    }
 
     return result || null
   }
@@ -521,10 +531,12 @@ export class NeuroAuthManager {
     await this.db.db
       .insertInto('neuro_identity_link')
       .values({
-        neuroJid: jid,
+        legalId: jid, // For real users (Legal ID) - test users will set this to null
+        jid: null, // For test users only
         did,
         email: email || null,
         userName: userName || null,
+        isTestUser: 0, // 0 = real user, 1 = test user
         linkedAt: new Date().toISOString(),
         lastLoginAt: null,
       })
@@ -539,10 +551,11 @@ export class NeuroAuthManager {
       throw new Error('Database not configured')
     }
 
+    // Update for either legal ID or JID
     await this.db.db
       .updateTable('neuro_identity_link')
       .set({ lastLoginAt: new Date().toISOString() })
-      .where('neuroJid', '=', jid)
+      .where((eb) => eb.where('legalId', '=', jid).orWhere('jid', '=', jid))
       .execute()
   }
 

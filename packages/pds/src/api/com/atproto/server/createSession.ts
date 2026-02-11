@@ -62,8 +62,8 @@ export default function (server: Server, ctx: AppContext) {
 
           const accountLink = await ctx.accountManager.db.db
             .selectFrom('neuro_identity_link')
-            .select(['did', 'neuroJid'])
-            .where('neuroJid', '=', legalId)
+            .select(['did', 'legalId'])
+            .where('legalId', '=', legalId)
             .executeTakeFirst()
 
           if (accountLink) {
@@ -123,11 +123,11 @@ export default function (server: Server, ctx: AppContext) {
           // Get linked Legal ID for this account
           const accountLink = await ctx.accountManager.db.db
             .selectFrom('neuro_identity_link')
-            .select(['neuroJid'])
+            .select(['legalId'])
             .where('did', '=', account.did)
             .executeTakeFirst()
 
-          if (!accountLink) {
+          if (!accountLink?.legalId) {
             throw new AuthRequiredError(
               'This account does not have a linked Neuro Legal ID. ' +
                 'Use your app password instead, or set up Neuro authentication.',
@@ -135,10 +135,10 @@ export default function (server: Server, ctx: AppContext) {
           }
 
           req.log.info(
-            { did: account.did, legalId: accountLink.neuroJid },
+            { did: account.did, legalId: accountLink.legalId },
             'Found linked Legal ID for account',
           )
-          legalId = accountLink.neuroJid
+          legalId = accountLink.legalId
           userForRemoteLogin = account
         }
 

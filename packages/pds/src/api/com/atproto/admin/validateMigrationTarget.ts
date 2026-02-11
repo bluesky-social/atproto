@@ -6,16 +6,16 @@ export default function (server: Server, ctx: AppContext) {
   server.com.atproto.admin.validateMigrationTarget({
     auth: ctx.authVerifier.adminToken,
     handler: async ({ params, req }) => {
-      const { did, neuroJid, targetHandle } = params
+      const { did, legalId, targetHandle } = params
 
       req.log.info(
-        { did, neuroJid, targetHandle },
+        { did, legalId, targetHandle },
         'Validating migration target',
       )
 
       const checks = {
         didAvailable: false,
-        neuroJidAvailable: false,
+        legalIdAvailable: false,
         handleAvailable: false,
       }
 
@@ -38,22 +38,22 @@ export default function (server: Server, ctx: AppContext) {
         }
 
         // Check 2: W ID (Neuro Legal ID) should not be linked to a different account
-        if (neuroJid) {
+        if (legalId) {
           const existingLink = await ctx.accountManager.db.db
             .selectFrom('neuro_identity_link')
-            .select(['did', 'neuroJid'])
-            .where('neuroJid', '=', neuroJid)
+            .select(['did', 'legalId'])
+            .where('legalId', '=', legalId)
             .executeTakeFirst()
 
-          checks.neuroJidAvailable = !existingLink || existingLink.did === did
+          checks.legalIdAvailable = !existingLink || existingLink.did === did
 
           if (existingLink && existingLink.did !== did) {
             canAccept = false
-            error = `W ID ${neuroJid} is already linked to a different account on target PDS`
+            error = `W ID ${legalId} is already linked to a different account on target PDS`
           }
         } else {
           // No Neuro JID to check - mark as available
-          checks.neuroJidAvailable = true
+          checks.legalIdAvailable = true
         }
 
         // Check 3: Handle should be available (if changing handle)

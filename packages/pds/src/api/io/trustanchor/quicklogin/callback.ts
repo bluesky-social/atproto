@@ -73,12 +73,21 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
 
       req.log.info({ jid }, 'Processing QuickLogin for JID')
 
-      // Check if this Neuro identity is already linked
-      const existingLink = await ctx.accountManager.db.db
+      // Check if this Neuro identity is already linked (try Legal ID first, then JID)
+      let existingLink = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
         .selectAll()
-        .where('neuroJid', '=', jid)
+        .where('legalId', '=', jid)
         .executeTakeFirst()
+
+      // Fallback to JID column (for test users)
+      if (!existingLink) {
+        existingLink = await ctx.accountManager.db.db
+          .selectFrom('neuro_identity_link')
+          .selectAll()
+          .where('jid', '=', jid)
+          .executeTakeFirst()
+      }
 
       let did: string
       let accessJwt: string
@@ -99,7 +108,7 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
         await ctx.accountManager.db.db
           .updateTable('neuro_identity_link')
           .set({ lastLoginAt: new Date().toISOString() })
-          .where('neuroJid', '=', jid)
+          .where((eb) => eb.where('legalId', '=', jid).orWhere('jid', '=', jid))
           .execute()
 
         // Create session
@@ -228,14 +237,16 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
           did = existingAccount.did
           handle = await getHandleForDid(ctx, did)
 
-          // Create the neuro_identity_link
+          // Create the neuro_identity_link (QuickLogin is for real users, not test users)
           await ctx.accountManager.db.db
             .insertInto('neuro_identity_link')
             .values({
-              neuroJid: jid,
+              legalId: jid, // Real users use Legal ID
+              jid: null, // NULL for real users
               did,
               email: email || null,
               userName: userName || null,
+              isTestUser: 0,
               linkedAt: new Date().toISOString(),
               lastLoginAt: new Date().toISOString(),
             })

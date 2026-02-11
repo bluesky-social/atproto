@@ -74,9 +74,9 @@
     },
     "neuroLinkData": {
       "type": "object",
-      "required": ["neuroJid"],
+      "required": ["legalId"],
       "properties": {
-        "neuroJid": {
+        "legalId": {
           "type": "string",
           "description": "Neuro Legal ID (W ID) in format: uuid@legal.domain"
         },
