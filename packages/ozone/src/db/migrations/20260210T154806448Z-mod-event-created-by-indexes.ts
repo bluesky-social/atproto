@@ -10,7 +10,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createIndex('moderation_event_created_by_idx')
     .on('moderation_event')
-    .columns(['createdBy', 'createdAt'])
+    .columns(['createdBy', 'createdAt', 'id'])
     .execute()
 }
 
