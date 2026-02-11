@@ -17,7 +17,7 @@ describe('verification views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let labelerDid: string
-  let sc: SeedClient
+  let sc: SeedClient<TestNetwork>
 
   // account dids, for convenience
   let alice: string
@@ -39,24 +39,11 @@ describe('verification views', () => {
     })
     agent = network.bsky.getClient()
     sc = network.getSeedClient()
+
     await verificationsSeed(sc)
-
-    labelerDid = network.bsky.ctx.cfg.modServiceDid
-    await createLabel({
-      src: labelerDid,
-      uri: sc.dids.impersonator,
-      cid: '',
-      val: 'impersonation',
-    })
-    await createLabel({
-      src: labelerDid,
-      uri: sc.dids.verifier3,
-      cid: '',
-      val: 'impersonation',
-    })
-
     await network.processAll()
 
+    labelerDid = network.bsky.ctx.cfg.modServiceDid
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -284,26 +271,5 @@ describe('verification views', () => {
       },
     )
     return res.data
-  }
-
-  const createLabel = async (opts: {
-    src?: string
-    uri: string
-    cid: string
-    val: string
-    exp?: string
-  }) => {
-    await network.bsky.db.db
-      .insertInto('label')
-      .values({
-        uri: opts.uri,
-        cid: opts.cid,
-        val: opts.val,
-        cts: new Date().toISOString(),
-        exp: opts.exp ?? null,
-        neg: false,
-        src: opts.src ?? labelerDid,
-      })
-      .execute()
   }
 })

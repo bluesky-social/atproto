@@ -3,6 +3,8 @@ import { TestNetwork } from '../network'
 import { SeedClient } from './client'
 
 export default async (sc: SeedClient<TestNetwork>) => {
+  const labelerDid = sc.network.bsky.ctx.cfg.modServiceDid
+
   await sc.createAccount('alice', users.alice)
   await sc.createAccount('bob', users.bob)
   await sc.createAccount('carol', users.carol)
@@ -123,7 +125,21 @@ export default async (sc: SeedClient<TestNetwork>) => {
   // Process all events to sync actors to appview before modifying the DB
   await sc.network.processAll()
 
-  // Set handle to invalid directly in the database
+  // Do DB updates to change actors as needed for each case.
+  await createLabel(sc, labelerDid, {
+    src: labelerDid,
+    uri: sc.dids.impersonator,
+    cid: '',
+    val: 'impersonation',
+  })
+
+  await createLabel(sc, labelerDid, {
+    src: labelerDid,
+    uri: sc.dids.verifier3,
+    cid: '',
+    val: 'impersonation',
+  })
+
   await sc.network.bsky.db.db
     .updateTable('actor')
     .set({ handle: INVALID_HANDLE })
@@ -199,4 +215,29 @@ const users = {
     handle: 'handleinvalid.test',
     password: 'handleinvalid-pass',
   },
+}
+
+const createLabel = async (
+  sc: SeedClient<TestNetwork>,
+  labelerDid: string,
+  opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  },
+) => {
+  await sc.network.bsky.db.db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      exp: opts.exp ?? null,
+      neg: false,
+      src: opts.src ?? labelerDid,
+    })
+    .execute()
 }
