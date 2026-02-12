@@ -252,7 +252,12 @@ export class Server {
       messageSchema
         ? async function* (ctx) {
             for await (const item of handler(ctx)) {
-              yield messageSchema.validate(item)
+              if (item instanceof Frame) {
+                messageSchema.validate(item.body)
+                yield item
+              } else {
+                yield messageSchema.validate(item)
+              }
             }
           }
         : handler,
@@ -282,14 +287,14 @@ export class Server {
 
   streamMethod<A extends Auth = Auth>(
     nsid: string,
-    configOrFn: StreamConfigOrHandler<A, Params, Frame | LexValue>,
+    configOrFn: StreamConfigOrHandler<A, Params>,
   ) {
     this.addStreamMethod(nsid, configOrFn)
   }
 
   addStreamMethod<A extends Auth = Auth>(
     nsid: string,
-    configOrFn: StreamConfigOrHandler<A, Params, Frame | LexValue>,
+    configOrFn: StreamConfigOrHandler<A, Params>,
   ) {
     const config =
       typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
@@ -517,7 +522,7 @@ export class Server {
   protected async addSubscription<A extends Auth = Auth>(
     nsid: string,
     def: LexXrpcSubscription,
-    cfg: StreamConfig<A, Params, Frame | LexValue>,
+    cfg: StreamConfig<A, Params>,
   ) {
     this.addSubscriptionInternal(
       nsid,
@@ -529,15 +534,11 @@ export class Server {
     )
   }
 
-  protected addSubscriptionInternal<
-    A extends Auth,
-    P extends Params,
-    O extends LexValue,
-  >(
+  protected addSubscriptionInternal<A extends Auth, P extends Params>(
     nsid: string,
     paramsVerifier: ParamsVerifierInternal<P>,
     authVerifier: AuthVerifierInternal<StreamAuthContext<P>, A> | null,
-    handler: (ctx: StreamContext<A, P>) => AsyncIterable<O | Frame<O>>,
+    handler: (ctx: StreamContext<A, P>) => AsyncIterable<unknown>,
   ) {
     this.subscriptions.set(
       nsid,
@@ -557,7 +558,7 @@ export class Server {
             for await (const item of handler({ req, params, auth, signal })) {
               yield item instanceof Frame
                 ? item
-                : MessageFrame.fromLexValue(item, nsid)
+                : MessageFrame.fromLexValue(item as LexValue, nsid)
             }
           } catch (err) {
             yield ErrorFrame.fromError(err)

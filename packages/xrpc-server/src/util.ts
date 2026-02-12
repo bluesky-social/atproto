@@ -9,14 +9,15 @@ import {
 } from 'express'
 import { contentType } from 'mime-types'
 import { MaxSizeChecker, createDecoders } from '@atproto/common'
+import { jsonToLex } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
 import {
-  LexXrpcBody,
-  LexXrpcProcedure,
-  LexXrpcQuery,
-  LexXrpcSubscription,
+  type LexXrpcBody,
+  type LexXrpcProcedure,
+  type LexXrpcQuery,
+  type LexXrpcSubscription,
   Lexicons,
-  jsonToLex,
+  jsonToLex as jsonToLexWithBlobRef,
 } from '@atproto/lexicon'
 import { ResponseType } from '@atproto/xrpc'
 import {
@@ -172,8 +173,9 @@ export function createSchemaParamsVerifier<
   const schema = l.getMain(ns)
   return (req) => {
     try {
-      const queryParams = getQueryParams(req)
-      return schema.parameters.parse(queryParams) as LexMethodParams<M>
+      return schema.parameters.fromURLSearchParams(
+        getSearchParams(req.url) ?? new URLSearchParams(),
+      ) as LexMethodParams<M>
     } catch (err) {
       throw new InvalidRequestError(String(err))
     }
@@ -231,7 +233,7 @@ export function createLexiconInputVerifier<I extends Input = Input>(
 
     if (input.schema) {
       try {
-        const lexBody = req.body ? jsonToLex(req.body) : req.body
+        const lexBody = req.body ? jsonToLexWithBlobRef(req.body) : req.body
         req.body = lexicons.assertValidXrpcInput(nsid, lexBody)
       } catch (cause) {
         throw new InvalidRequestError(
@@ -295,10 +297,8 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
 
     if (input.schema) {
       try {
-        req.body = input.schema.parse({
-          encoding: reqEncoding,
-          body: req.body ? jsonToLex(req.body) : req.body,
-        })
+        const lexBody = req.body ? jsonToLex(req.body) : req.body
+        req.body = input.schema.parse(lexBody)
       } catch (cause) {
         throw new InvalidRequestError(
           cause instanceof Error ? cause.message : String(cause),
