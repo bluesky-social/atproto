@@ -2,7 +2,7 @@ import {
   GrowthBookClient,
   type UserContext as GrowthBookUserContext,
 } from '@growthbook/growthbook'
-import { featureGatesLogger } from './logger'
+import { featureGatesLogger } from '../logger'
 
 /**
  * We want this to be sufficiently high that we don't time out under

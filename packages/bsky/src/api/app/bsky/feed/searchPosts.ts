@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { FeatureGateID } from '../../../../analytics/feature-gates'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -7,7 +8,6 @@ import {
   PostSearchQuery,
   parsePostSearchQuery,
 } from '../../../../data-plane/server/util'
-import { FeatureGateID } from '../../../../feature-gates'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { Server } from '../../../../lexicon'

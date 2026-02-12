@@ -1,8 +1,8 @@
 import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { InternalServerError } from '@atproto/xrpc-server'
+import { FeatureGates } from '../../../../analytics/feature-gates'
 import { AppContext } from '../../../../context'
-import { FeatureGates } from '../../../../feature-gates'
 import {
   HydrateCtx,
   Hydrator,

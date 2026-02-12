@@ -1,8 +1,11 @@
 import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
+import {
+  type CheckedFeatureGatesMap,
+  FeatureGateID,
+} from '../analytics/feature-gates'
 import { DataPlaneClient } from '../data-plane/client'
-import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
