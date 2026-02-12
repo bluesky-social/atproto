@@ -32,6 +32,7 @@ describe('verification views', () => {
   let verifier2: string
   let verifier3: string
   let handleinvalid: string
+  let handleempty: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -56,6 +57,7 @@ describe('verification views', () => {
     verifier2 = sc.dids.verifier2
     verifier3 = sc.dids.verifier3
     handleinvalid = sc.dids.handleinvalid
+    handleempty = sc.dids.handleempty
 
     await network.bsky.db.db
       .updateTable('actor')
@@ -234,6 +236,12 @@ describe('verification views', () => {
         description:
           'returns undefined for user with invalid handle even if they have verifications',
         getDid: () => handleinvalid,
+        getExpected: () => undefined,
+      },
+      {
+        description:
+          'returns undefined for user with empty handle even if they have verifications',
+        getDid: () => handleempty,
         getExpected: () => undefined,
       },
     ]

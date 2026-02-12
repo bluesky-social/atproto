@@ -26,6 +26,7 @@ export default async (sc: SeedClient<TestNetwork>) => {
   await sc.createAccount('verifier3', users.verifier3)
 
   await sc.createAccount('handleinvalid', users.handleinvalid)
+  await sc.createAccount('handleempty', users.handleempty)
 
   for (const name in sc.dids) {
     await sc.createProfile(sc.dids[name], `display-${name}`, `descript-${name}`)
@@ -145,6 +146,11 @@ export default async (sc: SeedClient<TestNetwork>) => {
     .set({ handle: INVALID_HANDLE })
     .where('did', '=', sc.dids.handleinvalid)
     .execute()
+  await sc.network.bsky.db.db
+    .updateTable('actor')
+    .set({ handle: null })
+    .where('did', '=', sc.dids.handleempty)
+    .execute()
 
   return sc
 }
@@ -214,6 +220,11 @@ const users = {
     email: 'handleinvalid@test.com',
     handle: 'handleinvalid.test',
     password: 'handleinvalid-pass',
+  },
+  handleempty: {
+    email: 'handleempty@test.com',
+    handle: 'handleempty.test',
+    password: 'handleempty-pass',
   },
 }
 
