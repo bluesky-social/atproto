@@ -141,6 +141,8 @@ const handlers = {
 
 for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
   describe(buildServer, () => {
+    // @NOTE we need to clone because "new Lexicons" will mutate the lexicon
+    // definitions
     const lex = new Lexicons(structuredClone(LEXICONS))
 
     let server: xrpcServer.Server
