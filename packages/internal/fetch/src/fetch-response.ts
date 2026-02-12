@@ -166,6 +166,18 @@ export function cancelBodyOnError<T>(
   }
 }
 
+export function fetchNoRedirectProcessor(): ResponseTransformer {
+  return cancelBodyOnError(async (response) => {
+    if (
+      response.type === 'opaqueredirect' ||
+      (response.status >= 300 && response.status < 400)
+    ) {
+      throw await FetchResponseError.from(response, 'redirect not allowed')
+    }
+    return response
+  })
+}
+
 export function fetchOkProcessor(
   customMessage?: string | ResponseMessageGetter,
 ): ResponseTransformer {
