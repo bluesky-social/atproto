@@ -121,7 +121,7 @@ export default function (server: Server, ctx: AppContext) {
       let preparedWrites: PreparedWrite[]
       try {
         preparedWrites = await Promise.all(
-          writes.map(async (write) => {
+          writes.map(async (write, i) => {
             if (com.atproto.repo.applyWrites.create.$isTypeOf(write)) {
               return prepareCreate({
                 did,
@@ -129,6 +129,7 @@ export default function (server: Server, ctx: AppContext) {
                 record: write.value,
                 rkey: write.rkey,
                 validate,
+                validationPath: ['writes', i, 'record'],
               })
             } else if (com.atproto.repo.applyWrites.update.$isTypeOf(write)) {
               return prepareUpdate({
@@ -137,6 +138,7 @@ export default function (server: Server, ctx: AppContext) {
                 record: write.value,
                 rkey: write.rkey,
                 validate,
+                validationPath: ['writes', i, 'record'],
               })
             } else if (com.atproto.repo.applyWrites.delete.$isTypeOf(write)) {
               return prepareDelete({

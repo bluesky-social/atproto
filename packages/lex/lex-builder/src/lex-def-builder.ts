@@ -684,11 +684,11 @@ export class LexDefBuilder {
   }
 
   private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {
-    return this.pure(`l.unknownObject()`)
+    return this.pure(`l.lexMap()`)
   }
 
   private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
-    return `l.UnknownObject`
+    return `l.LexMap`
   }
 
   private withDefault(schema: string, defaultValue: unknown) {

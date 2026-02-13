@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { integer } from './integer.js'
+import { lexMap } from './lex-map.js'
 import { object } from './object.js'
 import { payload } from './payload.js'
 import { string } from './string.js'
-import { unknownObject } from './unknown-object.js'
 
 describe('Payload', () => {
   describe('basic construction', () => {
@@ -224,7 +224,7 @@ describe('Payload', () => {
         'application/json',
         object({
           success: string(),
-          data: unknownObject(),
+          data: lexMap(),
         }),
       )
       expect(def.encoding).toBe('application/json')

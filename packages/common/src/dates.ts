@@ -1,4 +1,4 @@
-import { isValidISODateString } from 'iso-datestring-validator'
+import { isValidDatetime } from '@atproto/syntax'
 
 // Normalize date strings to simplified ISO so that the lexical sort preserves temporal sort.
 // Rather than failing on an invalid date format, returns valid unix epoch.
@@ -8,7 +8,7 @@ export function toSimplifiedISOSafe(dateStr: string) {
     return new Date(0).toISOString()
   }
   const iso = date.toISOString()
-  if (!isValidISODateString(iso)) {
+  if (!isValidDatetime(iso)) {
     // Occurs in rare cases, e.g. where resulting UTC year is negative. These also don't preserve lexical sort.
     return new Date(0).toISOString()
   }

@@ -111,7 +111,6 @@ export default function (server: Server, ctx: AppContext) {
             }
             throw err
           }
-
           // no-op
           if (current && current.cid === write.cid.toString()) {
             return {

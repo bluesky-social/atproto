@@ -62,7 +62,10 @@ const knownSchemas = new Map<string, RecordSchema>(
 const validateRecord = (
   record: TypedLexMap,
   rkey: RecordKeyString,
-  opts: { validate?: boolean },
+  opts: {
+    validate?: boolean
+    validationPath?: (string | number)[]
+  },
 ): undefined | ValidationStatus => {
   // If validation is explicitly disabled, skip it
   if (opts.validate === false) {
@@ -88,7 +91,9 @@ const validateRecord = (
     )
   }
 
-  const recordResult = schema.safeValidate(record)
+  const recordResult = schema.safeValidate(record, {
+    path: opts.validationPath ?? ['record'],
+  })
   if (!recordResult.success) {
     throw new InvalidRecordError(
       `Invalid ${record.$type} record: ${recordResult.reason.message}`,
@@ -106,6 +111,7 @@ export const prepareCreate = async (opts: {
   swapCid?: Cid | null
   record: LexMap
   validate?: boolean
+  validationPath?: (string | number)[]
 }): Promise<PreparedCreate> => {
   const { cid, uri, record, blobs, validationStatus } = await prepareWrite(opts)
 
@@ -127,6 +133,7 @@ export const prepareUpdate = async (opts: {
   swapCid?: Cid | null
   record: LexMap
   validate?: boolean
+  validationPath?: (string | number)[]
 }): Promise<PreparedUpdate> => {
   const { cid, uri, record, blobs, validationStatus } = await prepareWrite(opts)
 
@@ -147,6 +154,7 @@ async function prepareWrite(opts: {
   rkey?: RecordKeyString
   record: LexMap
   validate?: boolean
+  validationPath?: (string | number)[]
 }): Promise<{
   record: TypedLexMap
   blobs: BlobRef[]

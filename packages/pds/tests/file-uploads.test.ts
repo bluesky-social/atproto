@@ -115,11 +115,11 @@ describe('file uploads', () => {
       alice,
       smallBlob.ref.toString(),
     )
-    expect(headers['content-type']).toEqual('image/jpeg')
-    expect(headers['content-security-policy']).toEqual(
+    expect(headers.get('content-type')).toEqual('image/jpeg')
+    expect(headers.get('content-security-policy')).toEqual(
       `default-src 'none'; sandbox`,
     )
-    expect(headers['x-content-type-options']).toEqual('nosniff')
+    expect(headers.get('x-content-type-options')).toEqual('nosniff')
     expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
   })
 

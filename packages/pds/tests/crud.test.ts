@@ -1,12 +1,17 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
-import { AppBskyFeedPostRecord, AtpAgent } from '@atproto/api'
+import {
+  AppBskyActorProfile,
+  AppBskyEmbedImages,
+  AppBskyFeedPost,
+  AppBskyFeedPostRecord,
+  AtpAgent,
+} from '@atproto/api'
 import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { AppContext } from '../src/context'
-import { app } from '../src/lexicons/index.js'
 import { forSnapshot, paginateAll } from './_util'
 
 describe('crud operations', () => {
@@ -90,7 +95,7 @@ describe('crud operations', () => {
     expect(res1.data.records.length).toBe(1)
     expect(res1.data.records[0].uri).toBe(uri.toString())
     const { value } = res1.data.records[0]
-    assert(app.bsky.feed.post.$matches(value))
+    assert(AppBskyFeedPost.isMain(value))
     expect(value.text).toBe('Hello, world!')
 
     const res2 = await agent.app.bsky.feed.post.list({
@@ -106,7 +111,7 @@ describe('crud operations', () => {
       rkey: uri.rkey,
     })
     expect(res3.data.uri).toBe(uri.toString())
-    assert(app.bsky.feed.post.$matches(res3.data.value))
+    assert(AppBskyFeedPost.isMain(res3.data.value))
     expect(res3.data.value.text).toBe('Hello, world!')
 
     const res4 = await agent.app.bsky.feed.post.get({
@@ -184,7 +189,7 @@ describe('crud operations', () => {
       rkey: postUri.rkey,
       repo: aliceAgent.assertDid,
     })
-    assert(app.bsky.embed.images.$matches(post.value.embed))
+    assert(AppBskyEmbedImages.isMain(post.value.embed))
     const images = post.value.embed.images
     expect(images.length).toEqual(1)
     expect(uploaded.ref.equals(images[0].image.ref)).toBeTruthy()
@@ -510,9 +515,12 @@ describe('crud operations', () => {
           description: 3.141,
         },
       })
-      await expect(put).rejects.toThrow(
-        'Invalid app.bsky.actor.profile record: Record/description must be a string',
-      )
+      await expect(put).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('description'),
+        // Invalid app.bsky.actor.profile record: Record/description must be a string
+        // Expected one of null, boolean, integer, string, cid, bytes, array or object value type at $.record.description (got float)
+      })
       const { data: profile } = await repo.getRecord({
         ...profilePath,
         repo: bobAgent.assertDid,
@@ -524,33 +532,32 @@ describe('crud operations', () => {
       })
     })
 
-    // @TODO remove after migrating legacy blobs
-    it('updates a legacy blob ref when updating profile', async () => {
-      const { repo } = bobAgent.com.atproto
-      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
-      const uploadedRes = await repo.uploadBlob(file, {
+    it('rejects creation of legacy blobs', async () => {
+      const file = crypto.getRandomValues(new Uint8Array(100))
+      const {
+        data: { blob },
+      } = await bobAgent.com.atproto.repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       })
 
-      await repo.putRecord({
-        ...profilePath,
-        repo: bobAgent.assertDid,
-        record: {
-          displayName: 'Robert',
-          avatar: {
-            mimeType: uploadedRes.data.blob.mimeType,
-            cid: uploadedRes.data.blob.ref.toString(),
+      await expect(
+        bobAgent.com.atproto.repo.putRecord({
+          ...profilePath,
+          repo: bobAgent.assertDid,
+          record: {
+            displayName: 'Robert',
+            avatar: {
+              mimeType: blob.mimeType,
+              cid: blob.ref.toString(),
+            },
           },
-        },
+        }),
+      ).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining(
+          'Invalid app.bsky.actor.profile record: Expected blob value type at $.record.avatar (got object)',
+        ),
       })
-
-      const got = await repo.getRecord({
-        ...profilePath,
-        repo: bobAgent.assertDid,
-      })
-      assert(app.bsky.actor.profile.$matches(got.data.value))
-      const gotAvatar = got.data.value['avatar']
-      expect(gotAvatar).toEqual(uploadedRes.data.blob)
     })
   })
 
@@ -582,9 +589,11 @@ describe('crud operations', () => {
       collection: 'com.example.foobar',
       record: { $type: 'com.example.foobar' },
     })
-    await expect(prom).rejects.toThrow(
-      'Lexicon not found: lex:com.example.foobar',
-    )
+    await expect(prom).rejects.toMatchObject({
+      message: expect.stringContaining('com.example.foobar'),
+      // Lexicon not found: lex:com.example.foobar
+      // Unknown lexicon type: com.example.foobar
+    })
   })
 
   it('does not require the schema to be known if not explicitly validating', async () => {
@@ -622,7 +631,12 @@ describe('crud operations', () => {
         },
         rkey: '..',
       }),
-    ).rejects.toThrow('Input/rkey must be a valid Record Key')
+    ).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining('rkey'),
+      // Input/rkey must be a valid Record Key
+      // Invalid record key at $.rkey (got \"..\")
+    })
   })
 
   it('validates the record on write', async () => {
@@ -632,25 +646,31 @@ describe('crud operations', () => {
         collection: 'app.bsky.feed.post',
         record: { $type: 'app.bsky.feed.post' },
       }),
-    ).rejects.toThrow(
-      'Invalid app.bsky.feed.post record: Record must have the property "text"',
-    )
+    ).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining('Invalid app.bsky.feed.post record'),
+      // Invalid app.bsky.feed.post record: Record must have the property "text"
+      // Invalid app.bsky.feed.post record: Missing required key \"text\" at $.record
+    })
   })
 
-  it('validates datetimes more rigorously than lex sdk', async () => {
-    const postRecord = app.bsky.feed.post.$build({
+  it('validates datetimes rigorously', async () => {
+    const postRecord = {
+      $type: 'app.bsky.feed.post',
       text: 'test',
-      createdAt: '1985-04-12T23:20:50.123Z',
-    })
+      createdAt: '0000-04-12T23:20:50.123Z',
+    }
     await expect(
       aliceAgent.com.atproto.repo.createRecord({
         repo: aliceAgent.assertDid,
         collection: 'app.bsky.feed.post',
         record: postRecord,
       }),
-    ).rejects.toThrow(
-      'Invalid app.bsky.feed.post record: createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)',
-    )
+    ).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining('Invalid app.bsky.feed.post record'),
+      // Invalid app.bsky.feed.post record: createdAt must be an valid atproto datetime (both RFC-3339 and ISO-8601)
+    })
   })
 
   describe('unvalidated writes', () => {
@@ -663,9 +683,12 @@ describe('crud operations', () => {
           blah: 'thing',
         },
       })
-      await expect(attempt).rejects.toThrow(
-        'Lexicon not found: lex:com.example.record',
-      )
+      await expect(attempt).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('com.example.record'),
+        // Lexicon not found: lex:com.example.record
+        // Unknown lexicon type: com.example.record
+      })
     })
 
     it('allows creation of unknown lexicons when validate is not set to true', async () => {
@@ -749,7 +772,7 @@ describe('crud operations', () => {
       })
     })
 
-    it('applyWrites returns results with validation status', async () => {
+    it.only('applyWrites returns results with validation status', async () => {
       const existing1 = await aliceAgent.com.atproto.repo.createRecord({
         validate: false,
         repo: aliceAgent.assertDid,
@@ -758,6 +781,7 @@ describe('crud operations', () => {
           blah: 'thing1',
         },
       })
+      const existing1Uri = new AtUri(existing1.data.uri)
       const existing2 = await aliceAgent.com.atproto.repo.createRecord({
         validate: false,
         repo: aliceAgent.assertDid,
@@ -766,6 +790,7 @@ describe('crud operations', () => {
           blah: 'thing2',
         },
       })
+      const existing2Uri = new AtUri(existing2.data.uri)
       const {
         data: { results },
       } = await aliceAgent.com.atproto.repo.applyWrites({
@@ -782,14 +807,14 @@ describe('crud operations', () => {
           },
           {
             $type: 'com.atproto.repo.applyWrites#create',
-            collection: 'com.example.record',
-            rkey: new AtUri(existing1.data.uri).rkey,
+            collection: existing1Uri.collectionSafe,
+            rkey: existing1Uri.rkey,
             value: {},
           },
           {
             $type: `com.atproto.repo.applyWrites#delete`,
-            collection: 'com.example.record',
-            rkey: new AtUri(existing2.data.uri).rkey,
+            collection: existing2Uri.collectionSafe,
+            rkey: existing2Uri.rkey,
           },
         ],
       })

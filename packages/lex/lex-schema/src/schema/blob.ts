@@ -69,7 +69,7 @@ export class BlobSchema<
           : null
 
     if (!blob) {
-      return ctx.issueInvalidType(input, 'blob')
+      return ctx.issueUnexpectedType(input, 'blob')
     }
 
     const accept = this.options?.accept
