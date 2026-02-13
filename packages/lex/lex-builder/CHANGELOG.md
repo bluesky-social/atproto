@@ -1,5 +1,11 @@
 # @atproto/lex-builder
 
+## 0.0.15
+
+### Patch Changes
+
+- [#4610](https://github.com/bluesky-social/atproto/pull/4610) [`619068f`](https://github.com/bluesky-social/atproto/commit/619068fb81203b3b43b632892bdcb0a5067f7fe4) Thanks [@gaearon](https://github.com/gaearon)! - Export `LexDefBuilder` class and add `moduleSpecifier` option to `RefResolverOptions` for custom external import resolution
+
 ## 0.0.14
 
 ### Patch Changes
