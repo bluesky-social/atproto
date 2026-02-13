@@ -17,8 +17,8 @@ export function prefAllowed(
 
 export function isFullAccessOnlyPref(
   type: string,
-): type is typeof app.bsky.actor.defs.declaredAgePref.$type {
-  return type === app.bsky.actor.defs.declaredAgePref.$type
+): type is typeof app.bsky.actor.defs.personalDetailsPref.$type {
+  return type === app.bsky.actor.defs.personalDetailsPref.$type
 }
 
 export function isReadOnlyPref(

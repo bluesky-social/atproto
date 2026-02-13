@@ -260,7 +260,7 @@ export class IssueTooSmall extends Issue {
 
 function stringifyExpectedType(expected: string): string {
   if (expected === '$typed') {
-    return 'an object or record which includes a "$type" property'
+    return 'an object which includes the "$type" property'
   }
   return expected
 }

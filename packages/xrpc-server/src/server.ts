@@ -490,6 +490,8 @@ export class Server {
           }
         }
       } catch (err: unknown) {
+        console.error(`[${LOGGER_NAME}] Error in handler for:`, err)
+
         // LexError provides a method to be converted into a downstream response
         if (!res.headersSent && err instanceof LexError) {
           const response = err.toResponse()
