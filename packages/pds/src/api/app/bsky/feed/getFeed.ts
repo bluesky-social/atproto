@@ -1,5 +1,5 @@
 import { InvalidRequestError } from '@atproto/oauth-provider'
-import { AtUri, NsidString } from '@atproto/syntax'
+import { AtUri } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app, com } from '../../../../lexicons/index.js'
@@ -25,8 +25,8 @@ export default function (server: Server, ctx: AppContext) {
 
       const data = await bskyAppView.client.call(com.atproto.repo.getRecord, {
         repo: feedUrl.host,
-        collection: feedUrl.collection as NsidString,
-        rkey: feedUrl.rkey,
+        collection: feedUrl.collectionSafe,
+        rkey: feedUrl.rkeySafe,
       })
 
       const feedDid = data.value['did']

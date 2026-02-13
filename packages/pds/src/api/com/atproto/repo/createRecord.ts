@@ -97,8 +97,8 @@ export default function (server: Server, ctx: AppContext) {
         const backlinkDeletions = backlinkConflicts.map((uri) =>
           prepareDelete({
             did: uri.hostname,
-            collection: uri.collection,
-            rkey: uri.rkey,
+            collection: uri.collectionSafe,
+            rkey: uri.rkeySafe,
           }),
         )
         const writes = [...backlinkDeletions, write]

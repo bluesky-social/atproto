@@ -522,5 +522,42 @@ describe('AtUri validation', () => {
     })
   })
 
+  it('properly checks that the did property is a valid did', () => {
+    const urip = new AtUri('at://did:example:123')
+    expect(urip.did).toBe('did:example:123')
+    urip.host = 'did:example:456'
+    expect(urip.did).toBe('did:example:456')
+    urip.host = 'foo.com'
+    expect(() => urip.did).toThrow()
+  })
+
+  it('properly checks that the collection is a valid nsid', () => {
+    const urip = new AtUri('at://foo.com')
+    expect(urip.collection).toBe('')
+    urip.collection = 'com.example.foo'
+    expect(urip.collection).toBe('com.example.foo')
+    expect(urip.collectionSafe).toBe('com.example.foo')
+    urip.collectionSafe = 'com.other.foo'
+    expect(urip.collection).toBe('com.other.foo')
+    expect(urip.collectionSafe).toBe('com.other.foo')
+    expect(() => (urip.collection = 'not a valid nsid')).toThrow()
+    // @ts-expect-error validation is disabled when using the "Safe" setter, so
+    // this is expected to cause a compile-time error, but not a runtime error
+    urip.collectionSafe = 'not a valid nsid'
+  })
+
+  it('properly checks that the rkey is a valid record key', () => {
+    const urip = new AtUri('at://foo.com')
+    expect(urip.rkey).toBe('')
+    urip.rkey = 'valid_rkey-123'
+    expect(urip.rkey).toBe('valid_rkey-123')
+    expect(urip.rkeySafe).toBe('valid_rkey-123')
+    urip.rkeySafe = 'other_valid_rkey-456'
+    expect(urip.rkey).toBe('other_valid_rkey-456')
+    expect(urip.rkeySafe).toBe('other_valid_rkey-456')
+    expect(() => (urip.rkey = 'not a valid rkey')).toThrow()
+    urip.rkeySafe = 'not a valid rkey' // Checking is disabled
+  })
+
   // NOTE: this package is currently more permissive than spec about AT URIs, so invalid cases are not errors
 })

@@ -128,7 +128,10 @@ describe('appeal account takedown', () => {
           },
         },
       ),
-    ).rejects.toThrow('Report not accepted from takendown account')
+    ).rejects.toMatchObject({
+      error: 'AccountTakedown',
+      message: 'Report not accepted from takendown account',
+    })
   })
   it('takendown actor is not allowed to create records.', async () => {
     const { data: auth } = await agent.com.atproto.server.createSession({

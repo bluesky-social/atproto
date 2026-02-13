@@ -205,22 +205,22 @@ export const prepareDelete = (opts: {
 
 export const createWriteToOp = (write: PreparedCreate): RecordCreateOp => ({
   action: WriteOpAction.Create,
-  collection: write.uri.collection,
-  rkey: write.uri.rkey,
+  collection: write.uri.collectionSafe,
+  rkey: write.uri.rkeySafe,
   record: write.record,
 })
 
 export const updateWriteToOp = (write: PreparedUpdate): RecordUpdateOp => ({
   action: WriteOpAction.Update,
-  collection: write.uri.collection,
-  rkey: write.uri.rkey,
+  collection: write.uri.collectionSafe,
+  rkey: write.uri.rkeySafe,
   record: write.record,
 })
 
 export const deleteWriteToOp = (write: PreparedDelete): RecordDeleteOp => ({
   action: WriteOpAction.Delete,
-  collection: write.uri.collection,
-  rkey: write.uri.rkey,
+  collection: write.uri.collectionSafe,
+  rkey: write.uri.rkeySafe,
 })
 
 export const writeToOp = (write: PreparedWrite): RecordWriteOp => {
