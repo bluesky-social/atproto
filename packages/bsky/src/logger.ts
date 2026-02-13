@@ -13,8 +13,8 @@ export const labelerLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:labeler')
 export const hydrationLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:hydration')
-export const featureGatesLogger: ReturnType<typeof subsystemLogger> =
-  subsystemLogger('bsky:featuregates')
+export const analyticsLogger: ReturnType<typeof subsystemLogger> =
+  subsystemLogger('bsky:analytics')
 export const dataplaneLogger: ReturnType<typeof subsystemLogger> =
   subsystemLogger('bsky:dp')
 export const ageAssuranceLogger: ReturnType<typeof subsystemLogger> =

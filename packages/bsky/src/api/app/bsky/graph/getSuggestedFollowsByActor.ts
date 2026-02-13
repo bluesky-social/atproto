@@ -129,7 +129,6 @@ type Context = {
   hydrator: Hydrator
   views: Views
   suggestionsAgent: AtpAgent | undefined
-  featureGates: AppContext['featureGates']
 }
 
 type Params = QueryParams & {
