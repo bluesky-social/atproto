@@ -192,7 +192,7 @@ export type ValidationOptions = {
  * class MyValidator implements Validator {
  *   validateInContext(input: unknown, ctx: ValidationContext): ValidationResult {
  *     if (typeof input !== 'string') {
- *       return ctx.issueInvalidType(input, 'string')
+ *       return ctx.issueUnexpectedType(input, 'string')
  *     }
  *     return ctx.success(input)
  *   }
@@ -377,6 +377,15 @@ export class ValidationContext {
     K extends PropertyKey & keyof I,
     V extends Validator,
   >(input: I, key: K, validator: V): ValidationResult<InferInput<V>> {
+    // @NOTE we could add support for recursive schemas by keeping track of
+    // "parent" objects in the context and checking for circular references
+    // here. This would allow us to validate recursive structures without
+    // hitting maximum call stack errors, and would also allow us to provide
+    // better error messages for circular reference issues. However, this is not
+    // a priority at the moment as recursive structures are not supported in
+    // the context of AT Protocol lexicons, and we can always add this in the
+    // future if needed.
+
     // Instead of creating a new context, we just push/pop the path segment.
     this.currentPath.push(key)
     try {
@@ -447,11 +456,22 @@ export class ValidationContext {
    * Creates a failure for an invalid type.
    *
    * @param input - The actual value that was received
+   * @param expected - An array of expected type names
+   * @returns A failed validation result with an invalid type issue
+   */
+  issueInvalidType(input: unknown, expected: readonly string[]) {
+    return this.issue(new IssueInvalidType(this.path, input, expected))
+  }
+
+  /**
+   * Creates a failure for an invalid type.
+   *
+   * @param input - The actual value that was received
    * @param expected - The expected type name
    * @returns A failed validation result with an invalid type issue
    */
-  issueInvalidType(input: unknown, expected: string) {
-    return this.issue(new IssueInvalidType(this.path, input, [expected]))
+  issueUnexpectedType(input: unknown, expected: string) {
+    return this.issueInvalidType(input, [expected])
   }
 
   /**

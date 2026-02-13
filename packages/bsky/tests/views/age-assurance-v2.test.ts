@@ -4,7 +4,9 @@ import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application, json } from 'express'
 import {
+  AppBskyAgeassuranceBegin,
   AppBskyAgeassuranceDefs,
+  AppBskyAgeassuranceGetState,
   AtpAgent,
   ageAssuranceRuleIDs as ruleIds,
 } from '@atproto/api'
@@ -19,9 +21,6 @@ import {
   serializeKWSExternalPayloadV2,
 } from '../../src/api/age-assurance/kws/external-payload'
 import { KwsWebhookBody } from '../../src/api/kws/types'
-import { ids } from '../../src/lexicon/lexicons'
-import * as AppBskyAgeassuranceBegin from '../../src/lexicon/types/app/bsky/ageassurance/begin'
-import * as AppBskyAgeassuranceGetState from '../../src/lexicon/types/app/bsky/ageassurance/getState'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -122,7 +121,7 @@ describe('age assurance v2 views', () => {
     kws.setBskyBaseUrl(network.bsky.url)
 
     db = network.bsky.db
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await basicSeed(sc)
@@ -169,7 +168,7 @@ describe('age assurance v2 views', () => {
     const { data } = await agent.app.bsky.ageassurance.getState(params, {
       headers: await network.serviceHeaders(
         actor.did,
-        ids.AppBskyAgeassuranceGetState,
+        'app.bsky.ageassurance.getState',
       ),
     })
     return data
@@ -189,7 +188,7 @@ describe('age assurance v2 views', () => {
       {
         headers: await network.serviceHeaders(
           actor.did,
-          ids.AppBskyAgeassuranceBegin,
+          'app.bsky.ageassurance.begin',
         ),
       },
     )

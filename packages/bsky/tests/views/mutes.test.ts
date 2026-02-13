@@ -1,12 +1,10 @@
-import { AtpAgent } from '@atproto/api'
+import { AppBskyGraphGetMutes, AtpAgent } from '@atproto/api'
 import {
   SeedClient,
   TestNetwork,
   basicSeed,
   usersBulkSeed,
 } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetMutesOutputSchema } from '../../src/lexicon/types/app/bsky/graph/getMutes'
 import { forSnapshot, paginateAll } from '../_util'
 
 describe('mute views', () => {
@@ -24,7 +22,7 @@ describe('mute views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_mutes',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await usersBulkSeed(sc, 10)
@@ -49,7 +47,7 @@ describe('mute views', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyGraphMuteActor,
+            'app.bsky.graph.muteActor',
           ),
           encoding: 'application/json',
         },
@@ -67,7 +65,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -84,7 +82,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyFeedGetAuthorFeed,
+          'app.bsky.feed.getAuthorFeed',
         ),
       },
     )
@@ -99,7 +97,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyFeedGetTimeline,
+          'app.bsky.feed.getTimeline',
         ),
       },
     )
@@ -118,7 +116,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyFeedGetListFeed,
+          'app.bsky.feed.getListFeed',
         ),
       },
     )
@@ -133,7 +131,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -146,7 +144,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetProfiles,
+          'app.bsky.actor.getProfiles',
         ),
       },
     )
@@ -163,7 +161,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -188,7 +186,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyActorGetSuggestions,
+          'app.bsky.actor.getSuggestions',
         ),
       },
     )
@@ -205,14 +203,14 @@ describe('mute views', () => {
     const { data: view } = await agent.api.app.bsky.graph.getMutes(
       {},
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetMutes),
+        headers: await network.serviceHeaders(alice, 'app.bsky.graph.getMutes'),
       },
     )
     expect(forSnapshot(view.mutes)).toMatchSnapshot()
   })
 
   it('paginates.', async () => {
-    const results = (results: GetMutesOutputSchema[]) =>
+    const results = (results: AppBskyGraphGetMutes.OutputSchema[]) =>
       results.flatMap((res) => res.mutes)
     const paginator = async (cursor?: string) => {
       const { data: view } = await agent.api.app.bsky.graph.getMutes(
@@ -220,7 +218,7 @@ describe('mute views', () => {
         {
           headers: await network.serviceHeaders(
             alice,
-            ids.AppBskyGraphGetMutes,
+            'app.bsky.graph.getMutes',
           ),
         },
       )
@@ -235,7 +233,7 @@ describe('mute views', () => {
     const full = await agent.api.app.bsky.graph.getMutes(
       {},
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetMutes),
+        headers: await network.serviceHeaders(alice, 'app.bsky.graph.getMutes'),
       },
     )
 
@@ -247,7 +245,7 @@ describe('mute views', () => {
     const { data: initial } = await agent.api.app.bsky.graph.getMutes(
       {},
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetMutes),
+        headers: await network.serviceHeaders(alice, 'app.bsky.graph.getMutes'),
       },
     )
     expect(initial.mutes.length).toEqual(8)
@@ -258,7 +256,7 @@ describe('mute views', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyGraphUnmuteActor,
+          'app.bsky.graph.unmuteActor',
         ),
         encoding: 'application/json',
       },
@@ -267,7 +265,7 @@ describe('mute views', () => {
     const { data: final } = await agent.api.app.bsky.graph.getMutes(
       {},
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetMutes),
+        headers: await network.serviceHeaders(alice, 'app.bsky.graph.getMutes'),
       },
     )
     expect(final.mutes.length).toEqual(7)
@@ -276,7 +274,10 @@ describe('mute views', () => {
     await agent.api.app.bsky.graph.muteActor(
       { actor: sc.dids['elta48.test'] },
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
+        headers: await network.serviceHeaders(
+          alice,
+          'app.bsky.graph.muteActor',
+        ),
         encoding: 'application/json',
       },
     )
@@ -286,7 +287,10 @@ describe('mute views', () => {
     const promise = agent.api.app.bsky.graph.muteActor(
       { actor: alice },
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyGraphMuteActor),
+        headers: await network.serviceHeaders(
+          alice,
+          'app.bsky.graph.muteActor',
+        ),
         encoding: 'application/json',
       },
     )

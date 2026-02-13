@@ -31,9 +31,9 @@ export const forSnapshot = (obj: unknown) => {
   const unknown = { [kTake]: 'unknown' }
   const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
   return mapLeafValues(toWalk, (item) => {
-    const asCid = CID.asCID(item)
-    if (asCid !== null) {
-      return take(cids, asCid.toString())
+    const ifCid = CID.asCID(item)
+    if (ifCid !== null) {
+      return take(cids, ifCid.toString())
     }
     if (typeof item !== 'string') {
       return item

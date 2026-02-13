@@ -1,5 +1,5 @@
 import { Cid, isCid } from './cid.js'
-import { isPlainObject, isPlainProto } from './object.js'
+import { isPlainObject } from './object.js'
 
 /**
  * Primitive values in the Lexicon data model.
@@ -185,34 +185,16 @@ export function isLexValue(value: unknown): value is LexValue {
   do {
     const value = stack.pop()!
 
-    // Optimization: we are not using `isLexScalar` here to avoid extra function
-    // calls, and to avoid computing `typeof value` multiple times.
-    switch (typeof value) {
-      case 'object':
-        if (value === null) {
-          // LexScalar
-        } else if (isPlainProto(value)) {
-          if (visited.has(value)) return false
-          visited.add(value)
-          stack.push(...Object.values(value))
-        } else if (Array.isArray(value)) {
-          if (visited.has(value)) return false
-          visited.add(value)
-          stack.push(...value)
-        } else if (value instanceof Uint8Array || isCid(value)) {
-          // LexScalar
-        } else {
-          return false
-        }
-        break
-      case 'string':
-      case 'boolean':
-        break
-      case 'number':
-        if (Number.isInteger(value)) break
-      // fallthrough
-      default:
-        return false
+    if (isPlainObject(value)) {
+      if (visited.has(value)) return false
+      visited.add(value)
+      stack.push(...Object.values(value))
+    } else if (Array.isArray(value)) {
+      if (visited.has(value)) return false
+      visited.add(value)
+      stack.push(...value)
+    } else {
+      if (!isLexScalar(value)) return false
     }
   } while (stack.length > 0)
 

@@ -1,8 +1,9 @@
 import { mapDefined } from '@atproto/common'
+import { AtUriString, DidString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getBlocks'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -15,7 +16,7 @@ import { clearlyBadCursor, resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
   const getBlocks = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.graph.getBlocks({
+  server.add(app.bsky.graph.getBlocks, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth, req }) => {
       const viewer = auth.credentials.iss
@@ -34,16 +35,21 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
   if (clearlyBadCursor(params.cursor)) {
     return { blockedDids: [] }
   }
-  const { blockUris, cursor } = await ctx.hydrator.dataplane.getBlocks({
+  const { blockUris, cursor } = (await ctx.hydrator.dataplane.getBlocks({
     actorDid: params.hydrateCtx.viewer,
     cursor: params.cursor,
     limit: params.limit,
-  })
+  })) as {
+    blockUris: AtUriString[]
+    cursor?: string
+  }
   const blocks = await ctx.hydrator.graph.getBlocks(blockUris)
   const blockedDids = mapDefined(
     blockUris,
@@ -78,11 +84,11 @@ type Context = {
   views: Views
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.graph.getBlocks.Params & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 
 type SkeletonState = {
-  blockedDids: string[]
+  blockedDids: DidString[]
   cursor?: string
 }

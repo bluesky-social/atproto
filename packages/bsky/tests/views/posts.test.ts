@@ -1,8 +1,12 @@
-import { AppBskyFeedPost, AtpAgent, Un$Typed } from '@atproto/api'
+import {
+  AppBskyEmbedRecord,
+  AppBskyEmbedRecordWithMedia,
+  AppBskyEmbedVideo,
+  AppBskyFeedPost,
+  AtpAgent,
+  Un$Typed,
+} from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { RecordWithMedia } from '../../dist/views/types'
-import { ids } from '../../src/lexicon/lexicons'
-import { RecordEmbed, VideoEmbed } from '../../src/views/types'
 import { forSnapshot, stripViewerFromPost } from '../_util'
 
 describe('pds posts views', () => {
@@ -15,8 +19,8 @@ describe('pds posts views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_posts',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
 
@@ -63,7 +67,7 @@ describe('pds posts views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -88,7 +92,7 @@ describe('pds posts views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -112,7 +116,7 @@ describe('pds posts views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -136,7 +140,7 @@ describe('pds posts views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -160,7 +164,7 @@ describe('pds posts views', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPosts,
+          'app.bsky.feed.getPosts',
         ),
       },
     )
@@ -231,7 +235,7 @@ describe('pds posts views', () => {
           video: video.blob,
           alt: 'alt text',
           aspectRatio: { height: 3, width: 4 },
-        } satisfies VideoEmbed,
+        } satisfies AppBskyEmbedVideo.Main,
       },
       sc.getHeaders(sc.dids.alice),
     )
@@ -269,14 +273,14 @@ describe('pds posts views', () => {
               uri: embedRecord.uri,
               cid: embedRecord.cid,
             },
-          } satisfies RecordEmbed,
+          } satisfies AppBskyEmbedRecord.Main,
           media: {
             $type: 'app.bsky.embed.video',
             video: video.blob,
             alt: 'alt text',
             aspectRatio: { height: 3, width: 4 },
-          } satisfies VideoEmbed,
-        } satisfies RecordWithMedia,
+          } satisfies AppBskyEmbedVideo.Main,
+        } satisfies AppBskyEmbedRecordWithMedia.Main,
       },
       sc.getHeaders(sc.dids.alice),
     )

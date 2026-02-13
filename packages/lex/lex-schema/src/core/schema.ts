@@ -58,7 +58,7 @@ export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
  * class MySchema extends Schema<string> {
  *   validateInContext(input: unknown, ctx: ValidationContext): ValidationResult {
  *     if (typeof input !== 'string') {
- *       return ctx.issueInvalidType(input, 'string')
+ *       return ctx.issueUnexpectedType(input, 'string')
  *     }
  *     return ctx.success(input)
  *   }

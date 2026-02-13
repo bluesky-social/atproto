@@ -2,6 +2,7 @@ import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
 import { z } from 'zod'
+import { l } from '@atproto/lex-schema'
 import { ErrorResult, XRPCError } from './errors'
 import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
 
@@ -173,6 +174,19 @@ export type RouteOptions = {
   textLimit?: number
 }
 
+export type MethodAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+> = MethodAuthVerifier<Extract<A, AuthResult>, P>
+
+export type MethodRateLimit<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+> =
+  | RateLimitOpts<HandlerContext<A, P, I>>
+  | RateLimitOpts<HandlerContext<A, P, I>>[]
+
 export type MethodConfig<
   A extends Auth = Auth,
   P extends Params = Params,
@@ -180,11 +194,21 @@ export type MethodConfig<
   O extends Output = Output,
 > = {
   handler: MethodHandler<A, P, I, O>
-  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P>
+  auth?: MethodAuth<A, P>
   opts?: RouteOptions
-  rateLimit?:
-    | RateLimitOpts<HandlerContext<A, P, I>>
-    | RateLimitOpts<HandlerContext<A, P, I>>[]
+  rateLimit?: MethodRateLimit<A, P, I>
+}
+
+export type MethodConfigWithAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = {
+  handler: MethodHandler<A, P, I, O>
+  auth: MethodAuth<A, P>
+  opts?: RouteOptions
+  rateLimit?: MethodRateLimit<A, P, I>
 }
 
 export type MethodConfigOrHandler<
@@ -198,6 +222,43 @@ export type StreamAuthContext<P extends Params = Params> = {
   params: P
   req: IncomingMessage
 }
+
+export type LexMethodParams<M extends l.Procedure | l.Query | l.Subscription> =
+  l.InferMethodParams<M>
+
+export type LexMethodInput<M extends l.Procedure | l.Query> =
+  l.InferMethodInput<M, Readable>
+
+export type LexMethodOutput<M extends l.Procedure | l.Query> =
+  l.InferMethodOutput<M, Readable> extends undefined
+    ? l.InferMethodOutput<M, Readable> | void
+    : l.InferMethodOutput<M, Readable>
+
+export type LexMethodMessage<M extends l.Subscription> = l.InferMethodMessage<M>
+
+export type LexMethodHandler<
+  M extends l.Procedure | l.Query,
+  A extends Auth = Auth,
+> = MethodHandler<A, LexMethodParams<M>, LexMethodInput<M>, LexMethodOutput<M>>
+
+export type LexMethodConfig<
+  M extends l.Procedure | l.Query,
+  A extends Auth = Auth,
+> = MethodConfig<A, LexMethodParams<M>, LexMethodInput<M>, LexMethodOutput<M>>
+
+export type LexSubscriptionHandler<
+  M extends l.Subscription,
+  A extends Auth = Auth,
+> = StreamHandler<
+  Extract<A, AuthResult>,
+  LexMethodParams<M>,
+  LexMethodMessage<M>
+>
+
+export type LexSubscriptionConfig<
+  M extends l.Subscription,
+  A extends Auth = Auth,
+> = StreamConfig<A, LexMethodParams<M>, LexMethodMessage<M>>
 
 export type StreamAuthVerifier<
   A extends AuthResult = AuthResult,

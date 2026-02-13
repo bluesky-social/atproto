@@ -1,20 +1,12 @@
 import { setImmediate } from 'node:timers/promises'
-import * as cbor from '@ipld/dag-cbor'
-import { CID } from 'multiformats/cid'
-import * as ui8 from 'uint8arrays'
 import * as varint from 'varint'
-import {
-  check,
-  parseCidFromBytes,
-  schema,
-  streamToBuffer,
-  verifyCidForBytes,
-} from '@atproto/common'
+import * as cbor from '@atproto/lex-cbor'
+import { Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
 import { BlockMap } from './block-map'
-import { CarBlock } from './types'
+import { CarBlock, schema } from './types'
 
 export async function* writeCarStream(
-  root: CID | null,
+  root: Cid | null,
   blocks: AsyncIterable<CarBlock>,
 ): AsyncIterable<Uint8Array> {
   const header = new Uint8Array(
@@ -34,16 +26,19 @@ export async function* writeCarStream(
   }
 }
 
-export const blocksToCarFile = (
-  root: CID | null,
+export async function blocksToCarFile(
+  root: Cid | null,
   blocks: BlockMap,
-): Promise<Uint8Array> => {
-  const carStream = blocksToCarStream(root, blocks)
-  return streamToBuffer(carStream)
+): Promise<Uint8Array> {
+  const chunks: Uint8Array[] = []
+  for await (const chunk of blocksToCarStream(root, blocks)) {
+    chunks.push(chunk)
+  }
+  return Buffer.concat(chunks)
 }
 
 export const blocksToCarStream = (
-  root: CID | null,
+  root: Cid | null,
   blocks: BlockMap,
 ): AsyncIterable<Uint8Array> => {
   return writeCarStream(root, iterateBlocks(blocks))
@@ -65,7 +60,7 @@ export type ReadCarOptions = {
 export const readCar = async (
   bytes: Uint8Array,
   opts?: ReadCarOptions,
-): Promise<{ roots: CID[]; blocks: BlockMap }> => {
+): Promise<{ roots: Cid[]; blocks: BlockMap }> => {
   const { roots, blocks } = await readCarReader(new Ui8Reader(bytes), opts)
   const blockMap = new BlockMap()
   for await (const block of blocks) {
@@ -77,7 +72,7 @@ export const readCar = async (
 export const readCarWithRoot = async (
   bytes: Uint8Array,
   opts?: ReadCarOptions,
-): Promise<{ root: CID; blocks: BlockMap }> => {
+): Promise<{ root: Cid; blocks: BlockMap }> => {
   const { roots, blocks } = await readCar(bytes, opts)
   if (roots.length !== 1) {
     throw new Error(`Expected one root, got ${roots.length}`)
@@ -96,7 +91,7 @@ export const readCarStream = async (
   car: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
   opts?: ReadCarOptions,
 ): Promise<{
-  roots: CID[]
+  roots: Cid[]
   blocks: CarBlockIterable
 }> => {
   return readCarReader(new BufferedReader(car), opts)
@@ -106,7 +101,7 @@ export const readCarReader = async (
   reader: BytesReader,
   opts?: ReadCarOptions,
 ): Promise<{
-  roots: CID[]
+  roots: Cid[]
   blocks: CarBlockIterable
 }> => {
   try {
@@ -116,11 +111,12 @@ export const readCarReader = async (
     }
     const headerBytes = await reader.read(headerSize)
     const header = cbor.decode(headerBytes)
-    if (!check.is(header, schema.carHeader)) {
-      throw new Error('Could not parse CAR header')
+    const result = schema.carHeader.safeParse(header)
+    if (!result.success) {
+      throw new Error('Could not parse CAR header', { cause: result.error })
     }
     return {
-      roots: header.roots,
+      roots: result.data.roots,
       blocks: readCarBlocksIter(reader, opts),
     }
   } catch (err) {
@@ -163,7 +159,7 @@ async function* readCarBlocksIterGenerator(
         break
       }
       const blockBytes = await reader.read(blockSize)
-      const cid = parseCidFromBytes(blockBytes.subarray(0, 36))
+      const cid = decodeCid(blockBytes.subarray(0, 36))
       const bytes = blockBytes.subarray(36)
       yield { cid, bytes }
 
@@ -183,9 +179,17 @@ export async function* verifyIncomingCarBlocks(
   car: AsyncIterable<CarBlock>,
 ): AsyncGenerator<CarBlock, void, unknown> {
   for await (const block of car) {
-    await verifyCidForBytes(block.cid, block.bytes)
-    yield block
+    yield await verifyIncomingCarBlock(block)
   }
+}
+
+export async function verifyIncomingCarBlock<T extends CarBlock>(
+  block: T,
+): Promise<T> {
+  if (!(await isCidForBytes(block.cid, block.bytes))) {
+    throw new Error(`CID does not match block content: ${block.cid.toString()}`)
+  }
+  return block
 }
 
 const readVarint = async (reader: BytesReader): Promise<number | null> => {
@@ -205,7 +209,7 @@ const readVarint = async (reader: BytesReader): Promise<number | null> => {
       done = true
     }
   }
-  const concatted = ui8.concat(bytes)
+  const concatted = Buffer.concat(bytes)
   return varint.decode(concatted)
 }
 
@@ -262,7 +266,7 @@ class BufferedReader implements BytesReader {
         this.isDone = true
         return
       }
-      this.buffer = ui8.concat([this.buffer, next.value])
+      this.buffer = Buffer.concat([this.buffer, next.value])
     }
   }
 

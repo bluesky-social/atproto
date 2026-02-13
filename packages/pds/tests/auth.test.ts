@@ -11,7 +11,7 @@ describe('auth', () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'auth',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
   })
 
   afterAll(async () => {

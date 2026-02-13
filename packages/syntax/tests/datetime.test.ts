@@ -1,6 +1,5 @@
 import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import {
   InvalidDatetimeError,
   ensureValidDatetime,
@@ -9,67 +8,104 @@ import {
   normalizeDatetimeAlways,
 } from '../src'
 
-describe('datetime validation', () => {
-  const expectValid = (h: string) => {
-    ensureValidDatetime(h)
-    normalizeDatetime(h)
-    normalizeDatetimeAlways(h)
-  }
-  const expectInvalid = (h: string) => {
-    expect(() => ensureValidDatetime(h)).toThrow(InvalidDatetimeError)
-  }
+function readLines(filePath: string): string[] {
+  return fs
+    .readFileSync(filePath, 'utf-8')
+    .split(/\r?\n/)
+    .filter((line) => !line.startsWith('#') && line.length > 0)
+}
 
-  it('conforms to interop valid datetimes', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/datetime_syntax_valid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      if (!isValidDatetime(line)) {
-        console.log(line)
-      }
-      expectValid(line)
-    })
+const interopValid = readLines(
+  `${__dirname}/interop-files/datetime_syntax_valid.txt`,
+)
+const interopInvalidSyntax = readLines(
+  `${__dirname}/interop-files/datetime_syntax_invalid.txt`,
+)
+const interopInvalidParse = readLines(
+  `${__dirname}/interop-files/datetime_parse_invalid.txt`,
+)
+
+describe(ensureValidDatetime, () => {
+  describe('valid interop', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        expect(() => ensureValidDatetime(dt)).not.toThrow()
+      })
+    }
   })
 
-  it('conforms to interop invalid datetimes', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/datetime_syntax_invalid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectInvalid(line)
-    })
+  describe('fails on interop (invalid syntax)', () => {
+    for (const dt of interopInvalidSyntax) {
+      test(dt, () => {
+        expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
+      })
+    }
   })
 
-  it('conforms to interop invalid parse (semantics) datetimes', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/datetime_parse_invalid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectInvalid(line)
-    })
+  describe('fails on interop (invalid parse)', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
+      })
+    }
   })
 })
 
-describe('normalization', () => {
-  it('normalizes datetimes', () => {
+describe(isValidDatetime, () => {
+  describe('valid interop', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        expect(isValidDatetime(dt)).toBe(true)
+      })
+    }
+  })
+
+  describe('fails on interop (invalid syntax)', () => {
+    for (const dt of interopInvalidSyntax) {
+      test(dt, () => {
+        expect(isValidDatetime(dt)).toBe(false)
+      })
+    }
+  })
+
+  describe('fails on interop (invalid parse)', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(isValidDatetime(dt)).toBe(false)
+      })
+    }
+  })
+})
+
+describe(normalizeDatetime, () => {
+  describe('valid interop', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        expect(() => normalizeDatetime(dt)).not.toThrow()
+      })
+    }
+  })
+
+  // @NOTE Normalize will actually succeed on some of the invalid syntax cases,
+  // because it is more lenient than the regex validation.
+
+  // describe('fails on interop (invalid syntax)', () => {
+  //   for (const dt of invalidSyntax) {
+  //     test(dt, () => {
+  //       expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
+  //     })
+  //   }
+  // })
+
+  describe('fails on interop (invalid parse)', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
+      })
+    }
+  })
+
+  it('normalizes valid input', () => {
     expect(normalizeDatetime('1234-04-12T23:20:50Z')).toEqual(
       '1234-04-12T23:20:50.000Z',
     )
@@ -90,7 +126,7 @@ describe('normalization', () => {
     )
   })
 
-  it('throws on invalid normalized datetimes', () => {
+  it('throws on invalid input', () => {
     expect(() => normalizeDatetime('')).toThrow(InvalidDatetimeError)
     expect(() => normalizeDatetime('blah')).toThrow(InvalidDatetimeError)
     expect(() => normalizeDatetime('1999-19-39T23:20:50.123Z')).toThrow(
@@ -106,8 +142,10 @@ describe('normalization', () => {
       InvalidDatetimeError,
     )
   })
+})
 
-  it('normalizes datetimes always', () => {
+describe(normalizeDatetimeAlways, () => {
+  it('normalizes valid input', () => {
     expect(normalizeDatetimeAlways('1985-04-12T23:20:50Z')).toEqual(
       '1985-04-12T23:20:50.000Z',
     )

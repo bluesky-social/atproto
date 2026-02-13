@@ -1,7 +1,5 @@
-import { AtpAgent } from '@atproto/api'
+import { AppBskyFeedGetLikes, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, likesSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetLikesOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getLikes'
 import { constantDate, forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds like views', () => {
@@ -19,7 +17,7 @@ describe('pds like views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_likes',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await likesSeed(sc)
     await sc.createAccount('frankie', {
@@ -50,7 +48,9 @@ describe('pds like views', () => {
   it('fetches post likes', async () => {
     const alicePost = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getLikes'),
+      },
     )
 
     expect(forSnapshot(alicePost.data)).toMatchSnapshot()
@@ -62,7 +62,9 @@ describe('pds like views', () => {
   it('fetches reply likes', async () => {
     const bobReply = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.replies[bob][0].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getLikes'),
+      },
     )
 
     expect(forSnapshot(bobReply.data)).toMatchSnapshot()
@@ -72,7 +74,7 @@ describe('pds like views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: GetLikesOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetLikes.OutputSchema[]) =>
       results.flatMap((res) => res.likes)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getLikes(
@@ -82,7 +84,10 @@ describe('pds like views', () => {
           limit: 2,
         },
         {
-          headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes),
+          headers: await network.serviceHeaders(
+            alice,
+            'app.bsky.feed.getLikes',
+          ),
         },
       )
       return res.data
@@ -95,7 +100,9 @@ describe('pds like views', () => {
 
     const full = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getLikes'),
+      },
     )
 
     expect(full.data.likes.length).toEqual(4)
@@ -105,7 +112,9 @@ describe('pds like views', () => {
   it('fetches post likes unauthed', async () => {
     const { data: authed } = await agent.api.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getLikes'),
+      },
     )
     const { data: unauthed } = await agent.api.app.bsky.feed.getLikes({
       uri: sc.posts[alice][1].ref.uriStr,
@@ -127,7 +136,9 @@ describe('pds like views', () => {
 
     const beforeBlock = await agent.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getLikes'),
+      },
     )
 
     expect(beforeBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
@@ -143,7 +154,9 @@ describe('pds like views', () => {
 
     const afterBlock = await agent.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetLikes) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getLikes'),
+      },
     )
 
     expect(afterBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
@@ -160,7 +173,7 @@ describe('pds like views', () => {
 
     const beforeBlock = await agent.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+      { headers: await network.serviceHeaders(bob, 'app.bsky.feed.getLikes') },
     )
 
     expect(beforeBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([
@@ -177,7 +190,7 @@ describe('pds like views', () => {
 
     const afterBlock = await agent.app.bsky.feed.getLikes(
       { uri: sc.posts[alice][1].ref.uriStr },
-      { headers: await network.serviceHeaders(bob, ids.AppBskyFeedGetLikes) },
+      { headers: await network.serviceHeaders(bob, 'app.bsky.feed.getLikes') },
     )
 
     expect(afterBlock.data.likes.map((like) => like.actor.did)).toStrictEqual([

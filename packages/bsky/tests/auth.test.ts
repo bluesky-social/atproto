@@ -2,7 +2,6 @@ import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
 import { createServiceJwt } from '@atproto/xrpc-server'
-import { ids } from '../src/lexicon/lexicons'
 
 describe('auth', () => {
   let network: TestNetwork
@@ -17,7 +16,7 @@ describe('auth', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_auth',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -36,7 +35,7 @@ describe('auth', () => {
       const jwt = await createServiceJwt({
         iss: issuer,
         aud: network.bsky.ctx.cfg.serverDid,
-        lxm: ids.AppBskyActorGetProfile,
+        lxm: 'app.bsky.actor.getProfile',
         keypair,
       })
       return agent.api.app.bsky.actor.getProfile(
@@ -76,7 +75,7 @@ describe('auth', () => {
     const jwt = await createServiceJwt({
       iss: alice,
       aud: network.bsky.ctx.cfg.serverDid,
-      lxm: ids.AppBskyFeedGetTimeline,
+      lxm: 'app.bsky.feed.getTimeline',
       keypair: bobKeypair,
     })
 

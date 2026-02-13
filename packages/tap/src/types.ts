@@ -7,7 +7,7 @@ export const recordEventDataSchema = l.object({
   collection: l.string({ format: 'nsid' }),
   rkey: l.string({ format: 'record-key' }),
   action: l.enum(['create', 'update', 'delete']),
-  record: l.optional(l.unknownObject()),
+  record: l.optional(l.lexMap()),
   cid: l.optional(l.string({ format: 'cid' })),
   live: l.boolean(),
 })

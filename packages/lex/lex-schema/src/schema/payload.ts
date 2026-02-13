@@ -107,15 +107,13 @@ export class Payload<
    * encoding.
    */
   matchesEncoding(contentType: string | undefined): boolean {
-    const mime = contentType?.split(';', 1)[0].trim()
-
     const { encoding } = this
 
     // Handle undefined cases
     if (encoding === undefined) {
       // Expecting no body
-      return mime === undefined
-    } else if (mime === undefined) {
+      return contentType == null
+    } else if (contentType == null) {
       // Expecting a body, but got no content-type
       return false
     }
@@ -124,6 +122,7 @@ export class Payload<
       return true
     }
 
+    const mime = contentType?.split(';', 1)[0].trim()
     if (encoding.endsWith('/*')) {
       return mime.startsWith(encoding.slice(0, -1))
     }

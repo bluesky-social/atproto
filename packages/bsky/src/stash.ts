@@ -1,35 +1,19 @@
-import { LexValue, stringifyLex } from '@atproto/lexicon'
+import { LexMap, TypedObjectSchema, lexStringify } from '@atproto/lex'
 import { BsyncClient } from './bsync'
-import { lexicons } from './lexicon/lexicons'
-import { Event as AgeAssuranceEventV2 } from './lexicon/types/app/bsky/ageassurance/defs'
-import { Bookmark } from './lexicon/types/app/bsky/bookmark/defs'
-import { Notification } from './lexicon/types/app/bsky/contact/defs'
-import { DraftWithId } from './lexicon/types/app/bsky/draft/defs'
-import {
-  Preferences,
-  SubjectActivitySubscription,
-} from './lexicon/types/app/bsky/notification/defs'
-import { AgeAssuranceEvent } from './lexicon/types/app/bsky/unspecced/defs'
+import { app } from './lexicons/index.js'
 import { Method } from './proto/bsync_pb'
 
-type PickNSID<T extends { $type?: string }> = Exclude<T['$type'], undefined>
-
 export const Namespaces = {
-  AppBskyAgeassuranceDefsEvent:
-    'app.bsky.ageassurance.defs#event' satisfies PickNSID<AgeAssuranceEventV2>,
-  AppBskyBookmarkDefsBookmark:
-    'app.bsky.bookmark.defs#bookmark' satisfies PickNSID<Bookmark>,
-  AppBskyContactDefsNotification:
-    'app.bsky.contact.defs#notification' satisfies PickNSID<Notification>,
-  AppBskyDraftDefsDraftWithId:
-    'app.bsky.draft.defs#draftWithId' satisfies PickNSID<DraftWithId>,
-  AppBskyNotificationDefsPreferences:
-    'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
+  AppBskyAgeassuranceDefsEvent: app.bsky.ageassurance.defs.event,
+  AppBskyBookmarkDefsBookmark: app.bsky.bookmark.defs.bookmark,
+  AppBskyContactDefsNotification: app.bsky.contact.defs.notification,
+  AppBskyDraftDefsDraftWithId: app.bsky.draft.defs.draftWithId,
+  AppBskyNotificationDefsPreferences: app.bsky.notification.defs.preferences,
   AppBskyNotificationDefsSubjectActivitySubscription:
-    'app.bsky.notification.defs#subjectActivitySubscription' satisfies PickNSID<SubjectActivitySubscription>,
+    app.bsky.notification.defs.subjectActivitySubscription,
   AppBskyUnspeccedDefsAgeAssuranceEvent:
-    'app.bsky.unspecced.defs#ageAssuranceEvent' satisfies PickNSID<AgeAssuranceEvent>,
-}
+    app.bsky.unspecced.defs.ageAssuranceEvent,
+} satisfies Record<string, TypedObjectSchema>
 
 export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]
 
@@ -43,12 +27,12 @@ export class StashClient {
   constructor(private readonly bsyncClient: BsyncClient) {}
 
   create(input: CreateInput) {
-    this.validateLexicon(input.namespace, input.payload)
+    input.namespace.assert(input.payload)
     return this.putOperation(Method.CREATE, input)
   }
 
   update(input: UpdateInput) {
-    this.validateLexicon(input.namespace, input.payload)
+    input.namespace.assert(input.payload)
     return this.putOperation(Method.UPDATE, input)
   }
 
@@ -56,44 +40,33 @@ export class StashClient {
     return this.putOperation(Method.DELETE, { ...input, payload: undefined })
   }
 
-  private validateLexicon(namespace: Namespace, payload: LexValue) {
-    const result = lexicons.validate(namespace, payload)
-    if (!result.success) {
-      throw result.error
-    }
-  }
-
-  private async putOperation(method: Method, input: PutOperationInput) {
+  private async putOperation(
+    method: Method,
+    input: {
+      actorDid: string
+      namespace: TypedObjectSchema
+      key: string
+      payload: LexMap | undefined
+    },
+  ) {
     const { actorDid, namespace, key, payload } = input
     await this.bsyncClient.putOperation({
       actorDid,
-      namespace,
+      namespace: namespace.$type,
       key,
       method,
       payload: payload
-        ? Buffer.from(
-            stringifyLex({
-              $type: namespace,
-              ...payload,
-            }),
-          )
+        ? Buffer.from(lexStringify({ ...payload, $type: namespace.$type }))
         : undefined,
     })
   }
-}
-
-type PutOperationInput = {
-  actorDid: string
-  namespace: Namespace
-  key: string
-  payload: LexValue | undefined
 }
 
 type CreateInput = {
   actorDid: string
   namespace: Namespace
   key: string
-  payload: LexValue
+  payload: LexMap
 }
 
 type UpdateInput = CreateInput

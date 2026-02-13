@@ -1,11 +1,9 @@
-import { AtpAgent } from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetListsOutputSchema } from '../../src/lexicon/types/app/bsky/graph/getLists'
 import {
-  ListWithMembership,
-  OutputSchema as GetListsWithMembershipOutputSchema,
-} from '../../src/lexicon/types/app/bsky/graph/getListsWithMembership'
+  AppBskyGraphGetLists,
+  AppBskyGraphGetListsWithMembership,
+  AtpAgent,
+} from '@atproto/api'
+import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
 
 describe('bsky actor likes feed views', () => {
@@ -30,7 +28,7 @@ describe('bsky actor likes feed views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_lists',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await sc.createAccount('eve', {
@@ -151,7 +149,7 @@ describe('bsky actor likes feed views', () => {
   ])(
     'paginates for purposes filter: $purposes',
     async ({ expected, purposes }) => {
-      const results = (out: GetListsOutputSchema[]) =>
+      const results = (out: AppBskyGraphGetLists.OutputSchema[]) =>
         out.flatMap((res) => res.lists)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.graph.getLists(
@@ -159,7 +157,7 @@ describe('bsky actor likes feed views', () => {
           {
             headers: await network.serviceHeaders(
               eve,
-              ids.AppBskyGraphGetLists,
+              'app.bsky.graph.getLists',
             ),
           },
         )
@@ -174,7 +172,7 @@ describe('bsky actor likes feed views', () => {
       const full = await agent.app.bsky.graph.getLists(
         { actor: eve, purposes },
         {
-          headers: await network.serviceHeaders(eve, ids.AppBskyGraphGetLists),
+          headers: await network.serviceHeaders(eve, 'app.bsky.graph.getLists'),
         },
       )
       expect(full.data.lists.length).toBe(expected)
@@ -195,7 +193,10 @@ describe('bsky actor likes feed views', () => {
         list: curateList,
       },
       {
-        headers: await network.serviceHeaders(frankie, ids.AppBskyGraphGetList),
+        headers: await network.serviceHeaders(
+          frankie,
+          'app.bsky.graph.getList',
+        ),
       },
     )
     expect(curView.data.items.length).toBe(2)
@@ -204,7 +205,10 @@ describe('bsky actor likes feed views', () => {
     const refView = await agent.app.bsky.graph.getList(
       { list: referenceList },
       {
-        headers: await network.serviceHeaders(frankie, ids.AppBskyGraphGetList),
+        headers: await network.serviceHeaders(
+          frankie,
+          'app.bsky.graph.getList',
+        ),
       },
     )
     expect(refView.data.items.length).toBe(2)
@@ -216,14 +220,18 @@ describe('bsky actor likes feed views', () => {
       {
         list: curateList,
       },
-      { headers: await network.serviceHeaders(greta, ids.AppBskyGraphGetList) },
+      {
+        headers: await network.serviceHeaders(greta, 'app.bsky.graph.getList'),
+      },
     )
     expect(curView.data.items.length).toBe(2)
     expect(forSnapshot(curView.data.items)).toMatchSnapshot()
 
     const refView = await agent.app.bsky.graph.getList(
       { list: referenceList },
-      { headers: await network.serviceHeaders(greta, ids.AppBskyGraphGetList) },
+      {
+        headers: await network.serviceHeaders(greta, 'app.bsky.graph.getList'),
+      },
     )
     expect(refView.data.items.length).toBe(2)
     expect(forSnapshot(refView.data.items)).toMatchSnapshot()
@@ -246,14 +254,14 @@ describe('bsky actor likes feed views', () => {
   it('does include users with creator block relationship in reference lists for creator', async () => {
     const curView = await agent.app.bsky.graph.getList(
       { list: curateList },
-      { headers: await network.serviceHeaders(eve, ids.AppBskyGraphGetList) },
+      { headers: await network.serviceHeaders(eve, 'app.bsky.graph.getList') },
     )
     expect(curView.data.items.length).toBe(3)
     expect(forSnapshot(curView.data.items)).toMatchSnapshot()
 
     const refView = await agent.app.bsky.graph.getList(
       { list: referenceList },
-      { headers: await network.serviceHeaders(eve, ids.AppBskyGraphGetList) },
+      { headers: await network.serviceHeaders(eve, 'app.bsky.graph.getList') },
     )
     expect(refView.data.items.length).toBe(3)
     expect(forSnapshot(refView.data.items)).toMatchSnapshot()
@@ -262,7 +270,9 @@ describe('bsky actor likes feed views', () => {
   it('does return all users regardless of creator block relationship in moderation lists', async () => {
     const view = await agent.app.bsky.graph.getList(
       { list: blockList },
-      { headers: await network.serviceHeaders(alice, ids.AppBskyGraphGetList) },
+      {
+        headers: await network.serviceHeaders(alice, 'app.bsky.graph.getList'),
+      },
     )
     expect(view.data.items.length).toBe(2)
     expect(forSnapshot(view.data.items)).toMatchSnapshot()
@@ -270,7 +280,9 @@ describe('bsky actor likes feed views', () => {
 
   describe('list membership', () => {
     const uriSort = (a: string, b: string) => (a > b ? 1 : -1)
-    const membershipsUris = (lwms: ListWithMembership[]): string[] =>
+    const membershipsUris = (
+      lwms: AppBskyGraphGetListsWithMembership.ListWithMembership[],
+    ): string[] =>
       lwms
         .map((lwm) => lwm.listItem?.uri)
         .filter((li): li is string => typeof li === 'string')
@@ -282,7 +294,7 @@ describe('bsky actor likes feed views', () => {
         {
           headers: await network.serviceHeaders(
             eve,
-            ids.AppBskyGraphGetListsWithMembership,
+            'app.bsky.graph.getListsWithMembership',
           ),
         },
       )
@@ -295,7 +307,7 @@ describe('bsky actor likes feed views', () => {
         {
           headers: await network.serviceHeaders(
             eve,
-            ids.AppBskyGraphGetListsWithMembership,
+            'app.bsky.graph.getListsWithMembership',
           ),
         },
       )
@@ -312,7 +324,7 @@ describe('bsky actor likes feed views', () => {
         {
           headers: await network.serviceHeaders(
             eve,
-            ids.AppBskyGraphGetListsWithMembership,
+            'app.bsky.graph.getListsWithMembership',
           ),
         },
       )
@@ -331,7 +343,7 @@ describe('bsky actor likes feed views', () => {
         {
           headers: await network.serviceHeaders(
             eve,
-            ids.AppBskyGraphGetListsWithMembership,
+            'app.bsky.graph.getListsWithMembership',
           ),
         },
       )
@@ -348,7 +360,7 @@ describe('bsky actor likes feed views', () => {
         {
           headers: await network.serviceHeaders(
             eve,
-            ids.AppBskyGraphGetListsWithMembership,
+            'app.bsky.graph.getListsWithMembership',
           ),
         },
       )
@@ -367,15 +379,16 @@ describe('bsky actor likes feed views', () => {
     ])(
       'paginates for purposes filter: $purposes',
       async ({ expected, purposes }) => {
-        const results = (out: GetListsWithMembershipOutputSchema[]) =>
-          out.flatMap((res) => res.listsWithMembership)
+        const results = (
+          out: AppBskyGraphGetListsWithMembership.OutputSchema[],
+        ) => out.flatMap((res) => res.listsWithMembership)
         const paginator = async (cursor?: string) => {
           const res = await agent.app.bsky.graph.getListsWithMembership(
             { actor: eve, purposes, limit: 2, cursor },
             {
               headers: await network.serviceHeaders(
                 eve,
-                ids.AppBskyGraphGetListsWithMembership,
+                'app.bsky.graph.getListsWithMembership',
               ),
             },
           )
@@ -392,7 +405,7 @@ describe('bsky actor likes feed views', () => {
           {
             headers: await network.serviceHeaders(
               eve,
-              ids.AppBskyGraphGetListsWithMembership,
+              'app.bsky.graph.getListsWithMembership',
             ),
           },
         )

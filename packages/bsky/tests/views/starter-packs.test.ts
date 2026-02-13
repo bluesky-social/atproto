@@ -1,15 +1,14 @@
 import assert from 'node:assert'
-import { AtpAgent, asPredicate } from '@atproto/api'
-import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { validateRecord as validateProfileRecord } from '../../src/lexicon/types/app/bsky/actor/profile'
 import {
-  OutputSchema as GetStarterPacksWithMembershipOutputSchema,
-  StarterPackWithMembership,
-} from '../../src/lexicon/types/app/bsky/graph/getStarterPacksWithMembership'
+  AppBskyActorProfile,
+  AppBskyGraphGetStarterPacksWithMembership,
+  AtpAgent,
+  asPredicate,
+} from '@atproto/api'
+import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { forSnapshot, paginateAll } from '../_util'
 
-const isValidProfile = asPredicate(validateProfileRecord)
+const isValidProfile = asPredicate(AppBskyActorProfile.validateRecord)
 
 describe('starter packs', () => {
   let network: TestNetwork
@@ -24,7 +23,7 @@ describe('starter packs', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_starter_packs',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -142,7 +141,7 @@ describe('starter packs', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -165,7 +164,7 @@ describe('starter packs', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.frankie,
-          ids.AppBskyGraphGetStarterPack,
+          'app.bsky.graph.getStarterPack',
         ),
       },
     )
@@ -181,7 +180,7 @@ describe('starter packs', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyGraphGetStarterPack,
+          'app.bsky.graph.getStarterPack',
         ),
       },
     )
@@ -203,7 +202,7 @@ describe('starter packs', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyGraphGetStarterPack,
+          'app.bsky.graph.getStarterPack',
         ),
       },
     )
@@ -254,7 +253,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.frankie,
-            ids.AppBskyGraphSearchStarterPacks,
+            'app.bsky.graph.searchStarterPacks',
           ),
         },
       )
@@ -266,7 +265,9 @@ describe('starter packs', () => {
   })
 
   describe('starter pack membership', () => {
-    const membershipsUris = (lwms: StarterPackWithMembership[]): string[] =>
+    const membershipsUris = (
+      lwms: AppBskyGraphGetStarterPacksWithMembership.StarterPackWithMembership[],
+    ): string[] =>
       lwms
         .map((spwm) => spwm.listItem?.uri)
         .filter((li): li is string => typeof li === 'string')
@@ -277,7 +278,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyGraphGetStarterPacksWithMembership,
+            'app.bsky.graph.getStarterPacksWithMembership',
           ),
         },
       )
@@ -290,7 +291,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyGraphGetStarterPacksWithMembership,
+            'app.bsky.graph.getStarterPacksWithMembership',
           ),
         },
       )
@@ -306,7 +307,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyGraphGetStarterPacksWithMembership,
+            'app.bsky.graph.getStarterPacksWithMembership',
           ),
         },
       )
@@ -323,7 +324,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyGraphGetStarterPacksWithMembership,
+            'app.bsky.graph.getStarterPacksWithMembership',
           ),
         },
       )
@@ -339,7 +340,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.carol,
-            ids.AppBskyGraphGetStarterPacksWithMembership,
+            'app.bsky.graph.getStarterPacksWithMembership',
           ),
         },
       )
@@ -351,15 +352,16 @@ describe('starter packs', () => {
       const viewer = sc.dids.alice
       const actor = sc.dids.bob
 
-      const results = (out: GetStarterPacksWithMembershipOutputSchema[]) =>
-        out.flatMap((res) => res.starterPacksWithMembership)
+      const results = (
+        out: AppBskyGraphGetStarterPacksWithMembership.OutputSchema[],
+      ) => out.flatMap((res) => res.starterPacksWithMembership)
       const paginator = async (cursor?: string) => {
         const res = await agent.app.bsky.graph.getStarterPacksWithMembership(
           { actor, limit: 2, cursor },
           {
             headers: await network.serviceHeaders(
               viewer,
-              ids.AppBskyGraphGetStarterPacksWithMembership,
+              'app.bsky.graph.getStarterPacksWithMembership',
             ),
           },
         )
@@ -376,7 +378,7 @@ describe('starter packs', () => {
         {
           headers: await network.serviceHeaders(
             viewer,
-            ids.AppBskyGraphGetStarterPacksWithMembership,
+            'app.bsky.graph.getStarterPacksWithMembership',
           ),
         },
       )

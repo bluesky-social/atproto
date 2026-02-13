@@ -1,10 +1,9 @@
-import AtpAgent from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { AtUriString, Client } from '@atproto/lex'
+import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getSuggestedFeeds'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -16,7 +15,7 @@ import { Views } from '../../../../views'
 
 export default function (server: Server, ctx: AppContext) {
   const getFeeds = createPipeline(skeleton, hydration, noRules, presentation)
-  server.app.bsky.unspecced.getSuggestedFeeds({
+  server.add(app.bsky.unspecced.getSuggestedFeeds, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -44,23 +43,24 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  input: SkeletonFnInput<Context, Params>,
+): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (ctx.topicsAgent) {
-    const res =
-      await ctx.topicsAgent.app.bsky.unspecced.getSuggestedFeedsSkeleton(
-        {
-          limit: params.limit,
-          viewer: params.hydrateCtx.viewer ?? undefined,
-        },
-        {
-          headers: params.headers,
-        },
-      )
-
-    return res.data
+  if (ctx.topicsClient) {
+    return ctx.topicsClient.call(
+      app.bsky.unspecced.getSuggestedFeedsSkeleton,
+      {
+        limit: params.limit,
+        viewer: params.hydrateCtx.viewer ?? undefined,
+      },
+      {
+        headers: params.headers,
+      },
+    )
   } else {
-    throw new InternalServerError('Topics agent not available')
+    // Use 501 instead of 500 as these are not considered retry-able by clients
+    throw new MethodNotImplementedError('Topics agent not available')
   }
 }
 
@@ -86,14 +86,14 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
 }
 
-type Params = QueryParams & {
-  hydrateCtx: HydrateCtx & { viewer: string | null }
+type Params = app.bsky.unspecced.getSuggestedFeeds.Params & {
+  hydrateCtx: HydrateCtx
   headers: Record<string, string>
 }
 
 type SkeletonState = {
-  feeds: string[]
+  feeds: AtUriString[]
 }
