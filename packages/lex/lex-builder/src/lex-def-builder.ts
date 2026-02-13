@@ -769,6 +769,7 @@ export class LexDefBuilder {
 
     const options = stringifyOptions(def, [
       'format',
+      'knownValues',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',

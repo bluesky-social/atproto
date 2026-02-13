@@ -3,6 +3,7 @@ import {
   InferStringFormat,
   Schema,
   StringFormat,
+  UnknownString,
   ValidationContext,
   isStringFormat,
 } from '../core.js'
@@ -20,6 +21,7 @@ import { TokenSchema } from './token.js'
  */
 export type StringSchemaOptions = {
   format?: StringFormat
+  knownValues?: readonly string[]
   minLength?: number
   maxLength?: number
   minGraphemes?: number
@@ -45,7 +47,9 @@ export class StringSchema<
 > extends Schema<
   TOptions extends { format: infer F extends StringFormat }
     ? InferStringFormat<F>
-    : string
+    : TOptions extends { knownValues: readonly (infer V extends string)[] }
+      ? V | UnknownString
+      : string
 > {
   constructor(readonly options?: TOptions) {
     super()
