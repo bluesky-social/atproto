@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import type { UnknownString } from '../core.js'
 import { string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
@@ -45,6 +46,39 @@ describe('StringSchema', () => {
     it('rejects plain objects', () => {
       const result = schema.safeParse({ value: 'hello' })
       expect(result.success).toBe(false)
+    })
+  })
+
+  describe('knownValues', () => {
+    const schema = string({
+      knownValues: ['xsmall', 'small', 'medium', 'large'],
+    })
+
+    it('accepts known values', () => {
+      expect(schema.safeParse('xsmall').success).toBe(true)
+      expect(schema.safeParse('medium').success).toBe(true)
+    })
+
+    it('accepts unknown string values', () => {
+      // knownValues are hints, not constraints
+      expect(schema.safeParse('custom').success).toBe(true)
+      expect(schema.safeParse('').success).toBe(true)
+    })
+
+    it('still rejects non-strings', () => {
+      expect(schema.safeParse(123).success).toBe(false)
+    })
+
+    it('infers a union type with UnknownString', () => {
+      type Parsed = ReturnType<typeof schema.parse>
+      expectTypeOf<'xsmall'>().toMatchTypeOf<Parsed>()
+      expectTypeOf<'small'>().toMatchTypeOf<Parsed>()
+      expectTypeOf<'medium'>().toMatchTypeOf<Parsed>()
+      expectTypeOf<'large'>().toMatchTypeOf<Parsed>()
+      // Arbitrary strings are assignable via UnknownString
+      expectTypeOf<UnknownString>().toMatchTypeOf<Parsed>()
+      // But number is not
+      expectTypeOf<number>().not.toMatchTypeOf<Parsed>()
     })
   })
 
