@@ -27,16 +27,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params, auth, req }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
         ctx.authVerifier.parseCreds(auth)
+
+      const featureGateEvaluator = ctx.featureGatesClient.scope(viewer, req)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
         includeTakedowns,
         include3pBlocks,
-        featureGates: ctx.featureGates.checkGates(
-          [ctx.featureGates.ids.ThreadsReplyRankingExplorationEnable],
-          ctx.featureGates.userContext({ did: viewer }),
-        ),
+        featureGatesMap: featureGateEvaluator.checkGates([
+          'threads:reply_ranking_exploration:enable',
+        ]),
       })
 
       return {

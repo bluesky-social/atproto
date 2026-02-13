@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
-import { FeatureGateID } from '../../../../analytics/feature-gates'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -35,14 +34,14 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
 
+      const featureGateEvaluator = ctx.featureGatesClient.scope(viewer, req)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGates: ctx.featureGates.checkGates(
-          [ctx.featureGates.ids.SearchFilteringExplorationEnable],
-          ctx.featureGates.userContext({ did: viewer }),
-        ),
+        featureGatesMap: featureGateEvaluator.checkGates([
+          'search:filtering_exploration:enable',
+        ]),
       })
       const results = await searchPosts(
         { ...params, hydrateCtx, isModService },
@@ -109,8 +108,8 @@ const hydration = async (
     params.hydrateCtx,
     undefined,
     {
-      processDynamicTagsForView: params.hydrateCtx.featureGates.get(
-        FeatureGateID.SearchFilteringExplorationEnable,
+      processDynamicTagsForView: params.hydrateCtx.featureGatesMap.get(
+        'search:filtering_exploration:enable',
       )
         ? 'search'
         : undefined,
@@ -139,8 +138,8 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     let tagged = false
     if (
-      params.hydrateCtx.featureGates.get(
-        FeatureGateID.SearchFilteringExplorationEnable,
+      params.hydrateCtx.featureGatesMap.get(
+        'search:filtering_exploration:enable',
       )
     ) {
       tagged = post.tags.has(ctx.cfg.visibilityTagHide)

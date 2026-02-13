@@ -1,10 +1,7 @@
 import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import {
-  type CheckedFeatureGatesMap,
-  FeatureGateID,
-} from '../analytics/feature-gates'
+import { type CheckedFeatureGatesMap } from '../analytics/feature-gates'
 import { DataPlaneClient } from '../data-plane/client'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -86,7 +83,10 @@ export class HydrateCtx {
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
-  featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
+  // This is a cache of the evaluated feature gates to be used in a hydration.
+  // The actual evaluations happen in the route handlers and are cached on this map.
+  featureGatesMap: CheckedFeatureGatesMap =
+    this.vals.featureGatesMap || new Map()
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -105,7 +105,7 @@ export type HydrateCtxVals = {
   overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
-  featureGates?: CheckedFeatureGatesMap
+  featureGatesMap?: CheckedFeatureGatesMap
 }
 
 export type HydrationState = {
@@ -749,8 +749,8 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const postsState = await this.hydratePosts(refs, ctx, undefined, {
-      processDynamicTagsForView: ctx.featureGates.get(
-        FeatureGateID.ThreadsReplyRankingExplorationEnable,
+      processDynamicTagsForView: ctx.featureGatesMap.get(
+        'threads:reply_ranking_exploration:enable',
       )
         ? 'thread'
         : undefined,
@@ -1334,7 +1334,7 @@ export class Hydrator {
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,
-      featureGates: vals.featureGates,
+      featureGatesMap: vals.featureGatesMap,
     })
   }
 

@@ -10,7 +10,11 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import { FeatureGates } from './analytics/feature-gates'
+import {
+  Events as AnalyticsEvents,
+  FeatureGatesClient,
+  MetricsClient,
+} from './analytics'
 import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
@@ -181,9 +185,13 @@ export class BskyAppView {
       entrywayJwtPublicKey,
     })
 
-    const featureGates = new FeatureGates({
+    const metricsClient = new MetricsClient<AnalyticsEvents>({
+      trackingHost: config.growthBookApiHost,
+    })
+    const featureGatesClient = new FeatureGatesClient({
       apiHost: config.growthBookApiHost,
       clientKey: config.growthBookClientKey,
+      metricsClient,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
@@ -205,7 +213,7 @@ export class BskyAppView {
       courierClient,
       rolodexClient,
       authVerifier,
-      featureGates,
+      featureGatesClient,
       blobDispatcher,
       kwsClient,
     })
@@ -241,7 +249,7 @@ export class BskyAppView {
     if (this.ctx.dataplaneHostList instanceof EtcdHostList) {
       await this.ctx.dataplaneHostList.connect()
     }
-    await this.ctx.featureGates.start()
+    await this.ctx.featureGatesClient.start()
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -253,7 +261,7 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
-    this.ctx.featureGates.destroy()
+    this.ctx.featureGatesClient.destroy()
     await this.terminator?.terminate()
     await this.ctx.etcd?.close()
   }

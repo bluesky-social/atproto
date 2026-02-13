@@ -2,7 +2,11 @@ import {
   GrowthBookClient,
   type UserContext as GrowthBookUserContext,
 } from '@growthbook/growthbook'
-import { featureGatesLogger } from '../logger'
+import type express from 'express'
+import { analyticsLogger } from '../logger'
+import { MetricsClient } from './metrics'
+import { extractAnalyticsHeaders } from './request'
+import { Events } from './types'
 
 /**
  * We want this to be sufficiently high that we don't time out under
@@ -19,90 +23,101 @@ const REFETCH_INTERVAL = 60e3 // 1 minute
 export type Config = {
   apiHost?: string
   clientKey?: string
+  metricsClient?: MetricsClient<Events>
 }
 
-type UserContext = Omit<GrowthBookUserContext, 'attributes'> & {
-  attributes?: {
-    did?: string | null
-  }
-}
-
-export enum FeatureGateID {
-  /**
-   * Left here ensure this is interpreted as a string enum and therefore
-   * appease TS
-   */
-  _ = '',
-  SuggestedUsersDiscoverAgentEnable = 'suggested_users:discover_agent:enable',
-  SuggestedOnboardingUsersDiscoverAgentEnable = 'suggested_onboarding_users:discover_agent:enable',
-  ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
-  SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
-}
+export type FeatureGateID =
+  | 'suggested_users:discover_agent:enable'
+  | 'suggested_onboarding_users:discover_agent:enable'
+  | 'threads:reply_ranking_exploration:enable'
+  | 'search:filtering_exploration:enable'
 
 /**
  * Pre-evaluated feature gates map, the result of `FeatureGates.checkGates()`
  */
 export type CheckedFeatureGatesMap = Map<FeatureGateID, boolean>
 
-export class FeatureGates {
+export class FeatureGatesClient {
   ready = false
   client: GrowthBookClient | undefined = undefined
-  ids = FeatureGateID
   refreshInterval: NodeJS.Timeout | undefined = undefined
 
   constructor(private config: Config) {}
 
   async start() {
+    if (!this.config.apiHost || !this.config.clientKey) {
+      analyticsLogger.info(
+        {},
+        'feature gates not configured, skipping initialization',
+      )
+      return
+    }
+
     try {
-      if (this.config.apiHost && this.config.clientKey) {
-        this.client = new GrowthBookClient({
-          apiHost: this.config.apiHost,
-          clientKey: this.config.clientKey,
-        })
-
-        const { source, error } = await this.client.init({
-          timeout: FETCH_TIMEOUT,
-        })
-
-        /**
-         * This does not necessarily mean that the client completely failed,
-         * since it could just be that the request timed out. It may succeed
-         * after the timeout, or later during refreshes.
-         *
-         * @see https://docs.growthbook.io/lib/node#error-handling
-         */
-        if (error) {
-          featureGatesLogger.error(
-            { err: error, source },
-            'Client failed to initialize normally',
+      this.client = new GrowthBookClient({
+        apiHost: this.config.apiHost,
+        clientKey: this.config.clientKey,
+        onFeatureUsage: (feature, result, userContext) => {
+          this.config.metricsClient?.track(
+            'feature:viewed',
+            {
+              featureId: feature,
+              featureResultValue: result.value,
+              experimentId: result.experiment?.key,
+              variationId: result.experimentResult?.key,
+            },
+            userContext, // Use userContext as event metadata.
           )
-        }
+        },
+        trackingCallback: (experiment, result, userContext) => {
+          this.config.metricsClient?.track(
+            'experiment:viewed',
+            {
+              experimentId: experiment.key,
+              variationId: result.key,
+            },
+            userContext, // Use userContext as event metadata.
+          )
+        },
+      })
 
-        /**
-         * Set up periodic refresh of feature definitions
-         *
-         * @see https://docs.growthbook.io/lib/node#refreshing-features
-         */
-        this.refreshInterval = setInterval(async () => {
-          try {
-            await this.client?.refreshFeatures({
-              timeout: FETCH_TIMEOUT,
-            })
-          } catch (err) {
-            featureGatesLogger.error({ err }, 'Failed to refresh features')
-          }
-        }, REFETCH_INTERVAL)
+      const { source, error } = await this.client.init({
+        timeout: FETCH_TIMEOUT,
+      })
 
-        /* Ready or not, here we come */
-        this.ready = true
-      } else {
-        featureGatesLogger.error(
-          'Missing required config for FeatureGates client',
+      /**
+       * This does not necessarily mean that the client completely failed,
+       * since it could just be that the request timed out. It may succeed
+       * after the timeout, or later during refreshes.
+       *
+       * @see https://docs.growthbook.io/lib/node#error-handling
+       */
+      if (error) {
+        analyticsLogger.error(
+          { err: error, source },
+          'Client failed to initialize normally',
         )
       }
+
+      /**
+       * Set up periodic refresh of feature definitions
+       *
+       * @see https://docs.growthbook.io/lib/node#refreshing-features
+       */
+      this.refreshInterval = setInterval(async () => {
+        try {
+          await this.client?.refreshFeatures({
+            timeout: FETCH_TIMEOUT,
+          })
+        } catch (err) {
+          analyticsLogger.error({ err }, 'Failed to refresh features')
+        }
+      }, REFETCH_INTERVAL)
+
+      /* Ready or not, here we come */
+      this.ready = true
     } catch (err) {
-      featureGatesLogger.error({ err }, 'Client initialization failed')
-      this.ready = false
+      analyticsLogger.error({ err }, 'Client initialization failed')
     }
   }
 
@@ -115,12 +130,20 @@ export class FeatureGates {
     }
   }
 
-  userContext({
-    did,
-  }: Exclude<UserContext['attributes'], undefined>): UserContext {
-    return { attributes: { did: did ?? null } }
+  // Creates an evaluator where gate checks will be made scoped to
+  // the provided user context.
+  scope(did: string | null, req: express.Request): FeatureGatesScopedEvaluator {
+    const analyticsHeaders = extractAnalyticsHeaders(req)
+    return new FeatureGatesScopedEvaluator(this, {
+      did: did,
+      sessionId: analyticsHeaders.sessionId,
+      stableId: analyticsHeaders.stableId,
+    })
   }
 
+  /**
+   * Prefer using {@link FeatureGatesScopedEvaluator.check} instead.
+   */
   check(gate: FeatureGateID, ctx: UserContext): boolean {
     if (!this.ready || !this.client) return false
     return this.client.isOn(gate, ctx)
@@ -129,8 +152,39 @@ export class FeatureGates {
   /**
    * Pre-evaluate multiple feature gates for a given user, returning a map of
    * gate ID to boolean result.
+   * Prefer using {@link FeatureGatesScopedEvaluator.checkGates} instead.
    */
   checkGates(gates: FeatureGateID[], ctx: UserContext): CheckedFeatureGatesMap {
     return new Map(gates.map((g) => [g, this.check(g, ctx)]))
+  }
+}
+
+type UserContextAttributes = {
+  did?: string | null
+  stableId?: string | null
+  sessionId?: string | null
+}
+
+type UserContext = Omit<GrowthBookUserContext, 'attributes'> & {
+  attributes?: UserContextAttributes
+}
+
+// Wraps feature gate evaluations
+export class FeatureGatesScopedEvaluator {
+  constructor(
+    private client: FeatureGatesClient,
+    private userContextAttributes: UserContextAttributes,
+  ) {}
+
+  check(gate: FeatureGateID): boolean {
+    return this.client.check(gate, { attributes: this.userContextAttributes })
+  }
+
+  /**
+   * Pre-evaluate multiple feature gates for a given user, returning a map of
+   * gate ID to boolean result.
+   */
+  checkGates(gates: FeatureGateID[]): CheckedFeatureGatesMap {
+    return new Map(gates.map((g) => [g, this.check(g)]))
   }
 }
