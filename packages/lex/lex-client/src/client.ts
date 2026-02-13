@@ -941,7 +941,7 @@ function getLiteralRecordKey<const T extends RecordSchema>(
   schema: T,
 ): InferRecordKey<T> {
   if (schema.key.startsWith('literal:')) {
-    return schema.key.slice(8)
+    return schema.key.slice(8) as InferRecordKey<T>
   }
 
   throw new TypeError(
