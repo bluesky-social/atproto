@@ -1,7 +1,6 @@
 import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import {
-  AppBskyActorProfile,
   AppBskyEmbedImages,
   AppBskyFeedPost,
   AppBskyFeedPostRecord,
@@ -554,9 +553,8 @@ describe('crud operations', () => {
         }),
       ).rejects.toMatchObject({
         error: 'InvalidRequest',
-        message: expect.stringContaining(
-          'Invalid app.bsky.actor.profile record: Expected blob value type at $.record.avatar (got object)',
-        ),
+        message:
+          'Invalid app.bsky.actor.profile record: Expected blob value type at $.record.avatar (got legacy-blob)',
       })
     })
   })
@@ -772,7 +770,7 @@ describe('crud operations', () => {
       })
     })
 
-    it.only('applyWrites returns results with validation status', async () => {
+    it('applyWrites returns results with validation status', async () => {
       const existing1 = await aliceAgent.com.atproto.repo.createRecord({
         validate: false,
         repo: aliceAgent.assertDid,
@@ -806,7 +804,7 @@ describe('crud operations', () => {
             },
           },
           {
-            $type: 'com.atproto.repo.applyWrites#create',
+            $type: 'com.atproto.repo.applyWrites#update',
             collection: existing1Uri.collectionSafe,
             rkey: existing1Uri.rkey,
             value: {},
@@ -886,19 +884,23 @@ describe('crud operations', () => {
         encoding: 'image/jpeg',
       })
 
-      const attempt = aliceAgent.com.atproto.repo.createRecord({
-        repo: aliceAgent.assertDid,
-        collection: 'com.example.record',
-        record: {
-          blah: 'thing',
-          image: {
-            cid: uploadedRes.data.blob.ref.toString(),
-            mimeType: uploadedRes.data.blob.mimeType,
+      await expect(
+        aliceAgent.com.atproto.repo.createRecord({
+          repo: aliceAgent.assertDid,
+          collection: 'com.example.record',
+          record: {
+            blah: 'thing',
+            image: {
+              cid: uploadedRes.data.blob.ref.toString(),
+              mimeType: uploadedRes.data.blob.mimeType,
+            },
           },
-        },
-        validate: false,
+          validate: false,
+        }),
+      ).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('Legacy blobs are not allowed'),
       })
-      await expect(attempt).rejects.toThrow(`Legacy blob ref at 'image'`)
     })
   })
 
