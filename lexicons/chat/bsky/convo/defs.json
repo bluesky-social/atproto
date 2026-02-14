@@ -27,7 +27,7 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record"]
+          "refs": ["app.bsky.embed.record", "app.bsky.embed.images"]
         }
       }
     },
@@ -49,7 +49,7 @@
         },
         "embed": {
           "type": "union",
-          "refs": ["app.bsky.embed.record#view"]
+          "refs": ["app.bsky.embed.record#view", "app.bsky.embed.images#view"]
         },
         "reactions": {
           "type": "array",
