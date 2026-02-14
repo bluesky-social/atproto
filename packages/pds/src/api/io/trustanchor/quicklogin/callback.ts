@@ -1,0 +1,225 @@
+import { Router } from 'express'
+import { AppContext } from '../../../../context'
+import {
+  NeuroCallbackPayload,
+  createAccountViaQuickLogin,
+  deriveAvailableHandle,
+  extractEmail,
+  extractUserName,
+  getHandleForDid,
+} from './helpers'
+
+export function callbackQuickLogin(router: Router, ctx: AppContext) {
+  router.post('/api/quicklogin/callback', async (req, res) => {
+    try {
+      if (!ctx.cfg.quicklogin) {
+        return res.status(400).json({ error: 'QuickLogin not enabled' })
+      }
+
+      const payload = req.body as NeuroCallbackPayload
+
+      req.log.info(
+        {
+          sessionId: payload.SessionId,
+          key: payload.Key,
+          state: payload.State,
+        },
+        'QuickLogin callback received',
+      )
+
+      // The provider sends back its own SessionId, but we need to look up by Key (serviceId)
+      const serviceId = payload.Key
+      if (!serviceId) {
+        req.log.warn({ payload }, 'Missing Key/serviceId in callback')
+        return res.status(400).json({ error: 'Missing Key' })
+      }
+
+      // Find session by serviceId
+      const session = ctx.quickloginStore.getSessionByServiceId(serviceId)
+      if (!session) {
+        req.log.warn({ serviceId }, 'Session not found for serviceId')
+        return res.status(404).json({ error: 'Session not found' })
+      }
+
+      // Check if session expired
+      if (new Date() > new Date(session.expiresAt)) {
+        req.log.warn({ sessionId: payload.SessionId }, 'Session expired')
+        return res.status(400).json({ error: 'Session expired' })
+      }
+
+      // Validate state (mTLS handles signature verification)
+      if (payload.State !== 'Approved') {
+        req.log.info(
+          { sessionId: session.sessionId, state: payload.State },
+          'QuickLogin not approved',
+        )
+        ctx.quickloginStore.updateSession(session.sessionId, {
+          status: 'failed',
+          error: `QuickLogin ${payload.State}`,
+        })
+        return res.status(400).json({ error: `QuickLogin ${payload.State}` })
+      }
+
+      // Extract JID from payload
+      const jid = payload.JID
+      if (!jid) {
+        req.log.error({ payload }, 'JID missing from callback')
+        ctx.quickloginStore.updateSession(session.sessionId, {
+          status: 'failed',
+          error: 'JID missing',
+        })
+        return res.status(400).json({ error: 'JID missing from callback' })
+      }
+
+      req.log.info({ jid }, 'Processing QuickLogin for JID')
+
+      // Check if this Neuro identity is already linked
+      const existingLink = await ctx.accountManager.db.db
+        .selectFrom('neuro_identity_link')
+        .selectAll()
+        .where('neuroJid', '=', jid)
+        .executeTakeFirst()
+
+      let did: string
+      let accessJwt: string
+      let refreshJwt: string
+      let handle: string
+
+      if (existingLink) {
+        // User has logged in via QuickLogin before - use existing link
+        req.log.info(
+          { jid, did: existingLink.did },
+          'Existing Neuro identity link found',
+        )
+
+        did = existingLink.did
+        handle = await getHandleForDid(ctx, did)
+
+        // Update last login
+        await ctx.accountManager.db.db
+          .updateTable('neuro_identity_link')
+          .set({ lastLoginAt: new Date().toISOString() })
+          .where('neuroJid', '=', jid)
+          .execute()
+
+        // Create session
+        const account = await ctx.accountManager.getAccount(did)
+        if (!account) {
+          req.log.error({ did }, 'Account not found for linked DID')
+          return res.status(500).json({ error: 'Account not found' })
+        }
+
+        const tokens = await ctx.accountManager.createSession(did, null, false)
+        accessJwt = tokens.accessJwt
+        refreshJwt = tokens.refreshJwt
+      } else {
+        // No existing link - this is user's first QuickLogin (but account should exist)
+        //
+        // IMPORTANT: QuickLogin is ONLY for login, not account creation.
+        // The W ID app enforces that users cannot scan QR codes until both their
+        // W ID account AND W Social account have been provisioned. Account provisioning
+        // happens via the /neuro/provision/account endpoint when Neuro sends a
+        // LegalIdUpdated notification. Therefore, when we reach this code, the account
+        // must already exist - we just need to create the neuro_identity_link.
+
+        const email = extractEmail(payload.Properties)
+        const userName = extractUserName(payload.Properties)
+
+        if (!email) {
+          req.log.error({ jid }, 'No email found in QuickLogin payload')
+          ctx.quickloginStore.updateSession(session.sessionId, {
+            status: 'failed',
+            error: 'Email required',
+          })
+          return res.status(400).json({ error: 'Email required' })
+        }
+
+        // Find the existing account by email
+        const existingAccount = await ctx.accountManager.db.db
+          .selectFrom('account')
+          .selectAll()
+          .where('email', '=', email.toLowerCase())
+          .executeTakeFirst()
+
+        if (!existingAccount) {
+          // This should never happen given W ID app behavior
+          req.log.error(
+            { jid, email },
+            'Account not found - user scanned QR before account provisioning completed',
+          )
+          ctx.quickloginStore.updateSession(session.sessionId, {
+            status: 'failed',
+            error:
+              'Account not found. Please ensure your account is fully set up.',
+          })
+          return res.status(400).json({
+            error:
+              'Account not found. Please ensure your account is fully set up.',
+          })
+        }
+
+        // Account exists - create the link
+        req.log.info(
+          { jid, email, did: existingAccount.did },
+          'Creating Neuro identity link for existing account',
+        )
+
+        did = existingAccount.did
+        handle = await getHandleForDid(ctx, did)
+
+        // Create the neuro_identity_link
+        await ctx.accountManager.db.db
+          .insertInto('neuro_identity_link')
+          .values({
+            neuroJid: jid,
+            did,
+            email: email || null,
+            userName: userName || null,
+            linkedAt: new Date().toISOString(),
+            lastLoginAt: new Date().toISOString(),
+          })
+          .execute()
+
+        // Create session
+        const tokens = await ctx.accountManager.createSession(did, null, false)
+        accessJwt = tokens.accessJwt
+        refreshJwt = tokens.refreshJwt
+      }
+
+      // Update session with success
+      ctx.quickloginStore.updateSession(session.sessionId, {
+        status: 'completed',
+        result: {
+          did,
+          handle,
+          accessJwt,
+          refreshJwt,
+          created: !existingLink,
+        },
+      })
+
+      req.log.info(
+        { sessionId: session.sessionId, did, handle },
+        'QuickLogin completed successfully',
+      )
+
+      // Return success to provider
+      return res.json({ success: true })
+    } catch (error) {
+      req.log.error(
+        {
+          error:
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack,
+                  name: error.name,
+                }
+              : error,
+        },
+        'QuickLogin callback failed',
+      )
+      return res.status(500).json({ error: 'Internal server error' })
+    }
+  })
+}
