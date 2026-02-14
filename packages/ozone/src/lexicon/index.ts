@@ -242,6 +242,7 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneReportCreateReport from './types/tools/ozone/report/createReport.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
 import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
@@ -3257,6 +3258,7 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  report: ToolsOzoneReportNS
   safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -3270,6 +3272,7 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.report = new ToolsOzoneReportNS(server)
     this.safelink = new ToolsOzoneSafelinkNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
@@ -3540,6 +3543,26 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneReportNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createReport<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportCreateReport.QueryParams,
+      ToolsOzoneReportCreateReport.HandlerInput,
+      ToolsOzoneReportCreateReport.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.createReport' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
