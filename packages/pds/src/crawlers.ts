@@ -32,7 +32,7 @@ export class Crawlers {
             })
           } catch (err) {
             log.warn(
-              { err, cralwer: agent.service.toString() },
+              { err, crawler: agent.service.toString() },
               'failed to request crawl',
             )
           }
