@@ -48,7 +48,7 @@ deps: ## Installs dependent libs using 'pnpm install'
 
 .PHONY: clean
 clean: ## Deletes all 'dist' and 'node_modules' directories (including nested)
-	rm -rf **/dist **/node_modules
+	find . -type d \( -name "dist" -o -name "node_modules" \) -prune -exec rm -rf {} +
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
