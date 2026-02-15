@@ -47,8 +47,8 @@ deps: ## Installs dependent libs using 'pnpm install'
 	pnpm install --frozen-lockfile
 
 .PHONY: clean
-clean: ## Deletes all 'dist' and 'node_package' directories (including nested)
-	rm -rf **/dist **/node_packages
+clean: ## Deletes all 'dist' and 'node_modules' directories (including nested)
+	rm -rf **/dist **/node_modules
 
 .PHONY: nvm-setup
 nvm-setup: ## Use NVM to install and activate node+pnpm
