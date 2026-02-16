@@ -66,7 +66,7 @@ export class FeatureGatesClient {
               experimentId: result.experiment?.key,
               variationId: result.experimentResult?.key,
             },
-            userContext, // Use userContext as event metadata.
+            growthBookContextToTrackingMetadata(userContext),
           )
         },
         trackingCallback: (experiment, result, userContext) => {
@@ -76,7 +76,7 @@ export class FeatureGatesClient {
               experimentId: experiment.key,
               variationId: result.key,
             },
-            userContext, // Use userContext as event metadata.
+            growthBookContextToTrackingMetadata(userContext),
           )
         },
       })
@@ -186,5 +186,13 @@ export class FeatureGatesScopedEvaluator {
    */
   checkGates(gates: FeatureGateID[]): CheckedFeatureGatesMap {
     return new Map(gates.map((g) => [g, this.check(g)]))
+  }
+}
+
+function growthBookContextToTrackingMetadata(userContext: UserContext) {
+  return {
+    did: userContext.attributes?.did,
+    stableId: userContext.attributes?.stableId,
+    sessionId: userContext.attributes?.sessionId,
   }
 }
