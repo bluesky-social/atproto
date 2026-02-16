@@ -17,12 +17,14 @@ export type RawUserContext = {
 }
 
 /**
- * A simplified and parsed version of the user context, containing only the
- * relevant information for feature gate evaluation and tracking.
+ * Extracted values from the `RawUserContext`. These values should match the
+ * `attributes` we've configured for GrowthBook in our GB dashboard. We also
+ * send these same values as properties in our analytics events, so we want to
+ * make sure they are consistent.
  */
 export type ParsedUserContext = {
   did?: string | null
-  deviceId?: string | null
+  stableId?: string | null
   sessionId?: string | null
 }
 

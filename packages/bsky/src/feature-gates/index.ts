@@ -124,35 +124,24 @@ export class FeatureGatesClient {
   }
 
   /**
-   * Evaluate a single feature gate for a given user, returning a boolean
-   * result.
-   */
-  check(gate: FeatureGate, userContext: RawUserContext): boolean {
-    if (!this.ready || !this.client) return false
-
-    /**
-     * The keys of `attributes` are arbitrary and configured by us in our
-     * GrowthBook dashboard.
-     */
-    const attributes = parseRawUserContext(userContext)
-
-    /*
-     * If we don't have a deviceId or did, we won't be able to target the user
-     * with any feature gates, so just return false.
-     */
-    if (!attributes.deviceId && !attributes.did) return false
-
-    return this.client.isOn(gate, { attributes })
-  }
-
-  /**
    * Evaluate multiple feature gates for a given user, returning a map of gate
    * ID to boolean result.
    */
   checkGates(
     gates: FeatureGate[],
-    userContext: RawUserContext,
+    rawUserContext: RawUserContext,
   ): CheckedFeatureGatesMap {
-    return new Map(gates.map((g) => [g, this.check(g, userContext)]))
+    const gb = this.client
+    const attributes = parseRawUserContext(rawUserContext)
+
+    /*
+     * If the GB client isn't ready, or we don't have a stableId or did, we
+     * won't be able to target the user with any feature gates, so just return
+     * false.
+     */
+    if (!gb || !this.ready || (!attributes.stableId && !attributes.did))
+      return new Map(gates.map((g) => [g, false]))
+
+    return new Map(gates.map((g) => [g, gb.isOn(g, { attributes })]))
   }
 }
