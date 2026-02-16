@@ -122,6 +122,7 @@ export class FeatureGatesClient {
         clearInterval(this.refreshInterval)
       }
     }
+    this.metrics.stop()
   }
 
   /**
