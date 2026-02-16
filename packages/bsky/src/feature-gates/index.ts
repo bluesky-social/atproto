@@ -48,7 +48,7 @@ export class FeatureGatesClient {
 
     try {
       this.client = new GrowthBookClient({
-        apiHost: this.config.apiHost,
+        apiHost: `${this.config.apiHost}/gb`,
         clientKey: this.config.clientKey,
         onFeatureUsage: (feature, result, userContext) => {
           this.metrics.track(

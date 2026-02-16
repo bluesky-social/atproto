@@ -83,8 +83,11 @@ export class HydrateCtx {
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
-  // This is a cache of the evaluated feature gates to be used in a hydration.
-  // The actual evaluations happen in the route handlers and are cached on this map.
+  /**
+   * Cache of evaluated feature gates to be used in a given request lifecycle.
+   * The actual evaluations happen at the top of the route handler and the
+   * results are stored in this map.
+   */
   featureGatesMap: CheckedFeatureGatesMap =
     this.vals.featureGatesMap || new Map()
   constructor(private vals: HydrateCtxVals) {}

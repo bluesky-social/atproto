@@ -47,7 +47,6 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-
       const result = await getSuggestedOnboardingUsers(
         {
           ...params,
