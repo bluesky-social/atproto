@@ -23,7 +23,6 @@ const REFETCH_INTERVAL = 60e3 // 1 minute
 export type Config = {
   apiHost?: string
   clientKey?: string
-  metricsClient?: MetricsClient<Events>
 }
 
 export type FeatureGateID =
@@ -41,8 +40,13 @@ export class FeatureGatesClient {
   ready = false
   client: GrowthBookClient | undefined = undefined
   refreshInterval: NodeJS.Timeout | undefined = undefined
+  metrics: MetricsClient<Events>
 
-  constructor(private config: Config) {}
+  constructor(private config: Config) {
+    this.metrics = new MetricsClient<Events>({
+      trackingEndpoint: config.apiHost ? `${config.apiHost}/t` : undefined,
+    })
+  }
 
   async start() {
     if (!this.config.apiHost || !this.config.clientKey) {
@@ -58,7 +62,7 @@ export class FeatureGatesClient {
         apiHost: this.config.apiHost,
         clientKey: this.config.clientKey,
         onFeatureUsage: (feature, result, userContext) => {
-          this.config.metricsClient?.track(
+          this.metrics.track(
             'feature:viewed',
             {
               featureId: feature,
@@ -70,7 +74,7 @@ export class FeatureGatesClient {
           )
         },
         trackingCallback: (experiment, result, userContext) => {
-          this.config.metricsClient?.track(
+          this.metrics.track(
             'experiment:viewed',
             {
               experimentId: experiment.key,

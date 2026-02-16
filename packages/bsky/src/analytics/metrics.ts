@@ -8,7 +8,7 @@ type Event<M extends Record<string, any>> = {
 }
 
 export type Config = {
-  trackingHost?: string
+  trackingEndpoint?: string
 }
 
 export class MetricsClient<M extends Record<string, any>> {
@@ -63,9 +63,9 @@ export class MetricsClient<M extends Record<string, any>> {
   }
 
   private async sendBatch(events: Event<M>[]) {
-    if (!this.config.trackingHost) return
+    if (!this.config.trackingEndpoint) return
 
-    const res = await fetch(this.config.trackingHost, {
+    const res = await fetch(this.config.trackingEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

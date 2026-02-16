@@ -10,11 +10,7 @@ import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
-import {
-  Events as AnalyticsEvents,
-  FeatureGatesClient,
-  MetricsClient,
-} from './analytics'
+import { FeatureGatesClient } from './analytics'
 import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
@@ -185,13 +181,9 @@ export class BskyAppView {
       entrywayJwtPublicKey,
     })
 
-    const metricsClient = new MetricsClient<AnalyticsEvents>({
-      trackingHost: config.eventTrackingApiHost,
-    })
     const featureGatesClient = new FeatureGatesClient({
-      apiHost: config.growthBookApiHost,
+      apiHost: config.eventTrackingProxyHost,
       clientKey: config.growthBookClientKey,
-      metricsClient,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
