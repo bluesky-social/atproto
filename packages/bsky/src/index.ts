@@ -182,8 +182,9 @@ export class BskyAppView {
     })
 
     const featureGatesClient = new FeatureGatesClient({
-      apiHost: config.eventTrackingProxyHost,
-      clientKey: config.growthBookClientKey,
+      growthBookApiHost: config.growthBookApiHost,
+      growthBookClientKey: config.growthBookClientKey,
+      eventProxyTrackingEndpoint: config.eventProxyTrackingEndpoint,
     })
 
     const blobDispatcher = createBlobDispatcher(config)

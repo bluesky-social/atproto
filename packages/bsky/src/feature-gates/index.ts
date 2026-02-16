@@ -28,17 +28,18 @@ export class FeatureGatesClient {
 
   constructor(
     private config: {
-      apiHost?: string
-      clientKey?: string
+      growthBookApiHost?: string
+      growthBookClientKey?: string
+      eventProxyTrackingEndpoint?: string
     },
   ) {
     this.metrics = new MetricsClient({
-      trackingEndpoint: config.apiHost ? `${config.apiHost}/t` : undefined,
+      trackingEndpoint: config.eventProxyTrackingEndpoint,
     })
   }
 
   async start() {
-    if (!this.config.apiHost || !this.config.clientKey) {
+    if (!this.config.growthBookApiHost || !this.config.growthBookClientKey) {
       analyticsLogger.info(
         {},
         'feature gates not configured, skipping initialization',
@@ -48,8 +49,8 @@ export class FeatureGatesClient {
 
     try {
       this.client = new GrowthBookClient({
-        apiHost: `${this.config.apiHost}/gb`,
-        clientKey: this.config.clientKey,
+        apiHost: this.config.growthBookApiHost,
+        clientKey: this.config.growthBookClientKey,
         onFeatureUsage: (feature, result, userContext) => {
           this.metrics.track(
             'feature:viewed',
