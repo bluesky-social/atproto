@@ -524,9 +524,7 @@ export class LxmSet {
     return this.inner.has(normalizeLxm(lxm))
   }
   *[Symbol.iterator](): Iterator<string> {
-    for (const lxm of this.original) {
-      yield lxm
-    }
+    yield* this.original
   }
 }
 
