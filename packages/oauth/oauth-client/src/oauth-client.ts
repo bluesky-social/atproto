@@ -446,6 +446,15 @@ export class OAuthClient extends CustomEventTarget<OAuthClientEventMap> {
         stateData.verifier,
         options?.redirect_uri ?? server.clientMetadata.redirect_uris[0],
       )
+
+      // We revoke any existing session first to avoid leaving orphaned sessions
+      // on the AS.
+      try {
+        await this.revoke(tokenSet.sub)
+      } catch {
+        // No existing session, or failed to get it. This is fine.
+      }
+
       try {
         await this.sessionGetter.setStored(tokenSet.sub, {
           dpopKey: stateData.dpopKey,
