@@ -113,11 +113,21 @@ describe('app_passwords', () => {
   })
 
   it('restricts service auth token methods for non-privileged access tokens', async () => {
-    const attempt = appAgent.api.com.atproto.server.getServiceAuth({
-      aud: 'did:example:test',
-      lxm: 'com.atproto.server.createAccount',
-    })
-    await expect(attempt).rejects.toThrow(
+    const attemptCaseSensitive = appAgent.api.com.atproto.server.getServiceAuth(
+      {
+        aud: 'did:example:test',
+        lxm: 'com.atproto.server.createAccount',
+      },
+    )
+    await expect(attemptCaseSensitive).rejects.toThrow(
+      /insufficient access to request a service auth token for the following method/,
+    )
+    const attemptCaseInsensitive =
+      appAgent.api.com.atproto.server.getServiceAuth({
+        aud: 'did:example:test',
+        lxm: 'com.atproto.server.createaccount',
+      })
+    await expect(attemptCaseInsensitive).rejects.toThrow(
       /insufficient access to request a service auth token for the following method/,
     )
   })
