@@ -81,6 +81,7 @@ export interface ServerConfigValues {
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
+  eventTrackingApiHost?: string
   growthBookApiHost?: string
   growthBookClientKey?: string
   // threads
@@ -213,6 +214,7 @@ export class ServerConfig {
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
 
+    const eventTrackingApiHost = process.env.BSKY_EVENTS_TRACKING_API_HOST || undefined
     const growthBookApiHost = process.env.BSKY_GROWTHBOOK_API_HOST || undefined
     const growthBookClientKey =
       process.env.NODE_ENV === 'test'
@@ -369,6 +371,7 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
+      eventTrackingApiHost,
       growthBookApiHost,
       growthBookClientKey,
       clientCheckEmailConfirmed,
@@ -568,6 +571,10 @@ export class ServerConfig {
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get eventTrackingApiHost() {
+    return this.cfg.eventTrackingApiHost
   }
 
   get growthBookApiHost() {

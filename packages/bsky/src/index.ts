@@ -186,7 +186,7 @@ export class BskyAppView {
     })
 
     const metricsClient = new MetricsClient<AnalyticsEvents>({
-      trackingHost: config.growthBookApiHost,
+      trackingHost: config.eventTrackingApiHost,
     })
     const featureGatesClient = new FeatureGatesClient({
       apiHost: config.growthBookApiHost,
