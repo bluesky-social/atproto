@@ -43,6 +43,7 @@ export class MetricsClient<M extends Record<string, any>> {
     this.start()
 
     const e = {
+      source: 'appview',
       time: Date.now(),
       event,
       payload,
