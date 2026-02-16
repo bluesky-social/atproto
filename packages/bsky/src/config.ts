@@ -213,7 +213,8 @@ export class ServerConfig {
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
 
-    const eventTrackingProxyHost = process.env.BSKY_EVENT_TRACKING_PROXY_HOST || undefined
+    const eventTrackingProxyHost =
+      process.env.BSKY_EVENT_TRACKING_PROXY_HOST || undefined
     const growthBookClientKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'

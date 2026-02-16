@@ -1,12 +1,12 @@
-import {
-  GrowthBookClient,
-  type UserContext as GrowthBookUserContext,
-} from '@growthbook/growthbook'
-import type express from 'express'
+import { GrowthBookClient } from '@growthbook/growthbook'
 import { analyticsLogger } from '../logger'
+import { FeatureGate } from './gates'
 import { MetricsClient } from './metrics'
-import { extractAnalyticsHeaders } from './request'
-import { Events } from './types'
+import { CheckedFeatureGatesMap, RawUserContext } from './types'
+import {
+  extractParsedUserContextFromGrowthBookUserContext,
+  parseRawUserContext,
+} from './utils'
 
 /**
  * We want this to be sufficiently high that we don't time out under
@@ -20,30 +20,19 @@ const FETCH_TIMEOUT = 3e3 // 3 seconds
  */
 const REFETCH_INTERVAL = 60e3 // 1 minute
 
-export type Config = {
-  apiHost?: string
-  clientKey?: string
-}
-
-export type FeatureGateID =
-  | 'suggested_users:discover_agent:enable'
-  | 'suggested_onboarding_users:discover_agent:enable'
-  | 'threads:reply_ranking_exploration:enable'
-  | 'search:filtering_exploration:enable'
-
-/**
- * Pre-evaluated feature gates map, the result of `FeatureGates.checkGates()`
- */
-export type CheckedFeatureGatesMap = Map<FeatureGateID, boolean>
-
 export class FeatureGatesClient {
   ready = false
   client: GrowthBookClient | undefined = undefined
   refreshInterval: NodeJS.Timeout | undefined = undefined
-  metrics: MetricsClient<Events>
+  metrics: MetricsClient
 
-  constructor(private config: Config) {
-    this.metrics = new MetricsClient<Events>({
+  constructor(
+    private config: {
+      apiHost?: string
+      clientKey?: string
+    },
+  ) {
+    this.metrics = new MetricsClient({
       trackingEndpoint: config.apiHost ? `${config.apiHost}/t` : undefined,
     })
   }
@@ -70,7 +59,7 @@ export class FeatureGatesClient {
               experimentId: result.experiment?.key,
               variationId: result.experimentResult?.key,
             },
-            growthBookContextToTrackingMetadata(userContext),
+            extractParsedUserContextFromGrowthBookUserContext(userContext),
           )
         },
         trackingCallback: (experiment, result, userContext) => {
@@ -80,7 +69,7 @@ export class FeatureGatesClient {
               experimentId: experiment.key,
               variationId: result.key,
             },
-            growthBookContextToTrackingMetadata(userContext),
+            extractParsedUserContextFromGrowthBookUserContext(userContext),
           )
         },
       })
@@ -134,69 +123,36 @@ export class FeatureGatesClient {
     }
   }
 
-  // Creates an evaluator where gate checks will be made scoped to
-  // the provided user context.
-  scope(did: string | null, req: express.Request): FeatureGatesScopedEvaluator {
-    const analyticsHeaders = extractAnalyticsHeaders(req)
-    return new FeatureGatesScopedEvaluator(this, {
-      did: did,
-      sessionId: analyticsHeaders.sessionId,
-      stableId: analyticsHeaders.stableId,
-    })
-  }
-
   /**
-   * Prefer using {@link FeatureGatesScopedEvaluator.check} instead.
+   * Evaluate a single feature gate for a given user, returning a boolean
+   * result.
    */
-  check(gate: FeatureGateID, ctx: UserContext): boolean {
+  check(gate: FeatureGate, userContext: RawUserContext): boolean {
     if (!this.ready || !this.client) return false
-    return this.client.isOn(gate, ctx)
+
+    /**
+     * The keys of `attributes` are arbitrary and configured by us in our
+     * GrowthBook dashboard.
+     */
+    const attributes = parseRawUserContext(userContext)
+
+    /*
+     * If we don't have a deviceId or did, we won't be able to target the user
+     * with any feature gates, so just return false.
+     */
+    if (!attributes.deviceId && !attributes.did) return false
+
+    return this.client.isOn(gate, { attributes })
   }
 
   /**
-   * Pre-evaluate multiple feature gates for a given user, returning a map of
-   * gate ID to boolean result.
-   * Prefer using {@link FeatureGatesScopedEvaluator.checkGates} instead.
+   * Evaluate multiple feature gates for a given user, returning a map of gate
+   * ID to boolean result.
    */
-  checkGates(gates: FeatureGateID[], ctx: UserContext): CheckedFeatureGatesMap {
-    return new Map(gates.map((g) => [g, this.check(g, ctx)]))
-  }
-}
-
-type UserContextAttributes = {
-  did?: string | null
-  stableId?: string | null
-  sessionId?: string | null
-}
-
-type UserContext = Omit<GrowthBookUserContext, 'attributes'> & {
-  attributes?: UserContextAttributes
-}
-
-// Wraps feature gate evaluations
-export class FeatureGatesScopedEvaluator {
-  constructor(
-    private client: FeatureGatesClient,
-    private userContextAttributes: UserContextAttributes,
-  ) {}
-
-  check(gate: FeatureGateID): boolean {
-    return this.client.check(gate, { attributes: this.userContextAttributes })
-  }
-
-  /**
-   * Pre-evaluate multiple feature gates for a given user, returning a map of
-   * gate ID to boolean result.
-   */
-  checkGates(gates: FeatureGateID[]): CheckedFeatureGatesMap {
-    return new Map(gates.map((g) => [g, this.check(g)]))
-  }
-}
-
-function growthBookContextToTrackingMetadata(userContext: UserContext) {
-  return {
-    did: userContext.attributes?.did,
-    stableId: userContext.attributes?.stableId,
-    sessionId: userContext.attributes?.sessionId,
+  checkGates(
+    gates: FeatureGate[],
+    userContext: RawUserContext,
+  ): CheckedFeatureGatesMap {
+    return new Map(gates.map((g) => [g, this.check(g, userContext)]))
   }
 }

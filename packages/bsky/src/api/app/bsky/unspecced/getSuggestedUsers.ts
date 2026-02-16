@@ -1,7 +1,6 @@
 import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { InternalServerError } from '@atproto/xrpc-server'
-import { FeatureGatesScopedEvaluator } from '../../../../analytics/feature-gates'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
@@ -31,7 +30,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        featureGatesMap: ctx.featureGatesClient.checkGates(
+          ['suggested_users:discover_agent:enable'],
+          {
+            viewer,
+            req,
+          },
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
@@ -39,13 +48,11 @@ export default function (server: Server, ctx: AppContext) {
           : req.headers['x-bsky-topics'],
       })
 
-      const featureGateEvaluator = ctx.featureGatesClient.scope(viewer, req)
       const result = await getSuggestedUsers(
         {
           ...params,
           hydrateCtx,
           headers,
-          featureGateEvaluator,
         },
         ctx,
       )
@@ -101,7 +108,7 @@ const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useDiscover = input.params.featureGateEvaluator.check(
+  const useDiscover = input.params.hydrateCtx.featureGatesMap.get(
     'suggested_users:discover_agent:enable',
   )
   const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
@@ -167,7 +174,6 @@ type Params = QueryParams & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
   category?: string
-  featureGateEvaluator: FeatureGatesScopedEvaluator
 }
 
 type SkeletonState = {

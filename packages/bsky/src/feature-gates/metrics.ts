@@ -1,5 +1,20 @@
 import { analyticsLogger } from '../logger'
 
+type Events = {
+  'experiment:viewed': {
+    experimentId: string
+    variationId: string
+  }
+  'feature:viewed': {
+    featureId: string
+    featureResultValue: unknown
+    /** Only available if feature has experiment rules applied */
+    experimentId?: string
+    /** Only available if feature has experiment rules applied */
+    variationId?: string
+  }
+}
+
 type Event<M extends Record<string, any>> = {
   time: number
   event: keyof M
@@ -11,7 +26,7 @@ export type Config = {
   trackingEndpoint?: string
 }
 
-export class MetricsClient<M extends Record<string, any>> {
+export class MetricsClient<M extends Record<string, any> = Events> {
   maxBatchSize = 100
 
   private started: boolean = false

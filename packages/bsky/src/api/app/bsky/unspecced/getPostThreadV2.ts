@@ -28,16 +28,16 @@ export default function (server: Server, ctx: AppContext) {
       const { viewer, includeTakedowns, include3pBlocks } =
         ctx.authVerifier.parseCreds(auth)
 
-      const featureGateEvaluator = ctx.featureGatesClient.scope(viewer, req)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
         includeTakedowns,
         include3pBlocks,
-        featureGatesMap: featureGateEvaluator.checkGates([
-          'threads:reply_ranking_exploration:enable',
-        ]),
+        featureGatesMap: ctx.featureGatesClient.checkGates(
+          ['threads:reply_ranking_exploration:enable'],
+          { viewer, req },
+        ),
       })
 
       return {

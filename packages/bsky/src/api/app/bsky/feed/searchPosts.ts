@@ -34,14 +34,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
 
-      const featureGateEvaluator = ctx.featureGatesClient.scope(viewer, req)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: featureGateEvaluator.checkGates([
-          'search:filtering_exploration:enable',
-        ]),
+        featureGatesMap: ctx.featureGatesClient.checkGates(
+          ['search:filtering_exploration:enable'],
+          {
+            viewer,
+            req,
+          },
+        ),
       })
       const results = await searchPosts(
         { ...params, hydrateCtx, isModService },
