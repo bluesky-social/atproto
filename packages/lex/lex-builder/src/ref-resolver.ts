@@ -28,6 +28,7 @@ export type RefResolverOptions = {
    * @default '.js'
    */
   importExt?: string
+  moduleSpecifier?: (nsid: string) => string
 }
 
 /**
@@ -211,10 +212,12 @@ export class RefResolver {
   private readonly resolveExternal = memoize(
     async (fullRef: string): Promise<ResolvedRef> => {
       const [nsid, hash] = fullRef.split('#')
-      const moduleSpecifier = `${asRelativePath(
-        this.file.getDirectoryPath(),
-        join('/', ...nsid.split('.')),
-      )}.defs${this.options.importExt ?? '.js'}`
+      const moduleSpecifier = this.options.moduleSpecifier
+        ? this.options.moduleSpecifier(nsid)
+        : `${asRelativePath(
+            this.file.getDirectoryPath(),
+            join('/', ...nsid.split('.')),
+          )}.defs${this.options.importExt ?? '.js'}`
 
       // Lets first make sure the referenced lexicon exists
       const srcDoc = await this.indexer.get(nsid)
