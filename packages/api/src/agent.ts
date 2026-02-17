@@ -592,7 +592,10 @@ export class Agent extends XrpcClient {
         hideAllFeeds: false,
       },
     }
-    const res = await this.app.bsky.actor.getPreferences({})
+    const res = await this.app.bsky.actor.getPreferences(
+      {},
+      { headers: { 'atproto-proxy': '' } },
+    )
     const labelPrefs: AppBskyActorDefs.ContentLabelPref[] = []
     for (const pref of res.data.preferences) {
       if (predicate.isValidAdultContentPref(pref)) {
@@ -1428,14 +1431,18 @@ export class Agent extends XrpcClient {
   ) {
     try {
       await this.#prefsLock.acquireAsync()
-      const res = await this.app.bsky.actor.getPreferences({})
+      const res = await this.app.bsky.actor.getPreferences(
+        {},
+        { headers: { 'atproto-proxy': '' } },
+      )
       const newPrefs = cb(res.data.preferences)
       if (newPrefs === false) {
         return res.data.preferences
       }
-      await this.app.bsky.actor.putPreferences({
-        preferences: newPrefs,
-      })
+      await this.app.bsky.actor.putPreferences(
+        { preferences: newPrefs },
+        { headers: { 'atproto-proxy': '' } },
+      )
       return newPrefs
     } finally {
       this.#prefsLock.release()
