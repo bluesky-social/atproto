@@ -3,6 +3,7 @@ import {
   InferStringFormat,
   Schema,
   StringFormat,
+  UnknownString,
   ValidationContext,
   isStringFormat,
 } from '../core.js'
@@ -13,6 +14,7 @@ import { TokenSchema } from './token.js'
  * Configuration options for string schema validation.
  *
  * @property format - Expected string format (e.g., 'datetime', 'uri', 'at-uri', 'did', 'handle', 'nsid', 'cid', 'tid', 'record-key', 'at-identifier', 'language')
+ * @property knownValues - Known string literal values for type narrowing
  * @property minLength - Minimum length in UTF-8 bytes
  * @property maxLength - Maximum length in UTF-8 bytes
  * @property minGraphemes - Minimum number of grapheme clusters
@@ -20,6 +22,7 @@ import { TokenSchema } from './token.js'
  */
 export type StringSchemaOptions = {
   format?: StringFormat
+  knownValues?: readonly string[]
   minLength?: number
   maxLength?: number
   minGraphemes?: number
@@ -45,7 +48,9 @@ export class StringSchema<
 > extends Schema<
   TOptions extends { format: infer F extends StringFormat }
     ? InferStringFormat<F>
-    : string
+    : TOptions extends { knownValues: readonly (infer V extends string)[] }
+      ? V | UnknownString
+      : string
 > {
   constructor(readonly options?: TOptions) {
     super()

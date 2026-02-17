@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { UnknownString } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.procedure', () => {
@@ -64,5 +65,19 @@ describe('com.example.procedure', () => {
     expect(() => {
       com.example.procedure.$output.schema.$parse({})
     }).toThrow('Missing required key "object" at $')
+  })
+})
+
+describe('com.example.procedureKnownValues', () => {
+  it('properly types knownValues in params', () => {
+    expectTypeOf<
+      com.example.procedureKnownValues.Params['status']
+    >().toEqualTypeOf<'active' | 'inactive' | UnknownString | undefined>()
+  })
+
+  it('properly types knownValues in input body', () => {
+    expectTypeOf<com.example.procedureKnownValues.InputBody>().toMatchObjectType<{
+      role: 'admin' | 'user' | UnknownString
+    }>()
   })
 })

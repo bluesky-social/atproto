@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { UnknownString } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.query', () => {
@@ -143,5 +144,19 @@ describe('com.example.query', () => {
         })
       }).toThrow('Expected boolean value type at $.object.boolean (got string)')
     })
+  })
+})
+
+describe('com.example.queryKnownValues', () => {
+  it('properly types knownValues in params', () => {
+    expectTypeOf<com.example.queryKnownValues.Params['sort']>().toEqualTypeOf<
+      'asc' | 'desc' | UnknownString | undefined
+    >()
+  })
+
+  it('properly types knownValues in output body', () => {
+    expectTypeOf<com.example.queryKnownValues.OutputBody>().toMatchObjectType<{
+      status: 'ok' | 'error' | UnknownString
+    }>()
   })
 })
