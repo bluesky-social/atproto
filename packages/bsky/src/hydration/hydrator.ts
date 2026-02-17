@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { type CheckedFeatureGatesMap, FeatureGateID } from '../feature-gates'
+import { type CheckedFeatureGatesMap } from '../feature-gates/types'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
@@ -83,7 +83,13 @@ export class HydrateCtx {
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
-  featureGates: CheckedFeatureGatesMap = this.vals.featureGates || new Map()
+  /**
+   * Cache of evaluated feature gates to be used in a given request lifecycle.
+   * The actual evaluations happen at the top of the route handler and the
+   * results are stored in this map.
+   */
+  featureGatesMap: CheckedFeatureGatesMap =
+    this.vals.featureGatesMap || new Map()
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -102,7 +108,7 @@ export type HydrateCtxVals = {
   overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
-  featureGates?: CheckedFeatureGatesMap
+  featureGatesMap?: CheckedFeatureGatesMap
 }
 
 export type HydrationState = {
@@ -746,8 +752,8 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const postsState = await this.hydratePosts(refs, ctx, undefined, {
-      processDynamicTagsForView: ctx.featureGates.get(
-        FeatureGateID.ThreadsReplyRankingExplorationEnable,
+      processDynamicTagsForView: ctx.featureGatesMap.get(
+        'threads:reply_ranking_exploration:enable',
       )
         ? 'thread'
         : undefined,
@@ -1331,7 +1337,7 @@ export class Hydrator {
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,
-      featureGates: vals.featureGates,
+      featureGatesMap: vals.featureGatesMap,
     })
   }
 
