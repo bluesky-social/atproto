@@ -80,9 +80,9 @@ describe('image uri builder', () => {
   })
 
   it('errors on bad format.', () => {
-    expect(
-      tryGetOptions(`/banner/plain/${did}/${cid.toString()}@gif`),
-    ).toThrow(new BadPathError('Invalid path: bad format'))
+    expect(tryGetOptions(`/banner/plain/${did}/${cid.toString()}@gif`)).toThrow(
+      new BadPathError('Invalid path: bad format'),
+    )
   })
 
   function tryGetOptions(path: string) {
