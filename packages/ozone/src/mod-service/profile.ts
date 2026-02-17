@@ -1,66 +1,62 @@
 import AtpAgent, { AppBskyLabelerDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { OzoneConfig } from '../config'
-import {
-  REASONAPPEAL,
-  REASONMISLEADING,
-  REASONOTHER,
-  REASONRUDE,
-  REASONSEXUAL,
-  REASONSPAM,
-  REASONVIOLATION,
-} from '../lexicon/types/com/atproto/moderation/defs'
+import * as ATReportDefs from '../lexicon/types/com/atproto/moderation/defs'
+import * as ReportDefs from '../lexicon/types/tools/ozone/report/defs'
 import { httpLogger } from '../logger'
 
 // Reverse mapping from new ozone namespaced reason types to old com.atproto namespaced reason types
-export const NEW_TO_OLD_REASON_MAPPING: Record<string, string> = {
-  'tools.ozone.report.defs#reasonAppeal': REASONAPPEAL,
-  'tools.ozone.report.defs#reasonOther': REASONOTHER,
+export const NEW_TO_OLD_REASON_MAPPING: Record<
+  ReportDefs.ReasonType,
+  ATReportDefs.ReasonType
+> = {
+  [ReportDefs.REASONAPPEAL]: ATReportDefs.REASONAPPEAL,
+  [ReportDefs.REASONOTHER]: ATReportDefs.REASONOTHER,
 
-  'tools.ozone.report.defs#reasonViolenceAnimal': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceThreats': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceGraphicContent': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceGlorification': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceExtremistContent': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceTrafficking': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonViolenceOther': REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCEANIMAL]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCETHREATS]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCEGRAPHICCONTENT]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCEGLORIFICATION]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCEEXTREMISTCONTENT]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCETRAFFICKING]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONVIOLENCEOTHER]: ATReportDefs.REASONVIOLATION,
 
-  'tools.ozone.report.defs#reasonSexualAbuseContent': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualNCII': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualDeepfake': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualAnimal': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualUnlabeled': REASONSEXUAL,
-  'tools.ozone.report.defs#reasonSexualOther': REASONSEXUAL,
+  [ReportDefs.REASONSEXUALABUSECONTENT]: ATReportDefs.REASONSEXUAL,
+  [ReportDefs.REASONSEXUALNCII]: ATReportDefs.REASONSEXUAL,
+  [ReportDefs.REASONSEXUALDEEPFAKE]: ATReportDefs.REASONSEXUAL,
+  [ReportDefs.REASONSEXUALANIMAL]: ATReportDefs.REASONSEXUAL,
+  [ReportDefs.REASONSEXUALUNLABELED]: ATReportDefs.REASONSEXUAL,
+  [ReportDefs.REASONSEXUALOTHER]: ATReportDefs.REASONSEXUAL,
 
-  'tools.ozone.report.defs#reasonChildSafetyCSAM': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyGroom': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyPrivacy': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyHarassment': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonChildSafetyOther': REASONVIOLATION,
+  [ReportDefs.REASONCHILDSAFETYCSAM]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONCHILDSAFETYGROOM]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONCHILDSAFETYPRIVACY]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONCHILDSAFETYHARASSMENT]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONCHILDSAFETYOTHER]: ATReportDefs.REASONVIOLATION,
 
-  'tools.ozone.report.defs#reasonHarassmentTroll': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentTargeted': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentHateSpeech': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentDoxxing': REASONRUDE,
-  'tools.ozone.report.defs#reasonHarassmentOther': REASONRUDE,
+  [ReportDefs.REASONHARASSMENTTROLL]: ATReportDefs.REASONRUDE,
+  [ReportDefs.REASONHARASSMENTTARGETED]: ATReportDefs.REASONRUDE,
+  [ReportDefs.REASONHARASSMENTHATESPEECH]: ATReportDefs.REASONRUDE,
+  [ReportDefs.REASONHARASSMENTDOXXING]: ATReportDefs.REASONRUDE,
+  [ReportDefs.REASONHARASSMENTOTHER]: ATReportDefs.REASONRUDE,
 
-  'tools.ozone.report.defs#reasonMisleadingBot': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingImpersonation': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingSpam': REASONSPAM,
-  'tools.ozone.report.defs#reasonMisleadingScam': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingElections': REASONMISLEADING,
-  'tools.ozone.report.defs#reasonMisleadingOther': REASONMISLEADING,
+  [ReportDefs.REASONMISLEADINGBOT]: ATReportDefs.REASONMISLEADING,
+  [ReportDefs.REASONMISLEADINGIMPERSONATION]: ATReportDefs.REASONMISLEADING,
+  [ReportDefs.REASONMISLEADINGSPAM]: ATReportDefs.REASONSPAM,
+  [ReportDefs.REASONMISLEADINGSCAM]: ATReportDefs.REASONMISLEADING,
+  [ReportDefs.REASONMISLEADINGELECTIONS]: ATReportDefs.REASONMISLEADING,
+  [ReportDefs.REASONMISLEADINGOTHER]: ATReportDefs.REASONMISLEADING,
 
-  'tools.ozone.report.defs#reasonRuleSiteSecurity': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonRuleProhibitedSales': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonRuleBanEvasion': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonRuleOther': REASONVIOLATION,
+  [ReportDefs.REASONRULESITESECURITY]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONRULEPROHIBITEDSALES]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONRULEBANEVASION]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONRULEOTHER]: ATReportDefs.REASONVIOLATION,
 
-  'tools.ozone.report.defs#reasonSelfHarmContent': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmED': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmStunts': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmSubstances': REASONVIOLATION,
-  'tools.ozone.report.defs#reasonSelfHarmOther': REASONVIOLATION,
+  [ReportDefs.REASONSELFHARMCONTENT]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONSELFHARMED]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONSELFHARMSTUNTS]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONSELFHARMSUBSTANCES]: ATReportDefs.REASONVIOLATION,
+  [ReportDefs.REASONSELFHARMOTHER]: ATReportDefs.REASONVIOLATION,
 }
 
 interface CacheEntry {
