@@ -8060,6 +8060,59 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested users for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedOnboardingUsers',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+              recId: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -8381,59 +8434,6 @@ export const schemaDict = {
                 items: {
                   type: 'ref',
                   ref: 'lex:app.bsky.actor.defs#profileView',
-                },
-              },
-              recId: {
-                type: 'string',
-                description:
-                  'Snowflake for this recommendation, use when submitting recommendation events.',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
-  AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton: {
-    lexicon: 1,
-    id: 'app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton',
-    defs: {
-      main: {
-        type: 'query',
-        description:
-          'Get a skeleton of suggested users for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedOnboardingUsers',
-        parameters: {
-          type: 'params',
-          properties: {
-            viewer: {
-              type: 'string',
-              format: 'did',
-              description:
-                'DID of the account making the request (not included for public/unauthenticated queries).',
-            },
-            category: {
-              type: 'string',
-              description: 'Category of users to get suggestions for.',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 50,
-              default: 25,
-            },
-          },
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['dids'],
-            properties: {
-              dids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'did',
                 },
               },
               recId: {
@@ -20761,6 +20761,8 @@ export const ids = {
     'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
   AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton:
     'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton:
+    'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetPostThreadOtherV2:
@@ -20771,8 +20773,6 @@ export const ids = {
     'app.bsky.unspecced.getSuggestedFeedsSkeleton',
   AppBskyUnspeccedGetSuggestedOnboardingUsers:
     'app.bsky.unspecced.getSuggestedOnboardingUsers',
-  AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton:
-    'app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton',
   AppBskyUnspeccedGetSuggestedStarterPacks:
     'app.bsky.unspecced.getSuggestedStarterPacks',
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:

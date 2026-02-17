@@ -91,13 +91,13 @@ import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacks from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
 import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/unspecced/getSuggestedOnboardingUsers.js'
-import * as AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton from './types/app/bsky/unspecced/getSuggestedOnboardingUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
@@ -1386,6 +1386,18 @@ export class AppBskyUnspeccedNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getOnboardingSuggestedUsersSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.QueryParams,
+      AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.HandlerInput,
+      AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getPopularFeedGenerators<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -1455,18 +1467,6 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getSuggestedOnboardingUsers' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
-  getSuggestedOnboardingUsersSkeleton<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton.QueryParams,
-      AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton.HandlerInput,
-      AppBskyUnspeccedGetSuggestedOnboardingUsersSkeleton.HandlerOutput
-    >,
-  ) {
-    const nsid = 'app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

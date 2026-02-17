@@ -63,7 +63,7 @@ const skeletonFromDiscover = async (
     throw new InternalServerError('Suggestions agent not available')
 
   const res =
-    await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton(
+    await ctx.suggestionsAgent.app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton(
       {
         limit: params.limit,
         viewer: params.hydrateCtx.viewer ?? undefined,
