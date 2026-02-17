@@ -1,4 +1,5 @@
 /// <reference types="jest" />
+import { analyticsLogger } from '../logger'
 import { MetricsClient } from './metrics'
 
 jest.mock('../logger', () => ({
@@ -6,8 +7,6 @@ jest.mock('../logger', () => ({
     error: jest.fn(),
   },
 }))
-
-import { analyticsLogger } from '../logger'
 
 type TestEvents = {
   click: { button: string }
