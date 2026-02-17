@@ -11,7 +11,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
@@ -174,7 +174,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
@@ -249,7 +249,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(0)",
         "displayName": "ali",
@@ -341,7 +341,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
@@ -383,7 +383,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
       "cid": "cids(3)",
       "creator": Object {
         "associated": Object {
@@ -391,7 +391,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
@@ -448,7 +448,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
@@ -489,7 +489,7 @@ Object {
       },
     },
     Object {
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
       "cid": "cids(3)",
       "creator": Object {
         "associated": Object {
@@ -497,7 +497,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(1)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "its me!",
         "did": "user(0)",
@@ -580,7 +580,7 @@ Object {
           "blockedBy": false,
           "blocking": "record(0)",
           "blockingByList": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@webp",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
@@ -605,7 +605,7 @@ Object {
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(5)/cids(1)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "description": "hi im bob label_me",
         "did": "user(4)",
@@ -617,7 +617,7 @@ Object {
           "blockedBy": false,
           "blocking": "record(0)",
           "blockingByList": Object {
-            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+            "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@webp",
             "cid": "cids(0)",
             "indexedAt": "1970-01-01T00:00:00.000Z",
             "labels": Array [],
@@ -637,7 +637,7 @@ Object {
     },
   ],
   "list": Object {
-    "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+    "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@webp",
     "cid": "cids(0)",
     "creator": Object {
       "associated": Object {
@@ -645,7 +645,7 @@ Object {
           "allowSubscriptions": "followers",
         },
       },
-      "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@jpeg",
+      "avatar": "https://bsky.public.url/img/avatar/plain/user(0)/cids(1)@webp",
       "createdAt": "1970-01-01T00:00:00.000Z",
       "description": "its me!",
       "did": "user(1)",
