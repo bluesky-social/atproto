@@ -1,5 +1,5 @@
 import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
-import { ParsedUserContext, RawUserContext } from './types'
+import { ParsedUserContext, RawUserContext, TrackingMetadata } from './types'
 
 const ANALYTICS_HEADER_STABLE_ID = 'X-Bsky-Stable-Id'
 const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
@@ -31,5 +31,24 @@ export function extractParsedUserContextFromGrowthBookUserContext(
     did: userContext.attributes?.did,
     stableId: userContext.attributes?.stableId,
     sessionId: userContext.attributes?.sessionId,
+  }
+}
+
+/**
+ * Convert the `ParsedUserContext` into the `TrackingMetadata` format that we
+ * use for our analytics events. This ensures that we have the same user
+ * properties as we do for events from our client app.
+ */
+export function parsedUserContextToTrackingMetadata(
+  parsedUserContext: ParsedUserContext,
+): TrackingMetadata {
+  return {
+    base: {
+      deviceId: parsedUserContext.stableId ?? undefined,
+      sessionId: parsedUserContext.sessionId ?? undefined,
+    },
+    session: {
+      did: parsedUserContext.did ?? undefined,
+    },
   }
 }

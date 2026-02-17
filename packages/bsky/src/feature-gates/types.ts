@@ -29,6 +29,28 @@ export type ParsedUserContext = {
 }
 
 /**
+ * This loosely matches the metadata we send from the client for analytics
+ * events. We want to make sure we have the same properties in both places so
+ * that we can correlate feature gate evaluations with analytics events.
+ *
+ * @see https://github.com/bluesky-social/social-app/blob/76109a58dc7aafccdfbd07a81cbd9925e065d1c0/src/analytics/metadata.ts
+ */
+export type TrackingMetadata = {
+  base: {
+    /**
+     * This is called `stableId` in the `ParsedUserContext` and in our
+     * analytics headers, but we call it `deviceId` in the `TrackingMetadata`
+     * because that's what our event proxy expects.
+     */
+    deviceId: string | undefined
+    sessionId: string | undefined
+  }
+  session: {
+    did: string | undefined
+  }
+}
+
+/**
  * Pre-evaluated feature gates map, the result of
  * `ctx.FeatureGatesClient.checkGates()`
  */

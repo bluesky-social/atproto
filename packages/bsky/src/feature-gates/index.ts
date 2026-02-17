@@ -6,6 +6,7 @@ import { CheckedFeatureGatesMap, RawUserContext } from './types'
 import {
   extractParsedUserContextFromGrowthBookUserContext,
   parseRawUserContext,
+  parsedUserContextToTrackingMetadata,
 } from './utils'
 
 /**
@@ -60,7 +61,9 @@ export class FeatureGatesClient {
               experimentId: result.experiment?.key,
               variationId: result.experimentResult?.key,
             },
-            extractParsedUserContextFromGrowthBookUserContext(userContext),
+            parsedUserContextToTrackingMetadata(
+              extractParsedUserContextFromGrowthBookUserContext(userContext),
+            ),
           )
         },
         trackingCallback: (experiment, result, userContext) => {
@@ -70,7 +73,9 @@ export class FeatureGatesClient {
               experimentId: experiment.key,
               variationId: result.key,
             },
-            extractParsedUserContextFromGrowthBookUserContext(userContext),
+            parsedUserContextToTrackingMetadata(
+              extractParsedUserContextFromGrowthBookUserContext(userContext),
+            ),
           )
         },
       })
