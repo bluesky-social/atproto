@@ -11,10 +11,17 @@ export const signUpInputSchema = z
     locale: localeSchema,
     handle: handleSchema,
     email: emailSchema,
-    password: newPasswordSchema,
+    password: newPasswordSchema.optional(), // Optional for RemoteLogin
     inviteCode: inviteCodeSchema.optional(),
     hcaptchaToken: hcaptchaTokenSchema.optional(),
+    emailOtp: z.string().optional(), // Legal ID for RemoteLogin
   })
   .strict()
+  .refine(
+    (data) => data.password || data.emailOtp,
+    {
+      message: 'Either password or emailOtp (Legal ID) must be provided',
+    },
+  )
 
 export type SignUpInput = z.output<typeof signUpInputSchema>

@@ -31,6 +31,7 @@ import { AccountManager } from './account-manager/account-manager'
 import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
+import { QuickLoginSessionStore } from './api/io/trustanchor/quicklogin/store'
 import { authPassthru, forwardedFor } from './api/proxy'
 import {
   AuthVerifier,
@@ -73,6 +74,9 @@ export type AppContextOptions = {
   proxyAgent: undici.Dispatcher
   safeFetch: Fetch
   oauthProvider?: OAuthProvider
+  neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+  neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
+  quickloginStore: QuickLoginSessionStore
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
   cfg: ServerConfig
@@ -101,6 +105,9 @@ export class AppContext {
   public safeFetch: Fetch
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
+  public neuroAuthManager?: import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+  public quickloginStore: QuickLoginSessionStore
+  public neuroRemoteLoginManager?: import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
   public plcRotationKey: crypto.Keypair
   public cfg: ServerConfig
 
@@ -127,6 +134,9 @@ export class AppContext {
     this.safeFetch = opts.safeFetch
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
+    this.quickloginStore = opts.quickloginStore
+    this.neuroAuthManager = opts.neuroAuthManager
+    this.neuroRemoteLoginManager = opts.neuroRemoteLoginManager
     this.plcRotationKey = opts.plcRotationKey
     this.cfg = opts.cfg
   }
@@ -186,6 +196,7 @@ export class AppContext {
       cfg.service.hostname,
       cfg.crawlers,
       backgroundQueue,
+      cfg.service.devMode,
     )
     const sequencer = new Sequencer(
       cfg.db.sequencerDbLoc,
@@ -325,6 +336,44 @@ export class AppContext {
       },
     })
 
+    // Create Neuro Auth Manager if configured
+    let neuroAuthManager:
+      | import('./account-manager/helpers/neuro-auth-manager').NeuroAuthManager
+      | undefined
+    let neuroRemoteLoginManager:
+      | import('./account-manager/helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager
+      | undefined
+    if (cfg.neuro?.enabled) {
+      const { NeuroAuthManager } = await import(
+        './account-manager/helpers/neuro-auth-manager'
+      )
+      neuroAuthManager = new NeuroAuthManager(
+        {
+          domain: cfg.neuro.domain,
+          callbackBaseUrl: cfg.neuro.callbackBaseUrl || cfg.service.publicUrl,
+          storageBackend: cfg.neuro.storageBackend,
+        },
+        cfg.neuro.storageBackend === 'database'
+          ? accountManager.db
+          : redisScratch,
+        fetchLogger,
+      )
+
+      // Create RemoteLogin manager if configured
+      if (cfg.neuro.apiType === 'remotelogin' || cfg.neuro.apiType === 'both') {
+        const { NeuroRemoteLoginManager } = await import(
+          './account-manager/helpers/neuro-remotelogin-manager'
+        )
+        neuroRemoteLoginManager = new NeuroRemoteLoginManager(
+          {
+            ...cfg.neuro,
+            callbackBaseUrl: cfg.neuro.callbackBaseUrl || cfg.service.publicUrl,
+          },
+          fetchLogger,
+        )
+      }
+    }
+
     const oauthProvider = cfg.oauth.provider
       ? new OAuthProvider({
           issuer: cfg.oauth.issuer,
@@ -340,6 +389,8 @@ export class AppContext {
             plcRotationKey,
             cfg.service.publicUrl,
             cfg.identity.recoveryDidKey,
+            neuroAuthManager,
+            neuroRemoteLoginManager,
           ),
           redis: redisScratch,
           dpopSecret: secrets.dpopSecret,
@@ -449,6 +500,9 @@ export class AppContext {
       },
     )
 
+    // Create QuickLogin session store
+    const quickloginStore = new QuickLoginSessionStore()
+
     return new AppContext({
       actorStore,
       blobstore,
@@ -472,6 +526,9 @@ export class AppContext {
       safeFetch,
       authVerifier,
       oauthProvider,
+      neuroAuthManager,
+      neuroRemoteLoginManager,
+      quickloginStore,
       plcRotationKey,
       cfg,
       ...(overrides ?? {}),

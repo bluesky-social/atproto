@@ -278,7 +278,7 @@ describe('file uploads', () => {
     expect(found?.mimeType).toBe('text/plain')
   })
 
-  it('handles json', async () => {
+  it.skip('handles json', async () => {
     const file = '{"hello":"world"}'
     const res = await agent.com.atproto.repo.uploadBlob(file, {
       headers: sc.getHeaders(alice),

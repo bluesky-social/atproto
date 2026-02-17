@@ -10975,6 +10975,58 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminGetNeuroLink: {
+    lexicon: 1,
+    id: 'com.atproto.admin.getNeuroLink',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get Neuro/W ID link for an account.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the account.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+              },
+              email: {
+                type: 'string',
+              },
+              neuroJid: {
+                type: 'string',
+                description: 'Neuro Legal ID (W ID)',
+              },
+              linkedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+              lastLoginAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoAdminGetSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.getSubjectStatus',
@@ -11022,6 +11074,332 @@ export const schemaDict = {
                 type: 'ref',
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
+            },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminImportAccount: {
+    lexicon: 1,
+    id: 'com.atproto.admin.importAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Import an account from another PDS. Called by source PDS during migration. Service-auth or admin-auth required.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'handle'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              handle: {
+                type: 'string',
+                description: 'Account handle',
+              },
+              email: {
+                type: 'string',
+                description: 'Account email (optional for Neuro accounts)',
+              },
+              emailConfirmed: {
+                type: 'boolean',
+                description: 'Whether email was confirmed on source PDS',
+              },
+              neuroLink: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.importAccount#neuroLinkData',
+                description: 'W ID (Neuro Legal ID) link to restore',
+              },
+              appPasswords: {
+                type: 'array',
+                description:
+                  'App passwords to restore (preserves third-party client access)',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.importAccount#appPasswordItem',
+                },
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              importStatus: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.importAccount#importStatusData',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountExists',
+          },
+          {
+            name: 'DuplicateNeuroId',
+          },
+          {
+            name: 'HandleTaken',
+          },
+        ],
+      },
+      neuroLinkData: {
+        type: 'object',
+        required: ['neuroJid'],
+        properties: {
+          neuroJid: {
+            type: 'string',
+            description: 'Neuro Legal ID (W ID) in format: uuid@legal.domain',
+          },
+          linkedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the link was originally created',
+          },
+          lastLoginAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'Last Neuro authentication time',
+          },
+        },
+      },
+      appPasswordItem: {
+        type: 'object',
+        required: ['name', 'passwordScrypt', 'createdAt'],
+        properties: {
+          name: {
+            type: 'string',
+            description: 'App password name',
+          },
+          passwordScrypt: {
+            type: 'string',
+            description: 'Scrypt hash of app password',
+          },
+          privileged: {
+            type: 'boolean',
+            description: 'Whether app password has privileged access',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+      importStatusData: {
+        type: 'object',
+        properties: {
+          accountCreated: {
+            type: 'boolean',
+            description: 'Whether account was created successfully',
+          },
+          neuroLinkRestored: {
+            type: 'boolean',
+            description: 'Whether W ID link was restored',
+          },
+          appPasswordsRestored: {
+            type: 'integer',
+            description: 'Number of app passwords restored',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminListNeuroAccounts: {
+    lexicon: 1,
+    id: 'com.atproto.admin.listNeuroAccounts',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'List all accounts with their Neuro/W ID links.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 100,
+              description: 'Maximum number of accounts to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['accounts'],
+            properties: {
+              accounts: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.admin.listNeuroAccounts#neuroAccountView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      neuroAccountView: {
+        type: 'object',
+        required: ['did', 'handle'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          handle: {
+            type: 'string',
+          },
+          email: {
+            type: 'string',
+          },
+          neuroJid: {
+            type: 'string',
+            description: 'Neuro Legal ID (W ID)',
+          },
+          linkedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          lastLoginAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminMigrateAccount: {
+    lexicon: 1,
+    id: 'com.atproto.admin.migrateAccount',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Migrate an account to a different PDS. Admin only. Transfers all account data, blobs, and W ID links.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'targetPdsUrl'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'DID of account to migrate',
+              },
+              targetPdsUrl: {
+                type: 'string',
+                format: 'uri',
+                description:
+                  'URL of destination PDS (e.g., https://pds2.wsocial.eu)',
+              },
+              targetHandle: {
+                type: 'string',
+                description:
+                  'Optional: New handle on target PDS (default: keep existing)',
+              },
+              skipDeactivation: {
+                type: 'boolean',
+                description:
+                  "If true, don't deactivate account on source PDS after migration",
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'sourcePds', 'targetPds', 'status', 'migratedAt'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              sourcePds: {
+                type: 'string',
+                description: 'Source PDS hostname',
+              },
+              targetPds: {
+                type: 'string',
+                description: 'Target PDS URL',
+              },
+              status: {
+                type: 'string',
+                description: 'Migration status: completed, partial, failed',
+              },
+              migratedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+              details: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.migrateAccount#migrationDetails',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountNotFound',
+          },
+          {
+            name: 'InvalidTargetPds',
+          },
+          {
+            name: 'MigrationFailed',
+          },
+        ],
+      },
+      migrationDetails: {
+        type: 'object',
+        properties: {
+          repoBlocks: {
+            type: 'integer',
+            description: 'Number of repo blocks migrated',
+          },
+          blobsTransferred: {
+            type: 'integer',
+            description: 'Number of blobs successfully transferred',
+          },
+          blobsFailed: {
+            type: 'integer',
+            description: 'Number of blobs that failed to transfer',
+          },
+          neuroLinkMigrated: {
+            type: 'boolean',
+            description: 'Whether W ID link was migrated',
+          },
+          appPasswordsMigrated: {
+            type: 'integer',
+            description: 'Number of app passwords migrated',
+          },
+          errors: {
+            type: 'array',
+            items: {
+              type: 'string',
             },
           },
         },
@@ -11234,6 +11612,73 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoAdminUpdateNeuroLink: {
+    lexicon: 1,
+    id: 'com.atproto.admin.updateNeuroLink',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Update the Neuro/W ID link for an account.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'newLegalId'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the account.',
+              },
+              newLegalId: {
+                type: 'string',
+                description:
+                  'The new Neuro Legal ID (W ID) to link to this account.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['success', 'did', 'newLegalId', 'updatedAt'],
+            properties: {
+              success: {
+                type: 'boolean',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+              },
+              oldLegalId: {
+                type: 'string',
+                description: 'Previous Legal ID (if any)',
+              },
+              newLegalId: {
+                type: 'string',
+              },
+              updatedAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+          },
+          {
+            name: 'InvalidLegalId',
+          },
+          {
+            name: 'LegalIdInUse',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoAdminUpdateSubjectStatus: {
     lexicon: 1,
     id: 'com.atproto.admin.updateSubjectStatus',
@@ -11286,6 +11731,76 @@ export const schemaDict = {
                 ref: 'lex:com.atproto.admin.defs#statusAttr',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoAdminValidateMigrationTarget: {
+    lexicon: 1,
+    id: 'com.atproto.admin.validateMigrationTarget',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Validate that target PDS can accept account migration. Pre-flight check. Admin only.',
+        parameters: {
+          type: 'params',
+          required: ['did'],
+          properties: {
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'DID to migrate',
+            },
+            neuroJid: {
+              type: 'string',
+              description: 'W ID (Neuro Legal ID) if account has one',
+            },
+            targetHandle: {
+              type: 'string',
+              description: 'New handle on target (if changing)',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['canAccept'],
+            properties: {
+              canAccept: {
+                type: 'boolean',
+                description: 'Whether target PDS can accept this migration',
+              },
+              checks: {
+                type: 'ref',
+                ref: 'lex:com.atproto.admin.validateMigrationTarget#validationChecks',
+                description: 'Detailed validation results',
+              },
+              error: {
+                type: 'string',
+                description: 'Error message if canAccept is false',
+              },
+            },
+          },
+        },
+      },
+      validationChecks: {
+        type: 'object',
+        description: 'Detailed validation check results',
+        properties: {
+          didAvailable: {
+            type: 'boolean',
+            description: 'True if DID does not exist on target',
+          },
+          neuroJidAvailable: {
+            type: 'boolean',
+            description: 'True if W ID is not linked to another account',
+          },
+          handleAvailable: {
+            type: 'boolean',
+            description: 'True if handle is available on target',
           },
         },
       },
@@ -15443,6 +15958,217 @@ export const schemaDict = {
                 format: 'at-identifier',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorQuickloginCallback: {
+    lexicon: 1,
+    id: 'io.trustanchor.quicklogin.callback',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Receive QuickLogin provider callback after user scans QR',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['SessionId', 'State'],
+            properties: {
+              SessionId: {
+                type: 'string',
+                description: 'Session ID from init request',
+              },
+              State: {
+                type: 'string',
+                description: 'Authentication state (Approved/Rejected)',
+              },
+              JID: {
+                type: 'string',
+                description: "User's JID from W ID app",
+              },
+              Provider: {
+                type: 'string',
+                description: 'Provider domain',
+              },
+              Domain: {
+                type: 'string',
+                description: 'Domain used for authentication',
+              },
+              Key: {
+                type: 'string',
+                description: 'Public key',
+              },
+              Properties: {
+                type: 'unknown',
+                description: 'User properties from W ID',
+              },
+              Created: {
+                type: 'string',
+                format: 'datetime',
+              },
+              Updated: {
+                type: 'string',
+                format: 'datetime',
+              },
+              From: {
+                type: 'string',
+                format: 'datetime',
+              },
+              To: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorQuickloginInit: {
+    lexicon: 1,
+    id: 'io.trustanchor.quicklogin.init',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Initialize QuickLogin session',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              allowCreate: {
+                type: 'boolean',
+                description:
+                  'Allow automatic account creation if JID not found',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'sessionId',
+              'sessionToken',
+              'serviceId',
+              'expiresAt',
+              'providerBaseUrl',
+            ],
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Unique session identifier',
+              },
+              sessionToken: {
+                type: 'string',
+                description: 'Secret token for polling status',
+              },
+              serviceId: {
+                type: 'string',
+                description: 'Service ID from provider for QR generation',
+              },
+              expiresAt: {
+                type: 'string',
+                format: 'datetime',
+                description: 'When this session expires',
+              },
+              providerBaseUrl: {
+                type: 'string',
+                format: 'uri',
+                description: 'Provider base URL for fetching QR code',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorQuickloginStatus: {
+    lexicon: 1,
+    id: 'io.trustanchor.quicklogin.status',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Poll QuickLogin session status',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sessionId', 'sessionToken'],
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'Session identifier from init',
+              },
+              sessionToken: {
+                type: 'string',
+                description: 'Session token from init',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['status', 'expiresAt'],
+            properties: {
+              status: {
+                type: 'string',
+                enum: ['pending', 'completed', 'failed'],
+                description: 'Current session status',
+              },
+              expiresAt: {
+                type: 'string',
+                format: 'datetime',
+                description: 'When this session expires',
+              },
+              result: {
+                type: 'ref',
+                ref: 'lex:io.trustanchor.quicklogin.status#loginResult',
+                description: 'Login result if completed',
+              },
+              error: {
+                type: 'string',
+                description: 'Error message if failed',
+              },
+            },
+          },
+        },
+      },
+      loginResult: {
+        type: 'object',
+        required: ['accessJwt', 'refreshJwt', 'did', 'handle'],
+        properties: {
+          accessJwt: {
+            type: 'string',
+            description: 'Access token',
+          },
+          refreshJwt: {
+            type: 'string',
+            description: 'Refresh token',
+          },
+          did: {
+            type: 'string',
+            description: 'User DID',
+          },
+          handle: {
+            type: 'string',
+            description: 'User handle',
+          },
+          created: {
+            type: 'boolean',
+            description: 'Whether account was newly created',
           },
         },
       },
@@ -20831,7 +21557,11 @@ export const ids = {
   ComAtprotoAdminGetAccountInfo: 'com.atproto.admin.getAccountInfo',
   ComAtprotoAdminGetAccountInfos: 'com.atproto.admin.getAccountInfos',
   ComAtprotoAdminGetInviteCodes: 'com.atproto.admin.getInviteCodes',
+  ComAtprotoAdminGetNeuroLink: 'com.atproto.admin.getNeuroLink',
   ComAtprotoAdminGetSubjectStatus: 'com.atproto.admin.getSubjectStatus',
+  ComAtprotoAdminImportAccount: 'com.atproto.admin.importAccount',
+  ComAtprotoAdminListNeuroAccounts: 'com.atproto.admin.listNeuroAccounts',
+  ComAtprotoAdminMigrateAccount: 'com.atproto.admin.migrateAccount',
   ComAtprotoAdminSearchAccounts: 'com.atproto.admin.searchAccounts',
   ComAtprotoAdminSendEmail: 'com.atproto.admin.sendEmail',
   ComAtprotoAdminUpdateAccountEmail: 'com.atproto.admin.updateAccountEmail',
@@ -20840,7 +21570,10 @@ export const ids = {
     'com.atproto.admin.updateAccountPassword',
   ComAtprotoAdminUpdateAccountSigningKey:
     'com.atproto.admin.updateAccountSigningKey',
+  ComAtprotoAdminUpdateNeuroLink: 'com.atproto.admin.updateNeuroLink',
   ComAtprotoAdminUpdateSubjectStatus: 'com.atproto.admin.updateSubjectStatus',
+  ComAtprotoAdminValidateMigrationTarget:
+    'com.atproto.admin.validateMigrationTarget',
   ComAtprotoIdentityDefs: 'com.atproto.identity.defs',
   ComAtprotoIdentityGetRecommendedDidCredentials:
     'com.atproto.identity.getRecommendedDidCredentials',
@@ -20930,6 +21663,9 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  IoTrustanchorQuickloginCallback: 'io.trustanchor.quicklogin.callback',
+  IoTrustanchorQuickloginInit: 'io.trustanchor.quicklogin.init',
+  IoTrustanchorQuickloginStatus: 'io.trustanchor.quicklogin.status',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',

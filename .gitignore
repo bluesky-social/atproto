@@ -15,5 +15,9 @@ test.sqlite
 \#*\#
 *~
 *.swp
+test-*-local.*
+*-local.html
+old/
 .claude/
 coverage
+packages/lex/lex-password-agent

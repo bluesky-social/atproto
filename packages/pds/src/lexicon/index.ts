@@ -143,14 +143,20 @@ import * as ComAtprotoAdminEnableAccountInvites from './types/com/atproto/admin/
 import * as ComAtprotoAdminGetAccountInfo from './types/com/atproto/admin/getAccountInfo.js'
 import * as ComAtprotoAdminGetAccountInfos from './types/com/atproto/admin/getAccountInfos.js'
 import * as ComAtprotoAdminGetInviteCodes from './types/com/atproto/admin/getInviteCodes.js'
+import * as ComAtprotoAdminGetNeuroLink from './types/com/atproto/admin/getNeuroLink.js'
 import * as ComAtprotoAdminGetSubjectStatus from './types/com/atproto/admin/getSubjectStatus.js'
+import * as ComAtprotoAdminImportAccount from './types/com/atproto/admin/importAccount.js'
+import * as ComAtprotoAdminListNeuroAccounts from './types/com/atproto/admin/listNeuroAccounts.js'
+import * as ComAtprotoAdminMigrateAccount from './types/com/atproto/admin/migrateAccount.js'
 import * as ComAtprotoAdminSearchAccounts from './types/com/atproto/admin/searchAccounts.js'
 import * as ComAtprotoAdminSendEmail from './types/com/atproto/admin/sendEmail.js'
 import * as ComAtprotoAdminUpdateAccountEmail from './types/com/atproto/admin/updateAccountEmail.js'
 import * as ComAtprotoAdminUpdateAccountHandle from './types/com/atproto/admin/updateAccountHandle.js'
 import * as ComAtprotoAdminUpdateAccountPassword from './types/com/atproto/admin/updateAccountPassword.js'
 import * as ComAtprotoAdminUpdateAccountSigningKey from './types/com/atproto/admin/updateAccountSigningKey.js'
+import * as ComAtprotoAdminUpdateNeuroLink from './types/com/atproto/admin/updateNeuroLink.js'
 import * as ComAtprotoAdminUpdateSubjectStatus from './types/com/atproto/admin/updateSubjectStatus.js'
+import * as ComAtprotoAdminValidateMigrationTarget from './types/com/atproto/admin/validateMigrationTarget.js'
 import * as ComAtprotoIdentityGetRecommendedDidCredentials from './types/com/atproto/identity/getRecommendedDidCredentials.js'
 import * as ComAtprotoIdentityRefreshIdentity from './types/com/atproto/identity/refreshIdentity.js'
 import * as ComAtprotoIdentityRequestPlcOperationSignature from './types/com/atproto/identity/requestPlcOperationSignature.js'
@@ -222,6 +228,9 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as IoTrustanchorQuickloginCallback from './types/io/trustanchor/quicklogin/callback.js'
+import * as IoTrustanchorQuickloginInit from './types/io/trustanchor/quicklogin/init.js'
+import * as IoTrustanchorQuickloginStatus from './types/io/trustanchor/quicklogin/status.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -385,6 +394,7 @@ export class Server {
   app: AppNS
   chat: ChatNS
   com: ComNS
+  io: IoNS
   tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
@@ -392,6 +402,7 @@ export class Server {
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
     this.com = new ComNS(this)
+    this.io = new IoNS(this)
     this.tools = new ToolsNS(this)
   }
 }
@@ -2231,6 +2242,18 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminGetNeuroLink.QueryParams,
+      ComAtprotoAdminGetNeuroLink.HandlerInput,
+      ComAtprotoAdminGetNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.getNeuroLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getSubjectStatus<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2240,6 +2263,42 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.getSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  importAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminImportAccount.QueryParams,
+      ComAtprotoAdminImportAccount.HandlerInput,
+      ComAtprotoAdminImportAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.importAccount' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listNeuroAccounts<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminListNeuroAccounts.QueryParams,
+      ComAtprotoAdminListNeuroAccounts.HandlerInput,
+      ComAtprotoAdminListNeuroAccounts.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.listNeuroAccounts' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  migrateAccount<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminMigrateAccount.QueryParams,
+      ComAtprotoAdminMigrateAccount.HandlerInput,
+      ComAtprotoAdminMigrateAccount.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.migrateAccount' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -2315,6 +2374,18 @@ export class ComAtprotoAdminNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  updateNeuroLink<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminUpdateNeuroLink.QueryParams,
+      ComAtprotoAdminUpdateNeuroLink.HandlerInput,
+      ComAtprotoAdminUpdateNeuroLink.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.updateNeuroLink' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   updateSubjectStatus<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -2324,6 +2395,18 @@ export class ComAtprotoAdminNS {
     >,
   ) {
     const nsid = 'com.atproto.admin.updateSubjectStatus' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  validateMigrationTarget<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoAdminValidateMigrationTarget.QueryParams,
+      ComAtprotoAdminValidateMigrationTarget.HandlerInput,
+      ComAtprotoAdminValidateMigrationTarget.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.admin.validateMigrationTarget' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
@@ -3238,6 +3321,70 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.revokeAccountCredentials' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class IoNS {
+  _server: Server
+  trustanchor: IoTrustanchorNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.trustanchor = new IoTrustanchorNS(server)
+  }
+}
+
+export class IoTrustanchorNS {
+  _server: Server
+  quicklogin: IoTrustanchorQuickloginNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.quicklogin = new IoTrustanchorQuickloginNS(server)
+  }
+}
+
+export class IoTrustanchorQuickloginNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  callback<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorQuickloginCallback.QueryParams,
+      IoTrustanchorQuickloginCallback.HandlerInput,
+      IoTrustanchorQuickloginCallback.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.quicklogin.callback' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  init<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorQuickloginInit.QueryParams,
+      IoTrustanchorQuickloginInit.HandlerInput,
+      IoTrustanchorQuickloginInit.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.quicklogin.init' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  status<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorQuickloginStatus.QueryParams,
+      IoTrustanchorQuickloginStatus.HandlerInput,
+      IoTrustanchorQuickloginStatus.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.quicklogin.status' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

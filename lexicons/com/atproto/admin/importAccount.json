@@ -1,0 +1,135 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.importAccount",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Import an account from another PDS. Called by source PDS during migration. Service-auth or admin-auth required.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "handle"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "handle": {
+              "type": "string",
+              "description": "Account handle"
+            },
+            "email": {
+              "type": "string",
+              "description": "Account email (optional for Neuro accounts)"
+            },
+            "emailConfirmed": {
+              "type": "boolean",
+              "description": "Whether email was confirmed on source PDS"
+            },
+            "neuroLink": {
+              "type": "ref",
+              "ref": "#neuroLinkData",
+              "description": "W ID (Neuro Legal ID) link to restore"
+            },
+            "appPasswords": {
+              "type": "array",
+              "description": "App passwords to restore (preserves third-party client access)",
+              "items": {
+                "type": "ref",
+                "ref": "#appPasswordItem"
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "importStatus": {
+              "type": "ref",
+              "ref": "#importStatusData"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "AccountExists"
+        },
+        {
+          "name": "DuplicateNeuroId"
+        },
+        {
+          "name": "HandleTaken"
+        }
+      ]
+    },
+    "neuroLinkData": {
+      "type": "object",
+      "required": ["neuroJid"],
+      "properties": {
+        "neuroJid": {
+          "type": "string",
+          "description": "Neuro Legal ID (W ID) in format: uuid@legal.domain"
+        },
+        "linkedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the link was originally created"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "Last Neuro authentication time"
+        }
+      }
+    },
+    "appPasswordItem": {
+      "type": "object",
+      "required": ["name", "passwordScrypt", "createdAt"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "App password name"
+        },
+        "passwordScrypt": {
+          "type": "string",
+          "description": "Scrypt hash of app password"
+        },
+        "privileged": {
+          "type": "boolean",
+          "description": "Whether app password has privileged access"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    },
+    "importStatusData": {
+      "type": "object",
+      "properties": {
+        "accountCreated": {
+          "type": "boolean",
+          "description": "Whether account was created successfully"
+        },
+        "neuroLinkRestored": {
+          "type": "boolean",
+          "description": "Whether W ID link was restored"
+        },
+        "appPasswordsRestored": {
+          "type": "integer",
+          "description": "Number of app passwords restored"
+        }
+      }
+    }
+  }
+}

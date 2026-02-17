@@ -1,0 +1,70 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.quicklogin.callback",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Receive QuickLogin provider callback after user scans QR",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["SessionId", "State"],
+          "properties": {
+            "SessionId": {
+              "type": "string",
+              "description": "Session ID from init request"
+            },
+            "State": {
+              "type": "string",
+              "description": "Authentication state (Approved/Rejected)"
+            },
+            "JID": {
+              "type": "string",
+              "description": "User's JID from W ID app"
+            },
+            "Provider": {
+              "type": "string",
+              "description": "Provider domain"
+            },
+            "Domain": {
+              "type": "string",
+              "description": "Domain used for authentication"
+            },
+            "Key": {
+              "type": "string",
+              "description": "Public key"
+            },
+            "Properties": {
+              "type": "unknown",
+              "description": "User properties from W ID"
+            },
+            "Created": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "Updated": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "From": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "To": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  }
+}

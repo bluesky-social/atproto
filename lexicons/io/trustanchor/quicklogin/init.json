@@ -1,0 +1,53 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.quicklogin.init",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Initialize QuickLogin session",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "allowCreate": {
+              "type": "boolean",
+              "description": "Allow automatic account creation if JID not found"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["sessionId", "sessionToken", "serviceId", "expiresAt", "providerBaseUrl"],
+          "properties": {
+            "sessionId": {
+              "type": "string",
+              "description": "Unique session identifier"
+            },
+            "sessionToken": {
+              "type": "string",
+              "description": "Secret token for polling status"
+            },
+            "serviceId": {
+              "type": "string",
+              "description": "Service ID from provider for QR generation"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When this session expires"
+            },
+            "providerBaseUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "Provider base URL for fetching QR code"
+            }
+          }
+        }
+      }
+    }
+  }
+}

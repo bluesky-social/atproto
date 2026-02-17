@@ -1,0 +1,52 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.getNeuroLink",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get Neuro/W ID link for an account.",
+      "parameters": {
+        "type": "params",
+        "required": ["did"],
+        "properties": {
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the account."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "handle"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "handle": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "neuroJid": {
+              "type": "string",
+              "description": "Neuro Legal ID (W ID)"
+            },
+            "linkedAt": {
+              "type": "string",
+              "format": "datetime"
+            },
+            "lastLoginAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      }
+    }
+  }
+}

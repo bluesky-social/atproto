@@ -4,4 +4,5 @@ module.exports = {
   transform: { '^.+\\.ts$': '@swc/jest' },
   setupFiles: ['<rootDir>/../../jest.setup.ts'],
   moduleNameMapper: { '^(\\.\\.?\\/.+)\\.js$': ['$1.ts', '$1.js'] },
+  forceExit: true,
 }

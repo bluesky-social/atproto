@@ -1,0 +1,66 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.admin.updateNeuroLink",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Update the Neuro/W ID link for an account.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "newLegalId"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the account."
+            },
+            "newLegalId": {
+              "type": "string",
+              "description": "The new Neuro Legal ID (W ID) to link to this account."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["success", "did", "newLegalId", "updatedAt"],
+          "properties": {
+            "success": {
+              "type": "boolean"
+            },
+            "did": {
+              "type": "string",
+              "format": "did"
+            },
+            "oldLegalId": {
+              "type": "string",
+              "description": "Previous Legal ID (if any)"
+            },
+            "newLegalId": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string",
+              "format": "datetime"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "NotFound"
+        },
+        {
+          "name": "InvalidLegalId"
+        },
+        {
+          "name": "LegalIdInUse"
+        }
+      ]
+    }
+  }
+}
