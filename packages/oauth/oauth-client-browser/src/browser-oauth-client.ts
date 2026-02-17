@@ -6,7 +6,7 @@ import {
   OAuthClient,
   OAuthClientOptions,
   OAuthSession,
-  SessionEventMap,
+  SessionHooks,
 } from '@atproto/oauth-client'
 import {
   OAuthClientMetadataInput,
@@ -18,11 +18,7 @@ import {
 import { BrowserOAuthDatabase } from './browser-oauth-database.js'
 import { BrowserRuntimeImplementation } from './browser-runtime-implementation.js'
 import { LoginContinuedInParentWindowError } from './errors.js'
-import {
-  Simplify,
-  TypedBroadcastChannel,
-  buildLoopbackClientId,
-} from './util.js'
+import { Simplify, buildLoopbackClientId } from './util.js'
 
 export type BrowserOAuthClientOptions = Simplify<
   {
@@ -70,11 +66,15 @@ type PopupChannelData = PopupChannelResultData | PopupChannelAckData
 //- State synchronization channel
 
 type SyncChannelMessage = {
-  [K in keyof SessionEventMap]: [K, SessionEventMap[K]]
-}[keyof SessionEventMap]
+  [K in keyof SessionHooks & string]: {
+    name: K
+    args: Parameters<NonNullable<SessionHooks[K]>>
+  }
+}[keyof SessionHooks]
 
-const syncChannel: TypedBroadcastChannel<SyncChannelMessage> =
-  new BroadcastChannel(`${NAMESPACE}(synchronization-channel)`)
+const syncChannel = new BroadcastChannel(
+  `${NAMESPACE}(synchronization-channel:2)`,
+)
 
 export type BrowserOAuthClientLoadOptions = Simplify<
   {
@@ -83,7 +83,9 @@ export type BrowserOAuthClientLoadOptions = Simplify<
   } & Omit<BrowserOAuthClientOptions, 'clientMetadata'>
 >
 
-export class BrowserOAuthClient extends OAuthClient implements Disposable {
+const runtimeImplementation = new BrowserRuntimeImplementation()
+
+export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
   static async load({ clientId, ...options }: BrowserOAuthClientLoadOptions) {
     if (clientId.startsWith('http:')) {
       const clientMetadata = atprotoLoopbackClientMetadata(clientId)
@@ -100,7 +102,9 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
     }
   }
 
-  readonly [Symbol.dispose]: () => void
+  private readonly ac = new AbortController()
+
+  private readonly database: BrowserOAuthDatabase
 
   constructor({
     clientMetadata = atprotoLoopbackClientMetadata(
@@ -128,7 +132,7 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
       responseMode,
       keyset: undefined,
 
-      runtimeImplementation: new BrowserRuntimeImplementation(),
+      runtimeImplementation,
 
       sessionStore: database.getSessionStore(),
       stateStore: database.getStateStore(),
@@ -140,42 +144,46 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
         database.getAuthorizationServerMetadataCache(),
       protectedResourceMetadataCache:
         database.getProtectedResourceMetadataCache(),
+
+      onDelete: async (sub, cause) => {
+        if (localStorage.getItem(`${NAMESPACE}(sub)`) === sub) {
+          localStorage.removeItem(`${NAMESPACE}(sub)`)
+        }
+
+        syncChannel.postMessage({
+          name: 'onDelete',
+          args: [sub, cause],
+        } satisfies SyncChannelMessage)
+
+        return options.onDelete?.call(null, sub, cause)
+      },
+
+      onUpdate: async (sub, session) => {
+        syncChannel.postMessage({
+          name: 'onUpdate',
+          args: [sub, session],
+        } satisfies SyncChannelMessage)
+
+        return options.onUpdate?.call(null, sub, session)
+      },
     })
 
-    // @TODO replace with AsyncDisposableStack once they are standardized
-    const ac = new AbortController()
-    const { signal } = ac
-    this[Symbol.dispose] = () => ac.abort()
+    this.database = database
 
-    signal.addEventListener('abort', () => database[Symbol.asyncDispose](), {
-      once: true,
-    })
+    const { signal } = this.ac
 
-    // Keep track of the current session
-
-    this.addEventListener('deleted', ({ detail: { sub } }) => {
-      if (localStorage.getItem(`${NAMESPACE}(sub)`) === sub) {
-        localStorage.removeItem(`${NAMESPACE}(sub)`)
-      }
-    })
-
-    // Session synchronization across tabs
-
-    for (const type of ['deleted', 'updated'] as const) {
-      this.sessionGetter.addEventListener(type, ({ detail }) => {
-        // Notify other tabs when a session is deleted or updated
-        syncChannel.postMessage([type, detail] as SyncChannelMessage)
-      })
-    }
-
+    // Trigger hooks when an event is emitted in another tab
     syncChannel.addEventListener(
       'message',
       (event) => {
-        if (event.source !== window) {
-          // Trigger listeners when an event is received from another tab
-          const [type, detail] = event.data
-          this.dispatchCustomEvent(type, detail)
-        }
+        if (event.source === window) return
+
+        const { name, args } = event.data as SyncChannelMessage
+
+        const hook = options[name]
+
+        // @ts-expect-error
+        void hook?.(...args)
       },
       // Remove the listener when the client is disposed
       { signal },
@@ -481,6 +489,11 @@ export class BrowserOAuthClient extends OAuthClient implements Disposable {
 
         throw err
       })
+  }
+
+  async [Symbol.asyncDispose]() {
+    this.ac.abort()
+    await this.database[Symbol.asyncDispose]()
   }
 
   dispose() {
