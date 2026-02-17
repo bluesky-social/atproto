@@ -46,6 +46,8 @@ export function createImageProcessor({
     return processor.jpeg({ quality })
   } else if (format === 'png') {
     return processor.png({ quality })
+  } else if (format === 'webp') {
+    return processor.webp({ quality })
   } else {
     throw new Error(`Unhandled case: ${format}`)
   }
