@@ -73,6 +73,7 @@ const skeleton = async (input: {
       dids: res.data.actors.map((a) => a.did),
       cursor: res.data.cursor,
       recId: res.data.recId,
+      recIdStr: res.data.recIdStr,
       resHeaders: res.headers,
     }
   } else {
@@ -132,6 +133,7 @@ const presentation = (input: {
     actors,
     cursor: skeleton.cursor,
     recId: skeleton.recId,
+    recIdStr: skeleton.recIdStr,
     resHeaders: skeleton.resHeaders,
   }
 }
@@ -152,5 +154,6 @@ type Skeleton = {
   dids: string[]
   cursor?: string
   recId?: number
+  recIdStr?: string
   resHeaders?: HeadersMap
 }
