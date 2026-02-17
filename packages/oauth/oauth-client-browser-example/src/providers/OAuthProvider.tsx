@@ -4,13 +4,11 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from 'react'
-import type {
-  BrowserOAuthClient,
-  OAuthSession,
-} from '@atproto/oauth-client-browser'
+import { type OAuthSession } from '@atproto/oauth-client-browser'
+import { useAbortableEffect } from '../lib/use-abortable-effect'
+import { initPromise, oauthClient, oauthEvents } from '../oauthClient'
 
 export type SignInFunction = (
   input: string,
@@ -31,69 +29,46 @@ export const OAuthContext = createContext<null | {
   signOut: SignOutFunction
 }>(null)
 
-export function OAuthProvider({
-  client,
-  children,
-}: PropsWithChildren<{
-  client: BrowserOAuthClient
-}>) {
+export function OAuthProvider({ children }: PropsWithChildren) {
   const [initialized, setInitialized] = useState(false)
   const [loading, setLoading] = useState(false)
   const [session, setSession] = useState<null | OAuthSession>(null)
 
-  const clientInitRef = useRef<typeof client>(null)
-
   // Initialize by restoring the previously loaded session, if any.
-  useEffect(() => {
-    // In strict mode, we don't want to re-init() the client if it's the same
-    if (clientInitRef.current === client) return
-    clientInitRef.current = client
+  useAbortableEffect(
+    (signal) => {
+      setInitialized(false)
+      setSession(null)
 
-    setInitialized(false)
-    setSession(null)
+      void initPromise
+        .then(async (result) => {
+          if (signal.aborted) return
 
-    void client
-      .init(false)
-      .then(async (result) => {
-        if (clientInitRef.current !== client) return
+          if (result) setSession(result.session)
+        })
+        .finally(() => {
+          if (signal.aborted) return
 
-        setInitialized(true)
+          setInitialized(true)
+        })
+    },
+    [initPromise],
+  )
 
-        if (!result) return
-        const { session } = result
-
-        setSession(session)
-
-        // If we are not back from a redirect, force an async refresh here,
-        // which will cause the session to be deleted by the "deleted" event
-        // handler if the refresh token was revoked
-        if (result.state === undefined) void session.getTokenInfo(true)
-      })
-      .catch((err) => {
-        if (clientInitRef.current !== client) return
-
-        console.warn('Error during OAuth client initialization:', err)
-
-        setInitialized(true)
-      })
-  }, [client])
-
-  // If the current session gets deleted (e.g. from another browser tab, or
-  // because a refresh token was revoked), clear it
-  useEffect(() => {
-    if (!session) return
-
-    const handleDelete = (event: CustomEvent<{ sub: string }>) => {
-      if (event.detail.sub === session.did) {
-        setSession(null)
-      }
-    }
-
-    client.addEventListener('deleted', handleDelete)
-    return () => {
-      client.removeEventListener('deleted', handleDelete)
-    }
-  }, [client, session])
+  useAbortableEffect(
+    (signal) => {
+      oauthEvents.addEventListener(
+        'deleted',
+        (evt: CustomEvent<{ sub: string; cause: unknown }>) => {
+          setSession((session) =>
+            evt.detail.sub === session?.sub ? null : session,
+          )
+        },
+        { signal },
+      )
+    },
+    [oauthEvents],
+  )
 
   // When initializing the AuthProvider, we used "false" as restore's refresh
   // argument so that the app can work off-line. The following effect will
@@ -119,16 +94,16 @@ export function OAuthProvider({
       setLoading(true)
 
       try {
-        const session = await client
+        const session = await oauthClient
           .restore(input, true)
-          .catch(async (_err) => client.signIn(input, options))
+          .catch(async (_err) => oauthClient.signIn(input, options))
 
         setSession(session)
       } finally {
         setLoading(false)
       }
     },
-    [client],
+    [oauthClient],
   )
 
   const signOut = useCallback<SignOutFunction>(async () => {
@@ -147,7 +122,7 @@ export function OAuthProvider({
     async (input, options) => {
       setLoading(true)
       try {
-        const session = await client.signIn(input, {
+        const session = await oauthClient.signIn(input, {
           ...options,
           prompt: 'create',
         })
@@ -157,7 +132,7 @@ export function OAuthProvider({
         setLoading(false)
       }
     },
-    [client],
+    [oauthClient],
   )
 
   return (
