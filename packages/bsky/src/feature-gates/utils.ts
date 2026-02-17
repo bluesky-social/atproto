@@ -1,7 +1,10 @@
 import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
 import { ParsedUserContext, RawUserContext, TrackingMetadata } from './types'
 
-const ANALYTICS_HEADER_STABLE_ID = 'X-Bsky-Stable-Id'
+/**
+ * These need to match what the client sends
+ */
+const ANALYTICS_HEADER_DEVICE_ID = 'X-Bsky-Device-Id'
 const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
 
 /**
@@ -15,7 +18,7 @@ export function parseRawUserContext(
 ): ParsedUserContext {
   return {
     did: userContext.viewer,
-    stableId: userContext.req.header(ANALYTICS_HEADER_STABLE_ID),
+    deviceId: userContext.req.header(ANALYTICS_HEADER_DEVICE_ID),
     sessionId: userContext.req.header(ANALYTICS_HEADER_SESSION_ID),
   }
 }
@@ -29,7 +32,7 @@ export function extractParsedUserContextFromGrowthBookUserContext(
 ): ParsedUserContext {
   return {
     did: userContext.attributes?.did,
-    stableId: userContext.attributes?.stableId,
+    deviceId: userContext.attributes?.deviceId,
     sessionId: userContext.attributes?.sessionId,
   }
 }
@@ -44,7 +47,7 @@ export function parsedUserContextToTrackingMetadata(
 ): TrackingMetadata {
   return {
     base: {
-      deviceId: parsedUserContext.stableId ?? undefined,
+      deviceId: parsedUserContext.deviceId ?? undefined,
       sessionId: parsedUserContext.sessionId ?? undefined,
     },
     session: {
