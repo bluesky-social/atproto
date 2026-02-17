@@ -37,7 +37,12 @@ export type ParsedUserContext = {
  */
 export type TrackingMetadata = {
   base: {
-    stableId: string | undefined
+    /**
+     * This is called `stableId` in the `ParsedUserContext` and in our
+     * analytics headers, but we call it `deviceId` in the `TrackingMetadata`
+     * because that's what our event proxy expects.
+     */
+    deviceId: string | undefined
     sessionId: string | undefined
   }
   session: {

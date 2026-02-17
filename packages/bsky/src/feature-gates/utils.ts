@@ -44,7 +44,7 @@ export function parsedUserContextToTrackingMetadata(
 ): TrackingMetadata {
   return {
     base: {
-      stableId: parsedUserContext.stableId ?? undefined,
+      deviceId: parsedUserContext.stableId ?? undefined,
       sessionId: parsedUserContext.sessionId ?? undefined,
     },
     session: {
