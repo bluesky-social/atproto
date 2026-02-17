@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.216
+
+### Patch Changes
+
+- [#4647](https://github.com/bluesky-social/atproto/pull/4647) [`978a99e`](https://github.com/bluesky-social/atproto/commit/978a99efad8393247449bebd88af1ac5b602842e) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Use correct `suggestionsAgent` method `getOnboardingSuggestedUsersSkeleton`
+
 ## 0.0.215
 
 ### Patch Changes
