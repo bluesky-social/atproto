@@ -34,7 +34,6 @@ export function OAuthProvider({ children }: PropsWithChildren) {
   const [loading, setLoading] = useState(false)
   const [session, setSession] = useState<null | OAuthSession>(null)
 
-  // Initialize by restoring the previously loaded session, if any.
   useAbortableEffect(
     (signal) => {
       setInitialized(false)
@@ -55,19 +54,38 @@ export function OAuthProvider({ children }: PropsWithChildren) {
     [initPromise],
   )
 
+  // Keep tabs in sync by listening to the oauth client's events and updating
+  // the session state accordingly. The deletion part is needed because the
+  // oauth client internal data is shared across tabs, so if a session is
+  // deleted in one tab, the other tabs should reflect that change as well. The
+  // update part is optional.
   useAbortableEffect(
     (signal) => {
-      oauthEvents.addEventListener(
-        'deleted',
-        (evt: CustomEvent<{ sub: string; cause: unknown }>) => {
-          setSession((session) =>
-            evt.detail.sub === session?.sub ? null : session,
-          )
-        },
-        { signal },
-      )
+      // If the session is removed from another tab, we should update the state
+      // in this tab as well.
+      if (session) {
+        oauthEvents.addEventListener(
+          'deleted',
+          (evt) => {
+            if (evt.detail.sub === session.sub) setSession(null)
+          },
+          { signal },
+        )
+      } else {
+        // If we don't have a session, and one is refreshed in another tab,
+        // let's load it in the current tab as well.
+        oauthEvents.addEventListener(
+          'updated',
+          (evt) => {
+            void oauthClient.restore(evt.detail.sub, false).then((session) => {
+              if (!signal.aborted) setSession(session)
+            })
+          },
+          { signal },
+        )
+      }
     },
-    [oauthEvents],
+    [oauthEvents, session],
   )
 
   // When initializing the AuthProvider, we used "false" as restore's refresh
