@@ -1,5 +1,5 @@
 import { GrowthBookClient } from '@growthbook/growthbook'
-import { analyticsLogger } from '../logger'
+import { featureGatesLogger } from '../logger'
 import { FeatureGate } from './gates'
 import { MetricsClient } from './metrics'
 import { CheckedFeatureGatesMap, RawUserContext } from './types'
@@ -40,7 +40,7 @@ export class FeatureGatesClient {
 
   async start() {
     if (!this.config.growthBookApiHost || !this.config.growthBookClientKey) {
-      analyticsLogger.info(
+      featureGatesLogger.info(
         {},
         'feature gates not configured, skipping initialization',
       )
@@ -87,7 +87,7 @@ export class FeatureGatesClient {
        * @see https://docs.growthbook.io/lib/node#error-handling
        */
       if (error) {
-        analyticsLogger.error(
+        featureGatesLogger.error(
           { err: error, source },
           'Client failed to initialize normally',
         )
@@ -104,14 +104,14 @@ export class FeatureGatesClient {
             timeout: FETCH_TIMEOUT,
           })
         } catch (err) {
-          analyticsLogger.error({ err }, 'Failed to refresh features')
+          featureGatesLogger.error({ err }, 'Failed to refresh features')
         }
       }, REFETCH_INTERVAL)
 
       /* Ready or not, here we come */
       this.ready = true
     } catch (err) {
-      analyticsLogger.error({ err }, 'Client initialization failed')
+      featureGatesLogger.error({ err }, 'Client initialization failed')
     }
   }
 

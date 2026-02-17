@@ -1,9 +1,9 @@
 /// <reference types="jest" />
-import { analyticsLogger } from '../logger'
+import { featureGatesLogger } from '../logger'
 import { MetricsClient } from './metrics'
 
 jest.mock('../logger', () => ({
-  analyticsLogger: {
+  featureGatesLogger: {
     error: jest.fn(),
   },
 }))
@@ -97,7 +97,7 @@ describe('MetricsClient', () => {
     await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(analyticsLogger.error).toHaveBeenCalledWith(
+    expect(featureGatesLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         err: expect.any(Error),
       }),
@@ -126,7 +126,7 @@ describe('MetricsClient', () => {
     await flushPromises()
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(analyticsLogger.error).toHaveBeenCalledWith(
+    expect(featureGatesLogger.error).toHaveBeenCalledWith(
       expect.objectContaining({
         err: expect.objectContaining({
           message: expect.stringContaining('Unknown error'),

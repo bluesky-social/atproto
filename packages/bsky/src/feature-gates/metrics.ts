@@ -1,4 +1,4 @@
-import { analyticsLogger } from '../logger'
+import { featureGatesLogger } from '../logger'
 
 type Events = {
   'experiment:viewed': {
@@ -80,24 +80,28 @@ export class MetricsClient<M extends Record<string, any> = Events> {
   private async sendBatch(events: Event<M>[]) {
     if (!this.config.trackingEndpoint) return
 
-    const res = await fetch(this.config.trackingEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ events }),
-      keepalive: true,
-    })
+    try {
+      const res = await fetch(this.config.trackingEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ events }),
+        keepalive: true,
+      })
 
-    if (!res.ok) {
-      const errorText = await res.text().catch(() => 'Unknown error')
-      analyticsLogger.error(
-        { err: new Error(`${res.status} Failed to fetch - ${errorText}`) },
-        'Failed to send metrics',
-      )
-    } else {
-      // Drain response body to allow connection reuse.
-      await res.text().catch(() => {})
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => 'Unknown error')
+        featureGatesLogger.error(
+          { err: new Error(`${res.status} Failed to fetch - ${errorText}`) },
+          'Failed to send metrics',
+        )
+      } else {
+        // Drain response body to allow connection reuse.
+        await res.text().catch(() => {})
+      }
+    } catch (err) {
+      featureGatesLogger.error({ err }, 'Failed to send metrics')
     }
   }
 }

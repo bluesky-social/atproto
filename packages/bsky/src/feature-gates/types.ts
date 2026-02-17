@@ -29,6 +29,7 @@ export type ParsedUserContext = {
 }
 
 /**
- * Pre-evaluated feature gates map, the result of `FeatureGates.checkGates()`
+ * Pre-evaluated feature gates map, the result of
+ * `ctx.FeatureGatesClient.checkGates()`
  */
 export type CheckedFeatureGatesMap = Map<FeatureGate, boolean>
