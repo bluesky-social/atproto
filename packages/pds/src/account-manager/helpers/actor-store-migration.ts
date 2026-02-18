@@ -17,6 +17,17 @@ export const allActorStoresMigrated = async (
   return !unmigrated
 }
 
+export const countInProgressMigrations = async (
+  db: AccountDb,
+): Promise<number> => {
+  const result = await db.db
+    .selectFrom('actor')
+    .select(sql<number>`count(*)`.as('count'))
+    .where('storeIsMigrating', '=', 1)
+    .executeTakeFirstOrThrow()
+  return result.count
+}
+
 export class ActorStoreMigrator {
   destroyed = false
   running: Promise<void> | null = null
