@@ -7,6 +7,9 @@ export interface Actor {
   takedownRef: string | null
   deactivatedAt: string | null
   deleteAfter: string | null
+  storeSchemaVersion: string
+  storeIsMigrating: number
+  storeMigratedAt: string | null
 }
 
 export type ActorEntry = Selectable<Actor>
