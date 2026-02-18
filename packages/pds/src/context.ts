@@ -262,11 +262,6 @@ export class AppContext {
       bskyAppView,
     )
 
-    const actorStore = new ActorStore(cfg.actorStore, {
-      blobstore,
-      backgroundQueue,
-    })
-
     const accountManager = new AccountManager(
       idResolver,
       jwtSecretKey,
@@ -275,6 +270,15 @@ export class AppContext {
       cfg.db,
     )
     await accountManager.migrateOrThrow()
+
+    const actorStore = new ActorStore(
+      cfg.actorStore,
+      {
+        blobstore,
+        backgroundQueue,
+      },
+      accountManager.db,
+    )
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'

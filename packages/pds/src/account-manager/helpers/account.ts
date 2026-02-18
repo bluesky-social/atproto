@@ -7,6 +7,7 @@ import {
   currentDatetimeString,
   isDidIdentifier,
 } from '@atproto/lex'
+import { LATEST_SCHEMA_VERSION } from '../../actor-store/db/migrations'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { com } from '../../lexicons/index.js'
 import { AccountDb, ActorEntry } from '../db'
@@ -49,6 +50,9 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'actor.takedownRef',
       'actor.deactivatedAt',
       'actor.deleteAfter',
+      'actor.storeSchemaVersion',
+      'actor.storeIsMigrating',
+      'actor.storeMigratedAt',
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
@@ -125,6 +129,9 @@ export const registerActor = async (
         createdAt,
         deactivatedAt: deactivated ? createdAt : null,
         deleteAfter: deactivated ? new Date(now + 3 * DAY).toISOString() : null,
+        storeSchemaVersion: LATEST_SCHEMA_VERSION,
+        storeIsMigrating: 0,
+        storeMigratedAt: null,
       })
       .onConflict((oc) => oc.doNothing())
       .returning('did'),
