@@ -2,4 +2,4 @@
 '@atproto/oauth-client': minor
 ---
 
-Remove dependency on `EventTarget` (missing in some environements)
+Remove dependency on `EventTarget` (missing in some environments)
