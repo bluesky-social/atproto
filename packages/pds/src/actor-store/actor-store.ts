@@ -85,10 +85,10 @@ export class ActorStore {
       .select('storeSchemaVersion')
       .where('did', '=', did)
       .executeTakeFirst()
-    if (!actor) {
-      throw new Error(`Actor not found in account db: ${did}`)
-    }
-    if (actor.storeSchemaVersion === LATEST_STORE_SCHEMA_VERSION) {
+    if (!actor || actor.storeSchemaVersion === LATEST_STORE_SCHEMA_VERSION) {
+      // Actor may not exist yet during account creation (the store is created
+      // before the actor row). In that case the store was just freshly created
+      // with all migrations applied, so there's nothing to do.
       return
     }
 
