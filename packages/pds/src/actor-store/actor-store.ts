@@ -4,8 +4,9 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountDb } from '../account-manager/db'
+import { countInProgressMigrations } from '../account-manager/helpers/actor-store-migration'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
@@ -47,7 +48,10 @@ export class ActorStore {
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
-  async openDb(did: string): Promise<ActorDb> {
+  async openDb(
+    did: string,
+    opts?: { skipConcurrencyLimit?: boolean },
+  ): Promise<ActorDb> {
     const { dbLocation } = await this.getLocation(did)
     const exists = await fileExists(dbLocation)
     if (!exists) {
@@ -61,7 +65,7 @@ export class ActorStore {
       await retrySqlite(() =>
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
-      await this.ensureMigrated(did, db)
+      await this.ensureMigrated(did, db, opts?.skipConcurrencyLimit)
     } catch (err) {
       db.close()
       throw err
@@ -76,9 +80,11 @@ export class ActorStore {
   // migrating the same store, SQLite serializes the writes - the second
   // caller blocks until the first completes, then sees all migrations
   // already applied (no-op).
-  //
-  // TODO: limit number of concurrent migrations
-  private async ensureMigrated(did: string, db: ActorDb): Promise<void> {
+  private async ensureMigrated(
+    did: string,
+    db: ActorDb,
+    skipConcurrencyLimit?: boolean,
+  ): Promise<void> {
     const actor = await this.accountDb.db
       .selectFrom('actor')
       .select('storeSchemaVersion')
@@ -89,6 +95,18 @@ export class ActorStore {
       // before the actor row). In that case the store was just freshly created
       // with all migrations applied, so there's nothing to do.
       return
+    }
+
+    // We need to do a migration
+
+    if (
+      !skipConcurrencyLimit &&
+      (await countInProgressMigrations(this.accountDb)) >=
+        this.cfg.maxConcurrentMigrations
+    ) {
+      throw new InternalServerError(
+        'too many concurrent actor store migrations',
+      )
     }
 
     await this.accountDb.db
