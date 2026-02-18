@@ -76,8 +76,14 @@ export class ActorStoreMigrator {
         continue
       }
       try {
-        // auto-migrates to latest on open, updating account db appropriately on success/failure
-        const actorDb = await this.actorStore.openDb(claimed.did)
+        // auto-migrates to latest on open, updating account db appropriately on success/failure.
+        // if we did not set skipConcurrencyLimit and the limit was reached, we'd end up repeatedly
+        // setting storeIsMigrating=1 on rows with no actual migration occuring.
+        // the limit should be configured with enough headroom for the migration worker(s)
+        // (I think the only hard ceiling is the number of open fds?)
+        const actorDb = await this.actorStore.openDb(claimed.did, {
+          skipConcurrencyLimit: true,
+        })
         actorDb.close()
       } catch (e) {
         logger.error(
@@ -87,7 +93,7 @@ export class ActorStoreMigrator {
         if (this.throwOnError) {
           throw e
         }
-        // TODO: sleep here to avoid spamming errors?
+        // TODO: sleep here to avoid spamming errors if we're in a bad state?
       }
     }
   }

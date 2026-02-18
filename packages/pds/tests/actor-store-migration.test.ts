@@ -17,6 +17,7 @@ describe('actor store migration', () => {
   let ctx: any
   let agent: AtpAgent
   let aliceDid: string
+  let bobDid: string
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -33,11 +34,12 @@ describe('actor store migration', () => {
     })
     aliceDid = alice.data.did
 
-    await agent.api.com.atproto.server.createAccount({
+    const bob = await agent.api.com.atproto.server.createAccount({
       handle: 'bob.test',
       email: 'bob@test.com',
       password: 'password',
     })
+    bobDid = bob.data.did
   })
 
   afterAll(async () => {
@@ -143,6 +145,53 @@ describe('actor store migration', () => {
       )
       migrator.start()
       await migrator.destroy()
+    })
+  })
+
+  describe('concurrency limit', () => {
+    let originalLimit: number
+
+    beforeAll(async () => {
+      // inject a no-op migration so getLatestStoreSchemaVersion() returns '999'
+      migrations['999'] = {
+        async up() {},
+        async down() {},
+      }
+
+      // set a low concurrency limit
+      originalLimit = ctx.actorStore.cfg.maxConcurrentMigrations
+      ctx.actorStore.cfg.maxConcurrentMigrations = 1
+    })
+
+    afterAll(async () => {
+      delete migrations['999']
+      ctx.actorStore.cfg.maxConcurrentMigrations = originalLimit
+      // clear any leftover storeIsMigrating flags
+      await ctx.accountManager.db.db
+        .updateTable('actor')
+        .set({ storeIsMigrating: 0 })
+        .execute()
+    })
+
+    it('rejects store open when concurrency limit is reached', async () => {
+      // simulate alice having an in-progress migration
+      await ctx.accountManager.db.db
+        .updateTable('actor')
+        .set({ storeIsMigrating: 1 })
+        .where('did', '=', aliceDid)
+        .execute()
+
+      // downgrade bob so he needs a migration
+      await ctx.accountManager.db.db
+        .updateTable('actor')
+        .set({ storeSchemaVersion: '001' })
+        .where('did', '=', bobDid)
+        .execute()
+
+      // bob's open should fail because alice's migration is "in progress"
+      await expect(ctx.actorStore.openDb(bobDid)).rejects.toThrow(
+        'too many concurrent actor store migrations',
+      )
     })
   })
 })
