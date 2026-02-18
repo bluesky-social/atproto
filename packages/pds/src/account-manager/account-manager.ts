@@ -28,6 +28,7 @@ import * as invite from './helpers/invite'
 import * as password from './helpers/password'
 import * as repo from './helpers/repo'
 import * as scrypt from './helpers/scrypt'
+import * as actorStoreMigration from './helpers/actor-store-migration'
 import * as token from './helpers/token'
 
 export { AccountStatus, formatAccountStatus } from './helpers/account'
@@ -570,5 +571,9 @@ export class AccountManager {
         auth.revokeRefreshTokensByDid(dbTxn, did),
       ]),
     )
+  }
+
+  async allActorStoresMigrated(): Promise<boolean> {
+    return actorStoreMigration.allActorStoresMigrated(this.db)
   }
 }

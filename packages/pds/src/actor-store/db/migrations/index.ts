@@ -7,4 +7,4 @@ const migrations = {
 export default migrations
 
 const migrationKeys = Object.keys(migrations)
-export const LATEST_SCHEMA_VERSION = migrationKeys[migrationKeys.length - 1]
+export const LATEST_STORE_SCHEMA_VERSION = migrationKeys[migrationKeys.length - 1]
