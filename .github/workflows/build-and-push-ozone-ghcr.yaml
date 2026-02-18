@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+      - msi/build-optimiztion
+
 env:
   REGISTRY: ghcr.io
   USERNAME: ${{ github.actor }}

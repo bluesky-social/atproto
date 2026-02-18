@@ -51,13 +51,11 @@ COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./services/ozone ./services/ozone
 
 # install all deps
-RUN pnpm install --frozen-lockfile
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/aws...' --filter '@atproto/ozone...' build
-# clean up
-RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline
+RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
 
 WORKDIR services/ozone
 
