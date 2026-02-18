@@ -232,6 +232,23 @@ const handleModerationEvent = async ({
       externalId,
     })
 
+    // Create report entry if this is a report event
+    if (isModEventReport(event)) {
+      const now = new Date().toISOString()
+      await dbTxn.db
+        .insertInto('report')
+        .values({
+          eventId: result.event.id,
+          queueId: null, // Will be assigned by background job in future iteration
+          actionEventIds: null,
+          actionNote: null,
+          status: 'open',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .execute()
+    }
+
     const tagService = new TagService(
       subject,
       result.subjectStatus,

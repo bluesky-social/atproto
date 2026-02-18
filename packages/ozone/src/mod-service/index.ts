@@ -1007,6 +1007,21 @@ export class ModerationService {
       modTool,
     })
 
+    // Create report entry
+    const now = new Date().toISOString()
+    await this.db.db
+      .insertInto('report')
+      .values({
+        eventId: result.event.id,
+        queueId: null, // Will be assigned by background job in future iteration
+        actionEventIds: null,
+        actionNote: null,
+        status: 'open',
+        createdAt: now,
+        updatedAt: now,
+      })
+      .execute()
+
     return result
   }
 

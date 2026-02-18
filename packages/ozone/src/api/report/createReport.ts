@@ -29,32 +29,37 @@ export default function (server: Server, ctx: AppContext) {
         ctx.moderationServiceProfile().validateReasonType(reasonType),
       ])
 
-      const report = await db.transaction(async (dbTxn) => {
-        const moderationTxn = ctx.modService(dbTxn)
-        const { event: reportEvent, subjectStatus } =
-          await moderationTxn.report({
-            reason,
+      try {
+        const report = await db.transaction(async (dbTxn) => {
+          const moderationTxn = ctx.modService(dbTxn)
+          const { event: reportEvent, subjectStatus } =
+            await moderationTxn.report({
+              reason,
+              subject,
+              reasonType,
+              reportedBy: requester || ctx.cfg.service.did,
+              modTool,
+            })
+
+          const tagService = new TagService(
             subject,
-            reasonType,
-            reportedBy: requester || ctx.cfg.service.did,
-            modTool,
-          })
+            subjectStatus,
+            ctx.cfg.service.did,
+            moderationTxn,
+          )
+          await tagService.evaluateForSubject([getTagForReport(reasonType)])
 
-        const tagService = new TagService(
-          subject,
-          subjectStatus,
-          ctx.cfg.service.did,
-          moderationTxn,
-        )
-        await tagService.evaluateForSubject([getTagForReport(reasonType)])
+          return reportEvent
+        })
 
-        return reportEvent
-      })
-
-      const body = ctx.modService(db).views.formatReport(report)
-      return {
-        encoding: 'application/json',
-        body,
+        const body = ctx.modService(db).views.formatReport(report)
+        return {
+          encoding: 'application/json',
+          body,
+        }
+      } catch (err) {
+        console.error(err)
+        throw err
       }
     },
   })

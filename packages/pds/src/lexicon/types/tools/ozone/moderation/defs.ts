@@ -185,7 +185,10 @@ export function validateSubjectStatusView<V>(v: V) {
 export interface SubjectView {
   $type?: 'tools.ozone.moderation.defs#subjectView'
   type: ComAtprotoModerationDefs.SubjectType
-  subject: string
+  subject:
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
   status?: SubjectStatusView
   repo?: RepoViewDetail
   profile?: { $type: string }

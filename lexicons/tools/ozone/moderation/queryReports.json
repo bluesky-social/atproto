@@ -125,12 +125,9 @@
           "description": "Current status of the report"
         },
         "subject": {
-          "type": "union",
-          "refs": [
-            "com.atproto.admin.defs#repoRef",
-            "com.atproto.repo.strongRef"
-          ],
-          "description": "The subject that was reported"
+          "type": "ref",
+          "ref": "tools.ozone.moderation.defs#subjectView",
+          "description": "The subject that was reported with full details"
         },
         "reportType": {
           "type": "ref",

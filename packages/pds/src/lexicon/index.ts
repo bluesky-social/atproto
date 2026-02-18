@@ -237,9 +237,15 @@ import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/ge
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
+import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderation/queryReports.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
+import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
+import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
 import * as ToolsOzoneSafelinkQueryRules from './types/tools/ozone/safelink/queryRules.js'
@@ -3231,6 +3237,8 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  queue: ToolsOzoneQueueNS
+  report: ToolsOzoneReportNS
   safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -3244,6 +3252,8 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(server)
     this.hosting = new ToolsOzoneHostingNS(server)
     this.moderation = new ToolsOzoneModerationNS(server)
+    this.queue = new ToolsOzoneQueueNS(server)
+    this.report = new ToolsOzoneReportNS(server)
     this.safelink = new ToolsOzoneSafelinkNS(server)
     this.server = new ToolsOzoneServerNS(server)
     this.set = new ToolsOzoneSetNS(server)
@@ -3481,6 +3491,18 @@ export class ToolsOzoneModerationNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  queryReports<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationQueryReports.QueryParams,
+      ToolsOzoneModerationQueryReports.HandlerInput,
+      ToolsOzoneModerationQueryReports.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.queryReports' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   queryStatuses<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3514,6 +3536,82 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.searchRepos' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneQueueNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  createQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueCreateQueue.QueryParams,
+      ToolsOzoneQueueCreateQueue.HandlerInput,
+      ToolsOzoneQueueCreateQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.createQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueDeleteQueue.QueryParams,
+      ToolsOzoneQueueDeleteQueue.HandlerInput,
+      ToolsOzoneQueueDeleteQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.deleteQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listQueues<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueListQueues.QueryParams,
+      ToolsOzoneQueueListQueues.HandlerInput,
+      ToolsOzoneQueueListQueues.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.listQueues' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  updateQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueUpdateQueue.QueryParams,
+      ToolsOzoneQueueUpdateQueue.HandlerInput,
+      ToolsOzoneQueueUpdateQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.updateQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ToolsOzoneReportNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  reassignQueue<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportReassignQueue.QueryParams,
+      ToolsOzoneReportReassignQueue.HandlerInput,
+      ToolsOzoneReportReassignQueue.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.reassignQueue' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }
