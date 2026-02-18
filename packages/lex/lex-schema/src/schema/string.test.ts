@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { Infer, UnknownString } from '../core.js'
 import { string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
@@ -609,5 +610,81 @@ describe('StringSchema', () => {
       const result = schema.safeParse('👨‍👩‍👧‍👦')
       expect(result.success).toBe(true)
     })
+  })
+
+  describe('knownValues option', () => {
+    it('allows omitting knownValues at runtime', () => {
+      string<{ knownValues: ['active', 'inactive'] }>()
+
+      // @ts-expect-error format requires options to be set
+      string<{ knownValues: ['active', 'inactive']; format: 'did' }>()
+
+      // @ts-expect-error any options, besides knownValues, must be provided
+      string<{ knownValues: ['active', 'inactive']; minLength: 5 }>()
+
+      string<{
+        knownValues: ['john.doe', 'someone.else']
+        format: 'handle'
+      }>({
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['john.doe', 'someone.else']
+      }>({
+        // Being *more* precise than the generic if fine
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['did', 'inactive']
+        format: 'did'
+      }>({
+        // @ts-expect-error does not match format form generic constraint
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['active', 'inactive']
+        minLength: 10
+      }>({
+        minLength: 10,
+      })
+
+      string<{
+        knownValues: ['active', 'inactive']
+        minLength: 5
+      }>({
+        // @ts-expect-error mismatch
+        minLength: 10,
+      })
+    })
+  })
+
+  it('properly types knownValues in parameters', () => {
+    const schema = string({
+      knownValues: ['active', 'inactive'],
+    })
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: 'active' | 'inactive' | UnknownString
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: string
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: 'active' | 'inactive'
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: UnknownString
+    }>()
   })
 })

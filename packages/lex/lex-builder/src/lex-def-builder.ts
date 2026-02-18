@@ -767,15 +767,33 @@ export class LexDefBuilder {
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
-    const options = stringifyOptions(def, [
+    const optionKeys = [
       'format',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',
       'minLength',
-    ] satisfies (keyof l.StringSchemaOptions)[])
+    ] as const satisfies (keyof l.StringSchemaOptions)[]
 
-    return this.withDefault(this.pure(`l.string(${options})`), def.default)
+    // We don't want to include knownValues in the schema options **at runtime**
+    // as it has no effect and only causes bloat.
+    const options = stringifyOptions(def, optionKeys)
+
+    // We do however value knownValues for the TypeScript type, so we include it
+    // in the typing options.
+    const typingOptions = def.knownValues
+      ? stringifyOptions(def, [
+          ...optionKeys,
+          'knownValues',
+        ] satisfies (keyof l.StringSchemaOptions)[])
+      : undefined
+
+    return this.withDefault(
+      this.pure(
+        `l.string${typingOptions ? `<${typingOptions}>` : ''}(${options})`,
+      ),
+      def.default,
+    )
   }
 
   private async compileStringType(def: LexiconString): Promise<string> {

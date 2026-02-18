@@ -35,7 +35,12 @@ export type Param = Infer<typeof paramSchema>
 /**
  * Schema for validating individual parameter values.
  */
-export const paramSchema = union([paramScalarSchema, array(paramScalarSchema)])
+export const paramSchema = union([
+  paramScalarSchema,
+  array(boolean()),
+  array(integer()),
+  array(string()),
+])
 
 /**
  * Type for a params object with string keys and optional param values.
@@ -50,7 +55,7 @@ export const paramsSchema = dict(string(), optional(paramSchema))
 // @NOTE In order to properly coerce URLSearchParams, we need to distinguish
 // between scalar and array validators, requiring to be able to detect which
 // schema types are being used, restricting the allowed param validators here.
-type ParamScalarValidator<V extends ParamScalar = ParamScalar> =
+export type ParamScalarValidator<V extends ParamScalar = ParamScalar> =
   | LiteralSchema<V>
   | EnumSchema<V>
   | (V extends string
@@ -60,7 +65,7 @@ type ParamScalarValidator<V extends ParamScalar = ParamScalar> =
         : V extends number
           ? IntegerSchema
           : never)
-type ParamValueValidator<V extends Param = Param> =
+export type ParamValueValidator<V extends Param = Param> =
   V extends readonly (infer U)[]
     ? U extends ParamScalar
       ? ArraySchema<ParamScalarValidator<U>>
@@ -68,7 +73,7 @@ type ParamValueValidator<V extends Param = Param> =
     : V extends ParamScalar
       ? ParamScalarValidator<V>
       : never
-type ParamValidator<V extends Param | undefined = Param | undefined> =
+export type ParamValidator<V extends Param | undefined = Param | undefined> =
   //
   undefined extends Extract<V, undefined>
     ?
@@ -188,7 +193,7 @@ export class ParamsSchema<
   }
 
   fromURLSearchParams(iterable: Iterable<[string, string]>): InferOutput<this> {
-    const params: Record<string, Param> = {}
+    const params: Record<string, unknown> = {}
 
     // Compatibility with URLSearchParams not being iterable in some environments
     const entries =
