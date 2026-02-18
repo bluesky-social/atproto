@@ -48,8 +48,7 @@ COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
 # install all deps
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN pnpm install --frozen-lockfile
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/pds...' build
 # install only prod deps, hoisted to root node_modules dir

@@ -47,8 +47,7 @@ COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
 
 # install all deps
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN pnpm install --frozen-lockfile
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
 RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build

@@ -22,8 +22,7 @@ COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/syntax ./packages/syntax
 
 # install all deps
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-RUN pnpm install --frozen-lockfile
+RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
 # build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/bsync...' build
 # install only prod deps, hoisted to root node_modules dir
