@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -24,9 +24,18 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('actor')
     .column('storeSchemaVersion')
     .execute()
+
+  // make it cheap to COUNT number of in-progress migrations
+  await db.schema
+    .createIndex('actor_store_is_migrating_idx')
+    .on('actor')
+    // https://github.com/kysely-org/kysely/issues/302
+    .expression(sql`"storeIsMigrating") WHERE ("storeIsMigrating" = 1`)
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.dropIndex('actor_store_is_migrating_idx').execute()
   await db.schema.dropIndex('actor_store_schema_version_idx').execute()
   await db.schema.alterTable('actor').dropColumn('storeSchemaVersion').execute()
   await db.schema.alterTable('actor').dropColumn('storeIsMigrating').execute()
