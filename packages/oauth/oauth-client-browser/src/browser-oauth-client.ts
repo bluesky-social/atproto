@@ -182,7 +182,7 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
 
         const hook = options[name]
 
-        // @ts-expect-error
+        // @ts-expect-error TS has a hard time matching the args with the hook
         void hook?.(...args)
       },
       // Remove the listener when the client is disposed
@@ -492,8 +492,11 @@ export class BrowserOAuthClient extends OAuthClient implements AsyncDisposable {
   }
 
   async [Symbol.asyncDispose]() {
-    this.ac.abort()
-    await this.database[Symbol.asyncDispose]()
+    try {
+      this.ac.abort()
+    } finally {
+      await this.database[Symbol.asyncDispose]()
+    }
   }
 
   dispose() {
