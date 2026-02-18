@@ -21,6 +21,8 @@ export type UnknownObject = LexMap
  * ```
  */
 export class UnknownObjectSchema extends Schema<UnknownObject> {
+  readonly type = 'unknownObject' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (isLexMap(input)) {
       return ctx.success(input)

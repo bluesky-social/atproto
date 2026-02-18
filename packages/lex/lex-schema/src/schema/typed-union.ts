@@ -42,6 +42,8 @@ export class TypedUnionSchema<
     ? InferOutput<TValidators[number]>
     : InferOutput<TValidators[number]> | Unknown$TypedObject
 > {
+  readonly type = 'typedUnion' as const
+
   constructor(
     protected readonly validators: TValidators,
     public readonly closed: TClosed,

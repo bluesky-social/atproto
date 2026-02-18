@@ -18,6 +18,8 @@ import { Schema, ValidationContext } from '../core.js'
 export class EnumSchema<
   const TValue extends null | string | number | boolean,
 > extends Schema<TValue> {
+  readonly type = 'enum' as const
+
   constructor(readonly values: readonly TValue[]) {
     super()
   }

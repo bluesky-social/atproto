@@ -88,6 +88,9 @@ export abstract class Schema<
    */
   declare readonly ['__lex']: TInternals
 
+  // Needed to discriminate multiple schema types when used in unions
+  abstract readonly type: string
+
   /**
    * Performs validation of the input value within a validation context.
    *

@@ -29,6 +29,8 @@ export type CidSchemaOptions = CheckCidOptions
 export class CidSchema<
   const TOptions extends CidSchemaOptions = { flavor: undefined },
 > extends Schema<InferCheckedCid<TOptions>> {
+  readonly type = 'cid' as const
+
   constructor(readonly options?: TOptions) {
     super()
   }

@@ -13,7 +13,9 @@ import { memoizedOptions } from '../util/memoize.js'
 import { ArraySchema, array } from './array.js'
 import { BooleanSchema, boolean } from './boolean.js'
 import { dict } from './dict.js'
+import { EnumSchema } from './enum.js'
 import { IntegerSchema, integer } from './integer.js'
+import { LiteralSchema } from './literal.js'
 import { OptionalSchema, optional } from './optional.js'
 import { StringSchema, string } from './string.js'
 import { union } from './union.js'
@@ -48,15 +50,35 @@ export const paramsSchema = dict(string(), optional(paramSchema))
 // @NOTE In order to properly coerce URLSearchParams, we need to distinguish
 // between scalar and array validators, requiring to be able to detect which
 // schema types are being used, restricting the allowed param validators here.
-type ParamScalarValidator = StringSchema | BooleanSchema | IntegerSchema
-type ParamValueValidator =
-  | ParamScalarValidator
-  | ArraySchema<ParamScalarValidator>
-type ParamValidator =
-  | ParamValueValidator
-  | OptionalSchema<ParamValueValidator>
-  | OptionalSchema<WithDefaultSchema<ParamValueValidator>>
-  | WithDefaultSchema<ParamValueValidator>
+type ParamScalarValidator<V extends ParamScalar = ParamScalar> =
+  | LiteralSchema<V>
+  | EnumSchema<V>
+  | (V extends string
+      ? StringSchema
+      : V extends boolean
+        ? BooleanSchema
+        : V extends number
+          ? IntegerSchema
+          : never)
+type ParamValueValidator<V extends Param = Param> =
+  V extends readonly (infer U)[]
+    ? U extends ParamScalar
+      ? ArraySchema<ParamScalarValidator<U>>
+      : never
+    : V extends ParamScalar
+      ? ParamScalarValidator<V>
+      : never
+type ParamValidator<V extends Param | undefined = Param | undefined> =
+  //
+  undefined extends Extract<V, undefined>
+    ?
+        | OptionalSchema<ParamValueValidator<NonNullable<V>>>
+        | OptionalSchema<WithDefaultSchema<ParamValueValidator<NonNullable<V>>>>
+        | ParamValueValidator<NonNullable<V>>
+        | WithDefaultSchema<ParamValueValidator<NonNullable<V>>>
+    :
+        | ParamValueValidator<NonNullable<V>>
+        | WithDefaultSchema<ParamValueValidator<NonNullable<V>>>
 
 /**
  * Type representing the shape of a params schema definition.
@@ -96,6 +118,8 @@ export class ParamsSchema<
     [K in keyof TShape]: InferOutput<TShape[K]>
   }>
 > {
+  readonly type = 'params' as const
+
   constructor(readonly shape: TShape) {
     super()
   }
@@ -177,16 +201,7 @@ export class ParamsSchema<
         ? unwrapValidator(validator.validator)
         : validator
 
-      const coerced: ParamScalar =
-        scalarValidator instanceof StringSchema
-          ? value
-          : value === 'true'
-            ? true
-            : value === 'false'
-              ? false
-              : /^-?\d+$/.test(value)
-                ? Number(value)
-                : value
+      const coerced = coerceParam(value, scalarValidator)
 
       const currentParam = params[key]
       if (currentParam === undefined) {
@@ -220,6 +235,29 @@ export class ParamsSchema<
 
     return urlSearchParams
   }
+}
+
+function coerceParam(param: string, schema?: Validator): ParamScalar {
+  if (schema) {
+    if (schema instanceof LiteralSchema) {
+      return String(schema.value) === param ? schema.value : param
+    } else if (schema instanceof EnumSchema) {
+      return schema.values.find((v) => String(v) === param) ?? param
+    } else if (schema instanceof StringSchema) {
+      return param
+    } else if (schema instanceof BooleanSchema) {
+      switch (param) {
+        case 'true':
+          return true
+        case 'false':
+          return false
+      }
+    } else if (schema instanceof IntegerSchema) {
+      if (/^-?\d+$/.test(param)) return Number(param)
+    }
+  }
+
+  return param
 }
 
 /**

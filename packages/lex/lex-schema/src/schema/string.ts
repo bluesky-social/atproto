@@ -47,6 +47,8 @@ export class StringSchema<
     ? InferStringFormat<F>
     : string
 > {
+  readonly type = 'string' as const
+
   constructor(readonly options?: TOptions) {
     super()
   }

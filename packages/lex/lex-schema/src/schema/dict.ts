@@ -34,6 +34,8 @@ export class DictSchema<
   Record<InferInput<TKey>, InferInput<TValue>>,
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
+  readonly type = 'dict' as const
+
   constructor(
     readonly keySchema: TKey,
     readonly valueSchema: TValue,
