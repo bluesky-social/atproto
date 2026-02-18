@@ -96,6 +96,7 @@ export class ActorStore {
       .updateTable('actor')
       .set({ storeIsMigrating: 1, storeMigratedAt: new Date().toISOString() })
       .where('did', '=', did)
+      .where('storeIsMigrating', '=', 0) // don't bump storeMigratedAt if there's a concurrent migration
       .execute()
 
     try {
