@@ -1,7 +1,7 @@
 import { DAY } from '@atproto/common'
-import { LATEST_SCHEMA_VERSION } from '../../actor-store/db/migrations'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { LATEST_STORE_SCHEMA_VERSION } from '../../actor-store/db/migrations'
 import { AccountDb, ActorEntry } from '../db'
 
 export class UserAlreadyExistsError extends Error {}
@@ -121,7 +121,7 @@ export const registerActor = async (
         createdAt,
         deactivatedAt: deactivated ? createdAt : null,
         deleteAfter: deactivated ? new Date(now + 3 * DAY).toISOString() : null,
-        storeSchemaVersion: LATEST_SCHEMA_VERSION,
+        storeSchemaVersion: LATEST_STORE_SCHEMA_VERSION,
         storeIsMigrating: 0,
         storeMigratedAt: null,
       })

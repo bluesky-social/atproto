@@ -15,7 +15,7 @@ import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
 import { ActorStoreWriter } from './actor-store-writer'
 import { ActorDb, getDb, getMigrator } from './db'
-import { LATEST_SCHEMA_VERSION } from './db/migrations'
+import { LATEST_STORE_SCHEMA_VERSION } from './db/migrations'
 
 export class ActorStore {
   reservedKeyDir: string
@@ -88,7 +88,7 @@ export class ActorStore {
     if (!actor) {
       throw new Error(`Actor not found in account db: ${did}`)
     }
-    if (actor.storeSchemaVersion === LATEST_SCHEMA_VERSION) {
+    if (actor.storeSchemaVersion === LATEST_STORE_SCHEMA_VERSION) {
       return
     }
 
@@ -104,7 +104,7 @@ export class ActorStore {
       await this.accountDb.db
         .updateTable('actor')
         .set({
-          storeSchemaVersion: LATEST_SCHEMA_VERSION,
+          storeSchemaVersion: LATEST_STORE_SCHEMA_VERSION,
           storeIsMigrating: 0,
           storeMigratedAt: new Date().toISOString(),
         })
