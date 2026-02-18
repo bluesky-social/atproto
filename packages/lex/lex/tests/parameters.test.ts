@@ -10,6 +10,8 @@ describe('com.example.parametersEnum', () => {
       ['stringCst', 'foo'],
       ['stringEnum', 'bar'],
       ['arrayFalse', 'false'],
+      ['arrayFalse', 'false'],
+      ['arrayFalse', 'false'],
       ['arrayIntCst', '42'],
       ['arrayIntEnum', '5'],
     ])
@@ -19,7 +21,7 @@ describe('com.example.parametersEnum', () => {
       integerEnum: 2,
       stringCst: 'foo',
       stringEnum: 'bar',
-      arrayFalse: [false],
+      arrayFalse: [false, false, false],
       arrayIntCst: [42],
       arrayIntEnum: [5],
     })
