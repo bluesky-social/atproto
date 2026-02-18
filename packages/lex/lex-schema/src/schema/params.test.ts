@@ -318,18 +318,18 @@ describe('ParamsSchema', () => {
       expect(result).toEqual({ name: 'Alice', tags: ['one', 'two'] })
     })
 
-    it('coerces array values correctly', () => {
-      const urlParams = new URLSearchParams('name=Alice&num=1&num=2&num=3')
-      const result = schema.fromURLSearchParams(urlParams)
-      expect(result).toEqual({ name: 'Alice', num: [1, 2, 3] })
-    })
+    it('does not coerce numeric values of unknown params', () => {
+      expect(
+        schema.fromURLSearchParams(
+          new URLSearchParams('name=Alice&num=1&num=2&num=3&foo=3'),
+        ),
+      ).toEqual({ name: 'Alice', num: ['1', '2', '3'], foo: '3' })
 
-    it('handles mixed types in arrays', () => {
-      const urlParams = new URLSearchParams(
-        'name=Alice&val=true&val=123&val=text',
-      )
-      const result = schema.fromURLSearchParams(urlParams)
-      expect(result).toEqual({ name: 'Alice', val: [true, 123, 'text'] })
+      expect(
+        schema.fromURLSearchParams(
+          new URLSearchParams('name=Alice&val=true&val=123&val=text'),
+        ),
+      ).toEqual({ name: 'Alice', val: ['true', '123', 'text'] })
     })
 
     it('handles empty URLSearchParams', () => {
@@ -400,7 +400,7 @@ describe('ParamsSchema', () => {
           ['name', 'Alice'],
           ['bools', '2'],
         ]),
-      ).toThrow('Expected boolean value type at $.bools[0] (got integer)')
+      ).toThrow('Expected boolean value type at $.bools[0] (got string)')
     })
   })
 
@@ -461,15 +461,23 @@ describe('ParamsSchema', () => {
       expect(result.toString()).toBe('name=Alice')
     })
 
+    it('rejects arrays with multiple types', () => {
+      expect(() => {
+        schema.toURLSearchParams({
+          name: 'Alice',
+          // @ts-expect-error
+          values: [1, true, 'text'],
+        })
+      }).toThrow()
+    })
+
     it('handles arrays with multiple types', () => {
       const result = schema.toURLSearchParams({
         name: 'Alice',
         // @ts-expect-error
-        values: [1, true, 'text'],
+        values: ['foo', 'bar'],
       })
-      expect(result.toString()).toBe(
-        'name=Alice&values=1&values=true&values=text',
-      )
+      expect(result.toString()).toBe('name=Alice&values=foo&values=bar')
     })
 
     it('handles undefined input', () => {
@@ -711,9 +719,9 @@ describe('paramSchema', () => {
       expect(result.success).toBe(true)
     })
 
-    it('validates arrays with mixed scalar types', () => {
+    it('rejects arrays with mixed scalar types', () => {
       const result = paramSchema.safeParse([true, 42, 'text'])
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('validates arrays with negative integers', () => {
@@ -884,11 +892,11 @@ describe('paramsSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('validates object with arrays of mixed scalar types', () => {
+  it('rejects object with arrays of mixed scalar types', () => {
     const result = paramsSchema.safeParse({
       values: [true, 42, 'text'],
     })
-    expect(result.success).toBe(true)
+    expect(result.success).toBe(false)
   })
 
   it('validates object with numeric string keys', () => {
