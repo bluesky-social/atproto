@@ -19,10 +19,12 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .alterTable('actor')
     .addColumn('storeMigratedAt', 'varchar')
     .execute()
+
+  // efficiently get unmigrated actors, oldest-first
   await db.schema
     .createIndex('actor_store_schema_version_idx')
     .on('actor')
-    .column('storeSchemaVersion')
+    .columns(['storeSchemaVersion', 'storeMigratedAt'])
     .execute()
 
   // make it cheap to COUNT number of in-progress migrations

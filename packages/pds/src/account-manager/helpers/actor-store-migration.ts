@@ -51,13 +51,20 @@ export class ActorStoreMigrator {
     while (!(await allActorStoresMigrated(this.db))) {
       if (this.destroyed) return
       const now = new Date().toISOString()
+      // get next unmigrated actor, least-recently-migrated first
       const claimed = await this.db.db
         .updateTable('actor')
         .set({ storeIsMigrating: 1, storeMigratedAt: now })
         .where(
           'did',
           '=',
-          sql`(SELECT did FROM actor WHERE "storeSchemaVersion" < ${LATEST_STORE_SCHEMA_VERSION} AND "storeIsMigrating" = 0 LIMIT 1)`,
+          sql`(
+            SELECT did FROM actor
+            WHERE "storeSchemaVersion" < ${LATEST_STORE_SCHEMA_VERSION}
+            AND "storeIsMigrating" = 0
+            ORDER BY "storeSchemaVersion" ASC, "storeMigratedAt" ASC
+            LIMIT 1
+          )`,
         )
         .where('storeIsMigrating', '=', 0)
         .returning('did')
@@ -80,6 +87,7 @@ export class ActorStoreMigrator {
         if (this.throwOnError) {
           throw e
         }
+        // TODO: sleep here to avoid spamming errors?
       }
     }
   }
