@@ -61,12 +61,11 @@ export class ActorStore {
       await retrySqlite(() =>
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
+      await this.ensureMigrated(did, db)
     } catch (err) {
       db.close()
       throw err
     }
-
-    await this.ensureMigrated(did, db)
 
     return db
   }
