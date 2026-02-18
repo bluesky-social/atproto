@@ -1,11 +1,13 @@
+import { Migration } from 'kysely'
 import * as init from './001-init'
 
-const migrations = {
+const migrations: Record<string, Migration> = {
   '001': init,
 }
 
 export default migrations
 
-const migrationKeys = Object.keys(migrations)
-export const LATEST_STORE_SCHEMA_VERSION =
-  migrationKeys[migrationKeys.length - 1]
+// this is a getter so that it can be tweaked during testing
+export function getLatestStoreSchemaVersion(): string {
+  return Object.keys(migrations).sort().pop()!
+}

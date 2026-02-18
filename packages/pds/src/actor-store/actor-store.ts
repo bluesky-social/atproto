@@ -15,7 +15,7 @@ import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
 import { ActorStoreWriter } from './actor-store-writer'
 import { ActorDb, getDb, getMigrator } from './db'
-import { LATEST_STORE_SCHEMA_VERSION } from './db/migrations'
+import { getLatestStoreSchemaVersion } from './db/migrations'
 
 export class ActorStore {
   reservedKeyDir: string
@@ -84,7 +84,7 @@ export class ActorStore {
       .select('storeSchemaVersion')
       .where('did', '=', did)
       .executeTakeFirst()
-    if (!actor || actor.storeSchemaVersion === LATEST_STORE_SCHEMA_VERSION) {
+    if (!actor || actor.storeSchemaVersion === getLatestStoreSchemaVersion()) {
       // Actor may not exist yet during account creation (the store is created
       // before the actor row). In that case the store was just freshly created
       // with all migrations applied, so there's nothing to do.
@@ -104,7 +104,7 @@ export class ActorStore {
       await this.accountDb.db
         .updateTable('actor')
         .set({
-          storeSchemaVersion: LATEST_STORE_SCHEMA_VERSION,
+          storeSchemaVersion: getLatestStoreSchemaVersion(),
           storeIsMigrating: 0,
           storeMigratedAt: new Date().toISOString(),
         })

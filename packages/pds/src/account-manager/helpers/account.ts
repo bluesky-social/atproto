@@ -7,7 +7,7 @@ import {
   currentDatetimeString,
   isDidIdentifier,
 } from '@atproto/lex'
-import { LATEST_STORE_SCHEMA_VERSION } from '../../actor-store/db/migrations'
+import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { com } from '../../lexicons/index.js'
 import { AccountDb, ActorEntry } from '../db'
@@ -129,7 +129,7 @@ export const registerActor = async (
         createdAt,
         deactivatedAt: deactivated ? createdAt : null,
         deleteAfter: deactivated ? new Date(now + 3 * DAY).toISOString() : null,
-        storeSchemaVersion: LATEST_STORE_SCHEMA_VERSION,
+        storeSchemaVersion: getLatestStoreSchemaVersion(),
         storeIsMigrating: 0,
         storeMigratedAt: null,
       })
