@@ -1,7 +1,7 @@
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { ActorStore } from '../../actor-store/actor-store'
-import { LATEST_STORE_SCHEMA_VERSION } from '../../actor-store/db/migrations'
+import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { actorStoreMigrationLogger as logger } from '../../logger'
 import { AccountDb } from '../db'
 
@@ -11,7 +11,7 @@ export const allActorStoresMigrated = async (
   const unmigrated = await db.db
     .selectFrom('actor')
     .select('did')
-    .where('storeSchemaVersion', '<', LATEST_STORE_SCHEMA_VERSION)
+    .where('storeSchemaVersion', '<', getLatestStoreSchemaVersion())
     .limit(1)
     .executeTakeFirst()
   return !unmigrated
@@ -60,7 +60,7 @@ export class ActorStoreMigrator {
           '=',
           sql`(
             SELECT did FROM actor
-            WHERE "storeSchemaVersion" < ${LATEST_STORE_SCHEMA_VERSION}
+            WHERE "storeSchemaVersion" < ${getLatestStoreSchemaVersion()}
             AND "storeIsMigrating" = 0
             ORDER BY "storeSchemaVersion" ASC, "storeMigratedAt" ASC
             LIMIT 1

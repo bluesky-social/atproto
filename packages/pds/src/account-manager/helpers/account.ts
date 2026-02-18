@@ -1,5 +1,5 @@
 import { DAY } from '@atproto/common'
-import { LATEST_STORE_SCHEMA_VERSION } from '../../actor-store/db/migrations'
+import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { AccountDb, ActorEntry } from '../db'
@@ -121,7 +121,7 @@ export const registerActor = async (
         createdAt,
         deactivatedAt: deactivated ? createdAt : null,
         deleteAfter: deactivated ? new Date(now + 3 * DAY).toISOString() : null,
-        storeSchemaVersion: LATEST_STORE_SCHEMA_VERSION,
+        storeSchemaVersion: getLatestStoreSchemaVersion(),
         storeIsMigrating: 0,
         storeMigratedAt: null,
       })
