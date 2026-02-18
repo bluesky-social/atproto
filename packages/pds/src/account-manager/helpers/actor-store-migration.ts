@@ -17,41 +17,58 @@ export const allActorStoresMigrated = async (
   return !unmigrated
 }
 
-export const migrateAllActorStores = async (
-  db: AccountDb,
-  actorStore: ActorStore,
-  throwOnError: boolean,
-): Promise<void> => {
-  while (!(await allActorStoresMigrated(db))) {
-    const now = new Date().toISOString()
-    const claimed = await db.db
-      .updateTable('actor')
-      .set({ storeIsMigrating: 1, storeMigratedAt: now })
-      .where(
-        'did',
-        '=',
-        sql`(SELECT did FROM actor WHERE "storeSchemaVersion" < ${LATEST_STORE_SCHEMA_VERSION} AND "storeIsMigrating" = 0 LIMIT 1)`,
-      )
-      .where('storeIsMigrating', '=', 0)
-      .returning('did')
-      .executeTakeFirst()
-    if (!claimed) {
-      // There may be no work left to claim, but active tasks remaining.
-      // Either the other tasks are stuck and will eventually time out, or a concurrent process is actively working on them.
-      await wait(1000)
-      continue
-    }
-    try {
-      // auto-migrates to latest on open, updating account db appropriately on success/failure
-      const actorDb = await actorStore.openDb(claimed.did)
-      actorDb.close()
-    } catch (e) {
-      logger.error(
-        { did: claimed.did, err: e },
-        'Failed to migrate actor store',
-      )
-      if (throwOnError) {
-        throw e
+export class ActorStoreMigrator {
+  destroyed = false
+  running: Promise<void> | null = null
+
+  constructor(
+    private db: AccountDb,
+    private actorStore: ActorStore,
+    private throwOnError: boolean,
+  ) {}
+
+  start() {
+    this.running = this.run()
+  }
+
+  async destroy() {
+    this.destroyed = true
+    await this.running
+  }
+
+  private async run(): Promise<void> {
+    while (!(await allActorStoresMigrated(this.db))) {
+      if (this.destroyed) return
+      const now = new Date().toISOString()
+      const claimed = await this.db.db
+        .updateTable('actor')
+        .set({ storeIsMigrating: 1, storeMigratedAt: now })
+        .where(
+          'did',
+          '=',
+          sql`(SELECT did FROM actor WHERE "storeSchemaVersion" < ${LATEST_STORE_SCHEMA_VERSION} AND "storeIsMigrating" = 0 LIMIT 1)`,
+        )
+        .where('storeIsMigrating', '=', 0)
+        .returning('did')
+        .executeTakeFirst()
+      if (!claimed) {
+        // There may be no work left to claim, but active tasks remaining.
+        // Either the other tasks are stuck and will eventually time out, or a concurrent process is actively working on them.
+        await wait(1000)
+        continue
+      }
+      try {
+        // auto-migrates to latest on open, updating account db appropriately on success/failure
+        const actorDb = await this.actorStore.openDb(claimed.did)
+        actorDb.close()
+      } catch (e) {
+        logger.error(
+          { did: claimed.did, err: e },
+          'Failed to migrate actor store',
+        )
+        if (this.throwOnError) {
+          throw e
+        }
       }
     }
   }
