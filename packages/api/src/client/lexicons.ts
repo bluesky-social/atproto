@@ -15448,6 +15448,35 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoUnspeccedGetActorStoreMigrationStatus: {
+    lexicon: 1,
+    id: 'com.atproto.unspecced.getActorStoreMigrationStatus',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the status of actor store migrations.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['allMigrated', 'inProgressCount'],
+            properties: {
+              allMigrated: {
+                type: 'boolean',
+                description:
+                  'Whether all actor stores have been migrated to the latest schema version.',
+              },
+              inProgressCount: {
+                type: 'integer',
+                description:
+                  'The number of actor store migrations currently in progress.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComGermnetworkDeclaration: {
     lexicon: 1,
     id: 'com.germnetwork.declaration',
@@ -20999,6 +21028,8 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
+  ComAtprotoUnspeccedGetActorStoreMigrationStatus:
+    'com.atproto.unspecced.getActorStoreMigrationStatus',
   ComGermnetworkDeclaration: 'com.germnetwork.declaration',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
