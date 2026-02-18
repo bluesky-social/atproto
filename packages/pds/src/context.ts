@@ -28,6 +28,7 @@ import {
   unicastLookup,
 } from '@atproto-labs/fetch-node'
 import { AccountManager } from './account-manager/account-manager'
+import { ActorStoreMigrator } from './account-manager/helpers/actor-store-migration'
 import { OAuthStore } from './account-manager/oauth-store'
 import { ScopeReferenceGetter } from './account-manager/scope-reference-getter'
 import { ActorStore } from './actor-store/actor-store'
@@ -75,6 +76,7 @@ export type AppContextOptions = {
   oauthProvider?: OAuthProvider
   authVerifier: AuthVerifier
   plcRotationKey: crypto.Keypair
+  actorStoreMigrator?: ActorStoreMigrator
   cfg: ServerConfig
 }
 
@@ -102,6 +104,7 @@ export class AppContext {
   public authVerifier: AuthVerifier
   public oauthProvider?: OAuthProvider
   public plcRotationKey: crypto.Keypair
+  public actorStoreMigrator?: ActorStoreMigrator
   public cfg: ServerConfig
 
   constructor(opts: AppContextOptions) {
@@ -128,6 +131,7 @@ export class AppContext {
     this.authVerifier = opts.authVerifier
     this.oauthProvider = opts.oauthProvider
     this.plcRotationKey = opts.plcRotationKey
+    this.actorStoreMigrator = opts.actorStoreMigrator
     this.cfg = opts.cfg
   }
 
@@ -246,6 +250,17 @@ export class AppContext {
       },
       accountManager.db,
     )
+
+    const actorStoreMigrator = new ActorStoreMigrator(
+      accountManager.db,
+      actorStore,
+      // fail loudly if it's foregrounded
+      cfg.actorStore.migrateInBackground ? false : true,
+    )
+    actorStoreMigrator.start()
+    if (!cfg.actorStore.migrateInBackground) {
+      await actorStoreMigrator.running
+    }
 
     const plcRotationKey =
       secrets.plcRotationKey.provider === 'kms'
@@ -477,6 +492,7 @@ export class AppContext {
       authVerifier,
       oauthProvider,
       plcRotationKey,
+      actorStoreMigrator,
       cfg,
       ...(overrides ?? {}),
     })

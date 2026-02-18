@@ -53,6 +53,9 @@ export function readEnv() {
     // actor store
     actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
     actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
+    actorStoreMigrateInBackground: envBool(
+      'PDS_ACTOR_STORE_MIGRATE_IN_BACKGROUND',
+    ),
 
     // blobstore: one required
     // s3
