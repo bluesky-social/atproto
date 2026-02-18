@@ -26,9 +26,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'pnpm'
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Cache Puppeteer browser binaries
+        with:
+          path: ~/.cache
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
       - run: pnpm i --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: true
       - run: pnpm build
       - uses: actions/upload-artifact@v4
         with:
@@ -92,9 +97,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           cache: 'pnpm'
+      - name: Get current month
+        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        name: Cache Puppeteer browser binaries
+        with:
+          path: ~/.cache
+          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
       - run: pnpm i --frozen-lockfile
-        env:
-          PUPPETEER_SKIP_DOWNLOAD: true
       - uses: actions/download-artifact@v4
         with:
           name: dist
