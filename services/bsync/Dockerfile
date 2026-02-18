@@ -12,19 +12,18 @@ COPY ./*.* ./
 COPY ./tsconfig ./tsconfig
 
 # NOTE bsync's transitive dependencies go here: if that changes, this needs to be updated.
-# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path'
+# pnpm list --filter '@atproto/bsync...' --depth 0 --json | jq '.[].path' | sort -u
 COPY ./packages/bsync ./packages/bsync
-COPY ./packages/common ./packages/common
 COPY ./packages/common-web ./packages/common-web
+COPY ./packages/common ./packages/common
 COPY ./packages/lex/lex-cbor ./packages/lex/lex-cbor
 COPY ./packages/lex/lex-data ./packages/lex/lex-data
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/syntax ./packages/syntax
 
-COPY ./services/bsync ./services/bsync
-
 # install all deps
-RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+RUN pnpm install --frozen-lockfile
 # build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/bsync...' build
 # install only prod deps, hoisted to root node_modules dir

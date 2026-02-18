@@ -26,7 +26,6 @@ COPY ./packages/did ./packages/did
 COPY ./packages/identity ./packages/identity
 COPY ./packages/lex-cli ./packages/lex-cli
 COPY ./packages/lexicon ./packages/lexicon
-COPY ./packages/lexicon-resolver ./packages/lexicon-resolver
 COPY ./packages/oauth/jwk ./packages/oauth/jwk
 COPY ./packages/oauth/jwk-jose ./packages/oauth/jwk-jose
 COPY ./packages/oauth/jwk-webcrypto ./packages/oauth/jwk-webcrypto
@@ -48,10 +47,9 @@ COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc ./packages/xrpc
 COPY ./packages/xrpc-server ./packages/xrpc-server
 
-COPY ./services/ozone ./services/ozone
-
 # install all deps
-RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+RUN pnpm install --frozen-lockfile
 # build all packages with external node_modules
 RUN pnpm run --recursive --stream --filter '@atproto/aws...' --filter '@atproto/ozone...' build
 # install only prod deps, hoisted to root node_modules dir
