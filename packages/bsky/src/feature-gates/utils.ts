@@ -1,5 +1,5 @@
-import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
 import crypto from 'node:crypto'
+import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
 import { ParsedUserContext, RawUserContext, TrackingMetadata } from './types'
 
 /**
@@ -80,8 +80,8 @@ export function parsedUserContextToTrackingMetadata(
 ): TrackingMetadata {
   return {
     base: {
-      deviceId: parsedUserContext.deviceId ?? undefined,
-      sessionId: parsedUserContext.sessionId ?? undefined,
+      deviceId: parsedUserContext.deviceId,
+      sessionId: parsedUserContext.sessionId,
     },
     session: {
       did: parsedUserContext.did ?? undefined,

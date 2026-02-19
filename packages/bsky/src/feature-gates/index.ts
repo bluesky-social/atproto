@@ -140,15 +140,7 @@ export class FeatureGatesClient {
   ): CheckedFeatureGatesMap {
     const gb = this.client
     const attributes = parseRawUserContext(rawUserContext)
-
-    /*
-     * If the GB client isn't ready, or we don't have a deviceId, we won't be
-     * able to target the user with any feature gates, so just return false.
-     * The latter validation matches that of our event proxy, just FYI.
-     */
-    if (!gb || !this.ready || !attributes.deviceId)
-      return new Map(gates.map((g) => [g, false]))
-
+    if (!gb || !this.ready) return new Map(gates.map((g) => [g, false]))
     return new Map(gates.map((g) => [g, gb.isOn(g, { attributes })]))
   }
 }
