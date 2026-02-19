@@ -292,11 +292,14 @@ import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueAssign from './types/tools/ozone/queue/assign.js'
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportClaimReport from './types/tools/ozone/report/claimReport.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -614,11 +617,14 @@ export * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneQueueAssign from './types/tools/ozone/queue/assign.js'
 export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+export * as ToolsOzoneReportClaimReport from './types/tools/ozone/report/claimReport.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -5491,6 +5497,13 @@ export class ToolsOzoneQueueNS {
     this._client = client
   }
 
+  assign(
+    data?: ToolsOzoneQueueAssign.InputSchema,
+    opts?: ToolsOzoneQueueAssign.CallOptions,
+  ): Promise<ToolsOzoneQueueAssign.Response> {
+    return this._client.call('tools.ozone.queue.assign', opts?.qp, data, opts)
+  }
+
   createQueue(
     data?: ToolsOzoneQueueCreateQueue.InputSchema,
     opts?: ToolsOzoneQueueCreateQueue.CallOptions,
@@ -5510,6 +5523,18 @@ export class ToolsOzoneQueueNS {
       'tools.ozone.queue.deleteQueue',
       opts?.qp,
       data,
+      opts,
+    )
+  }
+
+  getAssignments(
+    params?: ToolsOzoneQueueGetAssignments.QueryParams,
+    opts?: ToolsOzoneQueueGetAssignments.CallOptions,
+  ): Promise<ToolsOzoneQueueGetAssignments.Response> {
+    return this._client.call(
+      'tools.ozone.queue.getAssignments',
+      params,
+      undefined,
       opts,
     )
   }
@@ -5544,6 +5569,17 @@ export class ToolsOzoneReportNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  claimReport(
+    data?: ToolsOzoneReportClaimReport.InputSchema,
+    opts?: ToolsOzoneReportClaimReport.CallOptions,
+  ): Promise<ToolsOzoneReportClaimReport.Response> {
+    return this._client
+      .call('tools.ozone.report.claimReport', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportClaimReport.toKnownErr(e)
+      })
   }
 
   reassignQueue(

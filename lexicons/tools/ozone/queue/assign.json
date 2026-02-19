@@ -1,0 +1,34 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.assign",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Assign a user to a queue.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queueId"],
+          "properties": {
+            "queueId": {
+              "type": "integer",
+              "description": "The ID of the queue to assign the user to."
+            },
+            "did": {
+              "type": "string",
+              "description": "DID to be assigned. Assigns to whomever sent the request if not provided."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.queue.defs#assignmentView"
+        }
+      }
+    }
+  }
+}

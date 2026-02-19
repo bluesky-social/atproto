@@ -72,3 +72,23 @@ export function isQueueStats<V>(v: V) {
 export function validateQueueStats<V>(v: V) {
   return validate<QueueStats & V>(v, id, hashQueueStats)
 }
+
+export interface AssignmentView {
+  $type?: 'tools.ozone.queue.defs#assignmentView'
+  id: number
+  did: string
+  queueId: number
+  reportId?: number
+  startAt: string
+  endAt: string
+}
+
+const hashAssignmentView = 'assignmentView'
+
+export function isAssignmentView<V>(v: V) {
+  return is$typed(v, id, hashAssignmentView)
+}
+
+export function validateAssignmentView<V>(v: V) {
+  return validate<AssignmentView & V>(v, id, hashAssignmentView)
+}

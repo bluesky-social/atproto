@@ -1,0 +1,55 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.getAssignments",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get moderator assignments, optionally filtered by active status, queue, moderator, or subject.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "onlyActiveAssignments": {
+            "type": "boolean",
+            "description": "When true, only returns active assignments where endAt is in the future."
+          },
+          "queueIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "If specified, returns assignments for these queues only."
+          },
+          "dids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "did"
+            },
+            "description": "If specified, returns assignments for these moderators only."
+          },
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "If specified as a DID, returns assignments for all records and the DID. If specified as an AT-URI, returns assignments for that URI only."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["assignments"],
+          "properties": {
+            "assignments": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.queue.defs#assignmentView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
