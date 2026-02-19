@@ -18246,6 +18246,7 @@ export const schemaDict = {
           'subject',
           'reportType',
           'reportedBy',
+          'reporter',
           'createdAt',
         ],
         properties: {
@@ -18285,6 +18286,11 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
             description: 'DID of the user who made the report',
+          },
+          reporter: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.moderation.defs#subjectView',
+            description: 'Full subject view of the reporter account',
           },
           comment: {
             type: 'string',

@@ -1,9 +1,28 @@
 import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
+import { Report } from '../db/schema/report'
 import { QueryParams } from '../lexicon/types/tools/ozone/moderation/queryReports'
 
-export async function queryReports(db: Database, params: QueryParams) {
+export type ReportWithEvent = Omit<Report, 'id'> & {
+  id: number
+  subjectDid: string
+  subjectUri: string | null
+  subjectCid: string | null
+  reportedBy: string
+  comment: string | null
+  meta: Record<string, string | boolean | number> | null
+}
+
+export type QueryReportsResult = {
+  reports: ReportWithEvent[]
+  cursor: string | undefined
+}
+
+export async function queryReports(
+  db: Database,
+  params: QueryParams,
+): Promise<QueryReportsResult> {
   let builder = db.db
     .selectFrom('report as r')
     .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
