@@ -19,11 +19,11 @@
     "node": ">=18.7.0"
   },
   "scripts": {
-    "prepare": "[ \"$npm_config_production\" = true ] || puppeteer browsers install chrome",
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
     "build": "tsc --build tsconfig.build.json",
     "postbuild": "node ./build.templates.js",
     "dev": "node ./build.templates.js --watch",
+    "pretest": "puppeteer browsers install chrome",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",
     "test:sqlite": "jest",
     "test:sqlite-only": "jest --testPathIgnorePatterns /tests/proxied/*",
@@ -95,7 +95,7 @@
     "esbuild-plugin-handlebars": "^1.0.3",
     "get-port": "^6.1.2",
     "jest": "^28.1.2",
-    "puppeteer": "^23.5.2",
+    "puppeteer": "^23.11.1",
     "ts-node": "^10.8.2",
     "typescript": "^5.6.3",
     "ws": "^8.12.0"
