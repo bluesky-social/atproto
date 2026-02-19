@@ -3,7 +3,9 @@ import {
   Infer,
   InferInput,
   InferOutput,
+  Issue,
   IssueInvalidType,
+  IssueInvalidValue,
   ParseOptions,
   Schema,
   ValidationContext,
@@ -65,11 +67,11 @@ export type ParamScalarValidator =
   | EnumSchema<string>
   | EnumSchema<number>
   // | EnumSchema<boolean> // Boolean lexicon definitions don't allow "enum"
-  | StringSchema
+  | StringSchema<any>
   | BooleanSchema
   | IntegerSchema
 
-type AsParamArraySchema<TSchema extends ParamScalarValidator> =
+type AsArrayParamSchema<TSchema extends Validator> =
   // This allows to "distribute" any union of scalar validators into a union of
   // arrays of those validators, instead of an array of union. If TSchema is
   // BooleanSchema | IntegerSchema, we want the result to be
@@ -80,7 +82,7 @@ type AsParamArraySchema<TSchema extends ParamScalarValidator> =
 
 export type ParamValueValidator =
   | ParamScalarValidator
-  | AsParamArraySchema<ParamScalarValidator>
+  | AsArrayParamSchema<ParamScalarValidator>
 
 export type ParamValidator =
   | ParamValueValidator
@@ -206,23 +208,23 @@ export class ParamsSchema<
     const entries =
       iterable instanceof URLSearchParams ? iterable.entries() : iterable
 
-    for (const [key, value] of entries) {
-      const validator = this.shapeValidators.get(key)
+    for (const [name, value] of entries) {
+      const validator = this.shapeValidators.get(name)
       const innerValidator = validator ? unwrapSchema(validator) : undefined
       const expectsArray = innerValidator instanceof ArraySchema
       const scalarValidator = expectsArray
         ? unwrapSchema(innerValidator.validator)
         : innerValidator
 
-      const coerced = coerceParam(key, value, scalarValidator, options)
+      const coerced = coerceParam(name, value, scalarValidator, options)
 
-      const currentParam = params[key]
+      const currentParam = params[name]
       if (currentParam === undefined) {
-        params[key] = expectsArray ? [coerced] : coerced
+        params[name] = expectsArray ? [coerced] : coerced
       } else if (Array.isArray(currentParam)) {
         currentParam.push(coerced)
       } else {
-        params[key] = [currentParam, coerced]
+        params[name] = [currentParam, coerced]
       }
     }
 
@@ -251,40 +253,36 @@ export class ParamsSchema<
 }
 
 function coerceParam(
-  key: string,
-  param: string,
+  name: string,
+  value: string,
   schema?: ParamScalarValidator,
   options?: ParseOptions,
 ): ParamScalar {
-  let expected: readonly string[]
+  let issue: Issue
+
   if (!schema) {
     // The param is unknown (not defined in schema), so we don't apply any
     // coercion and just return the string value.
-    return param
+    return value
   } else if (schema instanceof StringSchema) {
-    return param
+    return value
   } else if (schema instanceof IntegerSchema) {
-    if (/^-?\d+$/.test(param)) return Number(param)
-    expected = ['integer']
+    if (/^-?\d+$/.test(value)) return Number(value)
+    issue = new IssueInvalidType(paramPath(name, options), value, ['integer'])
   } else if (schema instanceof BooleanSchema) {
-    if (param === 'true') return true
-    if (param === 'false') return false
-    expected = ['boolean']
+    if (value === 'true') return true
+    if (value === 'false') return false
+    issue = new IssueInvalidType(paramPath(name, options), value, ['boolean'])
   } else if (schema instanceof LiteralSchema) {
     const { value } = schema
-    const valueStr = String(value)
-    if (valueStr === param) return value
-    expected = [valueStr]
+    if (String(value) === value) return value
+    issue = new IssueInvalidValue(paramPath(name, options), value, [value])
   } else if (schema instanceof EnumSchema) {
     const { values } = schema
-    const expectedStrings: string[] = new Array(values.length)
-    for (let i = 0; i < values.length; i++) {
-      const value = values[i]
-      const valueStr = String(value)
-      if (valueStr === param) return value
-      expectedStrings[i] = valueStr
+    for (const value of values) {
+      if (String(value) === value) return value
     }
-    expected = expectedStrings
+    issue = new IssueInvalidValue(paramPath(name, options), value, values)
   } else {
     // This should never happen. If it *does*, it means that the user of
     // lex-schema is mixing different versions of the lib, which is not
@@ -304,8 +302,11 @@ function coerceParam(
   // the index of the param in case of array params (e.g. "tags[1]"), which
   // could be helpful for debugging. The cost overhead is not worth it though
   // (IMO).
-  const path = options?.path ? [...options.path, key] : [key]
-  throw new ValidationError([new IssueInvalidType(path, param, expected)])
+  throw new ValidationError([issue])
+}
+
+function paramPath(key: string, options?: ParseOptions) {
+  return options?.path ? [...options.path, key] : [key]
 }
 
 /**

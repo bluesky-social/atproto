@@ -271,70 +271,58 @@ describe('ParamsSchema', () => {
     })
 
     it('parses string parameters', () => {
-      const urlParams = new URLSearchParams('name=Alice')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice')
       expect(result).toEqual({ name: 'Alice' })
     })
 
     it('parses and coerces boolean true', () => {
-      const urlParams = new URLSearchParams('name=Alice&active=true')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&active=true')
       expect(result).toEqual({ name: 'Alice', active: true })
     })
 
     it('parses and coerces boolean false', () => {
-      const urlParams = new URLSearchParams('name=Alice&active=false')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&active=false')
       expect(result).toEqual({ name: 'Alice', active: false })
     })
 
     it('parses and coerces integer values', () => {
-      const urlParams = new URLSearchParams('name=Alice&age=30')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&age=30')
       expect(result).toEqual({ name: 'Alice', age: 30 })
     })
 
     it('parses and coerces negative integers', () => {
-      const urlParams = new URLSearchParams('name=Alice&age=-5')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&age=-5')
       expect(result).toEqual({ name: 'Alice', age: -5 })
     })
 
     it('does not coerce non-integer numbers', () => {
-      const urlParams = new URLSearchParams('name=Alice&extra=3.14')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&extra=3.14')
       expect(result).toEqual({ name: 'Alice', extra: '3.14' })
     })
 
     it('keeps string values for string schema even if they look like numbers', () => {
-      const urlParams = new URLSearchParams('name=123')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=123')
       expect(result).toEqual({ name: '123' })
     })
 
     it('parses multiple values as array', () => {
-      const urlParams = new URLSearchParams('name=Alice&tags=one&tags=two')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&tags=one&tags=two')
       expect(result).toEqual({ name: 'Alice', tags: ['one', 'two'] })
     })
 
     it('does not coerce numeric values of unknown params', () => {
       expect(
-        schema.fromURLSearchParams(
-          new URLSearchParams('name=Alice&num=1&num=2&num=3&foo=3'),
-        ),
+        schema.fromURLSearchParams('name=Alice&num=1&num=2&num=3&foo=3'),
       ).toEqual({ name: 'Alice', num: ['1', '2', '3'], foo: '3' })
 
       expect(
-        schema.fromURLSearchParams(
-          new URLSearchParams('name=Alice&val=true&val=123&val=text'),
-        ),
+        schema.fromURLSearchParams('name=Alice&val=true&val=123&val=text'),
       ).toEqual({ name: 'Alice', val: ['true', '123', 'text'] })
     })
 
     it('handles empty URLSearchParams', () => {
-      const urlParams = new URLSearchParams()
-      expect(() => schema.fromURLSearchParams(urlParams)).toThrow()
+      expect(() => schema.fromURLSearchParams(new URLSearchParams())).toThrow()
+      expect(() => schema.fromURLSearchParams('')).toThrow()
     })
 
     it('handles multiple parameters', () => {

@@ -162,15 +162,19 @@ export function coerceToString(input: unknown): string | null {
   }
 }
 
+function _string(): StringSchema<NonNullable<unknown>>
 function _string<
   // Allow calling `string<{ knownValues: [...] }>()` without passing an options
   // object, since knownValues is only used for typing and has no runtime
   // effect, so it can be safely omitted at runtime.
   const TOptions extends {
-    [K in keyof StringSchemaOptions]?: K extends 'knownValues'
-      ? StringSchemaOptions[K]
-      : Restricted<`An options argument is required when using the "${K}" option`>
-  } = NonNullable<unknown>,
+    knownValues: StringSchemaOptions['knownValues']
+  } & {
+    [K in Exclude<
+      keyof StringSchemaOptions,
+      'knownValues'
+    >]?: Restricted<`An options argument is required when using the "${K}" option`>
+  },
 >(): StringSchema<Pick<TOptions, 'knownValues'>>
 function _string<const TOptions extends StringSchemaOptions>(
   // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
