@@ -17,15 +17,12 @@ yarn add @atproto/api
 
 Then in your application:
 
-
 ```typescript
 import { Agent, CredentialSession } from '@atproto/api'
 
-const session = new CredentialSession(
-  new URL("https://bsky.social"),
-);
-await session.login(account);
-const agent = new Agent(session);
+const session = new CredentialSession(new URL('https://bsky.social'))
+await session.login(account)
+const agent = new Agent(session)
 ```
 
 ## Usage
@@ -50,28 +47,26 @@ class.
 > `@atproto/oauth-client-*` packages).
 
 ```typescript
-import { Agent, CredentialSession, type AtpAgentLoginOpts } from "@atproto/api";
+import { Agent, CredentialSession, type AtpAgentLoginOpts } from '@atproto/api'
 
 // Configure connection to the server with authentification
 const account: AtpAgentLoginOpts = {
-	identifier: "your.bsky.social",
-	password: "xxxx-xxxx-xxxx-xxxx",
-};
-
-async function authenticate(account: AtpAgentLoginOpts): Promise<Agent> {
-	const session = new CredentialSession(
-		new URL("https://example.com"),
-	);
-	await session.login(account);
-	const agent = new Agent(session);
-	return agent;
+  identifier: 'your.bsky.social',
+  password: 'xxxx-xxxx-xxxx-xxxx',
 }
 
-(async () => {
-	console.log("Authenticating...");
-	const agent = await authenticate(account);
-  console.log(`Authenticated as from: ${agent.sessionManager.did}`);
-})();
+async function authenticate(account: AtpAgentLoginOpts): Promise<Agent> {
+  const session = new CredentialSession(new URL('https://example.com'))
+  await session.login(account)
+  const agent = new Agent(session)
+  return agent
+}
+
+;(async () => {
+  console.log('Authenticating...')
+  const agent = await authenticate(account)
+  console.log(`Authenticated as from: ${agent.sessionManager.did}`)
+})()
 ```
 
 #### OAuth based session management
