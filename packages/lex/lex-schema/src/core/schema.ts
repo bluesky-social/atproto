@@ -88,7 +88,10 @@ export abstract class Schema<
    */
   declare readonly ['__lex']: TInternals
 
-  // Needed to discriminate multiple schema types when used in unions
+  // Needed to discriminate multiple schema types when used in unions. Without
+  // this, Typescript could allow an EnumSchema<"foo" | "bar"> to be used where
+  // a StringSchema is expected, since they would both be structurally
+  // compatible.
   abstract readonly type: string
 
   /**
