@@ -1,5 +1,46 @@
 # @atproto/oauth-provider
 
+## 0.15.9
+
+### Patch Changes
+
+- [#4620](https://github.com/bluesky-social/atproto/pull/4620) [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that the `client_id` query param is correct when cancelling an authentication request
+
+- Updated dependencies [[`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0), [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0)]:
+  - @atproto/oauth-types@0.6.3
+
+## 0.15.8
+
+### Patch Changes
+
+- [#4619](https://github.com/bluesky-social/atproto/pull/4619) [`a2e4e95`](https://github.com/bluesky-social/atproto/commit/a2e4e9584730c1742aca7c1fcc59533a7c159740) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix depencies version
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix development in Safari
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `Permissions-Policy` header from Form redirect page
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Drop migrational code supporting old cookie style.
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Throw more detailed error upon CSRF login issue
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid potential conflict with `Object.prototype` when parsing cookies.
+
+- Updated dependencies [[`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`a2e4e95`](https://github.com/bluesky-social/atproto/commit/a2e4e9584730c1742aca7c1fcc59533a7c159740), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`19ecf5f`](https://github.com/bluesky-social/atproto/commit/19ecf5f76ae0d88c1963211a76920e00eecdd965), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015)]:
+  - @atproto/lex-document@0.0.13
+  - @atproto/oauth-provider-frontend@0.2.9
+  - @atproto/oauth-provider-ui@0.4.3
+  - @atproto/lex-resolver@0.0.14
+  - @atproto/common@0.5.11
+
+## 0.15.7
+
+### Patch Changes
+
+- Updated dependencies [[`49b3806`](https://github.com/bluesky-social/atproto/commit/49b38069ed4b5bd1ef71e967c78e5123b1c1f6f1)]:
+  - @atproto/common@0.5.10
+  - @atproto/lex-resolver@0.0.13
+  - @atproto/lex-document@0.0.12
+
 ## 0.15.6
 
 ### Patch Changes

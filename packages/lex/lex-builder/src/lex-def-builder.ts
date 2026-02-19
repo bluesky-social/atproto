@@ -38,14 +38,50 @@ import {
 } from './ref-resolver.js'
 import { asNamespaceExport } from './ts-lang.js'
 
+/**
+ * Configuration options for the {@link LexDefBuilder} class.
+ *
+ * @see {@link RefResolverOptions} for reference resolution options
+ */
 export type LexDefBuilderOptions = RefResolverOptions & {
+  /**
+   * The module specifier to use for importing the lexicon schema library.
+   *
+   * @default '@atproto/lex-schema'
+   */
   lib?: string
+  /**
+   * Whether to allow legacy blob references in the generated schemas.
+   *
+   * When `true`, blob types will accept both modern `BlobRef` and legacy
+   * `LegacyBlobRef` formats.
+   *
+   * @default false
+   */
   allowLegacyBlobs?: boolean
+  /**
+   * Whether to add `#__PURE__` annotations to function calls.
+   *
+   * These annotations help bundlers with tree-shaking by marking
+   * side-effect-free function calls.
+   *
+   * @default false
+   */
   pureAnnotations?: boolean
 }
 
 /**
- * Utility class to build a TypeScript source file from a lexicon document.
+ * Builds TypeScript type definitions and runtime schemas from a single
+ * Lexicon document.
+ *
+ * This class is responsible for generating the `.defs.ts` files that contain:
+ * - Type aliases for each lexicon definition
+ * - Runtime schema validators using `@atproto/lex-schema`
+ * - Utility functions for type checking and validation
+ * - Proper import statements for cross-references
+ *
+ * Each lexicon definition type (record, object, query, procedure, etc.)
+ * is handled with specialized code generation logic.
  */
 export class LexDefBuilder {
   private readonly refResolver: RefResolver
@@ -242,7 +278,7 @@ export class LexDefBuilder {
   ) {
     this.file.addTypeAlias({
       isExported: true,
-      name: 'Params',
+      name: '$Params',
       type: `l.InferMethodParams<typeof ${ref.varName}>`,
       docs: compileDocs(def.parameters?.description),
     })
@@ -250,15 +286,15 @@ export class LexDefBuilder {
     if (def.type === 'procedure') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Input',
-        type: `l.InferMethodInput<typeof ${ref.varName}>`,
+        name: '$Input<B = l.BinaryData>',
+        type: `l.InferMethodInput<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.input?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'InputBody',
-        type: `l.InferMethodInputBody<typeof ${ref.varName}>`,
+        name: '$InputBody<B = l.BinaryData>',
+        type: `l.InferMethodInputBody<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.input?.description),
       })
     }
@@ -266,15 +302,15 @@ export class LexDefBuilder {
     if (def.type === 'procedure' || def.type === 'query') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Output',
-        type: `l.InferMethodOutput<typeof ${ref.varName}>`,
+        name: '$Output<B = l.BinaryData>',
+        type: `l.InferMethodOutput<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.output?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'OutputBody',
-        type: `l.InferMethodOutputBody<typeof ${ref.varName}>`,
+        name: '$OutputBody<B = l.BinaryData>',
+        type: `l.InferMethodOutputBody<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.output?.description),
       })
     }
@@ -282,7 +318,7 @@ export class LexDefBuilder {
     if (def.type === 'subscription') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Message',
+        name: '$Message',
         type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
         docs: compileDocs(def.message?.description),
       })
@@ -648,11 +684,11 @@ export class LexDefBuilder {
   }
 
   private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {
-    return this.pure(`l.unknownObject()`)
+    return this.pure(`l.lexMap()`)
   }
 
   private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
-    return `l.UnknownObject`
+    return `l.LexMap`
   }
 
   private withDefault(schema: string, defaultValue: unknown) {
@@ -731,15 +767,33 @@ export class LexDefBuilder {
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
-    const options = stringifyOptions(def, [
+    const runtimeOptions = [
       'format',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',
       'minLength',
-    ] satisfies (keyof l.StringSchemaOptions)[])
+      // We don't want to include knownValues in the schema options **at
+      // runtime** as it has no effect and only causes bloat:
+      // "knownValues",
+    ] as const satisfies (keyof l.StringSchemaOptions)[]
 
-    return this.withDefault(this.pure(`l.string(${options})`), def.default)
+    const options = stringifyOptions(def, runtimeOptions)
+
+    // We *do* however need knownValues for the inferred type, so we include it
+    // as the generic parameter. We only do this if the def has knownValues,
+    // otherwise we let TypeScript infer the options generic by not defining it.
+    const generic = def.knownValues
+      ? stringifyOptions(def, [
+          ...runtimeOptions,
+          'knownValues',
+        ] satisfies (keyof l.StringSchemaOptions)[])
+      : undefined
+
+    return this.withDefault(
+      this.pure(`l.string${generic ? `<${generic}>` : ''}(${options})`),
+      def.default,
+    )
   }
 
   private async compileStringType(def: LexiconString): Promise<string> {

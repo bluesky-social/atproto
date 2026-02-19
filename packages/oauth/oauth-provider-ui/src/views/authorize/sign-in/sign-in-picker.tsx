@@ -107,7 +107,7 @@ export function SignInPicker({
           aria-label={t`Login to account that is not listed`}
           role="button"
           append={<ChevronRightIcon aria-hidden className="h-4" />}
-          icon={<AtSymbolIcon aria-hidden className="h-4" />}
+          icon={<AtSymbolIcon aria-hidden className="h-4 w-6" />}
         >
           <span className="truncate text-slate-700 dark:text-slate-400">
             <Trans>Another account</Trans>

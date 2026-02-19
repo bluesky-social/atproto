@@ -14,6 +14,8 @@ export type VerificationIssuerCreator = (
   verifierConfig: VerifierConfig,
 ) => VerificationIssuer
 
+const HANDLE_INVALID = 'handle.invalid'
+
 export class VerificationIssuer {
   private session = new CredentialSession(new URL(this.verifierConfig.url))
   private agent = new Agent(this.session)
@@ -58,6 +60,15 @@ export class VerificationIssuer {
     const agent = await this.getAgent()
     await Promise.allSettled(
       verifications.map(async ({ displayName, handle, subject, createdAt }) => {
+        if (handle.toLowerCase() === HANDLE_INVALID) {
+          failedVerifications.push({
+            $type: 'tools.ozone.verification.grantVerifications#grantError',
+            error: 'Cannot verify with invalid handle',
+            subject,
+          })
+          return
+        }
+
         try {
           const verificationRecord = {
             createdAt: createdAt || now,

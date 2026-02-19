@@ -2326,6 +2326,18 @@ export const schemaDict = {
         type: 'object',
         required: ['posts'],
         properties: {
+          deviceId: {
+            type: 'string',
+            description:
+              'UUIDv4 identifier of the device that created this draft.',
+            maxLength: 100,
+          },
+          deviceName: {
+            type: 'string',
+            description:
+              'The device and/or platform on which the draft was created.',
+            maxLength: 100,
+          },
           posts: {
             description: 'Array of draft posts that compose this draft.',
             type: 'array',
@@ -2380,9 +2392,10 @@ export const schemaDict = {
         properties: {
           text: {
             type: 'string',
-            maxLength: 3000,
-            maxGraphemes: 300,
-            description: 'The primary post content.',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+            description:
+              'The primary post content. It has a higher limit than post contents to allow storing a larger text that can later be refined into smaller posts.',
           },
           labels: {
             type: 'union',
@@ -6230,6 +6243,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'integer',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8043,6 +8060,59 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested users for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedOnboardingUsers',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+              recId: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -8331,6 +8401,52 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestedOnboardingUsers: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedOnboardingUsers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested users for onboarding',
+        parameters: {
+          type: 'params',
+          properties: {
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+              recId: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestedStarterPacks: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestedStarterPacks',
@@ -8569,6 +8685,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'integer',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -15334,7 +15454,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'record',
-        description: 'A delegate messaging id',
+        description: 'A declaration of a Germ Network account',
         key: 'literal:self',
         record: {
           type: 'object',
@@ -15342,22 +15462,33 @@ export const schemaDict = {
           properties: {
             version: {
               type: 'string',
+              description:
+                'Semver version number, without pre-release or build information, for the format of opaque content',
+              minLength: 5,
+              maxLength: 14,
             },
             currentKey: {
               type: 'bytes',
+              description:
+                'Opaque value, an ed25519 public key prefixed with a byte enum',
             },
             messageMe: {
               type: 'ref',
+              description: 'Controls who can message this account',
               ref: 'lex:com.germnetwork.declaration#messageMe',
             },
             keyPackage: {
               type: 'bytes',
+              description:
+                'Opaque value, contains MLS KeyPackage(s), and other signature data, and is signed by the currentKey',
             },
             continuityProofs: {
               type: 'array',
+              description: 'Array of opaque values to allow for key rolling',
               items: {
                 type: 'bytes',
               },
+              maxLength: 1000,
             },
           },
         },
@@ -15368,11 +15499,19 @@ export const schemaDict = {
         properties: {
           messageMeUrl: {
             type: 'string',
+            description:
+              'A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other',
             format: 'uri',
+            minLength: 1,
+            maxLength: 2047,
           },
           showButtonTo: {
             type: 'string',
-            knownValues: ['usersIFollow', 'everyone'],
+            knownValues: ['none', 'usersIFollow', 'everyone'],
+            description:
+              "The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.",
+            minLength: 1,
+            maxLength: 100,
           },
         },
       },
@@ -21288,6 +21427,8 @@ export const ids = {
     'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
   AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton:
     'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton:
+    'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetPostThreadOtherV2:
@@ -21296,6 +21437,8 @@ export const ids = {
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:
     'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+  AppBskyUnspeccedGetSuggestedOnboardingUsers:
+    'app.bsky.unspecced.getSuggestedOnboardingUsers',
   AppBskyUnspeccedGetSuggestedStarterPacks:
     'app.bsky.unspecced.getSuggestedStarterPacks',
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:

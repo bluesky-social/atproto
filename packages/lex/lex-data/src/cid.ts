@@ -4,31 +4,65 @@ import { sha256, sha512 } from 'multiformats/hashes/sha2'
 import { isObject } from './object.js'
 import { ui8Equals } from './uint8array.js'
 
-export const DAG_CBOR_MULTICODEC = 0x71 // DRISL conformant DAG-CBOR
-export type DAG_CBOR_MULTICODEC = typeof DAG_CBOR_MULTICODEC
+/**
+ * Codec code that indicates the CID references a CBOR-encoded data structure.
+ *
+ * Used when encoding structured data in AT Protocol repositories.
+ *
+ * @see {@link https://dasl.ing/cid.html Content IDs (DASL)}
+ */
+export const CBOR_DATA_CODEC = 0x71
+export type CBOR_DATA_CODEC = typeof CBOR_DATA_CODEC
 
-export const RAW_MULTICODEC = 0x55 // raw binary codec used in DASL CIDs
-export type RAW_MULTICODEC = typeof RAW_MULTICODEC
+/**
+ * Codec code that indicates the CID references raw binary data (like media blobs).
+ *
+ * Used in DASL CIDs for binary blobs like images and media.
+ *
+ * @see {@link https://dasl.ing/cid.html Content IDs (DASL)}
+ */
+export const RAW_DATA_CODEC = 0x55
+export type RAW_DATA_CODEC = typeof RAW_DATA_CODEC
 
-export const SHA256_MULTIHASH = sha256.code
-export type SHA256_MULTIHASH = typeof SHA256_MULTIHASH
+/**
+ * Hash code that indicates that a CID uses SHA-256.
+ */
+export const SHA256_HASH_CODE = sha256.code
+export type SHA256_HASH_CODE = typeof SHA256_HASH_CODE
 
-export const SHA512_MULTIHASH = sha512.code
-export type SHA512_MULTIHASH = typeof SHA512_MULTIHASH
+/**
+ * Hash code that indicates that a CID uses SHA-512.
+ */
+export const SHA512_HASH_CODE = sha512.code
+export type SHA512_HASH_CODE = typeof SHA512_HASH_CODE
 
-export interface Multihash<TCode extends number = number> {
+/**
+ * Represent the hash part of a CID, which includes the hash algorithm code and
+ * the raw digest bytes.
+ *
+ * @see {@link https://dasl.ing/cid.html Content IDs (DASL)}
+ */
+export interface Multihash<THashCode extends number = number> {
   /**
-   * Code of the multihash
+   * Code of the hash algorithm (e.g., SHA256_HASH_CODE).
    */
-  code: TCode
+  code: THashCode
 
   /**
-   * Raw digest
+   * Raw digest bytes.
    */
   digest: Uint8Array
 }
 
+/**
+ * Compares two {@link Multihash} for equality.
+ *
+ * @param a - First {@link Multihash}
+ * @param b - Second {@link Multihash}
+ * @returns `true` if both multihashes have the same code and digest
+ */
 export function multihashEquals(a: Multihash, b: Multihash): boolean {
+  if (a === b) return true
   return a.code === b.code && ui8Equals(a.digest, b.digest)
 }
 
@@ -86,9 +120,9 @@ export { /** @deprecated */ CID }
  */
 export function asMultiformatsCID<
   TVersion extends 0 | 1 = 0 | 1,
-  TCode extends number = number,
-  TMultihashCode extends number = number,
->(input: Cid<TVersion, TCode, TMultihashCode>) {
+  TCodec extends number = number,
+  THashCode extends number = number,
+>(input: Cid<TVersion, TCodec, THashCode>) {
   const cid =
     // Already a multiformats CID instance
     CID.asCID(input) ??
@@ -103,79 +137,155 @@ export function asMultiformatsCID<
   // interface is indeed compatible with multiformats' CID implementation, which
   // allows us to safely rely on multiformats' CID implementation where Cid are
   // needed.
-  return cid satisfies Cid as CID & Cid<TVersion, TCode, TMultihashCode>
+  return cid satisfies Cid as CID & Cid<TVersion, TCodec, THashCode>
 }
 
 /**
- * Interface for working with CIDs
+ * Content Identifier (CID) for addressing content by its hash.
+ *
+ * CIDs are self-describing content addresses used throughout AT Protocol for
+ * linking to data by its cryptographic hash. This interface provides a
+ * stable API that is compatible with the `multiformats` library but avoids
+ * direct dependency issues.
+ *
+ * @typeParam TVersion - CID version (0 or 1)
+ * @typeParam TCodec - Multicodec content type code
+ * @typeParam THashCode - Multihash algorithm code
+ *
+ * @example
+ * ```typescript
+ * import type { Cid } from '@atproto/lex-data'
+ * import { parseCid, isCid } from '@atproto/lex-data'
+ *
+ * // Parse a CID from a string
+ * const cid: Cid = parseCid('bafyreib...')
+ *
+ * // Check if a value is a CID
+ * if (isCid(value)) {
+ *   console.log(cid.toString())
+ * }
+ * ```
+ *
+ * @see {@link isCid} to check if a value is a valid CID
+ * @see {@link parseCid} to parse a CID from a string
+ * @see {@link decodeCid} to decode a CID from bytes
+ * @see {@link https://dasl.ing/cid.html Content IDs (DASL)}
  */
 export interface Cid<
   TVersion extends 0 | 1 = 0 | 1,
-  TCode extends number = number,
-  TMultihashCode extends number = number,
+  TCodec extends number = number,
+  THashCode extends number = number,
 > {
   // @NOTE This interface is compatible with multiformats' CID implementation
   // which we are using under the hood.
 
+  /** CID version (0 or 1). AT Protocol uses CIDv1. */
   readonly version: TVersion
-  readonly code: TCode
-  readonly multihash: Multihash<TMultihashCode>
+  /** Coded (e.g., {@link CBOR_DATA_CODEC}, {@link RAW_DATA_CODEC}). */
+  readonly code: TCodec
+  /** The multihash containing the hash algorithm and digest. */
+  readonly multihash: Multihash<THashCode>
 
   /**
    * Binary representation of the whole CID.
    */
   readonly bytes: Uint8Array
 
+  /**
+   * Compares this CID with another for equality.
+   *
+   * @param other - The CID to compare with
+   * @returns `true` if the CIDs are equal
+   */
   equals(other: Cid): boolean
+
+  /**
+   * Returns the string representation of this CID (base32 for v1, base58btc for v0).
+   */
   toString(): string
 }
 
 /**
- * Represents the cid of raw binary data (like media blobs).
+ * Represents the CID of raw binary data (like media blobs).
  *
- * The use of {@link SHA256_MULTIHASH} is recommended but not required for raw CIDs.
+ * The use of {@link SHA256_HASH_CODE} is recommended but not required for raw CIDs.
  *
- * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats ATproto Data Model - Link and CID Formats}
+ * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats AT Protocol Data Model - Link and CID Formats}
  */
-export type RawCid = Cid<1, RAW_MULTICODEC>
+export type RawCid = Cid<1, RAW_DATA_CODEC>
 
+/**
+ * Type guard to check if a CID is a raw binary CID.
+ *
+ * @param cid - The CID to check
+ * @returns `true` if the CID is a version 1 CID with raw multicodec
+ */
 export function isRawCid(cid: Cid): cid is RawCid {
-  return cid.version === 1 && cid.code === RAW_MULTICODEC
+  return cid.version === 1 && cid.code === RAW_DATA_CODEC
 }
 
 /**
  * Represents a DASL compliant CID.
- * @see {@link https://dasl.ing/cid.html DASL-CIDs}
+ *
+ * DASL CIDs are version 1 CIDs using either raw or DAG-CBOR multicodec
+ * with SHA-256 multihash.
+ *
+ * @see {@link https://dasl.ing/cid.html Content IDs (DASL)}
  */
-export type DaslCid = Cid<
-  1,
-  RAW_MULTICODEC | DAG_CBOR_MULTICODEC,
-  SHA256_MULTIHASH
->
+export type DaslCid = Cid<1, RAW_DATA_CODEC | CBOR_DATA_CODEC, SHA256_HASH_CODE>
 
+/**
+ * Type guard to check if a CID is DASL compliant.
+ *
+ * @param cid - The CID to check
+ * @returns `true` if the CID is DASL compliant (v1, raw/dag-cbor, sha256)
+ */
 export function isDaslCid(cid: Cid): cid is DaslCid {
   return (
     cid.version === 1 &&
-    (cid.code === RAW_MULTICODEC || cid.code === DAG_CBOR_MULTICODEC) &&
-    cid.multihash.code === SHA256_MULTIHASH &&
-    cid.multihash.digest.byteLength === 32 // Should always be 32 bytes (256 bits) for SHA-256, but double-checking anyways
+    (cid.code === RAW_DATA_CODEC || cid.code === CBOR_DATA_CODEC) &&
+    cid.multihash.code === SHA256_HASH_CODE &&
+    cid.multihash.digest.byteLength === 0x20 // Should always be 32 bytes (256 bits) for SHA-256, but double-checking anyways
   )
 }
 
 /**
- * Represents the cid of ATProto DAG-CBOR data (like repository MST nodes).
- * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats ATproto Data Model - Link and CID Formats}
+ * Represents the CID of AT Protocol DAG-CBOR data (like repository MST nodes).
+ *
+ * CBOR CIDs are version 1 CIDs using DAG-CBOR multicodec with SHA-256 multihash.
+ *
+ * @see {@link https://atproto.com/specs/data-model#link-and-cid-formats AT Protocol Data Model - Link and CID Formats}
  */
-export type CborCid = Cid<1, DAG_CBOR_MULTICODEC, SHA256_MULTIHASH>
+export type CborCid = Cid<1, CBOR_DATA_CODEC, SHA256_HASH_CODE>
 
+/**
+ * Type guard to check if a CID is a DAG-CBOR CID.
+ *
+ * @param cid - The CID to check
+ * @returns `true` if the CID is a DAG-CBOR CID (v1, dag-cbor, sha256)
+ */
 export function isCborCid(cid: Cid): cid is CborCid {
-  return cid.code === DAG_CBOR_MULTICODEC && isDaslCid(cid)
+  return cid.code === CBOR_DATA_CODEC && isDaslCid(cid)
 }
 
+/**
+ * Options for checking CID flavor constraints.
+ */
 export type CheckCidOptions = {
+  /**
+   * The CID flavor to check for.
+   * - `'raw'` - Raw binary CID ({@link RawCid})
+   * - `'cbor'` - DAG-CBOR CID ({@link CborCid})
+   * - `'dasl'` - DASL compliant CID ({@link DaslCid})
+   */
   flavor?: 'raw' | 'cbor' | 'dasl'
 }
 
+/**
+ * Infers the CID type based on check options.
+ *
+ * @typeParam TOptions - The options used for checking
+ */
 export type InferCheckedCid<TOptions> = TOptions extends { flavor: 'raw' }
   ? RawCid
   : TOptions extends { flavor: 'cbor' }
@@ -287,6 +397,16 @@ export function parseCid(input: string, options?: CheckCidOptions): Cid {
   return asCid(cid, options)
 }
 
+/**
+ * Validates that a string is a valid CID representation.
+ *
+ * Unlike {@link parseCid}, this function returns a boolean instead of throwing.
+ * It also verifies that the string is the canonical representation of the CID.
+ *
+ * @param input - The string to validate
+ * @param options - Optional flavor constraints
+ * @returns `true` if the string is a valid CID
+ */
 export function validateCidString(
   input: string,
   options?: CheckCidOptions,
@@ -294,6 +414,23 @@ export function validateCidString(
   return parseCidSafe(input, options)?.toString() === input
 }
 
+/**
+ * Safely parses a CID string, returning `null` on failure instead of throwing.
+ *
+ * @param input - The string to parse
+ * @param options - Optional flavor constraints
+ * @returns The parsed CID, or `null` if parsing fails
+ *
+ * @example
+ * ```typescript
+ * import { parseCidSafe } from '@atproto/lex-data'
+ *
+ * const cid = parseCidSafe('bafyreib...')
+ * if (cid) {
+ *   console.log(cid.toString())
+ * }
+ * ```
+ */
 export function parseCidSafe<TOptions extends CheckCidOptions>(
   input: string,
   options: TOptions,
@@ -313,6 +450,13 @@ export function parseCidSafe(
   }
 }
 
+/**
+ * Ensures that a string is a valid CID representation.
+ *
+ * @param input - The string to validate
+ * @param options - Optional flavor constraints
+ * @throws If the string is not a valid CID
+ */
 export function ensureValidCidString(
   input: string,
   options?: CheckCidOptions,
@@ -346,36 +490,71 @@ export async function isCidForBytes(
   throw new Error('Unsupported CID multihash')
 }
 
-export function createCid<TCode extends number, TMultihashCode extends number>(
-  code: TCode,
-  multihashCode: TMultihashCode,
+/**
+ * Creates a CID from a multicodec, multihash code, and digest.
+ *
+ * @param code - The multicodec content type code
+ * @param multihashCode - The multihash algorithm code
+ * @param digest - The raw hash digest bytes
+ * @returns A new CIDv1 instance
+ *
+ * @example
+ * ```typescript
+ * import { createCid, RAW_DATA_CODEC, SHA256_HASH_CODE } from '@atproto/lex-data'
+ *
+ * const cid = createCid(RAW_DATA_CODEC, SHA256_HASH_CODE, hashDigest)
+ * ```
+ */
+export function createCid<TCodec extends number, THashCode extends number>(
+  code: TCodec,
+  multihashCode: THashCode,
   digest: Uint8Array,
 ) {
   const cid: Cid = CID.createV1(code, createDigest(multihashCode, digest))
-  return cid as Cid<1, TCode, TMultihashCode>
+  return cid as Cid<1, TCodec, THashCode>
 }
 
+/**
+ * Creates a DAG-CBOR CID for the given CBOR bytes.
+ *
+ * Computes the SHA-256 hash of the bytes and creates a CIDv1 with DAG-CBOR multicodec.
+ *
+ * @param bytes - The CBOR-encoded bytes to hash
+ * @returns A promise that resolves to the CborCid
+ */
 export async function cidForCbor(bytes: Uint8Array): Promise<CborCid> {
   const multihash = await sha256.digest(bytes)
-  return CID.createV1(DAG_CBOR_MULTICODEC, multihash) as CborCid
+  return CID.createV1(CBOR_DATA_CODEC, multihash) as CborCid
 }
 
+/**
+ * Creates a raw CID for the given binary bytes.
+ *
+ * Computes the SHA-256 hash of the bytes and creates a CIDv1 with raw multicodec.
+ *
+ * @param bytes - The raw binary bytes to hash
+ * @returns A promise that resolves to the RawCid
+ */
 export async function cidForRawBytes(bytes: Uint8Array): Promise<RawCid> {
   const multihash = await sha256.digest(bytes)
-  return CID.createV1(RAW_MULTICODEC, multihash) as RawCid
+  return CID.createV1(RAW_DATA_CODEC, multihash) as RawCid
 }
 
+/**
+ * Creates a raw CID from an existing SHA-256 hash digest.
+ *
+ * @param digest - The SHA-256 hash digest (must be 32 bytes)
+ * @returns A RawCid with the given digest
+ * @throws If the digest length is not 32 bytes
+ */
 export function cidForRawHash(digest: Uint8Array): RawCid {
   // Fool-proofing
   if (digest.length !== 32) {
     throw new Error(`Invalid SHA-256 hash length: ${digest.length}`)
   }
-  return createCid(RAW_MULTICODEC, sha256.code, digest)
+  return createCid(RAW_DATA_CODEC, sha256.code, digest)
 }
 
-/**
- * @internal
- */
 function isCidImplementation(value: unknown): value is Cid {
   if (CID.asCID(value)) {
     // CIDs created using older multiformats versions did not have a "bytes"
@@ -414,9 +593,6 @@ function isCidImplementation(value: unknown): value is Cid {
   }
 }
 
-/**
- * @internal
- */
 function isUint8(val: unknown): val is number {
   return Number.isInteger(val) && (val as number) >= 0 && (val as number) < 256
 }

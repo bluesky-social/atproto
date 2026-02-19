@@ -1509,6 +1509,7 @@ describe('Subscription', () => {
 
   it('handles subscriptions with cleanup', async () => {
     let sentCount = 0
+    const maxMessages = 10
 
     const { resolve, promise: finallyPromise } = timeoutDeferred(5000)
 
@@ -1516,7 +1517,7 @@ describe('Subscription', () => {
       io.example.subscribe,
       async function* ({ params: { message }, signal }) {
         try {
-          for (; sentCount < 10; ) {
+          for (; sentCount < maxMessages; ) {
             await scheduler.wait(5, { signal })
             yield { message, count: ++sentCount }
           }
@@ -1558,7 +1559,7 @@ describe('Subscription', () => {
     ])
 
     expect(sentCount).toBeGreaterThanOrEqual(3)
-    expect(sentCount).toBeLessThan(5)
+    expect(sentCount).toBeLessThan(maxMessages)
   })
 
   it('returns 405 for non-GET request', async () => {

@@ -79,6 +79,7 @@ import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerat
 import getPostThreadOtherV2 from './app/bsky/unspecced/getPostThreadOtherV2'
 import getPostThreadV2 from './app/bsky/unspecced/getPostThreadV2'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
+import getSuggestedOnboardingUsers from './app/bsky/unspecced/getSuggestedOnboardingUsers'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
 import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
@@ -165,6 +166,7 @@ export default function (server: Server, ctx: AppContext) {
   getTrendingTopics(server, ctx)
   getTrends(server, ctx)
   getOnboardingSuggestedStarterPacks(server, ctx)
+  getSuggestedOnboardingUsers(server, ctx)
   getSuggestedStarterPacks(server, ctx)
   getSuggestedUsers(server, ctx)
   getUnspeccedSuggestedFeeds(server, ctx)

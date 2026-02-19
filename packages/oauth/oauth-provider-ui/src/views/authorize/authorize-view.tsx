@@ -1,3 +1,4 @@
+import type { AuthorizeData } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useEffect, useState } from 'react'
 import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
@@ -8,7 +9,6 @@ import {
 } from '../../components/layouts/layout-title-page.tsx'
 import { useApi } from '../../hooks/use-api.ts'
 import { useBoundDispatch } from '../../hooks/use-bound-dispatch.ts'
-import type { AuthorizeData } from '../../hydration-data'
 import { Override } from '../../lib/util.ts'
 import { ConsentView } from './consent/consent-view.tsx'
 import { ResetPasswordView } from './reset-password/reset-password-view.tsx'

@@ -1,5 +1,32 @@
 # @atproto/api
 
+## 0.18.21
+
+### Patch Changes
+
+- [#4633](https://github.com/bluesky-social/atproto/pull/4633) [`60f84eb`](https://github.com/bluesky-social/atproto/commit/60f84ebe47016828add07b143c403e331c58ee78) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Increase draft char limit from 300 to 1000
+
+- [#4632](https://github.com/bluesky-social/atproto/pull/4632) [`50dfbec`](https://github.com/bluesky-social/atproto/commit/50dfbec512682d35e8108b952e8f0533da71beef) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getSuggestedOnboardingUser and app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - update germ networks lexicon
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - add `none` to germ declaration record
+
+## 0.18.20
+
+### Patch Changes
+
+- [#4591](https://github.com/bluesky-social/atproto/pull/4591) [`4f5c400`](https://github.com/bluesky-social/atproto/commit/4f5c4001271bbf38b30506efd30ebdabb969878f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `platform` to `deviceName` on `draft` view, add maxLength.
+
+## 0.18.19
+
+### Patch Changes
+
+- [#4590](https://github.com/bluesky-social/atproto/pull/4590) [`25cea46`](https://github.com/bluesky-social/atproto/commit/25cea46aaa3d84521d1e977b67d3ac3581304ba1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `deviceId` and `platform` to drafts as optional props
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.15
+
 ## 0.18.18
 
 ### Patch Changes

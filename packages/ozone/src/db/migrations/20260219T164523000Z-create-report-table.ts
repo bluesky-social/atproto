@@ -8,11 +8,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
     // Core link to report event (all metadata comes from moderation_event via JOIN)
     .addColumn('eventId', 'integer', (col) =>
-      col
-        .notNull()
-        .unique()
-        .references('moderation_event.id')
-        .onDelete('cascade'),
+      col.notNull().unique().onDelete('cascade'),
     )
 
     // Queue assignment (computed by background job in future iteration)

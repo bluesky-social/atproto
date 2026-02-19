@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex",
-  "version": "0.0.13",
+  "version": "0.0.16",
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [
@@ -30,6 +30,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },

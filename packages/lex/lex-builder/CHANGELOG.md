@@ -1,5 +1,29 @@
 # @atproto/lex-builder
 
+## 0.0.15
+
+### Patch Changes
+
+- [#4610](https://github.com/bluesky-social/atproto/pull/4610) [`619068f`](https://github.com/bluesky-social/atproto/commit/619068fb81203b3b43b632892bdcb0a5067f7fe4) Thanks [@gaearon](https://github.com/gaearon)! - Export `LexDefBuilder` class and add `moduleSpecifier` option to `RefResolverOptions` for custom external import resolution
+
+## 0.0.14
+
+### Patch Changes
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add JSDoc
+
+- Updated dependencies [[`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015)]:
+  - @atproto/lex-schema@0.0.12
+  - @atproto/lex-document@0.0.13
+
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-document@0.0.12
+  - @atproto/lex-schema@0.0.11
+
 ## 0.0.12
 
 ### Patch Changes

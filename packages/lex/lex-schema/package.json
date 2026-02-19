@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-schema",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "license": "MIT",
   "description": "Lexicon schema system for AT Lexicons",
   "keywords": [
@@ -31,7 +31,7 @@
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {

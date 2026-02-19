@@ -8,9 +8,24 @@ import {
 } from '../core.js'
 
 /**
+ * Schema for validating dictionary/map-like objects with dynamic keys.
+ *
+ * Unlike `ObjectSchema` which validates a fixed set of properties, `DictSchema`
+ * validates objects where any string key is allowed, with both keys and values
+ * validated against their respective schemas.
+ *
  * @note There is no dictionary in Lexicon schemas. This is a custom extension
  * to allow map-like objects when using the lex library programmatically (i.e.
  * not code generated from a lexicon schema).
+ *
+ * @template TKey - The validator type for dictionary keys (must validate strings)
+ * @template TValue - The validator type for dictionary values
+ *
+ * @example
+ * ```ts
+ * const schema = new DictSchema(l.string(), l.integer())
+ * const result = schema.validate({ a: 1, b: 2, c: 3 })
+ * ```
  */
 export class DictSchema<
   const TKey extends Validator<string> = any,
@@ -19,6 +34,8 @@ export class DictSchema<
   Record<InferInput<TKey>, InferInput<TValue>>,
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
+  readonly type = 'dict' as const
+
   constructor(
     readonly keySchema: TKey,
     readonly valueSchema: TValue,
@@ -32,7 +49,7 @@ export class DictSchema<
     options?: { ignoredKeys?: { has(k: string): boolean } },
   ) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'dict')
+      return ctx.issueUnexpectedType(input, 'dict')
     }
 
     let copy: undefined | Record<string, unknown>
@@ -67,6 +84,35 @@ export class DictSchema<
   }
 }
 
+/**
+ * Creates a dictionary schema for validating map-like objects.
+ *
+ * Validates objects where all keys match the key schema and all values
+ * match the value schema. Useful for dynamic key-value mappings.
+ *
+ * @param key - Schema to validate each key (must be a string validator)
+ * @param value - Schema to validate each value
+ * @returns A new {@link DictSchema} instance
+ *
+ * @example
+ * ```ts
+ * // String to number mapping
+ * const scoresSchema = l.dict(l.string(), l.integer())
+ * scoresSchema.parse({ alice: 100, bob: 85 })
+ *
+ * // Constrained keys
+ * const langSchema = l.dict(
+ *   l.string({ minLength: 2, maxLength: 5 }), // Language codes
+ *   l.string() // Translations
+ * )
+ *
+ * // Complex values
+ * const usersById = l.dict(
+ *   l.string({ format: 'did' }),
+ *   l.object({ name: l.string(), age: l.integer() })
+ * )
+ * ```
+ */
 /*@__NO_SIDE_EFFECTS__*/
 export function dict<
   const TKey extends Validator<string>,
