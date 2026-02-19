@@ -37,7 +37,7 @@ export class BytesSchema extends Schema<Uint8Array> {
     const bytes =
       ctx.options.mode === 'parse' ? asUint8Array(input) : ifUint8Array(input)
     if (!bytes) {
-      return ctx.issueInvalidType(input, 'bytes')
+      return ctx.issueUnexpectedType(input, 'bytes')
     }
 
     const { minLength } = this.options

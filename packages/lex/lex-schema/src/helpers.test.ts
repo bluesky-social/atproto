@@ -61,7 +61,7 @@ describe('InferMethodParams', () => {
         l.params({
           cursor: l.optional(l.integer()),
         }),
-        l.unknownObject(),
+        l.lexMap(),
       )
 
       type Params = l.InferMethodParams<typeof subscription>

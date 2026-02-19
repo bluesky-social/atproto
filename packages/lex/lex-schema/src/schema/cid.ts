@@ -37,7 +37,7 @@ export class CidSchema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isCid(input, this.options)) {
-      return ctx.issueInvalidType(input, 'cid')
+      return ctx.issueUnexpectedType(input, 'cid')
     }
 
     return ctx.success(input)

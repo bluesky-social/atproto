@@ -69,7 +69,7 @@ export class TypedUnionSchema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input) || !('$type' in input)) {
-      return ctx.issueInvalidType(input, '$typed')
+      return ctx.issueUnexpectedType(input, '$typed')
     }
 
     const { $type } = input

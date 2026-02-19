@@ -49,7 +49,7 @@ export class DictSchema<
     options?: { ignoredKeys?: { has(k: string): boolean } },
   ) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'dict')
+      return ctx.issueUnexpectedType(input, 'dict')
     }
 
     let copy: undefined | Record<string, unknown>

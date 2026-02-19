@@ -47,7 +47,7 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!Array.isArray(input)) {
-      return ctx.issueInvalidType(input, 'array')
+      return ctx.issueUnexpectedType(input, 'array')
     }
 
     const { minLength, maxLength } = this.options

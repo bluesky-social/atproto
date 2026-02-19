@@ -8,6 +8,7 @@ import {
   ValidationContext,
   isStringFormat,
 } from '../core.js'
+import { IfAny } from '../util/if-any.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
 
@@ -47,11 +48,15 @@ export type StringSchemaOptions = {
 export class StringSchema<
   const TOptions extends StringSchemaOptions = StringSchemaOptions,
 > extends Schema<
-  TOptions extends { format: infer F extends StringFormat }
-    ? InferStringFormat<F>
-    : TOptions extends { knownValues: readonly (infer V extends string)[] }
-      ? V | UnknownString
-      : string
+  IfAny<
+    TOptions,
+    string,
+    TOptions extends { format: infer F extends StringFormat }
+      ? InferStringFormat<F>
+      : TOptions extends { knownValues: readonly (infer V extends string)[] }
+        ? V | UnknownString
+        : string
+  >
 > {
   readonly type = 'string' as const
 
@@ -70,7 +75,7 @@ export class StringSchema<
   validateInContext(input: unknown, ctx: ValidationContext) {
     const str = coerceToString(input)
     if (str == null) {
-      return ctx.issueInvalidType(input, 'string')
+      return ctx.issueUnexpectedType(input, 'string')
     }
 
     let lazyUtf8Len: number
@@ -175,7 +180,9 @@ function _string<
       'knownValues'
     >]?: Restricted<`An options argument is required when using the "${K}" option`>
   },
->(): StringSchema<Pick<TOptions, 'knownValues'>>
+>(): StringSchema<
+  IfAny<TOptions, any, { knownValues: TOptions['knownValues'] }>
+>
 function _string<const TOptions extends StringSchemaOptions>(
   // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
   // allow the actual options argument to omit the "knownValues" property since

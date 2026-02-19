@@ -33,7 +33,7 @@ export class IntegerSchema extends Schema<number> {
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isInteger(input)) {
-      return ctx.issueInvalidType(input, 'integer')
+      return ctx.issueUnexpectedType(input, 'integer')
     }
 
     if (this.options?.minimum != null && input < this.options.minimum) {

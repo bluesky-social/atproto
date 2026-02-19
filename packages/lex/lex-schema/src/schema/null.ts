@@ -19,7 +19,7 @@ export class NullSchema extends Schema<null> {
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (input !== null) {
-      return ctx.issueInvalidType(input, 'null')
+      return ctx.issueUnexpectedType(input, 'null')
     }
 
     return ctx.success(null)

@@ -26,7 +26,7 @@ export class RegexpSchema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (typeof input !== 'string') {
-      return ctx.issueInvalidType(input, 'string')
+      return ctx.issueUnexpectedType(input, 'string')
     }
 
     if (!this.pattern.test(input)) {
