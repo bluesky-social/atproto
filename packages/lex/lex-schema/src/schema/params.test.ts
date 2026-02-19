@@ -393,14 +393,19 @@ describe('ParamsSchema', () => {
           ['name', 'Alice'],
           ['bools', 'notabool'],
         ]),
-      ).toThrow('Expected boolean value type at $.bools[0] (got string)')
+      ).toThrow('Expected boolean value type at $.bools (got string)')
 
       expect(() =>
-        schema.fromURLSearchParams([
-          ['name', 'Alice'],
-          ['bools', '2'],
-        ]),
-      ).toThrow('Expected boolean value type at $.bools[0] (got string)')
+        schema.fromURLSearchParams(
+          [
+            ['name', 'Alice'],
+            ['bools', '2'],
+          ],
+          {
+            path: ['foo', 'bar'],
+          },
+        ),
+      ).toThrow('Expected boolean value type at $.foo.bar.bools (got string)')
     })
   })
 

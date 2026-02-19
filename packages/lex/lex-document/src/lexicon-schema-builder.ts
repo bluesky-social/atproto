@@ -411,7 +411,7 @@ export class LexiconSchemaBuilder {
   protected compileParams(doc: LexiconDocument, def?: LexiconParameters) {
     if (!def) return l.params()
 
-    const shape: l.ParamsSchemaShape = {}
+    const shape: l.ParamsShape = {}
     for (const [paramName, paramDef] of Object.entries(def.properties)) {
       if (paramDef === undefined) continue
 

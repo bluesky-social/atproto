@@ -11,13 +11,13 @@ import {
  * Options for parsing operations.
  * Excludes the `mode` option as it is implicitly set to `"parse"`.
  */
-type ParseOptions = Omit<ValidationOptions, 'mode'>
+export type ParseOptions = Omit<ValidationOptions, 'mode'>
 
 /**
  * Options for validation operations.
  * Excludes the `mode` option as it is implicitly set to `"validate"`.
  */
-type ValidateOptions = Omit<ValidationOptions, 'mode'>
+export type ValidateOptions = Omit<ValidationOptions, 'mode'>
 
 /**
  * Internal type structure for schema type inference.

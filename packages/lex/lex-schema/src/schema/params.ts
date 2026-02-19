@@ -3,8 +3,11 @@ import {
   Infer,
   InferInput,
   InferOutput,
+  IssueInvalidType,
+  ParseOptions,
   Schema,
   ValidationContext,
+  ValidationError,
   Validator,
   WithOptionalProperties,
 } from '../core.js'
@@ -52,45 +55,45 @@ export type Params = Infer<typeof paramsSchema>
  */
 export const paramsSchema = dict(string(), optional(paramSchema))
 
-// @NOTE In order to properly coerce URLSearchParams, we need to distinguish
-// between scalar and array validators, requiring to be able to detect which
-// schema types are being used, restricting the allowed param validators here.
-export type ParamScalarValidator<V extends ParamScalar = ParamScalar> =
-  | LiteralSchema<V>
-  | EnumSchema<V>
-  | (V extends string
-      ? StringSchema
-      : V extends boolean
-        ? BooleanSchema
-        : V extends number
-          ? IntegerSchema
-          : never)
-export type ParamValueValidator<V extends Param = Param> =
-  V extends readonly (infer U)[]
-    ? U extends ParamScalar
-      ? ArraySchema<ParamScalarValidator<U>>
-      : never
-    : V extends ParamScalar
-      ? ParamScalarValidator<V>
-      : never
-export type ParamValidator<V extends Param | undefined = Param | undefined> =
-  //
-  undefined extends Extract<V, undefined>
-    ?
-        | OptionalSchema<ParamValueValidator<NonNullable<V>>>
-        | OptionalSchema<WithDefaultSchema<ParamValueValidator<NonNullable<V>>>>
-        | ParamValueValidator<NonNullable<V>>
-        | WithDefaultSchema<ParamValueValidator<NonNullable<V>>>
-    :
-        | ParamValueValidator<NonNullable<V>>
-        | WithDefaultSchema<ParamValueValidator<NonNullable<V>>>
+export type ParamScalarValidator =
+  // @NOTE In order to properly coerce URLSearchParams, we need to distinguish
+  // between scalar and array validators, requiring to be able to detect which
+  // schema types are being used, restricting the allowed param validators here.
+  | LiteralSchema<string>
+  | LiteralSchema<number>
+  | LiteralSchema<boolean>
+  | EnumSchema<string>
+  | EnumSchema<number>
+  // | EnumSchema<boolean> // Boolean lexicon definitions don't allow "enum"
+  | StringSchema
+  | BooleanSchema
+  | IntegerSchema
+
+type AsParamArraySchema<TSchema extends ParamScalarValidator> =
+  // This allows to "distribute" any union of scalar validators into a union of
+  // arrays of those validators, instead of an array of union. If TSchema is
+  // BooleanSchema | IntegerSchema, we want the result to be
+  // ArraySchema<BooleanSchema> | ArraySchema<IntegerSchema>, not
+  // ArraySchema<BooleanSchema | IntegerSchema>, since the latter would allow
+  // arrays with mixed types (e.g. [true, 42]), which we don't want.
+  TSchema extends any ? ArraySchema<TSchema> : never
+
+export type ParamValueValidator =
+  | ParamScalarValidator
+  | AsParamArraySchema<ParamScalarValidator>
+
+export type ParamValidator =
+  | ParamValueValidator
+  | OptionalSchema<ParamValueValidator>
+  | OptionalSchema<WithDefaultSchema<ParamValueValidator>>
+  | WithDefaultSchema<ParamValueValidator>
 
 /**
  * Type representing the shape of a params schema definition.
  *
  * Maps parameter names to their validators (must be Param or undefined).
  */
-export type ParamsSchemaShape = {
+export type ParamsShape = {
   [x: string]: ParamValidator
 }
 
@@ -114,7 +117,7 @@ export type ParamsSchemaShape = {
  * ```
  */
 export class ParamsSchema<
-  const TShape extends ParamsSchemaShape = ParamsSchemaShape,
+  const TShape extends ParamsShape = ParamsShape,
 > extends Schema<
   WithOptionalProperties<{
     [K in keyof TShape]: InferInput<TShape[K]>
@@ -192,21 +195,26 @@ export class ParamsSchema<
     return ctx.success(copy ?? input)
   }
 
-  fromURLSearchParams(iterable: Iterable<[string, string]>): InferOutput<this> {
+  fromURLSearchParams(
+    input: string | Iterable<[string, string]>,
+    options?: ParseOptions,
+  ): InferOutput<this> {
     const params: Record<string, unknown> = {}
 
-    // Compatibility with URLSearchParams not being iterable in some environments
+    const iterable =
+      typeof input === 'string' ? new URLSearchParams(input) : input
     const entries =
       iterable instanceof URLSearchParams ? iterable.entries() : iterable
 
     for (const [key, value] of entries) {
-      const validator = unwrapValidator(this.shapeValidators.get(key))
-      const expectsArray = validator instanceof ArraySchema
+      const validator = this.shapeValidators.get(key)
+      const innerValidator = validator ? unwrapSchema(validator) : undefined
+      const expectsArray = innerValidator instanceof ArraySchema
       const scalarValidator = expectsArray
-        ? unwrapValidator(validator.validator)
-        : validator
+        ? unwrapSchema(innerValidator.validator)
+        : innerValidator
 
-      const coerced = coerceParam(value, scalarValidator)
+      const coerced = coerceParam(key, value, scalarValidator, options)
 
       const currentParam = params[key]
       if (currentParam === undefined) {
@@ -218,7 +226,7 @@ export class ParamsSchema<
       }
     }
 
-    return this.parse(params)
+    return this.parse(params, options)
   }
 
   toURLSearchParams(input: InferInput<this>): URLSearchParams {
@@ -242,27 +250,62 @@ export class ParamsSchema<
   }
 }
 
-function coerceParam(param: string, schema?: Validator): ParamScalar {
-  if (schema) {
-    if (schema instanceof LiteralSchema) {
-      return String(schema.value) === param ? schema.value : param
-    } else if (schema instanceof EnumSchema) {
-      return schema.values.find((v) => String(v) === param) ?? param
-    } else if (schema instanceof StringSchema) {
-      return param
-    } else if (schema instanceof BooleanSchema) {
-      switch (param) {
-        case 'true':
-          return true
-        case 'false':
-          return false
-      }
-    } else if (schema instanceof IntegerSchema) {
-      if (/^-?\d+$/.test(param)) return Number(param)
+function coerceParam(
+  key: string,
+  param: string,
+  schema?: ParamScalarValidator,
+  options?: ParseOptions,
+): ParamScalar {
+  let expected: readonly string[]
+  if (!schema) {
+    // The param is unknown (not defined in schema), so we don't apply any
+    // coercion and just return the string value.
+    return param
+  } else if (schema instanceof StringSchema) {
+    return param
+  } else if (schema instanceof IntegerSchema) {
+    if (/^-?\d+$/.test(param)) return Number(param)
+    expected = ['integer']
+  } else if (schema instanceof BooleanSchema) {
+    if (param === 'true') return true
+    if (param === 'false') return false
+    expected = ['boolean']
+  } else if (schema instanceof LiteralSchema) {
+    const { value } = schema
+    const valueStr = String(value)
+    if (valueStr === param) return value
+    expected = [valueStr]
+  } else if (schema instanceof EnumSchema) {
+    const { values } = schema
+    const expectedStrings: string[] = new Array(values.length)
+    for (let i = 0; i < values.length; i++) {
+      const value = values[i]
+      const valueStr = String(value)
+      if (valueStr === param) return value
+      expectedStrings[i] = valueStr
     }
+    expected = expectedStrings
+  } else {
+    // This should never happen. If it *does*, it means that the user of
+    // lex-schema is mixing different versions of the lib, which is not
+    // supported. Throwing an error here is better than silently accepting
+    // invalid params and causing unexpected behavior down the line (ie. error
+    // message returning the string value instead of the expected
+    // boolean/number/string value).
+    throw new Error(`Unsupported schema type for param coercion: ${schema}`)
   }
 
-  return param
+  // We were not able to coerce the param to the expected type. There is no
+  // point in returning the original string value since it doesn't conform to
+  // the expected schema, so we throw a validation error instead. We could
+  // return the "param" here, which would cause the validation to fail later on
+  // (see fromURLSearchParams()'s return statement). The main benefit of
+  // returning the original "param" value is that the error path would include
+  // the index of the param in case of array params (e.g. "tags[1]"), which
+  // could be helpful for debugging. The cost overhead is not worth it though
+  // (IMO).
+  const path = options?.path ? [...options.path, key] : [key]
+  throw new ValidationError([new IssueInvalidType(path, param, expected)])
 }
 
 /**
@@ -301,17 +344,24 @@ function coerceParam(param: string, schema?: Validator): ParamScalar {
  * ```
  */
 export const params = /*#__PURE__*/ memoizedOptions(function params<
-  const TShape extends ParamsSchemaShape = NonNullable<unknown>,
+  const TShape extends ParamsShape = NonNullable<unknown>,
 >(properties: TShape = {} as TShape) {
   return new ParamsSchema<TShape>(properties)
 })
 
-function unwrapValidator(schema?: Validator): Validator | undefined {
+type UnwrapSchema<S extends Validator> =
+  S extends OptionalSchema<infer U>
+    ? UnwrapSchema<U>
+    : S extends WithDefaultSchema<infer U>
+      ? UnwrapSchema<U>
+      : S
+
+function unwrapSchema<S extends Validator>(schema: S): UnwrapSchema<S> {
   while (
     schema instanceof OptionalSchema ||
     schema instanceof WithDefaultSchema
   ) {
-    schema = schema.validator
+    return unwrapSchema(schema.validator)
   }
-  return schema
+  return schema as UnwrapSchema<S>
 }
