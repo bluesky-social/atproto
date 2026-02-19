@@ -38,7 +38,7 @@ export type DeleteFailure = XrpcFailure<
  * service URL used for authentication. Store this data securely to resume sessions
  * later without re-authenticating.
  */
-export type SessionData = com.atproto.server.createSession.OutputBody & {
+export type SessionData = com.atproto.server.createSession.$OutputBody & {
   service: string
 }
 
@@ -442,7 +442,7 @@ export class PasswordSession implements Agent {
    * ```
    */
   static async createAccount(
-    body: com.atproto.server.createAccount.InputBody,
+    body: com.atproto.server.createAccount.$InputBody,
     {
       service,
       headers,
