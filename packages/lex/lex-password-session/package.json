@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-password-session",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "description": "Password based client authentication for AT Lexicons",
   "keywords": [

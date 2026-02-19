@@ -1,5 +1,11 @@
 # @atproto/lex-data
 
+## 0.0.12
+
+### Patch Changes
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor code simplification
+
 ## 0.0.11
 
 ### Patch Changes
