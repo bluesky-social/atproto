@@ -18,6 +18,8 @@ import { Schema, ValidationContext } from '../core.js'
 export class LiteralSchema<
   const TValue extends null | string | number | boolean,
 > extends Schema<TValue> {
+  readonly type = 'literal' as const
+
   constructor(readonly value: TValue) {
     super()
   }

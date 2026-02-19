@@ -1,0 +1,32 @@
+{
+  "lexicon": 1,
+  "id": "com.example.subscription",
+  "defs": {
+    "main": {
+      "type": "subscription",
+      "description": "A subscription",
+      "message": {
+        "schema": {
+          "type": "union",
+          "refs": ["#message", "#params"]
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "description": "A definition with a name (message) that might cause conflict with generated utility types for subscriptions",
+      "required": ["string"],
+      "properties": {
+        "string": { "type": "string" }
+      }
+    },
+    "params": {
+      "type": "object",
+      "description": "A definition with a name (params) that might cause conflict with generated utility types for methods",
+      "required": ["integer"],
+      "properties": {
+        "integer": { "type": "integer" }
+      }
+    }
+  }
+}

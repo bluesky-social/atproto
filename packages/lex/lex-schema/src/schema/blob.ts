@@ -32,6 +32,7 @@ export type BlobSchemaOptions = BlobRefCheckOptions & {
 }
 
 export type { BlobRef, LegacyBlobRef }
+export { isBlobRef, isLegacyBlobRef }
 
 /**
  * Schema for validating blob references in AT Protocol.
@@ -53,6 +54,8 @@ export class BlobSchema<
 > extends Schema<
   TOptions extends { allowLegacy: true } ? BlobRef | LegacyBlobRef : BlobRef
 > {
+  readonly type = 'blob' as const
+
   constructor(readonly options?: TOptions) {
     super()
   }
@@ -68,7 +71,7 @@ export class BlobSchema<
           : null
 
     if (!blob) {
-      return ctx.issueInvalidType(input, 'blob')
+      return ctx.issueUnexpectedType(input, 'blob')
     }
 
     const accept = this.options?.accept

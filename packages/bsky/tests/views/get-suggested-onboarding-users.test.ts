@@ -5,7 +5,7 @@ import express, { Application } from 'express'
 import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSuggestedOnboardingUsersSkeleton'
+import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSuggestedUsersSkeleton'
 
 type User = {
   id: string

@@ -29,13 +29,15 @@ export type CidSchemaOptions = CheckCidOptions
 export class CidSchema<
   const TOptions extends CidSchemaOptions = { flavor: undefined },
 > extends Schema<InferCheckedCid<TOptions>> {
+  readonly type = 'cid' as const
+
   constructor(readonly options?: TOptions) {
     super()
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isCid(input, this.options)) {
-      return ctx.issueInvalidType(input, 'cid')
+      return ctx.issueUnexpectedType(input, 'cid')
     }
 
     return ctx.success(input)

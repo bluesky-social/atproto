@@ -10,7 +10,7 @@ import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
 import { CourierClient } from './courier'
 import { DataPlaneClient, HostList } from './data-plane/client'
-import { FeatureGates } from './feature-gates'
+import { FeatureGatesClient } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import { KwsClient } from './kws'
 import { httpLogger as log } from './logger'
@@ -42,7 +42,7 @@ export class AppContext {
       courierClient: CourierClient | undefined
       rolodexClient: RolodexClient | undefined
       authVerifier: AuthVerifier
-      featureGates: FeatureGates
+      featureGatesClient: FeatureGatesClient
       blobDispatcher: Dispatcher
       kwsClient: KwsClient | undefined
     },
@@ -116,8 +116,8 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  get featureGates(): FeatureGates {
-    return this.opts.featureGates
+  get featureGatesClient(): FeatureGatesClient {
+    return this.opts.featureGatesClient
   }
 
   get blobDispatcher(): Dispatcher {

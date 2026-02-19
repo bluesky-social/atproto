@@ -43,6 +43,8 @@ export class ObjectSchema<
     [K in keyof TShape]: InferOutput<TShape[K]>
   }>
 > {
+  readonly type = 'object' as const
+
   constructor(readonly shape: TShape) {
     super()
   }
@@ -55,7 +57,7 @@ export class ObjectSchema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+      return ctx.issueUnexpectedType(input, 'object')
     }
 
     // Lazily copy value

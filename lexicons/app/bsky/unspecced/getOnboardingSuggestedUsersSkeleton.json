@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton",
+  "id": "app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton",
   "defs": {
     "main": {
       "type": "query",

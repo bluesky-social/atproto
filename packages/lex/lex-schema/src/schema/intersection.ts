@@ -56,6 +56,8 @@ export class IntersectionSchema<
   Simplify<Intersect<InferInput<Left>, InferInput<Right>>>,
   Simplify<Intersect<InferOutput<Left>, InferOutput<Right>>>
 > {
+  readonly type = 'intersection' as const
+
   constructor(
     protected readonly left: Left,
     protected readonly right: Right,

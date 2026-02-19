@@ -1,11 +1,14 @@
 import { graphemeLen, ifCid, utf8Len } from '@atproto/lex-data'
 import {
   InferStringFormat,
+  Restricted,
   Schema,
   StringFormat,
+  UnknownString,
   ValidationContext,
   isStringFormat,
 } from '../core.js'
+import { IfAny } from '../util/if-any.js'
 import { memoizedOptions } from '../util/memoize.js'
 import { TokenSchema } from './token.js'
 
@@ -13,6 +16,7 @@ import { TokenSchema } from './token.js'
  * Configuration options for string schema validation.
  *
  * @property format - Expected string format (e.g., 'datetime', 'uri', 'at-uri', 'did', 'handle', 'nsid', 'cid', 'tid', 'record-key', 'at-identifier', 'language')
+ * @property knownValues - Known string literal values for type narrowing
  * @property minLength - Minimum length in UTF-8 bytes
  * @property maxLength - Maximum length in UTF-8 bytes
  * @property minGraphemes - Minimum number of grapheme clusters
@@ -20,6 +24,7 @@ import { TokenSchema } from './token.js'
  */
 export type StringSchemaOptions = {
   format?: StringFormat
+  knownValues?: readonly string[]
   minLength?: number
   maxLength?: number
   minGraphemes?: number
@@ -43,30 +48,46 @@ export type StringSchemaOptions = {
 export class StringSchema<
   const TOptions extends StringSchemaOptions = StringSchemaOptions,
 > extends Schema<
-  TOptions extends { format: infer F extends StringFormat }
-    ? InferStringFormat<F>
-    : string
+  IfAny<
+    TOptions,
+    string,
+    TOptions extends { format: infer F extends StringFormat }
+      ? InferStringFormat<F>
+      : TOptions extends { knownValues: readonly (infer V extends string)[] }
+        ? V | UnknownString
+        : string
+  >
 > {
-  constructor(readonly options?: TOptions) {
+  readonly type = 'string' as const
+
+  // @NOTE since the _string utility allows omitting knownValues when TOptions
+  // *does* include it (since it's only used for typing), we cannot type options
+  // as TOptions directly since it may not actually include knownValues at
+  // runtime, making schema.options.knownValues potentially undefined even when
+  // TOptions includes it.
+  readonly options: StringSchemaOptions
+
+  constructor(options: TOptions) {
     super()
+    this.options = options
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     const str = coerceToString(input)
     if (str == null) {
-      return ctx.issueInvalidType(input, 'string')
+      return ctx.issueUnexpectedType(input, 'string')
     }
 
     let lazyUtf8Len: number
 
-    const minLength = this.options?.minLength
+    const minLength = this.options.minLength
     if (minLength != null) {
       if ((lazyUtf8Len ??= utf8Len(str)) < minLength) {
         return ctx.issueTooSmall(str, 'string', minLength, lazyUtf8Len)
       }
     }
 
-    const maxLength = this.options?.maxLength
+    const maxLength = this.options.maxLength
     if (maxLength != null) {
       // Optimization: we can avoid computing the UTF-8 length if the maximum
       // possible length, in bytes, of the input JS string is smaller than the
@@ -80,7 +101,7 @@ export class StringSchema<
 
     let lazyGraphLen: number
 
-    const minGraphemes = this.options?.minGraphemes
+    const minGraphemes = this.options.minGraphemes
     if (minGraphemes != null) {
       // Optimization: avoid counting graphemes if the length check already fails
       if (str.length < minGraphemes) {
@@ -90,14 +111,14 @@ export class StringSchema<
       }
     }
 
-    const maxGraphemes = this.options?.maxGraphemes
+    const maxGraphemes = this.options.maxGraphemes
     if (maxGraphemes != null) {
       if ((lazyGraphLen ??= graphemeLen(str)) > maxGraphemes) {
         return ctx.issueTooBig(str, 'grapheme', maxGraphemes, lazyGraphLen)
       }
     }
 
-    const format = this.options?.format
+    const format = this.options.format
     if (format != null && !isStringFormat(str, format)) {
       return ctx.issueInvalidFormat(str, format)
     }
@@ -146,6 +167,32 @@ export function coerceToString(input: unknown): string | null {
   }
 }
 
+function _string(): StringSchema<NonNullable<unknown>>
+function _string<
+  // Allow calling `string<{ knownValues: [...] }>()` without passing an options
+  // object, since knownValues is only used for typing and has no runtime
+  // effect, so it can be safely omitted at runtime.
+  const TOptions extends {
+    knownValues: StringSchemaOptions['knownValues']
+  } & {
+    [K in Exclude<
+      keyof StringSchemaOptions,
+      'knownValues'
+    >]?: Restricted<`An options argument is required when using the "${K}" option`>
+  },
+>(): StringSchema<
+  IfAny<TOptions, any, { knownValues: TOptions['knownValues'] }>
+>
+function _string<const TOptions extends StringSchemaOptions>(
+  // If TOptions is explicitly provided (e.g. `string<{ ... }>({ ... })`), we
+  // allow the actual options argument to omit the "knownValues" property since
+  // it's only used for inferring the type and has no runtime effect.
+  options: TOptions | Omit<TOptions, 'knownValues'>,
+): StringSchema<TOptions>
+function _string(options: StringSchemaOptions = {}) {
+  return new StringSchema(options)
+}
+
 /**
  * Creates a string schema with optional format and length constraints.
  *
@@ -173,8 +220,4 @@ export function coerceToString(input: unknown): string | null {
  * const handleSchema = l.string({ format: 'handle', minLength: 3, maxLength: 253 })
  * ```
  */
-export const string = /*#__PURE__*/ memoizedOptions(function <
-  const O extends StringSchemaOptions = NonNullable<unknown>,
->(options?: StringSchemaOptions & O) {
-  return new StringSchema<O>(options)
-})
+export const string = /*#__PURE__*/ memoizedOptions(_string)

@@ -18,13 +18,15 @@ import { Schema, ValidationContext } from '../core.js'
 export class RegexpSchema<
   TValue extends string = string,
 > extends Schema<TValue> {
+  readonly type = 'regexp' as const
+
   constructor(public readonly pattern: RegExp) {
     super()
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (typeof input !== 'string') {
-      return ctx.issueInvalidType(input, 'string')
+      return ctx.issueUnexpectedType(input, 'string')
     }
 
     if (!this.pattern.test(input)) {
