@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { Infer, UnknownString } from '../core.js'
-import { string } from './string.js'
+import { StringSchemaOptions, string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
 
@@ -685,6 +685,26 @@ describe('StringSchema', () => {
       foo: SchemaType
     }>().not.toMatchObjectType<{
       foo: UnknownString
+    }>()
+  })
+
+  it('type string<any>() as string', () => {
+    const schema = string<any>()
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: string
+    }>()
+  })
+
+  it('type string<StringSchemaOptions>({}) as string', () => {
+    const schema = string<StringSchemaOptions>({})
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: string
     }>()
   })
 })
