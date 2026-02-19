@@ -278,7 +278,7 @@ export class LexDefBuilder {
   ) {
     this.file.addTypeAlias({
       isExported: true,
-      name: 'Params',
+      name: '$Params',
       type: `l.InferMethodParams<typeof ${ref.varName}>`,
       docs: compileDocs(def.parameters?.description),
     })
@@ -286,14 +286,14 @@ export class LexDefBuilder {
     if (def.type === 'procedure') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Input',
+        name: '$Input',
         type: `l.InferMethodInput<typeof ${ref.varName}>`,
         docs: compileDocs(def.input?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'InputBody',
+        name: '$InputBody',
         type: `l.InferMethodInputBody<typeof ${ref.varName}>`,
         docs: compileDocs(def.input?.description),
       })
@@ -302,14 +302,14 @@ export class LexDefBuilder {
     if (def.type === 'procedure' || def.type === 'query') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Output',
+        name: '$Output',
         type: `l.InferMethodOutput<typeof ${ref.varName}>`,
         docs: compileDocs(def.output?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'OutputBody',
+        name: '$OutputBody',
         type: `l.InferMethodOutputBody<typeof ${ref.varName}>`,
         docs: compileDocs(def.output?.description),
       })
@@ -318,7 +318,7 @@ export class LexDefBuilder {
     if (def.type === 'subscription') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Message',
+        name: '$Message',
         type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
         docs: compileDocs(def.message?.description),
       })

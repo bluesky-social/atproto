@@ -390,7 +390,7 @@ describe('Client', () => {
         const rkey = payload.rkey || nextTid()
         const cid = await cidForLex(payload.record as LexValue)
 
-        const responseBody: com.atproto.repo.createRecord.OutputBody = {
+        const responseBody: com.atproto.repo.createRecord.$OutputBody = {
           cid: cid.toString(),
           uri: `at://${payload.repo}/${payload.collection}/${rkey}`,
         }
@@ -490,7 +490,7 @@ describe('Client', () => {
 
         const cid = await cidForLex(record)
 
-        const responseBody: com.atproto.repo.getRecord.OutputBody = {
+        const responseBody: com.atproto.repo.getRecord.$OutputBody = {
           cid: cid.toString(),
           uri: `at://${repo!}/${collection!}/${rkey!}` as any,
           value: record,
@@ -536,7 +536,7 @@ describe('Client', () => {
 
         const bytes = new Uint8Array(await blob.arrayBuffer())
 
-        const responseBody: com.atproto.repo.uploadBlob.OutputBody = {
+        const responseBody: com.atproto.repo.uploadBlob.$OutputBody = {
           blob: {
             $type: 'blob',
             ref: await cidForRawBytes(bytes),
