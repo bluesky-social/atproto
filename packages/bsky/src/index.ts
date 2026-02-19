@@ -242,7 +242,7 @@ export class BskyAppView {
     if (this.ctx.dataplaneHostList instanceof EtcdHostList) {
       await this.ctx.dataplaneHostList.connect()
     }
-    await this.ctx.featureGatesClient.start()
+    this.ctx.featureGatesClient.start() // lazy, no await
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
