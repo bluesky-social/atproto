@@ -68,13 +68,13 @@ describe('com.example.procedure', () => {
   })
 
   it('properly types knownValues in params', () => {
-    expectTypeOf<com.example.procedureKnownValues.Params>().toMatchObjectType<{
+    expectTypeOf<com.example.procedureKnownValues.$Params>().toMatchObjectType<{
       status?: 'active' | 'inactive' | UnknownString
     }>()
   })
 
   it('properly types knownValues in input body', () => {
-    expectTypeOf<com.example.procedureKnownValues.InputBody>().toMatchObjectType<{
+    expectTypeOf<com.example.procedureKnownValues.$InputBody>().toMatchObjectType<{
       role: 'admin' | 'user' | UnknownString
     }>()
   })

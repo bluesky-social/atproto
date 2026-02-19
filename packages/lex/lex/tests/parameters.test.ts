@@ -28,7 +28,7 @@ describe('com.example.parametersEnum', () => {
   })
 
   it('properly types params', () => {
-    expectTypeOf<com.example.parametersEnum.Params>().toMatchObjectType<{
+    expectTypeOf<com.example.parametersEnum.$Params>().toMatchObjectType<{
       booleanCst: true
       integerCst: 42
       integerEnum?: 1 | 2 | 3
