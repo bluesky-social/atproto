@@ -442,7 +442,11 @@ export type LexiconParameters = l.Infer<typeof lexiconParameters>
  * the request or response body.
  */
 export const lexiconPayload = l.object({
-  encoding: l.string(),
+  encoding: l.refine(l.string(), {
+    check: (v) => !v.includes(',') && !v.includes(';') && !v.includes(' '),
+    message:
+      'Invalid encoding string (must be a single MIME type without parameters)',
+  }),
   schema: l.optional(
     l.discriminatedUnion('type', [
       lexiconRefSchema,

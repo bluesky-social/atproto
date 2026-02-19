@@ -54,7 +54,7 @@ export class StringSchema<
   validateInContext(input: unknown, ctx: ValidationContext) {
     const str = coerceToString(input)
     if (str == null) {
-      return ctx.issueInvalidType(input, 'string')
+      return ctx.issueUnexpectedType(input, 'string')
     }
 
     let lazyUtf8Len: number

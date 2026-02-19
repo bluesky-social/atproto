@@ -15,7 +15,6 @@ import {
   Query,
   RecordSchema,
   Restricted,
-  UnknownObject,
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
@@ -263,9 +262,10 @@ export type ListOutput<T extends RecordSchema> = InferMethodOutputBody<
   /** Records that successfully validated against the schema. */
   records: ListRecord<Infer<T>>[]
   // @NOTE Because the schema uses "type": "unknown" instead of an open union,
-  // we have to use UnknownObject instead of Unknown$TypedObject here.
+  // we have to use LexMap instead of Unknown$TypedObject here, which is
+  // unfortunate.
   /** Records that failed schema validation. */
-  invalid: UnknownObject[]
+  invalid: LexMap[]
 }
 
 /**
@@ -941,7 +941,7 @@ function getLiteralRecordKey<const T extends RecordSchema>(
   schema: T,
 ): InferRecordKey<T> {
   if (schema.key.startsWith('literal:')) {
-    return schema.key.slice(8)
+    return schema.key.slice(8) as InferRecordKey<T>
   }
 
   throw new TypeError(

@@ -1,4 +1,4 @@
-import { ifCid, isPlainObject } from '@atproto/lex-data'
+import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
 import { PropertyKey } from './property-key.js'
 
 /**
@@ -260,7 +260,7 @@ export class IssueTooSmall extends Issue {
 
 function stringifyExpectedType(expected: string): string {
   if (expected === '$typed') {
-    return 'an object or record which includes a "$type" property'
+    return 'an object which includes the "$type" property'
   }
   return expected
 }
@@ -295,6 +295,7 @@ function stringifyType(value: unknown): string {
       if (value === null) return 'null'
       if (Array.isArray(value)) return 'array'
       if (ifCid(value)) return 'cid'
+      if (isLegacyBlobRef(value)) return 'legacy-blob'
       if (value instanceof Date) return 'date'
       if (value instanceof RegExp) return 'regexp'
       if (value instanceof Map) return 'map'

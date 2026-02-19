@@ -21,7 +21,7 @@ export class BooleanSchema extends Schema<boolean> {
       return ctx.success(input)
     }
 
-    return ctx.issueInvalidType(input, 'boolean')
+    return ctx.issueUnexpectedType(input, 'boolean')
   }
 }
 

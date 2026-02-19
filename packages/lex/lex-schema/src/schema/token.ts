@@ -34,7 +34,7 @@ export class TokenSchema<
     }
 
     if (typeof input !== 'string') {
-      return ctx.issueInvalidType(input, 'token')
+      return ctx.issueUnexpectedType(input, 'token')
     }
 
     return ctx.issueInvalidValue(input, [this.value])

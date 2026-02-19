@@ -676,7 +676,9 @@ export class LexRouter {
 
       try {
         const url = new URL(request.url)
-        const params = method.parameters.fromURLSearchParams(url.searchParams)
+        const params = method.parameters.fromURLSearchParams(
+          url.searchParams,
+        ) as InferMethodParams<Method>
 
         const credentials = auth
           ? await auth({ method, params, request, connection })
@@ -798,7 +800,7 @@ export class LexRouter {
             const url = new URL(request.url)
             const params = method.parameters.fromURLSearchParams(
               url.searchParams,
-            )
+            ) as InferMethodParams<Method>
 
             const credentials: Credentials = auth
               ? await auth({ method, params, request, connection })
