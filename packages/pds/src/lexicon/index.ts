@@ -249,6 +249,7 @@ import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQue
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportClaimReport from './types/tools/ozone/report/claimReport.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -3653,6 +3654,18 @@ export class ToolsOzoneReportNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  claimReport<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportClaimReport.QueryParams,
+      ToolsOzoneReportClaimReport.HandlerInput,
+      ToolsOzoneReportClaimReport.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.claimReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   reassignQueue<A extends Auth = void>(

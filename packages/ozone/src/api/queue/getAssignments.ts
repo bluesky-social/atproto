@@ -40,8 +40,6 @@ export default function (server: Server, ctx: AppContext) {
           assignments: results.map((row) => ({
             id: row.id,
             did: row.did,
-            handle: row.handle ?? undefined,
-            displayName: row.displayName ?? undefined,
             reportId: row.reportId ?? undefined,
             queueId: row.queueId!,
             startAt: row.startAt.toISOString(),

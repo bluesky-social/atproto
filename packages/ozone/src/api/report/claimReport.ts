@@ -5,61 +5,70 @@ import { Server } from '../../lexicon'
 const ASSIGNMENT_DURATION_MS = 5 * 60 * 1000 // 5 minutes
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.assign({
+  server.tools.ozone.report.claimReport({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
-      // inputs
-      const queueId = input.body.queueId
+      // context
       const authDid =
         auth.credentials.type === 'moderator'
           ? auth.credentials.iss
           : auth.credentials.type === 'admin_token'
             ? ctx.cfg.service.did
             : undefined
-      const did = input.body.did ?? authDid
+
+      // inputs
+      const reportId = input.body.reportId
+      const queueId = input.body.queueId
+      const assign = input.body.assign
+      const did = authDid
       const now = new Date()
-      const endAt = new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+      const endAt = assign
+        ? new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+        : now
 
       // validation
       if (!did) {
-        throw new InvalidRequestError('DID is required')
-      }
-
-      // access
-      if (did !== authDid && !auth.credentials.isAdmin) {
-        throw new ForbiddenError('Cannot assign others')
+        throw new ForbiddenError('No one to assign report to')
       }
 
       const result = await ctx.db.transaction(async (dbTxn) => {
-        // Check for an existing active assignment for this moderator + queue
+        // existing
         const existing = await dbTxn.db
           .selectFrom('moderator_assignment')
           .selectAll()
-          .where('did', '=', did)
-          .where('queueId', '=', queueId)
-          .where('reportId', 'is', null)
+          .where('reportId', '=', reportId)
           .where('endAt', '>', now)
           .executeTakeFirst()
-
         if (existing) {
-          // Refresh
-          const updated = await dbTxn.db
-            .updateTable('moderator_assignment')
-            .set({
-              endAt,
-            })
-            .where('id', '=', existing.id)
-            .returningAll()
-            .executeTakeFirstOrThrow()
-          return updated
+          // Same mod
+          if (existing.did === did) {
+            const updated = await dbTxn.db
+              .updateTable('moderator_assignment')
+              .set({
+                endAt,
+                queueId,
+              })
+              .where('id', '=', existing.id)
+              .returningAll()
+              .executeTakeFirstOrThrow()
+            return updated
+          }
+          // Different mod
+          else {
+            throw new InvalidRequestError(
+              'Report already claimed',
+              'AlreadyClaimed',
+            )
+          }
         }
 
-        // Create a new assignment
+        // new
         const created = await dbTxn.db
           .insertInto('moderator_assignment')
           .values({
             did,
-            queueId,
+            reportId,
+            queueId: queueId ?? null,
             startAt: now,
             endAt,
           })
@@ -73,8 +82,8 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           id: result.id,
           did: result.did,
-          reportId: result.reportId ?? undefined,
-          queueId: result.queueId!,
+          reportId: result.reportId!,
+          queueId: result.queueId ?? undefined,
           startAt: result.startAt.toISOString(),
           endAt: result.endAt.toISOString(),
         },

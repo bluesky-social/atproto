@@ -137,3 +137,23 @@ export const REASONSELFHARMSTUNTS = `${id}#reasonSelfHarmStunts`
 export const REASONSELFHARMSUBSTANCES = `${id}#reasonSelfHarmSubstances`
 /** Other dangerous content */
 export const REASONSELFHARMOTHER = `${id}#reasonSelfHarmOther`
+
+export interface AssignmentView {
+  $type?: 'tools.ozone.report.defs#assignmentView'
+  id: number
+  did: string
+  queueId?: number
+  reportId: number
+  startAt: string
+  endAt: string
+}
+
+const hashAssignmentView = 'assignmentView'
+
+export function isAssignmentView<V>(v: V) {
+  return is$typed(v, id, hashAssignmentView)
+}
+
+export function validateAssignmentView<V>(v: V) {
+  return validate<AssignmentView & V>(v, id, hashAssignmentView)
+}

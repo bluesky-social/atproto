@@ -19341,6 +19341,50 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportClaimReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.claimReport',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Claim a report for the current moderator.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to claim.',
+              },
+              queueId: {
+                type: 'integer',
+                description: 'Optional queue ID to associate the claim with.',
+              },
+              assign: {
+                type: 'boolean',
+                description: 'Whether to assign the report to the moderator.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'AlreadyClaimed',
+            description: 'The report is already claimed by another user.',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneReportDefs: {
     lexicon: 1,
     id: 'tools.ozone.report.defs',
@@ -19553,6 +19597,33 @@ export const schemaDict = {
       reasonSelfHarmOther: {
         type: 'token',
         description: 'Other dangerous content',
+      },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'reportId', 'startAt', 'endAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          queueId: {
+            type: 'integer',
+          },
+          reportId: {
+            type: 'integer',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
       },
     },
   },
@@ -21757,6 +21828,7 @@ export const ids = {
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
+  ToolsOzoneReportClaimReport: 'tools.ozone.report.claimReport',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
