@@ -243,8 +243,10 @@ import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueAssign from './types/tools/ozone/queue/assign.js'
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
@@ -3573,6 +3575,18 @@ export class ToolsOzoneQueueNS {
     this._server = server
   }
 
+  assign<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueAssign.QueryParams,
+      ToolsOzoneQueueAssign.HandlerInput,
+      ToolsOzoneQueueAssign.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.assign' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createQueue<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3594,6 +3608,18 @@ export class ToolsOzoneQueueNS {
     >,
   ) {
     const nsid = 'tools.ozone.queue.deleteQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueGetAssignments.QueryParams,
+      ToolsOzoneQueueGetAssignments.HandlerInput,
+      ToolsOzoneQueueGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.getAssignments' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

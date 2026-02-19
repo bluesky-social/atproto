@@ -18829,6 +18829,41 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueAssign: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.assign',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Assign a user to a queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to assign the user to.',
+              },
+              did: {
+                type: 'string',
+                description:
+                  'DID to be assigned. Assigns to whomever sent the request if not provided.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#assignmentView',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneQueueCreateQueue: {
     lexicon: 1,
     id: 'tools.ozone.queue.createQueue',
@@ -19009,6 +19044,33 @@ export const schemaDict = {
           },
         },
       },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'queueId', 'startAt', 'endAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          queueId: {
+            type: 'integer',
+          },
+          reportId: {
+            type: 'integer',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   ToolsOzoneQueueDeleteQueue: {
@@ -19050,6 +19112,66 @@ export const schemaDict = {
                 type: 'integer',
                 description:
                   'Number of reports that were migrated (if migration occurred)',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get moderator assignments, optionally filtered by active status, queue, moderator, or subject.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActiveAssignments: {
+              type: 'boolean',
+              description:
+                'When true, only returns active assignments where endAt is in the future.',
+            },
+            queueIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              description:
+                'If specified, returns assignments for these queues only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            subject: {
+              type: 'string',
+              format: 'uri',
+              description:
+                'If specified as a DID, returns assignments for all records and the DID. If specified as an AT-URI, returns assignments for that URI only.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.queue.defs#assignmentView',
+                },
               },
             },
           },
@@ -21558,9 +21680,11 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneQueueAssign: 'tools.ozone.queue.assign',
   ToolsOzoneQueueCreateQueue: 'tools.ozone.queue.createQueue',
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
+  ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
