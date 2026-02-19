@@ -58,3 +58,6 @@ export class LexMapSchema extends Schema<LexMap> {
 export const lexMap = /*#__PURE__*/ memoizedOptions(function () {
   return new LexMapSchema()
 })
+
+/** @deprecated Use {@link lexMap} instead */
+export const unknownObject = lexMap
