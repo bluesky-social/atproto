@@ -18,6 +18,8 @@ import { Schema, ValidationContext } from '../core.js'
 export class RegexpSchema<
   TValue extends string = string,
 > extends Schema<TValue> {
+  readonly type = 'regexp' as const
+
   constructor(public readonly pattern: RegExp) {
     super()
   }

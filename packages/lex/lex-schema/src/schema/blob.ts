@@ -54,6 +54,8 @@ export class BlobSchema<
 > extends Schema<
   TOptions extends { allowLegacy: true } ? BlobRef | LegacyBlobRef : BlobRef
 > {
+  readonly type = 'blob' as const
+
   constructor(readonly options?: TOptions) {
     super()
   }

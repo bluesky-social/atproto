@@ -16,6 +16,8 @@ import { memoizedOptions } from '../util/memoize.js'
  * ```
  */
 export class BooleanSchema extends Schema<boolean> {
+  readonly type = 'boolean' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (typeof input === 'boolean') {
       return ctx.success(input)

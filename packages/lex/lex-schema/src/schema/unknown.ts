@@ -15,6 +15,8 @@ import { memoizedOptions } from '../util/memoize.js'
  * ```
  */
 export class UnknownSchema extends Schema<unknown> {
+  readonly type = 'unknown' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     return ctx.success(input)
   }

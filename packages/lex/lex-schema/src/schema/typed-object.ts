@@ -47,6 +47,8 @@ export class TypedObjectSchema<
   $TypedMaybe<InferInput<TShape>, TType>,
   $TypedMaybe<InferOutput<TShape>, TType>
 > {
+  readonly type = 'typedObject' as const
+
   constructor(
     readonly $type: TType,
     readonly schema: TShape,

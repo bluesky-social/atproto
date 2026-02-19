@@ -78,6 +78,8 @@ export class DiscriminatedUnionSchema<
   DiscriminatedUnionSchemaInput<TVariants>,
   DiscriminatedUnionSchemaOutput<TVariants>
 > {
+  readonly type = 'discriminatedUnion' as const
+
   readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<TDiscriminator>>
 
   constructor(

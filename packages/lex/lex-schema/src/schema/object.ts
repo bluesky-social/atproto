@@ -43,6 +43,8 @@ export class ObjectSchema<
     [K in keyof TShape]: InferOutput<TShape[K]>
   }>
 > {
+  readonly type = 'object' as const
+
   constructor(readonly shape: TShape) {
     super()
   }

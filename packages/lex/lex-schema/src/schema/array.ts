@@ -36,6 +36,8 @@ export class ArraySchema<const TItem extends Validator> extends Schema<
   Array<InferInput<TItem>>,
   Array<InferOutput<TItem>>
 > {
+  readonly type = 'array' as const
+
   constructor(
     readonly validator: TItem,
     readonly options: ArraySchemaOptions = {},

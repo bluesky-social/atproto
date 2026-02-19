@@ -18,6 +18,8 @@ import { $type, NsidString, Schema, ValidationContext } from '../core.js'
 export class TokenSchema<
   const TValue extends string = string,
 > extends Schema<TValue> {
+  readonly type = 'token' as const
+
   constructor(readonly value: TValue) {
     super()
   }

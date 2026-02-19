@@ -15,6 +15,8 @@ export type { LexMap }
  * values.
  */
 export class LexMapSchema extends Schema<LexMap> {
+  readonly type = 'lexMap' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
       return ctx.issueUnexpectedType(input, 'object')

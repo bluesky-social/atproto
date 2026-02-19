@@ -26,6 +26,8 @@ export type BytesSchemaOptions = {
  * ```
  */
 export class BytesSchema extends Schema<Uint8Array> {
+  readonly type = 'bytes' as const
+
   constructor(readonly options: BytesSchemaOptions = {}) {
     super()
   }

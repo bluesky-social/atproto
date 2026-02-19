@@ -22,6 +22,8 @@ const EXPECTED_TYPES = Object.freeze([
  * integer, boolean, null, bytes, cid, array, or object.
  */
 export class LexValueSchema extends Schema<LexValue> {
+  readonly type = 'lexValue' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     // @NOTE We are *not* using "isLexValue" here to allow for more specific
     // error messages about the path and type of the invalid value. The
