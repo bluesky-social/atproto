@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { array } from './array.js'
 import { boolean } from './boolean.js'
+import { enumSchema } from './enum.js'
 import { integer } from './integer.js'
+import { literal } from './literal.js'
 import { optional } from './optional.js'
 import { paramSchema, params, paramsSchema } from './params.js'
 import { string } from './string.js'
@@ -257,6 +259,42 @@ describe('ParamsSchema', () => {
         const result = schema.safeParse({ tags: ['tag1', 123] })
         expect(result.success).toBe(false)
       })
+    })
+  })
+
+  describe('coercion', () => {
+    it('throws for invalid enum values', () => {
+      const schema = params({
+        status: enumSchema(['active', 'inactive']),
+      })
+      expect(() => schema.fromURLSearchParams('status=unknown')).toThrow(
+        'Expected one of "active" or "inactive"',
+      )
+    })
+
+    it('throws for invalid const values', () => {
+      const schema = params({
+        version: literal(42),
+      })
+      expect(() => schema.fromURLSearchParams('version=99')).toThrow(
+        'Expected 42',
+      )
+    })
+
+    it('handles negative integer enum values', () => {
+      const schema = params({
+        offset: enumSchema([-10, 0, 10]),
+      })
+      const result = schema.fromURLSearchParams('offset=-10')
+      expect(result).toEqual({ offset: -10 })
+    })
+
+    it('handles boolean const false', () => {
+      const schema = params({
+        disabled: literal(false),
+      })
+      const result = schema.fromURLSearchParams('disabled=false')
+      expect(result).toEqual({ disabled: false })
     })
   })
 
