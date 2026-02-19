@@ -37,6 +37,8 @@ export class UnionSchema<
   InferInput<TValidators[number]>,
   InferOutput<TValidators[number]>
 > {
+  readonly type = 'union' as const
+
   constructor(protected readonly validators: TValidators) {
     super()
   }

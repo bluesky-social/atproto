@@ -767,15 +767,33 @@ export class LexDefBuilder {
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
-    const options = stringifyOptions(def, [
+    const runtimeOptions = [
       'format',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',
       'minLength',
-    ] satisfies (keyof l.StringSchemaOptions)[])
+      // We don't want to include knownValues in the schema options **at
+      // runtime** as it has no effect and only causes bloat:
+      // "knownValues",
+    ] as const satisfies (keyof l.StringSchemaOptions)[]
 
-    return this.withDefault(this.pure(`l.string(${options})`), def.default)
+    const options = stringifyOptions(def, runtimeOptions)
+
+    // We *do* however need knownValues for the inferred type, so we include it
+    // as the generic parameter. We only do this if the def has knownValues,
+    // otherwise we let TypeScript infer the options generic by not defining it.
+    const generic = def.knownValues
+      ? stringifyOptions(def, [
+          ...runtimeOptions,
+          'knownValues',
+        ] satisfies (keyof l.StringSchemaOptions)[])
+      : undefined
+
+    return this.withDefault(
+      this.pure(`l.string${generic ? `<${generic}>` : ''}(${options})`),
+      def.default,
+    )
   }
 
   private async compileStringType(def: LexiconString): Promise<string> {

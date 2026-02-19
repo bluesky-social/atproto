@@ -50,6 +50,8 @@ export class RecordSchema<
   $Typed<InferInput<TShape>, TType>,
   $Typed<InferOutput<TShape>, TType>
 > {
+  readonly type = 'record' as const
+
   keySchema: RecordKeySchema<TKey>
 
   constructor(

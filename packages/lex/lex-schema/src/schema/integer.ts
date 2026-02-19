@@ -25,6 +25,8 @@ export type IntegerSchemaOptions = {
  * ```
  */
 export class IntegerSchema extends Schema<number> {
+  readonly type = 'integer' as const
+
   constructor(readonly options?: IntegerSchemaOptions) {
     super()
   }

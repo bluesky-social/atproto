@@ -147,19 +147,25 @@ describe('com.example.stringLengthNoMinLength', () => {
 
 describe('com.example.stringKnownValues', () => {
   it('properly types known string values', () => {
-    const result = com.example.stringKnownValues.$build({
-      myKey: '',
-    })
-
-    expectTypeOf(result).not.toMatchObjectType<{ myKey: string }>()
-    expectTypeOf(result).not.toMatchObjectType<{ myKey: UnknownString }>()
-    expectTypeOf(result).toMatchObjectType<{
+    expectTypeOf<com.example.stringKnownValues.Main>().not.toMatchObjectType<{
+      myKey: string
+    }>()
+    expectTypeOf<com.example.stringKnownValues.Main>().not.toMatchObjectType<{
+      myKey: UnknownString
+    }>()
+    expectTypeOf<com.example.stringKnownValues.Main>().toMatchObjectType<{
       myKey: 'foo' | 'bar' | UnknownString
     }>()
 
-    expectTypeOf(result.myKey).not.toEqualTypeOf<string>()
-    expectTypeOf(result.myKey).not.toEqualTypeOf<UnknownString>()
-    expectTypeOf(result.myKey).toEqualTypeOf<'foo' | 'bar' | UnknownString>()
+    expectTypeOf<
+      com.example.stringKnownValues.Main['myKey']
+    >().not.toEqualTypeOf<string>()
+    expectTypeOf<
+      com.example.stringKnownValues.Main['myKey']
+    >().not.toEqualTypeOf<UnknownString>()
+    expectTypeOf<com.example.stringKnownValues.Main['myKey']>().toEqualTypeOf<
+      'foo' | 'bar' | UnknownString
+    >()
   })
 })
 
