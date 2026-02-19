@@ -6,8 +6,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('id', 'serial', (col) => col.primaryKey())
     // assignee
     .addColumn('did', 'text', (col) => col.notNull())
-    .addColumn('handle', 'text')
-    .addColumn('displayName', 'text')
     // assigned over
     .addColumn('reportId', 'integer')
     .addColumn('queueId', 'integer')
@@ -16,10 +14,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       col.defaultTo(sql`now()`).notNull(),
     )
     .addColumn('endAt', 'timestamptz', (col) => col.notNull())
-    // metadata
-    .addColumn('updatedAt', 'timestamptz', (col) =>
-      col.defaultTo(sql`now()`).notNull(),
-    )
     .addUniqueConstraint('moderator_assignment_queue_report_unique', [
       'queueId',
       'reportId',
