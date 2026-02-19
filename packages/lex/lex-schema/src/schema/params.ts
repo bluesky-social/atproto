@@ -254,7 +254,7 @@ export class ParamsSchema<
 
 function coerceParam(
   name: string,
-  value: string,
+  param: string,
   schema?: ParamScalarValidator,
   options?: ParseOptions,
 ): ParamScalar {
@@ -263,26 +263,26 @@ function coerceParam(
   if (!schema) {
     // The param is unknown (not defined in schema), so we don't apply any
     // coercion and just return the string value.
-    return value
+    return param
   } else if (schema instanceof StringSchema) {
-    return value
+    return param
   } else if (schema instanceof IntegerSchema) {
-    if (/^-?\d+$/.test(value)) return Number(value)
-    issue = new IssueInvalidType(paramPath(name, options), value, ['integer'])
+    if (/^-?\d+$/.test(param)) return Number(param)
+    issue = new IssueInvalidType(paramPath(name, options), param, ['integer'])
   } else if (schema instanceof BooleanSchema) {
-    if (value === 'true') return true
-    if (value === 'false') return false
-    issue = new IssueInvalidType(paramPath(name, options), value, ['boolean'])
+    if (param === 'true') return true
+    if (param === 'false') return false
+    issue = new IssueInvalidType(paramPath(name, options), param, ['boolean'])
   } else if (schema instanceof LiteralSchema) {
     const { value } = schema
-    if (String(value) === value) return value
-    issue = new IssueInvalidValue(paramPath(name, options), value, [value])
+    if (String(value) === param) return value
+    issue = new IssueInvalidValue(paramPath(name, options), param, [value])
   } else if (schema instanceof EnumSchema) {
     const { values } = schema
     for (const value of values) {
-      if (String(value) === value) return value
+      if (String(value) === param) return value
     }
-    issue = new IssueInvalidValue(paramPath(name, options), value, values)
+    issue = new IssueInvalidValue(paramPath(name, options), param, values)
   } else {
     // This should never happen. If it *does*, it means that the user of
     // lex-schema is mixing different versions of the lib, which is not
