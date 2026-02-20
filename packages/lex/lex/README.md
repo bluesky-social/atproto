@@ -1,5 +1,3 @@
-# @atproto/lex
-
 Type-safe Lexicon tooling for working with AT Protocol data.
 
 - Install and manage Lexicon schemas in your project
@@ -34,7 +32,7 @@ app.bsky.actor.profile.$validate({
 ```
 
 ```typescript
-// Trivially make type-safe (unauthenticated) XRPC requests towards any service
+// Trivially make type-safe XRPC requests towards a service
 
 const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
   params: { actor: 'pfrazee.com' },
@@ -145,15 +143,11 @@ This generates TypeScript files in `./src/lexicons` (by default) with type-safe 
 **4. Use in your code**
 
 ```typescript
-import { Client } from '@atproto/lex'
-import * as app from './lexicons/app.js'
+import { xrpc } from '@atproto/lex'
+import { app } from './lexicons/index.js'
 
-// Create a client instance
-const client = new Client('https://public.api.bsky.app')
-
-// Start making requests using generated schemas
-const response = await client.call(app.bsky.actor.getProfile, {
-  actor: 'pfrazee.com',
+const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
+  params: { actor: 'pfrazee.com' },
 })
 ```
 
@@ -424,7 +418,7 @@ if (isTypedLexMap(data)) {
 In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`. This package provides utilities to parse and stringify data model values to/from JSON:
 
 ```typescript
-import { lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
+import { Cid, lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
 
 // Parse JSON string → data model (decodes $link and $bytes)
 const parsed = lexParse<{
@@ -434,6 +428,9 @@ const parsed = lexParse<{
   "ref": { "$link": "bafyrei..." },
   "data": { "$bytes": "SGVsbG8sIHdvcmxkIQ==" }
 }`)
+
+assert(isCid(parsed.ref))
+assert(parsed.data instanceof Uint8Array)
 
 const someCid = lexParse<Cid>('{"$link": "bafyrei..."}')
 const someBytes = lexParse<Uint8Array>('{"$bytes": "SGVsbG8sIHdvcmxkIQ=="}')
@@ -603,7 +600,7 @@ const timeline = await client.call(
 
 #### `client.create()`
 
-Create a new record.
+Create a new record un the authenticated user's repo.
 
 ```typescript
 import * as app from './lexicons/app.js'
@@ -630,6 +627,7 @@ Retrieve a record.
 ```typescript
 import * as app from './lexicons/app.js'
 
+// No need to specify the "rkey" for records with literal keys (e.g. profile)
 const profile = await client.get(app.bsky.actor.profile)
 
 console.log(profile.displayName)
