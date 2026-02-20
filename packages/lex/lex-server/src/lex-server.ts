@@ -1,5 +1,11 @@
 import { encode } from '@atproto/lex-cbor'
-import { LexError, LexValue, isPlainObject, ui8Concat } from '@atproto/lex-data'
+import {
+  LexError,
+  LexErrorData,
+  LexValue,
+  isPlainObject,
+  ui8Concat,
+} from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   InferMethodInput,
@@ -16,6 +22,7 @@ import {
   getMain,
   isNsidString,
 } from '@atproto/lex-schema'
+import { LexResponseError } from './errors.js'
 import { drainWebsocket } from './lib/drain-websocket.js'
 
 type Awaitable<T> = T | Promise<T>
@@ -326,7 +333,7 @@ export type LexRouterSubscriptionConfig<
  * ```typescript
  * const authHandler: LexRouterAuth<UserCredentials> = async (ctx) => {
  *   const token = ctx.request.headers.get('authorization')
- *   if (!token) throw new LexError('AuthenticationRequired', 'Missing token')
+ *   if (!token) throw new LexServerAuthError('AuthenticationRequired', 'Missing token')
  *   return { userId: await verifyToken(token) }
  * }
  * ```
@@ -356,7 +363,7 @@ export type LexRouterAuthContext<Method extends LexMethod = LexMethod> = {
  * // Simple token-based auth
  * const tokenAuth: LexRouterAuth<{ userId: string }> = async ({ request }) => {
  *   const token = request.headers.get('authorization')?.replace('Bearer ', '')
- *   if (!token) throw new LexError('AuthenticationRequired', 'Token required')
+ *   if (!token) throw new LexServerAuthError('AuthenticationRequired', 'Token required')
  *   const userId = await verifyToken(token)
  *   return { userId }
  * }
@@ -786,12 +793,15 @@ export class LexRouter {
         const abort = () => abortController.abort()
 
         const onMessage = (event: unknown) => {
-          const error = new LexError(
-            'InvalidRequest',
-            'XRPC subscriptions do not accept messages',
+          const error = new LexResponseError(
+            400,
+            {
+              error: 'InvalidRequest',
+              message: 'XRPC subscriptions do not accept messages',
+            },
             { cause: event },
           )
-          socket.send(encodeErrorFrame(error))
+          socket.send(encodeErrorFrame(error.toJSON()))
           socket.close(1008, error.error)
         }
 
@@ -845,18 +855,23 @@ export class LexRouter {
           } catch (error) {
             // If the socket is still open, send an error frame before closing
             if (socket.readyState === 1) {
-              const lexError =
-                error instanceof LexError
-                  ? error
-                  : new LexError('InternalError', 'An internal error occurred')
+              const isLexError = error instanceof LexError
 
-              socket.send(encodeErrorFrame(lexError))
+              // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+              const code =
+                isLexError && method.errors?.includes(error.error)
+                  ? 1008 // Policy Violation for known LexErrors
+                  : 1011 // Internal Error for unexpected errors
 
-              socket.close(
-                // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-                error instanceof LexError ? 1008 : 1011,
-                lexError.error,
-              )
+              if (isLexError) {
+                socket.send(encodeErrorFrame(error.toJSON()))
+                socket.close(code, error.error)
+              } else {
+                const error = 'InternalServerError'
+                const message = 'An internal error occurred'
+                socket.send(encodeErrorFrame({ error, message }))
+                socket.close(code, error)
+              }
             }
 
             // Only report unexpected processing errors
@@ -892,7 +907,8 @@ export class LexRouter {
     }
 
     if (error instanceof LexError) {
-      return error.toResponse()
+      const { status, headers, data } = error.toDownstreamError()
+      return Response.json(data, { status, headers })
     }
 
     return Response.json(
@@ -989,7 +1005,10 @@ async function getProcedureInput<M extends Procedure>(
       : undefined)
 
   if (!this.input.matchesEncoding(encoding)) {
-    throw new LexError('InvalidRequest', `Invalid content-type: ${encoding}`)
+    throw new LexResponseError(400, {
+      error: 'InvalidRequest',
+      message: `Invalid content-type: ${encoding}`,
+    })
   }
 
   if (this.input.encoding === 'application/json') {
@@ -1014,7 +1033,10 @@ async function getQueryInput<M extends Query>(
     request.headers.has('content-type') ||
     request.headers.has('content-length')
   ) {
-    throw new LexError('InvalidRequest', 'GET requests must not have a body')
+    throw new LexResponseError(400, {
+      error: 'InvalidRequest',
+      message: 'GET requests must not have a body',
+    })
   }
 
   return undefined as InferMethodInput<M, Body>
@@ -1023,8 +1045,8 @@ async function getQueryInput<M extends Query>(
 // Pre-encoded frame header for error frames
 const ERROR_FRAME_HEADER = /*#__PURE__*/ encode({ op: -1 })
 
-function encodeErrorFrame(error: LexError): Uint8Array {
-  return ui8Concat([ERROR_FRAME_HEADER, encode(error.toJSON())])
+function encodeErrorFrame(errorData: LexErrorData): Uint8Array {
+  return ui8Concat([ERROR_FRAME_HEADER, encode(errorData)])
 }
 
 // Pre-encoded frame header for message frames with unknown type

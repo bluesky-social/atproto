@@ -1,5 +1,5 @@
 import { getNotif } from '@atproto/identity'
-import { Client } from '@atproto/lex'
+import { xrpc } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
@@ -20,8 +20,8 @@ export default function (server: Server, ctx: AppContext) {
         // assert permissions here.
       },
     }),
-    handler: async ({ auth, input }) => {
-      const { serviceDid } = input.body
+    handler: async ({ auth, input: { body } }) => {
+      const { serviceDid } = body
       const { did } = auth.credentials
 
       if (auth.credentials.type === 'oauth') {
@@ -40,15 +40,17 @@ export default function (server: Server, ctx: AppContext) {
       if (bskyAppView.did === serviceDid) {
         await bskyAppView.client.call(
           app.bsky.notification.registerPush,
-          input.body,
+          body,
           { headers },
         )
         return
       }
 
       const notifEndpoint = await getEndpoint(ctx, serviceDid)
-      const client = new Client({ service: notifEndpoint })
-      await client.call(app.bsky.notification.registerPush, input.body, {
+
+      await xrpc(notifEndpoint, app.bsky.notification.registerPush, {
+        validateResponse: false,
+        body,
         headers,
       })
     },

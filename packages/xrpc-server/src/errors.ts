@@ -1,5 +1,6 @@
 import { isHttpError } from 'http-errors'
 import { z } from 'zod'
+import { LexError } from '@atproto/lex-client'
 import {
   ResponseType,
   ResponseTypeStrings,
@@ -89,6 +90,11 @@ export class XRPCError extends Error {
     if (cause instanceof XRPCClientError) {
       const { error, message, type } = mapFromClientError(cause)
       return new XRPCError(type, message, error, { cause })
+    }
+
+    if (cause instanceof LexError) {
+      const { status, headers, data } = cause.toDownstreamError()
+      return new XRPCError(status, data.message, data.error, { cause, headers })
     }
 
     if (isHttpError(cause)) {

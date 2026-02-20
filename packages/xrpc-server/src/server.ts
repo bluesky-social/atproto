@@ -2,7 +2,6 @@ import assert from 'node:assert'
 import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-import { ReadableStream as NodeReadableStream } from 'node:stream/web'
 import express, {
   Application,
   ErrorRequestHandler,
@@ -10,7 +9,7 @@ import express, {
   RequestHandler,
   Router,
 } from 'express'
-import { LexError, LexValue } from '@atproto/lex-data'
+import { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import {
   LexXrpcProcedure,
@@ -20,7 +19,6 @@ import {
   Lexicons,
   lexToJson,
 } from '@atproto/lexicon'
-import { XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   ErrorResult,
   InternalServerError,
@@ -491,35 +489,6 @@ export class Server {
           }
         }
       } catch (err: unknown) {
-        await new Promise((resolve) => setImmediate(resolve, 100))
-        console.error(
-          `[${LOGGER_NAME}] Error in handler for:`,
-          {
-            req: { method: req.method, url: req.url },
-            isXRPCClientError: err instanceof XRPCClientError,
-            isXRPCError: err instanceof XRPCError,
-            isLexError: err instanceof LexError,
-          },
-          err,
-        ) // XXX
-
-        // LexError provides a method to be converted into a downstream response
-        if (!res.headersSent && err instanceof LexError) {
-          const response = err.toResponse()
-          res.status(response.status)
-          for (const [key, value] of response.headers) res.setHeader(key, value)
-          if (response.body && req.method !== 'HEAD') {
-            await pipeline(
-              Readable.fromWeb(response.body as NodeReadableStream),
-              res,
-            )
-          } else {
-            await response.body?.cancel()
-            res.end()
-          }
-          return
-        }
-
         // Express will not call the next middleware (errorMiddleware in this case)
         // if the value passed to next is false-y (e.g. null, undefined, 0).
         // Hence we replace it with an InternalServerError.
@@ -735,16 +704,6 @@ function createErrorMiddleware({
   return (err, req, res, next) => {
     const nsid = extractUrlNsid(req.originalUrl)
     const xrpcError = errorParser(err)
-
-    console.error('IN ERROR MWIDDLEWARE', {
-      err,
-      'errorParser === XRPCError.fromError':
-        errorParser === XRPCError.fromError,
-      'err instanceof XRPCError': err instanceof XRPCError,
-      'err instanceof XRPCClientError': err instanceof XRPCClientError,
-
-      xrpcError,
-    }) // XXX
 
     // Use the request's logger (if available) to benefit from request context
     // (id, timing) and logging configuration (serialization, etc.).

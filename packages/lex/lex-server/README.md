@@ -64,7 +64,7 @@ await serve(router, { port: 3000 })
   - [Custom Authentication](#custom-authentication)
   - [WWW-Authenticate Headers](#www-authenticate-headers)
 - [Error Handling](#error-handling)
-  - [LexError](#lexerror)
+  - [LexResponseError](#lexresponseerror)
   - [LexServerAuthError](#lexserverautherror)
   - [Error Handler Callback](#error-handler-callback)
 - [Node.js Server](#nodejs-server)
@@ -100,7 +100,7 @@ lex build
 **3. Create a router and add handlers**
 
 ```typescript
-import { LexRouter, LexError } from '@atproto/lex-server'
+import { LexRouter, LexResponseError } from '@atproto/lex-server'
 import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
 import * as app from './lexicons/app.js'
 
@@ -110,7 +110,10 @@ const router = new LexRouter({ upgradeWebSocket })
 router.add(app.bsky.actor.getProfile, async ({ params }) => {
   const profile = await db.getProfile(params.actor)
   if (!profile) {
-    throw new LexError('NotFound', 'Profile not found')
+    throw new LexResponseError(404, {
+      error: 'NotFound',
+      message: 'Profile not found',
+    })
   }
   return { body: profile }
 })
@@ -267,7 +270,7 @@ router.add(app.example.getBlob, async ({ params }) => {
 Subscriptions provide real-time data over WebSocket connections. Handlers are async generators that yield messages:
 
 ```typescript
-import { LexRouter, LexError } from '@atproto/lex-server'
+import { LexRouter, LexResponseError } from '@atproto/lex-server'
 import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
 import { scheduler } from 'node:timers/promises'
 
@@ -290,8 +293,11 @@ router.add(com.example.stream, async function* ({ params, request }) {
     await scheduler.wait(1000, { signal })
   }
 
-  // Throwing a LexError closes the connection with an error frame
-  throw new LexError('LimitReached', `Limit of ${limit} messages reached`)
+  // Throwing a LexResponseError closes the connection with an error frame
+  throw new LexResponseError(400, {
+    error: 'LimitReached',
+    message: `Limit of ${limit} messages reached`,
+  })
 })
 ```
 
@@ -391,17 +397,20 @@ throw new LexServerAuthError('AuthenticationRequired', 'Auth required', {
 
 ## Error Handling
 
-### LexError
+### LexResponseError
 
-Throw `LexError` to return structured XRPC error responses:
+Throw `LexResponseError` to return structured XRPC error responses:
 
 ```typescript
-import { LexError } from '@atproto/lex-server'
+import { LexResponseError } from '@atproto/lex-server'
 
 router.add(app.bsky.actor.getProfile, async ({ params }) => {
   const profile = await db.getProfile(params.actor)
   if (!profile) {
-    throw new LexError('NotFound', 'Profile not found')
+    throw new LexResponseError(404, {
+      error: 'NotFound',
+      message: 'Profile not found',
+    })
   }
   return { body: profile }
 })
@@ -418,7 +427,7 @@ Error responses follow the XRPC format:
 
 ### LexServerAuthError
 
-`LexServerAuthError` extends `LexError` with `WWW-Authenticate` header support:
+`LexServerAuthError` extends `LexResponseError` with `WWW-Authenticate` header support:
 
 ```typescript
 import { LexServerAuthError } from '@atproto/lex-server'

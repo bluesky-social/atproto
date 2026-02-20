@@ -1,4 +1,4 @@
-import { LexError } from '@atproto/lex-data'
+import { DownstreamError, LexError } from '@atproto/lex-data'
 import { NSID } from '@atproto/syntax'
 
 /**
@@ -74,6 +74,12 @@ export class LexResolverError extends LexError {
     options?: ErrorOptions,
   ) {
     super('LexiconResolutionFailure', `${description} (${nsid})`, options)
+  }
+
+  toDownstreamError(): DownstreamError {
+    // @NOTE the status code could be more specific based on the cause (e.g.,
+    // 404 for not found, 502 for network failure, etc.)
+    return { status: 500, data: this.toJSON() }
   }
 
   /**

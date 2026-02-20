@@ -757,7 +757,7 @@ if (result.success) {
   // All XrpcFailure types have these properties:
   result.shouldRetry() // boolean - whether the error is transient
 
-  if (result.matchesSchema()) {
+  if (result.matchesSchemaErrors()) {
     // Check if the error matches a declared error in the schema.
     // TypeScript knows this is a declared error for the method.
     result.error // "HandleNotFound"

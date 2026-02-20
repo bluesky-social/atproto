@@ -2190,6 +2190,9 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex/lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
