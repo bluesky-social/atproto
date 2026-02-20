@@ -1,48 +1,57 @@
 # @atproto/lex
 
-Type-safe Lexicon tooling for creating great API clients. See the [Changelog](./CHANGELOG.md) for version history.
+Type-safe Lexicon tooling for working with AT Protocol data.
 
-```bash
-npm install -g @atproto/lex
-lex --help
-```
-
-- Install and manage Lexicon schemas
-- Generate TypeScript client and data validators
-- Handle common tasks like OAuth
+- Install and manage Lexicon schemas in your project
+- Generate [TypeScript](https://www.typescriptlang.org/) data validators
+- Handle common tasks like authentication and XRPC requests
 
 > [!IMPORTANT]
 >
-> This package is currently in **preview**. The API and features are subject to change before the stable release.
+> This package is currently in **preview**. The API and features are subject to change before the stable release. See the [Changelog](./CHANGELOG.md) for version history.
 
 **What is this?**
 
-Working directly with XRPC endpoints requires manually tracking schema definitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
+Working directly with [Lexicon](https://atproto.com/specs/lexicon) defined data requires tracking schema definitions, validation data structures, and properly formatting HTTP requests (aka. XRPC requests). `@atproto/lex` automates this by:
 
-1. Fetching lexicons from the network and generating TypeScript types
-2. Providing runtime validation to ensure data matches schemas
-3. Offering a type-safe client that knows which parameters each endpoint expects
+1. Fetching lexicons from the network and generating TypeScript schemas
+2. Providing compile-time and runtime validation to ensure type safety when working with AT Protocol data
+3. Offering a type-safe XRPC client that knows which parameters/input/output each endpoint expects
 4. Support modern patterns like tree-shaking and composition
 
 ```typescript
-const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'atproto.com',
+// Build data with generated builders and validators
+
+const newPost = app.bsky.feed.post.$build({
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
 })
+
+app.bsky.actor.profile.$validate({
+  $type: 'app.bsky.actor.profile',
+  displayName: 'Ha'.repeat(32) + '!',
+}) // Error: grapheme too big (maximum 64) at $.displayName (got 65)
+```
+
+```typescript
+// Trivially make type-safe (unauthenticated) XRPC requests towards any service
+
+const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
+  params: { actor: 'pfrazee.com' },
+})
+```
+
+```typescript
+// Manipulate records with the Client API in the context of an authenticated session
+
+const client = new Client(oauthSession)
 
 await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
   createdAt: new Date().toISOString(),
 })
 
-const posts = await client.list(app.bsky.feed.post, {
-  limit: 10,
-  repo: 'atproto.com',
-})
-
-app.bsky.actor.profile.$validate({
-  $type: 'app.bsky.actor.profile',
-  displayName: 'Ha'.repeat(32) + '!',
-}) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
+const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 ```
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -59,6 +68,7 @@ app.bsky.actor.profile.$validate({
   - [Types](#types)
   - [JSON Encoding](#json-encoding)
   - [CBOR Encoding](#cbor-encoding)
+- [Making simple XRPC Requests](#making-simple-xrpc-requests)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -458,7 +468,42 @@ const cborBytes = encode(someLexValue)
 const lexValue: LexValue = decode(cborBytes)
 ```
 
+## Making simple XRPC Requests
+
+[XRPC](https://atproto.com/specs/xrpc) (short for "Lexicon RPC") is the set of HTTP conventions used by AT Protocol for client-server and server-server communication. Endpoints follow the pattern `/xrpc/<nsid>`, where the NSID maps to a Lexicon schema that defines the request and response types. XRPC has three method types: **queries** (HTTP GET) for read operations, **procedures** (HTTP POST) for mutations and **subscriptions** (WebSockets) for real-time updates.
+
+The `xrpc()` and `xrpcSafe()` functions can be used to make simple XRPC requests. They are typically used for one-off requests that don't require all the helpers provided by the [`Client`](#client-api) class, such as in scripts or for testing.
+
+```typescript
+import { xrpc, xrpcSafe } from '@atproto/lex'
+import * as com from './lexicons/com.js'
+
+// Pass a service URL directly
+const response = await xrpc(
+  'https://bsky.network',
+  com.atproto.identity.resolveHandle,
+  { params: { handle: 'atproto.com' } },
+)
+
+// Or use the safe variant (returns errors instead of throwing)
+const result = await xrpcSafe(
+  'https://bsky.network',
+  com.atproto.identity.resolveHandle,
+  { params: { handle: 'atproto.com' } },
+)
+
+if (result.success) {
+  console.log(result.body)
+} else {
+  console.error(result.message)
+}
+```
+
 ## Client API
+
+The `Client` class provides high-level helpers for common AT Protocol "repo" operations: `create()`, `get()`, `put()`, `delete()`, `list()`, `uploadBlob()`, and more. A `Client` instance is typically useful for making requests in the context of an authenticated user session, as it automatically handles headers and provides default values based on the authenticated user's DID.
+
+A `Client` instance is also useful to encapsulate configuration for a specific service, by specifying the `service` option (for proxying) and `labelers` option (for content labeling). Additionally, a `Client` can be used as an `Agent` for another `Client`, allowing you to compose headers and configuration across multiple services.
 
 ### Creating a Client
 

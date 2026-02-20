@@ -379,11 +379,18 @@ export class Client implements Agent {
   }
 
   /**
-   * Low-level fetch handler for making requests.
+   * {@link Agent}'s {@link Agent.fetchHandler} implementation, which adds
+   * labelers and service proxying headers. This method allow a {@link Client}
+   * instance to be used directly as an {@link Agent} for another
+   * {@link Client}, enabling composition of headers (labelers, proxying, etc.).
+   *
    * @param path - The request path
    * @param init - Request initialization options
    */
-  public fetchHandler(path: string, init: RequestInit): Promise<Response> {
+  public fetchHandler(
+    path: `/${string}`,
+    init: RequestInit,
+  ): Promise<Response> {
     const headers = buildAtprotoHeaders({
       headers: init.headers,
       service: this.service,

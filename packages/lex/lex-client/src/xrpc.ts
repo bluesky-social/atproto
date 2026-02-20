@@ -4,6 +4,7 @@ import {
   InferInput,
   InferPayload,
   Main,
+  NsidString,
   Params,
   Payload,
   Procedure,
@@ -12,7 +13,7 @@ import {
   Subscription,
   getMain,
 } from '@atproto/lex-schema'
-import { Agent } from './agent.js'
+import { Agent, AgentOptions, buildAgent } from './agent.js'
 import { XrpcFailure, asXrpcFailure } from './errors.js'
 import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
@@ -88,28 +89,35 @@ export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
  *
  * @example
  * ```typescript
+ * const response = await xrpc('https://bsky.network', com.atproto.identity.resolveHandle, {
+ *   params: { handle: "atproto.com" }
+ * })
+ * ```
+ *
+ * @example
+ * ```typescript
  * const response = await xrpc(agent, app.bsky.feed.getTimeline.main, {
  *   params: { limit: 50 }
  * })
  * ```
  */
 export async function xrpc<const M extends Query | Procedure>(
-  agent: Agent,
+  agentOpts: Agent | AgentOptions,
   ns: NonNullable<unknown> extends XrpcOptions<M>
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
-  agent: Agent,
+  agentOpts: Agent | AgentOptions,
   ns: Main<M>,
   options: XrpcOptions<M>,
 ): Promise<XrpcResponse<M>>
 export async function xrpc<const M extends Query | Procedure>(
-  agent: Agent,
+  agentOpts: Agent | AgentOptions,
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResponse<M>> {
-  const response = await xrpcSafe<M>(agent, ns, options)
+  const response = await xrpcSafe<M>(agentOpts, ns, options)
   if (response.success) return response
   else throw response
 }
@@ -141,7 +149,7 @@ export type XrpcResult<M extends Procedure | Query> =
  *
  * @example
  * ```typescript
- * const result = await xrpcSafe(agent, app.bsky.actor.getProfile.main, {
+ * const result = await xrpcSafe('https://example.com', app.bsky.actor.getProfile, {
  *   params: { actor: 'alice.bsky.social' }
  * })
  *
@@ -153,23 +161,24 @@ export type XrpcResult<M extends Procedure | Query> =
  * ```
  */
 export async function xrpcSafe<const M extends Query | Procedure>(
-  agent: Agent,
+  agentOpts: Agent | AgentOptions,
   ns: NonNullable<unknown> extends XrpcOptions<M>
     ? Main<M>
     : Restricted<'This XRPC method requires an "options" argument'>,
 ): Promise<XrpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
-  agent: Agent,
+  agentOpts: Agent | AgentOptions,
   ns: Main<M>,
   options: XrpcOptions<M>,
 ): Promise<XrpcResult<M>>
 export async function xrpcSafe<const M extends Query | Procedure>(
-  agent: Agent,
+  agentOpts: Agent | AgentOptions,
   ns: Main<M>,
   options: XrpcOptions<M> = {} as XrpcOptions<M>,
 ): Promise<XrpcResult<M>> {
   options.signal?.throwIfAborted()
   const method: M = getMain(ns)
+  const agent = buildAgent(agentOpts)
   try {
     const url = xrpcRequestUrl(method, options)
     const request = xrpcRequestInit(method, options)
@@ -183,14 +192,14 @@ export async function xrpcSafe<const M extends Query | Procedure>(
 function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   method: M,
   options: CallOptions & { params?: Params },
-) {
-  const path = `/xrpc/${method.nsid}`
+): `/xrpc/${NsidString}${'' | `?${string}`}` {
+  const path = `/xrpc/${method.nsid}` as const
 
   const queryString = method.parameters
     ?.toURLSearchParams(options.params ?? {})
     .toString()
 
-  return queryString ? `${path}?${queryString}` : path
+  return queryString ? (`${path}?${queryString}` as const) : path
 }
 
 function xrpcRequestInit<T extends Procedure | Query>(
