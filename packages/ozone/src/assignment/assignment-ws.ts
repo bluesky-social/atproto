@@ -1,9 +1,8 @@
 import { IncomingMessage } from 'node:http'
 import { Duplex } from 'node:stream'
 import { RawData, WebSocket, WebSocketServer } from 'ws'
-import { Database } from '../db'
 import { AssignmentService } from '.'
-import { ToolsOzoneReportDefs } from '@atproto/api'
+import { Database } from '../db'
 
 interface ModeratorClient {
   ws: WebSocket
@@ -12,7 +11,6 @@ interface ModeratorClient {
   subscribedQueues: string[] // Queues they're viewing
 }
 
-// Client → Server
 type ClientMessage =
   | {
       type: 'subscribe'
@@ -34,35 +32,6 @@ type ClientMessage =
       type: 'ping' // Heartbeat
     }
 
-// Server → Client
-type ServerMessage =
-  | {
-      type: 'report:review:started'
-      reportId: number
-      moderator: { did: string; handle: string }
-    }
-  | {
-      type: 'report:review:ended'
-      reportId: number
-      moderator: { did: string; handle: string }
-    }
-  | {
-      type: 'report:actioned'
-      reportIds: number[]
-      actionEventId: number
-      moderator: { did: string; handle: string }
-      queues: string[] // Which queues this affects
-    }
-  | {
-      type: 'report:created'
-      reportId: number
-      queues: string[] // Which queues this should appear in
-      report: ToolsOzoneReportDefs.AssignmentView
-    }
-  | {
-      type: 'pong'
-    }
-
 export interface AssignmentEvent {
   id: number
   did: string
@@ -77,7 +46,7 @@ export class AssignmentWebSocketServer {
   clients: Map<string, ModeratorClient> = new Map()
   private reportService: AssignmentService
 
-  constructor(private db: Database) {
+  constructor(db: Database) {
     this.wss = new WebSocketServer({ noServer: true })
     this.wss.on('connection', (ws, req) => this.handleConnection(ws, req))
     this.reportService = new AssignmentService(db)
@@ -122,6 +91,21 @@ export class AssignmentWebSocketServer {
     ws.on('close', () => {
       this.handleConnectionClose(clientId)
     })
+
+    // backfill
+    try {
+      const activeAssignments = await this.reportService.getAssignments({
+        onlyActiveAssignments: true,
+        queueIds: undefined,
+      })
+      for (const assignment of activeAssignments) {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(assignment))
+        }
+      }
+    } catch (e) {
+      console.error('Failed to send initial assignments:', e)
+    }
   }
   private async handleConnectionMessage(clientId: string, message: RawData) {
     const client = this.clients.get(clientId)
