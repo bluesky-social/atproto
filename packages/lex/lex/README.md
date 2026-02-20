@@ -1,21 +1,13 @@
-Type-safe Lexicon tooling for working with AT Protocol data.
-
-- Install and manage Lexicon schemas in your project
-- Generate [TypeScript](https://www.typescriptlang.org/) data validators
-- Handle common tasks like authentication and XRPC requests
-
 > [!IMPORTANT]
 >
 > This package is currently in **preview**. The API and features are subject to change before the stable release. See the [Changelog](./CHANGELOG.md) for version history.
 
-**What is this?**
+Type-safe Lexicon tooling for AT Protocol data.
 
-Working directly with [Lexicon](https://atproto.com/specs/lexicon) defined data requires tracking schema definitions, validation data structures, and properly formatting HTTP requests (aka. XRPC requests). `@atproto/lex` automates this by:
-
-1. Fetching lexicons from the network and generating TypeScript schemas
-2. Providing compile-time and runtime type safety for working with AT Protocol data structures
-3. Offering a fully typed XRPC request client with authentication awareness
-4. Supporting modern patterns like tree-shaking and composition
+- Fetch and manage Lexicon schemas, generate TypeScript validators
+- Compile-time and runtime type safety for AT Protocol data structures
+- Fully typed XRPC client with authentication support
+- Tree-shaking and composition friendly
 
 ```typescript
 // Build data with generated builders and validators
