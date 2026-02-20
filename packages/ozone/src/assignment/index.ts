@@ -17,6 +17,22 @@ export interface AssignQueueResult {
   endAt: string
 }
 
+export interface GetAssignmentsInput {
+  onlyActiveAssignments?: boolean
+  queueIds?: number[]
+  dids?: string[]
+  subject?: string
+}
+
+export interface AssignmentRow {
+  id: number
+  did: string
+  reportId: number | null
+  queueId: number | null
+  startAt: string
+  endAt: string
+}
+
 export interface ClaimReportInput {
   did: string
   reportId: number
@@ -35,6 +51,43 @@ export interface ClaimReportResult {
 
 export class AssignmentService {
   constructor(public db: Database) {}
+
+  async getAssignments(input: GetAssignmentsInput): Promise<AssignmentRow[]> {
+    const { onlyActiveAssignments, queueIds, dids, subject } = input
+
+    let query = this.db.db.selectFrom('moderator_assignment').selectAll()
+
+    if (onlyActiveAssignments) {
+      query = query.where('endAt', '>', new Date())
+    }
+
+    if (queueIds?.length) {
+      query = query.where('queueId', 'in', queueIds)
+    }
+
+    if (dids?.length) {
+      query = query.where('did', 'in', dids)
+    }
+
+    if (subject) {
+      if (subject.startsWith('at://')) {
+        query = query.where('reportId', 'is not', null)
+      } else {
+        query = query.where('did', '=', subject)
+      }
+    }
+
+    const results = await query.execute()
+
+    return results.map((row) => ({
+      id: row.id,
+      did: row.did,
+      reportId: row.reportId ?? null,
+      queueId: row.queueId ?? null,
+      startAt: row.startAt.toISOString(),
+      endAt: row.endAt.toISOString(),
+    }))
+  }
 
   async assignQueue(input: AssignQueueInput): Promise<AssignQueueResult> {
     const { did, queueId } = input

@@ -1,7 +1,6 @@
 import { ForbiddenError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import { AssignmentService } from '../../assignment'
 
 export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.report.claimReport({
