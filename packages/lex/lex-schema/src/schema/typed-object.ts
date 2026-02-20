@@ -87,16 +87,20 @@ export class TypedObjectSchema<
     return value.$type === undefined || value.$type === this.$type
   }
 
-  $build = (
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> => {
-    return this.build(input)
+  /**
+   * Bound alias for {@link build} for compatibility with generated utilities.
+   * @see {@link build}
+   */
+  get $build() {
+    return this.build.bind(this)
   }
 
-  $isTypeOf = <TValue extends Record<string, unknown>>(
-    value: TValue,
-  ): value is MaybeTypedObject<TType, TValue> => {
-    return this.isTypeOf(value)
+  /**
+   * Bound alias for {@link isTypeOf} for compatibility with generated utilities.
+   * @see {@link isTypeOf}
+   */
+  get $isTypeOf() {
+    return this.isTypeOf.bind(this)
   }
 }
 

@@ -39,7 +39,7 @@ jobs:
             packages/api/src/moderation/const/labels.ts
             packages/api/src/client
             packages/ozone/src/lexicon
-            packages/sync/src/lexicon
+            packages/sync/src/lexicons
             packages/bsky/src/lexicons
             packages/lexicon-resolver/src/lexicons
             packages/pds/src/lexicons

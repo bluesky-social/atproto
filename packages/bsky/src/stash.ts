@@ -3,6 +3,13 @@ import { BsyncClient } from './bsync'
 import { app } from './lexicons/index.js'
 import { Method } from './proto/bsync_pb'
 
+// $build and $isTypeof are causing typing issues so we simply omit them from
+// the interface (since we don't use them anyways).
+type SimplifiedTypedObjectSchema = Omit<
+  TypedObjectSchema,
+  '$build' | '$isTypeOf'
+>
+
 export const Namespaces = {
   AppBskyAgeassuranceDefsEvent: app.bsky.ageassurance.defs.event,
   AppBskyBookmarkDefsBookmark: app.bsky.bookmark.defs.bookmark,
@@ -13,7 +20,7 @@ export const Namespaces = {
     app.bsky.notification.defs.subjectActivitySubscription,
   AppBskyUnspeccedDefsAgeAssuranceEvent:
     app.bsky.unspecced.defs.ageAssuranceEvent,
-} satisfies Record<string, TypedObjectSchema>
+} satisfies Record<string, SimplifiedTypedObjectSchema>
 
 export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]
 
@@ -44,7 +51,7 @@ export class StashClient {
     method: Method,
     input: {
       actorDid: string
-      namespace: TypedObjectSchema
+      namespace: SimplifiedTypedObjectSchema
       key: string
       payload: LexMap | undefined
     },
