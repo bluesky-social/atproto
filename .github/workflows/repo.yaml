@@ -37,7 +37,7 @@ jobs:
             packages/oauth/*/src/locales/*/messages.ts
 
   changeset:
-    name: Check changeset
+    name: Changeset
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +56,19 @@ jobs:
   test:
     name: Test
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    # Puppeteer does not work in recent Ubuntu versions without a workaround due
+    # to sandboxing issues. Using "ubuntu-latest" results in the following
+    # error:
+    #
+    # No usable sandbox! If you are running on Ubuntu 23.10+ or another Linux
+    # distro that has disabled unprivileged user namespaces with AppArmor, see
+    # https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md.
+    # Otherwise see
+    # https://chromium.googlesource.com/chromium/src/+/main/docs/linux/suid_sandbox_development.md
+    # for more information on developing with the (older) SUID sandbox. If you
+    # want to live dangerously and need an immediate workaround, you can try
+    # using --no-sandbox.
     strategy:
       fail-fast: false
       matrix:
@@ -68,8 +80,7 @@ jobs:
         with:
           cache: pnpm
           node-version-file: '.nvmrc'
-      - name: Get current month
-        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
+      - run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         name: Cache Puppeteer browser binaries
         with:
