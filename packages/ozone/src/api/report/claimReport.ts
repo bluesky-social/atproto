@@ -31,6 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         moderator: {
           did: result.did,
         },
+        queues: result.queueId != null ? [result.queueId] : [],
       })
 
       return {

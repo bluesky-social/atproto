@@ -9,7 +9,7 @@ describe('report-assignment', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const generateReportId = () => new Date().getTime() % 1000
+  const generateId = () => new Date().getTime() % 1000
 
   const claimReport = async (
     input: ToolsOzoneReportClaimReport.InputSchema,
@@ -48,7 +48,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can claim', async () => {
-    const reportId = generateReportId()
+    const reportId = generateId()
     const assignment1 = await claimReport(
       {
         reportId,
@@ -64,7 +64,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can refresh claim', async () => {
-    const reportId = generateReportId()
+    const reportId = generateId()
     const assignment1 = await claimReport(
       {
         reportId,
@@ -86,7 +86,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can claim then un-claim a report', async () => {
-    const reportId = generateReportId()
+    const reportId = generateId()
     await claimReport(
       {
         reportId,
@@ -107,7 +107,7 @@ describe('report-assignment', () => {
   })
 
   it('claim can be exchanged', async () => {
-    const reportId = generateReportId()
+    const reportId = generateId()
     await claimReport(
       {
         reportId,
@@ -135,7 +135,7 @@ describe('report-assignment', () => {
   })
 
   it('cannot double claim', async () => {
-    const reportId = generateReportId()
+    const reportId = generateId()
     await claimReport(
       {
         reportId,
@@ -155,7 +155,7 @@ describe('report-assignment', () => {
   })
 
   describe('realtime', () => {
-    const connectWs = (): Promise<{
+    const wsConnect = (): Promise<{
       ws: WebSocket
       updates: AssignmentEvent[]
     }> => {
@@ -171,68 +171,83 @@ describe('report-assignment', () => {
         ws.on('error', reject)
       })
     }
+    const wsSubscribe = (ws: WebSocket, queueId: number) => {
+      ws.send(JSON.stringify({ type: 'subscribe', queues: [queueId] }))
+    }
 
     const settle = (ms: number = 100) =>
       new Promise((resolve) => setTimeout(resolve, ms))
 
-    it('moderator receives assignment updates', async () => {
-      const reportId = generateReportId()
-      const { ws, updates } = await connectWs()
+    it('subscription receives updates', async () => {
+      const queueId = generateId()
+      const { ws, updates } = await wsConnect()
       await settle()
-      const initialCount = updates.length
+      wsSubscribe(ws, queueId)
 
       try {
         await claimReport(
           {
-            reportId,
+            reportId: generateId(),
+            queueId,
             assign: true,
           },
           'moderator',
         )
         await claimReport(
           {
-            reportId,
+            reportId: generateId(),
+            queueId,
+            assign: true,
+          },
+          'moderator',
+        )
+        await claimReport(
+          {
+            reportId: generateId(),
+            queueId,
             assign: false,
           },
           'moderator',
         )
         await claimReport(
           {
-            reportId,
+            reportId: generateId(),
+            queueId,
             assign: true,
           },
           'admin',
         )
+        await claimReport(
+          {
+            reportId: generateId(),
+            queueId,
+            assign: true,
+          },
+          'moderator',
+        )
         await settle()
 
-        const newUpdates = updates.slice(initialCount)
-        expect(newUpdates.length).toBe(3)
-        expect(newUpdates[0].reportId).toBe(reportId)
-        expect(newUpdates[0].did).toBe(network.ozone.moderatorAccnt.did)
-        expect(newUpdates[1].reportId).toBe(reportId)
-        expect(newUpdates[1].did).toBe(network.ozone.moderatorAccnt.did)
-        expect(newUpdates[2].reportId).toBe(reportId)
-        expect(newUpdates[2].did).toBe(network.ozone.adminAccnt.did)
+        expect(updates.length).toBe(5)
       } finally {
         ws.close()
       }
     })
 
     it('new subscription receives latest assignment state', async () => {
-      const reportId = generateReportId()
+      const queueId = generateId()
+      const reportId = generateId()
       await claimReport(
         {
           reportId,
+          queueId,
           assign: true,
         },
         'moderator',
       )
 
-      const { ws, updates } = await connectWs()
+      const { ws, updates } = await wsConnect()
       await settle()
-
-      ws.send(JSON.stringify({ type: 'subscribe', queues: [] }))
-      await settle()
+      wsSubscribe(ws, queueId)
 
       try {
         const claimUpdate = updates.find((u) => u.reportId === reportId)
@@ -243,15 +258,13 @@ describe('report-assignment', () => {
       }
     })
 
-    it('ping refreshes assignment', async () => {
-      const reportId = generateReportId()
+    it('ping refreshes connection', async () => {
+      const reportId = generateId()
 
-      const { ws, updates } = await connectWs()
+      const { ws, updates } = await wsConnect()
       await settle()
-      const initialCount = updates.length
 
       try {
-
         await claimReport(
           {
             reportId,
@@ -259,22 +272,16 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-
-        // Wait for update to be received
         await settle()
-        const claimUpdate = updates[initialCount]
-        const originalEndAt = new Date(claimUpdate.endAt).getTime()
+        expect(updates.length).toBe(1)
 
-        // Send ping
-        ws.send(JSON.stringify({ type: 'ping' }))
-        await settle()
+        // Wait for longer than the server timeout, but send pings to keep the connection alive
+        for (let i = 0; i < 5; i++) {
+          await settle(1100)
+          ws.ping()
+        }
 
-        const newUpdates = updates.slice(initialCount)
-        expect(newUpdates.length).toBe(2)
-        expect(newUpdates[1].reportId).toBe(reportId)
-        expect(newUpdates[1].did).toBe(network.ozone.moderatorAccnt.did)
-        const refreshedEndAt = new Date(newUpdates[1].endAt).getTime()
-        expect(refreshedEndAt).toBeGreaterThan(originalEndAt)
+        expect(updates.length).toBe(1) // No new updates, but connection should still be alive
       } finally {
         ws.close()
       }

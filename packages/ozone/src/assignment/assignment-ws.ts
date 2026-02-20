@@ -36,11 +36,13 @@ export type ServerMessage =
       type: 'report:review:started'
       reportId: number
       moderator: { did: string }
+      queues: number[]
     }
   | {
       type: 'report:review:ended'
       reportId: number
       moderator: { did: string }
+      queues: number[]
     }
   | {
       type: 'report:actioned'
@@ -169,6 +171,7 @@ export class AssignmentWebSocketServer {
             moderator: {
               did: client.moderatorDid,
             },
+            queues: result.queueId != null ? [result.queueId] : [],
           })
         } catch (e) {
           console.error('Error claiming report:', e)
@@ -187,6 +190,7 @@ export class AssignmentWebSocketServer {
             moderator: {
               did: client.moderatorDid,
             },
+            queues: result.queueId != null ? [result.queueId] : [],
           })
         } catch (e) {
           client.ws.send(JSON.stringify({ type: 'error', message: String(e) }))
