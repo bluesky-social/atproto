@@ -86,10 +86,7 @@ describe('queue', () => {
       expect(queueIds).toContain(1)
     })
     it('should be able to assign a mod to a queue', async () => {
-      const assignment = await assign(
-        { queueId: 1, did: sc.dids.bob },
-        'admin',
-      )
+      const assignment = await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
 
       expect(assignment.queueId).toBe(1)
       expect(assignment.did).toBe(sc.dids.bob)
@@ -100,6 +97,17 @@ describe('queue', () => {
       )
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
+    })
+    it('should be able to assign multiple mods to a queue', async () => {
+      await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+      await assign({ queueId: 1, did: sc.dids.carol }, 'admin')
+      const assignments = await getAssignments(
+        { onlyActiveAssignments: true, queueIds: [1] },
+        'admin',
+      )
+      const dids = assignments.assignments.map((a) => a.did)
+      expect(dids).toContain(sc.dids.bob)
+      expect(dids).toContain(sc.dids.carol)
     })
   })
 
@@ -117,7 +125,7 @@ describe('queue', () => {
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
     })
-    it('should not be able to assign a mod to a queue', async () => {
+    it('should not be able to assign another user to a queue', async () => {
       const p = assign(
         { queueId: 1, did: network.ozone.adminAccnt.did },
         'moderator',
