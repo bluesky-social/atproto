@@ -18663,6 +18663,109 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportCreateReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.createReport',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reasonType', 'subject'],
+            properties: {
+              reasonType: {
+                type: 'ref',
+                description:
+                  'Indicates the broad category of violation the report is for.',
+                ref: 'lex:tools.ozone.report.defs#reasonType',
+              },
+              reason: {
+                type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
+                description:
+                  'Additional context about the content and violation.',
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.createReport#modTool',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: [
+              'id',
+              'reasonType',
+              'subject',
+              'reportedBy',
+              'createdAt',
+            ],
+            properties: {
+              id: {
+                type: 'integer',
+              },
+              reasonType: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reasonType',
+              },
+              reason: {
+                type: 'string',
+                maxGraphemes: 2000,
+                maxLength: 20000,
+              },
+              subject: {
+                type: 'union',
+                refs: [
+                  'lex:com.atproto.admin.defs#repoRef',
+                  'lex:com.atproto.repo.strongRef',
+                ],
+              },
+              reportedBy: {
+                type: 'string',
+                format: 'did',
+              },
+              createdAt: {
+                type: 'string',
+                format: 'datetime',
+              },
+            },
+          },
+        },
+      },
+      modTool: {
+        type: 'object',
+        description:
+          'Moderation tool information for tracing the source of the action',
+        required: ['name'],
+        properties: {
+          name: {
+            type: 'string',
+            description:
+              "Name/identifier of the source (e.g., 'bsky-app/android', 'bsky-web/chrome')",
+          },
+          meta: {
+            type: 'unknown',
+            description: 'Additional arbitrary metadata about the source',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneReportDefs: {
     lexicon: 1,
     id: 'tools.ozone.report.defs',
@@ -18670,6 +18773,13 @@ export const schemaDict = {
       reasonType: {
         type: 'string',
         knownValues: [
+          'com.atproto.moderation.defs#reasonSpam',
+          'com.atproto.moderation.defs#reasonViolation',
+          'com.atproto.moderation.defs#reasonMisleading',
+          'com.atproto.moderation.defs#reasonSexual',
+          'com.atproto.moderation.defs#reasonRude',
+          'com.atproto.moderation.defs#reasonOther',
+          'com.atproto.moderation.defs#reasonAppeal',
           'tools.ozone.report.defs#reasonAppeal',
           'tools.ozone.report.defs#reasonOther',
           'tools.ozone.report.defs#reasonViolenceAnimal',
@@ -21030,6 +21140,7 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneReportCreateReport: 'tools.ozone.report.createReport',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
