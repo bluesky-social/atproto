@@ -535,10 +535,10 @@ export class Agent extends XrpcClient {
 
     const blocked = listInfo.data.list.viewer?.blocked
     if (blocked) {
-      const { rkey } = new AtUri(blocked)
+      const uri = new AtUri(blocked)
       return this.app.bsky.graph.listblock.delete({
         repo,
-        rkey,
+        rkey: uri.rkey,
       })
     }
   }

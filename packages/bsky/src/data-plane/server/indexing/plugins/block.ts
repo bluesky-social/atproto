@@ -1,21 +1,19 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as Block from '../../../../lexicon/types/app/bsky/graph/block'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyGraphBlock
 type IndexedBlock = Selectable<DatabaseSchemaType['actor_block']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: Block.Record,
+  cid: Cid,
+  obj: app.bsky.graph.block.Main,
   timestamp: string,
 ): Promise<IndexedBlock | null> => {
   const inserted = await db
@@ -37,7 +35,7 @@ const insertFn = async (
 const findDuplicate = async (
   db: DatabaseSchema,
   uri: AtUri,
-  obj: Block.Record,
+  obj: app.bsky.graph.block.Main,
 ): Promise<AtUri | null> => {
   const found = await db
     .selectFrom('actor_block')
@@ -68,14 +66,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<Block.Record, IndexedBlock>
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.graph.block.main,
     insertFn,
     findDuplicate,
     deleteFn,

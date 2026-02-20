@@ -1,12 +1,12 @@
 import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { ids } from '../../../../lexicon/lexicons'
+import { app } from '../../../../lexicons/index.js'
 
 export const validateUri = (uri: string) => {
   const atUri = new AtUri(uri)
-  if (atUri.collection !== ids.AppBskyFeedPost) {
+  if (atUri.collection !== app.bsky.feed.post.$type) {
     throw new InvalidRequestError(
-      `Only '${ids.AppBskyFeedPost}' records can be bookmarked`,
+      `Only '${app.bsky.feed.post.$type}' records can be bookmarked`,
       'UnsupportedCollection',
     )
   }

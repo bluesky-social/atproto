@@ -1,4 +1,4 @@
-import { LexError } from '@atproto/lex-data'
+import { DownstreamError, LexError } from '@atproto/lex-data'
 import { arrayAgg } from '../util/array-agg.js'
 import { ResultFailure, failureReason } from './result.js'
 import {
@@ -66,6 +66,10 @@ export class ValidationError extends LexError {
       ...super.toJSON(),
       issues: this.issues.map((issue) => issue.toJSON()),
     }
+  }
+
+  toDownstreamError(): DownstreamError {
+    return { status: 400, data: this.toJSON() }
   }
 
   /**

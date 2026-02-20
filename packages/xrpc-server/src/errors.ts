@@ -1,5 +1,6 @@
 import { isHttpError } from 'http-errors'
 import { z } from 'zod'
+import { LexError } from '@atproto/lex-client'
 import {
   ResponseType,
   ResponseTypeStrings,
@@ -29,14 +30,21 @@ export function excludeErrorResult<V>(v: V) {
 
 export { ResponseType }
 
+export type XRPCErrorOptions = ErrorOptions & {
+  headers?: Headers
+}
+
 export class XRPCError extends Error {
+  headers?: Headers
+
   constructor(
     public type: ResponseType,
     public errorMessage?: string,
     public customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(errorMessage, options)
+    this.headers = options?.headers
   }
 
   get statusCode(): number {
@@ -52,9 +60,13 @@ export class XRPCError extends Error {
     return type
   }
 
+  get error(): string | undefined {
+    return this.customErrorName ?? this.typeName
+  }
+
   get payload() {
     return {
-      error: this.customErrorName ?? this.typeName,
+      error: this.error,
       message:
         this.type === ResponseType.InternalServerError
           ? this.typeStr // Do not respond with error details for 500s
@@ -78,6 +90,11 @@ export class XRPCError extends Error {
     if (cause instanceof XRPCClientError) {
       const { error, message, type } = mapFromClientError(cause)
       return new XRPCError(type, message, error, { cause })
+    }
+
+    if (cause instanceof LexError) {
+      const { status, headers, data } = cause.toDownstreamError()
+      return new XRPCError(status, data.message, data.error, { cause, headers })
     }
 
     if (isHttpError(cause)) {
@@ -108,7 +125,7 @@ export class InvalidRequestError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(ResponseType.InvalidRequest, errorMessage, customErrorName, options)
   }
@@ -125,7 +142,7 @@ export class AuthRequiredError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(
       ResponseType.AuthenticationRequired,
@@ -147,7 +164,7 @@ export class ForbiddenError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(ResponseType.Forbidden, errorMessage, customErrorName, options)
   }
@@ -163,7 +180,7 @@ export class InternalServerError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(
       ResponseType.InternalServerError,
@@ -185,7 +202,7 @@ export class UpstreamFailureError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(ResponseType.UpstreamFailure, errorMessage, customErrorName, options)
   }
@@ -202,7 +219,7 @@ export class NotEnoughResourcesError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(
       ResponseType.NotEnoughResources,
@@ -224,7 +241,7 @@ export class UpstreamTimeoutError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(ResponseType.UpstreamTimeout, errorMessage, customErrorName, options)
   }
@@ -241,7 +258,7 @@ export class MethodNotImplementedError extends XRPCError {
   constructor(
     errorMessage?: string,
     customErrorName?: string,
-    options?: ErrorOptions,
+    options?: XRPCErrorOptions,
   ) {
     super(
       ResponseType.MethodNotImplemented,

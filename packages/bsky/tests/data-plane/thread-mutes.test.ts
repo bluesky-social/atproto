@@ -1,6 +1,5 @@
 import { AtpAgent } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('thread mutes', () => {
   let network: TestNetwork
@@ -18,7 +17,7 @@ describe('thread mutes', () => {
       dbPostgresSchema: 'bsky_thread_mutes',
     })
     sc = network.getSeedClient()
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     await usersSeed(sc)
     alice = sc.dids.alice
     bob = sc.dids.bob
@@ -38,7 +37,7 @@ describe('thread mutes', () => {
         encoding: 'application/json',
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyGraphMuteThread,
+          'app.bsky.graph.muteThread',
         ),
       },
     )
@@ -50,7 +49,7 @@ describe('thread mutes', () => {
         uris: [rootPost.uriStr, replyPost.uriStr],
       },
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetPosts),
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getPosts'),
       },
     )
     expect(res.data.posts[0].viewer?.threadMuted).toBe(true)
@@ -67,7 +66,7 @@ describe('thread mutes', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -84,7 +83,7 @@ describe('thread mutes', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -101,7 +100,7 @@ describe('thread mutes', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -118,7 +117,7 @@ describe('thread mutes', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -132,7 +131,7 @@ describe('thread mutes', () => {
         encoding: 'application/json',
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyGraphUnmuteThread,
+          'app.bsky.graph.unmuteThread',
         ),
       },
     )
@@ -144,7 +143,7 @@ describe('thread mutes', () => {
         uris: [rootPost.uriStr, replyPost.uriStr],
       },
       {
-        headers: await network.serviceHeaders(alice, ids.AppBskyFeedGetPosts),
+        headers: await network.serviceHeaders(alice, 'app.bsky.feed.getPosts'),
       },
     )
     expect(res.data.posts[0].viewer?.threadMuted).toBe(false)
@@ -163,7 +162,7 @@ describe('thread mutes', () => {
       {
         headers: await network.serviceHeaders(
           alice,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )

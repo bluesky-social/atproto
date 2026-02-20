@@ -1,6 +1,5 @@
 import { AtUri, AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 
 describe('bsky actor likes feed views', () => {
   let network: TestNetwork
@@ -17,8 +16,8 @@ describe('bsky actor likes feed views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_actor_likes',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
@@ -39,7 +38,7 @@ describe('bsky actor likes feed views', () => {
       {
         headers: await network.serviceHeaders(
           bob,
-          ids.AppBskyFeedGetActorLikes,
+          'app.bsky.feed.getActorLikes',
         ),
       },
     )
@@ -52,7 +51,7 @@ describe('bsky actor likes feed views', () => {
         {
           headers: await network.serviceHeaders(
             carol,
-            ids.AppBskyFeedGetActorLikes,
+            'app.bsky.feed.getActorLikes',
           ),
         },
       ),
@@ -80,7 +79,7 @@ describe('bsky actor likes feed views', () => {
       {
         headers: await network.serviceHeaders(
           bob,
-          ids.AppBskyFeedGetActorLikes,
+          'app.bsky.feed.getActorLikes',
         ),
       },
     )
@@ -119,7 +118,7 @@ describe('bsky actor likes feed views', () => {
       {
         headers: await network.serviceHeaders(
           bob,
-          ids.AppBskyFeedGetActorLikes,
+          'app.bsky.feed.getActorLikes',
         ),
       },
     )

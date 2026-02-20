@@ -24,7 +24,7 @@ describe('ozone query labels', () => {
       dbPostgresSchema: 'ozone_query_labels',
     })
 
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
 
     const toCreate = [
       {

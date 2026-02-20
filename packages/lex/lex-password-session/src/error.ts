@@ -48,13 +48,7 @@ export class LexAuthFactorError extends LexError {
     super(cause.error, cause.message ?? 'Auth factor token required', { cause })
   }
 
-  /**
-   * Converts this error to an HTTP Response.
-   *
-   * @returns A 500 Internal Server Error response (2FA errors should not be
-   * exposed to end users in server contexts)
-   */
-  override toResponse(): Response {
-    return Response.json({ error: 'InternalServerError' }, { status: 500 })
+  override toDownstreamError() {
+    return { status: 500, data: { error: 'InternalServerError' } }
   }
 }

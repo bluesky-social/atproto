@@ -22,6 +22,14 @@ describe('account', () => {
   const mailCatcher = new EventEmitter()
   let _origSendMail
 
+  const tryHandle = async (handle: string) => {
+    await agent.api.com.atproto.server.createAccount({
+      email: 'john@test.com',
+      handle,
+      password: 'test123',
+    })
+  }
+
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'account',
@@ -36,7 +44,7 @@ describe('account', () => {
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = network.pds.ctx.idResolver
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
 
     // Catch emails for use in tests
     _origSendMail = mailer.transporter.sendMail
@@ -70,7 +78,11 @@ describe('account', () => {
       handle: 'did:bad-handle.test',
       password: 'asdf',
     })
-    await expect(promise).rejects.toThrow('Input/handle must be a valid handle')
+    await expect(promise).rejects.toMatchObject({
+      error: 'InvalidRequest',
+      message: expect.stringContaining('handle'),
+      // - Input/handle must be a valid handle
+    })
   })
 
   describe('email validation', () => {
@@ -89,9 +101,11 @@ describe('account', () => {
         handle: 'bad-email.test',
         password: 'asdf',
       })
-      await expect(promise).rejects.toThrow(
-        'This email address is not supported, please use a different email.',
-      )
+      await expect(promise).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('email'),
+        // - This email address is not supported, please use a different email.
+      })
     })
   })
 
@@ -292,50 +306,54 @@ describe('account', () => {
     ).rejects.toThrow('Handle already taken: bob.test')
   })
 
-  it('disallows improperly formatted handles', async () => {
-    const tryHandle = async (handle: string) => {
-      await agent.api.com.atproto.server.createAccount({
-        email: 'john@test.com',
-        handle,
-        password: 'test123',
+  it('validates input through lexicon schema', async () => {
+    for (const invalidHandle of [
+      'did:john',
+      'jo_hn.test',
+      'jo!hn.test',
+      'jo%hn.test',
+      'jo&hn.test',
+      'jo*hn.test',
+      'jo|hn.test',
+      'jo:hn.test',
+      'jo/hn.test',
+    ]) {
+      await expect(tryHandle(invalidHandle)).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('handle'),
       })
     }
-    await expect(tryHandle('did:john')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('john.bsky.io')).rejects.toThrow(
-      'Not a supported handle domain',
-    )
-    await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
-    await expect(tryHandle('jayromy-johnber12345678910.test')).rejects.toThrow(
-      'Handle too long',
-    )
-    await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
-    await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
+  })
+
+  it('disallows improperly formatted handles', async () => {
+    await expect(tryHandle('j.test')).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too short',
+    })
+    await expect(
+      tryHandle('jayromy-johnber12345678910.test'),
+    ).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too long',
+    })
+  })
+
+  it('disallows reserved handles', async () => {
+    await expect(tryHandle('john.bsky.io')).rejects.toMatchObject({
+      error: 'UnsupportedDomain',
+      message: 'Not a supported handle domain',
+    })
+  })
+
+  it('disallows reserved handles', async () => {
+    await expect(tryHandle('about.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
+    await expect(tryHandle('atp.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
   })
 
   it('handles racing signups for same handle', async () => {

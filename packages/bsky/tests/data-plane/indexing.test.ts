@@ -1,5 +1,4 @@
 import { sql } from 'kysely'
-import { CID } from 'multiformats/cid'
 import {
   AppBskyActorProfile,
   AppBskyFeedLike,
@@ -10,11 +9,11 @@ import {
 } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed, usersSeed } from '@atproto/dev-env'
+import { Cid } from '@atproto/lex-data'
 import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../../src/data-plane/server/db'
-import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot } from '../_util'
 
 describe('indexing', () => {
@@ -28,8 +27,8 @@ describe('indexing', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_indexing',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     db = network.bsky.db
     await usersSeed(sc)
@@ -46,49 +45,49 @@ describe('indexing', () => {
     const createdAt = new Date().toISOString()
     const createRecord = await prepareCreate({
       did: sc.dids.alice,
-      collection: ids.AppBskyFeedPost,
+      collection: 'app.bsky.feed.post',
       record: {
-        $type: ids.AppBskyFeedPost,
+        $type: 'app.bsky.feed.post',
         text: '@bob.test how are you?',
         facets: [
           {
             index: { byteStart: 0, byteEnd: 9 },
             features: [
               {
-                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                $type: 'app.bsky.richtext.facet#mention',
                 did: sc.dids.bob,
               },
             ],
           },
         ],
         createdAt,
-      } as AppBskyFeedPost.Record,
+      } satisfies AppBskyFeedPost.Record,
     })
     const [uri] = createRecord
     const updateRecord = await prepareUpdate({
       did: sc.dids.alice,
-      collection: ids.AppBskyFeedPost,
+      collection: 'app.bsky.feed.post',
       rkey: uri.rkey,
       record: {
-        $type: ids.AppBskyFeedPost,
+        $type: 'app.bsky.feed.post',
         text: '@carol.test how are you?',
         facets: [
           {
             index: { byteStart: 0, byteEnd: 11 },
             features: [
               {
-                $type: `${ids.AppBskyRichtextFacet}#mention`,
+                $type: 'app.bsky.richtext.facet#mention',
                 did: sc.dids.carol,
               },
             ],
           },
         ],
         createdAt,
-      } as AppBskyFeedPost.Record,
+      } satisfies AppBskyFeedPost.Record,
     })
     const deleteRecord = prepareDelete({
       did: sc.dids.alice,
-      collection: ids.AppBskyFeedPost,
+      collection: 'app.bsky.feed.post',
       rkey: uri.rkey,
     })
 
@@ -100,7 +99,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -115,7 +114,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -130,7 +129,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -149,26 +148,26 @@ describe('indexing', () => {
   it('indexes profiles.', async () => {
     const createRecord = await prepareCreate({
       did: sc.dids.dan,
-      collection: ids.AppBskyActorProfile,
+      collection: 'app.bsky.actor.profile',
       rkey: 'self',
       record: {
-        $type: ids.AppBskyActorProfile,
+        $type: 'app.bsky.actor.profile',
         displayName: 'dan',
-      } as AppBskyActorProfile.Record,
+      } satisfies AppBskyActorProfile.Record,
     })
     const [uri] = createRecord
     const updateRecord = await prepareUpdate({
       did: sc.dids.dan,
-      collection: ids.AppBskyActorProfile,
+      collection: 'app.bsky.actor.profile',
       rkey: uri.rkey,
       record: {
-        $type: ids.AppBskyActorProfile,
+        $type: 'app.bsky.actor.profile',
         displayName: 'danny',
-      } as AppBskyActorProfile.Record,
+      } satisfies AppBskyActorProfile.Record,
     })
     const deleteRecord = prepareDelete({
       did: sc.dids.dan,
-      collection: ids.AppBskyActorProfile,
+      collection: 'app.bsky.actor.profile',
       rkey: uri.rkey,
     })
 
@@ -180,7 +179,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -194,7 +193,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -208,7 +207,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.alice,
-          ids.AppBskyActorGetProfile,
+          'app.bsky.actor.getProfile',
         ),
       },
     )
@@ -219,12 +218,12 @@ describe('indexing', () => {
     const createdAt = new Date().toISOString()
     const originalPost = await prepareCreate({
       did: sc.dids.alice,
-      collection: ids.AppBskyFeedPost,
+      collection: 'app.bsky.feed.post',
       record: {
-        $type: ids.AppBskyFeedPost,
+        $type: 'app.bsky.feed.post',
         text: 'original post',
         createdAt,
-      } as AppBskyFeedPost.Record,
+      } satisfies AppBskyFeedPost.Record,
     })
     const originalPostRef = {
       uri: originalPost[0].toString(),
@@ -232,34 +231,34 @@ describe('indexing', () => {
     }
     const reply = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyFeedPost,
+      collection: 'app.bsky.feed.post',
       record: {
-        $type: ids.AppBskyFeedPost,
+        $type: 'app.bsky.feed.post',
         text: 'reply post',
         reply: {
           root: originalPostRef,
           parent: originalPostRef,
         },
         createdAt,
-      } as AppBskyFeedPost.Record,
+      } satisfies AppBskyFeedPost.Record,
     })
     const like = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyFeedLike,
+      collection: 'app.bsky.feed.like',
       record: {
-        $type: ids.AppBskyFeedLike,
+        $type: 'app.bsky.feed.like',
         subject: originalPostRef,
         createdAt,
-      } as AppBskyFeedLike.Record,
+      } satisfies AppBskyFeedLike.Record,
     })
     const repost = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyFeedRepost,
+      collection: 'app.bsky.feed.repost',
       record: {
-        $type: ids.AppBskyFeedRepost,
+        $type: 'app.bsky.feed.repost',
         subject: originalPostRef,
         createdAt,
-      } as AppBskyFeedRepost.Record,
+      } satisfies AppBskyFeedRepost.Record,
     })
     // reply, like, and repost indexed orior to the original post
     await network.bsky.sub.indexingSvc.indexRecord(...reply)
@@ -299,12 +298,12 @@ describe('indexing', () => {
 
     const originalPost = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyFeedPost,
+      collection: 'app.bsky.feed.post',
       record: {
-        $type: ids.AppBskyFeedPost,
+        $type: 'app.bsky.feed.post',
         text: 'original post',
         createdAt,
-      } as AppBskyFeedPost.Record,
+      } satisfies AppBskyFeedPost.Record,
     })
 
     const originalPostRef = {
@@ -315,41 +314,41 @@ describe('indexing', () => {
     // own actions
     const ownLike = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyFeedLike,
+      collection: 'app.bsky.feed.like',
       record: {
-        $type: ids.AppBskyFeedLike,
+        $type: 'app.bsky.feed.like',
         subject: originalPostRef,
         createdAt,
-      } as AppBskyFeedLike.Record,
+      } satisfies AppBskyFeedLike.Record,
     })
     const ownRepost = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyFeedRepost,
+      collection: 'app.bsky.feed.repost',
       record: {
-        $type: ids.AppBskyFeedRepost,
+        $type: 'app.bsky.feed.repost',
         subject: originalPostRef,
         createdAt,
-      } as AppBskyFeedRepost.Record,
+      } satisfies AppBskyFeedRepost.Record,
     })
 
     // other actions
     const aliceLike = await prepareCreate({
       did: sc.dids.alice,
-      collection: ids.AppBskyFeedLike,
+      collection: 'app.bsky.feed.like',
       record: {
-        $type: ids.AppBskyFeedLike,
+        $type: 'app.bsky.feed.like',
         subject: originalPostRef,
         createdAt,
-      } as AppBskyFeedLike.Record,
+      } satisfies AppBskyFeedLike.Record,
     })
     const aliceRepost = await prepareCreate({
       did: sc.dids.alice,
-      collection: ids.AppBskyFeedRepost,
+      collection: 'app.bsky.feed.repost',
       record: {
-        $type: ids.AppBskyFeedRepost,
+        $type: 'app.bsky.feed.repost',
         subject: originalPostRef,
         createdAt,
-      } as AppBskyFeedRepost.Record,
+      } satisfies AppBskyFeedRepost.Record,
     })
 
     await network.bsky.sub.indexingSvc.indexRecord(...originalPost)
@@ -366,7 +365,7 @@ describe('indexing', () => {
       {
         headers: await network.serviceHeaders(
           sc.dids.bob,
-          ids.AppBskyNotificationListNotifications,
+          'app.bsky.notification.listNotifications',
         ),
       },
     )
@@ -399,12 +398,12 @@ describe('indexing', () => {
     const unknownDid = 'did:example:unknown'
     const follow = await prepareCreate({
       did: sc.dids.bob,
-      collection: ids.AppBskyGraphFollow,
+      collection: 'app.bsky.graph.follow',
       record: {
-        $type: ids.AppBskyGraphFollow,
+        $type: 'app.bsky.graph.follow',
         subject: unknownDid,
         createdAt,
-      } as AppBskyGraphFollow.Record,
+      } satisfies AppBskyGraphFollow.Record,
     })
     await network.bsky.sub.indexingSvc.indexRecord(...follow)
     await network.bsky.sub.background.processAll()
@@ -444,7 +443,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -453,7 +452,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyFeedGetAuthorFeed,
+            'app.bsky.feed.getAuthorFeed',
           ),
         },
       )
@@ -462,7 +461,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyGraphGetFollows,
+            'app.bsky.graph.getFollows',
           ),
         },
       )
@@ -479,7 +478,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -488,7 +487,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyFeedGetAuthorFeed,
+            'app.bsky.feed.getAuthorFeed',
           ),
         },
       )
@@ -497,7 +496,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyGraphGetFollows,
+            'app.bsky.graph.getFollows',
           ),
         },
       )
@@ -511,7 +510,7 @@ describe('indexing', () => {
       await pdsAgent.api.com.atproto.repo.putRecord(
         {
           repo: sc.dids.alice,
-          collection: ids.AppBskyActorProfile,
+          collection: 'app.bsky.actor.profile',
           rkey: 'self',
           record: { description: 'freshening things up' },
         },
@@ -538,7 +537,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -547,7 +546,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyFeedGetAuthorFeed,
+            'app.bsky.feed.getAuthorFeed',
           ),
         },
       )
@@ -556,7 +555,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyGraphGetFollows,
+            'app.bsky.graph.getFollows',
           ),
         },
       )
@@ -574,12 +573,12 @@ describe('indexing', () => {
       const writes = await Promise.all([
         repoPrepare.prepareCreate({
           did: sc.dids.alice,
-          collection: ids.AppBskyFeedPost,
+          collection: 'app.bsky.feed.post',
           record: { text: 'valid', createdAt: new Date().toISOString() },
         }),
         repoPrepare.prepareCreate({
           did: sc.dids.alice,
-          collection: ids.AppBskyFeedPost,
+          collection: 'app.bsky.feed.post',
           record: { text: 0 },
           validate: false,
         }),
@@ -606,7 +605,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyFeedGetPostThread,
+            'app.bsky.feed.getPostThread',
           ),
         },
       )
@@ -616,7 +615,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyFeedGetPostThread,
+            'app.bsky.feed.getPostThread',
           ),
         },
       )
@@ -631,7 +630,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.alice,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -655,7 +654,7 @@ describe('indexing', () => {
 
     it('reindexes handle for existing did when forced', async () => {
       const now = new Date().toISOString()
-      const sessionAgent = network.pds.getClient()
+      const sessionAgent = network.pds.getAgent()
       const {
         data: { did },
       } = await sessionAgent.createAccount({
@@ -676,7 +675,7 @@ describe('indexing', () => {
 
     it('handles profile aggregations out of order', async () => {
       const now = new Date().toISOString()
-      const agent = network.pds.getClient()
+      const agent = network.pds.getAgent()
       await agent.createAccount({
         email: 'did3@test.com',
         handle: 'did3.test',
@@ -685,12 +684,12 @@ describe('indexing', () => {
       const did = agent.accountDid
       const follow = await prepareCreate({
         did: sc.dids.bob,
-        collection: ids.AppBskyGraphFollow,
+        collection: 'app.bsky.graph.follow',
         record: {
-          $type: ids.AppBskyGraphFollow,
+          $type: 'app.bsky.graph.follow',
           subject: did,
           createdAt: now,
-        } as AppBskyGraphFollow.Record,
+        } satisfies AppBskyGraphFollow.Record,
       })
       await network.bsky.sub.indexingSvc.indexRecord(...follow)
       await network.bsky.sub.indexingSvc.indexHandle(did, now)
@@ -714,7 +713,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -725,7 +724,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -739,7 +738,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -762,7 +761,7 @@ describe('indexing', () => {
         {
           headers: await network.serviceHeaders(
             sc.dids.bob,
-            ids.AppBskyActorGetProfile,
+            'app.bsky.actor.getProfile',
           ),
         },
       )
@@ -787,7 +786,7 @@ async function prepareCreate(opts: {
   rkey?: string
   record: unknown
   timestamp?: string
-}): Promise<[AtUri, CID, unknown, WriteOpAction.Create, string]> {
+}): Promise<[AtUri, Cid, unknown, WriteOpAction.Create, string]> {
   const rkey = opts.rkey ?? TID.nextStr()
   return [
     AtUri.make(opts.did, opts.collection, rkey),
@@ -804,7 +803,7 @@ async function prepareUpdate(opts: {
   rkey: string
   record: unknown
   timestamp?: string
-}): Promise<[AtUri, CID, unknown, WriteOpAction.Update, string]> {
+}): Promise<[AtUri, Cid, unknown, WriteOpAction.Update, string]> {
   return [
     AtUri.make(opts.did, opts.collection, opts.rkey),
     await cidForCbor(opts.record),

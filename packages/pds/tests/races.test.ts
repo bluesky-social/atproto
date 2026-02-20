@@ -19,7 +19,7 @@ describe('races', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     await agent.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',

@@ -31,6 +31,13 @@ describe('handles', () => {
 
   const newHandle = 'alice2.test'
 
+  const tryHandle = async (handle: string) => {
+    await agent.com.atproto.identity.updateHandle(
+      { handle },
+      { headers: sc.getHeaders(alice), encoding: 'application/json' },
+    )
+  }
+
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
@@ -38,7 +45,7 @@ describe('handles', () => {
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
     idResolver = new IdResolver({ plcUrl: ctx.cfg.identity.plcUrl })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -117,49 +124,53 @@ describe('handles', () => {
     expect(data.handle).toBe(newHandle)
   })
 
-  it('disallows improperly formatted handles', async () => {
-    const tryHandle = async (handle: string) => {
-      await agent.api.com.atproto.identity.updateHandle(
-        { handle },
-        { headers: sc.getHeaders(alice), encoding: 'application/json' },
-      )
-    }
-    await expect(tryHandle('did:john')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
+  it('disallows handles that do not resolve to a DID', async () => {
     await expect(tryHandle('john.bsky.io')).rejects.toThrow(
       'External handle did not resolve to DID',
     )
-    await expect(tryHandle('j.test')).rejects.toThrow('Handle too short')
-    await expect(tryHandle('jayromy-johnber12345678910.test')).rejects.toThrow(
-      'Handle too long',
-    )
-    await expect(tryHandle('jo_hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo!hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo%hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo&hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo*hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo|hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo:hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('jo/hn.test')).rejects.toThrow(
-      'Input/handle must be a valid handle',
-    )
-    await expect(tryHandle('about.test')).rejects.toThrow('Reserved handle')
-    await expect(tryHandle('atp.test')).rejects.toThrow('Reserved handle')
+  })
+
+  it('validates input through lexicon schema', async () => {
+    for (const invalidHandle of [
+      'did:john',
+      'jo_hn.test',
+      'jo!hn.test',
+      'jo%hn.test',
+      'jo&hn.test',
+      'jo*hn.test',
+      'jo|hn.test',
+      'jo:hn.test',
+      'jo/hn.test',
+    ]) {
+      await expect(tryHandle(invalidHandle)).rejects.toMatchObject({
+        error: 'InvalidRequest',
+        message: expect.stringContaining('handle'),
+      })
+    }
+  })
+
+  it('applies PDS specific handle length constraints', async () => {
+    await expect(tryHandle('j.test')).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too short',
+    })
+    await expect(
+      tryHandle('jayromy-johnber12345678910.test'),
+    ).rejects.toMatchObject({
+      error: 'InvalidHandle',
+      message: 'Handle too long',
+    })
+  })
+
+  it('disallows reserved handles', async () => {
+    await expect(tryHandle('about.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
+    await expect(tryHandle('atp.test')).rejects.toMatchObject({
+      error: 'HandleNotAvailable',
+      message: 'Reserved handle',
+    })
   })
 
   it('allows updating to a dns handles', async () => {
