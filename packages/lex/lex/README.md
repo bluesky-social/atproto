@@ -13,9 +13,9 @@ Type-safe Lexicon tooling for working with AT Protocol data.
 Working directly with [Lexicon](https://atproto.com/specs/lexicon) defined data requires tracking schema definitions, validation data structures, and properly formatting HTTP requests (aka. XRPC requests). `@atproto/lex` automates this by:
 
 1. Fetching lexicons from the network and generating TypeScript schemas
-2. Providing compile-time and runtime validation to ensure type safety when working with AT Protocol data
-3. Offering a type-safe XRPC client that knows which parameters/input/output each endpoint expects
-4. Support modern patterns like tree-shaking and composition
+2. Providing compile-time and runtime type safety for working with AT Protocol data structures
+3. Offering a fully typed XRPC request client with authentication awareness
+4. Supporting modern patterns like tree-shaking and composition
 
 ```typescript
 // Build data with generated builders and validators
@@ -469,30 +469,40 @@ const lexValue: LexValue = decode(cborBytes)
 
 [XRPC](https://atproto.com/specs/xrpc) (short for "Lexicon RPC") is the set of HTTP conventions used by AT Protocol for client-server and server-server communication. Endpoints follow the pattern `/xrpc/<nsid>`, where the NSID maps to a Lexicon schema that defines the request and response types. XRPC has three method types: **queries** (HTTP GET) for read operations, **procedures** (HTTP POST) for mutations and **subscriptions** (WebSockets) for real-time updates.
 
-The `xrpc()` and `xrpcSafe()` functions can be used to make simple XRPC requests. They are typically used for one-off requests that don't require all the helpers provided by the [`Client`](#client-api) class, such as in scripts or for testing.
+The `xrpc()` and `xrpcSafe()` functions can be used to make simple XRPC requests. They are typically used in places that don't require an authenticated session, or when more granular control over the request/response is needed. For most use cases, the `Client` API provides a more ergonomic way to work with XRPC in the context of an authenticated session.
 
 ```typescript
 import { xrpc, xrpcSafe } from '@atproto/lex'
 import * as com from './lexicons/com.js'
 
-// Pass a service URL directly
 const response = await xrpc(
   'https://bsky.network',
   com.atproto.identity.resolveHandle,
-  { params: { handle: 'atproto.com' } },
+  {
+    params: { handle: 'atproto.com' },
+    headers: { 'user-agent': 'MyApp/1.0.0' },
+  },
 )
+
+response.status // number
+response.headers // Headers
+response.body.did // `did:${string}:${string}`
 
 // Or use the safe variant (returns errors instead of throwing)
 const result = await xrpcSafe(
   'https://bsky.network',
   com.atproto.identity.resolveHandle,
-  { params: { handle: 'atproto.com' } },
+  {
+    params: { handle: 'atproto.com' },
+    signal: AbortSignal.timeout(5000), // Abort after 5 seconds
+  },
 )
 
 if (result.success) {
   console.log(result.body)
 } else {
-  console.error(result.message)
+  console.error(result.error) // XRPC error code
+  console.error(result.message) // Error message
 }
 ```
 
