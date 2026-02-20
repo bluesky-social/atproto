@@ -231,7 +231,7 @@ describe('report-assignment', () => {
         )
         await settle()
 
-        expect(updates.length).toBe(5)
+        expect(updates.length).toBe(6) // intial snapshot + 5 events
       } finally {
         ws.close()
       }
