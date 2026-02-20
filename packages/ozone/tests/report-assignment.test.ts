@@ -1,5 +1,7 @@
 import AtpAgent, { ToolsOzoneReportClaimReport } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import WebSocket from 'ws'
+import { AssignmentEvent } from '../src/assignment/assignment-ws'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('report-assignment', () => {
@@ -121,5 +123,83 @@ describe('report-assignment', () => {
     expect(assignment.reportId).toBe(4)
     expect(assignment.did).toBe(network.ozone.adminAccnt.did)
     expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(new Date().getTime())
+  })
+
+  it('cannot double claim', async () => {
+    await claimReport(
+      {
+        reportId: 6,
+        assign: true,
+      },
+      'moderator',
+    )
+    const p = claimReport(
+      {
+        reportId: 6,
+        assign: true,
+      },
+      'admin',
+    )
+    await expect(p).rejects.toThrow('Report already claimed')
+  })
+
+  describe('realtime', () => {
+    const connectWs = (): Promise<{
+      ws: WebSocket
+      updates: AssignmentEvent[]
+    }> => {
+      return new Promise((resolve, reject) => {
+        const wsUrl = network.ozone.url.replace('http://', 'ws://')
+        const ws = new WebSocket(`${wsUrl}/ws/assignments`)
+        const updates: AssignmentEvent[] = []
+
+        ws.on('open', () => resolve({ ws, updates }))
+        ws.on('message', (data) => {
+          updates.push(JSON.parse(data.toString()))
+        })
+        ws.on('error', reject)
+      })
+    }
+
+    it('moderator receives assignment update', async () => {
+      const { ws, updates } = await connectWs()
+
+      try {
+        await claimReport(
+          {
+            reportId: 5,
+            assign: true,
+          },
+          'moderator',
+        )
+        await claimReport(
+          {
+            reportId: 5,
+            assign: false,
+          },
+          'moderator',
+        )
+        await claimReport(
+          {
+            reportId: 5,
+            assign: true,
+          },
+          'admin',
+        )
+
+        // Wait for updates to be received
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        expect(updates.length).toBe(3)
+        expect(updates[0].reportId).toBe(5)
+        expect(updates[0].did).toBe(network.ozone.moderatorAccnt.did)
+        expect(updates[1].reportId).toBe(5)
+        expect(updates[1].did).toBe(network.ozone.moderatorAccnt.did)
+        expect(updates[2].reportId).toBe(5)
+        expect(updates[2].did).toBe(network.ozone.adminAccnt.did)
+      } finally {
+        ws.close()
+      }
+    })
   })
 })
