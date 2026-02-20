@@ -158,7 +158,7 @@ export class AssignmentService {
             .updateTable('moderator_assignment')
             .set({
               endAt,
-              queueId: queueId ?? null,
+              queueId: queueId ?? existing.queueId ?? null,
             })
             .where('id', '=', existing.id)
             .returningAll()
