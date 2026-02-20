@@ -1,6 +1,6 @@
 import http from 'node:http'
 import cors from 'cors'
-import express, { Router } from 'express'
+import express, { Router, json } from 'express'
 import { DidDocument } from '../../src'
 import { DidWebDb } from './db'
 
@@ -60,7 +60,7 @@ export class DidWebServer {
     const app = express()
 
     app.use(cors())
-    app.use(express.json())
+    app.use(json())
     app.use((_req, res, next) => {
       res.locals.db = db
       next()
