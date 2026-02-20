@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-client",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "license": "MIT",
   "description": "HTTP client for interacting with Lexicon based APIs",
   "keywords": [

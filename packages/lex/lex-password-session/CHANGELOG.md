@@ -1,5 +1,13 @@
 # @atproto/lex-password-session
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [[`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a), [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df), [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df)]:
+  - @atproto/lex-schema@0.0.13
+  - @atproto/lex-client@0.0.13
+
 ## 0.0.5
 
 ### Patch Changes
