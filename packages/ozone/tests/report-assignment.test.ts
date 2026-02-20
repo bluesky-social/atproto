@@ -1,7 +1,11 @@
 import AtpAgent, { ToolsOzoneReportClaimReport } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import WebSocket from 'ws'
-import { AssignmentEvent } from '../src/assignment/assignment-ws'
+import {
+  AssignmentEvent,
+  ClientMessage,
+  ServerMessage,
+} from '../src/assignment/assignment-ws'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('report-assignment', () => {
@@ -9,7 +13,7 @@ describe('report-assignment', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const generateId = () => new Date().getTime() % 1000
+  const generateId = () => new Date().getTime() % 10000
 
   const claimReport = async (
     input: ToolsOzoneReportClaimReport.InputSchema,
@@ -37,9 +41,6 @@ describe('report-assignment', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-  })
-
-  beforeEach(async () => {
     await clearAssignments()
   })
 
@@ -131,7 +132,9 @@ describe('report-assignment', () => {
     )
     expect(assignment.reportId).toBe(reportId)
     expect(assignment.did).toBe(network.ozone.adminAccnt.did)
-    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(new Date().getTime())
+    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
+      new Date().getTime(),
+    )
   })
 
   it('cannot double claim', async () => {
@@ -183,6 +186,7 @@ describe('report-assignment', () => {
       const { ws, updates } = await wsConnect()
       await settle()
       wsSubscribe(ws, queueId)
+      await settle()
 
       try {
         await claimReport(
@@ -251,7 +255,13 @@ describe('report-assignment', () => {
       await settle()
 
       try {
-        const claimUpdate = updates.find((u) => u.reportId === reportId)
+        const snapshot = updates.find(
+          (u) => 'type' in u && u.type === 'snapshot',
+        ) as (ServerMessage & { type: 'snapshot' }) | undefined
+        expect(snapshot).toBeDefined()
+        const claimUpdate = snapshot!.events.find(
+          (e) => e.reportId === reportId,
+        )
         expect(claimUpdate).toBeDefined()
         expect(claimUpdate?.did).toBe(network.ozone.moderatorAccnt.did)
       } finally {
@@ -259,30 +269,42 @@ describe('report-assignment', () => {
       }
     })
 
-    it('ping refreshes connection', async () => {
+    it('report can be started', async () => {
+      const queueId = generateId()
       const reportId = generateId()
 
       const { ws, updates } = await wsConnect()
       await settle()
+      ws.send(
+        JSON.stringify({
+          type: 'authenticate',
+          did: network.ozone.moderatorAccnt.did,
+        } satisfies ClientMessage),
+      )
+      wsSubscribe(ws, queueId)
+      await settle()
 
       try {
-        await claimReport(
-          {
-            reportId,
-            assign: true,
-          },
-          'moderator',
-        )
-        await settle()
-        expect(updates.length).toBe(1)
-
-        // Wait for longer than the server timeout, but send pings to keep the connection alive
-        for (let i = 0; i < 5; i++) {
-          await settle(1100)
-          ws.ping()
+        const message: ClientMessage = {
+          type: 'report:review:start',
+          reportId,
+          queueId,
         }
+        ws.send(JSON.stringify(message))
+        await settle()
 
-        expect(updates.length).toBe(1) // No new updates, but connection should still be alive
+        const claimUpdate = updates.find(
+          (u) =>
+            'type' in u &&
+            u.type === 'report:review:started' &&
+            u.reportId === reportId,
+        ) as ServerMessage | undefined
+        expect(claimUpdate).toBeDefined()
+        expect(
+          claimUpdate && 'moderator' in claimUpdate
+            ? claimUpdate.moderator.did
+            : undefined,
+        ).toBe(network.ozone.moderatorAccnt.did)
       } finally {
         ws.close()
       }

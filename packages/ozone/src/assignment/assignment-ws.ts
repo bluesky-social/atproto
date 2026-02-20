@@ -13,6 +13,10 @@ export interface ModeratorClient {
 
 export type ClientMessage =
   | {
+      type: 'authenticate'
+      did: string
+    }
+  | {
       type: 'subscribe'
       queues: number[] // Subscribe to queue updates
     }
@@ -23,15 +27,21 @@ export type ClientMessage =
   | {
       type: 'report:review:start'
       reportId: number
+      queueId?: number
     }
   | {
       type: 'report:review:end'
       reportId: number
+      queueId?: number
     }
   | {
       type: 'ping' // Heartbeat
     }
 export type ServerMessage =
+  | {
+      type: 'snapshot'
+      events: AssignmentEvent[]
+    }
   | {
       type: 'report:review:started'
       reportId: number
@@ -62,6 +72,10 @@ export type ServerMessage =
     }
   | {
       type: 'pong'
+    }
+  | {
+      type: 'error'
+      message: string
     }
 
 export interface AssignmentEvent {
@@ -123,14 +137,14 @@ export class AssignmentWebSocketServer {
   private onClose(clientId: string) {
     this.clients.delete(clientId)
   }
-  private send(clientId: string, data: RawData) {
+  private send(clientId: string, messsage: ServerMessage) {
     const client = this.clients.get(clientId)
     if (!client) {
       console.error('Attempted to send message to unknown client:', clientId)
       return
     }
     if (client.ws.readyState === WebSocket.OPEN) {
-      client.ws.send(data)
+      client.ws.send(JSON.stringify(messsage))
     } else {
       console.warn('Attempted to send message to non-open WebSocket:', clientId)
     }
@@ -148,40 +162,45 @@ export class AssignmentWebSocketServer {
     client: ModeratorClient,
     message: ClientMessage,
   ) {
-    switch (message.type) {
-      case 'subscribe':
-        client.subscribedQueues = message.queues
-        await this.sendSnapshot(client)
-        break
-      case 'unsubscribe':
-        client.subscribedQueues = client.subscribedQueues.filter(
-          (queue) => !message.queues.includes(queue),
-        )
-        break
-      case 'report:review:start':
-        try {
-          const result = await this.reportService.claimReport({
-            did: client.moderatorDid,
-            reportId: message.reportId,
-            assign: true,
-          })
-          this.broadcast({
-            type: 'report:review:started',
-            reportId: result.reportId,
-            moderator: {
+    try {
+      switch (message.type) {
+        case 'authenticate':
+          client.moderatorDid = message.did
+          break
+        case 'subscribe':
+          client.subscribedQueues = message.queues
+          await this.sendSnapshot(client)
+          break
+        case 'unsubscribe':
+          client.subscribedQueues = client.subscribedQueues.filter(
+            (queue) => !message.queues.includes(queue),
+          )
+          break
+        case 'report:review:start':
+          try {
+            const result = await this.reportService.claimReport({
               did: client.moderatorDid,
-            },
-            queues: result.queueId != null ? [result.queueId] : [],
-          })
-        } catch (e) {
-          console.error('Error claiming report:', e)
-        }
-        break
-      case 'report:review:end':
-        try {
+              reportId: message.reportId,
+              queueId: message.queueId,
+              assign: true,
+            })
+            this.broadcast({
+              type: 'report:review:started',
+              reportId: result.reportId,
+              moderator: {
+                did: client.moderatorDid,
+              },
+              queues: result.queueId != null ? [result.queueId] : [],
+            })
+          } catch (e) {
+            console.error('Error claiming report:', e)
+          }
+          break
+        case 'report:review:end':
           const result = await this.reportService.claimReport({
             did: client.moderatorDid,
             reportId: message.reportId,
+            queueId: message.queueId,
             assign: false,
           })
           this.broadcast({
@@ -192,14 +211,15 @@ export class AssignmentWebSocketServer {
             },
             queues: result.queueId != null ? [result.queueId] : [],
           })
-        } catch (e) {
-          client.ws.send(JSON.stringify({ type: 'error', message: String(e) }))
-        }
-        break
-      case 'ping':
-        this.send(client.id, Buffer.from(JSON.stringify({ type: 'pong' })))
-        client.ws.pong(() => {}) // Respond to WebSocket-level ping for connection health
-        break
+          break
+        case 'ping':
+          this.send(client.id, { type: 'pong' })
+          client.ws.pong(() => {}) // Respond to WebSocket-level ping for connection health
+          break
+      }
+    } catch (e) {
+      console.error('Error handling client message:', e)
+      this.send(client.id, { type: 'error', message: 'Internal server error' })
     }
   }
   /** Broadcast message to relevant connections */
@@ -213,7 +233,7 @@ export class AssignmentWebSocketServer {
           message.queues.includes(q),
         )
         if (!subscibed) continue
-        this.send(clientId, Buffer.from(JSON.stringify(message)))
+        this.send(clientId, message)
       }
     }
   }
@@ -223,8 +243,10 @@ export class AssignmentWebSocketServer {
       onlyActiveAssignments: true,
       queueIds: client.subscribedQueues,
     })
-    for (const assignment of assignments) {
-      client.ws.send(JSON.stringify(assignment))
+    const message: ServerMessage = {
+      type: 'snapshot',
+      events: assignments,
     }
+    this.send(client.id, message)
   }
 }
