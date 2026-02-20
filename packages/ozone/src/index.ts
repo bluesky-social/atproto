@@ -121,6 +121,20 @@ export class OzoneService {
     this.server = server
     server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
+
+    // upgrade interceptor
+    const upgradeListeners = server.rawListeners('upgrade').slice()
+    server.removeAllListeners('upgrade')
+    server.on('upgrade', (req, socket, head) => {
+      if (req.url?.startsWith('/ws/assignments')) {
+        this.ctx.assignmentWss.handleUpgrade(req, socket, head)
+      } else {
+        for (const fn of upgradeListeners) {
+          fn.call(server, req, socket, head)
+        }
+      }
+    })
+
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.assignPort(port)
@@ -131,6 +145,7 @@ export class OzoneService {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.sequencer.destroy()
+    this.ctx.assignmentWss.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined

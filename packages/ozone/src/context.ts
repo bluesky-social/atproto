@@ -1,10 +1,12 @@
-import assert from 'node:assert'
-import * as plc from '@did-plc/lib'
-import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import assert from 'node:assert'
+import { AssignmentService } from './assignment'
+import { AssignmentWebSocketServer } from './assignment/assignment-ws'
 import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import {
@@ -73,6 +75,8 @@ export type AppContextOptions = {
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
+  assignmentService: AssignmentService
+  assignmentWss: AssignmentWebSocketServer
   authVerifier: AuthVerifier
   verificationService: VerificationServiceCreator
   verificationIssuer: VerificationIssuerCreator
@@ -173,6 +177,9 @@ export class AppContext {
       teamService: teamService(db),
     })
 
+    const assignmentService = new AssignmentService(db)
+    const assignmentWss = new AssignmentWebSocketServer(db)
+
     return new AppContext(
       {
         db,
@@ -195,6 +202,8 @@ export class AppContext {
         idResolver,
         backgroundQueue,
         sequencer,
+        assignmentService,
+        assignmentWss,
         authVerifier,
         blobDiverter,
         verificationService,
@@ -307,6 +316,14 @@ export class AppContext {
 
   get sequencer(): Sequencer {
     return this.opts.sequencer
+  }
+
+  get assignmentService(): AssignmentService {
+    return this.opts.assignmentService
+  }
+
+  get assignmentWss(): AssignmentWebSocketServer {
+    return this.opts.assignmentWss
   }
 
   get authVerifier(): AuthVerifier {
