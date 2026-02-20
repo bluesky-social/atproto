@@ -138,12 +138,6 @@ export const asyncFilter = async <T>(
   return arr.filter((_, i) => results[i])
 }
 
-export const isErrnoException = (
-  err: unknown,
-): err is NodeJS.ErrnoException => {
-  return !!err && err['code']
-}
-
 export const errHasMsg = (err: unknown, msg: string): boolean => {
   return !!err && typeof err === 'object' && err['message'] === msg
 }
