@@ -56,9 +56,13 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
-      const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+      const proxy = await parseProxyInfo(ctx, req, lxm)
 
-      const authResult = await performAuth({ req, res, params: { lxm, aud } })
+      const authResult = await performAuth({
+        req,
+        res,
+        params: { lxm, aud: serviceProxyTo(proxy) },
+      })
 
       const { credentials } = excludeErrorResult(authResult)
 
@@ -80,11 +84,11 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, serviceJwtAud(proxy), lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
-        origin,
+        origin: proxy.serviceInfo.url,
         method: req.method,
         path: req.originalUrl,
         body,
@@ -156,10 +160,10 @@ export async function pipethrough(
 
   const lxm = parseReqNsid(req)
 
-  const { url: origin, did: aud } = await parseProxyInfo(ctx, req, lxm)
+  const proxy = await parseProxyInfo(ctx, req, lxm)
 
   const dispatchOptions: Dispatcher.RequestOptions = {
-    origin,
+    origin: proxy.serviceInfo.url,
     method: req.method,
     path: req.originalUrl,
     headers: {
@@ -178,7 +182,7 @@ export async function pipethrough(
       ),
 
       authorization: options?.iss
-        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
+        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? serviceJwtAud(proxy), options.lxm ?? lxm)}`
         : undefined,
     },
 
@@ -209,9 +213,7 @@ export function computeProxyTo(
   if (proxyToHeader) return proxyToHeader
 
   const service = defaultService(ctx, lxm)
-  if (service.serviceInfo) {
-    return `${service.serviceInfo.did}#${service.serviceId}`
-  }
+  if (service) return serviceProxyTo(service)
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -220,14 +222,14 @@ export async function parseProxyInfo(
   ctx: AppContext,
   req: Request,
   lxm: string,
-): Promise<{ url: string; did: string }> {
+): Promise<{ serviceId: string; serviceInfo: { url: string; did: string } }> {
   // /!\ Hot path
 
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const { serviceInfo } = defaultService(ctx, lxm)
-  if (serviceInfo) return serviceInfo
+  const service = defaultService(ctx, lxm)
+  if (service) return service
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -236,7 +238,7 @@ export const parseProxyHeader = async (
   // Using subset of AppContext for testing purposes
   ctx: Pick<AppContext, 'cfg' | 'idResolver'>,
   proxyTo: string,
-): Promise<{ did: string; url: string }> => {
+): Promise<ServiceDetails> => {
   // /!\ Hot path
 
   const hashIndex = proxyTo.indexOf('#')
@@ -260,13 +262,11 @@ export const parseProxyHeader = async (
   }
 
   const did = proxyTo.slice(0, hashIndex)
+  const serviceId = proxyTo.slice(hashIndex + 1)
 
   // Special case a configured appview, while still proxying correctly any other appview
-  if (
-    ctx.cfg.bskyAppView &&
-    proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
-  ) {
-    return { did, url: ctx.cfg.bskyAppView.url }
+  if (serviceId === 'bsky_appview' && did === ctx.cfg.bskyAppView?.did) {
+    return { serviceId, serviceInfo: ctx.cfg.bskyAppView }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -274,13 +274,22 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did')
   }
 
-  const serviceId = proxyTo.slice(hashIndex)
   const url = getServiceEndpoint(didDoc, { id: serviceId })
   if (!url) {
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url }
+  return { serviceId, serviceInfo: { did, url } }
+}
+
+// proxy header or audience for rpc scope check
+export function serviceProxyTo(details: ServiceDetails): string {
+  return `${details.serviceInfo.did}#${details.serviceId}`
+}
+
+// audience for service token creation
+export function serviceJwtAud(details: ServiceDetails): string {
+  return details.serviceInfo.did
 }
 
 /**
@@ -579,10 +588,7 @@ export const PROTECTED_METHODS = new LxmSet([
 const defaultService = (
   ctx: AppContext,
   nsid: string,
-): {
-  serviceId: string
-  serviceInfo: { url: string; did: string } | null
-} => {
+): ServiceDetails | null => {
   switch (nsid) {
     case ids.ToolsOzoneTeamAddMember:
     case ids.ToolsOzoneTeamDeleteMember:
@@ -611,16 +617,19 @@ const defaultService = (
     case ids.ToolsOzoneModerationListScheduledActions:
     case ids.ToolsOzoneModerationCancelScheduledActions:
     case ids.ToolsOzoneModerationScheduleAction:
+      if (!ctx.cfg.modService) return null
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.modService,
       }
     case ids.ComAtprotoModerationCreateReport:
+      if (!ctx.cfg.reportService) return null
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.reportService,
       }
     default:
+      if (!ctx.cfg.bskyAppView) return null
       return {
         serviceId: 'bsky_appview',
         serviceInfo: ctx.cfg.bskyAppView,
@@ -634,4 +643,9 @@ const safeString = (str: unknown): string | undefined => {
 
 function logResponseError(this: ServerResponse, err: unknown): void {
   httpLogger.warn({ err }, 'error forwarding upstream response')
+}
+
+type ServiceDetails = {
+  serviceId: string
+  serviceInfo: { url: string; did: string }
 }
