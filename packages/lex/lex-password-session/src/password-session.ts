@@ -143,7 +143,7 @@ export type PasswordSessionOptions = {
  *
  * @implements {Agent}
  */
-export class PasswordSession implements Agent {
+export class PasswordSession implements Agent, AsyncDisposable {
   /**
    * Internal {@link Agent} used for session management towards the
    * authentication service only.
@@ -415,6 +415,10 @@ export class PasswordSession implements Agent {
     )
   }
 
+  async [Symbol.asyncDispose]() {
+    await this.logout()
+  }
+
   /**
    * Creates a new account and returns an authenticated session.
    *
@@ -491,11 +495,11 @@ export class PasswordSession implements Agent {
    *
    * @example Basic login with app password
    * ```ts
-   * const session = await PasswordSession.login({
+   * // Supports "using" syntax for automatic cleanup of temporary sessions
+   * await using session = await PasswordSession.login({
    *   service: 'https://bsky.social',
    *   identifier: 'alice.bsky.social',
    *   password: 'xxxx-xxxx-xxxx-xxxx', // App password
-   *   onUpdated: (data) => saveToStorage(data),
    * })
    * ```
    *
