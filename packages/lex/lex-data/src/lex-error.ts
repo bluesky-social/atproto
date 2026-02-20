@@ -42,7 +42,7 @@ export type LexErrorData<N extends LexErrorCode = LexErrorCode> = {
 
 export type DownstreamError<N extends LexErrorCode = LexErrorCode> = {
   status: number
-  headers?: HeadersInit
+  headers?: Headers
   data: LexErrorData<N>
 }
 

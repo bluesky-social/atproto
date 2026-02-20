@@ -1,4 +1,4 @@
-import { buildAgent, xrpc } from '@atproto/lex'
+import { xrpc } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertRpc({ aud, lxm })
       },
     }),
-    handler: async ({ auth, input: { body }, req }) => {
+    handler: async ({ auth, params, input: { body }, req }) => {
       const { url, did: aud } = await parseProxyInfo(
         ctx,
         req,
@@ -28,10 +28,11 @@ export default function (server: Server, ctx: AppContext) {
         com.atproto.moderation.createReport.$lxm,
       )
 
-      // @TODO remove buildAgent() after https://github.com/bluesky-social/atproto/pull/4672
-      return xrpc(buildAgent(url), com.atproto.moderation.createReport, {
-        body,
+      return xrpc(url, com.atproto.moderation.createReport, {
+        // @NOTE request params are **not** being proxied (some probably should)
         headers,
+        params,
+        body,
       })
     },
   })

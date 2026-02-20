@@ -15,12 +15,12 @@ export class LexResponseError<
 > extends LexError<N> {
   name = 'LexResponseError'
 
-  readonly headers?: HeadersInit
+  readonly headers?: Headers
 
   constructor(
     readonly status: number,
     readonly body: LexErrorData<N>,
-    options?: ErrorOptions & { headers?: HeadersInit },
+    options?: ErrorOptions & { headers?: Headers },
   ) {
     super(body.error, body.message, options)
     this.headers = options?.headers
@@ -82,10 +82,10 @@ export class LexServerAuthError<
     const body: LexErrorData<N> = { error, message }
     super(401, body, {
       ...options,
-      headers: {
+      headers: new Headers({
         'WWW-Authenticate': formatWWWAuthenticateHeader(wwwAuthenticate),
         'Access-Control-Expose-Headers': 'WWW-Authenticate', // CORS
-      },
+      }),
     })
   }
 
