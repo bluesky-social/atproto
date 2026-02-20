@@ -78,8 +78,7 @@ export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
 /**
  * Makes an XRPC request and throws on failure.
  *
- * This is the low-level function for making XRPC calls. For most use cases,
- * prefer using {@link Client.xrpc} which provides a more ergonomic API.
+ * This is the low-level function for making XRPC calls.
  *
  * @param agent - The {@link Agent} to use for making the request
  * @param ns - The lexicon method definition
@@ -178,8 +177,8 @@ export async function xrpcSafe<const M extends Query | Procedure>(
 ): Promise<XrpcResult<M>> {
   options.signal?.throwIfAborted()
   const method: M = getMain(ns)
-  const agent = buildAgent(agentOpts)
   try {
+    const agent = buildAgent(agentOpts)
     const url = xrpcRequestUrl(method, options)
     const request = xrpcRequestInit(method, options)
     const response = await agent.fetchHandler(url, request)
