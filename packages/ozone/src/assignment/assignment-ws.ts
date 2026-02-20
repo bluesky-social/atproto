@@ -4,21 +4,21 @@ import { RawData, WebSocket, WebSocketServer } from 'ws'
 import { AssignmentService } from '.'
 import { Database } from '../db'
 
-interface ModeratorClient {
+export interface ModeratorClient {
+  id: string
   ws: WebSocket
   moderatorDid: string
-  moderatorHandle: string
-  subscribedQueues: string[] // Queues they're viewing
+  subscribedQueues: number[] // Queues they're viewing
 }
 
-type ClientMessage =
+export type ClientMessage =
   | {
       type: 'subscribe'
-      queues: string[] // Subscribe to queue updates
+      queues: number[] // Subscribe to queue updates
     }
   | {
       type: 'unsubscribe'
-      queues: string[]
+      queues: number[]
     }
   | {
       type: 'report:review:start'
@@ -30,6 +30,36 @@ type ClientMessage =
     }
   | {
       type: 'ping' // Heartbeat
+    }
+export type ServerMessage =
+  | {
+      type: 'report:review:started'
+      reportId: number
+      moderator: { did: string }
+    }
+  | {
+      type: 'report:review:ended'
+      reportId: number
+      moderator: { did: string }
+    }
+  | {
+      type: 'report:actioned'
+      reportIds: number[]
+      actionEventId: number
+      moderator: { did: string }
+      queues: number[] // Which queues this affects
+    }
+  | {
+      type: 'report:created'
+      reportId: number
+      queues: number[] // Which queues this should appear in
+    }
+  | {
+      type: 'queue:assigned'
+      queueId: number
+    }
+  | {
+      type: 'pong'
     }
 
 export interface AssignmentEvent {
@@ -48,121 +78,149 @@ export class AssignmentWebSocketServer {
 
   constructor(db: Database) {
     this.wss = new WebSocketServer({ noServer: true })
-    this.wss.on('connection', (ws, req) => this.handleConnection(ws, req))
+    this.wss.on('connection', (ws, req) => this.onConnection(ws, req))
     this.reportService = new AssignmentService(db)
   }
 
+  // Protocol Layer
   /** Upgrade HTTP connection to WebSocket connection */
   handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
     this.wss.handleUpgrade(req, socket, head, (ws) => {
       this.wss.emit('connection', ws, req)
     })
   }
-
-  /** Broadcast assignment to relevant connections */
-  broadcast(assignment: AssignmentEvent) {
-    const msg = JSON.stringify(assignment)
-    for (const client of this.clients.values()) {
-      if (
-        assignment.queueId === null ||
-        client.subscribedQueues.includes(String(assignment.queueId))
-      ) {
-        if (client.ws.readyState === WebSocket.OPEN) {
-          client.ws.send(msg)
-        }
-      }
-    }
-  }
-
-  /** Handle new connection */
-  private async handleConnection(ws: WebSocket, req: IncomingMessage) {
+  private async onConnection(ws: WebSocket, req: IncomingMessage) {
     const clientId = `${req.socket.remoteAddress}:${req.socket.remotePort}`
     const client = {
+      id: clientId,
       ws,
       moderatorDid: '',
       moderatorHandle: '',
       subscribedQueues: [],
     }
     this.clients.set(clientId, client)
-
-    ws.on('message', (message) => {
-      this.handleConnectionMessage(clientId, message)
-    })
-
-    ws.on('close', () => {
-      this.handleConnectionClose(clientId)
-    })
+    ws.on('message', (message) => this.onMessage(clientId, message))
+    ws.on('close', () => this.onClose(clientId))
   }
-  private async handleConnectionMessage(clientId: string, message: RawData) {
+  private async onMessage(clientId: string, data: RawData) {
     const client = this.clients.get(clientId)
     if (!client) {
       console.error('Received message from unknown client:', clientId)
-      this.handleConnectionClose(clientId)
+      this.onClose(clientId)
       return
     }
-
     let parsed: ClientMessage
     try {
-      parsed = JSON.parse(message.toString())
+      parsed = JSON.parse(data.toString()) satisfies ClientMessage
     } catch (e) {
       console.error('Invalid message format', e)
       return
     }
-
-    switch (parsed.type) {
-      case 'subscribe':
-        client.subscribedQueues = parsed.queues
-        break
-      case 'unsubscribe':
-        client.subscribedQueues = client.subscribedQueues.filter(
-          (queue) => !parsed.queues.includes(queue),
-        )
-        break
-      case 'report:review:start':
-        if (client.moderatorDid) {
-          try {
-            const result = await this.reportService.claimReport({
-              did: client.moderatorDid,
-              reportId: parsed.reportId,
-              assign: true,
-            })
-            this.broadcast(result)
-          } catch (e) {
-            client.ws.send(
-              JSON.stringify({ type: 'error', message: String(e) }),
-            )
-          }
-        }
-        break
-      case 'report:review:end':
-        if (client.moderatorDid) {
-          try {
-            const result = await this.reportService.claimReport({
-              did: client.moderatorDid,
-              reportId: parsed.reportId,
-              assign: false,
-            })
-            this.broadcast(result)
-          } catch (e) {
-            client.ws.send(
-              JSON.stringify({ type: 'error', message: String(e) }),
-            )
-          }
-        }
-        break
-      case 'ping':
-        client.ws.send(JSON.stringify({ type: 'pong' }))
-        break
-    }
+    this.handleClientMessage(client, parsed)
   }
-  private handleConnectionClose(clientId: string) {
+  private onClose(clientId: string) {
     this.clients.delete(clientId)
   }
-
+  private send(clientId: string, data: RawData) {
+    const client = this.clients.get(clientId)
+    if (!client) {
+      console.error('Attempted to send message to unknown client:', clientId)
+      return
+    }
+    if (client.ws.readyState === WebSocket.OPEN) {
+      client.ws.send(data)
+    } else {
+      console.warn('Attempted to send message to non-open WebSocket:', clientId)
+    }
+  }
   destroy() {
     for (const client of this.wss.clients) {
       client.close()
     }
     this.wss.close()
+  }
+
+  // Application Layer
+  /** Handle messages from clients */
+  private async handleClientMessage(
+    client: ModeratorClient,
+    message: ClientMessage,
+  ) {
+    switch (message.type) {
+      case 'subscribe':
+        client.subscribedQueues = message.queues
+        await this.sendSnapshot(client)
+        break
+      case 'unsubscribe':
+        client.subscribedQueues = client.subscribedQueues.filter(
+          (queue) => !message.queues.includes(queue),
+        )
+        break
+      case 'report:review:start':
+        try {
+          const result = await this.reportService.claimReport({
+            did: client.moderatorDid,
+            reportId: message.reportId,
+            assign: true,
+          })
+          this.broadcast({
+            type: 'report:review:started',
+            reportId: result.reportId,
+            moderator: {
+              did: client.moderatorDid,
+            },
+          })
+        } catch (e) {
+          console.error('Error claiming report:', e)
+        }
+        break
+      case 'report:review:end':
+        try {
+          const result = await this.reportService.claimReport({
+            did: client.moderatorDid,
+            reportId: message.reportId,
+            assign: false,
+          })
+          this.broadcast({
+            type: 'report:review:ended',
+            reportId: result.reportId,
+            moderator: {
+              did: client.moderatorDid,
+            },
+          })
+        } catch (e) {
+          client.ws.send(JSON.stringify({ type: 'error', message: String(e) }))
+        }
+        break
+      case 'ping':
+        this.send(client.id, Buffer.from(JSON.stringify({ type: 'pong' })))
+        client.ws.pong(() => {}) // Respond to WebSocket-level ping for connection health
+        break
+    }
+  }
+  /** Broadcast message to relevant connections */
+  broadcast(message: ServerMessage) {
+    for (const clientId of this.clients.keys()) {
+      const client = this.clients.get(clientId)
+      if (!client) continue
+      if ('queues' in message) {
+        // Only send to clients subscribed to affected queues
+        const subscibed = client.subscribedQueues.some((q) =>
+          message.queues.includes(q),
+        )
+        if (!subscibed) continue
+        this.send(clientId, Buffer.from(JSON.stringify(message)))
+      }
+    }
+  }
+  /** Send active assignments to client */
+  private async sendSnapshot(client: ModeratorClient) {
+    const assignments = await this.reportService.getAssignments({
+      onlyActiveAssignments: true,
+      queueIds: client.subscribedQueues,
+    })
+    for (const assignment of assignments) {
+      client.ws.send(JSON.stringify(assignment))
+    }
   }
 }

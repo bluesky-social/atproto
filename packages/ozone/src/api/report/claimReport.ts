@@ -23,7 +23,15 @@ export default function (server: Server, ctx: AppContext) {
         queueId: input.body.queueId,
         assign: input.body.assign || false,
       })
-      ctx.assignmentWss.broadcast(result)
+      ctx.assignmentWss.broadcast({
+        type: input.body.assign
+          ? 'report:review:started'
+          : 'report:review:ended',
+        reportId: result.reportId!,
+        moderator: {
+          did: result.did,
+        },
+      })
 
       return {
         encoding: 'application/json' as const,
