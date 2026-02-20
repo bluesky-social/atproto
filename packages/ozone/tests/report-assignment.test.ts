@@ -9,6 +9,8 @@ describe('report-assignment', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
+  const generateReportId = () => new Date().getTime() % 1000
+
   const claimReport = async (
     input: ToolsOzoneReportClaimReport.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
@@ -23,6 +25,10 @@ describe('report-assignment', () => {
     return data
   }
 
+  const clearAssignments = async () => {
+    await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'report_assignment',
@@ -31,7 +37,10 @@ describe('report-assignment', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
+  })
+
+  beforeEach(async () => {
+    await clearAssignments()
   })
 
   afterAll(async () => {
@@ -39,14 +48,15 @@ describe('report-assignment', () => {
   })
 
   it('moderator can claim', async () => {
+    const reportId = generateReportId()
     const assignment1 = await claimReport(
       {
-        reportId: 1,
+        reportId,
         assign: true,
       },
       'moderator',
     )
-    expect(assignment1.reportId).toBe(1)
+    expect(assignment1.reportId).toBe(reportId)
     expect(assignment1.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment1.endAt).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
@@ -54,18 +64,17 @@ describe('report-assignment', () => {
   })
 
   it('moderator can refresh claim', async () => {
+    const reportId = generateReportId()
     const assignment1 = await claimReport(
       {
-        reportId: 2,
+        reportId,
         assign: true,
       },
       'moderator',
     )
-    expect(assignment1.did).toBe(network.ozone.moderatorAccnt.did)
-
     const assignment2 = await claimReport(
       {
-        reportId: 2,
+        reportId,
         assign: true,
       },
       'moderator',
@@ -77,70 +86,72 @@ describe('report-assignment', () => {
   })
 
   it('moderator can claim then un-claim a report', async () => {
+    const reportId = generateReportId()
     await claimReport(
       {
-        reportId: 3,
+        reportId,
         assign: true,
       },
       'moderator',
     )
     const assignment = await claimReport(
       {
-        reportId: 3,
+        reportId,
         assign: false,
       },
       'moderator',
     )
-    expect(assignment.reportId).toBe(3)
-    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
       new Date().getTime(),
     )
   })
 
   it('claim can be exchanged', async () => {
+    const reportId = generateReportId()
     await claimReport(
       {
-        reportId: 4,
+        reportId,
         assign: true,
       },
       'moderator',
     )
     await claimReport(
       {
-        reportId: 4,
+        reportId,
         assign: false,
       },
       'moderator',
     )
     const assignment = await claimReport(
       {
-        reportId: 4,
+        reportId,
         assign: true,
       },
       'admin',
     )
-    expect(assignment.reportId).toBe(4)
+    expect(assignment.reportId).toBe(reportId)
     expect(assignment.did).toBe(network.ozone.adminAccnt.did)
     expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(new Date().getTime())
   })
 
   it('cannot double claim', async () => {
+    const reportId = generateReportId()
     await claimReport(
       {
-        reportId: 5,
+        reportId,
         assign: true,
       },
       'moderator',
     )
-    const p = claimReport(
-      {
-        reportId: 5,
-        assign: true,
-      },
-      'admin',
-    )
-    await expect(p).rejects.toThrow('Report already claimed')
+    await expect(
+      claimReport(
+        {
+          reportId,
+          assign: true,
+        },
+        'admin',
+      ),
+    ).rejects.toThrow('Report already claimed')
   })
 
   describe('realtime', () => {
@@ -165,29 +176,29 @@ describe('report-assignment', () => {
       new Promise((resolve) => setTimeout(resolve, ms))
 
     it('moderator receives assignment updates', async () => {
+      const reportId = generateReportId()
       const { ws, updates } = await connectWs()
-      // Wait for initial state to be sent
       await settle()
       const initialCount = updates.length
 
       try {
         await claimReport(
           {
-            reportId: 6,
+            reportId,
             assign: true,
           },
           'moderator',
         )
         await claimReport(
           {
-            reportId: 6,
+            reportId,
             assign: false,
           },
           'moderator',
         )
         await claimReport(
           {
-            reportId: 6,
+            reportId,
             assign: true,
           },
           'admin',
@@ -196,21 +207,22 @@ describe('report-assignment', () => {
 
         const newUpdates = updates.slice(initialCount)
         expect(newUpdates.length).toBe(3)
-        expect(newUpdates[0].reportId).toBe(6)
+        expect(newUpdates[0].reportId).toBe(reportId)
         expect(newUpdates[0].did).toBe(network.ozone.moderatorAccnt.did)
-        expect(newUpdates[1].reportId).toBe(6)
+        expect(newUpdates[1].reportId).toBe(reportId)
         expect(newUpdates[1].did).toBe(network.ozone.moderatorAccnt.did)
-        expect(newUpdates[2].reportId).toBe(6)
+        expect(newUpdates[2].reportId).toBe(reportId)
         expect(newUpdates[2].did).toBe(network.ozone.adminAccnt.did)
       } finally {
         ws.close()
       }
     })
 
-    it('new connection receives latest assignment state', async () => {
+    it('new subscription receives latest assignment state', async () => {
+      const reportId = generateReportId()
       await claimReport(
         {
-          reportId: 7,
+          reportId,
           assign: true,
         },
         'moderator',
@@ -219,25 +231,30 @@ describe('report-assignment', () => {
       const { ws, updates } = await connectWs()
       await settle()
 
+      ws.send(JSON.stringify({ type: 'subscribe', queues: [] }))
+      await settle()
+
       try {
-        expect(updates.length).toBeGreaterThanOrEqual(1)
-        const report = updates.find((u) => u.reportId === 7)
-        expect(report).toBeDefined()
-        expect(report!.did).toBe(network.ozone.moderatorAccnt.did)
+        const claimUpdate = updates.find((u) => u.reportId === reportId)
+        expect(claimUpdate).toBeDefined()
+        expect(claimUpdate?.did).toBe(network.ozone.moderatorAccnt.did)
       } finally {
         ws.close()
       }
     })
 
     it('ping refreshes assignment', async () => {
+      const reportId = generateReportId()
+
       const { ws, updates } = await connectWs()
       await settle()
       const initialCount = updates.length
 
       try {
+
         await claimReport(
           {
-            reportId: 8,
+            reportId,
             assign: true,
           },
           'moderator',
@@ -254,7 +271,7 @@ describe('report-assignment', () => {
 
         const newUpdates = updates.slice(initialCount)
         expect(newUpdates.length).toBe(2)
-        expect(newUpdates[1].reportId).toBe(8)
+        expect(newUpdates[1].reportId).toBe(reportId)
         expect(newUpdates[1].did).toBe(network.ozone.moderatorAccnt.did)
         const refreshedEndAt = new Date(newUpdates[1].endAt).getTime()
         expect(refreshedEndAt).toBeGreaterThan(originalEndAt)

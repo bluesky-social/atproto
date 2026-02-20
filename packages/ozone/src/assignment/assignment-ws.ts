@@ -77,12 +77,13 @@ export class AssignmentWebSocketServer {
   /** Handle new connection */
   private async handleConnection(ws: WebSocket, req: IncomingMessage) {
     const clientId = `${req.socket.remoteAddress}:${req.socket.remotePort}`
-    this.clients.set(clientId, {
+    const client = {
       ws,
       moderatorDid: '',
       moderatorHandle: '',
       subscribedQueues: [],
-    })
+    }
+    this.clients.set(clientId, client)
 
     ws.on('message', (message) => {
       this.handleConnectionMessage(clientId, message)
@@ -91,21 +92,6 @@ export class AssignmentWebSocketServer {
     ws.on('close', () => {
       this.handleConnectionClose(clientId)
     })
-
-    // backfill
-    try {
-      const activeAssignments = await this.reportService.getAssignments({
-        onlyActiveAssignments: true,
-        queueIds: undefined,
-      })
-      for (const assignment of activeAssignments) {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(assignment))
-        }
-      }
-    } catch (e) {
-      console.error('Failed to send initial assignments:', e)
-    }
   }
   private async handleConnectionMessage(clientId: string, message: RawData) {
     const client = this.clients.get(clientId)
