@@ -1,4 +1,4 @@
-name: Test
+name: Repository CI
 
 on:
   pull_request:
@@ -12,32 +12,22 @@ concurrency:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
         with:
+          cache: pnpm
           node-version-file: '.nvmrc'
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Configure Dependency Cache
-        uses: actions/setup-node@v4
-        with:
-          cache: 'pnpm'
-      - name: Get current month
-        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
-      - uses: actions/cache@v4
-        name: Cache Puppeteer browser binaries
-        with:
-          path: ~/.cache
-          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
-      - run: pnpm i --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
       - run: pnpm build
       - uses: actions/upload-artifact@v4
         with:
           name: dist
+          retention-days: 2
           path: |
             packages/*/dist
             packages/*/*/dist
@@ -45,66 +35,67 @@ jobs:
             packages/lex/*/tests/lexicons
             packages/oauth/oauth-client-browser-example/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
-          retention-days: 1
+
+  changeset:
+    name: Check changeset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # needed for git diff against base branch
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+          node-version-file: '.nvmrc'
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
+      - run: pnpm changeset status --since=origin/${{ github.base_ref }}
+
   test:
     name: Test
     needs: build
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         shard: [1/8, 2/8, 3/8, 4/8, 5/8, 6/8, 7/8, 8/8]
-    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
         with:
+          cache: pnpm
           node-version-file: '.nvmrc'
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Configure Dependency Cache
-        uses: actions/setup-node@v4
-        with:
-          cache: 'pnpm'
       - name: Get current month
         run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
       - uses: actions/cache@v4
         name: Cache Puppeteer browser binaries
         with:
-          path: ~/.cache
+          path: ~/.cache/puppeteer
           key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
-      - run: pnpm i --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: packages
       - run: pnpm test:withFlags --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
+
   verify:
     name: Verify
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
         with:
+          cache: pnpm
           node-version-file: '.nvmrc'
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Configure Dependency Cache
-        uses: actions/setup-node@v4
-        with:
-          cache: 'pnpm'
-      - name: Get current month
-        run: echo "CURRENT_MONTH=$(date +'%Y-%m')" >> $GITHUB_ENV
-      - uses: actions/cache@v4
-        name: Cache Puppeteer browser binaries
-        with:
-          path: ~/.cache
-          key: ${{ env.CURRENT_MONTH }}-${{ runner.os }}-${{ runner.arch }}
-      - run: pnpm i --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
       - uses: actions/download-artifact@v4
         with:
           name: dist
