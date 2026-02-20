@@ -23,6 +23,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PUPPETEER_SKIP_DOWNLOAD: true
+
+      - uses: actions/cache@v5
+        id: codegen-cache
+        with:
+          key: codegen-${{ hashFiles('lexicons/**/*.json') }}-${{ hashFiles('packages/lex-cli/package.json') }}
+          # Note: Keep here any package that has codegen output that is not checked in
+          path: |
+            packages/bsky/src/lexicon
+            packages/pds/src/lexicon
+          enableCrossOsArchive: true
+
+      - name: Perform code generation
+        if: steps.codegen-cache.outputs.cache-hit != 'true'
+        run: pnpm run codegen
+
       - run: pnpm build
       - uses: actions/upload-artifact@v4
         with:
@@ -35,6 +50,12 @@ jobs:
             packages/lex/*/tests/lexicons
             packages/oauth/oauth-client-browser-example/src/lexicons
             packages/oauth/*/src/locales/*/messages.ts
+            packages/api/src/moderation/const/labels.ts
+            packages/api/src/client
+            packages/bsky/src/lexicon
+            packages/lexicon-resolver/src/client
+            packages/ozone/src/lexicon
+            packages/pds/src/lexicon
 
   changeset:
     name: Changeset
