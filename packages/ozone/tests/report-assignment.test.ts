@@ -233,7 +233,7 @@ describe('report-assignment', () => {
       }
     })
 
-    it('new subscription receives latest assignment state', async () => {
+    it('new subscription receives snapshot', async () => {
       const queueId = generateId()
       const reportId = generateId()
       await claimReport(
@@ -248,6 +248,7 @@ describe('report-assignment', () => {
       const { ws, updates } = await wsConnect()
       await settle()
       wsSubscribe(ws, queueId)
+      await settle()
 
       try {
         const claimUpdate = updates.find((u) => u.reportId === reportId)
