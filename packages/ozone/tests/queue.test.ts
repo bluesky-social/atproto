@@ -133,4 +133,18 @@ describe('queue', () => {
       await expect(p).rejects.toThrow('Cannot assign others')
     })
   })
+
+  describe('triage', () => {
+    it('should not be able to assign self to a queue', async () => {
+      const p = assign({ queueId: 1 }, 'triage')
+      await expect(p).rejects.toThrow('Unauthorized')
+    })
+    it('should not be able to assign another user to a queue', async () => {
+      const p = assign(
+        { queueId: 1, did: network.ozone.adminAccnt.did },
+        'triage',
+      )
+      await expect(p).rejects.toThrow('Unauthorized')
+    })
+  })
 })

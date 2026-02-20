@@ -15,6 +15,9 @@ export default function (server: Server, ctx: AppContext) {
             : undefined
       const did = input.body.did ?? authDid
 
+      if (!auth.credentials.isAdmin && !auth.credentials.isModerator) {
+        throw new ForbiddenError('Unauthorized')
+      }
       if (!did) {
         throw new InvalidRequestError('DID is required')
       }
