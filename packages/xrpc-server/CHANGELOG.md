@@ -1,5 +1,13 @@
 # @atproto/xrpc-server
 
+## 0.10.14
+
+### Patch Changes
+
+- Updated dependencies [[`66b7295`](https://github.com/bluesky-social/atproto/commit/66b72950e8bcb39cac3382116bd282b3bb692f16)]:
+  - @atproto/lex-cbor@0.0.13
+  - @atproto/common@0.5.13
+
 ## 0.10.13
 
 ### Patch Changes
