@@ -20,6 +20,7 @@ COPY ./packages/lex/lex-cbor ./packages/lex/lex-cbor
 COPY ./packages/lex/lex-data ./packages/lex/lex-data
 COPY ./packages/lex/lex-json ./packages/lex/lex-json
 COPY ./packages/syntax ./packages/syntax
+COPY ./services/bsync ./services/bsync
 
 COPY ./services/bsync ./services/bsync
 

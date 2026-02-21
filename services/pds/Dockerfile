@@ -46,6 +46,7 @@ COPY ./packages/syntax ./packages/syntax
 COPY ./packages/ws-client ./packages/ws-client
 COPY ./packages/xrpc-server ./packages/xrpc-server
 COPY ./packages/xrpc ./packages/xrpc
+COPY ./services/pds ./services/pds
 
 COPY ./services/pds ./services/pds
 
