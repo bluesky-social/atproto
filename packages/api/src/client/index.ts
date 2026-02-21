@@ -268,6 +268,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as ComAtprotoUnspeccedGetActorStoreMigrationStatus from './types/com/atproto/unspecced/getActorStoreMigrationStatus.js'
 import * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
@@ -583,6 +584,7 @@ export * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+export * as ComAtprotoUnspeccedGetActorStoreMigrationStatus from './types/com/atproto/unspecced/getActorStoreMigrationStatus.js'
 export * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
@@ -3909,6 +3911,7 @@ export class ComAtprotoNS {
   server: ComAtprotoServerNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
+  unspecced: ComAtprotoUnspeccedNS
 
   constructor(client: XrpcClient) {
     this._client = client
@@ -3921,6 +3924,7 @@ export class ComAtprotoNS {
     this.server = new ComAtprotoServerNS(client)
     this.sync = new ComAtprotoSyncNS(client)
     this.temp = new ComAtprotoTempNS(client)
+    this.unspecced = new ComAtprotoUnspeccedNS(client)
   }
 }
 
@@ -5050,6 +5054,26 @@ export class ComAtprotoTempNS {
       'com.atproto.temp.revokeAccountCredentials',
       opts?.qp,
       data,
+      opts,
+    )
+  }
+}
+
+export class ComAtprotoUnspeccedNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getActorStoreMigrationStatus(
+    params?: ComAtprotoUnspeccedGetActorStoreMigrationStatus.QueryParams,
+    opts?: ComAtprotoUnspeccedGetActorStoreMigrationStatus.CallOptions,
+  ): Promise<ComAtprotoUnspeccedGetActorStoreMigrationStatus.Response> {
+    return this._client.call(
+      'com.atproto.unspecced.getActorStoreMigrationStatus',
+      params,
+      undefined,
       opts,
     )
   }
