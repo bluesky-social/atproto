@@ -3,6 +3,7 @@ import {
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
+  ToolsOzoneModerationQueryReports as QueryModerationReports,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
@@ -12,6 +13,7 @@ import { TestOzone } from './ozone'
 type TakeActionInput = EmitModerationEvent.InputSchema
 type QueryStatusesParams = QueryModerationStatuses.QueryParams
 type QueryEventsParams = QueryModerationEvents.QueryParams
+type QueryReportsParams = QueryModerationReports.QueryParams
 type ModLevel = 'admin' | 'moderator' | 'triage'
 
 export class ModeratorClient {
@@ -63,6 +65,16 @@ export class ModeratorClient {
     const result = await this.agent.tools.ozone.moderation.queryEvents(input, {
       headers: await this.ozone.modHeaders(
         'tools.ozone.moderation.queryEvents',
+        role,
+      ),
+    })
+    return result.data
+  }
+
+  async queryReports(input: QueryReportsParams, role?: ModLevel) {
+    const result = await this.agent.tools.ozone.moderation.queryReports(input, {
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.moderation.queryReports',
         role,
       ),
     })

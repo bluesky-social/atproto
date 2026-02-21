@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.listQueues",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List all configured moderation queues with statistics.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Filter by enabled status. If not specified, returns all queues."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queues"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "queues": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.queue.defs#queueView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -20,6 +20,7 @@ import getRepos from './moderation/getRepos'
 import getSubjects from './moderation/getSubjects'
 import listScheduledActions from './moderation/listScheduledActions'
 import queryEvents from './moderation/queryEvents'
+import queryReports from './moderation/queryReports'
 import queryStatuses from './moderation/queryStatuses'
 import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
@@ -62,6 +63,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
+  queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
