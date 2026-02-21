@@ -17,12 +17,16 @@ export class ImageProcessingServerInvalidator implements ImageInvalidator {
         const [, signature] = path.split('/')
         if (!signature) throw new Error('Missing signature')
         const options = ImageUriBuilder.getOptions(path)
-        const cacheKey = [
-          options.did,
-          options.cid.toString(),
-          options.preset,
-        ].join('::')
-        await this.cache.clear(cacheKey)
+        const formats = ['jpeg', 'png', 'webp'] as const
+        for (const format of formats) {
+          const cacheKey = [
+            options.did,
+            options.cid.toString(),
+            options.preset,
+            format,
+          ].join('::')
+          await this.cache.clear(cacheKey)
+        }
       }),
     )
     const rejection = results.find(
