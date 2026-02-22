@@ -370,6 +370,8 @@ export interface Interaction {
   item?: string
   event?:
     | 'app.bsky.feed.defs#requestLess'
+    | 'app.bsky.feed.defs#requestLessFromUser'
+    | 'app.bsky.feed.defs#requestLessFromTopic'
     | 'app.bsky.feed.defs#requestMore'
     | 'app.bsky.feed.defs#clickthroughItem'
     | 'app.bsky.feed.defs#clickthroughAuthor'
