@@ -4,6 +4,7 @@ export type EmailTokenPurpose =
   | 'reset_password'
   | 'delete_account'
   | 'plc_operation'
+  | 'email_auth_factor'
 
 export interface EmailToken {
   purpose: EmailTokenPurpose

@@ -526,6 +526,10 @@ export class AccountManager {
     )
   }
 
+  async setEmailAuthFactor(did: string, enabled: boolean) {
+    return account.setEmailAuthFactor(this.db, did, enabled)
+  }
+
   async updateEmail(opts: { did: string; email: string }) {
     const { did, email } = opts
     await this.db.transaction((dbTxn) =>
