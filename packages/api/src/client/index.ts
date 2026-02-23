@@ -292,7 +292,7 @@ import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
-import * as ToolsOzoneQueueAssign from './types/tools/ozone/queue/assign.js'
+import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
@@ -617,7 +617,7 @@ export * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
-export * as ToolsOzoneQueueAssign from './types/tools/ozone/queue/assign.js'
+export * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
 export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
@@ -5497,11 +5497,16 @@ export class ToolsOzoneQueueNS {
     this._client = client
   }
 
-  assign(
-    data?: ToolsOzoneQueueAssign.InputSchema,
-    opts?: ToolsOzoneQueueAssign.CallOptions,
-  ): Promise<ToolsOzoneQueueAssign.Response> {
-    return this._client.call('tools.ozone.queue.assign', opts?.qp, data, opts)
+  assignModerator(
+    data?: ToolsOzoneQueueAssignModerator.InputSchema,
+    opts?: ToolsOzoneQueueAssignModerator.CallOptions,
+  ): Promise<ToolsOzoneQueueAssignModerator.Response> {
+    return this._client.call(
+      'tools.ozone.queue.assignModerator',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   createQueue(

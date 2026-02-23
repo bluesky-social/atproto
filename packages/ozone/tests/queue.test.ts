@@ -1,5 +1,5 @@
 import AtpAgent, {
-  ToolsOzoneQueueAssign,
+  ToolsOzoneQueueAssignModerator,
   ToolsOzoneQueueGetAssignments,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -11,13 +11,13 @@ describe('queue', () => {
   let sc: SeedClient
 
   const assign = async (
-    input: ToolsOzoneQueueAssign.InputSchema,
+    input: ToolsOzoneQueueAssignModerator.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) => {
-    const { data } = await agent.tools.ozone.queue.assign(input, {
+    const { data } = await agent.tools.ozone.queue.assignModerator(input, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders(
-        ids.ToolsOzoneQueueAssign,
+        ids.ToolsOzoneQueueAssignModerator,
         callerRole,
       ),
     })

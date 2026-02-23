@@ -5,7 +5,7 @@ import { Server } from '../../lexicon'
 const ASSIGNMENT_DURATION_MS = 5 * 60 * 1000 // 5 minutes
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.assign({
+  server.tools.ozone.queue.assignModerator({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       // inputs

@@ -243,7 +243,7 @@ import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
-import * as ToolsOzoneQueueAssign from './types/tools/ozone/queue/assign.js'
+import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
@@ -3576,15 +3576,15 @@ export class ToolsOzoneQueueNS {
     this._server = server
   }
 
-  assign<A extends Auth = void>(
+  assignModerator<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
-      ToolsOzoneQueueAssign.QueryParams,
-      ToolsOzoneQueueAssign.HandlerInput,
-      ToolsOzoneQueueAssign.HandlerOutput
+      ToolsOzoneQueueAssignModerator.QueryParams,
+      ToolsOzoneQueueAssignModerator.HandlerInput,
+      ToolsOzoneQueueAssignModerator.HandlerOutput
     >,
   ) {
-    const nsid = 'tools.ozone.queue.assign' // @ts-ignore
+    const nsid = 'tools.ozone.queue.assignModerator' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

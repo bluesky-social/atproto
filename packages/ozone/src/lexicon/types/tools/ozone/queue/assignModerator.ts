@@ -1,7 +1,6 @@
 /**
  * GENERATED CODE - DO NOT MODIFY
  */
-import { HeadersMap, XRPCError } from '@atproto/xrpc'
 import { type ValidationResult, BlobRef } from '@atproto/lexicon'
 import { CID } from 'multiformats/cid'
 import { validate as _validate } from '../../../../lexicons'
@@ -14,7 +13,7 @@ import type * as ToolsOzoneQueueDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.queue.assign'
+const id = 'tools.ozone.queue.assignModerator'
 
 export type QueryParams = {}
 
@@ -29,19 +28,20 @@ export interface InputSchema {
 
 export type OutputSchema = ToolsOzoneQueueDefs.AssignmentView
 
-export interface CallOptions {
-  signal?: AbortSignal
-  headers?: HeadersMap
-  qp?: QueryParams
-  encoding?: 'application/json'
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
 }
 
-export interface Response {
-  success: boolean
-  headers: HeadersMap
-  data: OutputSchema
+export interface HandlerSuccess {
+  encoding: 'application/json'
+  body: OutputSchema
+  headers?: { [key: string]: string }
 }
 
-export function toKnownErr(e: any) {
-  return e
+export interface HandlerError {
+  status: number
+  message?: string
 }
+
+export type HandlerOutput = HandlerError | HandlerSuccess
