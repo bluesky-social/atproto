@@ -10,6 +10,7 @@ import { Record as PostRecord } from '../../lexicon/types/app/bsky/feed/post'
 import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
 import { LocalRecords } from '../../read-after-write/types'
 import { ActorDb, Backlink } from '../db'
+import { makeAtUriStringWithoutValidation } from './util'
 
 export type RecordDescript = {
   uri: string
@@ -18,7 +19,10 @@ export type RecordDescript = {
 }
 
 export class RecordReader {
-  constructor(public db: ActorDb) {}
+  constructor(
+    public db: ActorDb,
+    public did: string,
+  ) {}
 
   async recordCount(): Promise<number> {
     const res = await this.db.db
@@ -81,31 +85,59 @@ export class RecordReader {
       includeSoftDeleted = false,
     } = opts
 
+    // There is no index on record(collection, rkey)
+    // However, the primary key (uri) acts like an index on (did, collection, rkey), which we
+    // can use equivalently if we construct the appropriate URI strings.
+
     const { ref } = this.db.db.dynamic
     let builder = this.db.db
       .selectFrom('record')
       .innerJoin('repo_block', 'repo_block.cid', 'record.cid')
-      .where('record.collection', '=', collection)
+      .where(
+        'record.uri',
+        '>=',
+        makeAtUriStringWithoutValidation(this.did, collection, ''),
+      )
+      .where(
+        'record.uri',
+        '<',
+        makeAtUriStringWithoutValidation(this.did, collection, '\x7f'),
+      ) // together, these two .where() clauses are equivalent to .where('record.collection', '=', collection), but index-friendly
       .if(!includeSoftDeleted, (qb) =>
         qb.where(notSoftDeletedClause(ref('record'))),
       )
-      .orderBy('record.rkey', reverse ? 'asc' : 'desc')
+      .orderBy('record.uri', reverse ? 'asc' : 'desc') // equivalent to order by rkey
       .limit(limit)
       .selectAll()
 
     // prioritize cursor but fall back to soon-to-be-depcreated rkey start/end
     if (cursor !== undefined) {
+      const cursorUri = makeAtUriStringWithoutValidation(
+        this.did,
+        collection,
+        cursor,
+      )
       if (reverse) {
-        builder = builder.where('record.rkey', '>', cursor)
+        builder = builder.where('record.uri', '>', cursorUri)
       } else {
-        builder = builder.where('record.rkey', '<', cursor)
+        builder = builder.where('record.uri', '<', cursorUri)
       }
     } else {
       if (rkeyStart !== undefined) {
-        builder = builder.where('record.rkey', '>', rkeyStart)
+        const rkeyStartUri = makeAtUriStringWithoutValidation(
+          this.did,
+          collection,
+          rkeyStart,
+        )
+        builder = builder.where('record.uri', '>', rkeyStartUri)
       }
       if (rkeyEnd !== undefined) {
-        builder = builder.where('record.rkey', '<', rkeyEnd)
+        const rkeyEndUri = makeAtUriStringWithoutValidation(
+          this.did,
+          collection,
+          rkeyEnd,
+        )
+        builder = builder.where('record.uri', '<', rkeyEndUri)
       }
     }
     const res = await builder.execute()
