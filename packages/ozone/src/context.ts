@@ -178,7 +178,11 @@ export class AppContext {
     })
 
     const assignmentService = new AssignmentService(db)
-    const assignmentWss = new AssignmentWebSocketServer(db)
+    const assignmentWss = new AssignmentWebSocketServer(db, {
+      serviceDid: cfg.service.did,
+      idResolver,
+      teamService: teamService(db),
+    })
 
     return new AppContext(
       {

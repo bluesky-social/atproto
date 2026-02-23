@@ -1,8 +1,11 @@
 import { IncomingMessage } from 'node:http'
 import { Duplex } from 'node:stream'
 import { RawData, WebSocket, WebSocketServer } from 'ws'
+import { IdResolver } from '@atproto/identity'
+import { verifyJwt } from '@atproto/xrpc-server'
 import { AssignmentService } from '.'
 import { Database } from '../db'
+import { TeamService } from '../team'
 
 export interface ModeratorClient {
   id: string
@@ -12,10 +15,6 @@ export interface ModeratorClient {
 }
 
 export type ClientMessage =
-  | {
-      type: 'authenticate'
-      did: string
-    }
   | {
       type: 'subscribe'
       queues: number[] // Subscribe to queue updates
@@ -87,31 +86,86 @@ export interface AssignmentEvent {
   endAt: string
 }
 
+export interface AssignmentWebSocketServerOpts {
+  serviceDid: string
+  idResolver: IdResolver
+  teamService: TeamService
+}
+
 export class AssignmentWebSocketServer {
   wss: WebSocketServer
   clients: Map<string, ModeratorClient> = new Map()
   private reportService: AssignmentService
+  private serviceDid: string
+  private idResolver: IdResolver
+  private teamService: TeamService
 
-  constructor(db: Database) {
+  constructor(db: Database, opts: AssignmentWebSocketServerOpts) {
     this.wss = new WebSocketServer({ noServer: true })
-    this.wss.on('connection', (ws, req) => this.onConnection(ws, req))
     this.reportService = new AssignmentService(db)
+    this.serviceDid = opts.serviceDid
+    this.idResolver = opts.idResolver
+    this.teamService = opts.teamService
   }
 
   // Protocol Layer
   /** Upgrade HTTP connection to WebSocket connection */
   handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
-    this.wss.handleUpgrade(req, socket, head, (ws) => {
-      this.wss.emit('connection', ws, req)
-    })
+    this.authenticateRequest(req)
+      .then((moderatorDid) => {
+        this.wss.handleUpgrade(req, socket, head, (ws) => {
+          this.onConnection(ws, req, moderatorDid)
+        })
+      })
+      .catch(() => {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+        socket.destroy()
+      })
   }
-  private async onConnection(ws: WebSocket, req: IncomingMessage) {
-    const clientId = `${req.socket.remoteAddress}:${req.socket.remotePort}`
-    const client = {
+
+  private async authenticateRequest(req: IncomingMessage): Promise<string> {
+    const authorization = req.headers.authorization
+    if (!authorization?.startsWith('Bearer ')) {
+      throw new Error('Missing authorization')
+    }
+    const jwtStr = authorization.slice('Bearer '.length).trim()
+    const getSigningKey = async (
+      did: string,
+      forceRefresh: boolean,
+    ): Promise<string> => {
+      const atprotoData = await this.idResolver.did.resolveAtprotoData(
+        did,
+        forceRefresh,
+      )
+      return atprotoData.signingKey
+    }
+    const payload = await verifyJwt(
+      jwtStr,
+      this.serviceDid,
+      null,
+      getSigningKey,
+    )
+    const member = await this.teamService.getMember(payload.iss)
+    if (!member || member.disabled) {
+      throw new Error('Not a team member')
+    }
+    const { isTriage } = this.teamService.getMemberRole(member)
+    if (!isTriage) {
+      throw new Error('Not a moderator')
+    }
+    return payload.iss
+  }
+
+  private onConnection(
+    ws: WebSocket,
+    req: IncomingMessage,
+    moderatorDid: string,
+  ) {
+    const clientId = `${moderatorDid}:${req.socket.remotePort}`
+    const client: ModeratorClient = {
       id: clientId,
       ws,
-      moderatorDid: '',
-      moderatorHandle: '',
+      moderatorDid,
       subscribedQueues: [],
     }
     this.clients.set(clientId, client)
@@ -164,9 +218,6 @@ export class AssignmentWebSocketServer {
   ) {
     try {
       switch (message.type) {
-        case 'authenticate':
-          client.moderatorDid = message.did
-          break
         case 'subscribe':
           client.subscribedQueues = message.queues
           await this.sendSnapshot(client)

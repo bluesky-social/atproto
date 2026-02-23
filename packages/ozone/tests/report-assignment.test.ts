@@ -13,7 +13,8 @@ describe('report-assignment', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const generateId = () => new Date().getTime() % 10000
+  let lastId = 0
+  const generateId = () => ++lastId
 
   const claimReport = async (
     input: ToolsOzoneReportClaimReport.InputSchema,
@@ -158,14 +159,20 @@ describe('report-assignment', () => {
   })
 
   describe('realtime', () => {
-    const wsConnect = (): Promise<{
+    const wsConnect = async (
+      role: 'admin' | 'moderator' | 'triage' = 'moderator',
+    ): Promise<{
       ws: WebSocket
-      updates: AssignmentEvent[]
+      updates: ServerMessage[]
     }> => {
+      const headers = await network.ozone.modHeaders(
+        'com.atproto.server.createSession',
+        role,
+      )
       return new Promise((resolve, reject) => {
         const wsUrl = network.ozone.url.replace('http://', 'ws://')
-        const ws = new WebSocket(`${wsUrl}/ws/assignments`)
-        const updates: AssignmentEvent[] = []
+        const ws = new WebSocket(`${wsUrl}/ws/assignments`, { headers })
+        const updates: ServerMessage[] = []
 
         ws.on('open', () => resolve({ ws, updates }))
         ws.on('message', (data) => {
@@ -273,14 +280,8 @@ describe('report-assignment', () => {
       const queueId = generateId()
       const reportId = generateId()
 
-      const { ws, updates } = await wsConnect()
+      const { ws, updates } = await wsConnect('moderator')
       await settle()
-      ws.send(
-        JSON.stringify({
-          type: 'authenticate',
-          did: network.ozone.moderatorAccnt.did,
-        } satisfies ClientMessage),
-      )
       wsSubscribe(ws, queueId)
       await settle()
 
