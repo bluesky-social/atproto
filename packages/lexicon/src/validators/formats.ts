@@ -32,9 +32,10 @@ export function uri(path: string, value: string): ValidationResult {
   if (!isValidUri(value)) {
     return {
       success: false,
-      error: new ValidationError(`${path} must be a uri`),
+      error: new ValidationError(`${path} must be a valid uri`),
     }
   }
+
   return { success: true, value }
 }
 
