@@ -1,6 +1,10 @@
+import { INVALID_HANDLE } from '@atproto/syntax'
+import { TestNetwork } from '../network'
 import { SeedClient } from './client'
 
-export default async (sc: SeedClient) => {
+export default async (sc: SeedClient<TestNetwork>) => {
+  const labelerDid = sc.network.bsky.ctx.cfg.modServiceDid
+
   await sc.createAccount('alice', users.alice)
   await sc.createAccount('bob', users.bob)
   await sc.createAccount('carol', users.carol)
@@ -20,6 +24,9 @@ export default async (sc: SeedClient) => {
   await sc.createAccount('verifier2', users.verifier2)
   // This user should be set a label 'impersonation` in the tests.
   await sc.createAccount('verifier3', users.verifier3)
+
+  await sc.createAccount('handleinvalid', users.handleinvalid)
+  await sc.createAccount('handleempty', users.handleempty)
 
   for (const name in sc.dids) {
     await sc.createProfile(sc.dids[name], `display-${name}`, `descript-${name}`)
@@ -108,6 +115,43 @@ export default async (sc: SeedClient) => {
   // verifier2: is verifier and has no verification by other verifier.
   // NOOP
 
+  // handleinvalid: has verification but handle is set to invalid.
+  await sc.verify(
+    sc.dids.verifier1,
+    sc.dids.handleinvalid,
+    sc.accounts[sc.dids.handleinvalid].handle,
+    sc.profiles[sc.dids.handleinvalid].displayName,
+  )
+
+  // Process all events to sync actors to appview before modifying the DB
+  await sc.network.processAll()
+
+  // Do DB updates to change actors as needed for each case.
+  await createLabel(sc, labelerDid, {
+    src: labelerDid,
+    uri: sc.dids.impersonator,
+    cid: '',
+    val: 'impersonation',
+  })
+
+  await createLabel(sc, labelerDid, {
+    src: labelerDid,
+    uri: sc.dids.verifier3,
+    cid: '',
+    val: 'impersonation',
+  })
+
+  await sc.network.bsky.db.db
+    .updateTable('actor')
+    .set({ handle: INVALID_HANDLE })
+    .where('did', '=', sc.dids.handleinvalid)
+    .execute()
+  await sc.network.bsky.db.db
+    .updateTable('actor')
+    .set({ handle: null })
+    .where('did', '=', sc.dids.handleempty)
+    .execute()
+
   return sc
 }
 
@@ -172,4 +216,39 @@ const users = {
     handle: 'nonverifier.test',
     password: 'nonverifier-pass',
   },
+  handleinvalid: {
+    email: 'handleinvalid@test.com',
+    handle: 'handleinvalid.test',
+    password: 'handleinvalid-pass',
+  },
+  handleempty: {
+    email: 'handleempty@test.com',
+    handle: 'handleempty.test',
+    password: 'handleempty-pass',
+  },
+}
+
+const createLabel = async (
+  sc: SeedClient<TestNetwork>,
+  labelerDid: string,
+  opts: {
+    src?: string
+    uri: string
+    cid: string
+    val: string
+    exp?: string
+  },
+) => {
+  await sc.network.bsky.db.db
+    .insertInto('label')
+    .values({
+      uri: opts.uri,
+      cid: opts.cid,
+      val: opts.val,
+      cts: new Date().toISOString(),
+      exp: opts.exp ?? null,
+      neg: false,
+      src: opts.src ?? labelerDid,
+    })
+    .execute()
 }
