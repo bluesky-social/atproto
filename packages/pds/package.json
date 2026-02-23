@@ -16,7 +16,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=18.7.0"
+    "node": ">=22.5.0"
   },
   "scripts": {
     "codegen": "lex gen-server --yes ./src/lexicon ../../lexicons/com/atproto/*/* ../../lexicons/app/bsky/*/* ../../lexicons/chat/bsky/*/* ../../lexicons/tools/ozone/*/*",
@@ -53,7 +53,6 @@
     "@atproto/xrpc-server": "workspace:^",
     "@did-plc/lib": "^0.0.4",
     "@hapi/address": "^5.1.1",
-    "better-sqlite3": "^10.0.0",
     "bytes": "^3.1.2",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

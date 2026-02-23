@@ -4,9 +4,6 @@
 'use strict'
 
 const { registerInstrumentations } = require('@opentelemetry/instrumentation')
-const {
-  BetterSqlite3Instrumentation,
-} = require('opentelemetry-plugin-better-sqlite3')
 const { TracerProvider } = require('dd-trace') // Only works with commonjs
   .init({ logInjection: true })
   .use('express', {
@@ -18,7 +15,7 @@ tracer.register()
 
 registerInstrumentations({
   tracerProvider: tracer,
-  instrumentations: [new BetterSqlite3Instrumentation()],
+  instrumentations: [],
 })
 
 const path = require('node:path')
