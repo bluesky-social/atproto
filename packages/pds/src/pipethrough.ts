@@ -70,11 +70,20 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         throw new InvalidRequestError('Bad token method', 'InvalidToken')
       }
 
+      const bskyHeaders = Object.entries(req.headers)
+        .filter(([key]) => key.startsWith('x-bsky-'))
+        .reduce(
+          (acc, [key, value]) => ({
+            ...acc,
+            [key]: value,
+          }),
+          {} as Record<string, string | string[] | undefined>,
+        )
       const headers: IncomingHttpHeaders = {
         'accept-encoding': req.headers['accept-encoding'] || 'identity',
         'accept-language': req.headers['accept-language'],
         'atproto-accept-labelers': req.headers['atproto-accept-labelers'],
-        'x-bsky-topics': req.headers['x-bsky-topics'],
+        ...bskyHeaders,
 
         'content-type': body && req.headers['content-type'],
         'content-encoding': body && req.headers['content-encoding'],
