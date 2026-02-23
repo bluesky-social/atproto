@@ -1,5 +1,12 @@
 # @atproto/lex-installer
 
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.0.16
+
 ## 0.0.18
 
 ### Patch Changes
