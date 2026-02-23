@@ -255,6 +255,122 @@ describe('General validation', () => {
     expect(result.success).toBeFalsy()
     expect(result['error']?.message).toBe('Object/union/test must be a string')
   })
+  it('union handles object, record and unknown refs', () => {
+    const schemas: LexiconDoc[] = [
+      {
+        lexicon: 1,
+        id: 'com.example.recordType',
+        defs: {
+          main: {
+            type: 'record',
+            key: 'tid',
+            record: {
+              type: 'object',
+              properties: {
+                test: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      {
+        lexicon: 1,
+        id: 'com.example.objectType',
+        defs: {
+          main: {
+            type: 'object',
+            properties: {
+              test: { type: 'string' },
+            },
+          },
+        },
+      },
+      {
+        lexicon: 1,
+        id: 'com.example.testUnionWithObjectRef',
+        defs: {
+          main: {
+            type: 'object',
+            required: ['union'],
+            properties: {
+              union: {
+                type: 'union',
+                refs: ['com.example.objectType'],
+              },
+            },
+          },
+        },
+      },
+      {
+        lexicon: 1,
+        id: 'com.example.testUnionWithRecordRef',
+        defs: {
+          main: {
+            type: 'object',
+            required: ['union'],
+            properties: {
+              union: {
+                type: 'union',
+                refs: ['com.example.recordType'],
+              },
+            },
+          },
+        },
+      },
+      {
+        lexicon: 1,
+        id: 'com.example.testUnionWithUnkownRef',
+        defs: {
+          main: {
+            type: 'object',
+            required: ['union'],
+            properties: {
+              union: {
+                type: 'union',
+                // Union has no refs, so any type should be valid
+                refs: [],
+              },
+            },
+          },
+        },
+      },
+    ]
+
+    const lexicon = new Lexicons(schemas)
+    let result = lexicon.validate('com.example.testUnionWithObjectRef', {
+      union: {
+        $type: 'com.example.objectType',
+        test: 'string',
+      },
+    })
+    expect(result.success).toBe(true)
+
+    result = lexicon.validate('com.example.testUnionWithRecordRef', {
+      union: {
+        $type: 'com.example.recordType',
+        test: '123',
+      },
+    })
+    expect(result.success).toBe(true)
+
+    result = lexicon.validate('com.example.testUnionWithRecordRef', {
+      union: {
+        $type: 'com.example.recordType',
+        // Test that the record type is validated against the record schema
+        test: 123,
+      },
+    })
+    expect(result.success).toBe(false)
+    expect(result['error']?.message).toBe('Object/union/test must be a string')
+
+    result = lexicon.validate('com.example.testUnionWithUnkownRef', {
+      union: {
+        $type: 'com.example.unknownType',
+        test: 'string',
+      },
+    })
+    expect(result.success).toBe(true)
+  })
 })
 
 describe('Record validation', () => {
