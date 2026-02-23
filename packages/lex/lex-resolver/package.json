@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-resolver",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MIT",
   "description": "Lexicon document resolver utility for AT Lexicons",
   "keywords": [

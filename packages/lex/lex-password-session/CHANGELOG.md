@@ -1,5 +1,16 @@
 # @atproto/lex-password-session
 
+## 0.0.7
+
+### Patch Changes
+
+- [#4672](https://github.com/bluesky-social/atproto/pull/4672) [`38852f0`](https://github.com/bluesky-social/atproto/commit/38852f0ddfa9fbce8036233dc6af87614e9ae4b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `PasswordSession` async disposable for better use with hard coded app passwords
+
+- [#4672](https://github.com/bluesky-social/atproto/pull/4672) [`38852f0`](https://github.com/bluesky-social/atproto/commit/38852f0ddfa9fbce8036233dc6af87614e9ae4b2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add easy login for app password based bots
+
+- Updated dependencies [[`38852f0`](https://github.com/bluesky-social/atproto/commit/38852f0ddfa9fbce8036233dc6af87614e9ae4b2)]:
+  - @atproto/lex-client@0.0.14
+
 ## 0.0.6
 
 ### Patch Changes

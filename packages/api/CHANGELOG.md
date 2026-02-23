@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.19.0
+
+### Minor Changes
+
+- [#4631](https://github.com/bluesky-social/atproto/pull/4631) [`450f085`](https://github.com/bluesky-social/atproto/commit/450f0856630fa08c20dc60fef8b5d2a07b9a2552) Thanks [@LotharieSlayer](https://github.com/LotharieSlayer)! - Updating atproto app password based session example in README
+
 ## 0.18.21
 
 ### Patch Changes
