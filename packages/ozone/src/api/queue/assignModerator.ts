@@ -27,10 +27,6 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const result = await ctx.assignmentService.assignQueue({ did, queueId, assign })
-      ctx.assignmentWss.broadcast({
-        type: 'queue:assigned',
-        queueId: result.queueId!,
-      })
 
       return {
         encoding: 'application/json' as const,

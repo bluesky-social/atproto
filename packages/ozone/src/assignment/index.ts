@@ -1,4 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import {
+  AssignmentWebSocketServer,
+  AssignmentWebSocketServerOpts,
+} from './assignment-ws'
 import { Database } from '../db'
 
 const ASSIGNMENT_DURATION_MS = 5 * 60 * 1000 // 5 minutes
@@ -51,7 +55,14 @@ export interface ClaimReportResult {
 }
 
 export class AssignmentService {
-  constructor(public db: Database) {}
+  public wss: AssignmentWebSocketServer
+
+  constructor(
+    public db: Database,
+    wssOpts: AssignmentWebSocketServerOpts,
+  ) {
+    this.wss = new AssignmentWebSocketServer(this, wssOpts)
+  }
 
   async getAssignments(input: GetAssignmentsInput): Promise<AssignmentRow[]> {
     const { onlyActiveAssignments, queueIds, dids, subject } = input
@@ -130,7 +141,7 @@ export class AssignmentService {
       return created
     })
 
-    return {
+    const row: AssignQueueResult = {
       id: result.id,
       did: result.did,
       reportId: null,
@@ -138,6 +149,13 @@ export class AssignmentService {
       startAt: result.startAt.toISOString(),
       endAt: result.endAt.toISOString(),
     }
+
+    this.wss.broadcast({
+      type: 'queue:assigned',
+      queueId: row.queueId!,
+    })
+
+    return row
   }
 
   async claimReport(input: ClaimReportInput): Promise<ClaimReportResult> {
@@ -189,7 +207,7 @@ export class AssignmentService {
       return created
     })
 
-    return {
+    const row: ClaimReportResult = {
       id: result.id,
       did: result.did,
       reportId: result.reportId!,
@@ -197,5 +215,14 @@ export class AssignmentService {
       startAt: result.startAt.toISOString(),
       endAt: result.endAt.toISOString(),
     }
+
+    this.wss.broadcast({
+      type: assign ? 'report:review:started' : 'report:review:ended',
+      reportId: row.reportId,
+      moderator: { did: row.did },
+      queues: row.queueId != null ? [row.queueId] : [],
+    })
+
+    return row
   }
 }

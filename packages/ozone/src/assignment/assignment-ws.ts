@@ -3,8 +3,7 @@ import { Duplex } from 'node:stream'
 import { RawData, WebSocket, WebSocketServer } from 'ws'
 import { IdResolver } from '@atproto/identity'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { AssignmentService } from '.'
-import { Database } from '../db'
+import type { AssignmentService } from '.'
 import { TeamService } from '../team'
 
 export interface ModeratorClient {
@@ -95,14 +94,17 @@ export interface AssignmentWebSocketServerOpts {
 export class AssignmentWebSocketServer {
   wss: WebSocketServer
   clients: Map<string, ModeratorClient> = new Map()
-  private reportService: AssignmentService
+  private assignmentService: AssignmentService
   private serviceDid: string
   private idResolver: IdResolver
   private teamService: TeamService
 
-  constructor(db: Database, opts: AssignmentWebSocketServerOpts) {
+  constructor(
+    assignmentService: AssignmentService,
+    opts: AssignmentWebSocketServerOpts,
+  ) {
     this.wss = new WebSocketServer({ noServer: true })
-    this.reportService = new AssignmentService(db)
+    this.assignmentService = assignmentService
     this.serviceDid = opts.serviceDid
     this.idResolver = opts.idResolver
     this.teamService = opts.teamService
@@ -229,7 +231,7 @@ export class AssignmentWebSocketServer {
           break
         case 'report:review:start':
           try {
-            const result = await this.reportService.claimReport({
+            const result = await this.assignmentService.claimReport({
               did: client.moderatorDid,
               reportId: message.reportId,
               queueId: message.queueId,
@@ -248,7 +250,7 @@ export class AssignmentWebSocketServer {
           }
           break
         case 'report:review:end':
-          const result = await this.reportService.claimReport({
+          const result = await this.assignmentService.claimReport({
             did: client.moderatorDid,
             reportId: message.reportId,
             queueId: message.queueId,
@@ -290,7 +292,7 @@ export class AssignmentWebSocketServer {
   }
   /** Send active assignments to client */
   private async sendSnapshot(client: ModeratorClient) {
-    const assignments = await this.reportService.getAssignments({
+    const assignments = await this.assignmentService.getAssignments({
       onlyActiveAssignments: true,
       queueIds: client.subscribedQueues,
     })

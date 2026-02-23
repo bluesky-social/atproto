@@ -6,7 +6,6 @@ import * as plc from '@did-plc/lib'
 import express from 'express'
 import assert from 'node:assert'
 import { AssignmentService } from './assignment'
-import { AssignmentWebSocketServer } from './assignment/assignment-ws'
 import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import {
@@ -76,7 +75,6 @@ export type AppContextOptions = {
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
   assignmentService: AssignmentService
-  assignmentWss: AssignmentWebSocketServer
   authVerifier: AuthVerifier
   verificationService: VerificationServiceCreator
   verificationIssuer: VerificationIssuerCreator
@@ -177,8 +175,7 @@ export class AppContext {
       teamService: teamService(db),
     })
 
-    const assignmentService = new AssignmentService(db)
-    const assignmentWss = new AssignmentWebSocketServer(db, {
+    const assignmentService = new AssignmentService(db, {
       serviceDid: cfg.service.did,
       idResolver,
       teamService: teamService(db),
@@ -207,7 +204,6 @@ export class AppContext {
         backgroundQueue,
         sequencer,
         assignmentService,
-        assignmentWss,
         authVerifier,
         blobDiverter,
         verificationService,
@@ -324,10 +320,6 @@ export class AppContext {
 
   get assignmentService(): AssignmentService {
     return this.opts.assignmentService
-  }
-
-  get assignmentWss(): AssignmentWebSocketServer {
-    return this.opts.assignmentWss
   }
 
   get authVerifier(): AuthVerifier {
