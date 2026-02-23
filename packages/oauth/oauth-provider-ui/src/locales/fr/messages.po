@@ -67,11 +67,11 @@ msgstr "Authentification"
 #: src/views/authorize/consent/consent-form.tsx:105
 #: src/views/authorize/consent/consent-form.tsx:174
 msgid "Authorize"
-msgstr "Authoriser l'accès"
+msgstr "Autoriser"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:79
 msgid "Avatar"
-msgstr "Photo de profile"
+msgstr "Photo de profil"
 
 #: src/views/authorize/sign-in/sign-in-picker.tsx:59
 #: src/views/authorize/sign-in/sign-in-form.tsx:132
@@ -101,7 +101,7 @@ msgstr "Services de discussion de Bluesky"
 #. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
 #: src/views/authorize/consent/consent-form.tsx:173
 msgid "By clicking <0>{0}</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "En cliquant sur <0>{0}</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et à sa <2>politique de confidentialité</2>."
+msgstr "En cliquant sur <0>{0}</0>, vous autorisez cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et à sa <2>politique de confidentialité</2>."
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
@@ -267,7 +267,7 @@ msgstr "Oublié ?"
 #. placeholder {0}: account.preferred_username || account.email || account.sub
 #: src/views/authorize/consent/consent-view.tsx:45
 msgid "Grant access to your <0>{0}</0> account"
-msgstr "Accorder l'accès à votre compte <0>{0}</0>"
+msgstr "Accordez l'accès à votre compte <0>{0}</0>"
 
 #: src/components/utils/help-card.tsx:32
 msgid "Having trouble? <0>Contact support</0>"
@@ -416,7 +416,7 @@ msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre m
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
 #: src/components/utils/link-title.tsx:18
 msgid "Privacy Policy"
-msgstr "Politique de Confidentialité"
+msgstr "Politique de confidentialité"
 
 #: src/components/utils/scope-description.tsx:617
 msgid "Publish changes"
@@ -462,7 +462,7 @@ msgstr "Sélectionner le domaine"
 
 #: src/views/authorize/sign-in/sign-in-view.tsx:141
 msgid "Select from an existing account"
-msgstr "Sélectionner un compte"
+msgstr "Sélectionnez un compte"
 
 #: src/views/authorize/welcome/welcome-view.tsx:45
 #: src/views/authorize/sign-in/sign-in-form.tsx:141
@@ -517,7 +517,7 @@ msgstr "Activer ou désactiver temporairement votre compte"
 #: src/views/authorize/sign-up/sign-up-disclaimer.tsx:37
 #: src/components/utils/link-title.tsx:19
 msgid "Terms of Service"
-msgstr "Conditions d'Utilisation"
+msgstr "Conditions d'utilisation"
 
 #: src/components/utils/error-message.tsx:52
 msgid "That handle cannot be used"
@@ -525,7 +525,7 @@ msgstr "Ce pseudonyme ne peut pas être utilisé"
 
 #: src/components/utils/scope-description.tsx:202
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
-msgstr "L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>usurper</1>, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance."
+msgstr "L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>usurper</1>, votre compte. N'autorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance."
 
 #: src/components/utils/scope-description.tsx:602
 msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
@@ -555,7 +555,7 @@ msgstr "Le pseudonyme contient un langage inapproprié"
 
 #: src/components/utils/error-message.tsx:50
 msgid "The handle is already in use"
-msgstr "Ce pseudonyme est déjà utilisé"
+msgstr "Le pseudonyme est déjà utilisé"
 
 #: src/components/utils/error-message.tsx:41
 msgid "The handle is invalid"
@@ -628,7 +628,7 @@ msgstr "veut vous identifier de manière unique via votre compte <0/>"
 
 #: src/views/authorize/sign-in/sign-in-form.tsx:200
 msgid "Warning"
-msgstr "Avertissement"
+msgstr "Attention"
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:84
 msgid "We're so excited to have you join us!"
@@ -656,7 +656,7 @@ msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 
 #: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
+msgstr "Vous allez recevoir un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
 #: src/views/authorize/sign-up/sign-up-view.tsx:121
 msgid "Your account"
