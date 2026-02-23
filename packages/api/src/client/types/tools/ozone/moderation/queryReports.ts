@@ -79,6 +79,7 @@ export interface ReportView {
   reportType: ComAtprotoModerationDefs.ReasonType
   /** DID of the user who made the report */
   reportedBy: string
+  reporter: ToolsOzoneModerationDefs.SubjectView
   /** Comment provided by the reporter */
   comment?: string
   /** When the report was created */

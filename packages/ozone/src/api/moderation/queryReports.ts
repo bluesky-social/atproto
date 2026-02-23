@@ -23,6 +23,7 @@ export default function (server: Server, ctx: AppContext) {
 
       for (const report of reportsToReturn) {
         dids.add(report.subjectDid)
+        dids.add(report.reportedBy)
         if (report.subjectUri) {
           uris.add(report.subjectUri)
         }
@@ -88,6 +89,35 @@ export default function (server: Server, ctx: AppContext) {
           status,
         }
 
+        // Build reporter view (always an account, never a record)
+        const reporterDid = report.reportedBy
+        const reporterPartialRepo = partialRepos.get(reporterDid)
+        const reporterRepo = reporterPartialRepo
+          ? addAccountInfoToRepoViewDetail(
+              reporterPartialRepo,
+              accountInfo.get(reporterDid) || null,
+              auth.credentials.isModerator,
+            )
+          : undefined
+        const reporterProfile = profiles.get(reporterDid)
+        const reporterStatus = reporterRepo?.moderation.subjectStatus
+
+        const reporterView = {
+          type: 'account' as const,
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef' as const,
+            did: reporterDid,
+          },
+          repo: reporterRepo,
+          profile: reporterProfile
+            ? {
+                $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
+                ...reporterProfile,
+              }
+            : undefined,
+          status: reporterStatus,
+        }
+
         return {
           id: report.id,
           eventId: report.eventId,
@@ -97,6 +127,7 @@ export default function (server: Server, ctx: AppContext) {
           subject: subjectView,
           reportType,
           reportedBy: report.reportedBy,
+          reporter: reporterView,
           comment: report.comment ?? undefined,
           createdAt: report.createdAt,
           updatedAt: report.updatedAt,
@@ -110,7 +141,7 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           cursor,
           reports: reportViews,

@@ -101,7 +101,16 @@
     },
     "reportView": {
       "type": "object",
-      "required": ["id", "eventId", "status", "subject", "reportType", "reportedBy", "createdAt"],
+      "required": [
+        "id",
+        "eventId",
+        "status",
+        "subject",
+        "reportType",
+        "reportedBy",
+        "reporter",
+        "createdAt"
+      ],
       "properties": {
         "id": {
           "type": "integer",
@@ -138,6 +147,11 @@
           "type": "string",
           "format": "did",
           "description": "DID of the user who made the report"
+        },
+        "reporter": {
+          "type": "ref",
+          "ref": "tools.ozone.moderation.defs#subjectView",
+          "description": "Full subject view of the reporter account"
         },
         "comment": {
           "type": "string",
