@@ -148,7 +148,7 @@ describe('query-reports', () => {
       expect(response.reports.length).toBe(3)
 
       response.reports.forEach((report) => {
-        expect(report.subject.subject.did).toBe(sc.dids.bob)
+        expect(report.subject.subject['did']).toBe(sc.dids.bob)
       })
     })
 

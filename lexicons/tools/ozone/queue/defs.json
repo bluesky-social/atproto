@@ -4,7 +4,17 @@
   "defs": {
     "queueView": {
       "type": "object",
-      "required": ["id", "name", "subjectTypes", "reportTypes", "createdBy", "createdAt", "updatedAt", "enabled", "stats"],
+      "required": [
+        "id",
+        "name",
+        "subjectTypes",
+        "reportTypes",
+        "createdBy",
+        "createdAt",
+        "updatedAt",
+        "enabled",
+        "stats"
+      ],
       "properties": {
         "id": {
           "type": "integer",
@@ -60,7 +70,12 @@
     },
     "queueStats": {
       "type": "object",
-      "required": ["pendingCount", "actionedCount", "escalatedPendingCount", "lastUpdated"],
+      "required": [
+        "pendingCount",
+        "actionedCount",
+        "escalatedPendingCount",
+        "lastUpdated"
+      ],
       "properties": {
         "pendingCount": {
           "type": "integer",

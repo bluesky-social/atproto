@@ -242,7 +242,10 @@
         },
         "subject": {
           "type": "union",
-          "refs": ["com.atproto.admin.defs#repoRef", "com.atproto.repo.strongRef"]
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
         },
         "status": {
           "type": "ref",
