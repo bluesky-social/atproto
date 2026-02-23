@@ -56,6 +56,7 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle ?? INVALID_HANDLE,
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
+          emailAuthFactor: !!user.emailAuthFactor,
           active,
           status,
         }),

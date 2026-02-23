@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ auth, input, req }) => {
       const did = auth.credentials.did
-      const { token, email } = input.body
+      const { token, email, emailAuthFactor } = input.body
       if (!isEmailValid(email) || isDisposableEmail(email)) {
         throw new InvalidRequestError(
           'This email address is not supported, please use a different email.',
@@ -45,8 +45,11 @@ export default function (server: Server, ctx: AppContext) {
         return
       }
 
-      // require valid token if account email is confirmed
-      if (account.emailConfirmedAt) {
+      const emailChanged =
+        email.toLowerCase() !== account.email?.toLowerCase()
+
+      // require valid token only if email is actually changing and already confirmed
+      if (emailChanged && account.emailConfirmedAt) {
         if (!token) {
           throw new InvalidRequestError(
             'confirmation token required',
@@ -60,15 +63,23 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      try {
-        await ctx.accountManager.updateEmail({ did, email })
-      } catch (err) {
-        if (err instanceof UserAlreadyExistsError) {
-          throw new InvalidRequestError(
-            'This email address is already in use, please use a different email.',
-          )
-        } else {
-          throw err
+      // Handle emailAuthFactor toggle (no token required)
+      if (emailAuthFactor !== undefined) {
+        await ctx.accountManager.setEmailAuthFactor(did, emailAuthFactor)
+      }
+
+      // Only update email if it actually changed
+      if (emailChanged) {
+        try {
+          await ctx.accountManager.updateEmail({ did, email })
+        } catch (err) {
+          if (err instanceof UserAlreadyExistsError) {
+            throw new InvalidRequestError(
+              'This email address is already in use, please use a different email.',
+            )
+          } else {
+            throw err
+          }
         }
       }
     },

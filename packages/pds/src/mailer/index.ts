@@ -52,6 +52,16 @@ export class ServerMailer {
     })
   }
 
+  async sendLoginAuthFactor(
+    params: { token: string },
+    mailOpts: Mail.Options,
+  ) {
+    await this.sendTemplate('loginAuthFactor', params, {
+      subject: 'Your login verification code',
+      ...mailOpts,
+    })
+  }
+
   async sendPlcOperation(params: { token: string }, mailOpts: Mail.Options) {
     await this.sendTemplate('plcOperation', params, {
       subject: 'PLC Update Operation Requested',
