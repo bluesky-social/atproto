@@ -31,13 +31,13 @@ Array [
           "images": Array [
             Object {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(1)@jpeg",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(1)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(1)@webp",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(1)@webp",
             },
             Object {
               "alt": "../dev-env/assets/key-alt.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)@jpeg",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)@webp",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)@webp",
             },
           ],
         },
@@ -146,7 +146,7 @@ Array [
             "allowSubscriptions": "followers",
           },
         },
-        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(5)@jpeg",
+        "avatar": "https://bsky.public.url/img/avatar/plain/user(4)/cids(5)@webp",
         "createdAt": "1970-01-01T00:00:00.000Z",
         "did": "user(3)",
         "displayName": "ali",
@@ -246,13 +246,13 @@ Array [
           "images": Array [
             Object {
               "alt": "../dev-env/assets/key-landscape-small.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(1)@jpeg",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(1)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(1)@webp",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(1)@webp",
             },
             Object {
               "alt": "../dev-env/assets/key-alt.jpg",
-              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)@jpeg",
-              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)@jpeg",
+              "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)@webp",
+              "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)@webp",
             },
           ],
         },
@@ -265,7 +265,7 @@ Array [
                   "allowSubscriptions": "followers",
                 },
               },
-              "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(4)@jpeg",
+              "avatar": "https://bsky.public.url/img/avatar/plain/user(3)/cids(4)@webp",
               "createdAt": "1970-01-01T00:00:00.000Z",
               "did": "user(2)",
               "displayName": "bobby",
