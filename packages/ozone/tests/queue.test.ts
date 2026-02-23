@@ -124,5 +124,34 @@ describe('queue', () => {
       )
       await expect(p).rejects.toThrow('Cannot assign others')
     })
+
+    it('moderator can unassign from queue', async () => {
+      await assign({ queueId: 1, assign: true }, 'moderator')
+      const assignment = await assign(
+        { queueId: 1, assign: false },
+        'moderator',
+      )
+      expect(assignment.queueId).toBe(1)
+      expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
+      expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
+        Date.now() + 1000,
+      )
+    })
+
+    it('defaults to assign when param is omitted', async () => {
+      const assignment = await assign({ queueId: 1 }, 'moderator')
+      expect(new Date(assignment.endAt).getTime()).toBeGreaterThan(Date.now())
+    })
+
+    it('unassign with no active assignment creates expired record', async () => {
+      const assignment = await assign(
+        { queueId: 999, assign: false },
+        'moderator',
+      )
+      expect(assignment.queueId).toBe(999)
+      expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
+        Date.now() + 1000,
+      )
+    })
   })
 })

@@ -18,7 +18,10 @@ export default function (server: Server, ctx: AppContext) {
             : undefined
       const did = input.body.did ?? authDid
       const now = new Date()
-      const endAt = new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+      const assign = input.body.assign !== false
+      const endAt = assign
+        ? new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+        : now
 
       // validation
       if (!did) {
@@ -42,7 +45,7 @@ export default function (server: Server, ctx: AppContext) {
           .executeTakeFirst()
 
         if (existing) {
-          // Refresh
+          // Refresh or unassign
           const updated = await dbTxn.db
             .updateTable('moderator_assignment')
             .set({
