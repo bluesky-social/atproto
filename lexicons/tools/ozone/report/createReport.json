@@ -1,10 +1,10 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.moderation.createReport",
+  "id": "tools.ozone.report.createReport",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth. Superceded by tools.ozone.report.createReport.",
+      "description": "Submit a moderation report regarding an atproto account or record. Implemented by moderation services (with PDS proxying), and requires auth. Supercedes com.atproto.moderation.createReport.",
       "input": {
         "encoding": "application/json",
         "schema": {
@@ -14,7 +14,7 @@
             "reasonType": {
               "type": "ref",
               "description": "Indicates the broad category of violation the report is for.",
-              "ref": "com.atproto.moderation.defs#reasonType"
+              "ref": "tools.ozone.report.defs#reasonType"
             },
             "reason": {
               "type": "string",
@@ -51,7 +51,7 @@
             "id": { "type": "integer" },
             "reasonType": {
               "type": "ref",
-              "ref": "com.atproto.moderation.defs#reasonType"
+              "ref": "tools.ozone.report.defs#reasonType"
             },
             "reason": {
               "type": "string",

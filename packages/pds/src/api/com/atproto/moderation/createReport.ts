@@ -38,4 +38,37 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+
+  server.tools.ozone.report.createReport({
+    auth: ctx.authVerifier.authorization({
+      additional: [AuthScope.Takendown],
+      authorize: (permissions, { req }) => {
+        const lxm = ids.ToolsOzoneReportCreateReport
+        const aud = computeProxyTo(ctx, req, lxm)
+        permissions.assertRpc({ aud, lxm })
+      },
+    }),
+    handler: async ({ auth, input, req }) => {
+      const { url, did: aud } = await parseProxyInfo(
+        ctx,
+        req,
+        ids.ToolsOzoneReportCreateReport,
+      )
+      const agent = new AtpAgent({ service: url })
+      const serviceAuth = await ctx.serviceAuthHeaders(
+        auth.credentials.did,
+        aud,
+        ids.ToolsOzoneReportCreateReport,
+      )
+      const res = await agent.tools.ozone.report.createReport(input.body, {
+        ...serviceAuth,
+        encoding: 'application/json',
+      })
+
+      return {
+        encoding: 'application/json',
+        body: res.data,
+      }
+    },
+  })
 }

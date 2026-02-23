@@ -4,6 +4,7 @@ import {
   REASONRUDE,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
+import { REASONHARASSMENTTROLL } from '../src/lexicon/types/tools/ozone/report/defs'
 import { ModerationServiceProfile } from '../src/mod-service/profile'
 import { forSnapshot } from './_util'
 
@@ -65,6 +66,39 @@ describe('report reason', () => {
       })
 
       expect(forSnapshot(validReport)).toMatchSnapshot()
+    })
+
+    it('can use both tools.ozone and com.atproto lexicons for reporting', async () => {
+      const [comAtprotoReport, { data: toolsOzoneReport }] = await Promise.all([
+        sc.createReport({
+          reasonType: REASONHARASSMENTTROLL,
+          subject: repoSubject(sc.dids.carol),
+          reportedBy: sc.dids.alice,
+        }),
+        network.pds.getClient().tools.ozone.report.createReport(
+          {
+            reasonType: REASONHARASSMENTTROLL,
+            subject: repoSubject(sc.dids.carol),
+          },
+          {
+            encoding: 'application/json',
+            headers: {
+              ...sc.getHeaders(sc.dids.alice),
+              'atproto-proxy': `${network.ozone.ctx.cfg.service.did}#atproto_labeler`,
+            },
+          },
+        ),
+      ])
+
+      expect({
+        reasonType: comAtprotoReport.reasonType,
+        subject: comAtprotoReport.subject,
+        reportedBy: comAtprotoReport.reportedBy,
+      }).toMatchObject({
+        reasonType: toolsOzoneReport.reasonType,
+        subject: toolsOzoneReport.subject,
+        reportedBy: toolsOzoneReport.reportedBy,
+      })
     })
   })
   describe('ModerationServiceProfile', () => {
