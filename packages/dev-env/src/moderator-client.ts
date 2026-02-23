@@ -91,6 +91,7 @@ export class ModeratorClient {
       meta?: unknown
       modTool?: ToolsOzoneModerationDefs.ModTool
       externalId?: string
+      reportAction?: TakeActionInput['reportAction']
     },
     role?: ModLevel,
   ) {
@@ -101,6 +102,7 @@ export class ModeratorClient {
       createdBy = 'did:example:admin',
       modTool,
       externalId,
+      reportAction,
     } = opts
     const result = await this.agent.tools.ozone.moderation.emitEvent(
       {
@@ -110,6 +112,7 @@ export class ModeratorClient {
         createdBy,
         modTool,
         externalId,
+        reportAction,
       },
       {
         encoding: 'application/json',
