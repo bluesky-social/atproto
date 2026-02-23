@@ -310,5 +310,48 @@ describe('report-assignment', () => {
         ws.close()
       }
     })
+
+    it('report can be ended', async () => {
+      const queueId = generateId()
+      const reportId = generateId()
+
+      const { ws, updates } = await wsConnect('moderator')
+      await settle()
+      wsSubscribe(ws, queueId)
+      await settle()
+
+      try {
+        let message: ClientMessage = {
+          type: 'report:review:start',
+          reportId,
+          queueId,
+        }
+        ws.send(JSON.stringify(message))
+        await settle()
+
+        message = {
+          type: 'report:review:end',
+          reportId,
+          queueId,
+        }
+        ws.send(JSON.stringify(message))
+        await settle()
+
+        const claimUpdate = updates.find(
+          (u) =>
+            'type' in u &&
+            u.type === 'report:review:ended' &&
+            u.reportId === reportId,
+        ) as ServerMessage | undefined
+        expect(claimUpdate).toBeDefined()
+        expect(
+          claimUpdate && 'moderator' in claimUpdate
+            ? claimUpdate.moderator.did
+            : undefined,
+        ).toBe(network.ozone.moderatorAccnt.did)
+      } finally {
+        ws.close()
+      }
+    })
   })
 })
