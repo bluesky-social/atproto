@@ -18904,9 +18904,9 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneQueueAssign: {
+  ToolsOzoneQueueAssignModerator: {
     lexicon: 1,
-    id: 'tools.ozone.queue.assign',
+    id: 'tools.ozone.queue.assignModerator',
     defs: {
       main: {
         type: 'procedure',
@@ -19371,7 +19371,8 @@ export const schemaDict = {
               },
               queueId: {
                 type: 'integer',
-                description: 'Optional queue ID to associate the claim with.',
+                description:
+                  'Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue.',
               },
               assign: {
                 type: 'boolean',
@@ -21832,7 +21833,7 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
-  ToolsOzoneQueueAssign: 'tools.ozone.queue.assign',
+  ToolsOzoneQueueAssignModerator: 'tools.ozone.queue.assignModerator',
   ToolsOzoneQueueCreateQueue: 'tools.ozone.queue.createQueue',
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',

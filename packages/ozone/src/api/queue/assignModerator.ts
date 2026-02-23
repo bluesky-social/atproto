@@ -3,7 +3,7 @@ import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.assign({
+  server.tools.ozone.queue.assignModerator({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const queueId = input.body.queueId

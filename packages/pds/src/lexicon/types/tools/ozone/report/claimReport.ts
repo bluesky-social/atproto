@@ -20,7 +20,7 @@ export type QueryParams = {}
 export interface InputSchema {
   /** The ID of the report to claim. */
   reportId: number
-  /** Optional queue ID to associate the claim with. */
+  /** Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue. */
   queueId?: number
   /** Whether to assign the report to the moderator. */
   assign?: boolean

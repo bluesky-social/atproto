@@ -13,7 +13,7 @@ import type * as ToolsOzoneQueueDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.queue.assign'
+const id = 'tools.ozone.queue.assignModerator'
 
 export type QueryParams = {}
 

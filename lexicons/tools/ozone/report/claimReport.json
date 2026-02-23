@@ -17,7 +17,7 @@
             },
             "queueId": {
               "type": "integer",
-              "description": "Optional queue ID to associate the claim with."
+              "description": "Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue."
             },
             "assign": {
               "type": "boolean",

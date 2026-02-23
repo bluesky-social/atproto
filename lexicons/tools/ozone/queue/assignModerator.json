@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.queue.assign",
+  "id": "tools.ozone.queue.assignModerator",
   "defs": {
     "main": {
       "type": "procedure",
