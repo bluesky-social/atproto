@@ -50,6 +50,7 @@ import {
   validateNux,
   validateSavedFeed,
 } from './util'
+import AtpAgent from '@atproto/api'
 
 const FEED_VIEW_PREF_DEFAULTS = {
   hideReplies: false,
@@ -110,9 +111,9 @@ export class Agent extends XrpcClient {
       typeof options === 'object' && 'fetchHandler' in options
         ? options
         : {
-            did: undefined,
-            fetchHandler: buildFetchHandler(options),
-          }
+          did: undefined,
+          fetchHandler: buildFetchHandler(options),
+        }
 
     super((url, init) => {
       const headers = new Headers(init?.headers)
@@ -272,65 +273,145 @@ export class Agent extends XrpcClient {
 
   //#region "app.bsky" lexicon short hand methods
 
-  getTimeline: typeof this.app.bsky.feed.getTimeline = (params, opts) =>
-    this.app.bsky.feed.getTimeline(params, opts)
+  // getTimeline
+  getTimeline(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getTimeline']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getTimeline']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getTimeline']> {
+    return this.app.bsky.feed.getTimeline(params, opts)
+  }
 
-  getAuthorFeed: typeof this.app.bsky.feed.getAuthorFeed = (params, opts) =>
-    this.app.bsky.feed.getAuthorFeed(params, opts)
+  // getAuthorFeed
+  getAuthorFeed(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getAuthorFeed']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getAuthorFeed']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getAuthorFeed']> {
+    return this.app.bsky.feed.getAuthorFeed(params, opts)
+  }
 
-  getActorLikes: typeof this.app.bsky.feed.getActorLikes = (params, opts) =>
-    this.app.bsky.feed.getActorLikes(params, opts)
+  // getActorLikes
+  getActorLikes(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getActorLikes']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getActorLikes']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getActorLikes']> {
+    return this.app.bsky.feed.getActorLikes(params, opts)
+  }
 
-  getPostThread: typeof this.app.bsky.feed.getPostThread = (params, opts) =>
-    this.app.bsky.feed.getPostThread(params, opts)
+  // getPostThread
+  getPostThread(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getPostThread']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getPostThread']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getPostThread']> {
+    return this.app.bsky.feed.getPostThread(params, opts)
+  }
 
-  getPost: typeof this.app.bsky.feed.post.get = (params) =>
-    this.app.bsky.feed.post.get(params)
+  // getPost
+  getPost(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['post']['get']>[0]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['post']['get']> {
+    return this.app.bsky.feed.post.get(params)
+  }
 
-  getPosts: typeof this.app.bsky.feed.getPosts = (params, opts) =>
-    this.app.bsky.feed.getPosts(params, opts)
+  // getPosts
+  getPosts(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getPosts']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getPosts']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getPosts']> {
+    return this.app.bsky.feed.getPosts(params, opts)
+  }
 
-  getLikes: typeof this.app.bsky.feed.getLikes = (params, opts) =>
-    this.app.bsky.feed.getLikes(params, opts)
+  // getLikes
+  getLikes(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getLikes']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getLikes']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getLikes']> {
+    return this.app.bsky.feed.getLikes(params, opts)
+  }
 
-  getRepostedBy: typeof this.app.bsky.feed.getRepostedBy = (params, opts) =>
-    this.app.bsky.feed.getRepostedBy(params, opts)
+  // getRepostedBy
+  getRepostedBy(
+    params: Parameters<AtpAgent['app']['bsky']['feed']['getRepostedBy']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['feed']['getRepostedBy']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['feed']['getRepostedBy']> {
+    return this.app.bsky.feed.getRepostedBy(params, opts)
+  }
 
-  getFollows: typeof this.app.bsky.graph.getFollows = (params, opts) =>
-    this.app.bsky.graph.getFollows(params, opts)
+  // getFollows (graph)
+  getFollows(
+    params: Parameters<AtpAgent['app']['bsky']['graph']['getFollows']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['graph']['getFollows']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['graph']['getFollows']> {
+    return this.app.bsky.graph.getFollows(params, opts)
+  }
 
-  getFollowers: typeof this.app.bsky.graph.getFollowers = (params, opts) =>
-    this.app.bsky.graph.getFollowers(params, opts)
+  // getFollowers (graph)
+  getFollowers(
+    params: Parameters<AtpAgent['app']['bsky']['graph']['getFollowers']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['graph']['getFollowers']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['graph']['getFollowers']> {
+    return this.app.bsky.graph.getFollowers(params, opts)
+  }
 
-  getProfile: typeof this.app.bsky.actor.getProfile = (params, opts) =>
-    this.app.bsky.actor.getProfile(params, opts)
+  // getProfile (actor)
+  getProfile(
+    params: Parameters<AtpAgent['app']['bsky']['actor']['getProfile']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['actor']['getProfile']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['actor']['getProfile']> {
+    return this.app.bsky.actor.getProfile(params, opts)
+  }
 
-  getProfiles: typeof this.app.bsky.actor.getProfiles = (params, opts) =>
-    this.app.bsky.actor.getProfiles(params, opts)
+  // getProfiles (actor)
+  getProfiles(
+    params: Parameters<AtpAgent['app']['bsky']['actor']['getProfiles']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['actor']['getProfiles']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['actor']['getProfiles']> {
+    return this.app.bsky.actor.getProfiles(params, opts)
+  }
 
-  getSuggestions: typeof this.app.bsky.actor.getSuggestions = (params, opts) =>
-    this.app.bsky.actor.getSuggestions(params, opts)
+  // getSuggestions (actor)
+  getSuggestions(
+    params: Parameters<AtpAgent['app']['bsky']['actor']['getSuggestions']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['actor']['getSuggestions']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['actor']['getSuggestions']> {
+    return this.app.bsky.actor.getSuggestions(params, opts)
+  }
 
-  searchActors: typeof this.app.bsky.actor.searchActors = (params, opts) =>
-    this.app.bsky.actor.searchActors(params, opts)
+  // searchActors (actor)
+  searchActors(
+    params: Parameters<AtpAgent['app']['bsky']['actor']['searchActors']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['actor']['searchActors']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['actor']['searchActors']> {
+    return this.app.bsky.actor.searchActors(params, opts)
+  }
 
-  searchActorsTypeahead: typeof this.app.bsky.actor.searchActorsTypeahead = (
-    params,
-    opts,
-  ) => this.app.bsky.actor.searchActorsTypeahead(params, opts)
+  // searchActorsTypeahead (actor)
+  searchActorsTypeahead(
+    params: Parameters<AtpAgent['app']['bsky']['actor']['searchActorsTypeahead']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['actor']['searchActorsTypeahead']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['actor']['searchActorsTypeahead']> {
+    return this.app.bsky.actor.searchActorsTypeahead(params, opts)
+  }
 
-  listNotifications: typeof this.app.bsky.notification.listNotifications = (
-    params,
-    opts,
-  ) => this.app.bsky.notification.listNotifications(params, opts)
+  listNotifications(
+    params: Parameters<AtpAgent['app']['bsky']['notification']['listNotifications']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['notification']['listNotifications']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['notification']['listNotifications']> {
+    return this.app.bsky.notification.listNotifications(params, opts)
+  }
 
-  countUnreadNotifications: typeof this.app.bsky.notification.getUnreadCount = (
-    params,
-    opts,
-  ) => this.app.bsky.notification.getUnreadCount(params, opts)
+  countUnreadNotifications(
+    params: Parameters<AtpAgent['app']['bsky']['notification']['getUnreadCount']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['notification']['getUnreadCount']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['notification']['getUnreadCount']> {
+    return this.app.bsky.notification.getUnreadCount(params, opts)
+  }
 
-  getLabelers: typeof this.app.bsky.labeler.getServices = (params, opts) =>
-    this.app.bsky.labeler.getServices(params, opts)
+  getLabelers(
+    params: Parameters<AtpAgent['app']['bsky']['labeler']['getServices']>[0],
+    opts?: Parameters<AtpAgent['app']['bsky']['labeler']['getServices']>[1]
+  ): ReturnType<AtpAgent['app']['bsky']['labeler']['getServices']> {
+    return this.app.bsky.labeler.getServices(params, opts)
+  }
 
   async getLabelDefinitions(
     prefs: BskyPreferences | ModerationPrefs | string[],
