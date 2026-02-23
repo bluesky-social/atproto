@@ -18857,6 +18857,11 @@ export const schemaDict = {
                 description:
                   'DID to be assigned. Assigns to whomever sent the request if not provided.',
               },
+              assign: {
+                type: 'boolean',
+                description:
+                  'Whether to assign the queue to the user. Defaults to true.',
+              },
             },
           },
         },

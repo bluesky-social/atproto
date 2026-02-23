@@ -6,6 +6,7 @@ const ASSIGNMENT_DURATION_MS = 5 * 60 * 1000 // 5 minutes
 export interface AssignQueueInput {
   did: string
   queueId: number
+  assign: boolean
 }
 
 export interface AssignQueueResult {
@@ -90,9 +91,11 @@ export class AssignmentService {
   }
 
   async assignQueue(input: AssignQueueInput): Promise<AssignQueueResult> {
-    const { did, queueId } = input
+    const { did, queueId, assign } = input
     const now = new Date()
-    const endAt = new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+    const endAt = assign
+      ? new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+      : now
 
     const result = await this.db.transaction(async (dbTxn) => {
       const existing = await dbTxn.db

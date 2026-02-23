@@ -14,6 +14,7 @@ export default function (server: Server, ctx: AppContext) {
             ? ctx.cfg.service.did
             : undefined
       const did = input.body.did ?? authDid
+      const assign = input.body.assign !== false
 
       if (!auth.credentials.isAdmin && !auth.credentials.isModerator) {
         throw new ForbiddenError('Unauthorized')
@@ -25,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('Cannot assign others')
       }
 
-      const result = await ctx.assignmentService.assignQueue({ did, queueId })
+      const result = await ctx.assignmentService.assignQueue({ did, queueId, assign })
       ctx.assignmentWss.broadcast({
         type: 'queue:assigned',
         queueId: result.queueId!,
