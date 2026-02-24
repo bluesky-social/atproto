@@ -68,6 +68,11 @@ export const verifyDiff = async (
     did,
     signingKey,
   )
+  if (repo?.did && repo.did !== updated.did) {
+    throw new Error(
+      `mismatched commit did (expected ${repo.did}, got ${updated.did})`,
+    )
+  }
   const diff = await DataDiff.of(updated.data, repo?.data ?? null)
   const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
