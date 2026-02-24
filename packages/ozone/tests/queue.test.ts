@@ -71,6 +71,18 @@ describe('queue', () => {
     expect(result.assignments[0].queueId).toBe(1)
   })
 
+  it('filters assignments by dids', async () => {
+    await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+    await assign({ queueId: 1, did: sc.dids.carol }, 'admin')
+
+    const result = await getAssignments({
+      dids: [sc.dids.bob],
+    })
+
+    expect(result.assignments.length).toBeGreaterThanOrEqual(1)
+    expect(result.assignments[0].did).toBe(sc.dids.bob)
+  })
+
   describe('admin', () => {
     it('should be able to assign self to a queue', async () => {
       const assignment = await assign({ queueId: 1 }, 'admin')
