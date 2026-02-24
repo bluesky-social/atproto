@@ -91,8 +91,8 @@ export const envToCfg = (env: OzoneEnvironment): OzoneConfig => {
       : null
 
   const assignmentsCfg: OzoneConfig['assignments'] = {
-    queueDurationMs: env.assignmentQueueDurationMs ?? 2 * HOUR,
-    reportDurationMs: env.assignmentReportDurationMs ?? 2 * HOUR,
+    queueDurationMs: env.assignmentQueueDurationMs ?? 5 * MINUTE,
+    reportDurationMs: env.assignmentReportDurationMs ?? 5 * MINUTE,
   }
 
   return {
