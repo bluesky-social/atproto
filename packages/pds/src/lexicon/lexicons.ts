@@ -19163,12 +19163,6 @@ export const schemaDict = {
               description:
                 'If specified, returns assignments for these moderators only.',
             },
-            subject: {
-              type: 'string',
-              format: 'uri',
-              description:
-                'If specified as a DID, returns assignments for all records and the DID. If specified as an AT-URI, returns assignments for that URI only.',
-            },
           },
         },
         output: {

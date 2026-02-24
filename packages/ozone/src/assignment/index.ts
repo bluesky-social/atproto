@@ -29,7 +29,6 @@ export interface GetAssignmentsInput {
   onlyActiveAssignments?: boolean
   queueIds?: number[]
   dids?: string[]
-  subject?: string
 }
 
 export interface AssignmentRow {
@@ -71,7 +70,7 @@ export class AssignmentService {
   }
 
   async getAssignments(input: GetAssignmentsInput): Promise<AssignmentRow[]> {
-    const { onlyActiveAssignments, queueIds, dids, subject } = input
+    const { onlyActiveAssignments, queueIds, dids } = input
 
     let query = this.db.db.selectFrom('moderator_assignment').selectAll()
 
@@ -85,14 +84,6 @@ export class AssignmentService {
 
     if (dids?.length) {
       query = query.where('did', 'in', dids)
-    }
-
-    if (subject) {
-      if (subject.startsWith('at://')) {
-        query = query.where('reportId', 'is not', null)
-      } else {
-        query = query.where('did', '=', subject)
-      }
     }
 
     const results = await query.execute()
