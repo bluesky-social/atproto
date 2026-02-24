@@ -250,6 +250,7 @@ import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAss
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
+import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -3665,6 +3666,18 @@ export class ToolsOzoneReportNS {
     >,
   ) {
     const nsid = 'tools.ozone.report.assignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetAssignments.QueryParams,
+      ToolsOzoneReportGetAssignments.HandlerInput,
+      ToolsOzoneReportGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getAssignments' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

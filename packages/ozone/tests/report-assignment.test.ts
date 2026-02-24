@@ -1,4 +1,7 @@
-import AtpAgent, { ToolsOzoneReportAssignModerator } from '@atproto/api'
+import AtpAgent, {
+  ToolsOzoneReportAssignModerator,
+  ToolsOzoneReportGetAssignments,
+} from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import WebSocket from 'ws'
 import { ClientMessage, ServerMessage } from '../src/assignment/assignment-ws'
@@ -27,6 +30,19 @@ describe('report-assignment', () => {
     return data
   }
 
+  const getAssignments = async (
+    input: ToolsOzoneReportGetAssignments.QueryParams,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) => {
+    const { data } = await agent.tools.ozone.report.getAssignments(input, {
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneReportGetAssignments,
+        callerRole,
+      ),
+    })
+    return data
+  }
+
   const clearAssignments = async () => {
     await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
   }
@@ -44,6 +60,19 @@ describe('report-assignment', () => {
 
   afterAll(async () => {
     await network.close()
+  })
+
+  it('can get assignment history', async () => {
+    const reportId = generateId()
+    await assignModerator(
+      {
+        reportId,
+        assign: true,
+      },
+      'moderator',
+    )
+    const result = await getAssignments({ reportIds: [reportId] })
+    expect(result.assignments.length).toBe(1)
   })
 
   it('moderator can assigned', async () => {

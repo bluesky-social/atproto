@@ -51,6 +51,7 @@ import revokeVerifications from './verification/revokeVerifications'
 import assignQueueModerator from './queue/assignModerator'
 import getAssignments from './queue/getAssignments'
 import assignReportModerator from './report/assignModerator'
+import getReportAssignments from './report/getAssignments'
 
 export * as health from './health'
 
@@ -108,5 +109,6 @@ export default function (server: Server, ctx: AppContext) {
   assignQueueModerator(server, ctx)
   getAssignments(server, ctx)
   assignReportModerator(server, ctx)
+  getReportAssignments(server, ctx)
   return server
 }
