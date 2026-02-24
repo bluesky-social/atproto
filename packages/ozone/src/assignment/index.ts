@@ -178,7 +178,7 @@ export class AssignmentService {
         .executeTakeFirst()
 
       if (existing) {
-        if (existing.did !== did && assign) {
+        if (existing.did !== did) {
           throw new InvalidRequestError(
             'Report already assigned',
             'AlreadyAssigned',
@@ -194,21 +194,21 @@ export class AssignmentService {
           .where('id', '=', existing.id)
           .returningAll()
           .executeTakeFirstOrThrow()
-          return updated
+        return updated
+      } else {
+        const created = await dbTxn.db
+          .insertInto('moderator_assignment')
+          .values({
+            did,
+            reportId,
+            queueId: queueId ?? null,
+            startAt: now,
+            endAt,
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow()
+        return created
       }
-
-      const created = await dbTxn.db
-        .insertInto('moderator_assignment')
-        .values({
-          did,
-          reportId,
-          queueId: queueId ?? null,
-          startAt: now,
-          endAt,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow()
-      return created
     })
 
     const row: ReportAssignment = {

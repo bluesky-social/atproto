@@ -177,7 +177,7 @@ describe('queue', () => {
         { queueId: 1, did: network.ozone.adminAccnt.did },
         'moderator',
       )
-      await expect(p).rejects.toThrow('Cannot assign others')
+      await expect(p).rejects.toThrow('Unauthorized')
     })
 
     it('defaults to assign when param is omitted', async () => {
