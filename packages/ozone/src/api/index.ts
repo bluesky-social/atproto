@@ -49,7 +49,7 @@ import grantVerifications from './verification/grantVerifications'
 import listVerifications from './verification/listVerifications'
 import revokeVerifications from './verification/revokeVerifications'
 import assignQueueModerator from './queue/assignModerator'
-import getAssignments from './queue/getAssignments'
+import getQueueAssignments from './queue/getAssignments'
 import assignReportModerator from './report/assignModerator'
 import getReportAssignments from './report/getAssignments'
 
@@ -107,7 +107,7 @@ export default function (server: Server, ctx: AppContext) {
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
   assignQueueModerator(server, ctx)
-  getAssignments(server, ctx)
+  getQueueAssignments(server, ctx)
   assignReportModerator(server, ctx)
   getReportAssignments(server, ctx)
   return server
