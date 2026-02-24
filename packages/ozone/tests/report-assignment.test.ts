@@ -45,7 +45,7 @@ describe('report-assignment', () => {
     await network.close()
   })
 
-  it('moderator can claim', async () => {
+  it('moderator can assigned', async () => {
     const reportId = generateId()
     const assignment1 = await assignModerator(
       {
@@ -61,7 +61,7 @@ describe('report-assignment', () => {
     )
   })
 
-  it('moderator can refresh claim', async () => {
+  it('moderator can refresh assignment', async () => {
     const reportId = generateId()
     const assignment1 = await assignModerator(
       {
@@ -83,7 +83,7 @@ describe('report-assignment', () => {
     )
   })
 
-  it('moderator can claim then un-claim a report', async () => {
+  it('moderator can assign then un-assign a report', async () => {
     const reportId = generateId()
     await assignModerator(
       {
@@ -104,7 +104,7 @@ describe('report-assignment', () => {
     )
   })
 
-  it('claim can be exchanged', async () => {
+  it('assignment can be exchanged', async () => {
     const reportId = generateId()
     await assignModerator(
       {
@@ -134,7 +134,7 @@ describe('report-assignment', () => {
     )
   })
 
-  it('cannot double claim', async () => {
+  it('cannot double assign', async () => {
     const reportId = generateId()
     await assignModerator(
       {
@@ -151,7 +151,7 @@ describe('report-assignment', () => {
         },
         'admin',
       ),
-    ).rejects.toThrow('Report already claimed')
+    ).rejects.toThrow('Report already assigned')
   })
 
   describe('realtime', () => {
@@ -262,11 +262,9 @@ describe('report-assignment', () => {
           (u) => 'type' in u && u.type === 'snapshot',
         ) as (ServerMessage & { type: 'snapshot' }) | undefined
         expect(snapshot).toBeDefined()
-        const claimUpdate = snapshot!.events.find(
-          (e) => e.reportId === reportId,
-        )
-        expect(claimUpdate).toBeDefined()
-        expect(claimUpdate?.did).toBe(network.ozone.moderatorAccnt.did)
+        const update = snapshot!.events.find((e) => e.reportId === reportId)
+        expect(update).toBeDefined()
+        expect(update?.did).toBe(network.ozone.moderatorAccnt.did)
       } finally {
         ws.close()
       }
@@ -290,17 +288,15 @@ describe('report-assignment', () => {
         ws.send(JSON.stringify(message))
         await settle()
 
-        const claimUpdate = updates.find(
+        const update = updates.find(
           (u) =>
             'type' in u &&
             u.type === 'report:review:started' &&
             u.reportId === reportId,
         ) as ServerMessage | undefined
-        expect(claimUpdate).toBeDefined()
+        expect(update).toBeDefined()
         expect(
-          claimUpdate && 'moderator' in claimUpdate
-            ? claimUpdate.moderator.did
-            : undefined,
+          update && 'moderator' in update ? update.moderator.did : undefined,
         ).toBe(network.ozone.moderatorAccnt.did)
       } finally {
         ws.close()
@@ -333,17 +329,15 @@ describe('report-assignment', () => {
         ws.send(JSON.stringify(message))
         await settle()
 
-        const claimUpdate = updates.find(
+        const update = updates.find(
           (u) =>
             'type' in u &&
             u.type === 'report:review:ended' &&
             u.reportId === reportId,
         ) as ServerMessage | undefined
-        expect(claimUpdate).toBeDefined()
+        expect(update).toBeDefined()
         expect(
-          claimUpdate && 'moderator' in claimUpdate
-            ? claimUpdate.moderator.did
-            : undefined,
+          update && 'moderator' in update ? update.moderator.did : undefined,
         ).toBe(network.ozone.moderatorAccnt.did)
       } finally {
         ws.close()

@@ -31,7 +31,7 @@ export interface GetAssignmentsInput {
   dids?: string[]
 }
 
-export interface AssignmentRow {
+export interface Assignment {
   id: number
   did: string
   reportId: number | null
@@ -40,14 +40,14 @@ export interface AssignmentRow {
   endAt: string
 }
 
-export interface ClaimReportInput {
+export interface AssignReportInput {
   did: string
   reportId: number
   queueId?: number | null
   assign: boolean
 }
 
-export interface ClaimReportResult {
+export interface ReportAssignment {
   id: number
   did: string
   reportId: number
@@ -69,7 +69,7 @@ export class AssignmentService {
     }
   }
 
-  async getAssignments(input: GetAssignmentsInput): Promise<AssignmentRow[]> {
+  async getAssignments(input: GetAssignmentsInput): Promise<Assignment[]> {
     const { onlyActiveAssignments, queueIds, dids } = input
 
     let query = this.db.db.selectFrom('moderator_assignment').selectAll()
@@ -155,7 +155,7 @@ export class AssignmentService {
     return row
   }
 
-  async assignReport(input: ClaimReportInput): Promise<ClaimReportResult> {
+  async assignReport(input: AssignReportInput): Promise<ReportAssignment> {
     const { did, reportId, queueId, assign } = input
     const now = new Date()
     const endAt = assign
@@ -184,8 +184,8 @@ export class AssignmentService {
           return updated
         } else {
           throw new InvalidRequestError(
-            'Report already claimed',
-            'AlreadyClaimed',
+            'Report already assigned',
+            'AlreadyAssigned',
           )
         }
       }
@@ -204,7 +204,7 @@ export class AssignmentService {
       return created
     })
 
-    const row: ClaimReportResult = {
+    const row: ReportAssignment = {
       id: result.id,
       did: result.did,
       reportId: result.reportId!,
