@@ -95,19 +95,13 @@ export class AssignmentWebSocketServer {
   wss: WebSocketServer
   clients: Map<string, ModeratorClient> = new Map()
   private assignmentService: AssignmentService
-  private serviceDid: string
-  private idResolver: IdResolver
-  private teamService: TeamService
 
   constructor(
     assignmentService: AssignmentService,
-    opts: AssignmentWebSocketServerOpts,
+    private opts: AssignmentWebSocketServerOpts,
   ) {
     this.wss = new WebSocketServer({ noServer: true })
     this.assignmentService = assignmentService
-    this.serviceDid = opts.serviceDid
-    this.idResolver = opts.idResolver
-    this.teamService = opts.teamService
   }
 
   // Protocol Layer
@@ -124,7 +118,6 @@ export class AssignmentWebSocketServer {
         socket.destroy()
       })
   }
-
   private async authenticateRequest(req: IncomingMessage): Promise<string> {
     const authorization = req.headers.authorization
     if (!authorization?.startsWith('Bearer ')) {
@@ -135,7 +128,7 @@ export class AssignmentWebSocketServer {
       did: string,
       forceRefresh: boolean,
     ): Promise<string> => {
-      const atprotoData = await this.idResolver.did.resolveAtprotoData(
+      const atprotoData = await this.opts.idResolver.did.resolveAtprotoData(
         did,
         forceRefresh,
       )
@@ -143,21 +136,20 @@ export class AssignmentWebSocketServer {
     }
     const payload = await verifyJwt(
       jwtStr,
-      this.serviceDid,
+      this.opts.serviceDid,
       null,
       getSigningKey,
     )
-    const member = await this.teamService.getMember(payload.iss)
+    const member = await this.opts.teamService.getMember(payload.iss)
     if (!member || member.disabled) {
       throw new Error('Not a team member')
     }
-    const { isTriage } = this.teamService.getMemberRole(member)
+    const { isTriage } = this.opts.teamService.getMemberRole(member)
     if (!isTriage) {
       throw new Error('Not a moderator')
     }
     return payload.iss
   }
-
   private onConnection(
     ws: WebSocket,
     req: IncomingMessage,

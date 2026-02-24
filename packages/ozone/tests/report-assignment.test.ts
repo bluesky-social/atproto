@@ -1,11 +1,7 @@
 import AtpAgent, { ToolsOzoneReportClaimReport } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import WebSocket from 'ws'
-import {
-  AssignmentEvent,
-  ClientMessage,
-  ServerMessage,
-} from '../src/assignment/assignment-ws'
+import { ClientMessage, ServerMessage } from '../src/assignment/assignment-ws'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('report-assignment', () => {
