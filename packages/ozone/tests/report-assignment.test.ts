@@ -141,7 +141,7 @@ describe('report-assignment', () => {
         reportId,
         assign: true,
       },
-      'moderator',
+      'admin',
     )
     await assignModerator(
       {
@@ -155,10 +155,10 @@ describe('report-assignment', () => {
         reportId,
         assign: true,
       },
-      'admin',
+      'moderator',
     )
     expect(assignment.reportId).toBe(reportId)
-    expect(assignment.did).toBe(network.ozone.adminAccnt.did)
+    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
