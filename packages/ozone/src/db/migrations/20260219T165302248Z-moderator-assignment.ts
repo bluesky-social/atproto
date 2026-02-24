@@ -14,10 +14,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
       col.defaultTo(sql`now()`).notNull(),
     )
     .addColumn('endAt', 'timestamptz', (col) => col.notNull())
-    .addUniqueConstraint('moderator_assignment_queue_report_unique', [
-      'queueId',
-      'reportId',
-    ])
     .execute()
 }
 
