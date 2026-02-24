@@ -55,13 +55,15 @@ export interface ClaimReportResult {
 }
 
 export class AssignmentService {
-  public wss: AssignmentWebSocketServer
+  public wss?: AssignmentWebSocketServer
 
   constructor(
     public db: Database,
-    wssOpts: AssignmentWebSocketServerOpts,
+    wssOpts?: AssignmentWebSocketServerOpts,
   ) {
-    this.wss = new AssignmentWebSocketServer(this, wssOpts)
+    if (wssOpts) {
+      this.wss = new AssignmentWebSocketServer(this, wssOpts)
+    }
   }
 
   async getAssignments(input: GetAssignmentsInput): Promise<AssignmentRow[]> {
@@ -150,7 +152,7 @@ export class AssignmentService {
       endAt: result.endAt.toISOString(),
     }
 
-    this.wss.broadcast({
+    this.wss?.broadcast({
       type: 'queue:assigned',
       queueId: row.queueId!,
     })
@@ -216,7 +218,7 @@ export class AssignmentService {
       endAt: result.endAt.toISOString(),
     }
 
-    this.wss.broadcast({
+    this.wss?.broadcast({
       type: assign ? 'report:review:started' : 'report:review:ended',
       reportId: row.reportId,
       moderator: { did: row.did },

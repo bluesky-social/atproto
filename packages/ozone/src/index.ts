@@ -127,7 +127,7 @@ export class OzoneService {
     server.removeAllListeners('upgrade')
     server.on('upgrade', (req, socket, head) => {
       if (req.url?.startsWith('/ws/assignments')) {
-        this.ctx.assignmentService.wss.handleUpgrade(req, socket, head)
+        this.ctx.assignmentService.wss?.handleUpgrade(req, socket, head)
       } else {
         for (const fn of upgradeListeners) {
           fn.call(server, req, socket, head)
@@ -145,7 +145,7 @@ export class OzoneService {
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
     await this.ctx.sequencer.destroy()
-    this.ctx.assignmentService.wss.destroy()
+    this.ctx.assignmentService.wss?.destroy()
     await this.ctx.db.close()
     clearInterval(this.dbStatsInterval)
     this.dbStatsInterval = undefined
