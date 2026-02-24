@@ -223,38 +223,22 @@ export class AssignmentWebSocketServer {
           break
         case 'report:review:start':
           try {
-            const result = await this.assignmentService.assignReport({
+            await this.assignmentService.assignReport({
               did: client.moderatorDid,
               reportId: message.reportId,
               queueId: message.queueId,
               assign: true,
-            })
-            this.broadcast({
-              type: 'report:review:started',
-              reportId: result.reportId,
-              moderator: {
-                did: client.moderatorDid,
-              },
-              queues: result.queueId != null ? [result.queueId] : [],
             })
           } catch (e) {
             console.error('Error claiming report:', e)
           }
           break
         case 'report:review:end':
-          const result = await this.assignmentService.assignReport({
+          await this.assignmentService.assignReport({
             did: client.moderatorDid,
             reportId: message.reportId,
             queueId: message.queueId,
             assign: false,
-          })
-          this.broadcast({
-            type: 'report:review:ended',
-            reportId: result.reportId,
-            moderator: {
-              did: client.moderatorDid,
-            },
-            queues: result.queueId != null ? [result.queueId] : [],
           })
           break
         case 'ping':
