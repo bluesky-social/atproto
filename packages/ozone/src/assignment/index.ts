@@ -5,7 +5,10 @@ import {
 } from './assignment-ws'
 import { Database } from '../db'
 
-const ASSIGNMENT_DURATION_MS = 5 * 60 * 1000 // 5 minutes
+export interface AssignmentServiceOpts {
+  queueDurationMs: number
+  reportDurationMs: number
+}
 
 export interface AssignQueueInput {
   did: string
@@ -59,6 +62,7 @@ export class AssignmentService {
 
   constructor(
     public db: Database,
+    public opts: AssignmentServiceOpts,
     wssOpts?: AssignmentWebSocketServerOpts,
   ) {
     if (wssOpts) {
@@ -107,7 +111,7 @@ export class AssignmentService {
     const { did, queueId, assign } = input
     const now = new Date()
     const endAt = assign
-      ? new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+      ? new Date(now.getTime() + this.opts.queueDurationMs)
       : now
 
     const result = await this.db.transaction(async (dbTxn) => {
@@ -164,7 +168,7 @@ export class AssignmentService {
     const { did, reportId, queueId, assign } = input
     const now = new Date()
     const endAt = assign
-      ? new Date(now.getTime() + ASSIGNMENT_DURATION_MS)
+      ? new Date(now.getTime() + this.opts.reportDurationMs)
       : now
 
     const result = await this.db.transaction(async (dbTxn) => {

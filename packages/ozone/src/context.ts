@@ -166,18 +166,24 @@ export class AppContext {
       strikeService,
       overrides?.imgInvalidator,
     )
+    const assignmentService = new AssignmentService(
+      db,
+      {
+        queueDurationMs: cfg.assignments.queueDurationMs,
+        reportDurationMs: cfg.assignments.reportDurationMs,
+      },
+      {
+        serviceDid: cfg.service.did,
+        idResolver,
+        teamService: teamService(db),
+      },
+    )
 
     const sequencer = new Sequencer(modService(db))
 
     const authVerifier = new AuthVerifier(idResolver, {
       serviceDid: cfg.service.did,
       adminPassword: secrets.adminPassword,
-      teamService: teamService(db),
-    })
-
-    const assignmentService = new AssignmentService(db, {
-      serviceDid: cfg.service.did,
-      idResolver,
       teamService: teamService(db),
     })
 
