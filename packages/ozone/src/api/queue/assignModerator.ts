@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('DID is required')
       }
       if (did !== authDid && !auth.credentials.isAdmin) {
-        throw new ForbiddenError('Cannot assign others')
+        throw new ForbiddenError('Unauthorized')
       }
 
       const result = await ctx.assignmentService.assignQueue({ did, queueId })
