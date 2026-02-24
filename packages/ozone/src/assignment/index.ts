@@ -171,23 +171,23 @@ export class AssignmentService {
         .executeTakeFirst()
 
       if (existing) {
-        if (existing.did === did) {
-          const updated = await dbTxn.db
-            .updateTable('moderator_assignment')
-            .set({
-              endAt,
-              queueId: queueId ?? existing.queueId ?? null,
-            })
-            .where('id', '=', existing.id)
-            .returningAll()
-            .executeTakeFirstOrThrow()
-          return updated
-        } else {
+        if (existing.did !== did && assign) {
           throw new InvalidRequestError(
             'Report already assigned',
             'AlreadyAssigned',
           )
         }
+        const updated = await dbTxn.db
+          .updateTable('moderator_assignment')
+          .set({
+            did,
+            endAt,
+            queueId: queueId ?? existing.queueId ?? null,
+          })
+          .where('id', '=', existing.id)
+          .returningAll()
+          .executeTakeFirstOrThrow()
+          return updated
       }
 
       const created = await dbTxn.db
