@@ -178,7 +178,7 @@ export class AssignmentService {
         .executeTakeFirst()
 
       if (existing) {
-        if (existing.did !== did) {
+        if (existing.did !== did && assign) {
           throw new InvalidRequestError(
             'Report already assigned',
             'AlreadyAssigned',
@@ -187,7 +187,7 @@ export class AssignmentService {
         const updated = await dbTxn.db
           .updateTable('moderator_assignment')
           .set({
-            did,
+            did: assign ? did : existing.did,
             endAt,
             queueId: queueId ?? existing.queueId ?? null,
           })
