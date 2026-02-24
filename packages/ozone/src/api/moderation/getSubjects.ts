@@ -59,16 +59,6 @@ export default function (server: Server, ctx: AppContext) {
             ? record?.moderation.subjectStatus
             : repo?.moderation.subjectStatus
 
-        // Build subject object with proper type
-        const subjectObj =
-          type === 'record'
-            ? {
-                $type: 'com.atproto.repo.strongRef' as const,
-                uri: subject,
-                cid: record?.cid || '',
-              }
-            : { $type: 'com.atproto.admin.defs#repoRef' as const, did: subject }
-
         subjectWithDetails.set(subject, {
           type,
           repo,
@@ -78,7 +68,7 @@ export default function (server: Server, ctx: AppContext) {
             ...profile,
           },
           status,
-          subject: subjectObj,
+          subject,
         })
 
         if ((type === 'record' && !record) || (type === 'account' && !repo)) {

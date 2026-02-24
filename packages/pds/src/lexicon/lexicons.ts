@@ -16181,11 +16181,7 @@ export const schemaDict = {
             ref: 'lex:com.atproto.moderation.defs#subjectType',
           },
           subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
+            type: 'string',
           },
           status: {
             type: 'ref',

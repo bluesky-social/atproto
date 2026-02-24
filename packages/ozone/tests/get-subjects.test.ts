@@ -76,6 +76,7 @@ describe('admin get multiple subjects with all relevant details', () => {
       { headers: await ozone.modHeaders(ids.ToolsOzoneModerationGetSubjects) },
     )
 
+    console.log(subjects)
     expect(forSnapshot(subjects)).toMatchSnapshot()
   })
 })
