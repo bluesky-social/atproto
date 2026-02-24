@@ -28,6 +28,7 @@ import { createServer } from './lexicon'
 import * as AppBskyFeedGetFeedSkeleton from './lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { loggerMiddleware } from './logger'
 import { proxyHandler } from './pipethrough'
+import { metricsMiddleware } from './metrics'
 import compression from './util/compression'
 import * as wellKnown from './well-known'
 
@@ -156,6 +157,7 @@ export class PDS {
       ...getTrustedIps(cfg),
     ])
     app.use(loggerMiddleware)
+    app.use(metricsMiddleware())
     app.use(compression())
     app.use(authRoutes.createRouter(ctx)) // Before CORS
     app.use(cors({ maxAge: DAY / SECOND }))

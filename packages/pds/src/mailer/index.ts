@@ -26,35 +26,35 @@ export class ServerMailer {
     mailOpts: Mail.Options,
   ) {
     await this.sendTemplate('resetPassword', params, {
-      subject: 'Password Reset Requested',
+      subject: 'protoimsg — Password Reset',
       ...mailOpts,
     })
   }
 
   async sendAccountDelete(params: { token: string }, mailOpts: Mail.Options) {
     await this.sendTemplate('deleteAccount', params, {
-      subject: 'Account Deletion Requested',
+      subject: 'protoimsg — Account Deletion',
       ...mailOpts,
     })
   }
 
   async sendConfirmEmail(params: { token: string }, mailOpts: Mail.Options) {
     await this.sendTemplate('confirmEmail', params, {
-      subject: 'Email Confirmation',
+      subject: 'protoimsg — Email Confirmation',
       ...mailOpts,
     })
   }
 
   async sendUpdateEmail(params: { token: string }, mailOpts: Mail.Options) {
     await this.sendTemplate('updateEmail', params, {
-      subject: 'Email Update Requested',
+      subject: 'protoimsg — Email Update',
       ...mailOpts,
     })
   }
 
   async sendPlcOperation(params: { token: string }, mailOpts: Mail.Options) {
     await this.sendTemplate('plcOperation', params, {
-      subject: 'PLC Update Operation Requested',
+      subject: 'protoimsg — Identity Update',
       ...mailOpts,
     })
   }

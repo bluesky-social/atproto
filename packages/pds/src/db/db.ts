@@ -14,8 +14,10 @@ import {
 import { dbLogger } from '../logger'
 import { retrySqlite } from './util'
 
-const DEFAULT_PRAGMAS = {
+const DEFAULT_PRAGMAS: Record<string, string> = {
   // strict: 'ON', // @TODO strictness should live on table defs instead
+  synchronous: 'NORMAL', // safe with WAL mode, faster than FULL
+  cache_size: '-20000', // 20MB page cache (default is ~2MB)
 }
 
 export class Database<Schema> {

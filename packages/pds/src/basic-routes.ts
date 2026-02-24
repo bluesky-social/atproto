@@ -1,6 +1,10 @@
+import fs from 'node:fs'
 import { Router } from 'express'
 import { sql } from 'kysely'
 import { AppContext } from './context'
+import { getMetrics, getContentType } from './metrics'
+
+const startedAt = Date.now()
 
 export const createRouter = (ctx: AppContext): Router => {
   const router = Router()
@@ -19,12 +23,12 @@ export const createRouter = (ctx: AppContext): Router => {
                     \\/_/
 
 
-This is an AT Protocol Personal Data Server (aka, an atproto PDS)
+This is an AT Protocol Personal Data Server (PDS) for protoimsg
 
 Most API routes are under /xrpc/
 
-      Code: https://github.com/bluesky-social/atproto
- Self-Host: https://github.com/bluesky-social/pds
+      Code: https://github.com/grishaLR/atproto
+ Self-Host: https://github.com/grishaLR/pds
   Protocol: https://atproto.com
 `)
   })
@@ -45,7 +49,49 @@ Most API routes are under /xrpc/
       res.status(503).send({ version, error: 'Service Unavailable' })
       return
     }
-    res.send({ version })
+
+    // Enhanced health info
+    const uptimeSeconds = Math.floor((Date.now() - startedAt) / 1000)
+
+    let diskUsagePercent: number | null = null
+    try {
+      // Use the directory of the account DB to check disk usage of the data volume
+      const dataDir = require('node:path').dirname(ctx.cfg.db.accountDbLoc)
+      const stat = fs.statfsSync(dataDir)
+      const totalBytes = stat.bsize * stat.blocks
+      const freeBytes = stat.bsize * stat.bavail
+      diskUsagePercent = Math.round(((totalBytes - freeBytes) / totalBytes) * 1000) / 10
+    } catch {
+      // statfs not available on all platforms
+    }
+
+    let accountCount: number | null = null
+    try {
+      const result = await sql<{ cnt: number }>`select count(*) as cnt from account`.execute(
+        ctx.accountManager.db.db,
+      )
+      accountCount = result.rows[0]?.cnt ?? null
+    } catch {
+      // table may not exist yet
+    }
+
+    res.send({
+      version,
+      uptimeSeconds,
+      ...(diskUsagePercent !== null && { diskUsagePercent }),
+      ...(accountCount !== null && { accountCount }),
+    })
+  })
+
+  router.get('/metrics', async function (req, res) {
+    try {
+      const metrics = await getMetrics()
+      res.set('Content-Type', getContentType())
+      res.send(metrics)
+    } catch (err) {
+      req.log.error({ err }, 'failed to collect metrics')
+      res.status(500).send('Error collecting metrics')
+    }
   })
 
   return router

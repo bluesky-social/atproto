@@ -11,8 +11,8 @@ export const getDb = (
   disableWalAutoCheckpoint = false,
 ): DidCacheDb => {
   const pragmas: Record<string, string> = disableWalAutoCheckpoint
-    ? { wal_autocheckpoint: '0', synchronous: 'NORMAL' }
-    : { synchronous: 'NORMAL' }
+    ? { wal_autocheckpoint: '0' }
+    : {}
   return Database.sqlite(location, { pragmas })
 }
 
