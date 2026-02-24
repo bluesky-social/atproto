@@ -48,9 +48,9 @@ import updateMember from './team/updateMember'
 import grantVerifications from './verification/grantVerifications'
 import listVerifications from './verification/listVerifications'
 import revokeVerifications from './verification/revokeVerifications'
-import assignModerator from './queue/assignModerator'
+import assignQueueModerator from './queue/assignModerator'
 import getAssignments from './queue/getAssignments'
-import claimReport from './report/claimReport'
+import assignReportModerator from './report/assignModerator'
 
 export * as health from './health'
 
@@ -105,8 +105,8 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
-  assignModerator(server, ctx)
+  assignQueueModerator(server, ctx)
   getAssignments(server, ctx)
-  claimReport(server, ctx)
+  assignReportModerator(server, ctx)
   return server
 }

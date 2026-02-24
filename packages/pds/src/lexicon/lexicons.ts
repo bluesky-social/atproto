@@ -19283,13 +19283,13 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneReportClaimReport: {
+  ToolsOzoneReportAssignModerator: {
     lexicon: 1,
-    id: 'tools.ozone.report.claimReport',
+    id: 'tools.ozone.report.assignModerator',
     defs: {
       main: {
         type: 'procedure',
-        description: 'Claim a report for the current moderator.',
+        description: 'Assign a report to the current user.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -19298,12 +19298,12 @@ export const schemaDict = {
             properties: {
               reportId: {
                 type: 'integer',
-                description: 'The ID of the report to claim.',
+                description: 'The ID of the report to assign.',
               },
               queueId: {
                 type: 'integer',
                 description:
-                  'Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue.',
+                  'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
               },
               assign: {
                 type: 'boolean',
@@ -19321,8 +19321,8 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'AlreadyClaimed',
-            description: 'The report is already claimed by another user.',
+            name: 'AlreadyAssigned',
+            description: 'The report is already assigned to another user.',
           },
         ],
       },
@@ -21770,7 +21770,7 @@ export const ids = {
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
-  ToolsOzoneReportClaimReport: 'tools.ozone.report.claimReport',
+  ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',

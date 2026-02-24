@@ -3,7 +3,7 @@ import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.claimReport({
+  server.tools.ozone.report.assignModerator({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const authDid =
@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         throw new ForbiddenError('No one to assign report to')
       }
 
-      const result = await ctx.assignmentService.claimReport({
+      const result = await ctx.assignmentService.assignReport({
         did: authDid,
         reportId: input.body.reportId,
         queueId: input.body.queueId,

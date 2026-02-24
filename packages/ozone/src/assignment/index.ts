@@ -164,7 +164,7 @@ export class AssignmentService {
     return row
   }
 
-  async claimReport(input: ClaimReportInput): Promise<ClaimReportResult> {
+  async assignReport(input: ClaimReportInput): Promise<ClaimReportResult> {
     const { did, reportId, queueId, assign } = input
     const now = new Date()
     const endAt = assign

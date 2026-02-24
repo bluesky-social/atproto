@@ -223,7 +223,7 @@ export class AssignmentWebSocketServer {
           break
         case 'report:review:start':
           try {
-            const result = await this.assignmentService.claimReport({
+            const result = await this.assignmentService.assignReport({
               did: client.moderatorDid,
               reportId: message.reportId,
               queueId: message.queueId,
@@ -242,7 +242,7 @@ export class AssignmentWebSocketServer {
           }
           break
         case 'report:review:end':
-          const result = await this.assignmentService.claimReport({
+          const result = await this.assignmentService.assignReport({
             did: client.moderatorDid,
             reportId: message.reportId,
             queueId: message.queueId,

@@ -1,4 +1,4 @@
-import AtpAgent, { ToolsOzoneReportClaimReport } from '@atproto/api'
+import AtpAgent, { ToolsOzoneReportAssignModerator } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import WebSocket from 'ws'
 import { ClientMessage, ServerMessage } from '../src/assignment/assignment-ws'
@@ -12,14 +12,14 @@ describe('report-assignment', () => {
   let lastId = 0
   const generateId = () => ++lastId
 
-  const claimReport = async (
-    input: ToolsOzoneReportClaimReport.InputSchema,
+  const assignModerator = async (
+    input: ToolsOzoneReportAssignModerator.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) => {
-    const { data } = await agent.tools.ozone.report.claimReport(input, {
+    const { data } = await agent.tools.ozone.report.assignModerator(input, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders(
-        ids.ToolsOzoneReportClaimReport,
+        ids.ToolsOzoneReportAssignModerator,
         callerRole,
       ),
     })
@@ -47,7 +47,7 @@ describe('report-assignment', () => {
 
   it('moderator can claim', async () => {
     const reportId = generateId()
-    const assignment1 = await claimReport(
+    const assignment1 = await assignModerator(
       {
         reportId,
         assign: true,
@@ -63,14 +63,14 @@ describe('report-assignment', () => {
 
   it('moderator can refresh claim', async () => {
     const reportId = generateId()
-    const assignment1 = await claimReport(
+    const assignment1 = await assignModerator(
       {
         reportId,
         assign: true,
       },
       'moderator',
     )
-    const assignment2 = await claimReport(
+    const assignment2 = await assignModerator(
       {
         reportId,
         assign: true,
@@ -85,14 +85,14 @@ describe('report-assignment', () => {
 
   it('moderator can claim then un-claim a report', async () => {
     const reportId = generateId()
-    await claimReport(
+    await assignModerator(
       {
         reportId,
         assign: true,
       },
       'moderator',
     )
-    const assignment = await claimReport(
+    const assignment = await assignModerator(
       {
         reportId,
         assign: false,
@@ -106,21 +106,21 @@ describe('report-assignment', () => {
 
   it('claim can be exchanged', async () => {
     const reportId = generateId()
-    await claimReport(
+    await assignModerator(
       {
         reportId,
         assign: true,
       },
       'moderator',
     )
-    await claimReport(
+    await assignModerator(
       {
         reportId,
         assign: false,
       },
       'moderator',
     )
-    const assignment = await claimReport(
+    const assignment = await assignModerator(
       {
         reportId,
         assign: true,
@@ -136,7 +136,7 @@ describe('report-assignment', () => {
 
   it('cannot double claim', async () => {
     const reportId = generateId()
-    await claimReport(
+    await assignModerator(
       {
         reportId,
         assign: true,
@@ -144,7 +144,7 @@ describe('report-assignment', () => {
       'moderator',
     )
     await expect(
-      claimReport(
+      assignModerator(
         {
           reportId,
           assign: true,
@@ -192,7 +192,7 @@ describe('report-assignment', () => {
       await settle()
 
       try {
-        await claimReport(
+        await assignModerator(
           {
             reportId: generateId(),
             queueId,
@@ -200,7 +200,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await claimReport(
+        await assignModerator(
           {
             reportId: generateId(),
             queueId,
@@ -208,7 +208,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await claimReport(
+        await assignModerator(
           {
             reportId: generateId(),
             queueId,
@@ -216,7 +216,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await claimReport(
+        await assignModerator(
           {
             reportId: generateId(),
             queueId,
@@ -224,7 +224,7 @@ describe('report-assignment', () => {
           },
           'admin',
         )
-        await claimReport(
+        await assignModerator(
           {
             reportId: generateId(),
             queueId,
@@ -243,7 +243,7 @@ describe('report-assignment', () => {
     it('new subscription receives snapshot', async () => {
       const queueId = generateId()
       const reportId = generateId()
-      await claimReport(
+      await assignModerator(
         {
           reportId,
           queueId,

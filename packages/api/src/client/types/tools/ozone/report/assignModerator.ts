@@ -14,14 +14,14 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.claimReport'
+const id = 'tools.ozone.report.assignModerator'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The ID of the report to claim. */
+  /** The ID of the report to assign. */
   reportId: number
-  /** Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue. */
+  /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
   queueId?: number
   /** Whether to assign the report to the moderator. */
   assign?: boolean
@@ -42,7 +42,7 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AlreadyClaimedError extends XRPCError {
+export class AlreadyAssignedError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -50,7 +50,7 @@ export class AlreadyClaimedError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AlreadyClaimed') return new AlreadyClaimedError(e)
+    if (e.error === 'AlreadyAssigned') return new AlreadyAssignedError(e)
   }
 
   return e
