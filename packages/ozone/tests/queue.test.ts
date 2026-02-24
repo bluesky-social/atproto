@@ -37,6 +37,10 @@ describe('queue', () => {
     return data
   }
 
+  const clearAssignments = async () => {
+    await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'queue',
@@ -51,7 +55,7 @@ describe('queue', () => {
     await network.close()
   })
 
-  it('lists assignments via getAssignments', async () => {
+  it('get active assignments', async () => {
     await assign({ queueId: 1 }, 'admin')
     const result = await getAssignments({ onlyActiveAssignments: true })
 
@@ -81,6 +85,37 @@ describe('queue', () => {
 
     expect(result.assignments.length).toBeGreaterThanOrEqual(1)
     expect(result.assignments[0].did).toBe(sc.dids.bob)
+  })
+
+  it('get assignments for a user', async () => {
+    await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+
+    const result = await getAssignments({
+      dids: [sc.dids.bob],
+    })
+
+    expect(result.assignments.length).toBeGreaterThanOrEqual(1)
+    expect(result.assignments[0].did).toBe(sc.dids.bob)
+  })
+
+  it('get active assignments for queue', async () => {
+    await clearAssignments()
+    await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+    const result = await getAssignments({
+      queueIds: [1],
+      onlyActiveAssignments: true,
+    })
+    expect(result.assignments.length).toBe(1)
+  })
+
+  it('get all assignments for queue', async () => {
+    await clearAssignments()
+    await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+    const result = await getAssignments({
+      queueIds: [1],
+      onlyActiveAssignments: false,
+    })
+    expect(result.assignments.length).toBe(1)
   })
 
   describe('admin', () => {

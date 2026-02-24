@@ -3,6 +3,7 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import WebSocket from 'ws'
 import { ClientMessage, ServerMessage } from '../src/assignment/assignment-ws'
 import { ids } from '../src/lexicon/lexicons'
+import { wait } from './_util'
 
 describe('report-assignment', () => {
   let network: TestNetwork
@@ -181,15 +182,12 @@ describe('report-assignment', () => {
       ws.send(JSON.stringify({ type: 'subscribe', queues: [queueId] }))
     }
 
-    const settle = (ms: number = 100) =>
-      new Promise((resolve) => setTimeout(resolve, ms))
-
     it('subscription receives updates', async () => {
       const queueId = generateId()
       const { ws, updates } = await wsConnect()
-      await settle()
+      await wait()
       wsSubscribe(ws, queueId)
-      await settle()
+      await wait()
 
       try {
         await assignModerator(
@@ -232,7 +230,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await settle()
+        await wait()
 
         expect(updates.length).toBe(6) // intial snapshot + 5 events
       } finally {
@@ -253,9 +251,9 @@ describe('report-assignment', () => {
       )
 
       const { ws, updates } = await wsConnect()
-      await settle()
+      await wait()
       wsSubscribe(ws, queueId)
-      await settle()
+      await wait()
 
       try {
         const snapshot = updates.find(
@@ -275,9 +273,9 @@ describe('report-assignment', () => {
       const reportId = generateId()
 
       const { ws, updates } = await wsConnect('moderator')
-      await settle()
+      await wait()
       wsSubscribe(ws, queueId)
-      await settle()
+      await wait()
 
       try {
         const message: ClientMessage = {
@@ -286,7 +284,7 @@ describe('report-assignment', () => {
           queueId,
         }
         ws.send(JSON.stringify(message))
-        await settle()
+        await wait()
 
         const update = updates.find(
           (u) =>
@@ -308,9 +306,9 @@ describe('report-assignment', () => {
       const reportId = generateId()
 
       const { ws, updates } = await wsConnect('moderator')
-      await settle()
+      await wait()
       wsSubscribe(ws, queueId)
-      await settle()
+      await wait()
 
       try {
         let message: ClientMessage = {
@@ -319,7 +317,7 @@ describe('report-assignment', () => {
           queueId,
         }
         ws.send(JSON.stringify(message))
-        await settle()
+        await wait()
 
         message = {
           type: 'report:review:end',
@@ -327,7 +325,7 @@ describe('report-assignment', () => {
           queueId,
         }
         ws.send(JSON.stringify(message))
-        await settle()
+        await wait()
 
         const update = updates.find(
           (u) =>
