@@ -22,8 +22,6 @@ export interface InputSchema {
   queueId: number
   /** DID to be assigned. Assigns to whomever sent the request if not provided. */
   did?: string
-  /** Whether to assign the queue to the user. Defaults to true. */
-  assign?: boolean
 }
 
 export type OutputSchema = ToolsOzoneQueueDefs.AssignmentView

@@ -13,7 +13,6 @@ export interface AssignmentServiceOpts {
 export interface AssignQueueInput {
   did: string
   queueId: number
-  assign: boolean
 }
 
 export interface AssignQueueResult {
@@ -99,11 +98,9 @@ export class AssignmentService {
   }
 
   async assignQueue(input: AssignQueueInput): Promise<AssignQueueResult> {
-    const { did, queueId, assign } = input
+    const { did, queueId } = input
     const now = new Date()
-    const endAt = assign
-      ? new Date(now.getTime() + this.opts.queueDurationMs)
-      : now
+    const endAt = new Date(now.getTime() + this.opts.queueDurationMs)
 
     const result = await this.db.transaction(async (dbTxn) => {
       const existing = await dbTxn.db
