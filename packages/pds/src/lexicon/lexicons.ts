@@ -18904,6 +18904,7 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+                maxLength: 25,
                 description: 'Report reason types (fully qualified NSIDs)',
               },
             },
@@ -19109,6 +19110,25 @@ export const schemaDict = {
               type: 'boolean',
               description:
                 'Filter by enabled status. If not specified, returns all queues.',
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                "Filter queues that handle this subject type ('account' or 'record').",
+            },
+            collection: {
+              type: 'string',
+              description:
+                "Filter queues by collection name (e.g. 'app.bsky.feed.post').",
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              maxLength: 10,
+              description:
+                'Filter queues that handle any of these report reason types.',
             },
             limit: {
               type: 'integer',

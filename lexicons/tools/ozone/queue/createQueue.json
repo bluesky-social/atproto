@@ -33,6 +33,7 @@
               "items": {
                 "type": "string"
               },
+              "maxLength": 25,
               "description": "Report reason types (fully qualified NSIDs)"
             }
           }

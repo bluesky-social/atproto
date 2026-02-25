@@ -18973,6 +18973,7 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+                maxLength: 25,
                 description: 'Report reason types (fully qualified NSIDs)',
               },
             },
@@ -19194,6 +19195,7 @@ export const schemaDict = {
               items: {
                 type: 'string',
               },
+              maxLength: 10,
               description:
                 'Filter queues that handle any of these report reason types.',
             },

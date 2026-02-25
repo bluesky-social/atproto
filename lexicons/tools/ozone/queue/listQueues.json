@@ -23,6 +23,7 @@
           "reportTypes": {
             "type": "array",
             "items": { "type": "string" },
+            "maxLength": 10,
             "description": "Filter queues that handle any of these report reason types."
           },
           "limit": {
