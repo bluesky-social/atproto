@@ -78,7 +78,6 @@ export interface AssignmentView {
   id: number
   did: string
   queueId: number
-  reportId?: number
   startAt: string
   endAt: string
 }

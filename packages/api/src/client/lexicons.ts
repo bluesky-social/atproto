@@ -19138,9 +19138,6 @@ export const schemaDict = {
           queueId: {
             type: 'integer',
           },
-          reportId: {
-            type: 'integer',
-          },
           startAt: {
             type: 'string',
             format: 'datetime',
