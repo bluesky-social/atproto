@@ -256,6 +256,5 @@ export async function stopServer(server: Server) {
   })
 }
 
-/** Waits for a specified amount of time (default 100ms) */
-export const wait = (ms: number = 100) =>
-  new Promise((resolve) => setTimeout(resolve, ms))
+/** Generates a unique ID based on the current time */
+export const generateId = (mod: number = 10000) => new Date().getTime() % mod

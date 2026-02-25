@@ -7,14 +7,13 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import WebSocket from 'ws'
 import { ClientMessage, ServerMessage } from '../src/assignment/assignment-ws'
 import { ids } from '../src/lexicon/lexicons'
-import { wait } from './_util'
+import { wait } from '@atproto/common'
+import { generateId } from './_util'
 
 describe('report-assignment', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-
-  const generateId = () => new Date().getTime() % 1000
 
   const assignReportModerator = async (
     input: ToolsOzoneReportAssignModerator.InputSchema,
@@ -228,9 +227,9 @@ describe('report-assignment', () => {
     it('subscription receives updates', async () => {
       const queueId = generateId()
       const { ws, updates } = await wsConnect()
-      await wait()
+      await wait(100)
       wsSubscribe(ws, queueId)
-      await wait()
+      await wait(100)
 
       try {
         await assignReportModerator(
@@ -273,7 +272,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await wait()
+        await wait(100)
 
         expect(updates.length).toBe(7) // 2 intial snapshots + 5 events
       } finally {
@@ -295,9 +294,9 @@ describe('report-assignment', () => {
       )
 
       const { ws, updates } = await wsConnect()
-      await wait()
+      await wait(100)
       wsSubscribe(ws, queueId)
-      await wait()
+      await wait(100)
 
       try {
         const report = updates.find((u) => u.type === 'report:snapshot')
@@ -314,9 +313,9 @@ describe('report-assignment', () => {
       const reportId = generateId()
 
       const { ws, updates } = await wsConnect('moderator')
-      await wait()
+      await wait(100)
       wsSubscribe(ws, queueId)
-      await wait()
+      await wait(100)
 
       try {
         const message: ClientMessage = {
@@ -325,7 +324,7 @@ describe('report-assignment', () => {
           queueId,
         }
         ws.send(JSON.stringify(message))
-        await wait()
+        await wait(100)
 
         const update = updates.find(
           (u) =>
@@ -347,9 +346,9 @@ describe('report-assignment', () => {
       const reportId = generateId()
 
       const { ws, updates } = await wsConnect('moderator')
-      await wait()
+      await wait(100)
       wsSubscribe(ws, queueId)
-      await wait()
+      await wait(100)
 
       try {
         let message: ClientMessage = {
@@ -358,7 +357,7 @@ describe('report-assignment', () => {
           queueId,
         }
         ws.send(JSON.stringify(message))
-        await wait()
+        await wait(100)
 
         message = {
           type: 'report:review:end',
@@ -366,7 +365,7 @@ describe('report-assignment', () => {
           queueId,
         }
         ws.send(JSON.stringify(message))
-        await wait()
+        await wait(100)
 
         const update = updates.find(
           (u) =>

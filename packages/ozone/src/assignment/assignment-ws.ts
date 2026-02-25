@@ -23,6 +23,10 @@ export type ClientMessage =
       queues: number[]
     }
   | {
+      type: 'queue:assign'
+      queueId: number
+    }
+  | {
       type: 'report:review:start'
       reportId: number
       queueId?: number
@@ -232,6 +236,12 @@ export class AssignmentWebSocketServer {
             (queue) => !message.queues.includes(queue),
           )
           break
+        case 'queue:assign':
+          await this.assignmentService.assignQueue({
+            did: client.moderatorDid,
+            queueId: message.queueId,
+          })
+          break
         case 'report:review:start':
           await this.assignmentService.assignReport({
             did: client.moderatorDid,
@@ -264,12 +274,14 @@ export class AssignmentWebSocketServer {
       if (!client) continue
       if ('queues' in message) {
         // Only send to clients subscribed to affected queues
-        const subscibed = client.subscribedQueues.some((q) =>
+        const subscribed = client.subscribedQueues.some((q) =>
           message.queues.includes(q),
         )
-        if (!subscibed) continue
-        this.send(clientId, message)
+        if (!subscribed) continue
+      } else if ('queueId' in message) {
+        if (!client.subscribedQueues.includes(message.queueId)) continue
       }
+      this.send(clientId, message)
     }
   }
   /** Send active assignments to client */
