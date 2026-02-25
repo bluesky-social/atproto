@@ -10,20 +10,7 @@ export interface AssignmentServiceOpts {
   reportDurationMs: number
 }
 
-export interface AssignQueueInput {
-  did: string
-  queueId: number
-}
-
-export interface AssignQueueResult {
-  id: number
-  did: string
-  reportId: null
-  queueId: number | null
-  startAt: string
-  endAt: string
-}
-
+// getAssignments
 export interface GetAssignmentsInput {
   type?: 'queue' | 'report'
   onlyActiveAssignments?: boolean
@@ -31,7 +18,6 @@ export interface GetAssignmentsInput {
   reportIds?: number[]
   dids?: string[]
 }
-
 export interface Assignment {
   id: number
   did: string
@@ -41,13 +27,26 @@ export interface Assignment {
   endAt: string
 }
 
+// assignQueue
+export interface AssignQueueInput {
+  did: string
+  queueId: number
+}
+export interface QueueAssignment {
+  id: number
+  did: string
+  queueId: number
+  startAt: string
+  endAt: string
+}
+
+// assignReport
 export interface AssignReportInput {
   did: string
   reportId: number
   queueId?: number | null
   assign: boolean
 }
-
 export interface ReportAssignment {
   id: number
   did: string
@@ -107,7 +106,7 @@ export class AssignmentService {
     }))
   }
 
-  async assignQueue(input: AssignQueueInput): Promise<AssignQueueResult> {
+  async assignQueue(input: AssignQueueInput): Promise<QueueAssignment> {
     const { did, queueId } = input
     const now = new Date()
     const endAt = new Date(now.getTime() + this.opts.queueDurationMs)
@@ -145,18 +144,21 @@ export class AssignmentService {
       return created
     })
 
-    const row: AssignQueueResult = {
+    if (result.queueId === null || result.reportId !== null) {
+      throw new Error('Failed to assign moderator to queue')
+    }
+
+    const row: QueueAssignment = {
       id: result.id,
       did: result.did,
-      reportId: null,
-      queueId: result.queueId ?? null,
+      queueId: result.queueId,
       startAt: result.startAt.toISOString(),
       endAt: result.endAt.toISOString(),
     }
 
     this.wss?.broadcast({
       type: 'queue:assigned',
-      queueId: row.queueId!,
+      queueId: row.queueId,
     })
 
     return row
@@ -201,7 +203,7 @@ export class AssignmentService {
           .values({
             did,
             reportId,
-            queueId: queueId ?? null,
+            queueId: queueId,
             startAt: now,
             endAt,
           })
@@ -211,11 +213,15 @@ export class AssignmentService {
       }
     })
 
+    if (result.reportId === null) {
+      throw new Error('Failed to assign moderator to report')
+    }
+
     const row: ReportAssignment = {
       id: result.id,
       did: result.did,
-      reportId: result.reportId!,
-      queueId: result.queueId ?? null,
+      reportId: result.reportId,
+      queueId: result.queueId,
       startAt: result.startAt.toISOString(),
       endAt: result.endAt.toISOString(),
     }

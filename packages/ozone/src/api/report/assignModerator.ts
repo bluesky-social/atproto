@@ -29,7 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           id: result.id,
           did: result.did,
-          reportId: result.reportId!,
+          reportId: result.reportId,
           queueId: result.queueId ?? undefined,
           startAt: result.startAt,
           endAt: result.endAt,
