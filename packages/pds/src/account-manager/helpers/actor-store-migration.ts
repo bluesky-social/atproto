@@ -1,6 +1,7 @@
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
 import { ActorStore } from '../../actor-store/actor-store'
+import { getMigrator } from '../../actor-store/db'
 import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { actorStoreMigrationLogger as logger } from '../../logger'
 import { AccountDb } from '../db'
@@ -76,16 +77,30 @@ export class ActorStoreMigrator {
         continue
       }
       try {
-        // auto-migrates to latest on open, updating account db appropriately on success/failure.
-        // if we did not set skipConcurrencyLimit and the limit was reached, we'd end up repeatedly
-        // setting storeIsMigrating=1 on rows with no actual migration occuring.
-        // the limit should be configured with enough headroom for the migration worker(s)
-        // (I think the only hard ceiling is the number of open fds?)
         const actorDb = await this.actorStore.openDb(claimed.did, {
-          skipConcurrencyLimit: true,
+          migrateOnOpen: false,
         })
+        // Calling migrateToLatestOrThrow expliticly lets us skip the concurrency limits and the early-exit if the db is already migrated
+        // The latter is important in the case where the actor store and account db are out-of-sync.
+        await getMigrator(actorDb).migrateToLatestOrThrow()
         actorDb.close()
+
+        // record the success
+        await this.db.db
+          .updateTable('actor')
+          .set({
+            storeSchemaVersion: getLatestStoreSchemaVersion(),
+            storeIsMigrating: 0,
+            storeMigratedAt: new Date().toISOString(),
+          })
+          .where('did', '=', claimed.did)
+          .execute()
       } catch (e) {
+        await this.db.db
+          .updateTable('actor')
+          .set({ storeIsMigrating: 0 })
+          .where('did', '=', claimed.did)
+          .execute()
         logger.error(
           { did: claimed.did, err: e },
           'Failed to migrate actor store',

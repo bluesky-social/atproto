@@ -15,7 +15,7 @@ import { ActorStoreReader } from './actor-store-reader'
 import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
 import { ActorStoreWriter } from './actor-store-writer'
-import { ActorDb, getDb, getMigrator } from './db'
+import { ActorDb, getDb, getMigrationLevel, getMigrator } from './db'
 import { getLatestStoreSchemaVersion } from './db/migrations'
 
 export class ActorStore {
@@ -50,8 +50,9 @@ export class ActorStore {
 
   async openDb(
     did: string,
-    opts?: { skipConcurrencyLimit?: boolean },
+    opts?: { migrateOnOpen?: boolean },
   ): Promise<ActorDb> {
+    const { migrateOnOpen = true } = opts ?? {}
     const { dbLocation } = await this.getLocation(did)
     const exists = await fileExists(dbLocation)
     if (!exists) {
@@ -65,7 +66,9 @@ export class ActorStore {
       await retrySqlite(() =>
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
-      await this.ensureMigrated(did, db, opts?.skipConcurrencyLimit)
+      if (migrateOnOpen) {
+        await this.ensureMigrated(did, db)
+      }
     } catch (err) {
       db.close()
       throw err
@@ -80,29 +83,18 @@ export class ActorStore {
   // migrating the same store, SQLite serializes the writes - the second
   // caller blocks until the first completes, then sees all migrations
   // already applied (no-op).
-  private async ensureMigrated(
-    did: string,
-    db: ActorDb,
-    skipConcurrencyLimit?: boolean,
-  ): Promise<void> {
-    const actor = await this.accountDb.db
-      .selectFrom('actor')
-      .select('storeSchemaVersion')
-      .where('did', '=', did)
-      .executeTakeFirst()
-    if (!actor || actor.storeSchemaVersion === getLatestStoreSchemaVersion()) {
-      // Actor may not exist yet during account creation (the store is created
-      // before the actor row). In that case the store was just freshly created
-      // with all migrations applied, so there's nothing to do.
+  private async ensureMigrated(did: string, db: ActorDb): Promise<void> {
+    const lastMigration = await getMigrationLevel(db)
+    if (lastMigration === getLatestStoreSchemaVersion()) {
+      // already up to date
       return
     }
 
     // We need to do a migration
 
     if (
-      !skipConcurrencyLimit &&
       (await countInProgressMigrations(this.accountDb)) >=
-        this.cfg.maxConcurrentMigrations
+      this.cfg.maxConcurrentMigrations
     ) {
       throw new InternalServerError(
         'too many concurrent actor store migrations',
@@ -118,6 +110,9 @@ export class ActorStore {
 
     try {
       await getMigrator(db).migrateToLatestOrThrow()
+
+      // NOTE: If the process dies here (after migration but before the account db has been updated),
+      // the account db and the actor store will be out of sync
 
       await this.accountDb.db
         .updateTable('actor')
