@@ -19110,6 +19110,24 @@ export const schemaDict = {
               description:
                 'Filter by enabled status. If not specified, returns all queues.',
             },
+            subjectType: {
+              type: 'string',
+              description:
+                "Filter queues that handle this subject type ('account' or 'record').",
+            },
+            collection: {
+              type: 'string',
+              description:
+                "Filter queues by collection name (e.g. 'app.bsky.feed.post').",
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description:
+                'Filter queues that handle any of these report reason types.',
+            },
             limit: {
               type: 'integer',
               minimum: 1,

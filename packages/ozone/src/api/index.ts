@@ -25,6 +25,10 @@ import queryStatuses from './moderation/queryStatuses'
 import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
+import createQueue from './queue/createQueue'
+import deleteQueue from './queue/deleteQueue'
+import listQueues from './queue/listQueues'
+import updateQueue from './queue/updateQueue'
 import createReport from './report/createReport'
 import addSafelinkRule from './safelink/addRule'
 import querySafelinkEvents from './safelink/queryEvents'
@@ -79,6 +83,10 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
+  createQueue(server, ctx)
+  listQueues(server, ctx)
+  updateQueue(server, ctx)
+  deleteQueue(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)

@@ -16,6 +16,7 @@ import * as recordEventsStats from './record_events_stats'
 import * as recordPushEvent from './record_push_event'
 import * as repoPushEvent from './repo_push_event'
 import * as report from './report'
+import * as reportQueue from './report_queue'
 import * as safelink from './safelink'
 import * as scheduledAction from './scheduled-action'
 import * as setting from './setting'
@@ -25,6 +26,7 @@ import * as verification from './verification'
 export type DatabaseSchemaType = modEvent.PartialDB &
   modSubjectStatus.PartialDB &
   report.PartialDB &
+  reportQueue.PartialDB &
   label.PartialDB &
   signingKey.PartialDB &
   repoPushEvent.PartialDB &

@@ -31,6 +31,7 @@ import {
   ScheduledActionServiceCreator,
 } from './scheduled-action/service'
 import { Sequencer } from './sequencer/sequencer'
+import { QueueService, QueueServiceCreator } from './queue/service'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
 import { TeamService, TeamServiceCreator } from './team'
@@ -58,6 +59,7 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   safelinkRuleService: SafelinkRuleServiceCreator
   scheduledActionService: ScheduledActionServiceCreator
+  queueService: QueueServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   strikeService: StrikeServiceCreator
@@ -143,6 +145,7 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
+    const queueService = QueueService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
     const strikeService = StrikeService.creator()
@@ -183,6 +186,7 @@ export class AppContext {
         safelinkRuleService,
         scheduledActionService,
         teamService,
+        queueService,
         setService,
         settingService,
         strikeService,
@@ -243,6 +247,10 @@ export class AppContext {
 
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
+  }
+
+  get queueService(): QueueServiceCreator {
+    return this.opts.queueService
   }
 
   get setService(): SetServiceCreator {
