@@ -3,7 +3,7 @@ import { Duplex } from 'node:stream'
 import { RawData, WebSocket, WebSocketServer } from 'ws'
 import { IdResolver } from '@atproto/identity'
 import { verifyJwt } from '@atproto/xrpc-server'
-import type { AssignmentService } from '.'
+import type { AssignmentService, QueueAssignment, ReportAssignment } from '.'
 import { TeamService } from '../team'
 
 export interface ModeratorClient {
@@ -37,8 +37,12 @@ export type ClientMessage =
     }
 export type ServerMessage =
   | {
-      type: 'snapshot'
-      events: AssignmentEvent[]
+      type: 'report:snapshot'
+      events: ReportAssignment[]
+    }
+  | {
+      type: 'queue:snapshot'
+      events: QueueAssignment[]
     }
   | {
       type: 'report:review:started'
@@ -75,15 +79,6 @@ export type ServerMessage =
       type: 'error'
       message: string
     }
-
-export interface AssignmentEvent {
-  id: number
-  did: string
-  queueId: number | null
-  reportId: number | null
-  startAt: string
-  endAt: string
-}
 
 export interface AssignmentWebSocketServerOpts {
   serviceDid: string
@@ -268,14 +263,29 @@ export class AssignmentWebSocketServer {
   }
   /** Send active assignments to client */
   private async sendSnapshot(client: ModeratorClient) {
-    const assignments = await this.assignmentService.getAssignments({
-      onlyActiveAssignments: true,
-      queueIds: client.subscribedQueues,
-    })
-    const message: ServerMessage = {
-      type: 'snapshot',
-      events: assignments,
-    }
-    this.send(client.id, message)
+    await Promise.all([
+      (async () => {
+        const assignments = await this.assignmentService.getQueueAssignments({
+          onlyActiveAssignments: true,
+          queueIds: client.subscribedQueues,
+        })
+        const message: ServerMessage = {
+          type: 'queue:snapshot',
+          events: assignments,
+        }
+        this.send(client.id, message)
+      })(),
+      (async () => {
+        const assignments = await this.assignmentService.getReportAssignments({
+          onlyActiveAssignments: true,
+          queueIds: client.subscribedQueues,
+        })
+        const message: ServerMessage = {
+          type: 'report:snapshot',
+          events: assignments,
+        }
+        this.send(client.id, message)
+      })(),
+    ])
   }
 }

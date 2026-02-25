@@ -10,24 +10,12 @@ export interface AssignmentServiceOpts {
   reportDurationMs: number
 }
 
-// getAssignments
-export interface GetAssignmentsInput {
-  type?: 'queue' | 'report'
+// Queue
+export interface GetQueueAssignmentsInput {
   onlyActiveAssignments?: boolean
   queueIds?: number[]
-  reportIds?: number[]
   dids?: string[]
 }
-export interface Assignment {
-  id: number
-  did: string
-  reportId: number | null
-  queueId: number | null
-  startAt: string
-  endAt: string
-}
-
-// assignQueue
 export interface AssignQueueInput {
   did: string
   queueId: number
@@ -40,7 +28,13 @@ export interface QueueAssignment {
   endAt: string
 }
 
-// assignReport
+// Report
+export interface GetReportAssignmentsInput {
+  onlyActiveAssignments?: boolean
+  reportIds?: number[]
+  queueIds?: number[]
+  dids?: string[]
+}
 export interface AssignReportInput {
   did: string
   reportId: number
@@ -69,10 +63,15 @@ export class AssignmentService {
     }
   }
 
-  async getAssignments(input: GetAssignmentsInput): Promise<Assignment[]> {
-    const { type, onlyActiveAssignments, queueIds, reportIds, dids } = input
+  async getQueueAssignments(
+    input: GetQueueAssignmentsInput,
+  ): Promise<QueueAssignment[]> {
+    const { onlyActiveAssignments, queueIds, dids } = input
 
-    let query = this.db.db.selectFrom('moderator_assignment').selectAll()
+    let query = this.db.db
+      .selectFrom('moderator_assignment')
+      .selectAll()
+      .where('reportId', 'is', null)
 
     if (onlyActiveAssignments) {
       query = query.where('endAt', '>', new Date())
@@ -80,14 +79,6 @@ export class AssignmentService {
 
     if (queueIds?.length) {
       query = query.where('queueId', 'in', queueIds)
-    }
-
-    if (reportIds?.length) {
-      query = query.where('reportId', 'in', reportIds)
-    } else if (type === 'queue') {
-      query = query.where('reportId', 'is', null)
-    } else if (type === 'report') {
-      query = query.where('reportId', 'is not', null)
     }
 
     if (dids?.length) {
@@ -99,8 +90,45 @@ export class AssignmentService {
     return results.map((row) => ({
       id: row.id,
       did: row.did,
-      reportId: row.reportId ?? null,
-      queueId: row.queueId ?? null,
+      queueId: row.queueId!,
+      startAt: row.startAt.toISOString(),
+      endAt: row.endAt.toISOString(),
+    }))
+  }
+
+  async getReportAssignments(
+    input: GetReportAssignmentsInput,
+  ): Promise<ReportAssignment[]> {
+    const { onlyActiveAssignments, reportIds, queueIds, dids } = input
+
+    let query = this.db.db
+      .selectFrom('moderator_assignment')
+      .selectAll()
+      .where('reportId', 'is not', null)
+
+    if (onlyActiveAssignments) {
+      query = query.where('endAt', '>', new Date())
+    }
+
+    if (reportIds?.length) {
+      query = query.where('reportId', 'in', reportIds)
+    }
+
+    if (queueIds?.length) {
+      query = query.where('queueId', 'in', queueIds)
+    }
+
+    if (dids?.length) {
+      query = query.where('did', 'in', dids)
+    }
+
+    const results = await query.execute()
+
+    return results.map((row) => ({
+      id: row.id,
+      did: row.did,
+      reportId: row.reportId!,
+      queueId: row.queueId,
       startAt: row.startAt.toISOString(),
       endAt: row.endAt.toISOString(),
     }))

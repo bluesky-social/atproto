@@ -1,4 +1,5 @@
 import AtpAgent, {
+  ToolsOzoneQueueAssignModerator,
   ToolsOzoneReportAssignModerator,
   ToolsOzoneReportGetAssignments,
 } from '@atproto/api'
@@ -13,10 +14,9 @@ describe('report-assignment', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  let lastId = 0
-  const generateId = () => ++lastId
+  const generateId = () => new Date().getTime() % 1000
 
-  const assignModerator = async (
+  const assignReportModerator = async (
     input: ToolsOzoneReportAssignModerator.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) => {
@@ -24,6 +24,20 @@ describe('report-assignment', () => {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders(
         ids.ToolsOzoneReportAssignModerator,
+        callerRole,
+      ),
+    })
+    return data
+  }
+
+  const assignQueueModerator = async (
+    input: ToolsOzoneQueueAssignModerator.InputSchema,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) => {
+    const { data } = await agent.tools.ozone.queue.assignModerator(input, {
+      encoding: 'application/json',
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneQueueAssignModerator,
         callerRole,
       ),
     })
@@ -64,7 +78,7 @@ describe('report-assignment', () => {
 
   it('can get assignment history', async () => {
     const reportId = generateId()
-    await assignModerator(
+    await assignReportModerator(
       {
         reportId,
         assign: true,
@@ -77,7 +91,7 @@ describe('report-assignment', () => {
 
   it('moderator can assigned', async () => {
     const reportId = generateId()
-    const assignment1 = await assignModerator(
+    const assignment1 = await assignReportModerator(
       {
         reportId,
         assign: true,
@@ -93,14 +107,14 @@ describe('report-assignment', () => {
 
   it('moderator can refresh assignment', async () => {
     const reportId = generateId()
-    const assignment1 = await assignModerator(
+    const assignment1 = await assignReportModerator(
       {
         reportId,
         assign: true,
       },
       'moderator',
     )
-    const assignment2 = await assignModerator(
+    const assignment2 = await assignReportModerator(
       {
         reportId,
         assign: true,
@@ -115,14 +129,14 @@ describe('report-assignment', () => {
 
   it('moderator can assign then un-assign a report', async () => {
     const reportId = generateId()
-    await assignModerator(
+    await assignReportModerator(
       {
         reportId,
         assign: true,
       },
       'moderator',
     )
-    const assignment = await assignModerator(
+    const assignment = await assignReportModerator(
       {
         reportId,
         assign: false,
@@ -136,21 +150,21 @@ describe('report-assignment', () => {
 
   it('assignment can be exchanged', async () => {
     const reportId = generateId()
-    await assignModerator(
+    await assignReportModerator(
       {
         reportId,
         assign: true,
       },
       'admin',
     )
-    await assignModerator(
+    await assignReportModerator(
       {
         reportId,
         assign: false,
       },
       'moderator',
     )
-    const assignment = await assignModerator(
+    const assignment = await assignReportModerator(
       {
         reportId,
         assign: true,
@@ -166,7 +180,7 @@ describe('report-assignment', () => {
 
   it('cannot double assign', async () => {
     const reportId = generateId()
-    await assignModerator(
+    await assignReportModerator(
       {
         reportId,
         assign: true,
@@ -174,7 +188,7 @@ describe('report-assignment', () => {
       'moderator',
     )
     await expect(
-      assignModerator(
+      assignReportModerator(
         {
           reportId,
           assign: true,
@@ -219,7 +233,7 @@ describe('report-assignment', () => {
       await wait()
 
       try {
-        await assignModerator(
+        await assignReportModerator(
           {
             reportId: generateId(),
             queueId,
@@ -227,7 +241,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await assignModerator(
+        await assignReportModerator(
           {
             reportId: generateId(),
             queueId,
@@ -235,7 +249,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await assignModerator(
+        await assignReportModerator(
           {
             reportId: generateId(),
             queueId,
@@ -243,7 +257,7 @@ describe('report-assignment', () => {
           },
           'moderator',
         )
-        await assignModerator(
+        await assignReportModerator(
           {
             reportId: generateId(),
             queueId,
@@ -251,7 +265,7 @@ describe('report-assignment', () => {
           },
           'admin',
         )
-        await assignModerator(
+        await assignReportModerator(
           {
             reportId: generateId(),
             queueId,
@@ -261,7 +275,7 @@ describe('report-assignment', () => {
         )
         await wait()
 
-        expect(updates.length).toBe(6) // intial snapshot + 5 events
+        expect(updates.length).toBe(7) // 2 intial snapshots + 5 events
       } finally {
         ws.close()
       }
@@ -270,7 +284,8 @@ describe('report-assignment', () => {
     it('new subscription receives snapshot', async () => {
       const queueId = generateId()
       const reportId = generateId()
-      await assignModerator(
+      await assignQueueModerator({ queueId })
+      await assignReportModerator(
         {
           reportId,
           queueId,
@@ -285,13 +300,10 @@ describe('report-assignment', () => {
       await wait()
 
       try {
-        const snapshot = updates.find(
-          (u) => 'type' in u && u.type === 'snapshot',
-        ) as (ServerMessage & { type: 'snapshot' }) | undefined
-        expect(snapshot).toBeDefined()
-        const update = snapshot!.events.find((e) => e.reportId === reportId)
-        expect(update).toBeDefined()
-        expect(update?.did).toBe(network.ozone.moderatorAccnt.did)
+        const report = updates.find((u) => u.type === 'report:snapshot')
+        expect(report?.events[0].reportId).toBe(reportId)
+        const queue = updates.find((u) => u.type === 'queue:snapshot')
+        expect(queue?.events[0].queueId).toBe(queueId)
       } finally {
         ws.close()
       }
