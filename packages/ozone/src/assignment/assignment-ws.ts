@@ -23,11 +23,6 @@ export type ClientMessage =
       queues: number[]
     }
   | {
-      type: 'queue:assign'
-      queueId: number
-      did: string
-    }
-  | {
       type: 'report:review:start'
       reportId: number
       queueId?: number
@@ -237,12 +232,6 @@ export class AssignmentWebSocketServer {
           client.subscribedQueues = client.subscribedQueues.filter(
             (queue) => !message.queues.includes(queue),
           )
-          break
-        case 'queue:assign':
-          await this.assignmentService.assignQueue({
-            did: message.did,
-            queueId: message.queueId,
-          })
           break
         case 'report:review:start':
           await this.assignmentService.assignReport({
