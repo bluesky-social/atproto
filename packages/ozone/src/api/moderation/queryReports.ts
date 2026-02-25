@@ -64,17 +64,8 @@ export default function (server: Server, ctx: AppContext) {
         const reportType = report.meta?.reportType as string
 
         // Build subject view (following getSubjects.ts pattern)
-        // For accounts, subject should be { did: string }, for records it should be { uri: string, cid: string }
-        const subject = isRecord
-          ? {
-              $type: 'com.atproto.repo.strongRef' as const,
-              uri: report.subjectUri!,
-              cid: report.subjectCid!,
-            }
-          : {
-              $type: 'com.atproto.admin.defs#repoRef' as const,
-              did: report.subjectDid,
-            }
+        // Subject should be a string: URI for records, DID for accounts
+        const subject = isRecord ? report.subjectUri! : report.subjectDid
         const subjectView = {
           type: (isRecord ? 'record' : 'account') as 'record' | 'account',
           subject,
@@ -104,10 +95,7 @@ export default function (server: Server, ctx: AppContext) {
 
         const reporterView = {
           type: 'account' as const,
-          subject: {
-            $type: 'com.atproto.admin.defs#repoRef' as const,
-            did: reporterDid,
-          },
+          subject: reporterDid,
           repo: reporterRepo,
           profile: reporterProfile
             ? {

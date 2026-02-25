@@ -21,6 +21,7 @@ import {
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { httpLogger } from '../../logger'
+import { processReportAction } from '../../mod-service/report'
 import { subjectFromInput } from '../../mod-service/subject'
 import { SettingService } from '../../setting/service'
 import { TagService } from '../../tag-service'
@@ -224,6 +225,21 @@ const handleModerationEvent = async ({
       }
     }
 
+    // Validate reportAction if provided (actual processing happens after event is logged)
+    if (input.body.reportAction) {
+      // Validate that at least one targeting criteria is provided
+      const { reportAction } = input.body
+      if (
+        !reportAction.ids?.length &&
+        !reportAction.types?.length &&
+        !reportAction.all
+      ) {
+        throw new InvalidRequestError(
+          'reportAction must specify ids, types, or all',
+        )
+      }
+    }
+
     const result = await moderationTxn.logEvent({
       event,
       subject,
@@ -247,6 +263,27 @@ const handleModerationEvent = async ({
           updatedAt: now,
         })
         .execute()
+    }
+
+    // Update reports if reportAction was provided
+    if (input.body.reportAction) {
+      const subjectUri = subject.isRecord() ? subject.uri : null
+      try {
+        await processReportAction({
+          db: dbTxn,
+          reportAction: input.body.reportAction,
+          subjectDid: subject.did,
+          subjectUri,
+          eventId: result.event.id,
+          eventType: event.$type,
+        })
+      } catch (err) {
+        throw new InvalidRequestError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to process report action',
+        )
+      }
     }
 
     const tagService = new TagService(

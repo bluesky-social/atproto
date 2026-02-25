@@ -241,11 +241,7 @@
           "ref": "com.atproto.moderation.defs#subjectType"
         },
         "subject": {
-          "type": "union",
-          "refs": [
-            "com.atproto.admin.defs#repoRef",
-            "com.atproto.repo.strongRef"
-          ]
+          "type": "string"
         },
         "status": {
           "type": "ref",
