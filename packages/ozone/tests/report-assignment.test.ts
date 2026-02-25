@@ -29,20 +29,6 @@ describe('report-assignment', () => {
     return data
   }
 
-  const assignQueueModerator = async (
-    input: ToolsOzoneQueueAssignModerator.InputSchema,
-    callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
-  ) => {
-    const { data } = await agent.tools.ozone.queue.assignModerator(input, {
-      encoding: 'application/json',
-      headers: await network.ozone.modHeaders(
-        ids.ToolsOzoneQueueAssignModerator,
-        callerRole,
-      ),
-    })
-    return data
-  }
-
   const getAssignments = async (
     input: ToolsOzoneReportGetAssignments.QueryParams,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
@@ -223,6 +209,21 @@ describe('report-assignment', () => {
     const wsSubscribe = (ws: WebSocket, queueId: number) => {
       ws.send(JSON.stringify({ type: 'subscribe', queues: [queueId] }))
     }
+    const wsAssignQueue = (ws: WebSocket, queueId: number, did: string) => {
+      ws.send(JSON.stringify({ type: 'queue:assign', queueId, did }))
+    }
+    const wsReviewStart = (
+      ws: WebSocket,
+      reportId: number,
+      queueId?: number,
+    ) => {
+      ws.send(
+        JSON.stringify({ type: 'report:review:start', reportId, queueId }),
+      )
+    }
+    const wsReviewEnd = (ws: WebSocket, reportId: number, queueId?: number) => {
+      ws.send(JSON.stringify({ type: 'report:review:end', reportId, queueId }))
+    }
 
     it('subscription receives updates', async () => {
       const queueId = generateId()
@@ -232,49 +233,18 @@ describe('report-assignment', () => {
       await wait(100)
 
       try {
-        await assignReportModerator(
-          {
-            reportId: generateId(),
-            queueId,
-            assign: true,
-          },
-          'moderator',
-        )
-        await assignReportModerator(
-          {
-            reportId: generateId(),
-            queueId,
-            assign: true,
-          },
-          'moderator',
-        )
-        await assignReportModerator(
-          {
-            reportId: generateId(),
-            queueId,
-            assign: false,
-          },
-          'moderator',
-        )
-        await assignReportModerator(
-          {
-            reportId: generateId(),
-            queueId,
-            assign: true,
-          },
-          'admin',
-        )
-        await assignReportModerator(
-          {
-            reportId: generateId(),
-            queueId,
-            assign: true,
-          },
-          'moderator',
-        )
+        wsReviewStart(ws, generateId(), queueId)
+        await wait(50)
+        wsReviewStart(ws, generateId(), queueId)
+        await wait(50)
+        wsReviewEnd(ws, generateId(), queueId)
+        await wait(50)
+        wsReviewStart(ws, generateId(), queueId)
+        await wait(50)
+        wsReviewStart(ws, generateId(), queueId)
         await wait(100)
 
-        expect(updates.length).toBe(7) // 2 intial snapshots + 5 events
+        expect(updates.length).toBe(7) // 2 initial snapshots + 5 events
       } finally {
         ws.close()
       }
@@ -283,16 +253,18 @@ describe('report-assignment', () => {
     it('new subscription receives snapshot', async () => {
       const queueId = generateId()
       const reportId = generateId()
-      await assignQueueModerator({ queueId })
-      await assignReportModerator(
-        {
-          reportId,
-          queueId,
-          assign: true,
-        },
-        'moderator',
-      )
 
+      // Set up assignments via a first WS connection
+      const setup = await wsConnect('moderator')
+      wsSubscribe(setup.ws, queueId)
+      await wait(100)
+      wsAssignQueue(setup.ws, queueId, network.ozone.moderatorAccnt.did)
+      await wait(50)
+      wsReviewStart(setup.ws, reportId, queueId)
+      await wait(100)
+      setup.ws.close()
+
+      // A new client should receive snapshots of the active assignments
       const { ws, updates } = await wsConnect()
       await wait(100)
       wsSubscribe(ws, queueId)
