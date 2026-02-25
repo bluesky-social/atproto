@@ -22,6 +22,7 @@ import {
   ModerationServiceProfileCreator,
 } from './mod-service/profile'
 import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
+import { QueueService, QueueServiceCreator } from './queue/service'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
@@ -31,7 +32,6 @@ import {
   ScheduledActionServiceCreator,
 } from './scheduled-action/service'
 import { Sequencer } from './sequencer/sequencer'
-import { QueueService, QueueServiceCreator } from './queue/service'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
 import { TeamService, TeamServiceCreator } from './team'
