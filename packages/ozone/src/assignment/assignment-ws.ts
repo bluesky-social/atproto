@@ -114,11 +114,23 @@ export class AssignmentWebSocketServer {
       })
   }
   private async authenticateRequest(req: IncomingMessage): Promise<string> {
-    const authorization = req.headers.authorization
-    if (!authorization?.startsWith('Bearer ')) {
+    let jwtStr: string | undefined
+
+    // Get jwt
+    const authorization = req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization
+      : undefined
+    if (authorization?.startsWith('Bearer ')) {
+      jwtStr = authorization.slice('Bearer '.length).trim()
+    } else if (req.url) {
+      const url = new URL(req.url, 'http://localhost')
+      jwtStr = url.searchParams.get('token') ?? undefined
+    }
+    if (!jwtStr) {
       throw new Error('Missing authorization')
     }
-    const jwtStr = authorization.slice('Bearer '.length).trim()
+
+    // helpers
     const getSigningKey = async (
       did: string,
       forceRefresh: boolean,
@@ -135,6 +147,8 @@ export class AssignmentWebSocketServer {
       null,
       getSigningKey,
     )
+
+    // access control
     const member = await this.opts.teamService.getMember(payload.iss)
     if (!member || member.disabled) {
       throw new Error('Not a team member')
@@ -143,6 +157,7 @@ export class AssignmentWebSocketServer {
     if (!isTriage) {
       throw new Error('Not a moderator')
     }
+
     return payload.iss
   }
   private onConnection(
@@ -160,6 +175,7 @@ export class AssignmentWebSocketServer {
     this.clients.set(clientId, client)
     ws.on('message', (message) => this.onMessage(clientId, message))
     ws.on('close', () => this.onClose(clientId))
+
   }
   private async onMessage(clientId: string, data: RawData) {
     const client = this.clients.get(clientId)
