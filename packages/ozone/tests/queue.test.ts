@@ -230,13 +230,16 @@ describe('queue', () => {
     const wsSubscribe = (ws: WebSocket, queueId: number) => {
       ws.send(JSON.stringify({ type: 'subscribe', queues: [queueId] }))
     }
+    const wsAssign = async (ws: WebSocket, queueId: number, did: string) => {
+      ws.send(JSON.stringify({ type: 'queue:assign', queueId, did }))
+    }
 
     it('assign to queue', async () => {
       const queueId = generateId()
       const { ws, updates } = await wsConnect('moderator')
       wsSubscribe(ws, queueId)
 
-      await assign({ queueId })
+      await wsAssign(ws, queueId, network.ozone.moderatorAccnt.did)
       await wait(100)
 
       expect(updates).toEqual(

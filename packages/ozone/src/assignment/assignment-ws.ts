@@ -25,6 +25,7 @@ export type ClientMessage =
   | {
       type: 'queue:assign'
       queueId: number
+      did: string
     }
   | {
       type: 'report:review:start'
@@ -75,6 +76,7 @@ export type ServerMessage =
   | {
       type: 'queue:assigned'
       queueId: number
+      did: string
     }
   | {
       type: 'pong'
@@ -238,7 +240,7 @@ export class AssignmentWebSocketServer {
           break
         case 'queue:assign':
           await this.assignmentService.assignQueue({
-            did: client.moderatorDid,
+            did: message.did,
             queueId: message.queueId,
           })
           break

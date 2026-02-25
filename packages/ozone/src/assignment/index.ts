@@ -187,6 +187,7 @@ export class AssignmentService {
     this.wss?.broadcast({
       type: 'queue:assigned',
       queueId: row.queueId,
+      did: row.did,
     })
 
     return row
