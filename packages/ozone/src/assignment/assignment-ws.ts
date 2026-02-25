@@ -217,16 +217,12 @@ export class AssignmentWebSocketServer {
           )
           break
         case 'report:review:start':
-          try {
-            await this.assignmentService.assignReport({
-              did: client.moderatorDid,
-              reportId: message.reportId,
-              queueId: message.queueId,
-              assign: true,
-            })
-          } catch (e) {
-            console.error('Error claiming report:', e)
-          }
+          await this.assignmentService.assignReport({
+            did: client.moderatorDid,
+            reportId: message.reportId,
+            queueId: message.queueId,
+            assign: true,
+          })
           break
         case 'report:review:end':
           await this.assignmentService.assignReport({
@@ -238,7 +234,6 @@ export class AssignmentWebSocketServer {
           break
         case 'ping':
           this.send(client.id, { type: 'pong' })
-          client.ws.pong(() => {}) // Respond to WebSocket-level ping for connection health
           break
       }
     } catch (e) {
