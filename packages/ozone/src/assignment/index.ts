@@ -72,6 +72,7 @@ export class AssignmentService {
       .selectFrom('moderator_assignment')
       .selectAll()
       .where('reportId', 'is', null)
+      .where('queueId', 'is not', null)
 
     if (onlyActiveAssignments) {
       query = query.where('endAt', '>', new Date())
