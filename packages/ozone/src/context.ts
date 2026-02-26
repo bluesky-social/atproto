@@ -32,7 +32,6 @@ import {
   ScheduledActionServiceCreator,
 } from './scheduled-action/service'
 import { Sequencer } from './sequencer/sequencer'
-import { QueueService, QueueServiceCreator } from './queue/service'
 import { SetService, SetServiceCreator } from './set/service'
 import { SettingService, SettingServiceCreator } from './setting/service'
 import { TeamService, TeamServiceCreator } from './team'
