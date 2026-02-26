@@ -2,4 +2,4 @@
 '@atproto/syntax': patch
 ---
 
-Allow calling `ensureValidDatetime` with any (non string) value
+Allow calling `ensureValidDatetime` with any (non-string) value
