@@ -121,7 +121,6 @@ export class OzoneService {
     this.server = server
     server.keepAliveTimeout = 90000
     this.terminator = createHttpTerminator({ server })
-
     await events.once(server, 'listening')
     const { port } = server.address() as AddressInfo
     this.ctx.assignPort(port)
