@@ -24,8 +24,8 @@ export type RawUserContext = {
  */
 export type ParsedUserContext = {
   did?: string | null
-  deviceId?: string | null
-  sessionId?: string | null
+  deviceId: string
+  sessionId: string
 }
 
 /**
@@ -37,8 +37,8 @@ export type ParsedUserContext = {
  */
 export type TrackingMetadata = {
   base: {
-    deviceId: string | undefined
-    sessionId: string | undefined
+    deviceId: string
+    sessionId: string
   }
   session: {
     did: string | undefined
