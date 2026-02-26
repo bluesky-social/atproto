@@ -18887,9 +18887,10 @@ export const schemaDict = {
               },
               subjectTypes: {
                 type: 'array',
+                minLength: 1,
                 items: {
                   type: 'string',
-                  knownValues: ['account', 'record'],
+                  knownValues: ['account', 'record', 'message'],
                 },
                 description: 'Subject types this queue accepts',
               },
@@ -18904,6 +18905,8 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+                minLength: 1,
+                maxLength: 25,
                 description: 'Report reason types (fully qualified NSIDs)',
               },
             },
@@ -18960,11 +18963,12 @@ export const schemaDict = {
           },
           subjectTypes: {
             type: 'array',
+            minLength: 1,
             items: {
               type: 'string',
-              knownValues: ['account', 'record'],
+              knownValues: ['account', 'record', 'message'],
             },
-            description: 'Subject types this queue accepts',
+            description: 'Subject types this queue accepts.',
           },
           collection: {
             type: 'string',
@@ -18977,6 +18981,7 @@ export const schemaDict = {
             items: {
               type: 'string',
             },
+            minLength: 1,
             description:
               'Report reason types this queue accepts (fully qualified NSIDs)',
           },
@@ -19125,6 +19130,7 @@ export const schemaDict = {
               items: {
                 type: 'string',
               },
+              maxLength: 10,
               description:
                 'Filter queues that handle any of these report reason types.',
             },

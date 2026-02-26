@@ -22,6 +22,7 @@ import {
   ModerationServiceProfileCreator,
 } from './mod-service/profile'
 import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
+import { QueueService, QueueServiceCreator } from './queue/service'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,

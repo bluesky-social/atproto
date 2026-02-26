@@ -12,6 +12,7 @@ export interface ReportQueue {
   createdAt: string
   updatedAt: string
   enabled: boolean
+  deletedAt: string | null // NULL = active, timestamp = soft-deleted
 }
 
 export type PartialDB = {
