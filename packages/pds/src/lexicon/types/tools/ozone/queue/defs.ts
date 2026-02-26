@@ -20,8 +20,8 @@ export interface QueueView {
   id: number
   /** Display name of the queue */
   name: string
-  /** Subject types this queue accepts */
-  subjectTypes: ('account' | 'record' | (string & {}))[]
+  /** Subject types this queue accepts. */
+  subjectTypes: ('account' | 'record' | 'message' | (string & {}))[]
   /** Collection name for record subjects (e.g., 'app.bsky.feed.post') */
   collection?: string
   /** Report reason types this queue accepts (fully qualified NSIDs) */

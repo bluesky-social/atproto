@@ -16181,11 +16181,7 @@ export const schemaDict = {
             ref: 'lex:com.atproto.moderation.defs#subjectType',
           },
           subject: {
-            type: 'union',
-            refs: [
-              'lex:com.atproto.admin.defs#repoRef',
-              'lex:com.atproto.repo.strongRef',
-            ],
+            type: 'string',
           },
           status: {
             type: 'ref',
@@ -17477,6 +17473,12 @@ export const schemaDict = {
                 description:
                   'An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject.',
               },
+              reportAction: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.emitEvent#reportAction',
+                description:
+                  'Optional report-level targeting. If provided, this event will be linked to specific reports and reporters may be notified.',
+              },
             },
           },
         },
@@ -17497,6 +17499,36 @@ export const schemaDict = {
               'An event with the same external ID already exists for the subject.',
           },
         ],
+      },
+      reportAction: {
+        type: 'object',
+        description: 'Target specific reports when emitting a moderation event',
+        properties: {
+          ids: {
+            type: 'array',
+            items: {
+              type: 'integer',
+            },
+            description: 'Target specific report IDs',
+          },
+          types: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              'Target reports matching these report types on the subject (fully qualified NSIDs)',
+          },
+          all: {
+            type: 'boolean',
+            description: 'Target ALL reports on the subject',
+          },
+          note: {
+            type: 'string',
+            description:
+              'Note to send to reporter(s) when actioning their report',
+          },
+        },
       },
     },
   },
@@ -18890,9 +18922,10 @@ export const schemaDict = {
               },
               subjectTypes: {
                 type: 'array',
+                minLength: 1,
                 items: {
                   type: 'string',
-                  knownValues: ['account', 'record'],
+                  knownValues: ['account', 'record', 'message'],
                 },
                 description: 'Subject types this queue accepts',
               },
@@ -18907,6 +18940,8 @@ export const schemaDict = {
                 items: {
                   type: 'string',
                 },
+                minLength: 1,
+                maxLength: 25,
                 description: 'Report reason types (fully qualified NSIDs)',
               },
             },
@@ -18963,11 +18998,12 @@ export const schemaDict = {
           },
           subjectTypes: {
             type: 'array',
+            minLength: 1,
             items: {
               type: 'string',
-              knownValues: ['account', 'record'],
+              knownValues: ['account', 'record', 'message'],
             },
-            description: 'Subject types this queue accepts',
+            description: 'Subject types this queue accepts.',
           },
           collection: {
             type: 'string',
@@ -18980,6 +19016,7 @@ export const schemaDict = {
             items: {
               type: 'string',
             },
+            minLength: 1,
             description:
               'Report reason types this queue accepts (fully qualified NSIDs)',
           },
@@ -19190,6 +19227,25 @@ export const schemaDict = {
               type: 'boolean',
               description:
                 'Filter by enabled status. If not specified, returns all queues.',
+            },
+            subjectType: {
+              type: 'string',
+              description:
+                "Filter queues that handle this subject type ('account' or 'record').",
+            },
+            collection: {
+              type: 'string',
+              description:
+                "Filter queues by collection name (e.g. 'app.bsky.feed.post').",
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              maxLength: 10,
+              description:
+                'Filter queues that handle any of these report reason types.',
             },
             limit: {
               type: 'integer',

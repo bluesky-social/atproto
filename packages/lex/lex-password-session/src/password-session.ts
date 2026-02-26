@@ -42,6 +42,14 @@ export type SessionData = com.atproto.server.createSession.$OutputBody & {
   service: string
 }
 
+export type LoginOptions = PasswordSessionOptions & {
+  service: string | URL
+  identifier: string
+  password: string
+  allowTakendown?: boolean
+  authFactorToken?: string
+}
+
 export type PasswordSessionOptions = {
   /**
    * Custom fetch implementation to use for network requests
@@ -143,7 +151,7 @@ export type PasswordSessionOptions = {
  *
  * @implements {Agent}
  */
-export class PasswordSession implements Agent {
+export class PasswordSession implements Agent, AsyncDisposable {
   /**
    * Internal {@link Agent} used for session management towards the
    * authentication service only.
@@ -415,6 +423,10 @@ export class PasswordSession implements Agent {
     )
   }
 
+  async [Symbol.asyncDispose]() {
+    await this.logout()
+  }
+
   /**
    * Creates a new account and returns an authenticated session.
    *
@@ -489,23 +501,42 @@ export class PasswordSession implements Agent {
    * @throws {LexAuthFactorError} If the server requires a 2FA token
    * @throws If authentication fails (invalid credentials, etc.)
    *
-   * @example Basic login with app password
+   * **Basic login with app password in script**
+   * @example
+   * ```ts
+   * // .env
+   * // APP_PASSWORD_CREDENTIALS="https://<handle>:<app-password>@<pds-hosting-provider>"
+   *
+   * // Make sure to dispose (or logout) the session when done to avoid leaking
+   * // resources and leaving orphaned sessions on the server
+   * await using session = await PasswordSession.login(process.env.APP_PASSWORD_CREDENTIALS)
+   *
+   * // Use session to make authenticated requests
+   * ```
+   *
+   * **Basic login with user password (not recommended!!!)**
+   * @example
    * ```ts
    * const session = await PasswordSession.login({
    *   service: 'https://bsky.social',
    *   identifier: 'alice.bsky.social',
-   *   password: 'xxxx-xxxx-xxxx-xxxx', // App password
+   *   password: 'xxxx',
    *   onUpdated: (data) => saveToStorage(data),
+   *   onDeleted: (data) => clearStorage(data.did),
    * })
+   *
+   * // Next time, use resume with the persisted session data to avoid storing
+   * // user credentials.
    * ```
    *
-   * @example Handling 2FA requirement
+   * **Handling 2FA requirement**
+   * @example
    * ```ts
    * try {
    *   const session = await PasswordSession.login({
    *     service: 'https://bsky.social',
    *     identifier: 'alice.bsky.social',
-   *     password: 'xxxx-xxxx-xxxx-xxxx',
+   *     password: 'xxxx',
    *   })
    * } catch (err) {
    *   if (err instanceof LexAuthFactorError) {
@@ -513,27 +544,28 @@ export class PasswordSession implements Agent {
    *     const session = await PasswordSession.login({
    *       service: 'https://bsky.social',
    *       identifier: 'alice.bsky.social',
-   *       password: 'xxxx-xxxx-xxxx-xxxx',
+   *       password: 'xxxx',
    *       authFactorToken: token,
    *     })
    *   }
    * }
    * ```
    */
-  static async login({
-    service,
-    identifier,
-    password,
-    allowTakendown,
-    authFactorToken,
-    ...options
-  }: PasswordSessionOptions & {
-    service: string | URL
-    identifier: string
-    password: string
-    allowTakendown?: boolean
-    authFactorToken?: string
-  }): Promise<PasswordSession> {
+  static async login(
+    input: string | URL | LoginOptions,
+  ): Promise<PasswordSession> {
+    const {
+      service,
+      identifier,
+      password,
+      allowTakendown,
+      authFactorToken,
+      ...options
+    } =
+      typeof input === 'string' || input instanceof URL
+        ? parseLoginUrl(input)
+        : input
+
     const xrpcAgent = buildAgent({
       service,
       fetch: options.fetch,
@@ -603,4 +635,25 @@ export class PasswordSession implements Agent {
 function fetchUrl(sessionData: SessionData, path: string): URL {
   const pdsUrl = extractPdsUrl(sessionData.didDoc)
   return new URL(path, pdsUrl ?? sessionData.service)
+}
+
+function parseLoginUrl(input: string | URL): LoginOptions {
+  const url = typeof input === 'string' ? new URL(input) : input
+  if (url.pathname !== '/') {
+    throw new TypeError('Invalid login URL: unexpected pathname')
+  }
+  if (url.hash) {
+    throw new TypeError('Invalid login URL: unexpected hash')
+  }
+  if (url.search) {
+    throw new TypeError('Invalid login URL: unexpected search parameters')
+  }
+  if (!url.username || !url.password) {
+    throw new TypeError('Invalid login URL: missing identifier or password')
+  }
+  return {
+    service: url.origin,
+    identifier: url.username,
+    password: url.password,
+  }
 }

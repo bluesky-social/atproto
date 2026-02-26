@@ -1,5 +1,21 @@
 # @atproto/oauth-provider
 
+## 0.15.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.0.16
+
+## 0.15.10
+
+### Patch Changes
+
+- Updated dependencies [[`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df)]:
+  - @atproto/lex-document@0.0.14
+  - @atproto/lex-resolver@0.0.15
+  - @atproto/common@0.5.12
+
 ## 0.15.9
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   // Report table - bridges report events to action events
@@ -7,13 +7,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('id', 'serial', (col) => col.primaryKey())
 
     // Core link to report event (all metadata comes from moderation_event via JOIN)
-    .addColumn('eventId', 'integer', (col) =>
-      col.notNull().unique().onDelete('cascade'),
-    )
+    .addColumn('eventId', 'integer', (col) => col.notNull().unique())
 
     // Queue assignment (computed by background job in future iteration)
     .addColumn('queueId', 'integer') // NULL = not yet assigned, -1 = no matching queue
-    .addColumn('queued_at', 'varchar')
+    .addColumn('queuedAt', 'varchar')
 
     // Action linkage (sorted DESC, most recent first)
     .addColumn('actionEventIds', 'jsonb') // Array of event IDs: [newest_id, ..., oldest_id]
@@ -86,6 +84,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .using('gin')
     .column('actionEventIds')
     .execute()
+
+  // Partial index for the queue-router background job.
+  // Only indexes unassigned rows (queueId IS NULL), so it shrinks as reports are routed.
+  // Supports: WHERE "queueId" IS NULL [AND id > $cursor] ORDER BY id ASC LIMIT n
+  // Kysely's CreateIndexBuilder doesn't support partial indexes, so we use raw SQL.
+  await sql`CREATE INDEX idx_report_unassigned_id ON report (id) WHERE "queueId" IS NULL`.execute(
+    db,
+  )
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

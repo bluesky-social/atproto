@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import {
   ModeratorClient,
   SeedClient,
@@ -10,7 +9,6 @@ import {
   REASONMISLEADING,
   REASONSPAM,
 } from '../src/lexicon/types/com/atproto/moderation/defs'
-import { isMain as isStrongRef } from '../src/lexicon/types/com/atproto/repo/strongRef'
 
 describe('query-reports', () => {
   let network: TestNetwork
@@ -117,10 +115,10 @@ describe('query-reports', () => {
       // Should return 5 account reports (3 on bob, 2 on alice)
       expect(response.reports.length).toBe(5)
 
-      // All subjects should be accounts (no URI)
+      // All subjects should be accounts (DIDs, not URIs)
       response.reports.forEach((report) => {
         expect(report.subject.type).toBe('account')
-        assert(!isStrongRef(report.subject.subject))
+        expect(report.subject.subject).toMatch(/^did:/)
       })
     })
 
@@ -135,7 +133,7 @@ describe('query-reports', () => {
       // All subjects should be records (have URI)
       response.reports.forEach((report) => {
         expect(report.subject.type).toBe('record')
-        assert(isStrongRef(report.subject.subject))
+        expect(report.subject.subject).toMatch(/^at:\/\//)
       })
     })
 
@@ -148,7 +146,7 @@ describe('query-reports', () => {
       expect(response.reports.length).toBe(3)
 
       response.reports.forEach((report) => {
-        expect(report.subject.subject['did']).toBe(sc.dids.bob)
+        expect(report.subject.subject).toBe(sc.dids.bob)
       })
     })
 
@@ -161,8 +159,7 @@ describe('query-reports', () => {
 
       // Should return 1 report on bob's post
       expect(response.reports.length).toBe(1)
-      assert(isStrongRef(response.reports[0].subject.subject))
-      expect(response.reports[0].subject.subject.uri).toBe(bobsPostUri)
+      expect(response.reports[0].subject.subject).toBe(bobsPostUri)
     })
 
     it('filters reports by report type', async () => {
@@ -196,8 +193,7 @@ describe('query-reports', () => {
       expect(response.reports.length).toBe(2)
 
       response.reports.forEach((report) => {
-        assert(isStrongRef(report.subject.subject))
-        const uri = new AtUri(report.subject.subject.uri)
+        const uri = new AtUri(report.subject.subject)
         expect(uri.collection).toBe('app.bsky.feed.post')
       })
     })

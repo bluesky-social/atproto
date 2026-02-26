@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
 import { ParsedUserContext, RawUserContext, TrackingMetadata } from './types'
 
@@ -16,10 +17,42 @@ const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
 export function parseRawUserContext(
   userContext: RawUserContext,
 ): ParsedUserContext {
+  const did = userContext.viewer
+
+  // prioritize passthrough header
+  let deviceId = userContext.req.header(ANALYTICS_HEADER_DEVICE_ID)
+  if (!deviceId) {
+    if (did) {
+      /*
+       * If we don't have a device header, fall back to the DID. Our event
+       * proxy ensures ordering based on this deviceId (also called a stableId
+       * in the proxy), so if we have a DID, we want to use it to ensure client
+       * and server events are properly ordered.
+       */
+      deviceId = did
+    } else {
+      /*
+       * Without any better option for identifying the user, we generate a
+       * random deviceId.
+       */
+      deviceId = `anon-${crypto.randomUUID()}`
+    }
+  }
+
+  // prioritize passthrough header
+  let sessionId = userContext.req.header(ANALYTICS_HEADER_SESSION_ID)
+  if (!sessionId) {
+    /*
+     * Without any better option for identifying the user, we generate a
+     * random deviceId.
+     */
+    sessionId = `anon-${crypto.randomUUID()}`
+  }
+
   return {
-    did: userContext.viewer,
-    deviceId: userContext.req.header(ANALYTICS_HEADER_DEVICE_ID),
-    sessionId: userContext.req.header(ANALYTICS_HEADER_SESSION_ID),
+    did,
+    deviceId,
+    sessionId,
   }
 }
 
@@ -47,8 +80,8 @@ export function parsedUserContextToTrackingMetadata(
 ): TrackingMetadata {
   return {
     base: {
-      deviceId: parsedUserContext.deviceId ?? undefined,
-      sessionId: parsedUserContext.sessionId ?? undefined,
+      deviceId: parsedUserContext.deviceId,
+      sessionId: parsedUserContext.sessionId,
     },
     session: {
       did: parsedUserContext.did ?? undefined,

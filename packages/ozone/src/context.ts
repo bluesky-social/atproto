@@ -23,6 +23,7 @@ import {
   ModerationServiceProfileCreator,
 } from './mod-service/profile'
 import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
+import { QueueService, QueueServiceCreator } from './queue/service'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
@@ -59,6 +60,7 @@ export type AppContextOptions = {
   communicationTemplateService: CommunicationTemplateServiceCreator
   safelinkRuleService: SafelinkRuleServiceCreator
   scheduledActionService: ScheduledActionServiceCreator
+  queueService: QueueServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   strikeService: StrikeServiceCreator
@@ -145,6 +147,7 @@ export class AppContext {
       cfg.appview.did,
       createAuthHeaders,
     )
+    const queueService = QueueService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
     const strikeService = StrikeService.creator()
@@ -189,6 +192,7 @@ export class AppContext {
         safelinkRuleService,
         scheduledActionService,
         teamService,
+        queueService,
         setService,
         settingService,
         strikeService,
@@ -250,6 +254,10 @@ export class AppContext {
 
   get teamService(): TeamServiceCreator {
     return this.opts.teamService
+  }
+
+  get queueService(): QueueServiceCreator {
+    return this.opts.queueService
   }
 
   get setService(): SetServiceCreator {

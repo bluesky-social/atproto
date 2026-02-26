@@ -35,7 +35,7 @@ targeting via the `viewer` param of the `checkGates` call.
 For unauthenticated users, and for experiments that don't require DID-level
 targeting, we rely on identifiers passed from the client as headers:
 
-- `X-Bsky-Stable-Id` - persistent device/client identifier
+- `X-Bsky-Device-Id` - persistent device/client identifier
 - `X-Bsky-Session-Id` - current session identifier
 
 > [!WARNING]

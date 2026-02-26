@@ -1,5 +1,18 @@
 # @atproto/lex-cbor
 
+## 0.0.13
+
+### Patch Changes
+
+- [#4667](https://github.com/bluesky-social/atproto/pull/4667) [`66b7295`](https://github.com/bluesky-social/atproto/commit/66b72950e8bcb39cac3382116bd282b3bb692f16) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use import `with` instead of deprecated import `assert` (fixing build warning)
+
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [[`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df)]:
+  - @atproto/lex-data@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes
