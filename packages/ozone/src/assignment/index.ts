@@ -1,11 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import {
-  AssignmentWebSocketServer,
-  AssignmentWebSocketServerOpts,
-} from './assignment-ws'
+import { Selectable } from 'kysely'
 import { Database } from '../db'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
-import { Selectable } from 'kysely'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number
@@ -53,17 +49,10 @@ export interface ReportAssignment {
 }
 
 export class AssignmentService {
-  public wss?: AssignmentWebSocketServer
-
   constructor(
     public db: Database,
     public opts: AssignmentServiceOpts,
-    wssOpts?: AssignmentWebSocketServerOpts,
-  ) {
-    if (wssOpts) {
-      this.wss = new AssignmentWebSocketServer(this, wssOpts)
-    }
-  }
+  ) {}
 
   async getQueueAssignments(
     input: GetQueueAssignmentsInput,
@@ -168,12 +157,6 @@ export class AssignmentService {
 
     const row = this.viewQueue(result)
 
-    this.wss?.broadcast({
-      type: 'queue:assigned',
-      queueId: row.queueId,
-      did: row.did,
-    })
-
     return row
   }
 
@@ -231,13 +214,6 @@ export class AssignmentService {
     }
 
     const row = this.viewReport(result)
-
-    this.wss?.broadcast({
-      type: assign ? 'report:review:started' : 'report:review:ended',
-      reportId: row.reportId,
-      moderator: { did: row.did },
-      queues: row.queueId != null ? [row.queueId] : [],
-    })
 
     return row
   }

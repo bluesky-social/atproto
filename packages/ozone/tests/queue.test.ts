@@ -4,10 +4,6 @@ import AtpAgent, {
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
-import { ServerMessage } from '../src/assignment/assignment-ws'
-import WebSocket from 'ws'
-import { wait } from '@atproto/common'
-import { generateId } from './_util'
 
 describe('queue', () => {
   let network: TestNetwork
@@ -201,49 +197,6 @@ describe('queue', () => {
         'triage',
       )
       await expect(p).rejects.toThrow('Unauthorized')
-    })
-  })
-
-  describe('realtime', () => {
-    const wsConnect = async (
-      role: 'admin' | 'moderator' | 'triage' = 'moderator',
-    ): Promise<{
-      ws: WebSocket
-      updates: ServerMessage[]
-    }> => {
-      const headers = await network.ozone.modHeaders(
-        'com.atproto.server.createSession',
-        role,
-      )
-      return new Promise((resolve, reject) => {
-        const wsUrl = network.ozone.url.replace('http://', 'ws://')
-        const ws = new WebSocket(`${wsUrl}/ws/assignments`, { headers })
-        const updates: ServerMessage[] = []
-
-        ws.on('open', () => resolve({ ws, updates }))
-        ws.on('message', (data) => {
-          updates.push(JSON.parse(data.toString()))
-        })
-        ws.on('error', reject)
-      })
-    }
-    const wsSubscribe = (ws: WebSocket, queueId: number) => {
-      ws.send(JSON.stringify({ type: 'subscribe', queues: [queueId] }))
-    }
-
-    it('receive assignments', async () => {
-      const queueId = generateId()
-      const { ws, updates } = await wsConnect('moderator')
-      wsSubscribe(ws, queueId)
-
-      await assign({ queueId, did: network.ozone.moderatorAccnt.did }, 'admin')
-      await wait(100)
-
-      expect(updates).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: 'queue:assigned', queueId }),
-        ]),
-      )
     })
   })
 })
