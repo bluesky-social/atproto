@@ -51,6 +51,19 @@ export class ActorStoreMigrator {
   private async run(): Promise<void> {
     while (!(await allActorStoresMigrated(this.db))) {
       if (this.destroyed) return
+      // Unstick migrations that have been in-progress for >60s so that they can be retried
+      const staleThreshold = new Date(Date.now() - 60_000).toISOString()
+      const unstuck = await this.db.db
+        .updateTable('actor')
+        .set({ storeIsMigrating: 0 })
+        .where('storeIsMigrating', '=', 1)
+        .where('storeMigratedAt', '<', staleThreshold)
+        .returning('did')
+        .execute()
+      for (const row of unstuck) {
+        logger.warn({ did: row.did }, 'Unstuck stale actor store migration')
+      }
+
       const now = new Date().toISOString()
       // get next unmigrated actor, least-recently-migrated first
       const claimed = await this.db.db
@@ -108,7 +121,7 @@ export class ActorStoreMigrator {
         if (this.throwOnError) {
           throw e
         }
-        // TODO: sleep here to avoid spamming errors if we're in a bad state?
+        await wait(1000) // avoid tight error loops
       }
     }
   }
