@@ -104,7 +104,7 @@ describe('com.example.query', () => {
     })
 
     it('properly infers the type of default parameters', () => {
-      function returnDef(params: com.example.query.Params): number {
+      function returnDef(params: com.example.query.$Params): number {
         return params.def
       }
 

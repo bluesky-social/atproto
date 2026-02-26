@@ -1,14 +1,12 @@
 import { LexMap, LexValue } from '@atproto/lex-client'
-import { l } from '@atproto/lex-schema'
-
-export const noop = () => {}
+import { lexErrorDataSchema } from '@atproto/lex-schema'
 
 export async function extractXrpcErrorCode(
   response: Response,
 ): Promise<string | null> {
   const json = await peekJson(response, 10 * 1024) // Avoid reading large bodies
   if (json === undefined) return null
-  if (!l.lexErrorData.matches(json)) return null
+  if (!lexErrorDataSchema.matches(json)) return null
   return json.error
 }
 

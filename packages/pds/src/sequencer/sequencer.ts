@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import EventEmitter from 'node:events'
 import TypedEmitter from 'typed-emitter'
 import { SECOND, cborDecode, wait } from '@atproto/common'

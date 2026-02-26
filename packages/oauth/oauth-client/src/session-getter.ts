@@ -3,6 +3,7 @@ import { Key } from '@atproto/jwk'
 import {
   CachedGetter,
   GetCachedOptions,
+  GetOptions,
   SimpleStore,
 } from '@atproto-labs/simple-store'
 import { AuthMethodUnsatisfiableError } from './errors/auth-method-unsatisfiable-error.js'
@@ -14,32 +15,35 @@ import { OAuthResponseError } from './oauth-response-error.js'
 import { TokenSet } from './oauth-server-agent.js'
 import { OAuthServerFactory } from './oauth-server-factory.js'
 import { Runtime } from './runtime.js'
-import { CustomEventTarget, combineSignals } from './util.js'
+import { combineSignals } from './util.js'
 
 export type Session = {
   dpopKey: Key
-  /**
-   * Previous implementation of this lib did not define an `authMethod`
-   */
-  authMethod?: ClientAuthMethod
+  authMethod: ClientAuthMethod
   tokenSet: TokenSet
 }
 
 export type SessionStore = SimpleStore<string, Session>
 
-export type SessionEventMap = {
-  updated: {
-    sub: string
-  } & Session
-  deleted: {
-    sub: string
-    cause: TokenRefreshError | TokenRevokedError | TokenInvalidError | unknown
-  }
+export type SessionHooks = {
+  onUpdate?: (sub: AtprotoDid, session: Session) => void
+  onDelete?: (
+    sub: AtprotoDid,
+    cause: TokenRefreshError | TokenRevokedError | TokenInvalidError | unknown,
+  ) => void
 }
 
-export type SessionEventListener<
-  T extends keyof SessionEventMap = keyof SessionEventMap,
-> = (event: CustomEvent<SessionEventMap[T]>) => void
+export function isExpectedSessionError(err: unknown) {
+  return (
+    err instanceof TokenRefreshError ||
+    err instanceof TokenRevokedError ||
+    err instanceof TokenInvalidError ||
+    err instanceof AuthMethodUnsatisfiableError ||
+    // The stored session is invalid (e.g. missing properties) and cannot
+    // be used properly
+    err instanceof TypeError
+  )
+}
 
 /**
  * There are several advantages to wrapping the sessionStore in a (single)
@@ -49,15 +53,14 @@ export type SessionEventListener<
  * localStorage/indexedDB, will sync across multiple tabs (for a given sub).
  */
 export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
-  private readonly eventTarget = new CustomEventTarget<SessionEventMap>()
-
   constructor(
     sessionStore: SessionStore,
     serverFactory: OAuthServerFactory,
     private readonly runtime: Runtime,
+    private readonly hooks: SessionHooks = {},
   ) {
     super(
-      async (sub, options, storedSession) => {
+      async (sub, { signal }, storedSession) => {
         // There needs to be a previous session to be able to refresh. If
         // storedSession is undefined, it means that the store does not contain
         // a session for the given sub.
@@ -69,17 +72,15 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
           // make sure an event is dispatched here if this occurs.
           const msg = 'The session was deleted by another process'
           const cause = new TokenRefreshError(sub, msg)
-          this.dispatchEvent('deleted', { sub, cause })
+          await hooks.onDelete?.call(null, sub, cause)
           throw cause
         }
 
-        // From this point forward, throwing a TokenRefreshError will result in
-        // this.delStored() being called, resulting in an event being
-        // dispatched, even if the session was removed from the store through a
-        // concurrent access (which, normally, should not happen if a proper
-        // runtime lock was provided).
+        // @NOTE Throwing a TokenRefreshError (or any other error class defined
+        // in the deleteOnError options) will result in this.delStored() being
+        // called.
 
-        const { dpopKey, authMethod = 'legacy', tokenSet } = storedSession
+        const { dpopKey, authMethod, tokenSet } = storedSession
 
         if (sub !== tokenSet.sub) {
           // Fool-proofing (e.g. against invalid session storage)
@@ -89,16 +90,6 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         if (!tokenSet.refresh_token) {
           throw new TokenRefreshError(sub, 'No refresh token available')
         }
-
-        // Since refresh tokens can only be used once, we might run into
-        // concurrency issues if multiple instances (e.g. browser tabs) are
-        // trying to refresh the same token simultaneously. The chances of this
-        // happening when multiple instances are started simultaneously is
-        // reduced by randomizing the expiry time (see isStale() below). The
-        // best solution is to use a mutex/lock to ensure that only one instance
-        // is refreshing the token at a time (runtime.usingLock) but that is not
-        // always possible. If no lock implementation is provided, we will use
-        // the store to check if a concurrent refresh occurred.
 
         const server = await serverFactory.fromIssuer(
           tokenSet.iss,
@@ -111,7 +102,7 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
         // point. Any thrown error beyond this point will prevent the
         // TokenGetter from obtaining, and storing, the new token set,
         // effectively rendering the currently saved session unusable.
-        options?.signal?.throwIfAborted()
+        signal?.throwIfAborted()
 
         try {
           const newTokenSet = await server.refresh(tokenSet)
@@ -127,9 +118,16 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
             authMethod: server.authMethod,
           }
         } catch (cause) {
-          // If the refresh token is invalid, let's try to recover from
-          // concurrency issues, or make sure the session is deleted by throwing
-          // a TokenRefreshError.
+          // Since refresh tokens can only be used once, we might run into
+          // concurrency issues if multiple instances (e.g. browser tabs) are
+          // trying to refresh the same token simultaneously. The chances of
+          // this happening when multiple instances are started simultaneously
+          // is reduced by randomizing the expiry time (see isStale() below).
+          // The best solution is to use a mutex/lock to ensure that only one
+          // instance is refreshing the token at a time (runtime.usingLock) but
+          // that is not always possible. Let's try to recover from concurrency
+          // issues, or force the session to be deleted by throwing a
+          // TokenRefreshError.
           if (
             cause instanceof OAuthResponseError &&
             cause.status === 400 &&
@@ -187,91 +185,63 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
                 30e3 * Math.random()
           )
         },
-        onStoreError: async (
-          err,
-          sub,
-          { tokenSet, dpopKey, authMethod = 'legacy' as const },
-        ) => {
-          if (!(err instanceof AuthMethodUnsatisfiableError)) {
-            // If the error was an AuthMethodUnsatisfiableError, there is no
-            // point in trying to call `fromIssuer`.
-            try {
-              // If the token data cannot be stored, let's revoke it
-              const server = await serverFactory.fromIssuer(
-                tokenSet.iss,
-                authMethod,
-                dpopKey,
-              )
-              await server.revoke(
-                tokenSet.refresh_token ?? tokenSet.access_token,
-              )
-            } catch {
-              // Let the original error propagate
-            }
+        onStoreError: async (err, sub, { tokenSet, dpopKey, authMethod }) => {
+          // If the token data cannot be stored, let's revoke it
+          try {
+            const server = await serverFactory.fromIssuer(
+              tokenSet.iss,
+              authMethod,
+              dpopKey,
+            )
+            await server.revoke(tokenSet.refresh_token ?? tokenSet.access_token)
+          } catch {
+            // At least we tried...
+          }
+
+          // Attempt to delete the session from the store. Note that this might
+          // fail if the store is not available, which is fine.
+          try {
+            await this.delStored(sub, err)
+          } catch {
+            // Ignore (better to propagate the original storage error)
           }
 
           throw err
         },
-        deleteOnError: async (err) =>
-          err instanceof TokenRefreshError ||
-          err instanceof TokenRevokedError ||
-          err instanceof TokenInvalidError ||
-          err instanceof AuthMethodUnsatisfiableError,
+        deleteOnError: isExpectedSessionError,
       },
     )
   }
 
-  addEventListener<T extends keyof SessionEventMap>(
-    type: T,
-    callback: SessionEventListener<T>,
-    options?: AddEventListenerOptions | boolean,
-  ) {
-    this.eventTarget.addEventListener(type, callback, options)
+  override async getStored(
+    sub: AtprotoDid,
+    options?: GetOptions,
+  ): Promise<Session | undefined> {
+    return super.getStored(sub, options)
   }
 
-  removeEventListener<T extends keyof SessionEventMap>(
-    type: T,
-    callback: SessionEventListener<T>,
-    options?: EventListenerOptions | boolean,
-  ) {
-    this.eventTarget.removeEventListener(type, callback, options)
-  }
-
-  dispatchEvent<T extends keyof SessionEventMap>(
-    type: T,
-    detail: SessionEventMap[T],
-  ): boolean {
-    return this.eventTarget.dispatchCustomEvent(type, detail)
-  }
-
-  async setStored(sub: string, session: Session) {
+  override async setStored(sub: AtprotoDid, session: Session) {
     // Prevent tampering with the stored value
     if (sub !== session.tokenSet.sub) {
       throw new TypeError('Token set does not match the expected sub')
     }
     await super.setStored(sub, session)
-    this.dispatchEvent('updated', { sub, ...session })
+    await this.hooks.onUpdate?.call(null, sub, session)
   }
 
   override async delStored(sub: AtprotoDid, cause?: unknown): Promise<void> {
     await super.delStored(sub, cause)
-    this.dispatchEvent('deleted', { sub, cause })
+    await this.hooks.onDelete?.call(null, sub, cause)
   }
 
   /**
-   * @param refresh When `true`, the credentials will be refreshed even if they
-   * are not expired. When `false`, the credentials will not be refreshed even
-   * if they are expired. When `undefined`, the credentials will be refreshed
-   * if, and only if, they are (about to be) expired. Defaults to `undefined`.
+   * @deprecated Use {@link getSession} instead
+   * @internal (not really deprecated)
    */
-  async getSession(sub: AtprotoDid, refresh: boolean | 'auto' = 'auto') {
-    return this.get(sub, {
-      noCache: refresh === true,
-      allowStale: refresh === false,
-    })
-  }
-
-  async get(sub: AtprotoDid, options?: GetCachedOptions): Promise<Session> {
+  override async get(
+    sub: AtprotoDid,
+    options?: GetCachedOptions,
+  ): Promise<Session> {
     const session = await this.runtime.usingLock(
       `@atproto-oauth-client-${sub}`,
       async () => {
@@ -294,5 +264,18 @@ export class SessionGetter extends CachedGetter<AtprotoDid, Session> {
     }
 
     return session
+  }
+
+  /**
+   * @param refresh When `true`, the credentials will be refreshed even if they
+   * are not expired. When `false`, the credentials will not be refreshed even
+   * if they are expired. When `undefined`, the credentials will be refreshed
+   * if, and only if, they are (about to be) expired. Defaults to `undefined`.
+   */
+  async getSession(sub: AtprotoDid, refresh: boolean | 'auto' = 'auto') {
+    return this.get(sub, {
+      noCache: refresh === true,
+      allowStale: refresh === false,
+    })
   }
 }

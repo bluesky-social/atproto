@@ -15,6 +15,31 @@ import {
   Validator,
 } from '../core.js'
 
+export type MaybeTypedObject<
+  TType extends $Type,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = TValue extends { $type?: TType }
+  ? TValue
+  : $TypedMaybe<Exclude<TValue, Unknown$TypedObject>, TType>
+
+/**
+ * Schema for typed objects in Lexicon unions.
+ *
+ * Typed objects have a `$type` field that identifies which variant they are
+ * in a union. The `$type` can be omitted in input (it's implicit), but if
+ * present, it must match the expected value.
+ *
+ * @template TType - The $type string literal type
+ * @template TShape - The validator type for the object's shape
+ *
+ * @example
+ * ```ts
+ * const schema = new TypedObjectSchema(
+ *   'app.bsky.embed.images#view',
+ *   l.object({ images: l.array(imageSchema) })
+ * )
+ * ```
+ */
 export class TypedObjectSchema<
   const TType extends $Type = $Type,
   const TShape extends Validator<{ [k: string]: unknown }> = any,
@@ -22,6 +47,8 @@ export class TypedObjectSchema<
   $TypedMaybe<InferInput<TShape>, TType>,
   $TypedMaybe<InferOutput<TShape>, TType>
 > {
+  readonly type = 'typedObject' as const
+
   constructor(
     readonly $type: TType,
     readonly schema: TShape,
@@ -29,11 +56,9 @@ export class TypedObjectSchema<
     super()
   }
 
-  isTypeOf<X extends Record<string, unknown>>(
-    value: X,
-  ): value is X extends { $type?: TType }
-    ? X
-    : $TypedMaybe<Exclude<X, Unknown$TypedObject>, TType> {
+  isTypeOf<TValue extends Record<string, unknown>>(
+    value: TValue,
+  ): value is MaybeTypedObject<TType, TValue> {
     return value.$type === undefined || value.$type === this.$type
   }
 
@@ -46,17 +71,21 @@ export class TypedObjectSchema<
     >
   }
 
-  $isTypeOf<X extends Record<string, unknown>>(value: X) {
+  $isTypeOf<TValue extends Record<string, unknown>>(
+    value: TValue,
+  ): value is MaybeTypedObject<TType, TValue> {
     return this.isTypeOf(value)
   }
 
-  $build(input: Omit<InferInput<this>, '$type'>) {
+  $build(
+    input: Omit<InferInput<this>, '$type'>,
+  ): $Typed<InferOutput<this>, TType> {
     return this.build(input)
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+      return ctx.issueUnexpectedType(input, 'object')
     }
 
     if (
@@ -72,15 +101,51 @@ export class TypedObjectSchema<
 }
 
 /**
+ * Creates a typed object schema for use in Lexicon unions.
+ *
+ * Typed objects are identified by their `$type` field, which combines an NSID
+ * and a hash (e.g., 'app.bsky.embed.images#view'). Used for union variants.
+ *
  * This function offers two overloads:
- * - One that allows creating a {@link TypedObjectSchema}, and infer the output
- *   type from the provided arguments, without requiring to specify any of the
- *   generics. This is useful when you want to define a record without
- *   explicitly defining its interface. This version does not support circular
- *   references, as TypeScript cannot infer types in such cases.
- * - One allows creating a {@link TypedObjectSchema} with an explicitly defined
- *   interface. This will typically be used by codegen (`lex build`) to generate
- *   schemas that work even if they contain circular references.
+ * - One that infers the type from arguments (no circular reference support)
+ * - One with explicit interface for codegen with circular references
+ *
+ * @param nsid - The NSID part of the type (e.g., 'app.bsky.embed.images')
+ * @param hash - The hash part of the type (e.g., 'view'), defaults to 'main'
+ * @param validator - Schema for validating the object properties
+ * @returns A new {@link TypedObjectSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Image embed view
+ * const imageViewSchema = l.typedObject(
+ *   'app.bsky.embed.images',
+ *   'view',
+ *   l.object({
+ *     images: l.array(l.object({
+ *       thumb: l.string(),
+ *       fullsize: l.string(),
+ *       alt: l.string(),
+ *     })),
+ *   })
+ * )
+ *
+ * // Main type (hash defaults to 'main')
+ * const postViewSchema = l.typedObject(
+ *   'app.bsky.feed.defs',
+ *   'postView',
+ *   l.object({ uri: l.string(), cid: l.string(), author: authorSchema })
+ * )
+ *
+ * // Use $isTypeOf to narrow union types
+ * if (imageViewSchema.$isTypeOf(embed)) {
+ *   // embed is narrowed to image view type
+ * }
+ *
+ * // Use $build to construct typed objects
+ * const view = imageViewSchema.$build({ images: [...] })
+ * // view.$type === 'app.bsky.embed.images#view'
+ * ```
  */
 export function typedObject<
   const N extends NsidString,

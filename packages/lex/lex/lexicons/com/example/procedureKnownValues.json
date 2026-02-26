@@ -1,0 +1,36 @@
+{
+  "lexicon": 1,
+  "id": "com.example.procedureKnownValues",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "status": {
+            "type": "string",
+            "knownValues": ["active", "inactive"]
+          }
+        }
+      },
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["role"],
+          "properties": {
+            "role": {
+              "type": "string",
+              "knownValues": ["admin", "user"]
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "knownValues": ["did:example:123", "did:example:456"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

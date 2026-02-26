@@ -81,8 +81,9 @@ export interface ServerConfigValues {
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
-  statsigKey?: string
-  statsigEnv?: string
+  eventProxyTrackingEndpoint?: string
+  growthBookApiHost?: string
+  growthBookClientKey?: string
   // threads
   bigThreadUris: Set<string>
   bigThreadDepth?: number
@@ -107,6 +108,7 @@ export interface ServerConfigValues {
   proxyPreferCompressed?: boolean
   kws?: KwsConfig
   debugFieldAllowedDids: Set<string>
+  draftsLimit: number
 }
 
 export class ServerConfig {
@@ -211,14 +213,14 @@ export class ServerConfig {
     )
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
-    const statsigKey =
+
+    const eventProxyTrackingEndpoint =
+      process.env.BSKY_EVENT_PROXY_TRACKING_ENDPOINT || undefined
+    const growthBookApiHost = process.env.BSKY_GROWTHBOOK_API_HOST || undefined
+    const growthBookClientKey =
       process.env.NODE_ENV === 'test'
         ? 'secret-key'
-        : process.env.BSKY_STATSIG_KEY || undefined
-    const statsigEnv =
-      process.env.NODE_ENV === 'test'
-        ? 'test'
-        : process.env.BSKY_STATSIG_ENV || 'development'
+        : process.env.BSKY_GROWTHBOOK_CLIENT_KEY || undefined
     const clientCheckEmailConfirmed =
       process.env.BSKY_CLIENT_CHECK_EMAIL_CONFIRMED === 'true'
     const topicsEnabled = process.env.BSKY_TOPICS_ENABLED === 'true'
@@ -323,6 +325,10 @@ export class ServerConfig {
       envList(process.env.BSKY_DEBUG_FIELD_ALLOWED_DIDS),
     )
 
+    const draftsLimit = process.env.BSKY_DRAFTS_LIMIT
+      ? parseInt(process.env.BSKY_DRAFTS_LIMIT || '', 10)
+      : 500
+
     return new ServerConfig({
       version,
       debugMode,
@@ -366,8 +372,9 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
-      statsigKey,
-      statsigEnv,
+      eventProxyTrackingEndpoint,
+      growthBookApiHost,
+      growthBookClientKey,
       clientCheckEmailConfirmed,
       topicsEnabled,
       indexedAtEpoch,
@@ -389,6 +396,7 @@ export class ServerConfig {
       proxyPreferCompressed,
       kws,
       debugFieldAllowedDids,
+      draftsLimit,
       ...noUndefinedVals(overrides ?? {}),
     })
   }
@@ -566,12 +574,16 @@ export class ServerConfig {
     return this.cfg.blobCacheLocation
   }
 
-  get statsigKey() {
-    return this.cfg.statsigKey
+  get eventProxyTrackingEndpoint() {
+    return this.cfg.eventProxyTrackingEndpoint
   }
 
-  get statsigEnv() {
-    return this.cfg.statsigEnv
+  get growthBookApiHost() {
+    return this.cfg.growthBookApiHost
+  }
+
+  get growthBookClientKey() {
+    return this.cfg.growthBookClientKey
   }
 
   get clientCheckEmailConfirmed() {
@@ -656,6 +668,10 @@ export class ServerConfig {
 
   get debugFieldAllowedDids() {
     return this.cfg.debugFieldAllowedDids
+  }
+
+  get draftsLimit() {
+    return this.cfg.draftsLimit
   }
 }
 

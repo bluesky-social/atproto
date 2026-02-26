@@ -362,7 +362,7 @@ export const invalidVectors: Array<{
   },
 ]
 
-describe('lexParse', () => {
+describe(lexParse, () => {
   describe('valid vectors', () => {
     for (const { name, json, lex } of validVectors) {
       describe(name, () => {
@@ -397,22 +397,32 @@ describe('lexParse', () => {
   })
 
   describe('invalid vectors', () => {
-    for (const { note, json } of invalidVectors) {
-      describe(note, () => {
-        it('throws when parsing malformed JSON', () => {
-          expect(() =>
-            lexParse(JSON.stringify(json), { strict: false }),
-          ).toThrow()
-          expect(() =>
-            lexParse(JSON.stringify(json), { strict: true }),
-          ).toThrow()
+    describe('strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        describe(note, () => {
+          it('throws when parsing malformed JSON', () => {
+            expect(() =>
+              lexParse(JSON.stringify(json), { strict: true }),
+            ).toThrow()
+          })
         })
-      })
-    }
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        describe(note, () => {
+          it('does not throws when parsing malformed JSON', () => {
+            expect(() =>
+              lexParse(JSON.stringify(json), { strict: false }),
+            ).not.toThrow()
+          })
+        })
+      }
+    })
   })
 })
 
-describe('lexStringify', () => {
+describe(lexStringify, () => {
   describe('valid vectors', () => {
     for (const { name, json, lex } of validVectors) {
       describe(name, () => {
@@ -424,7 +434,7 @@ describe('lexStringify', () => {
   })
 })
 
-describe('jsonToLex', () => {
+describe(jsonToLex, () => {
   describe('valid vectors', () => {
     for (const { name, json, lex } of validVectors) {
       describe(name, () => {
@@ -466,12 +476,16 @@ describe('jsonToLex', () => {
           expect(() => jsonToLex({ nested: json }, { strict: true })).toThrow()
           expect(() => jsonToLex([json], { strict: true })).toThrow()
         })
+
+        it('does not throw in non-strict mode', () => {
+          expect(() => jsonToLex(json, { strict: false })).not.toThrow()
+        })
       })
     }
   })
 })
 
-describe('lexToJson', () => {
+describe(lexToJson, () => {
   describe('valid vectors', () => {
     for (const { name, json, lex } of validVectors) {
       describe(name, () => {
@@ -501,6 +515,7 @@ describe('lex > json > lex', () => {
     for (const { name, lex } of validVectors) {
       describe(name, () => {
         it('converts lex to json', () => {
+          ;('')
           expect(lexEquals(jsonToLex(lexToJson(lex)), lex)).toBe(true)
           expect(lexEquals(lex, jsonToLex(lexToJson(lex)))).toBe(true)
         })

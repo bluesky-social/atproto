@@ -509,7 +509,30 @@ function* responseHeaders(
 // Utils
 // -------------------
 
-export const CHAT_BSKY_METHODS = new Set<string>([
+/**
+ * Performs lexicon method matching on a set of methods,
+ * taking into account that they are treated case-insensitively.
+ */
+export class LxmSet {
+  private inner: Set<string>
+  private original: Iterable<string>
+  constructor(items: Iterable<string>) {
+    this.inner = new Set(Array.from(items, normalizeLxm))
+    this.original = items
+  }
+  has(lxm: string) {
+    return this.inner.has(normalizeLxm(lxm))
+  }
+  *[Symbol.iterator](): Iterator<string> {
+    yield* this.original
+  }
+}
+
+export function normalizeLxm(lxm: string) {
+  return lxm.toLowerCase()
+}
+
+export const CHAT_BSKY_METHODS = new LxmSet([
   ids.ChatBskyActorDeleteAccount,
   ids.ChatBskyActorExportAccountData,
   ids.ChatBskyConvoDeleteMessageForSelf,
@@ -526,7 +549,7 @@ export const CHAT_BSKY_METHODS = new Set<string>([
   ids.ChatBskyConvoUpdateRead,
 ])
 
-export const PRIVILEGED_METHODS = new Set<string>([
+export const PRIVILEGED_METHODS = new LxmSet([
   ...CHAT_BSKY_METHODS,
   ids.ComAtprotoServerCreateAccount,
 ])
@@ -534,7 +557,7 @@ export const PRIVILEGED_METHODS = new Set<string>([
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new Set<string>([
+export const PROTECTED_METHODS = new LxmSet([
   ids.ComAtprotoAdminSendEmail,
   ids.ComAtprotoIdentityRequestPlcOperationSignature,
   ids.ComAtprotoIdentitySignPlcOperation,

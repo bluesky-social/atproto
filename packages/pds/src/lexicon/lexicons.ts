@@ -2326,6 +2326,18 @@ export const schemaDict = {
         type: 'object',
         required: ['posts'],
         properties: {
+          deviceId: {
+            type: 'string',
+            description:
+              'UUIDv4 identifier of the device that created this draft.',
+            maxLength: 100,
+          },
+          deviceName: {
+            type: 'string',
+            description:
+              'The device and/or platform on which the draft was created.',
+            maxLength: 100,
+          },
           posts: {
             description: 'Array of draft posts that compose this draft.',
             type: 'array',
@@ -2380,9 +2392,10 @@ export const schemaDict = {
         properties: {
           text: {
             type: 'string',
-            maxLength: 3000,
-            maxGraphemes: 300,
-            description: 'The primary post content.',
+            maxLength: 10000,
+            maxGraphemes: 1000,
+            description:
+              'The primary post content. It has a higher limit than post contents to allow storing a larger text that can later be refined into smaller posts.',
           },
           labels: {
             type: 'union',
@@ -3018,6 +3031,11 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
           },
+          presentation: {
+            type: 'string',
+            description: 'A hint to the client about how to present the video.',
+            knownValues: ['default', 'gif'],
+          },
         },
       },
       caption: {
@@ -3059,6 +3077,11 @@ export const schemaDict = {
           aspectRatio: {
             type: 'ref',
             ref: 'lex:app.bsky.embed.defs#aspectRatio',
+          },
+          presentation: {
+            type: 'string',
+            description: 'A hint to the client about how to present the video.',
+            knownValues: ['default', 'gif'],
           },
         },
       },
@@ -6220,6 +6243,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'integer',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8033,6 +8060,59 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested users for onboarding. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedOnboardingUsers',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+              recId: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetPopularFeedGenerators: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getPopularFeedGenerators',
@@ -8321,6 +8401,52 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestedOnboardingUsers: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedOnboardingUsers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested users for onboarding',
+        parameters: {
+          type: 'params',
+          properties: {
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+              recId: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestedStarterPacks: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestedStarterPacks',
@@ -8559,6 +8685,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'integer',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -20631,6 +20761,8 @@ export const ids = {
     'app.bsky.unspecced.getOnboardingSuggestedStarterPacks',
   AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton:
     'app.bsky.unspecced.getOnboardingSuggestedStarterPacksSkeleton',
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton:
+    'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
   AppBskyUnspeccedGetPopularFeedGenerators:
     'app.bsky.unspecced.getPopularFeedGenerators',
   AppBskyUnspeccedGetPostThreadOtherV2:
@@ -20639,6 +20771,8 @@ export const ids = {
   AppBskyUnspeccedGetSuggestedFeeds: 'app.bsky.unspecced.getSuggestedFeeds',
   AppBskyUnspeccedGetSuggestedFeedsSkeleton:
     'app.bsky.unspecced.getSuggestedFeedsSkeleton',
+  AppBskyUnspeccedGetSuggestedOnboardingUsers:
+    'app.bsky.unspecced.getSuggestedOnboardingUsers',
   AppBskyUnspeccedGetSuggestedStarterPacks:
     'app.bsky.unspecced.getSuggestedStarterPacks',
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:

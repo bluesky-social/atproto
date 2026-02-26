@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import crypto from 'node:crypto'
 import stream from 'node:stream'
 import bytes from 'bytes'

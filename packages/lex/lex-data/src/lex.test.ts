@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseCid } from './cid.js'
 import { isLexArray, isLexScalar, isLexValue, isTypedLexMap } from './lex.js'
 
-describe('isLexScalar', () => {
+describe(isLexScalar, () => {
   for (const { note, value, expected } of [
     { note: 'string', value: 'hello', expected: true },
     { note: 'boolean', value: true, expected: true },
@@ -29,7 +29,7 @@ describe('isLexScalar', () => {
   }
 })
 
-describe('isLexArray', () => {
+describe(isLexArray, () => {
   it('returns true for valid LexArray', () => {
     const list = [123, 'blah', true, null, new Uint8Array([1, 2, 3]), { a: 1 }]
     expect(isLexArray(list)).toBe(true)
@@ -55,7 +55,7 @@ describe('isLexArray', () => {
   })
 })
 
-describe('isLexValue', () => {
+describe(isLexValue, () => {
   describe('valid values', () => {
     for (const { note, value } of [
       { note: 'string', value: 'hello' },

@@ -42,52 +42,57 @@ export class JsonClient<
         : undefined,
     options?: Options,
   ): Promise<Endpoints[Path]['output']> {
-    const url = new URL(`${this.baseUrl}${path}`)
-    if (method === 'GET') {
-      if (input) {
-        for (const [key, value] of Object.entries(input)) {
-          url.searchParams.set(key, value)
+    try {
+      const url = new URL(`${this.baseUrl}${path}`)
+      if (method === 'GET') {
+        if (input) {
+          for (const [key, value] of Object.entries(input)) {
+            url.searchParams.set(key, value)
+          }
         }
       }
-    }
 
-    const body = method === 'POST' ? JSON.stringify(input) : undefined
+      const body = method === 'POST' ? JSON.stringify(input) : undefined
 
-    const headers = Object.entries(await this.getHeaders.call(null))
-      .filter((entry): entry is [string, string] => entry[1] != null)
-      .map(([k, v]) => [k.toLowerCase(), v] as [string, string])
+      const headers = Object.entries(await this.getHeaders.call(null))
+        .filter((entry): entry is [string, string] => entry[1] != null)
+        .map(([k, v]) => [k.toLowerCase(), v] as [string, string])
 
-    if (options?.bearer) {
-      headers.push(['authorization', `Bearer ${options.bearer}`])
-    }
+      if (options?.bearer) {
+        headers.push(['authorization', `Bearer ${options.bearer}`])
+      }
 
-    const response = await fetch(url, {
-      method,
-      headers:
-        body && !headers.some(([k]) => k === 'content-type')
-          ? headers.concat([['content-type', 'application/json']])
-          : headers,
-      mode: 'same-origin',
-      body,
-      signal: options?.signal,
-    })
-
-    if (response.status === 204) {
-      return undefined
-    }
-
-    const responseType = response.headers.get('content-type')
-    if (responseType !== 'application/json') {
-      await response.body?.cancel()
-      throw new Error(`Invalid content type "${responseType}"`, {
-        cause: response,
+      const response = await fetch(url, {
+        method,
+        headers:
+          body && !headers.some(([k]) => k === 'content-type')
+            ? headers.concat([['content-type', 'application/json']])
+            : headers,
+        mode: 'same-origin',
+        body,
+        signal: options?.signal,
       })
+
+      if (response.status === 204) {
+        return undefined
+      }
+
+      const responseType = response.headers.get('content-type')
+      if (responseType !== 'application/json') {
+        await response.body?.cancel()
+        throw new Error(`Invalid content type "${responseType}"`, {
+          cause: response,
+        })
+      }
+
+      const json = await response.json()
+
+      if (response.ok) return json as Endpoints[Path]['output']
+      else throw this.parseError(response, json)
+    } catch (err) {
+      console.warn('API request failed', err, { method, path, input, options })
+      throw err
     }
-
-    const json = await response.json()
-
-    if (response.ok) return json as Endpoints[Path]['output']
-    else throw this.parseError(response, json)
   }
 
   protected parseError(response: Response, json: Json): Error {

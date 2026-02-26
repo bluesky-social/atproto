@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import * as cbor from '@ipld/dag-cbor'
 import { TID, cborDecode, check, cidForCbor, schema } from '@atproto/common'
 import * as crypto from '@atproto/crypto'

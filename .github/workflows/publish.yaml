@@ -15,25 +15,21 @@ env:
 
 jobs:
   build:
-    name: Build & Publish
+    name: Publish
     if: github.repository == 'bluesky-social/atproto'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # https://github.com/actions/setup-node/issues/531#issuecomment-2960522861
-      - name: Install Node.js
-        uses: actions/setup-node@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
         with:
+          cache: pnpm
           node-version-file: '.nvmrc'
           registry-url: 'https://registry.npmjs.org'
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Configure Dependency Cache
-        uses: actions/setup-node@v6
-        with:
-          cache: 'pnpm'
-      - run: npm i -g npm@latest
-      - run: pnpm i --frozen-lockfile
+      - run: npm install --global npm@latest
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: true
       - name: Publish
         uses: changesets/action@v1
         id: changesets

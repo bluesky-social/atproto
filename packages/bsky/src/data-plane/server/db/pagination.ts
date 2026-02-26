@@ -296,6 +296,14 @@ export class IsoSortAtKey extends IsoTimeKey<{
   }
 }
 
+export class IsoUpdatedAtKey extends IsoTimeKey<{
+  updatedAt: string
+}> {
+  labelResult(result: { updatedAt: string }) {
+    return { primary: result.updatedAt }
+  }
+}
+
 type KeyResult = { key: string }
 type RkeyLabeledResult = SingleKeyCursor
 

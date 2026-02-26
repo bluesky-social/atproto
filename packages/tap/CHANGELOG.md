@@ -1,5 +1,75 @@
 # @atproto/tap
 
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [[`38852f0`](https://github.com/bluesky-social/atproto/commit/38852f0ddfa9fbce8036233dc6af87614e9ae4b2)]:
+  - @atproto/lex@0.0.19
+
+## 0.2.6
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.5.13
+  - @atproto/lex@0.0.18
+
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [[`009c4af`](https://github.com/bluesky-social/atproto/commit/009c4afd3643d4edf4bd05065ec93cab74610bfe)]:
+  - @atproto/lex@0.0.17
+  - @atproto/common@0.5.12
+
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.16
+
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [[`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015)]:
+  - @atproto/lex@0.0.15
+  - @atproto/common@0.5.11
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [[`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a), [`49b3806`](https://github.com/bluesky-social/atproto/commit/49b38069ed4b5bd1ef71e967c78e5123b1c1f6f1)]:
+  - @atproto/lex@0.0.14
+  - @atproto/common@0.5.10
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.13
+
+## 0.2.0
+
+### Minor Changes
+
+- [#4532](https://github.com/bluesky-social/atproto/pull/4532) [`aaedafc`](https://github.com/bluesky-social/atproto/commit/aaedafc6baef106b85e0954d8474cec21c00c1c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `record` data as parsed atproto data (including CIDs and Uint8Arrays)
+
+### Patch Changes
+
+- [#4532](https://github.com/bluesky-social/atproto/pull/4532) [`aaedafc`](https://github.com/bluesky-social/atproto/commit/aaedafc6baef106b85e0954d8474cec21c00c1c2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace event validation from "zod" to "@atproto/lex"
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add validation error as cause when handling invalid records
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/lex@0.0.12
+  - @atproto/common@0.5.9
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @atproto/oauth-client-browser-example
 
+## 0.0.10
+
+### Patch Changes
+
+- [#4586](https://github.com/bluesky-social/atproto/pull/4586) [`b619ae8`](https://github.com/bluesky-social/atproto/commit/b619ae87a8aff8f0db7785b26b0a3602d6ef6149) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid using the app with an invalid scope that prevents the labelers to be set
+
 ## 0.0.9
 
 ### Patch Changes

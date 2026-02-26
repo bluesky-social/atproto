@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { CID } from 'multiformats/cid'
 import { RepoRecord } from '@atproto/lexicon'
 import { CidSet, cborToLexRecord, formatDataKey } from '@atproto/repo'

@@ -127,6 +127,14 @@ export function setCookie(
   appendHeader(res, 'Set-Cookie', serializeCookie(cookieName, value, options))
 }
 
+export function getCookie(
+  req: IncomingMessage,
+  cookieName: string,
+): string | undefined {
+  const cookies = parseHttpCookies(req)
+  return Object.hasOwn(cookies, cookieName) ? cookies[cookieName] : undefined
+}
+
 export function clearCookie(
   res: ServerResponse,
   cookieName: string,
@@ -139,8 +147,8 @@ export function parseHttpCookies(
   req: IncomingMessage & { cookies?: any },
 ): Record<string, undefined | string> {
   req.cookies ??= req.headers['cookie']
-    ? parseCookie(req.headers['cookie'])
-    : Object.create(null)
+    ? { __proto__: null, ...parseCookie(req.headers['cookie']) }
+    : { __proto__: null }
   return req.cookies
 }
 

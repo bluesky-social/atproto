@@ -1,14 +1,12 @@
-/* eslint-disable import/no-deprecated */
-
 import { createHash } from 'node:crypto'
 import { Transform } from 'node:stream'
 import { Block, ByteView, encode as encodeBlock } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { cidForLex, decode, encode } from '@atproto/lex-cbor'
 import {
+  CBOR_DATA_CODEC,
   type CID,
   Cid,
-  DAG_CBOR_MULTICODEC,
   LexValue,
   asMultiformatsCID,
   // eslint-disable-next-line
@@ -40,7 +38,7 @@ export async function dataToCborBlock<T>(value: T): Promise<Block<T>> {
     value,
     codec: {
       name: 'at-cbor', // Not actually used
-      code: DAG_CBOR_MULTICODEC,
+      code: CBOR_DATA_CODEC,
       encode: encode as (data: T) => ByteView<T>,
     },
     hasher,

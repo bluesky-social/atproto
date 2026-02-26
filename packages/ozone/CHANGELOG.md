@@ -1,5 +1,32 @@
 # @atproto/ozone
 
+## 0.1.164
+
+### Patch Changes
+
+- Updated dependencies [[`450f085`](https://github.com/bluesky-social/atproto/commit/450f0856630fa08c20dc60fef8b5d2a07b9a2552)]:
+  - @atproto/api@0.19.0
+
+## 0.1.163
+
+### Patch Changes
+
+- [#4608](https://github.com/bluesky-social/atproto/pull/4608) [`9fdfb8a`](https://github.com/bluesky-social/atproto/commit/9fdfb8a3ad656b158fa54f5d2a79f45cb6d16f4d) Thanks [@ThisIsMissEm](https://github.com/ThisIsMissEm)! - Prevent tools.ozone.verification.grantVerification from verifying handle.invalid
+
+- Updated dependencies [[`00e6dbd`](https://github.com/bluesky-social/atproto/commit/00e6dbdcea295cfa3dff7eb7517420039cc3e821)]:
+  - @atproto/identity@0.4.11
+  - @atproto/common@0.5.11
+  - @atproto/xrpc-server@0.10.12
+
+## 0.1.162
+
+### Patch Changes
+
+- [#4581](https://github.com/bluesky-social/atproto/pull/4581) [`2830dae`](https://github.com/bluesky-social/atproto/commit/2830daeaa6f580fbf777a0f832d64a6579616dc7) Thanks [@mozzius](https://github.com/mozzius)! - Add `presentation` to video embed as a hint to the client about how to display the video
+
+- Updated dependencies [[`2830dae`](https://github.com/bluesky-social/atproto/commit/2830daeaa6f580fbf777a0f832d64a6579616dc7)]:
+  - @atproto/api@0.18.18
+
 ## 0.1.161
 
 ### Patch Changes

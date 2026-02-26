@@ -465,6 +465,42 @@ describe('moderation-events', () => {
         "only bob's account reports are returned, no events have a URI even though the subjectType is record",
       )
     })
+
+    it('queries events by creator', async () => {
+      const now = new Date()
+      const startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000) // 1 day ago
+      const endDate = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 1 day from now
+
+      const events = await modClient.queryEvents({
+        createdBy: network.ozone.moderatorAccnt.did,
+        createdAfter: startDate.toISOString(),
+        createdBefore: endDate.toISOString(),
+        limit: 25,
+        sortDirection: 'desc',
+      })
+
+      expect(events.events.length).toBeGreaterThan(0)
+      expect(events.events.length).toBeLessThanOrEqual(25)
+
+      // Verify sorting
+      for (let i = 1; i < events.events.length; i++) {
+        const prev = events.events[i - 1]
+        const curr = events.events[i]
+        const prevTime = new Date(prev.createdAt).getTime()
+        const currTime = new Date(curr.createdAt).getTime()
+
+        if (prevTime === currTime) {
+          expect(prev.id).toBeGreaterThan(curr.id)
+        } else {
+          expect(prevTime).toBeGreaterThan(currTime)
+        }
+      }
+
+      // Verify createdBy is correct
+      events.events.forEach((event) => {
+        expect(event.createdBy).toEqual(network.ozone.moderatorAccnt.did)
+      })
+    })
   })
 
   describe('get event', () => {

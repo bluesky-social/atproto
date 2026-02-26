@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { array } from './array.js'
 import { boolean } from './boolean.js'
+import { enumSchema } from './enum.js'
 import { integer } from './integer.js'
+import { literal } from './literal.js'
 import { optional } from './optional.js'
 import { paramSchema, params, paramsSchema } from './params.js'
 import { string } from './string.js'
@@ -260,78 +262,105 @@ describe('ParamsSchema', () => {
     })
   })
 
+  describe('coercion', () => {
+    it('throws for invalid enum values', () => {
+      const schema = params({
+        status: enumSchema(['active', 'inactive']),
+      })
+      expect(() => schema.fromURLSearchParams('status=unknown')).toThrow(
+        'Expected one of "active" or "inactive"',
+      )
+    })
+
+    it('throws for invalid const values', () => {
+      const schema = params({
+        version: literal(42),
+      })
+      expect(() => schema.fromURLSearchParams('version=99')).toThrow(
+        'Expected 42',
+      )
+    })
+
+    it('handles negative integer enum values', () => {
+      const schema = params({
+        offset: enumSchema([-10, 0, 10]),
+      })
+      const result = schema.fromURLSearchParams('offset=-10')
+      expect(result).toEqual({ offset: -10 })
+    })
+
+    it('handles boolean const false', () => {
+      const schema = params({
+        disabled: literal(false),
+      })
+      const result = schema.fromURLSearchParams('disabled=false')
+      expect(result).toEqual({ disabled: false })
+    })
+  })
+
   describe('fromURLSearchParams', () => {
     const schema = params({
       name: string(),
       age: optional(integer()),
       active: optional(boolean()),
+      tags: optional(array(string())),
+      ids: optional(array(integer())),
+      bools: optional(array(boolean())),
     })
 
     it('parses string parameters', () => {
-      const urlParams = new URLSearchParams('name=Alice')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice')
       expect(result).toEqual({ name: 'Alice' })
     })
 
     it('parses and coerces boolean true', () => {
-      const urlParams = new URLSearchParams('name=Alice&active=true')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&active=true')
       expect(result).toEqual({ name: 'Alice', active: true })
     })
 
     it('parses and coerces boolean false', () => {
-      const urlParams = new URLSearchParams('name=Alice&active=false')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&active=false')
       expect(result).toEqual({ name: 'Alice', active: false })
     })
 
     it('parses and coerces integer values', () => {
-      const urlParams = new URLSearchParams('name=Alice&age=30')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&age=30')
       expect(result).toEqual({ name: 'Alice', age: 30 })
     })
 
     it('parses and coerces negative integers', () => {
-      const urlParams = new URLSearchParams('name=Alice&age=-5')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&age=-5')
       expect(result).toEqual({ name: 'Alice', age: -5 })
     })
 
     it('does not coerce non-integer numbers', () => {
-      const urlParams = new URLSearchParams('name=Alice&extra=3.14')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=Alice&extra=3.14')
       expect(result).toEqual({ name: 'Alice', extra: '3.14' })
     })
 
     it('keeps string values for string schema even if they look like numbers', () => {
-      const urlParams = new URLSearchParams('name=123')
-      const result = schema.fromURLSearchParams(urlParams)
+      const result = schema.fromURLSearchParams('name=123')
       expect(result).toEqual({ name: '123' })
     })
 
     it('parses multiple values as array', () => {
-      const urlParams = new URLSearchParams('name=Alice&tag=one&tag=two')
-      const result = schema.fromURLSearchParams(urlParams)
-      expect(result).toEqual({ name: 'Alice', tag: ['one', 'two'] })
+      const result = schema.fromURLSearchParams('name=Alice&tags=one&tags=two')
+      expect(result).toEqual({ name: 'Alice', tags: ['one', 'two'] })
     })
 
-    it('coerces array values correctly', () => {
-      const urlParams = new URLSearchParams('name=Alice&num=1&num=2&num=3')
-      const result = schema.fromURLSearchParams(urlParams)
-      expect(result).toEqual({ name: 'Alice', num: [1, 2, 3] })
-    })
+    it('does not coerce numeric values of unknown params', () => {
+      expect(
+        schema.fromURLSearchParams('name=Alice&num=1&num=2&num=3&foo=3'),
+      ).toEqual({ name: 'Alice', num: ['1', '2', '3'], foo: '3' })
 
-    it('handles mixed types in arrays', () => {
-      const urlParams = new URLSearchParams(
-        'name=Alice&val=true&val=123&val=text',
-      )
-      const result = schema.fromURLSearchParams(urlParams)
-      expect(result).toEqual({ name: 'Alice', val: [true, 123, 'text'] })
+      expect(
+        schema.fromURLSearchParams('name=Alice&val=true&val=123&val=text'),
+      ).toEqual({ name: 'Alice', val: ['true', '123', 'text'] })
     })
 
     it('handles empty URLSearchParams', () => {
-      const urlParams = new URLSearchParams()
-      expect(() => schema.fromURLSearchParams(urlParams)).toThrow()
+      expect(() => schema.fromURLSearchParams(new URLSearchParams())).toThrow()
+      expect(() => schema.fromURLSearchParams('')).toThrow()
     })
 
     it('handles multiple parameters', () => {
@@ -345,6 +374,64 @@ describe('ParamsSchema', () => {
         active: true,
         extra: 'value',
       })
+    })
+
+    it('coerces single values into arrays in parse mode', () => {
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['tags', 'tag1'],
+        ]),
+      ).toEqual({ name: 'Alice', tags: ['tag1'] })
+
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['tags', 'true'],
+        ]),
+      ).toEqual({ name: 'Alice', tags: ['true'] })
+
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['tags', '1'],
+        ]),
+      ).toEqual({ name: 'Alice', tags: ['1'] })
+    })
+
+    it('coerces single boolean values into arrays in parse mode', () => {
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', 'true'],
+        ]),
+      ).toEqual({ name: 'Alice', bools: [true] })
+
+      expect(
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', 'false'],
+        ]),
+      ).toEqual({ name: 'Alice', bools: [false] })
+
+      expect(() =>
+        schema.fromURLSearchParams([
+          ['name', 'Alice'],
+          ['bools', 'notabool'],
+        ]),
+      ).toThrow('Expected boolean value type at $.bools (got string)')
+
+      expect(() =>
+        schema.fromURLSearchParams(
+          [
+            ['name', 'Alice'],
+            ['bools', '2'],
+          ],
+          {
+            path: ['foo', 'bar'],
+          },
+        ),
+      ).toThrow('Expected boolean value type at $.foo.bar.bools (got string)')
     })
   })
 
@@ -405,15 +492,23 @@ describe('ParamsSchema', () => {
       expect(result.toString()).toBe('name=Alice')
     })
 
+    it('rejects arrays with multiple types', () => {
+      expect(() => {
+        schema.toURLSearchParams({
+          name: 'Alice',
+          // @ts-expect-error
+          values: [1, true, 'text'],
+        })
+      }).toThrow()
+    })
+
     it('handles arrays with multiple types', () => {
       const result = schema.toURLSearchParams({
         name: 'Alice',
         // @ts-expect-error
-        values: [1, true, 'text'],
+        values: ['foo', 'bar'],
       })
-      expect(result.toString()).toBe(
-        'name=Alice&values=1&values=true&values=text',
-      )
+      expect(result.toString()).toBe('name=Alice&values=foo&values=bar')
     })
 
     it('handles undefined input', () => {
@@ -655,9 +750,9 @@ describe('paramSchema', () => {
       expect(result.success).toBe(true)
     })
 
-    it('validates arrays with mixed scalar types', () => {
+    it('rejects arrays with mixed scalar types', () => {
       const result = paramSchema.safeParse([true, 42, 'text'])
-      expect(result.success).toBe(true)
+      expect(result.success).toBe(false)
     })
 
     it('validates arrays with negative integers', () => {
@@ -828,11 +923,11 @@ describe('paramsSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('validates object with arrays of mixed scalar types', () => {
+  it('rejects object with arrays of mixed scalar types', () => {
     const result = paramsSchema.safeParse({
       values: [true, 42, 'text'],
     })
-    expect(result.success).toBe(true)
+    expect(result.success).toBe(false)
   })
 
   it('validates object with numeric string keys', () => {

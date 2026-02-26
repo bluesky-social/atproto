@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-password-session",
-  "version": "0.0.2",
+  "version": "0.0.7",
   "license": "MIT",
   "description": "Password based client authentication for AT Lexicons",
   "keywords": [
@@ -31,17 +31,17 @@
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {
-    "@atproto/lex-client": "workspace:*",
-    "@atproto/lex-schema": "workspace:*",
+    "@atproto/lex-client": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@atproto/lex-builder": "workspace:*",
-    "@atproto/lex-server": "workspace:*",
+    "@atproto/lex-builder": "workspace:^",
+    "@atproto/lex-server": "workspace:^",
     "vitest": "^4.0.16"
   },
   "scripts": {

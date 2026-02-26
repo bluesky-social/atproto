@@ -2,14 +2,13 @@ import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { InternalServerError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { FeatureGates } from '../../../../feature-gates'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getTrendingTopics'
+import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getSuggestedUsers'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -31,18 +30,27 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        featureGatesMap: ctx.featureGatesClient.checkGates(
+          ['suggested_users:discover_agent:enable'],
+          {
+            viewer,
+            req,
+          },
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { ...result } = await getSuggestedUsers(
+      const result = await getSuggestedUsers(
         {
           ...params,
-          viewer: viewer ?? undefined,
-          hydrateCtx: hydrateCtx.copy({ viewer }),
+          hydrateCtx,
           headers,
         },
         ctx,
@@ -67,7 +75,7 @@ const skeletonFromDiscover = async (
     await ctx.suggestionsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
       {
         limit: params.limit,
-        viewer: params.viewer,
+        viewer: params.hydrateCtx.viewer ?? undefined,
         category: params.category,
       },
       {
@@ -87,7 +95,7 @@ const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
     await ctx.topicsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
       {
         limit: params.limit,
-        viewer: params.viewer,
+        viewer: params.hydrateCtx.viewer ?? undefined,
         category: params.category,
       },
       {
@@ -99,9 +107,8 @@ const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useDiscover = input.ctx.featureGates.check(
-    input.ctx.featureGates.ids.SuggestedUsersFromDiscover,
-    input.ctx.featureGates.user({ did: input.params.viewer }),
+  const useDiscover = input.params.hydrateCtx.featureGatesMap.get(
+    'suggested_users:discover_agent:enable',
   )
   const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
   return skeletonFn(input)
@@ -113,8 +120,9 @@ const hydration = async (
   const { ctx, params, skeleton } = input
   const dids = dedupeStrs(skeleton.dids)
   const pairs: Map<string, string[]> = new Map()
-  if (params.viewer) {
-    pairs.set(params.viewer, dids)
+  const viewer = params.hydrateCtx.viewer
+  if (viewer) {
+    pairs.set(viewer, dids)
   }
   const [profilesState, bidirectionalBlocks] = await Promise.all([
     ctx.hydrator.hydrateProfiles(dids, params.hydrateCtx),
@@ -128,10 +136,11 @@ const noBlocksOrFollows = (
   input: RulesFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, skeleton, params, hydration } = input
-  if (!params.viewer) {
+  const viewer = params.hydrateCtx.viewer
+  if (!viewer) {
     return skeleton
   }
-  const blocks = hydration.bidirectionalBlocks?.get(params.viewer)
+  const blocks = hydration.bidirectionalBlocks?.get(viewer)
   return {
     ...skeleton,
     dids: skeleton.dids.filter((did) => {
@@ -158,7 +167,6 @@ type Context = {
   views: Views
   topicsAgent: AtpAgent | undefined
   suggestionsAgent: AtpAgent | undefined
-  featureGates: FeatureGates
 }
 
 type Params = QueryParams & {

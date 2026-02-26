@@ -1,11 +1,10 @@
-/* eslint-disable import/no-deprecated */
-
 import { LexValue, stringifyLex } from '@atproto/lexicon'
 import { BsyncClient } from './bsync'
 import { lexicons } from './lexicon/lexicons'
 import { Event as AgeAssuranceEventV2 } from './lexicon/types/app/bsky/ageassurance/defs'
 import { Bookmark } from './lexicon/types/app/bsky/bookmark/defs'
 import { Notification } from './lexicon/types/app/bsky/contact/defs'
+import { DraftWithId } from './lexicon/types/app/bsky/draft/defs'
 import {
   Preferences,
   SubjectActivitySubscription,
@@ -22,6 +21,8 @@ export const Namespaces = {
     'app.bsky.bookmark.defs#bookmark' satisfies PickNSID<Bookmark>,
   AppBskyContactDefsNotification:
     'app.bsky.contact.defs#notification' satisfies PickNSID<Notification>,
+  AppBskyDraftDefsDraftWithId:
+    'app.bsky.draft.defs#draftWithId' satisfies PickNSID<DraftWithId>,
   AppBskyNotificationDefsPreferences:
     'app.bsky.notification.defs#preferences' satisfies PickNSID<Preferences>,
   AppBskyNotificationDefsSubjectActivitySubscription:

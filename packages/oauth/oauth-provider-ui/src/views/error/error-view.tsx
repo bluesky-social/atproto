@@ -19,13 +19,14 @@ export const ErrorView = memo(function ErrorView({
 
   // LayoutWelcome
   title,
+  children,
   ...props
 }: ErrorViewProps) {
   const { t } = useLingui()
 
   return (
     <LayoutWelcome {...props} title={title ?? t`Error`}>
-      <ErrorCard error={error} />
+      <ErrorCard error={error}>{children}</ErrorCard>
     </LayoutWelcome>
   )
 })

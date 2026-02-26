@@ -132,6 +132,26 @@ describe('verification', () => {
         'Must be an admin or verifier to grant verifications',
       )
     })
+
+    it('fails if the handle is invalid', async () => {
+      const {
+        data: { verifications, failedVerifications },
+      } = await adminAgent.tools.ozone.verification.grantVerifications({
+        verifications: [
+          {
+            subject: sc.dids.dan,
+            handle: 'handle.invalid',
+            displayName: 'Bob',
+          },
+        ],
+      })
+
+      expect(verifications.length).toEqual(0)
+      expect(failedVerifications.length).toEqual(1)
+      const failed = failedVerifications.at(0)
+      expect(failed!.error).toEqual('Cannot verify with invalid handle')
+      expect(failed!.subject).toEqual(sc.dids.dan)
+    })
   })
 
   it('does not publish record if a valid one already exists', async () => {

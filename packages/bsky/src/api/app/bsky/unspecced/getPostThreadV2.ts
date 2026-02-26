@@ -33,9 +33,9 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
-        featureGates: ctx.featureGates.checkGates(
-          [ctx.featureGates.ids.ThreadsV2ReplyRankingExploration],
-          ctx.featureGates.user({ did: viewer ?? '' }),
+        featureGatesMap: ctx.featureGatesClient.checkGates(
+          ['threads:reply_ranking_exploration:enable'],
+          { viewer, req },
         ),
       })
 

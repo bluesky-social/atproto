@@ -1,48 +1,47 @@
-# @atproto/lex
-
-Type-safe Lexicon tooling for creating great API clients. See the [Changelog](./CHANGELOG.md) for version history.
-
-```bash
-npm install -g @atproto/lex
-lex --help
-```
-
-- Install and manage Lexicon schemas
-- Generate TypeScript client and data validators
-- Handle common tasks like OAuth
-
 > [!IMPORTANT]
 >
-> This package is currently in **preview**. The API and features are subject to change before the stable release.
+> This package is currently in **preview**. The API and features are subject to change before the stable release. See the [Changelog](./CHANGELOG.md) for version history.
 
-**What is this?**
+Type-safe Lexicon tooling for AT Protocol data.
 
-Working directly with XRPC endpoints requires manually tracking schema definitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
-
-1. Fetching lexicons from the network and generating TypeScript types
-2. Providing runtime validation to ensure data matches schemas
-3. Offering a type-safe client that knows which parameters each endpoint expects
-4. Support modern patterns like tree-shaking and composition
+- Fetch and manage Lexicon schemas, generate TypeScript validators
+- Compile-time and runtime type safety for AT Protocol data structures
+- Fully typed XRPC client with authentication support
+- Tree-shaking and composition friendly
 
 ```typescript
-const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'atproto.com',
+// Build data with generated builders and validators
+
+const newPost = app.bsky.feed.post.$build({
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
 })
+
+app.bsky.actor.profile.$validate({
+  $type: 'app.bsky.actor.profile',
+  displayName: 'Ha'.repeat(32) + '!',
+}) // Error: grapheme too big (maximum 64) at $.displayName (got 65)
+```
+
+```typescript
+// Trivially make type-safe XRPC requests towards a service
+
+const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
+  params: { actor: 'pfrazee.com' },
+})
+```
+
+```typescript
+// Manipulate records with the Client API in the context of an authenticated session
+
+const client = new Client(oauthSession)
 
 await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
   createdAt: new Date().toISOString(),
 })
 
-const posts = await client.list(app.bsky.feed.post, {
-  limit: 10,
-  repo: 'atproto.com',
-})
-
-app.bsky.actor.profile.$validate({
-  $type: 'app.bsky.actor.profile',
-  displayName: 'Ha'.repeat(32) + '!',
-}) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
+const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 ```
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -58,7 +57,8 @@ app.bsky.actor.profile.$validate({
 - [Data Model](#data-model)
   - [Types](#types)
   - [JSON Encoding](#json-encoding)
-  - [DAG-CBOR Encoding](#dag-cbor-encoding)
+  - [CBOR Encoding](#cbor-encoding)
+- [Making simple XRPC Requests](#making-simple-xrpc-requests)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -66,14 +66,13 @@ app.bsky.actor.profile.$validate({
   - [Authentication Methods](#authentication-methods)
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
-- [Blob references](#blob-references)
 - [Utilities](#utilities)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
   - [Tree-Shaking](#tree-shaking)
-  - [Custom Headers](#custom-headers)
-  - [Request Options](#request-options)
+  - [Blob references](#blob-references)
   - [Actions](#actions)
+  - [Creating a Client from Another Client](#creating-a-client-from-another-client)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
 - [License](#license)
 
@@ -136,15 +135,11 @@ This generates TypeScript files in `./src/lexicons` (by default) with type-safe 
 **4. Use in your code**
 
 ```typescript
-import { Client } from '@atproto/lex'
-import * as app from './lexicons/app.js'
+import { xrpc } from '@atproto/lex'
+import { app } from './lexicons/index.js'
 
-// Create a client instance
-const client = new Client('https://public.api.bsky.app')
-
-// Start making requests using generated schemas
-const response = await client.call(app.bsky.actor.getProfile, {
-  actor: 'pfrazee.com',
+const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
+  params: { actor: 'pfrazee.com' },
 })
 ```
 
@@ -383,9 +378,11 @@ if (app.bsky.feed.post.$isTypeOf(data)) {
 
 ## Data Model
 
-The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional types: **CIDs** (content-addressed links) and **bytes**. This data is encoded as JSON for XRPC (HTTP API) or as [DAG-CBOR](https://ipld.io/docs/codecs/known/dag-cbor/) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
+The AT Protocol uses a [data model](https://atproto.com/specs/data-model) that extends JSON with two additional data structures: **CIDs** (content-addressed links) and **bytes** (for raw data). This data model can be encoded either as JSON for XRPC (HTTP API) or as [CBOR](https://dasl.ing/drisl.html) for storage and authentication (see [`@atproto/lex-cbor`](../lex-cbor)).
 
 ### Types
+
+The package exports TypeScript types and type guards for working with the data model:
 
 ```typescript
 import type {
@@ -410,38 +407,102 @@ if (isTypedLexMap(data)) {
 
 ### JSON Encoding
 
-In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`:
+In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`. This package provides utilities to parse and stringify data model values to/from JSON:
 
 ```typescript
-import { lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
+import { Cid, lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
 
 // Parse JSON string → data model (decodes $link and $bytes)
-const data = lexParse('{"ref": {"$link": "bafyrei..."}}')
+const parsed = lexParse<{
+  ref: Cid
+  data: Uint8Array
+}>(`{
+  "ref": { "$link": "bafyrei..." },
+  "data": { "$bytes": "SGVsbG8sIHdvcmxkIQ==" }
+}`)
+
+assert(isCid(parsed.ref))
+assert(parsed.data instanceof Uint8Array)
+
+const someCid = lexParse<Cid>('{"$link": "bafyrei..."}')
+const someBytes = lexParse<Uint8Array>('{"$bytes": "SGVsbG8sIHdvcmxkIQ=="}')
 
 // Data model → JSON string (encodes CIDs and bytes)
 const json = lexStringify({ ref: someCid, data: someBytes })
 
 // Convert between parsed JSON objects and data model values
-const lex = jsonToLex(jsonObject)
-const obj = lexToJson(lexValue)
+const lex = jsonToLex({
+  ref: { $link: 'bafyrei...' }, // Converted to Cid
+  data: { $bytes: 'SGVsbG8sIHdvcmxkIQ==' }, // Converted to Uint8Array
+})
+
+const obj = lexToJson({
+  ref: someCid, // Converted to { $link: string }
+  data: someBytes, // Converted to { $bytes: string }
+})
 ```
 
-### DAG-CBOR Encoding
+### CBOR Encoding
 
-Use `@atproto/lex-cbor` to encode/decode the data model to/from DAG-CBOR format for storage and authentication:
+Use `@atproto/lex-cbor` to encode/decode the data model to/from CBOR ([DRISL](https://dasl.ing/drisl.html)) format for storage and authentication:
 
 ```typescript
 import { encode, decode } from '@atproto/lex-cbor'
 import type { LexValue } from '@atproto/lex'
 
-// Encode data model to DAG-CBOR bytes
+// Encode data model to CBOR bytes
 const cborBytes = encode(someLexValue)
 
-// Decode DAG-CBOR bytes to data model
+// Decode CBOR bytes to data model
 const lexValue: LexValue = decode(cborBytes)
 ```
 
+## Making simple XRPC Requests
+
+[XRPC](https://atproto.com/specs/xrpc) (short for "Lexicon RPC") is the set of HTTP conventions used by AT Protocol for client-server and server-server communication. Endpoints follow the pattern `/xrpc/<nsid>`, where the NSID maps to a Lexicon schema that defines the request and response types. XRPC has three method types: **queries** (HTTP GET) for read operations, **procedures** (HTTP POST) for mutations and **subscriptions** (WebSockets) for real-time updates.
+
+The `xrpc()` and `xrpcSafe()` functions can be used to make simple XRPC requests. They are typically used in places that don't require an authenticated session, or when more granular control over the request/response is needed. For most use cases, the `Client` API provides a more ergonomic way to work with XRPC in the context of an authenticated session.
+
+```typescript
+import { xrpc, xrpcSafe } from '@atproto/lex'
+import * as com from './lexicons/com.js'
+
+const response = await xrpc(
+  'https://bsky.network',
+  com.atproto.identity.resolveHandle,
+  {
+    params: { handle: 'atproto.com' },
+    headers: { 'user-agent': 'MyApp/1.0.0' },
+  },
+)
+
+response.status // number
+response.headers // Headers
+response.body.did // `did:${string}:${string}`
+
+// Or use the safe variant (returns errors instead of throwing)
+const result = await xrpcSafe(
+  'https://bsky.network',
+  com.atproto.identity.resolveHandle,
+  {
+    params: { handle: 'atproto.com' },
+    signal: AbortSignal.timeout(5000), // Abort after 5 seconds
+  },
+)
+
+if (result.success) {
+  console.log(result.body)
+} else {
+  console.error(result.error) // XRPC error code
+  console.error(result.message) // Error message
+}
+```
+
 ## Client API
+
+The `Client` class provides high-level helpers for common AT Protocol "repo" operations: `create()`, `get()`, `put()`, `delete()`, `list()`, `uploadBlob()`, and more. A `Client` instance is typically useful for making requests in the context of an authenticated user session, as it automatically handles headers and provides default values based on the authenticated user's DID.
+
+A `Client` instance is also useful to encapsulate configuration for a specific service, by specifying the `service` option (for proxying) and `labelers` option (for content labeling). Additionally, a `Client` can be used as an `Agent` for another `Client`, allowing you to compose headers and configuration across multiple services.
 
 ### Creating a Client
 
@@ -475,217 +536,24 @@ For detailed OAuth setup, see the [@atproto/oauth-client](../../../oauth/oauth-c
 
 #### Authenticated Client with Password
 
-For simpler use cases (CLI tools, scripts, server-to-server), you can use password-based authentication with `@atproto/lex-password-session`:
-
-```bash
-npm install @atproto/lex-password-session
-```
+For CLI tools, scripts, and bots, you can use password-based authentication with [`@atproto/lex-password-session`](../lex-password-session):
 
 ```typescript
 import { Client } from '@atproto/lex'
 import { PasswordSession } from '@atproto/lex-password-session'
-import * as app from './lexicons/app.js'
 
-// Create a session with app password credentials
-const session = await PasswordSession.create({
-  service: 'https://bsky.social',
-  identifier: 'alice.bsky.social', // handle or email
-  password: 'xxxx-xxxx-xxxx-xxxx', // App password (not your main password)
-
-  // Called when session is created or refreshed - persist the session data
-  onUpdated: (data) => {
-    saveToStorage(data) // Your persistence logic
-  },
-
-  // Called when session becomes invalid - clean up stored data
-  onDeleted: (data) => {
-    removeFromStorage(data.did)
-  },
-})
-
-// Use the session with a Client
-const client = new Client(session)
-
-const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'atproto.com',
-})
-```
-
-**Resuming a Session**
-
-Resume a previously persisted session. The `resume()` method validates the session by refreshing it:
-
-```typescript
-const savedData = loadFromStorage() // Your retrieval logic
-
-// Resume validates the session by refreshing it
-// Throws if the session is definitively invalid
-const session = await PasswordSession.resume(savedData, {
-  onUpdated: (data) => saveToStorage(data),
-  onDeleted: (data) => removeFromStorage(data.did),
-})
-
-const client = new Client(session)
-
-// Access session properties
-console.log(session.did) // User's DID
-console.log(session.handle) // User's handle
-console.log(session.destroyed) // false (session is active)
-```
-
-**Logging Out**
-
-```typescript
-await session.logout()
-```
-
-**Deleting a Session Without Resuming**
-
-Delete a stored session without needing to resume it first:
-
-```typescript
-const savedData = loadFromStorage()
-
-// Delete the session directly - throws on transient errors (network, server down)
-await PasswordSession.delete(savedData)
-```
-
-**Error Handling Hooks**
-
-Handle transient errors (network issues, server unavailability) separately from permanent failures:
-
-```typescript
-const session = await PasswordSession.create({
+const session = await PasswordSession.login({
   service: 'https://bsky.social',
   identifier: 'alice.bsky.social',
-  password: 'xxxx-xxxx-xxxx-xxxx',
-
+  password: 'xxxx-xxxx-xxxx-xxxx', // App password
   onUpdated: (data) => saveToStorage(data),
-  onDeleted: (data) => removeFromStorage(data.did),
-
-  // Called when refresh fails due to transient errors (network, server down)
-  // The session may still be valid - don't delete stored credentials
-  onUpdateFailure: (data, error) => {
-    console.warn('Session refresh failed, will retry:', error.message)
-  },
-
-  // Called when logout fails due to transient errors
-  // Consider retrying later to avoid orphaned sessions
-  onDeleteFailure: (data, error) => {
-    console.error('Logout failed, session may still be active:', error.message)
-    scheduleRetry(data) // Your retry logic
-  },
-})
-```
-
-**Handling Two-Factor Authentication (2FA)**
-
-> [!CAUTION]
->
-> Two-factor authentication only applies when using **main account credentials**, which is **strongly discouraged**. Password authentication should be used with [app passwords](https://bsky.app/settings/app-passwords) only because they are designed for programmatic access (bots, scripts, CLI tools). For user-facing applications, use OAuth via [@atproto/oauth-client](../../../oauth/oauth-client) which provides better security and user control.
-
-```typescript
-import {
-  PasswordSession,
-  LexAuthFactorError,
-} from '@atproto/lex-password-session'
-
-async function loginWithMainCredentials(
-  identifier: string,
-  password: string,
-  authFactorToken?: string,
-): Promise<PasswordSession> {
-  try {
-    return await PasswordSession.create({
-      service: 'https://bsky.social',
-      identifier,
-      password,
-      authFactorToken,
-
-      onUpdated: (data) => saveToStorage(data),
-      onDeleted: (data) => removeFromStorage(data.did),
-    })
-  } catch (err) {
-    if (err instanceof LexAuthFactorError && !authFactorToken) {
-      // 2FA required
-      const token = await promptUserFor2FACode(err.message)
-      return loginWithMainCredentials(identifier, password, token)
-    }
-    throw err
-  }
-}
-```
-
-#### Creating a Client from Another Client
-
-You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.
-
-> [!NOTE]
->
-> When you create a client from another client, the child client inherits the base client's configuration. On every request, the child client merges its own configuration with the base client's current configuration, with the child's settings taking precedence. Changes to the base client's configuration (like `baseClient.setLabelers()`) will be reflected in child client requests, but changes to child clients do not affect the base client.
-
-```typescript
-import { Client } from '@atproto/lex'
-
-// Base client with authentication
-const baseClient = new Client(session)
-
-baseClient.setLabelers(['did:plc:labelerA', 'did:plc:labelerB'])
-baseClient.headers.set('x-app-version', '1.0.0')
-
-// Create a new client with additional configuration that will get merged with
-// baseClient's settings on every request.
-const configuredClient = new Client(baseClient, {
-  labelers: ['did:plc:labelerC'],
-  headers: { 'x-trace-id': 'abc123' },
-})
-```
-
-This pattern is particularly useful when you need to:
-
-- Configure labelers after authentication
-- Add application-specific headers
-- Create multiple clients with different configurations from the same session
-
-**Example: Configuring labelers after sign-in**
-
-```typescript
-import { Client } from '@atproto/lex'
-import * as app from './lexicons/app.js'
-
-async function createBaseClient(session: OAuthSession) {
-  // Create base client
-  const client = new Client(session, {
-    service: 'did:web:api.bsky.app#bsky_appview',
-  })
-
-  // Fetch user preferences
-  const { preferences } = await client.call(app.bsky.actor.getPreferences)
-
-  // Extract labeler preferences
-  const labelerPref = preferences.findLast((p) =>
-    app.bsky.actor.defs.labelersPref.check(p),
-  )
-  const labelers = labelerPref?.labelers.map((l) => l.did) ?? []
-
-  // Configure the client with the user's preferred labelers
-  client.setLabelers(labelers)
-
-  return client
-}
-
-// Usage
-const baseClient = await createBaseClient(session)
-
-// Create a new client with a different service, but reusing the labelers
-// from the base client.
-const otherClient = new Client(baseClient, {
-  service: 'did:web:com.example.other#other_service',
+  onDeleted: (data) => clearStorage(data.did),
 })
 
-// Whenever you update labelers on the base client, the other client will automatically
-// receive the same updates, since they share the same labeler set.
+const client = new Client(session)
 ```
+
+For detailed password session setup, see the [@atproto/lex-password-session](../lex-password-session) documentation.
 
 #### Client with Service Proxy (authenticated only)
 
@@ -734,7 +602,7 @@ const timeline = await client.call(
 
 #### `client.create()`
 
-Create a new record.
+Create a new record un the authenticated user's repo.
 
 ```typescript
 import * as app from './lexicons/app.js'
@@ -761,6 +629,7 @@ Retrieve a record.
 ```typescript
 import * as app from './lexicons/app.js'
 
+// No need to specify the "rkey" for records with literal keys (e.g. profile)
 const profile = await client.get(app.bsky.actor.profile)
 
 console.log(profile.displayName)
@@ -837,104 +706,72 @@ By default, all client methods throw errors when requests fail. For more ergonom
 
 #### Safe Methods
 
-Each client method has a corresponding "Safe" variant that catches errors and returns them as part of the result type:
+The `xrpcSafe()` method catches errors and returns them as part of the result type instead of throwing:
 
-- `xrpcSafe()` - Safe version of `xrpc()`
-- `createRecordsSafe()` - Safe version of `createRecord()`
-- `deleteRecordsSafe()` - Safe version of `deleteRecord()`
-- `getRecordsSafe()` - Safe version of `getRecord()`
-- `putRecordsSafe()` - Safe version of `putRecord()`
+#### XrpcFailure Type
 
-#### ResponseFailure Type
-
-Safe methods return a union type that includes the success case and all possible failure cases:
+The `xrpcSafe()` method returns a union type that includes the success case (`XrpcResponse`) and failure cases (`XrpcFailure`):
 
 ```typescript
-import { Client, ResponseFailure } from '@atproto/lex'
-import * as app from './lexicons/app.js'
+import {
+  Client,
+  XrpcResponseError,
+  XrpcUpstreamError,
+  XrpcInternalError,
+} from '@atproto/lex'
+import * as com from './lexicons/com.js'
 
 const client = new Client(session)
 
 // Using a safe method
 const result = await client.xrpcSafe(com.atproto.identity.resolveHandle, {
-  params: { limit: 50 },
+  params: { handle: 'alice.bsky.social' },
 })
 
 if (result.success) {
   // Handle success
   console.log(result.body)
 } else {
-  // Handle failure
-  if (result.error === 'Unknown') {
-    // Unable to perform the request
-    const { reason } = result
-    if (reason instanceof XrpcResponseError) {
-      // The server returned a syntactically valid XRPC error response, but
-      // used an error code that is not declared for this method
-      reason.error // string (e.g. "AuthenticationRequired", "RateLimitExceeded", etc.)
-      reason.message // string
-      reason.status // number
-      reason.headers // Headers
-      reason.payload // { body: { error: string, message?: string }; encoding: string }
-    } else if (reason instanceof XrpcUpstreamError) {
-      // The response was incomplete (e.g. connection dropped), or
-      // invalid (e.g. malformed JSON, data does not match schema).
-      reason.error // "InvalidResponse"
-      reason.message // string
-      reason.response.status // number
-      reason.response.headers // Headers
-      reason.response.payload // null | { body: unknown; encoding: string }
-    } else {
-      reason // unknown (fetch failed, other?)
-    }
-  } else {
-    // A declared error for that method
-    result // XrpcResponseError<"HandleNotFound">
-    result.error // "HandleNotFound"
+  // Handle failure - result is an XrpcFailure
+  if (result instanceof XrpcResponseError) {
+    // The server returned a valid XRPC error response
+    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", etc.)
     result.message // string
+    result.response.status // number
+    result.response.headers // Headers
+    result.payload // { body: { error: string, message?: string }; encoding: string }
+  } else if (result instanceof XrpcUpstreamError) {
+    // The response was not a valid XRPC response (e.g. malformed JSON,
+    // data does not match schema, connection dropped)
+    result.error // "UpstreamFailure"
+    result.message // string
+    result.response.status // number
+    result.response.headers // Headers
+    result.payload // null | { body: unknown; encoding: string }
+  } else if (result instanceof XrpcInternalError) {
+    // Something went wrong on the client side (network error, etc.)
+    result.error // "InternalServerError"
+    result.message // string
+  }
+
+  // All XrpcFailure types have these properties:
+  result.shouldRetry() // boolean - whether the error is transient
+
+  if (result.matchesSchema()) {
+    // Check if the error matches a declared error in the schema.
+    // TypeScript knows this is a declared error for the method.
+    result.error // "HandleNotFound"
   }
 }
 ```
 
-The `ResponseFailure<M>` type is a union with three possible error types:
+The `XrpcFailure<M>` type is a union of three error classes:
 
-1. **Declared errors** - Errors explicitly listed in the method's Lexicon schema will be represented as an `XrpcResponseError<N>` instance:
+1. **`XrpcResponseError`** - The server returned a valid XRPC error response (non-2xx with proper error payload)
 
-   ```typescript
-   // XrpcResponseError<N>
-   type KnownLexRpcResponseFailure<N extends string> = {
-     success: false
-     name: N
-     error: XrpcResponseError<N>
+2. **`XrpcUpstreamError`** - The response was invalid or unprocessable (malformed JSON, schema mismatch, incomplete response)
 
-     // Additional response details
-     status: number
-     headers: Headers
-     encoding: undefined | string
-     body: LexErrorData<N>
-   }
-   ```
-
-2. **Unknown errors** - Server errors not declared in the method's schema:
-
-   ```typescript
-   // LexRpcResponseFailure<'Unexpected', XrpcResponseError>
-   type UnknownLexRpcResponseFailure = {
-     success: false
-     name: 'Unexpected'
-     error: XrpcResponseError<string>
-   }
-   ```
-
-3. **Unexpected errors** - Network errors, invalid responses, or other client-side errors:
-   ```typescript
-   // LexRpcResponseFailure<'UnexpectedError', unknown>
-   type UnexpectedLexRpcResponseFailure = {
-     success: false
-     name: 'UnexpectedError'
-     error: unknown // Could be anything (network error, parsing error, etc.)
-   }
-   ```
+3. **`XrpcInternalError`** - Client-side errors (network failures, timeouts, etc.)
 
 ### Authentication Methods
 
@@ -1011,41 +848,9 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
-## Blob references
-
-In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
-
-```typescript
-import { BlobRef, isBlobRef } from '@atproto/lex'
-
-const blobRef: BlobRef = {
-  $type: 'blob',
-  ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
-  mimeType: 'image/png',
-  size: 12345,
-}
-
-if (isBlobRef(blobRef)) {
-  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
-}
-```
-
-> [!NOTE]
->
-> Historically, references to blobs were represented as simple objects with the following structure:
->
-> ```typescript
-> type LegacyBlobRef = {
->   ref: string
->   mimeType: string
-> }
-> ```
->
-> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
-
 ## Utilities
 
-Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are available:
+Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are exported from the package:
 
 ```typescript
 import {
@@ -1075,7 +880,6 @@ import {
   encodeLexBytes, // Uint8Array → { $bytes: string }
 } from '@atproto/lex'
 
-// Examples
 const cid = parseCid('bafyreiabc...')
 graphemeLen('👨‍👩‍👧‍👦') // 1
 utf8Len('👨‍👩‍👧‍👦') // 25
@@ -1128,168 +932,37 @@ lex build --pure-annotations
 
 This will make the generated code more easily tree-shakeable from places that import your library.
 
-### Custom Headers
+### Blob references
 
-Add custom headers to all requests:
-
-```typescript
-const client = new Client(session, {
-  headers: {
-    'x-custom-header': 'value',
-  },
-})
-```
-
-### Request Options
-
-All client methods accept options for controlling request behavior. The available options depend on the type of operation.
-
-#### Base Call Options
-
-All methods support these base options:
+In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
 
 ```typescript
-type CallOptions = {
-  signal?: AbortSignal // Abort the request
-  headers?: HeadersInit // Additional request headers
-  service?: Service // Override service proxy for this request
-  labelers?: Iterable<Did> // Additional labelers for this request
-  validateRequest?: boolean // Set to "true" to enable request schema validation
-  validateResponse?: boolean // Set to "false" to skip response schema validation
+import { BlobRef, isBlobRef } from '@atproto/lex'
+
+const blobRef: BlobRef = {
+  $type: 'blob',
+  ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
+  mimeType: 'image/png',
+  size: 12345,
+}
+
+if (isBlobRef(blobRef)) {
+  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
 }
 ```
 
-#### Query and Procedure Calls
-
-When using `.call()` with Query or Procedure schemas:
-
-```typescript
-import * as app from './lexicons/app.js'
-
-// Query with parameters
-const timeline = await client.call(
-  app.bsky.feed.getTimeline,
-  { limit: 50 },
-  {
-    signal: abortController.signal,
-    headers: { 'x-custom': 'value' },
-  },
-)
-
-// Procedure with body
-const result = await client.call(
-  app.bsky.actor.putPreferences,
-  { preferences: [...] },
-  {
-    signal: abortController.signal,
-  },
-)
-```
-
-For low-level access with full response data, use `.xrpc()`:
-
-```typescript
-const response = await client.xrpc(app.bsky.feed.getTimeline, {
-  params: { limit: 50 },
-  signal: abortController.signal,
-  headers: { 'x-custom': 'value' },
-  skipVerification: false, // Whether to skip response schema validation
-})
-
-console.log(response.status) // 200
-console.log(response.headers) // Headers object
-console.log(response.body) // Parsed response body
-```
-
-#### Record Operations (CRUD)
-
-Record operations support additional options beyond base `CallOptions`:
-
-**Creating Records**
-
-```typescript
-import * as app from './lexicons/app.js'
-
-await client.create(
-  app.bsky.feed.post,
-  {
-    text: 'Hello!',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    // Base options
-    signal: abortController.signal,
-    headers: { 'x-custom': 'value' },
-
-    // Create-specific options
-    rkey: 'custom-key', // Custom record key (optional, auto-generated if omitted)
-    validate: true, // Validate before creating
-    swapCommit: 'bafyrei...', // CID for optimistic concurrency
-  },
-)
-```
-
-**Reading Records**
-
-```typescript
-await client.get(app.bsky.actor.profile, {
-  // Base options
-  signal: abortController.signal,
-
-  // Get-specific options
-  rkey: 'self', // Record key (required for non-literal keys)
-})
-```
-
-**Updating Records**
-
-```typescript
-await client.put(
-  app.bsky.actor.profile,
-  {
-    displayName: 'New Name',
-    description: 'Updated bio',
-  },
-  {
-    // Base options
-    signal: abortController.signal,
-
-    // Put-specific options
-    rkey: 'self', // Record key
-    validate: true, // Validate before updating
-    swapCommit: 'bafyrei...', // Expected repo commit CID
-    swapRecord: 'bafyrei...', // Expected record CID (for CAS)
-  },
-)
-```
-
-**Deleting Records**
-
-```typescript
-await client.delete(app.bsky.feed.post, {
-  // Base options
-  signal: abortController.signal,
-
-  // Delete-specific options
-  rkey: '3jxf7z2k3q2', // Record key
-  swapCommit: 'bafyrei...', // Expected repo commit CID
-  swapRecord: 'bafyrei...', // Expected record CID
-})
-```
-
-**Listing Records**
-
-```typescript
-await client.list(app.bsky.feed.post, {
-  // Base options
-  signal: abortController.signal,
-
-  // List-specific options
-  limit: 50, // Maximum records to return
-  cursor: 'abc123', // Pagination cursor
-  reverse: true, // Reverse chronological order
-})
-```
+> [!NOTE]
+>
+> Historically, references to blobs were represented as simple objects with the following structure:
+>
+> ```typescript
+> type LegacyBlobRef = {
+>   ref: string
+>   mimeType: string
+> }
+> ```
+>
+> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
 
 ### Actions
 
@@ -1453,6 +1126,77 @@ const enableAdultContent: Action<void, Preference[]> = async (
 
 // Use the high-level action
 await client.call(enableAdultContent)
+```
+
+### Creating a Client from Another Client
+
+You can create a new `Client` instance from an existing client. The new client will share the same underlying configuration (authentication, headers, labelers, service proxy), with the ability to override specific settings.
+
+> [!NOTE]
+>
+> When you create a client from another client, the child client inherits the base client's configuration. On every request, the child client merges its own configuration with the base client's current configuration, with the child's settings taking precedence. Changes to the base client's configuration (like `baseClient.setLabelers()`) will be reflected in child client requests, but changes to child clients do not affect the base client.
+
+```typescript
+import { Client } from '@atproto/lex'
+
+// Base client with authentication
+const baseClient = new Client(session)
+
+baseClient.setLabelers(['did:plc:labelerA', 'did:plc:labelerB'])
+baseClient.headers.set('x-app-version', '1.0.0')
+
+// Create a new client with additional configuration that will get merged with
+// baseClient's settings on every request.
+const configuredClient = new Client(baseClient, {
+  labelers: ['did:plc:labelerC'],
+  headers: { 'x-trace-id': 'abc123' },
+})
+```
+
+This pattern is particularly useful when you need to:
+
+- Configure labelers after authentication
+- Add application-specific headers
+- Create multiple clients with different configurations from the same session
+
+**Example: Configuring labelers after sign-in**
+
+```typescript
+import { Client } from '@atproto/lex'
+import * as app from './lexicons/app.js'
+
+async function createBaseClient(session: OAuthSession) {
+  // Create base client
+  const client = new Client(session, {
+    service: 'did:web:api.bsky.app#bsky_appview',
+  })
+
+  // Fetch user preferences
+  const { preferences } = await client.call(app.bsky.actor.getPreferences)
+
+  // Extract labeler preferences
+  const labelerPref = preferences.findLast((p) =>
+    app.bsky.actor.defs.labelersPref.check(p),
+  )
+  const labelers = labelerPref?.labelers.map((l) => l.did) ?? []
+
+  // Configure the client with the user's preferred labelers
+  client.setLabelers(labelers)
+
+  return client
+}
+
+// Usage
+const baseClient = await createBaseClient(session)
+
+// Create a new client with a different service, but reusing the labelers
+// from the base client.
+const otherClient = new Client(baseClient, {
+  service: 'did:web:com.example.other#other_service',
+})
+
+// Whenever you update labelers on the base client, the other client will automatically
+// receive the same updates, since they share the same labeler set.
 ```
 
 ### Building Library-Style APIs with Actions

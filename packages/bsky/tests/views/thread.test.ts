@@ -568,6 +568,8 @@ describe('appview thread views', () => {
         sc.getHeaders(bob),
       )
 
+      await network.processAll()
+
       const threadBeforeListTakedown = await agent.app.bsky.feed.getPostThread(
         { depth: 1, uri: reply.ref.uriStr },
         {

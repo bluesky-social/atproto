@@ -1,8 +1,8 @@
 import './style.css'
 
+import type { HydrationData } from '#/hydration-data.d.ts'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import type { HydrationData } from './hydration-data.d.ts'
 import { LocaleProvider } from './locales/locale-provider.tsx'
 import { ErrorView } from './views/error/error-view.tsx'
 

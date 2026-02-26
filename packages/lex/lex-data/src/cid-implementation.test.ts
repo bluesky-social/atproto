@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { base32 } from 'multiformats/bases/base32'
 import { CID } from 'multiformats/cid'
 import { create as createDigest } from 'multiformats/hashes/digest'
@@ -75,25 +73,19 @@ describe(BytesCid, () => {
  */
 export function createCustomCid<
   TVersion extends 0 | 1,
-  TCode extends number,
-  TMultihashCode extends number,
+  TCodec extends number,
+  THashCode extends number,
 >(
   version: TVersion,
-  code: TCode,
-  multihashCode: TMultihashCode,
+  code: TCodec,
+  hashCode: THashCode,
   digest: Uint8Array,
-): Cid<TVersion, TCode, TMultihashCode> {
+): Cid<TVersion, TCodec, THashCode> {
   return {
     version,
     code,
-    multihash: { code: multihashCode, digest },
-    bytes: new Uint8Array([
-      version,
-      code,
-      multihashCode,
-      digest.length,
-      ...digest,
-    ]),
+    multihash: { code: hashCode, digest },
+    bytes: new Uint8Array([version, code, hashCode, digest.length, ...digest]),
     toString,
     equals,
   }

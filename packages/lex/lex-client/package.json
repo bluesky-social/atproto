@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-client",
-  "version": "0.0.9",
+  "version": "0.0.14",
   "license": "MIT",
   "description": "HTTP client for interacting with Lexicon based APIs",
   "keywords": [
@@ -32,18 +32,18 @@
       "types": "./dist/index.d.ts",
       "browser": "./dist/index.js",
       "import": "./dist/index.js",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {
-    "@atproto/lex-data": "workspace:*",
-    "@atproto/lex-json": "workspace:*",
-    "@atproto/lex-schema": "workspace:*",
+    "@atproto/lex-data": "workspace:^",
+    "@atproto/lex-json": "workspace:^",
+    "@atproto/lex-schema": "workspace:^",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@atproto/lex-cbor": "workspace:*",
-    "@atproto/lex-builder": "workspace:*",
+    "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-builder": "workspace:^",
     "vitest": "^4.0.16"
   },
   "scripts": {

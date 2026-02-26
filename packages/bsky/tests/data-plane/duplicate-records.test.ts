@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { TID, cidForCbor } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { WriteOpAction } from '@atproto/repo'

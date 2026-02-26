@@ -23,7 +23,7 @@ import {
   createDataPlaneClient,
 } from './data-plane/client'
 import * as error from './error'
-import { FeatureGates } from './feature-gates'
+import { FeatureGatesClient } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
@@ -181,9 +181,10 @@ export class BskyAppView {
       entrywayJwtPublicKey,
     })
 
-    const featureGates = new FeatureGates({
-      apiKey: config.statsigKey,
-      env: config.statsigEnv,
+    const featureGatesClient = new FeatureGatesClient({
+      growthBookApiHost: config.growthBookApiHost,
+      growthBookClientKey: config.growthBookClientKey,
+      eventProxyTrackingEndpoint: config.eventProxyTrackingEndpoint,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
@@ -205,7 +206,7 @@ export class BskyAppView {
       courierClient,
       rolodexClient,
       authVerifier,
-      featureGates,
+      featureGatesClient,
       blobDispatcher,
       kwsClient,
     })
@@ -241,7 +242,7 @@ export class BskyAppView {
     if (this.ctx.dataplaneHostList instanceof EtcdHostList) {
       await this.ctx.dataplaneHostList.connect()
     }
-    await this.ctx.featureGates.start()
+    this.ctx.featureGatesClient.start() // lazy, no await
     const server = this.app.listen(this.ctx.cfg.port)
     this.server = server
     server.keepAliveTimeout = 90000
@@ -253,8 +254,8 @@ export class BskyAppView {
   }
 
   async destroy(): Promise<void> {
+    this.ctx.featureGatesClient.destroy()
     await this.terminator?.terminate()
-    this.ctx.featureGates.destroy()
     await this.ctx.etcd?.close()
   }
 }
