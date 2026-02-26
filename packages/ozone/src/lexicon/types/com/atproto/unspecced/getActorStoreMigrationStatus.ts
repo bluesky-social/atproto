@@ -22,6 +22,8 @@ export interface OutputSchema {
   allMigrated: boolean
   /** The number of actor store migrations currently in progress. */
   inProgressCount: number
+  /** The number of actors on each schema version. */
+  versionCounts: VersionCount[]
 }
 
 export type HandlerInput = void
@@ -38,3 +40,19 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+
+export interface VersionCount {
+  $type?: 'com.atproto.unspecced.getActorStoreMigrationStatus#versionCount'
+  version: string
+  count: number
+}
+
+const hashVersionCount = 'versionCount'
+
+export function isVersionCount<V>(v: V) {
+  return is$typed(v, id, hashVersionCount)
+}
+
+export function validateVersionCount<V>(v: V) {
+  return validate<VersionCount & V>(v, id, hashVersionCount)
+}

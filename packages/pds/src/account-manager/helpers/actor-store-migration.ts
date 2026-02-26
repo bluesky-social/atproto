@@ -18,6 +18,21 @@ export const allActorStoresMigrated = async (
   return !unmigrated
 }
 
+// Note, this is a relatively expensive query, it is only called via the admin interface
+export const getVersionCounts = async (
+  db: AccountDb,
+): Promise<{ version: string; count: number }[]> => {
+  const rows = await db.db
+    .selectFrom('actor')
+    .select(['storeSchemaVersion', sql<number>`count(*)`.as('count')])
+    .groupBy('storeSchemaVersion')
+    .execute()
+  return rows.map((row) => ({
+    version: row.storeSchemaVersion,
+    count: row.count,
+  }))
+}
+
 export const countInProgressMigrations = async (
   db: AccountDb,
 ): Promise<number> => {
