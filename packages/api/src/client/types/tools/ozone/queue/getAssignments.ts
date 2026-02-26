@@ -23,8 +23,6 @@ export type QueryParams = {
   queueIds?: number[]
   /** If specified, returns assignments for these moderators only. */
   dids?: string[]
-  /** If specified as a DID, returns assignments for all records and the DID. If specified as an AT-URI, returns assignments for that URI only. */
-  subject?: string
 }
 export type InputSchema = undefined
 

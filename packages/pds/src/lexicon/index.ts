@@ -249,7 +249,8 @@ import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQue
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
-import * as ToolsOzoneReportClaimReport from './types/tools/ozone/report/claimReport.js'
+import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
+import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -3656,15 +3657,27 @@ export class ToolsOzoneReportNS {
     this._server = server
   }
 
-  claimReport<A extends Auth = void>(
+  assignModerator<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
-      ToolsOzoneReportClaimReport.QueryParams,
-      ToolsOzoneReportClaimReport.HandlerInput,
-      ToolsOzoneReportClaimReport.HandlerOutput
+      ToolsOzoneReportAssignModerator.QueryParams,
+      ToolsOzoneReportAssignModerator.HandlerInput,
+      ToolsOzoneReportAssignModerator.HandlerOutput
     >,
   ) {
-    const nsid = 'tools.ozone.report.claimReport' // @ts-ignore
+    const nsid = 'tools.ozone.report.assignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetAssignments.QueryParams,
+      ToolsOzoneReportGetAssignments.HandlerInput,
+      ToolsOzoneReportGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getAssignments' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

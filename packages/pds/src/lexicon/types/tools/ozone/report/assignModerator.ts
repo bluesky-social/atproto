@@ -13,14 +13,14 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.claimReport'
+const id = 'tools.ozone.report.assignModerator'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The ID of the report to claim. */
+  /** The ID of the report to assign. */
   reportId: number
-  /** Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue. */
+  /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
   queueId?: number
   /** Whether to assign the report to the moderator. */
   assign?: boolean
@@ -42,7 +42,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AlreadyClaimed'
+  error?: 'AlreadyAssigned'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

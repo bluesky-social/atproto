@@ -18857,11 +18857,6 @@ export const schemaDict = {
                 description:
                   'DID to be assigned. Assigns to whomever sent the request if not provided.',
               },
-              assign: {
-                type: 'boolean',
-                description:
-                  'Whether to assign the queue to the user. Defaults to true.',
-              },
             },
           },
         },
@@ -19160,12 +19155,6 @@ export const schemaDict = {
               description:
                 'If specified, returns assignments for these moderators only.',
             },
-            subject: {
-              type: 'string',
-              format: 'uri',
-              description:
-                'If specified as a DID, returns assignments for all records and the DID. If specified as an AT-URI, returns assignments for that URI only.',
-            },
           },
         },
         output: {
@@ -19280,13 +19269,13 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneReportClaimReport: {
+  ToolsOzoneReportAssignModerator: {
     lexicon: 1,
-    id: 'tools.ozone.report.claimReport',
+    id: 'tools.ozone.report.assignModerator',
     defs: {
       main: {
         type: 'procedure',
-        description: 'Claim a report for the current moderator.',
+        description: 'Assign a report to the current user.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -19295,12 +19284,12 @@ export const schemaDict = {
             properties: {
               reportId: {
                 type: 'integer',
-                description: 'The ID of the report to claim.',
+                description: 'The ID of the report to assign.',
               },
               queueId: {
                 type: 'integer',
                 description:
-                  'Optional queue ID to associate the claim with. If not provided and the report has been claimed on a queue before, it will stay on that queue.',
+                  'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
               },
               assign: {
                 type: 'boolean',
@@ -19318,8 +19307,8 @@ export const schemaDict = {
         },
         errors: [
           {
-            name: 'AlreadyClaimed',
-            description: 'The report is already claimed by another user.',
+            name: 'AlreadyAssigned',
+            description: 'The report is already assigned to another user.',
           },
         ],
       },
@@ -19562,6 +19551,58 @@ export const schemaDict = {
           endAt: {
             type: 'string',
             format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get assignments for reports.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActiveAssignments: {
+              type: 'boolean',
+              description: 'When true, only returns active assignments.',
+            },
+            reportIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              description:
+                'If specified, returns assignments for these reports only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#assignmentView',
+                },
+              },
+            },
           },
         },
       },
@@ -21767,8 +21808,9 @@ export const ids = {
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
-  ToolsOzoneReportClaimReport: 'tools.ozone.report.claimReport',
+  ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
+  ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',

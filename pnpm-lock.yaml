@@ -1829,6 +1829,9 @@ importers:
       '@types/qs':
         specifier: ^6.9.7
         version: 6.9.7
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)

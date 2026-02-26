@@ -37,6 +37,10 @@ describe('queue', () => {
     return data
   }
 
+  const clearAssignments = async () => {
+    await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'queue',
@@ -51,7 +55,7 @@ describe('queue', () => {
     await network.close()
   })
 
-  it('lists assignments via getAssignments', async () => {
+  it('get active assignments', async () => {
     await assign({ queueId: 1 }, 'admin')
     const result = await getAssignments({ onlyActiveAssignments: true })
 
@@ -71,6 +75,49 @@ describe('queue', () => {
     expect(result.assignments[0].queueId).toBe(1)
   })
 
+  it('filters assignments by dids', async () => {
+    await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+    await assign({ queueId: 1, did: sc.dids.carol }, 'admin')
+
+    const result = await getAssignments({
+      dids: [sc.dids.bob],
+    })
+
+    expect(result.assignments.length).toBeGreaterThanOrEqual(1)
+    expect(result.assignments[0].did).toBe(sc.dids.bob)
+  })
+
+  it('get assignments for a user', async () => {
+    await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+
+    const result = await getAssignments({
+      dids: [sc.dids.bob],
+    })
+
+    expect(result.assignments.length).toBeGreaterThanOrEqual(1)
+    expect(result.assignments[0].did).toBe(sc.dids.bob)
+  })
+
+  it('get active assignments for queue', async () => {
+    await clearAssignments()
+    await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+    const result = await getAssignments({
+      queueIds: [1],
+      onlyActiveAssignments: true,
+    })
+    expect(result.assignments.length).toBe(1)
+  })
+
+  it('get all assignments for queue', async () => {
+    await clearAssignments()
+    await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+    const result = await getAssignments({
+      queueIds: [1],
+      onlyActiveAssignments: false,
+    })
+    expect(result.assignments.length).toBe(1)
+  })
+
   describe('admin', () => {
     it('should be able to assign self to a queue', async () => {
       const assignment = await assign({ queueId: 1 }, 'admin')
@@ -86,10 +133,7 @@ describe('queue', () => {
       expect(queueIds).toContain(1)
     })
     it('should be able to assign a mod to a queue', async () => {
-      const assignment = await assign(
-        { queueId: 1, did: sc.dids.bob },
-        'admin',
-      )
+      const assignment = await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
 
       expect(assignment.queueId).toBe(1)
       expect(assignment.did).toBe(sc.dids.bob)
@@ -100,6 +144,17 @@ describe('queue', () => {
       )
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
+    })
+    it('should be able to assign multiple mods to a queue', async () => {
+      await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+      await assign({ queueId: 1, did: sc.dids.carol }, 'admin')
+      const assignments = await getAssignments(
+        { onlyActiveAssignments: true, queueIds: [1] },
+        'admin',
+      )
+      const dids = assignments.assignments.map((a) => a.did)
+      expect(dids).toContain(sc.dids.bob)
+      expect(dids).toContain(sc.dids.carol)
     })
   })
 
@@ -117,41 +172,31 @@ describe('queue', () => {
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
     })
-    it('should not be able to assign a mod to a queue', async () => {
+    it('should not be able to assign another user to a queue', async () => {
       const p = assign(
         { queueId: 1, did: network.ozone.adminAccnt.did },
         'moderator',
       )
-      await expect(p).rejects.toThrow('Cannot assign others')
-    })
-
-    it('moderator can unassign from queue', async () => {
-      await assign({ queueId: 1, assign: true }, 'moderator')
-      const assignment = await assign(
-        { queueId: 1, assign: false },
-        'moderator',
-      )
-      expect(assignment.queueId).toBe(1)
-      expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
-      expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
-        Date.now() + 1000,
-      )
+      await expect(p).rejects.toThrow('Unauthorized')
     })
 
     it('defaults to assign when param is omitted', async () => {
       const assignment = await assign({ queueId: 1 }, 'moderator')
       expect(new Date(assignment.endAt).getTime()).toBeGreaterThan(Date.now())
     })
+  })
 
-    it('unassign with no active assignment creates expired record', async () => {
-      const assignment = await assign(
-        { queueId: 999, assign: false },
-        'moderator',
+  describe('triage', () => {
+    it('should not be able to assign self to a queue', async () => {
+      const p = assign({ queueId: 1 }, 'triage')
+      await expect(p).rejects.toThrow('Unauthorized')
+    })
+    it('should not be able to assign another user to a queue', async () => {
+      const p = assign(
+        { queueId: 1, did: network.ozone.adminAccnt.did },
+        'triage',
       )
-      expect(assignment.queueId).toBe(999)
-      expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
-        Date.now() + 1000,
-      )
+      await expect(p).rejects.toThrow('Unauthorized')
     })
   })
 })

@@ -1,24 +1,60 @@
-import AtpAgent, { ToolsOzoneReportClaimReport } from '@atproto/api'
+import AtpAgent, {
+  ToolsOzoneQueueAssignModerator,
+  ToolsOzoneReportAssignModerator,
+  ToolsOzoneReportGetAssignments,
+} from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
+import { generateId } from './_util'
 
 describe('report-assignment', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
 
-  const claimReport = async (
-    input: ToolsOzoneReportClaimReport.InputSchema,
+  const assignReportModerator = async (
+    input: ToolsOzoneReportAssignModerator.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) => {
-    const { data } = await agent.tools.ozone.report.claimReport(input, {
+    const { data } = await agent.tools.ozone.report.assignModerator(input, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders(
-        ids.ToolsOzoneReportClaimReport,
+        ids.ToolsOzoneReportAssignModerator,
         callerRole,
       ),
     })
     return data
+  }
+
+  const assignQueueModerator = async (
+    input: ToolsOzoneQueueAssignModerator.InputSchema,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) => {
+    const { data } = await agent.tools.ozone.queue.assignModerator(input, {
+      encoding: 'application/json',
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneQueueAssignModerator,
+        callerRole,
+      ),
+    })
+    return data
+  }
+
+  const getAssignments = async (
+    input: ToolsOzoneReportGetAssignments.QueryParams,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
+  ) => {
+    const { data } = await agent.tools.ozone.report.getAssignments(input, {
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneReportGetAssignments,
+        callerRole,
+      ),
+    })
+    return data
+  }
+
+  const clearAssignments = async () => {
+    await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
   }
 
   beforeAll(async () => {
@@ -29,41 +65,54 @@ describe('report-assignment', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
     await network.processAll()
-    await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
+    await clearAssignments()
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  it('moderator can claim', async () => {
-    const assignment1 = await claimReport(
+  it('can get assignment history', async () => {
+    const reportId = generateId()
+    await assignReportModerator(
       {
-        reportId: 1,
+        reportId,
         assign: true,
       },
       'moderator',
     )
-    expect(assignment1.reportId).toBe(1)
+    const result = await getAssignments({ reportIds: [reportId] })
+    expect(result.assignments.length).toBe(1)
+  })
+
+  it('moderator can assigned', async () => {
+    const reportId = generateId()
+    const assignment1 = await assignReportModerator(
+      {
+        reportId,
+        assign: true,
+      },
+      'moderator',
+    )
+    expect(assignment1.reportId).toBe(reportId)
     expect(assignment1.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment1.endAt).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
   })
 
-  it('moderator can refresh claim', async () => {
-    const assignment1 = await claimReport(
+  it('moderator can refresh assignment', async () => {
+    const reportId = generateId()
+    const assignment1 = await assignReportModerator(
       {
-        reportId: 2,
+        reportId,
         assign: true,
       },
       'moderator',
     )
-    expect(assignment1.did).toBe(network.ozone.moderatorAccnt.did)
-
-    const assignment2 = await claimReport(
+    const assignment2 = await assignReportModerator(
       {
-        reportId: 2,
+        reportId,
         assign: true,
       },
       'moderator',
@@ -74,52 +123,74 @@ describe('report-assignment', () => {
     )
   })
 
-  it('moderator can claim then un-claim a report', async () => {
-    await claimReport(
+  it('moderator can assign then un-assign a report', async () => {
+    const reportId = generateId()
+    await assignReportModerator(
       {
-        reportId: 3,
+        reportId,
         assign: true,
       },
       'moderator',
     )
-    const assignment = await claimReport(
+    const assignment = await assignReportModerator(
       {
-        reportId: 3,
+        reportId,
         assign: false,
       },
       'moderator',
     )
-    expect(assignment.reportId).toBe(3)
-    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
       new Date().getTime(),
     )
   })
 
-  it('claim can be exchanged', async () => {
-    await claimReport(
+  it('assignment can be exchanged', async () => {
+    const reportId = generateId()
+    await assignReportModerator(
       {
-        reportId: 4,
-        assign: true,
-      },
-      'moderator',
-    )
-    await claimReport(
-      {
-        reportId: 4,
-        assign: false,
-      },
-      'moderator',
-    )
-    const assignment = await claimReport(
-      {
-        reportId: 4,
+        reportId,
         assign: true,
       },
       'admin',
     )
-    expect(assignment.reportId).toBe(4)
-    expect(assignment.did).toBe(network.ozone.adminAccnt.did)
-    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(new Date().getTime())
+    await assignReportModerator(
+      {
+        reportId,
+        assign: false,
+      },
+      'moderator',
+    )
+    const assignment = await assignReportModerator(
+      {
+        reportId,
+        assign: true,
+      },
+      'moderator',
+    )
+    expect(assignment.reportId).toBe(reportId)
+    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
+    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
+      new Date().getTime(),
+    )
+  })
+
+  it('cannot double assign', async () => {
+    const reportId = generateId()
+    await assignReportModerator(
+      {
+        reportId,
+        assign: true,
+      },
+      'moderator',
+    )
+    await expect(
+      assignReportModerator(
+        {
+          reportId,
+          assign: true,
+        },
+        'admin',
+      ),
+    ).rejects.toThrow('Report already assigned')
   })
 })
