@@ -222,6 +222,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as InternalPdsGetActorStoreMigrationStatus from './types/internal/pds/getActorStoreMigrationStatus.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -385,6 +386,7 @@ export class Server {
   app: AppNS
   chat: ChatNS
   com: ComNS
+  internal: InternalNS
   tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
@@ -392,6 +394,7 @@ export class Server {
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
     this.com = new ComNS(this)
+    this.internal = new InternalNS(this)
     this.tools = new ToolsNS(this)
   }
 }
@@ -3238,6 +3241,36 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.revokeAccountCredentials' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class InternalNS {
+  _server: Server
+  pds: InternalPdsNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.pds = new InternalPdsNS(server)
+  }
+}
+
+export class InternalPdsNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorStoreMigrationStatus<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      InternalPdsGetActorStoreMigrationStatus.QueryParams,
+      InternalPdsGetActorStoreMigrationStatus.HandlerInput,
+      InternalPdsGetActorStoreMigrationStatus.HandlerOutput
+    >,
+  ) {
+    const nsid = 'internal.pds.getActorStoreMigrationStatus' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

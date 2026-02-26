@@ -48,6 +48,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
     cacheSize: env.actorStoreCacheSize ?? 100,
     disableWalAutoCheckpoint,
+    migrateInBackground: env.actorStoreMigrateInBackground ?? false,
+    maxConcurrentMigrations: env.actorStoreMaxConcurrentMigrations ?? 1000,
   }
 
   let blobstoreCfg: ServerConfig['blobstore']
@@ -401,6 +403,8 @@ export type ActorStoreConfig = {
   directory: string
   cacheSize: number
   disableWalAutoCheckpoint: boolean
+  migrateInBackground: boolean
+  maxConcurrentMigrations: number
 }
 
 export type S3BlobstoreConfig = {

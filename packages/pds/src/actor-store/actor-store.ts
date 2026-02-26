@@ -4,7 +4,9 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
+import { AccountDb } from '../account-manager/db'
+import { countInProgressMigrations } from '../account-manager/helpers/actor-store-migration'
 import { ActorStoreConfig } from '../config'
 import { retrySqlite } from '../db'
 import { DiskBlobStore } from '../disk-blobstore'
@@ -13,7 +15,8 @@ import { ActorStoreReader } from './actor-store-reader'
 import { ActorStoreResources } from './actor-store-resources'
 import { ActorStoreTransactor } from './actor-store-transactor'
 import { ActorStoreWriter } from './actor-store-writer'
-import { ActorDb, getDb, getMigrator } from './db'
+import { ActorDb, getDb, getMigrationLevel, getMigrator } from './db'
+import { getLatestStoreSchemaVersion } from './db/migrations'
 
 export class ActorStore {
   reservedKeyDir: string
@@ -21,6 +24,7 @@ export class ActorStore {
   constructor(
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
+    public accountDb: AccountDb,
   ) {
     this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
   }
@@ -44,7 +48,11 @@ export class ActorStore {
     return crypto.Secp256k1Keypair.import(privKey)
   }
 
-  async openDb(did: string): Promise<ActorDb> {
+  async openDb(
+    did: string,
+    opts?: { migrateOnOpen?: boolean },
+  ): Promise<ActorDb> {
+    const { migrateOnOpen = true } = opts ?? {}
     const { dbLocation } = await this.getLocation(did)
     const exists = await fileExists(dbLocation)
     if (!exists) {
@@ -58,12 +66,71 @@ export class ActorStore {
       await retrySqlite(() =>
         db.db.selectFrom('repo_root').selectAll().execute(),
       )
+      if (migrateOnOpen) {
+        await this.ensureMigrated(did, db)
+      }
     } catch (err) {
       db.close()
       throw err
     }
 
     return db
+  }
+
+  // Ensures the actor's SQLite store is at the latest schema version.
+  // If storeSchemaVersion is already LATEST, this is a no-op.
+  // Otherwise, we run the migrator. If a concurrent caller is already
+  // migrating the same store, SQLite serializes the writes - the second
+  // caller blocks until the first completes, then sees all migrations
+  // already applied (no-op).
+  private async ensureMigrated(did: string, db: ActorDb): Promise<void> {
+    const lastMigration = await getMigrationLevel(db)
+    if (lastMigration === getLatestStoreSchemaVersion()) {
+      // already up to date
+      return
+    }
+
+    // We need to do a migration
+
+    if (
+      (await countInProgressMigrations(this.accountDb)) >=
+      this.cfg.maxConcurrentMigrations
+    ) {
+      throw new InternalServerError(
+        'too many concurrent actor store migrations',
+      )
+    }
+
+    await this.accountDb.db
+      .updateTable('actor')
+      .set({ storeIsMigrating: 1, storeMigratedAt: new Date().toISOString() })
+      .where('did', '=', did)
+      .where('storeIsMigrating', '=', 0) // don't bump storeMigratedAt if there's a concurrent migration
+      .execute()
+
+    try {
+      await getMigrator(db).migrateToLatestOrThrow()
+
+      // NOTE: If the process dies here (after migration but before the account db has been updated),
+      // the account db and the actor store will be out of sync
+
+      await this.accountDb.db
+        .updateTable('actor')
+        .set({
+          storeSchemaVersion: getLatestStoreSchemaVersion(),
+          storeIsMigrating: 0,
+          storeMigratedAt: new Date().toISOString(),
+        })
+        .where('did', '=', did)
+        .execute()
+    } catch (err) {
+      await this.accountDb.db
+        .updateTable('actor')
+        .set({ storeIsMigrating: 0 })
+        .where('did', '=', did)
+        .execute()
+      throw err
+    }
   }
 
   async read<T>(did: string, fn: (fn: ActorStoreReader) => T | PromiseLike<T>) {

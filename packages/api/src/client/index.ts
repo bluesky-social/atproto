@@ -269,6 +269,7 @@ import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 import * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
+import * as InternalPdsGetActorStoreMigrationStatus from './types/internal/pds/getActorStoreMigrationStatus.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -584,6 +585,7 @@ export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
 export * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
+export * as InternalPdsGetActorStoreMigrationStatus from './types/internal/pds/getActorStoreMigrationStatus.js'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -751,6 +753,7 @@ export class AtpBaseClient extends XrpcClient {
   app: AppNS
   chat: ChatNS
   com: ComNS
+  internal: InternalNS
   tools: ToolsNS
 
   constructor(options: FetchHandler | FetchHandlerOptions) {
@@ -758,6 +761,7 @@ export class AtpBaseClient extends XrpcClient {
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
     this.com = new ComNS(this)
+    this.internal = new InternalNS(this)
     this.tools = new ToolsNS(this)
   }
 
@@ -5149,6 +5153,36 @@ export class ComGermnetworkDeclarationRecord {
       undefined,
       { collection: 'com.germnetwork.declaration', ...params },
       { headers },
+    )
+  }
+}
+
+export class InternalNS {
+  _client: XrpcClient
+  pds: InternalPdsNS
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.pds = new InternalPdsNS(client)
+  }
+}
+
+export class InternalPdsNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  getActorStoreMigrationStatus(
+    params?: InternalPdsGetActorStoreMigrationStatus.QueryParams,
+    opts?: InternalPdsGetActorStoreMigrationStatus.CallOptions,
+  ): Promise<InternalPdsGetActorStoreMigrationStatus.Response> {
+    return this._client.call(
+      'internal.pds.getActorStoreMigrationStatus',
+      params,
+      undefined,
+      opts,
     )
   }
 }
