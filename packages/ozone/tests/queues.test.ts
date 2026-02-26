@@ -1,11 +1,17 @@
 import AtpAgent from '@atproto/api'
-import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  ModeratorClient,
+  SeedClient,
+  TestNetwork,
+  basicSeed,
+} from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
 
 describe('ozone-queues', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
+  let modClient: ModeratorClient
 
   const modHeaders = async (nsid: string) =>
     network.ozone.modHeaders(nsid, 'admin')
@@ -91,6 +97,7 @@ describe('ozone-queues', () => {
     })
     agent = network.ozone.getClient()
     sc = network.getSeedClient()
+    modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
   })
@@ -510,6 +517,136 @@ describe('ozone-queues', () => {
 
       // Clean up
       await deleteQueue(created.queue.id)
+    })
+  })
+
+  describe('report migration on delete', () => {
+    const REASON_SPAM = 'com.atproto.moderation.defs#reasonSpam'
+    const REASON_HARASSMENT = 'com.atproto.moderation.defs#reasonHarassment'
+
+    const reportAccount = async (did: string, reportType: string) => {
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventReport',
+          reportType,
+          comment: 'test report',
+        },
+        subject: { $type: 'com.atproto.admin.defs#repoRef', did },
+      })
+    }
+
+    const queryLatestReportForSubject = async (subjectOrUri: string) => {
+      const { reports } = await modClient.queryReports({
+        subject: subjectOrUri,
+      })
+      return reports[0]
+    }
+
+    it('migrates non-closed reports to the target queue', async () => {
+      const [{ data: qAData }, { data: qBData }] = await Promise.all([
+        createQueue({
+          name: 'M: Spam Accounts',
+          subjectTypes: ['account'],
+          reportTypes: [REASON_SPAM],
+        }),
+        createQueue({
+          name: 'M: Harassment Accounts',
+          subjectTypes: ['account'],
+          reportTypes: [REASON_HARASSMENT],
+        }),
+      ])
+
+      await reportAccount(sc.dids.alice, REASON_SPAM)
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+      const { data } = await deleteQueue(qAData.queue.id, {
+        migrateToQueueId: qBData.queue.id,
+      })
+      expect(data.deleted).toBe(true)
+      expect(data.reportsMigrated).toBe(1)
+
+      const report = await queryLatestReportForSubject(sc.dids.alice)
+      expect(report.queueId).toBe(qBData.queue.id)
+      expect(report.queuedAt).toBeDefined()
+
+      // Clean up
+      await deleteQueue(qBData.queue.id)
+    })
+
+    it('moves non-closed reports to -1 when no target is specified', async () => {
+      const {
+        data: { queue },
+      } = await createQueue({
+        name: 'M: Spam No Target',
+        subjectTypes: ['account'],
+        reportTypes: [REASON_SPAM],
+      })
+
+      await reportAccount(sc.dids.bob, REASON_SPAM)
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+      const { data } = await deleteQueue(queue.id)
+      expect(data.deleted).toBe(true)
+      expect(data.reportsMigrated).toBe(1)
+
+      const report = await queryLatestReportForSubject(sc.dids.bob)
+      expect(report.queueId).toBe(-1)
+      expect(report.queuedAt).toBeUndefined()
+    })
+
+    it('does not migrate closed reports', async () => {
+      const {
+        data: { queue },
+      } = await createQueue({
+        name: 'M: Spam Closed',
+        subjectTypes: ['account'],
+        reportTypes: [REASON_SPAM],
+      })
+
+      await reportAccount(sc.dids.carol, REASON_SPAM)
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+      const reportBefore = await queryLatestReportForSubject(sc.dids.carol)
+      expect(reportBefore.queueId).toBe(queue.id)
+
+      // Close the report directly — no API surface for setting status in tests
+      await network.ozone.daemon.ctx.db.db
+        .updateTable('report')
+        .set({ status: 'closed' })
+        .where('id', '=', reportBefore.id)
+        .execute()
+
+      const { data } = await deleteQueue(queue.id)
+      expect(data.deleted).toBe(true)
+      expect(data.reportsMigrated).toBe(0)
+
+      // Closed report remains assigned to the soft-deleted queue for historical reference
+      const reportAfter = await queryLatestReportForSubject(sc.dids.carol)
+      expect(reportAfter.queueId).toBe(queue.id)
+    })
+
+    it('allows creating a queue with the same name and config after soft delete', async () => {
+      const {
+        data: { queue: original },
+      } = await createQueue({
+        name: 'M: Reusable Config',
+        subjectTypes: ['account'],
+        reportTypes: [REASON_HARASSMENT],
+      })
+      await deleteQueue(original.id)
+
+      // Same name and config should be allowed once the original is soft-deleted
+      const {
+        data: { queue: replacement },
+      } = await createQueue({
+        name: 'M: Reusable Config',
+        subjectTypes: ['account'],
+        reportTypes: [REASON_HARASSMENT],
+      })
+      expect(replacement.id).not.toBe(original.id)
+
+      // Clean up
+      await deleteQueue(replacement.id)
     })
   })
 })

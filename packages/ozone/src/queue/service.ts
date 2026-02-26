@@ -28,7 +28,10 @@ export class QueueService {
   }): Promise<void> {
     // It's not ideal to load all rows and perform in memory checks in case we end up with a LOT of queues
     // but we are not foreseeing a lot of queue rows so this should be fine for the
-    let qb = this.db.db.selectFrom('report_queue').selectAll()
+    let qb = this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('deletedAt', 'is', null)
 
     if (excludeId !== undefined) {
       qb = qb.where('id', '!=', excludeId)
@@ -89,6 +92,7 @@ export class QueueService {
       .selectFrom('report_queue')
       .selectAll()
       .where('id', '=', id)
+      .where('deletedAt', 'is', null)
       .executeTakeFirst()
   }
 
@@ -106,7 +110,30 @@ export class QueueService {
   }
 
   async delete(id: number): Promise<void> {
-    await this.db.db.deleteFrom('report_queue').where('id', '=', id).execute()
+    const now = new Date().toISOString()
+    await this.db.db
+      .updateTable('report_queue')
+      .set({ deletedAt: now })
+      .where('id', '=', id)
+      .execute()
+  }
+
+  async migrateReports(
+    fromQueueId: number,
+    toQueueId?: number,
+  ): Promise<number> {
+    const now = new Date().toISOString()
+    const results = await this.db.db
+      .updateTable('report')
+      .set({
+        queueId: toQueueId ?? -1,
+        queuedAt: toQueueId ? now : null,
+        updatedAt: now,
+      })
+      .where('queueId', '=', fromQueueId)
+      .where('status', '!=', 'closed')
+      .execute()
+    return results.reduce((sum, r) => sum + Number(r.numUpdatedRows), 0)
   }
 
   async list({
@@ -125,7 +152,10 @@ export class QueueService {
     reportTypes?: string[]
   }): Promise<{ queues: Selectable<ReportQueue>[]; cursor?: string }> {
     const { ref } = this.db.db.dynamic
-    let qb = this.db.db.selectFrom('report_queue').selectAll()
+    let qb = this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('deletedAt', 'is', null)
 
     if (enabled !== undefined) {
       qb = qb.where('enabled', '=', enabled)
