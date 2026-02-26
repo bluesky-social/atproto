@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const result = await ctx.assignmentService.assignQueue({ did, queueId })
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           id: result.id,
           did: result.did,
