@@ -15459,7 +15459,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['allMigrated', 'inProgressCount'],
+            required: ['allMigrated', 'inProgressCount', 'versionCounts'],
             properties: {
               allMigrated: {
                 type: 'boolean',
@@ -15471,7 +15471,27 @@ export const schemaDict = {
                 description:
                   'The number of actor store migrations currently in progress.',
               },
+              versionCounts: {
+                type: 'array',
+                description: 'The number of actors on each schema version.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.unspecced.getActorStoreMigrationStatus#versionCount',
+                },
+              },
             },
+          },
+        },
+      },
+      versionCount: {
+        type: 'object',
+        required: ['version', 'count'],
+        properties: {
+          version: {
+            type: 'string',
+          },
+          count: {
+            type: 'integer',
           },
         },
       },
