@@ -47,7 +47,7 @@ export interface ReportAssignment {
   id: number
   did: string
   reportId: number
-  queueId: number | null
+  queueId?: number
   startAt: string
   endAt: string
 }
@@ -257,7 +257,7 @@ export class AssignmentService {
       id: assignment.id,
       did: assignment.did,
       reportId: assignment.reportId!,
-      queueId: assignment.queueId,
+      queueId: assignment.queueId ?? undefined,
       startAt: assignment.startAt.toISOString(),
       endAt: assignment.endAt.toISOString(),
     }

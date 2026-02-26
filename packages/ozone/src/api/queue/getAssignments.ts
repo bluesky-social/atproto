@@ -9,15 +9,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.assignmentService.getQueueAssignments(params)
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
-          assignments: assignments.map((a) => ({
-            id: a.id,
-            did: a.did,
-            queueId: a.queueId,
-            startAt: a.startAt,
-            endAt: a.endAt,
-          })),
+          assignments,
         },
       }
     },

@@ -29,13 +29,7 @@ export default function (server: Server, ctx: AppContext) {
 
       return {
         encoding: 'application/json',
-        body: {
-          id: result.id,
-          did: result.did,
-          queueId: result.queueId,
-          startAt: result.startAt,
-          endAt: result.endAt,
-        },
+        body: result,
       }
     },
   })

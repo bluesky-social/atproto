@@ -9,16 +9,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.assignmentService.getReportAssignments(params)
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
-          assignments: assignments.map((a) => ({
-            id: a.id,
-            did: a.did,
-            reportId: a.reportId,
-            queueId: a.queueId ?? undefined,
-            startAt: a.startAt,
-            endAt: a.endAt,
-          })),
+          assignments,
         },
       }
     },
