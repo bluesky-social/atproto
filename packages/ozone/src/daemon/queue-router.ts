@@ -70,7 +70,7 @@ export class QueueRouter {
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
       .where('r.queueId', 'is', null)
-      .select(['r.id', 'me.subjectUri', 'me.meta'])
+      .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
       .orderBy('r.id', 'asc')
       .limit(BATCH_SIZE)
 
@@ -91,7 +91,11 @@ export class QueueRouter {
     let maxId = 0
 
     for (const report of reports) {
-      const subjectType = report.subjectUri ? 'record' : 'account'
+      const subjectType = report.subjectMessageId
+        ? 'message'
+        : report.subjectUri
+          ? 'record'
+          : 'account'
 
       let collection: string | null = null
       if (report.subjectUri) {
