@@ -42,6 +42,14 @@ describe(ensureValidDatetime, () => {
       })
     }
   })
+
+  it('rejects datetime that normalizes past year 9999 due to negative offset', () => {
+    // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to
+    // UTC advances it to 10000-01-01T00:00:00Z, which is out of range
+    expect(() => ensureValidDatetime('9999-12-31T23:59:00-00:01')).toThrow(
+      InvalidDatetimeError,
+    )
+  })
 })
 
 describe(isValidDatetime, () => {
@@ -67,6 +75,12 @@ describe(isValidDatetime, () => {
         expect(isValidDatetime(dt)).toBe(false)
       })
     }
+  })
+
+  it('rejects datetime that normalizes past year 9999 due to negative offset', () => {
+    // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to
+    // UTC advances it to 10000-01-01T00:00:00Z, which is out of range
+    expect(isValidDatetime('9999-12-31T23:59:00-00:01')).toBe(false)
   })
 })
 
@@ -132,6 +146,11 @@ describe(normalizeDatetime, () => {
       InvalidDatetimeError,
     )
     expect(() => normalizeDatetime('0001-01-01T00:00:00+01:00')).toThrow(
+      InvalidDatetimeError,
+    )
+    // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to
+    // UTC advances it to 10000-01-01T00:00:00Z, which is out of range
+    expect(() => normalizeDatetime('9999-12-31T23:59:00-00:01')).toThrow(
       InvalidDatetimeError,
     )
   })
