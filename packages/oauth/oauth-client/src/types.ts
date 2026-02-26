@@ -18,6 +18,7 @@ export type AuthorizeOptions = Simplify<
     | 'response_mode'
     | 'response_type'
     | 'login_hint'
+    | 'id_token_hint'
     | 'code_challenge'
     | 'code_challenge_method'
   > & {

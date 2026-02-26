@@ -17,6 +17,7 @@ export type Session = {
   selected: boolean
   loginRequired: boolean
   consentRequired: boolean
+  ephemeralToken?:string
 }
 
 export type MultiLangString = Record<string, string | undefined>
