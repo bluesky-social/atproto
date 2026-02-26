@@ -137,7 +137,7 @@ const router = new LexRouter({
   // Required for WebSocket subscriptions (Node.js)
   upgradeWebSocket,
 
-  // Optional: Handle unexpected errors
+  // Optional: Add logging or error reporting for unexpected errors in handlers
   onHandlerError: ({ error, request, method }) => {
     console.error(`Error in ${method.nsid}:`, error)
   },

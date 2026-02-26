@@ -387,6 +387,7 @@ export type LexRouterAuth<
  * Used for logging and monitoring errors that occur during request handling.
  */
 export type HandlerErrorContext = {
+  request: Request
   method: LexMethod
   error: LexServerError
 }
@@ -911,7 +912,7 @@ export class LexRouter {
     const error = LexServerError.from(cause)
 
     const { onHandlerError } = this.options
-    if (onHandlerError) await onHandlerError({ error, method })
+    if (onHandlerError) await onHandlerError({ error, request, method })
 
     return error.toResponse()
   }
