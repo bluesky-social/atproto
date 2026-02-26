@@ -57,7 +57,7 @@ describe('queue', () => {
 
   it('get active assignments', async () => {
     await assign({ queueId: 1 }, 'admin')
-    const result = await getAssignments({ onlyActiveAssignments: true })
+    const result = await getAssignments({ onlyActive: true })
 
     expect(result.assignments.length).toBeGreaterThanOrEqual(1)
     const queueIds = result.assignments.map((a) => a.queueId)
@@ -103,7 +103,7 @@ describe('queue', () => {
     await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
     const result = await getAssignments({
       queueIds: [1],
-      onlyActiveAssignments: true,
+      onlyActive: true,
     })
     expect(result.assignments.length).toBe(1)
   })
@@ -113,7 +113,7 @@ describe('queue', () => {
     await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
     const result = await getAssignments({
       queueIds: [1],
-      onlyActiveAssignments: false,
+      onlyActive: false,
     })
     expect(result.assignments.length).toBe(1)
   })
@@ -221,10 +221,7 @@ describe('queue', () => {
       expect(assignment.queueId).toBe(1)
       expect(assignment.did).toBe(network.ozone.adminAccnt.did)
 
-      const assignments = await getAssignments(
-        { onlyActiveAssignments: true },
-        'admin',
-      )
+      const assignments = await getAssignments({ onlyActive: true }, 'admin')
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
     })
@@ -234,10 +231,7 @@ describe('queue', () => {
       expect(assignment.queueId).toBe(1)
       expect(assignment.did).toBe(sc.dids.bob)
 
-      const assignments = await getAssignments(
-        { onlyActiveAssignments: true },
-        'admin',
-      )
+      const assignments = await getAssignments({ onlyActive: true }, 'admin')
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
     })
@@ -245,7 +239,7 @@ describe('queue', () => {
       await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
       await assign({ queueId: 1, did: sc.dids.carol }, 'admin')
       const assignments = await getAssignments(
-        { onlyActiveAssignments: true, queueIds: [1] },
+        { onlyActive: true, queueIds: [1] },
         'admin',
       )
       const dids = assignments.assignments.map((a) => a.did)
@@ -261,10 +255,7 @@ describe('queue', () => {
       expect(assignment.queueId).toBe(1)
       expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
 
-      const assignments = await getAssignments(
-        { onlyActiveAssignments: true },
-        'admin',
-      )
+      const assignments = await getAssignments({ onlyActive: true }, 'admin')
       const queueIds = assignments.assignments.map((a) => a.queueId)
       expect(queueIds).toContain(1)
     })

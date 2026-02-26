@@ -8,9 +8,10 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "onlyActiveAssignments": {
+          "onlyActive": {
             "type": "boolean",
-            "description": "When true, only returns active assignments where endAt is in the future."
+            "default": true,
+            "description": "When true, only returns active assignments."
           },
           "queueIds": {
             "type": "array",

@@ -18,15 +18,18 @@ const id = 'tools.ozone.report.getAssignments'
 
 export type QueryParams = {
   /** When true, only returns active assignments. */
-  onlyActiveAssignments?: boolean
+  onlyActive?: boolean
   /** If specified, returns assignments for these reports only. */
   reportIds?: number[]
   /** If specified, returns assignments for these moderators only. */
   dids?: string[]
+  limit?: number
+  cursor?: string
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   assignments: ToolsOzoneReportDefs.AssignmentView[]
 }
 

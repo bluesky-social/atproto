@@ -174,6 +174,147 @@ describe('report-assignment', () => {
     )
   })
 
+  describe('pagination', () => {
+    it('paginates assignments with limit', async () => {
+      await clearAssignments()
+      await assignReportModerator(
+        { reportId: generateId(), assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 1, assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 2, assign: true },
+        'admin',
+      )
+
+      const firstPage = await getAssignments({ limit: 2 })
+      expect(firstPage.assignments.length).toBe(2)
+      expect(firstPage.cursor).toBeDefined()
+    })
+
+    it('returns all results when limit exceeds total', async () => {
+      await clearAssignments()
+      await assignReportModerator(
+        { reportId: generateId(), assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 1, assign: true },
+        'admin',
+      )
+
+      const result = await getAssignments({ limit: 50 })
+      expect(result.assignments.length).toBe(2)
+      expect(result.cursor).toBeDefined()
+    })
+
+    it('fetches next page using cursor', async () => {
+      await clearAssignments()
+      await assignReportModerator(
+        { reportId: generateId(), assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 1, assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 2, assign: true },
+        'admin',
+      )
+
+      const firstPage = await getAssignments({ limit: 2 })
+      expect(firstPage.assignments.length).toBe(2)
+      expect(firstPage.cursor).toBeDefined()
+
+      const secondPage = await getAssignments({
+        limit: 2,
+        cursor: firstPage.cursor,
+      })
+      expect(secondPage.assignments.length).toBe(1)
+      expect(secondPage.cursor).toBeDefined()
+
+      // Ensure no overlap between pages
+      const firstPageIds = firstPage.assignments.map((a) => a.id)
+      const secondPageIds = secondPage.assignments.map((a) => a.id)
+      for (const id of secondPageIds) {
+        expect(firstPageIds).not.toContain(id)
+      }
+    })
+
+    it('returns all assignments across pages', async () => {
+      await clearAssignments()
+      await assignReportModerator(
+        { reportId: generateId(), assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 1, assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: generateId() + 2, assign: true },
+        'admin',
+      )
+
+      // Collect all assignments via pagination
+      const allAssignments: typeof firstPage.assignments = []
+      let cursor: string | undefined
+      const firstPage = await getAssignments({ limit: 1 })
+      allAssignments.push(...firstPage.assignments)
+      cursor = firstPage.cursor
+
+      while (cursor) {
+        const page = await getAssignments({ limit: 1, cursor })
+        allAssignments.push(...page.assignments)
+        cursor = page.cursor
+      }
+
+      expect(allAssignments.length).toBe(3)
+      // Verify all unique
+      const ids = allAssignments.map((a) => a.id)
+      expect(new Set(ids).size).toBe(3)
+    })
+
+    it('applies filters alongside pagination', async () => {
+      await clearAssignments()
+      const reportId1 = generateId()
+      const reportId2 = generateId() + 1
+      const reportId3 = generateId() + 2
+      await assignReportModerator(
+        { reportId: reportId1, assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: reportId2, assign: true },
+        'admin',
+      )
+      await assignReportModerator(
+        { reportId: reportId3, assign: true },
+        'moderator',
+      )
+
+      const result = await getAssignments({
+        dids: [network.ozone.adminAccnt.did],
+        limit: 1,
+      })
+      expect(result.assignments.length).toBe(1)
+      expect(result.assignments[0].did).toBe(network.ozone.adminAccnt.did)
+      expect(result.cursor).toBeDefined()
+
+      const nextPage = await getAssignments({
+        dids: [network.ozone.adminAccnt.did],
+        limit: 1,
+        cursor: result.cursor,
+      })
+      expect(nextPage.assignments.length).toBe(1)
+      expect(nextPage.assignments[0].did).toBe(network.ozone.adminAccnt.did)
+    })
+  })
+
   it('cannot double assign', async () => {
     const reportId = generateId()
     await assignReportModerator(

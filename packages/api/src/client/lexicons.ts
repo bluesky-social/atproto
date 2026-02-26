@@ -19239,10 +19239,10 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            onlyActiveAssignments: {
+            onlyActive: {
               type: 'boolean',
-              description:
-                'When true, only returns active assignments where endAt is in the future.',
+              default: true,
+              description: 'When true, only returns active assignments.',
             },
             queueIds: {
               type: 'array',
@@ -19703,8 +19703,9 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            onlyActiveAssignments: {
+            onlyActive: {
               type: 'boolean',
+              default: true,
               description: 'When true, only returns active assignments.',
             },
             reportIds: {
@@ -19712,6 +19713,7 @@ export const schemaDict = {
               items: {
                 type: 'integer',
               },
+              maxLength: 50,
               description:
                 'If specified, returns assignments for these reports only.',
             },
@@ -19721,8 +19723,18 @@ export const schemaDict = {
                 type: 'string',
                 format: 'did',
               },
+              maxLength: 50,
               description:
                 'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
             },
           },
         },
@@ -19732,6 +19744,9 @@ export const schemaDict = {
             type: 'object',
             required: ['assignments'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               assignments: {
                 type: 'array',
                 items: {

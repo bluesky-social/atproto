@@ -16,8 +16,8 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.queue.getAssignments'
 
 export type QueryParams = {
-  /** When true, only returns active assignments where endAt is in the future. */
-  onlyActiveAssignments?: boolean
+  /** When true, only returns active assignments. */
+  onlyActive: boolean
   /** If specified, returns assignments for these queues only. */
   queueIds?: number[]
   /** If specified, returns assignments for these moderators only. */

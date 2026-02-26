@@ -12,7 +12,7 @@ export interface AssignmentServiceOpts {
 
 // Queue
 export interface GetQueueAssignmentsInput {
-  onlyActiveAssignments?: boolean
+  onlyActive?: boolean
   queueIds?: number[]
   dids?: string[]
   limit?: number
@@ -25,10 +25,12 @@ export interface AssignQueueInput {
 
 // Report
 export interface GetReportAssignmentsInput {
-  onlyActiveAssignments?: boolean
+  onlyActive?: boolean
   reportIds?: number[]
   queueIds?: number[]
   dids?: string[]
+  limit?: number
+  cursor?: string
 }
 export interface AssignReportInput {
   did: string
@@ -49,7 +51,7 @@ export class AssignmentService {
     assignments: ToolsOzoneQueueDefs.AssignmentView[]
     cursor?: string
   }> {
-    const { onlyActiveAssignments, queueIds, dids, limit, cursor } = input
+    const { onlyActive, queueIds, dids, limit, cursor } = input
     const { ref } = this.db.db.dynamic
 
     let query = this.db.db
@@ -58,7 +60,7 @@ export class AssignmentService {
       .where('reportId', 'is', null)
       .where('queueId', 'is not', null)
 
-    if (onlyActiveAssignments) {
+    if (onlyActive) {
       query = query.where('endAt', '>', new Date().toISOString())
     }
 
@@ -90,15 +92,19 @@ export class AssignmentService {
 
   async getReportAssignments(
     input: GetReportAssignmentsInput,
-  ): Promise<ToolsOzoneReportDefs.AssignmentView[]> {
-    const { onlyActiveAssignments, reportIds, queueIds, dids } = input
+  ): Promise<{
+    assignments: ToolsOzoneReportDefs.AssignmentView[]
+    cursor?: string
+  }> {
+    const { onlyActive, reportIds, queueIds, dids, limit, cursor } = input
+    const { ref } = this.db.db.dynamic
 
     let query = this.db.db
       .selectFrom('moderator_assignment')
       .selectAll()
       .where('reportId', 'is not', null)
 
-    if (onlyActiveAssignments) {
+    if (onlyActive) {
       query = query.where('endAt', '>', new Date().toISOString())
     }
 
@@ -114,9 +120,21 @@ export class AssignmentService {
       query = query.where('did', 'in', dids)
     }
 
-    const results = await query.execute()
+    const keyset = new EndAtIdKeyset(ref('endAt'), ref('id'))
+    const paginatedQuery = paginate(query, {
+      limit,
+      cursor,
+      keyset,
+      direction: 'desc',
+      tryIndex: true,
+    })
 
-    return results.map((row) => this.viewReport(row))
+    const results = await paginatedQuery.execute()
+
+    return {
+      assignments: results.map((row) => this.viewReport(row)),
+      cursor: keyset.packFromResult(results),
+    }
   }
 
   async assignQueue(
