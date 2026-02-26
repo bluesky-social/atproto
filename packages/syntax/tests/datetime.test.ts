@@ -160,7 +160,7 @@ describe(normalizeDatetimeAlways, () => {
     }
   })
 
-  describe('fails on interop (invalid syntax)', () => {
+  describe('succeeds on interop (invalid syntax)', () => {
     for (const dt of interopInvalidSyntax) {
       test(dt, () => {
         // @NOTE we can't test the returned value as some will normalize while others won't.
