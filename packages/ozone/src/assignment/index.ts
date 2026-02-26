@@ -4,6 +4,8 @@ import {
   AssignmentWebSocketServerOpts,
 } from './assignment-ws'
 import { Database } from '../db'
+import { ModeratorAssignment } from '../db/schema/moderator_assignment'
+import { Selectable } from 'kysely'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number
@@ -88,13 +90,7 @@ export class AssignmentService {
 
     const results = await query.execute()
 
-    return results.map((row) => ({
-      id: row.id,
-      did: row.did,
-      queueId: row.queueId!,
-      startAt: row.startAt.toISOString(),
-      endAt: row.endAt.toISOString(),
-    }))
+    return results.map((row) => this.viewQueue(row))
   }
 
   async getReportAssignments(
@@ -125,14 +121,7 @@ export class AssignmentService {
 
     const results = await query.execute()
 
-    return results.map((row) => ({
-      id: row.id,
-      did: row.did,
-      reportId: row.reportId!,
-      queueId: row.queueId,
-      startAt: row.startAt.toISOString(),
-      endAt: row.endAt.toISOString(),
-    }))
+    return results.map((row) => this.viewReport(row))
   }
 
   async assignQueue(input: AssignQueueInput): Promise<QueueAssignment> {
@@ -177,13 +166,7 @@ export class AssignmentService {
       throw new Error('Failed to assign moderator to queue')
     }
 
-    const row: QueueAssignment = {
-      id: result.id,
-      did: result.did,
-      queueId: result.queueId,
-      startAt: result.startAt.toISOString(),
-      endAt: result.endAt.toISOString(),
-    }
+    const row = this.viewQueue(result)
 
     this.wss?.broadcast({
       type: 'queue:assigned',
@@ -247,14 +230,7 @@ export class AssignmentService {
       throw new Error('Failed to assign moderator to report')
     }
 
-    const row: ReportAssignment = {
-      id: result.id,
-      did: result.did,
-      reportId: result.reportId,
-      queueId: result.queueId,
-      startAt: result.startAt.toISOString(),
-      endAt: result.endAt.toISOString(),
-    }
+    const row = this.viewReport(result)
 
     this.wss?.broadcast({
       type: assign ? 'report:review:started' : 'report:review:ended',
@@ -264,5 +240,26 @@ export class AssignmentService {
     })
 
     return row
+  }
+
+  viewQueue(assignment: Selectable<ModeratorAssignment>): QueueAssignment {
+    return {
+      id: assignment.id,
+      did: assignment.did,
+      queueId: assignment.queueId!,
+      startAt: assignment.startAt.toISOString(),
+      endAt: assignment.endAt.toISOString(),
+    }
+  }
+
+  viewReport(assignment: Selectable<ModeratorAssignment>): ReportAssignment {
+    return {
+      id: assignment.id,
+      did: assignment.did,
+      reportId: assignment.reportId!,
+      queueId: assignment.queueId,
+      startAt: assignment.startAt.toISOString(),
+      endAt: assignment.endAt.toISOString(),
+    }
   }
 }
