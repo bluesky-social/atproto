@@ -4,9 +4,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { WebSocket } from 'ws'
 import { decodeAll } from '@atproto/lex-cbor'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { LexError, parseCid } from '@atproto/lex-data'
+import { parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
+import { LexServerAuthError, LexServerError } from './errors.js'
 import {
+  HandlerErrorHook,
   LexRouter,
   LexRouterAuth,
   LexRouterMethodHandler,
@@ -83,7 +85,7 @@ const handlers: {
 // Basic LexRouter Tests
 // ============================================================================
 
-describe('LexRouter', () => {
+describe(LexRouter, () => {
   it('returns MethodNotImplemented when the route is not found', async () => {
     const router = new LexRouter()
     const request = new Request(`https://example.com/xrpc/foo.bar.baz`)
@@ -291,14 +293,24 @@ describe('Authentication', () => {
     return async ({ request }) => {
       const header = request.headers.get('authorization') ?? ''
       if (!header.startsWith('Basic ')) {
-        throw new LexError('AuthenticationRequired', 'Authentication required')
+        throw new LexServerAuthError(
+          'AuthenticationRequired',
+          'Authentication required',
+        )
       }
       const original = header.slice(6)
-      const [username, password] = Buffer.from(original, 'base64')
-        .toString()
-        .split(':')
+      const decoded = Buffer.from(original, 'base64').toString()
+      // @NOTE not using .split(':') to allow colons in password
+      const colonIndex = decoded.indexOf(':')
+      const [username, password] =
+        colonIndex === -1
+          ? [decoded, '']
+          : [decoded.slice(0, colonIndex), decoded.slice(colonIndex + 1)]
       if (username !== allowed.username || password !== allowed.password) {
-        throw new LexError('AuthenticationRequired', 'Invalid credentials')
+        throw new LexServerAuthError(
+          'AuthenticationRequired',
+          'Invalid credentials',
+        )
       }
       return { username, original }
     }
@@ -337,7 +349,7 @@ describe('Authentication', () => {
     )
     const response = await router.fetch(request)
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(401)
     const data = await response.json()
     expect(data.error).toBe('AuthenticationRequired')
   })
@@ -407,7 +419,7 @@ describe('Authentication', () => {
     )
     const response = await router.fetch(request)
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(401)
     const data = await response.json()
     expect(data.error).toBe('AuthenticationRequired')
   })
@@ -451,7 +463,10 @@ describe('Error Handling', () => {
         params,
       }) => {
         if (params.which === 'foo') {
-          throw new LexError('Foo', 'It was this one!')
+          throw new LexServerError(400, {
+            error: 'Foo',
+            message: 'It was this one!',
+          })
         }
         return {}
       }
@@ -577,7 +592,7 @@ describe('Error Handling', () => {
 
   describe('Custom Error Handlers', () => {
     it('allows custom onHandlerError handler', async () => {
-      const onHandlerError = vi.fn()
+      const onHandlerError = vi.fn<HandlerErrorHook>()
       const customRouter = new LexRouter({
         onHandlerError,
       })

@@ -1,10 +1,78 @@
-import { LexError, LexErrorCode } from '@atproto/lex-data'
+import { XrpcError } from '@atproto/lex-client'
+import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
+import { LexValidationError } from '@atproto/lex-schema'
 import {
   WWWAuthenticate,
   formatWWWAuthenticateHeader,
 } from './lib/www-authenticate.js'
 
-export type { WWWAuthenticate }
+export { LexError }
+export type { LexErrorCode, LexErrorData, WWWAuthenticate }
+
+/**
+ * Base error class for representing errors that should be converted to XRPC
+ * error responses.
+ */
+export class LexServerError<
+  N extends LexErrorCode = LexErrorCode,
+> extends LexError<N> {
+  name = 'LexServerError'
+
+  readonly headers?: Headers
+
+  constructor(
+    readonly status: number,
+    readonly body: LexErrorData<N>,
+    headers?: HeadersInit,
+    options?: ErrorOptions,
+  ) {
+    super(body.error, body.message, options)
+    this.headers = headers ? new Headers(headers) : undefined
+  }
+
+  override toJSON(): LexErrorData<N> {
+    return this.body
+  }
+
+  public toResponse(): Response {
+    const { status, headers } = this
+    // @NOTE using this.toJSON() instead of this.body to allow overrides in subclasses
+    return Response.json(this.toJSON(), { status, headers })
+  }
+
+  static from(cause: unknown): LexServerError {
+    if (cause instanceof LexServerError) {
+      return cause
+    }
+
+    // Convert @atproto/lex-client errors to downstream LexServerError
+    if (cause instanceof XrpcError) {
+      const { status, body, headers } = cause.toDownstreamError()
+      return new LexServerError(status, body, headers, { cause })
+    }
+
+    // Convert @atproto/lex-schema validation errors to 400 Bad Request
+    if (cause instanceof LexValidationError) {
+      return new LexServerError(400, cause.toJSON(), undefined, {
+        cause,
+      })
+    }
+
+    // Any other error is treated as a generic 500 Internal Server Error
+    if (cause instanceof LexError) {
+      return new LexServerError(500, cause.toJSON(), undefined, {
+        cause,
+      })
+    }
+
+    return new LexServerError(
+      500,
+      { error: 'InternalError', message: 'An internal error occurred' },
+      undefined,
+      { cause },
+    )
+  }
+}
 
 /**
  * Error class for authentication failures in XRPC server handlers.
@@ -26,24 +94,10 @@ export type { WWWAuthenticate }
  *   { Bearer: { error: 'InvalidToken', realm: 'api.example.com' } }
  * )
  * ```
- *
- * @example Converting from a LexError
- * ```typescript
- * try {
- *   await validateToken(token)
- * } catch (error) {
- *   if (error instanceof LexError) {
- *     throw LexServerAuthError.from(error, {
- *       Bearer: { error: 'InvalidToken' }
- *     })
- *   }
- *   throw error
- * }
- * ```
  */
 export class LexServerAuthError<
   N extends LexErrorCode = LexErrorCode,
-> extends LexError<N> {
+> extends LexServerError<N> {
   name = 'LexServerAuthError'
 
   /**
@@ -60,62 +114,11 @@ export class LexServerAuthError<
     readonly wwwAuthenticate: WWWAuthenticate = {},
     options?: ErrorOptions,
   ) {
-    super(error, message, options)
-  }
-
-  /**
-   * Gets the formatted WWW-Authenticate header value.
-   *
-   * @returns The formatted header string for the 401 response
-   *
-   * @example
-   * ```typescript
-   * const error = new LexServerAuthError('AuthenticationRequired', 'Token required', {
-   *   Bearer: { realm: 'api.example.com', error: 'MissingToken' }
-   * })
-   * console.log(error.wwwAuthenticateHeader)
-   * // Output: 'Bearer realm="api.example.com", error="MissingToken"'
-   * ```
-   */
-  get wwwAuthenticateHeader(): string {
-    return formatWWWAuthenticateHeader(this.wwwAuthenticate)
-  }
-
-  /**
-   * Converts the error to a JSON representation suitable for response bodies.
-   *
-   * If the error was created from another LexError (via `from()`), returns
-   * the original error's JSON representation.
-   *
-   * @returns JSON object with error code and message
-   */
-  toJSON() {
-    const { cause } = this
-    return cause instanceof LexError ? cause.toJSON() : super.toJSON()
-  }
-
-  /**
-   * Converts the error to an HTTP 401 Response with WWW-Authenticate header.
-   *
-   * The response includes:
-   * - Status code 401 (Unauthorized)
-   * - WWW-Authenticate header (if parameters were provided)
-   * - Access-Control-Expose-Headers for CORS compatibility
-   * - JSON body with error details
-   *
-   * @returns HTTP Response object ready to be sent to the client
-   */
-  toResponse(): Response {
-    const { wwwAuthenticateHeader } = this
-
-    const headers = wwwAuthenticateHeader
-      ? new Headers({
-          'WWW-Authenticate': wwwAuthenticateHeader,
-          'Access-Control-Expose-Headers': 'WWW-Authenticate', // CORS
-        })
-      : undefined
-
-    return Response.json(this.toJSON(), { status: 401, headers })
+    const headers = new Headers({
+      'WWW-Authenticate': formatWWWAuthenticateHeader(wwwAuthenticate),
+      'Access-Control-Expose-Headers': 'WWW-Authenticate', // CORS
+    })
+    super(401, { error, message }, headers, options)
   }
 
   /**
@@ -128,21 +131,39 @@ export class LexServerAuthError<
    * @param wwwAuthenticate - WWW-Authenticate header parameters
    * @returns A LexServerAuthError instance
    *
-   * @example
+   * @example Converting from a LexError
    * ```typescript
-   * const lexError = new LexError('AuthenticationRequired', 'Token expired')
-   * const authError = LexServerAuthError.from(lexError, {
-   *   Bearer: { error: 'ExpiredToken' }
-   * })
+   * try {
+   *   await validateToken(token)
+   * } catch (error) {
+   *   throw LexServerAuthError.from(error, {
+   *     Bearer: { error: 'InvalidToken' }
+   *   })
+   * }
    * ```
    */
   static from(
-    cause: LexError,
+    cause: unknown,
     wwwAuthenticate?: WWWAuthenticate,
   ): LexServerAuthError {
-    if (cause instanceof LexServerAuthError) return cause
-    return new LexServerAuthError(cause.error, cause.message, wwwAuthenticate, {
-      cause,
-    })
+    if (cause instanceof LexServerAuthError) {
+      return cause
+    }
+
+    if (cause instanceof LexError) {
+      return new LexServerAuthError(
+        cause.error,
+        cause.message,
+        wwwAuthenticate,
+        { cause },
+      )
+    }
+
+    return new LexServerAuthError(
+      'AuthenticationRequired',
+      'Authentication failed',
+      wwwAuthenticate,
+      { cause },
+    )
   }
 }

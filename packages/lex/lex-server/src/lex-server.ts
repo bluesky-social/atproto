@@ -1,7 +1,14 @@
 import { encode } from '@atproto/lex-cbor'
-import { LexError, LexValue, isPlainObject, ui8Concat } from '@atproto/lex-data'
+import {
+  LexError,
+  LexErrorData,
+  LexValue,
+  isPlainObject,
+  ui8Concat,
+} from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
+  DidString,
   InferMethodInput,
   InferMethodMessage,
   InferMethodOutput,
@@ -14,8 +21,10 @@ import {
   Query,
   Subscription,
   getMain,
+  isDidString,
   isNsidString,
 } from '@atproto/lex-schema'
+import { LexServerError } from './errors.js'
 import { drainWebsocket } from './lib/drain-websocket.js'
 
 type Awaitable<T> = T | Promise<T>
@@ -326,7 +335,7 @@ export type LexRouterSubscriptionConfig<
  * ```typescript
  * const authHandler: LexRouterAuth<UserCredentials> = async (ctx) => {
  *   const token = ctx.request.headers.get('authorization')
- *   if (!token) throw new LexError('AuthenticationRequired', 'Missing token')
+ *   if (!token) throw new LexServerAuthError('AuthenticationRequired', 'Missing token')
  *   return { userId: await verifyToken(token) }
  * }
  * ```
@@ -356,8 +365,9 @@ export type LexRouterAuthContext<Method extends LexMethod = LexMethod> = {
  * // Simple token-based auth
  * const tokenAuth: LexRouterAuth<{ userId: string }> = async ({ request }) => {
  *   const token = request.headers.get('authorization')?.replace('Bearer ', '')
- *   if (!token) throw new LexError('AuthenticationRequired', 'Token required')
+ *   if (!token) throw new LexServerAuthError('AuthenticationRequired', 'Token required')
  *   const userId = await verifyToken(token)
+ *   if (!userId) throw new LexServerAuthError('AuthenticationRequired', 'Invalid token')
  *   return { userId }
  * }
  *
@@ -376,14 +386,21 @@ export type LexRouterAuth<
  *
  * Used for logging and monitoring errors that occur during request handling.
  */
-export type LexErrorHandlerContext = {
-  /** The error that was thrown during handling. */
-  error: unknown
-  /** The original HTTP request that triggered the error. */
-  request: Request
-  /** The Lexicon method that was being executed. */
+export type HandlerErrorContext = {
   method: LexMethod
+  error: LexServerError
 }
+
+export type HandlerErrorHook = (
+  ctx: HandlerErrorContext,
+) => void | Promise<void>
+
+export type SocketErrorContext = {
+  method: Subscription
+  error: unknown
+}
+
+export type SocketErrorHook = (ctx: SocketErrorContext) => void | Promise<void>
 
 /**
  * Function that upgrades an HTTP request to a WebSocket connection.
@@ -437,7 +454,17 @@ export type LexRouterOptions = {
    * Useful for logging and error reporting. Not called for client-induced
    * errors (e.g., request abortion).
    */
-  onHandlerError?: (ctx: LexErrorHandlerContext) => void | Promise<void>
+  onHandlerError?: HandlerErrorHook
+  /**
+   * Optional hook for handling errors during generation of WebSocket messages.
+   */
+  onSocketError?: SocketErrorHook
+  /**
+   * Optional fallback handler for requests that are not /xrpc/ paths. Can be
+   * used to serve static files or other routes. If not provided, non-/xrpc/
+   * requests will return XRPC formatted 404 responses.
+   */
+  fallback?: FetchHandler
   /**
    * High water mark for WebSocket backpressure (in bytes).
    * When buffered data exceeds this, the handler will wait before sending more.
@@ -630,7 +657,7 @@ export class LexRouter {
         ? { handler: config, auth: undefined }
         : config
 
-    const fetch: FetchHandler =
+    const handler: FetchHandler =
       method.type === 'subscription'
         ? this.buildSubscriptionHandler(
             method,
@@ -643,7 +670,7 @@ export class LexRouter {
             methodConfig.auth,
           )
 
-    this.handlers.set(method.nsid, fetch)
+    this.handlers.set(method.nsid, handler)
 
     return this
   }
@@ -719,7 +746,7 @@ export class LexRouter {
           headers,
         })
       } catch (error) {
-        return this.handleError(request, method, error)
+        return this.handlerError(request, method, error)
       }
     }
   }
@@ -730,7 +757,7 @@ export class LexRouter {
     auth?: LexRouterAuth<Credentials, Method>,
   ): FetchHandler {
     const {
-      onHandlerError,
+      onSocketError,
       upgradeWebSocket = (globalThis as any).Deno?.upgradeWebSocket as
         | UpgradeWebSocket
         | undefined,
@@ -769,10 +796,7 @@ export class LexRouter {
       }
 
       if (request.signal.aborted) {
-        return Response.json(
-          { error: 'RequestAborted', message: 'The request was aborted' },
-          { status: 499 },
-        )
+        return Response.json({ error: 'RequestAborted' }, { status: 499 })
       }
 
       try {
@@ -784,16 +808,6 @@ export class LexRouter {
         const abortController = new AbortController()
         const { signal } = abortController
         const abort = () => abortController.abort()
-
-        const onMessage = (event: unknown) => {
-          const error = new LexError(
-            'InvalidRequest',
-            'XRPC subscriptions do not accept messages',
-            { cause: event },
-          )
-          socket.send(encodeErrorFrame(error))
-          socket.close(1008, error.error)
-        }
 
         const onOpen = async () => {
           try {
@@ -819,9 +833,9 @@ export class LexRouter {
 
             const iterator = iterable[Symbol.asyncIterator]()
 
-            signal.addEventListener('abort', async () => {
-              // @NOTE will cause the process to crash if this throws
-              await iterator.return?.()
+            // @NOTE the process WILL crash if iterator.return() throws/rejects
+            signal.addEventListener('abort', () => void iterator.return?.(), {
+              once: true,
             })
 
             while (!signal.aborted && socket.readyState === 1) {
@@ -845,23 +859,27 @@ export class LexRouter {
           } catch (error) {
             // If the socket is still open, send an error frame before closing
             if (socket.readyState === 1) {
-              const lexError =
-                error instanceof LexError
-                  ? error
-                  : new LexError('InternalError', 'An internal error occurred')
+              const isLexError = error instanceof LexError
 
-              socket.send(encodeErrorFrame(lexError))
+              // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+              const code =
+                isLexError && method.errors?.includes(error.error)
+                  ? 1008 // Policy Violation for known LexErrors
+                  : 1011 // Internal Error for unexpected errors
 
-              socket.close(
-                // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-                error instanceof LexError ? 1008 : 1011,
-                lexError.error,
-              )
+              if (isLexError) {
+                socket.send(encodeErrorFrame(error.toJSON()))
+                socket.close(code, error.error)
+              } else {
+                const error = 'InternalServerError'
+                const message = 'An internal error occurred'
+                socket.send(encodeErrorFrame({ error, message }))
+                socket.close(code, error)
+              }
             }
 
-            // Only report unexpected processing errors
-            if (onHandlerError && !isAbortReason(request.signal, error)) {
-              await onHandlerError({ error, request, method })
+            if (onSocketError && !isAbortReason(signal, error)) {
+              await onSocketError({ method, error })
             }
           } finally {
             abortController.abort()
@@ -875,30 +893,27 @@ export class LexRouter {
 
         return response
       } catch (error) {
-        return this.handleError(request, method, error)
+        return this.handlerError(request, method, error)
       }
     }
   }
 
-  private async handleError(
+  private async handlerError(
     request: Request,
     method: LexMethod,
-    error: unknown,
+    cause: unknown,
   ) {
     // Only report unexpected processing errors
+    if (isAbortReason(request.signal, cause)) {
+      return Response.json({ error: 'RequestAborted' }, { status: 499 })
+    }
+
+    const error = LexServerError.from(cause)
+
     const { onHandlerError } = this.options
-    if (onHandlerError && !isAbortReason(request.signal, error)) {
-      await onHandlerError({ error, request, method })
-    }
+    if (onHandlerError) await onHandlerError({ error, method })
 
-    if (error instanceof LexError) {
-      return error.toResponse()
-    }
-
-    return Response.json(
-      { error: 'InternalError', message: 'An internal error occurred' },
-      { status: 500 },
-    )
+    return error.toResponse()
   }
 
   /**
@@ -934,21 +949,50 @@ export class LexRouter {
     request: Request,
     connection?: ConnectionInfo,
   ): Promise<Response> => {
-    const nsid = extractMethodNsid(request)
+    const { pathname } = new URL(request.url)
 
-    const fetch = nsid
-      ? (this.handlers as Map<unknown, FetchHandler>).get(nsid)
-      : undefined
-    if (fetch) return fetch(request, connection)
+    // Not an XPRC path
+    if (!pathname.startsWith('/xrpc/')) {
+      const { fallback } = this.options
+      if (fallback) return fallback(request, connection)
+      return new Response('Not Found', { status: 404 })
+    }
 
-    if (!nsid || !isNsidString(nsid)) {
+    // @NOTE we don't validate the NSID format *before* checking for the
+    // handler because the presence of a handler is sufficient to ensure that
+    // the NSID is valid. If there is no handler, *then* we can check if the
+    // NSID is invalid in order to return a more specific error message.
+    const nsid = pathname.slice(6)
+
+    const atprotoProxy = request.headers.get('atproto-proxy')
+    if (atprotoProxy == null) {
+      const handler = (this.handlers as Map<string, FetchHandler>).get(nsid)
+      if (handler) return handler(request, connection)
+    }
+
+    if (!isNsidString(nsid)) {
       return Response.json(
-        {
-          error: 'InvalidRequest',
-          message: 'Invalid XRPC method path',
-        },
-        { status: 404 },
+        { error: 'InvalidRequest', message: `Invalid NSID: ${nsid}` },
+        { status: 400 },
       )
+    }
+
+    if (atprotoProxy != null) {
+      const proxyInfo = parseAtprotoProxyHeader(atprotoProxy)
+      if (!proxyInfo) {
+        return Response.json(
+          {
+            error: 'InvalidRequest',
+            message: `Invalid atproto-proxy header value: ${atprotoProxy}`,
+          },
+          { status: 400 },
+        )
+      }
+
+      // @TODO actually implement service proxying logic here. The reason it was
+      // not done already if because we want to perform all the heavy lifting
+      // here, while still allowing the possibility to override the endpoint
+      // resolution, etc.
     }
 
     return Response.json(
@@ -959,15 +1003,6 @@ export class LexRouter {
       { status: 501 },
     )
   }
-}
-
-function extractMethodNsid(request: Request): string | null {
-  const { pathname } = new URL(request.url)
-  if (!pathname.startsWith('/xrpc/')) return null
-  if (pathname.includes('/', 6)) return null
-  // We don't really need to validate the NSID here, the existence of the route
-  // (which is looked up based on an NSID) is sufficient.
-  return pathname.slice(6)
 }
 
 async function getProcedureInput<M extends Procedure>(
@@ -989,7 +1024,10 @@ async function getProcedureInput<M extends Procedure>(
       : undefined)
 
   if (!this.input.matchesEncoding(encoding)) {
-    throw new LexError('InvalidRequest', `Invalid content-type: ${encoding}`)
+    throw new LexServerError(400, {
+      error: 'InvalidRequest',
+      message: `Invalid content-type: ${encoding}`,
+    })
   }
 
   if (this.input.encoding === 'application/json') {
@@ -1014,17 +1052,31 @@ async function getQueryInput<M extends Query>(
     request.headers.has('content-type') ||
     request.headers.has('content-length')
   ) {
-    throw new LexError('InvalidRequest', 'GET requests must not have a body')
+    throw new LexServerError(400, {
+      error: 'InvalidRequest',
+      message: 'GET requests must not have a body',
+    })
   }
 
   return undefined as InferMethodInput<M, Body>
 }
 
+function onMessage(this: WebSocket, _event: unknown) {
+  const error = 'InvalidRequest'
+  const message = 'XRPC subscriptions do not accept messages'
+  this.send(encodeErrorFrame({ error, message }))
+  // 1003 indicates that an endpoint is terminating the connection
+  // because it has received a type of data it cannot accept (e.g., an
+  // endpoint that understands only text data MAY send this if it
+  // receives a binary message).
+  this.close(1003, error)
+}
+
 // Pre-encoded frame header for error frames
 const ERROR_FRAME_HEADER = /*#__PURE__*/ encode({ op: -1 })
 
-function encodeErrorFrame(error: LexError): Uint8Array {
-  return ui8Concat([ERROR_FRAME_HEADER, encode(error.toJSON())])
+function encodeErrorFrame(errorData: LexErrorData): Uint8Array {
+  return ui8Concat([ERROR_FRAME_HEADER, encode(errorData)])
 }
 
 // Pre-encoded frame header for message frames with unknown type
@@ -1052,9 +1104,35 @@ function encodeMessageFrame(method: Subscription, value: LexValue): Uint8Array {
 }
 
 function isAbortReason(signal: AbortSignal, error: unknown): boolean {
-  if (!signal.aborted || signal.reason == null) return false
   return (
-    error === signal.reason ||
-    (error instanceof Error && error.cause === signal.reason)
+    signal.aborted &&
+    signal.reason != null &&
+    error instanceof Error &&
+    (error === signal.reason || error.cause === signal.reason)
   )
+}
+
+export type ServiceProxyInfo = {
+  did: DidString
+  serviceId: string
+}
+
+function parseAtprotoProxyHeader(value: string): ServiceProxyInfo | null {
+  // /!\ Hot path
+
+  // Basic sanity checks
+  if (!value.startsWith('did:')) return null
+  if (value.includes(' ')) return null
+
+  // The format is expected to be `did:example:service#serviceId`
+  const hashIndex = value.indexOf('#')
+  if (hashIndex === -1) return null
+  if (hashIndex === value.length - 1) return null
+  if (value.includes('#', hashIndex + 1)) return null
+
+  const did = value.slice(0, hashIndex)
+  if (!isDidString(did)) return null
+
+  const serviceId = value.slice(hashIndex + 1)
+  return { did, serviceId }
 }
