@@ -26,11 +26,12 @@
         },
         "subjectTypes": {
           "type": "array",
+          "minLength": 1,
           "items": {
             "type": "string",
-            "knownValues": ["account", "record"]
+            "knownValues": ["account", "record", "message"]
           },
-          "description": "Subject types this queue accepts"
+          "description": "Subject types this queue accepts."
         },
         "collection": {
           "type": "string",
@@ -42,6 +43,7 @@
           "items": {
             "type": "string"
           },
+          "minLength": 1,
           "description": "Report reason types this queue accepts (fully qualified NSIDs)"
         },
         "createdBy": {

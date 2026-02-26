@@ -21,7 +21,7 @@ export interface InputSchema {
   /** Display name for the queue (must be unique) */
   name: string
   /** Subject types this queue accepts */
-  subjectTypes: ('account' | 'record' | (string & {}))[]
+  subjectTypes: ('account' | 'record' | 'message' | (string & {}))[]
   /** Collection name for record subjects. Required if subjectTypes includes 'record'. */
   collection?: string
   /** Report reason types (fully qualified NSIDs) */

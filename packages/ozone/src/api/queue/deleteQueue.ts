@@ -33,7 +33,14 @@ export default function (server: Server, ctx: AppContext) {
           )
         }
       }
-      // @TODO: implement report migration if migrateToQueueId is provided
+
+      // Migrate non-closed reports before soft-deleting the queue.
+      // Closed reports are left assigned to the deleted queue — their history is preserved.
+      // Non-closed reports go to migrateToQueueId if specified, otherwise to -1 (unmatched).
+      const reportsMigrated = await queueService.migrateReports(
+        queueId,
+        migrateToQueueId,
+      )
 
       await queueService.delete(queueId)
 
@@ -41,7 +48,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           deleted: true,
-          ...(migrateToQueueId !== undefined ? { reportsMigrated: 0 } : {}),
+          reportsMigrated,
         },
       }
     },
