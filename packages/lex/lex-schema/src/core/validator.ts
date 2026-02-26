@@ -1,6 +1,6 @@
 import { PropertyKey } from './property-key.js'
 import { ResultFailure, ResultSuccess, failure, success } from './result.js'
-import { ValidationError } from './validation-error.js'
+import { LexValidationError } from './validation-error.js'
 import {
   Issue,
   IssueInvalidFormat,
@@ -20,16 +20,16 @@ import {
 export type ValidationSuccess<Value = unknown> = ResultSuccess<Value>
 
 /**
- * Represents a failed validation result containing a {@link ValidationError}.
+ * Represents a failed validation result containing a {@link LexValidationError}.
  */
-export type ValidationFailure = ResultFailure<ValidationError>
+export type ValidationFailure = ResultFailure<LexValidationError>
 
 /**
  * Discriminated union representing the outcome of a validation operation.
  *
  * Check the `success` property to determine if validation passed or failed:
  * - If `success` is `true`, the `value` property contains the validated data
- * - If `success` is `false`, the `reason` property contains the {@link ValidationError}
+ * - If `success` is `false`, the `reason` property contains the {@link LexValidationError}
  *
  * @typeParam Value - The type of the validated value on success
  *
@@ -39,7 +39,7 @@ export type ValidationFailure = ResultFailure<ValidationError>
  * if (result.success) {
  *   // result.value is string
  * } else {
- *   // result.reason is ValidationError
+ *   // result.reason is LexValidationError
  * }
  * ```
  */
@@ -326,7 +326,7 @@ export class ValidationContext {
       if (this.issues.length > 0) {
         // Validator returned a success but issues were added via the context.
         // This means the overall validation failed.
-        return failure(new ValidationError(Array.from(this.issues)))
+        return failure(new LexValidationError(Array.from(this.issues)))
       }
 
       if (this.options.mode !== 'parse' && !Object.is(result.value, input)) {
@@ -341,7 +341,7 @@ export class ValidationContext {
         // another.
 
         // This if block comes before the next one because 'this.issues' will
-        // end-up being appended to the returned ValidationError (see the
+        // end-up being appended to the returned LexValidationError (see the
         // "failure" method below), resulting in a more complete error report.
         return this.issueInvalidValue(input, [result.value])
       }
@@ -425,7 +425,7 @@ export class ValidationContext {
    * @param reason - The validation error
    * @returns A failed validation result
    */
-  failure(reason: ValidationError): ValidationFailure {
+  failure(reason: LexValidationError): ValidationFailure {
     return failure(reason)
   }
 
@@ -438,7 +438,7 @@ export class ValidationContext {
    * @returns A failed validation result
    */
   issue(issue: Issue) {
-    return this.failure(new ValidationError([...this.issues, issue]))
+    return this.failure(new LexValidationError([...this.issues, issue]))
   }
 
   /**

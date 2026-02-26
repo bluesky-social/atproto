@@ -7,6 +7,7 @@ import {
 } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
+  XrpcInvalidResponseError,
   XrpcResponseError,
   XrpcUpstreamError,
   isXrpcErrorPayload,
@@ -70,7 +71,7 @@ export class XrpcResponse<M extends Procedure | Query>
 
   /**
    * @throws {XrpcResponseError} in case of (valid) XRPC error responses. Use
-   * {@link XrpcResponseError.matchesSchema} to narrow the error type based on
+   * {@link XrpcResponseError.matchesSchemaErrors} to narrow the error type based on
    * the method's declared error schema. This can be narrowed further as a
    * {@link XrpcAuthenticationError} if the error is an authentication error.
    * @throws {XrpcUpstreamError} when the response is not a valid XRPC
@@ -162,12 +163,11 @@ export class XrpcResponse<M extends Procedure | Query>
         const result = method.output.schema.safeParse(payload.body)
 
         if (!result.success) {
-          throw new XrpcUpstreamError(
+          throw new XrpcInvalidResponseError(
             method,
             response,
             payload,
-            `Response validation failed: ${result.reason.message}`,
-            { cause: result.reason },
+            result.reason,
           )
         }
       }

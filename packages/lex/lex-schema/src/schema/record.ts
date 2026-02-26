@@ -11,6 +11,7 @@ import {
   ValidationContext,
   Validator,
 } from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 import { literal } from './literal.js'
 import { string } from './string.js'
 
@@ -70,30 +71,6 @@ export class RecordSchema<
     this.keySchema = recordKey(key)
   }
 
-  isTypeOf<TValue extends { $type?: unknown }>(
-    value: TValue,
-  ): value is TypedRecord<TType, TValue> {
-    return value.$type === this.$type
-  }
-
-  build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.parse($typed(input, this.$type))
-  }
-
-  $isTypeOf<TValue extends { $type?: unknown }>(
-    value: TValue,
-  ): value is TypedRecord<TType, TValue> {
-    return this.isTypeOf<TValue>(value)
-  }
-
-  $build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.build(input)
-  }
-
   validateInContext(input: unknown, ctx: ValidationContext) {
     const result = ctx.validate(input, this.schema)
 
@@ -106,6 +83,34 @@ export class RecordSchema<
     }
 
     return result
+  }
+
+  build(
+    input: Omit<InferInput<this>, '$type'>,
+  ): $Typed<InferOutput<this>, TType> {
+    return this.parse($typed(input, this.$type))
+  }
+
+  isTypeOf<TValue extends { $type?: unknown }>(
+    value: TValue,
+  ): value is TypedRecord<TType, TValue> {
+    return value.$type === this.$type
+  }
+
+  /**
+   * Bound alias for {@link build} for compatibility with generated utilities.
+   * @see {@link build}
+   */
+  get $build() {
+    return lazyProperty(this, '$build', this.build.bind(this))
+  }
+
+  /**
+   * Bound alias for {@link isTypeOf} for compatibility with generated utilities.
+   * @see {@link isTypeOf}
+   */
+  get $isTypeOf() {
+    return lazyProperty(this, '$isTypeOf', this.isTypeOf.bind(this))
   }
 }
 

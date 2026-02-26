@@ -6,10 +6,10 @@ import {
   Issue,
   IssueInvalidType,
   IssueInvalidValue,
+  LexValidationError,
   ParseOptions,
   Schema,
   ValidationContext,
-  ValidationError,
   Validator,
   WithOptionalProperties,
 } from '../core.js'
@@ -209,6 +209,9 @@ export class ParamsSchema<
       iterable instanceof URLSearchParams ? iterable.entries() : iterable
 
     for (const [name, value] of entries) {
+      // Ignore empty strings
+      if (!value) continue
+
       const validator = this.shapeValidators.get(name)
       const innerValidator = validator ? unwrapSchema(validator) : undefined
       const expectsArray = innerValidator instanceof ArraySchema
@@ -302,7 +305,7 @@ function coerceParam(
   // the index of the param in case of array params (e.g. "tags[1]"), which
   // could be helpful for debugging. The cost overhead is not worth it though
   // (IMO).
-  throw new ValidationError([issue])
+  throw new LexValidationError([issue])
 }
 
 function paramPath(key: string, options?: ParseOptions) {
