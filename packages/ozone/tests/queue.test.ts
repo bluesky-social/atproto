@@ -118,6 +118,102 @@ describe('queue', () => {
     expect(result.assignments.length).toBe(1)
   })
 
+  describe('pagination', () => {
+    it('paginates assignments with limit', async () => {
+      await clearAssignments()
+      // Create assignments for multiple queues
+      await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+      await assign({ queueId: 2, did: sc.dids.alice }, 'admin')
+      await assign({ queueId: 3, did: sc.dids.alice }, 'admin')
+
+      const firstPage = await getAssignments({ limit: 2 })
+      expect(firstPage.assignments.length).toBe(2)
+      expect(firstPage.cursor).toBeDefined()
+    })
+
+    it('returns all results when limit exceeds total', async () => {
+      await clearAssignments()
+      await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+      await assign({ queueId: 2, did: sc.dids.alice }, 'admin')
+
+      const result = await getAssignments({ limit: 50 })
+      expect(result.assignments.length).toBe(2)
+      // Cursor always points to the last item returned, even when all results fit in one page
+      expect(result.cursor).toBeDefined()
+    })
+
+    it('fetches next page using cursor', async () => {
+      await clearAssignments()
+      await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+      await assign({ queueId: 2, did: sc.dids.bob }, 'admin')
+      await assign({ queueId: 3, did: sc.dids.carol }, 'admin')
+
+      const firstPage = await getAssignments({ limit: 2 })
+      expect(firstPage.assignments.length).toBe(2)
+      expect(firstPage.cursor).toBeDefined()
+
+      const secondPage = await getAssignments({
+        limit: 2,
+        cursor: firstPage.cursor,
+      })
+      expect(secondPage.assignments.length).toBe(1)
+      // Cursor points to the last item returned; a subsequent fetch with this cursor would return 0 results
+      expect(secondPage.cursor).toBeDefined()
+
+      // Ensure no overlap between pages
+      const firstPageIds = firstPage.assignments.map((a) => a.id)
+      const secondPageIds = secondPage.assignments.map((a) => a.id)
+      for (const id of secondPageIds) {
+        expect(firstPageIds).not.toContain(id)
+      }
+    })
+
+    it('returns all assignments across pages', async () => {
+      await clearAssignments()
+      await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+      await assign({ queueId: 2, did: sc.dids.bob }, 'admin')
+      await assign({ queueId: 3, did: sc.dids.carol }, 'admin')
+
+      // Collect all assignments via pagination
+      const allAssignments: typeof firstPage.assignments = []
+      let cursor: string | undefined
+      const firstPage = await getAssignments({ limit: 1 })
+      allAssignments.push(...firstPage.assignments)
+      cursor = firstPage.cursor
+
+      while (cursor) {
+        const page = await getAssignments({ limit: 1, cursor })
+        allAssignments.push(...page.assignments)
+        cursor = page.cursor
+      }
+
+      expect(allAssignments.length).toBe(3)
+      // Verify all unique
+      const ids = allAssignments.map((a) => a.id)
+      expect(new Set(ids).size).toBe(3)
+    })
+
+    it('applies filters alongside pagination', async () => {
+      await clearAssignments()
+      await assign({ queueId: 1, did: sc.dids.alice }, 'admin')
+      await assign({ queueId: 1, did: sc.dids.bob }, 'admin')
+      await assign({ queueId: 2, did: sc.dids.carol }, 'admin')
+
+      const result = await getAssignments({ queueIds: [1], limit: 1 })
+      expect(result.assignments.length).toBe(1)
+      expect(result.assignments[0].queueId).toBe(1)
+      expect(result.cursor).toBeDefined()
+
+      const nextPage = await getAssignments({
+        queueIds: [1],
+        limit: 1,
+        cursor: result.cursor,
+      })
+      expect(nextPage.assignments.length).toBe(1)
+      expect(nextPage.assignments[0].queueId).toBe(1)
+    })
+  })
+
   describe('admin', () => {
     it('should be able to assign self to a queue', async () => {
       const assignment = await assign({ queueId: 1 }, 'admin')

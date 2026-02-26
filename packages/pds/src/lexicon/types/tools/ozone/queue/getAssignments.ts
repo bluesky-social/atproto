@@ -22,10 +22,13 @@ export type QueryParams = {
   queueIds?: number[]
   /** If specified, returns assignments for these moderators only. */
   dids?: string[]
+  limit: number
+  cursor?: string
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
+  cursor?: string
   assignments: ToolsOzoneQueueDefs.AssignmentView[]
 }
 

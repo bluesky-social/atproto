@@ -26,6 +26,15 @@
               "format": "did"
             },
             "description": "If specified, returns assignments for these moderators only."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string"
           }
         }
       },
@@ -35,6 +44,9 @@
           "type": "object",
           "required": ["assignments"],
           "properties": {
+            "cursor": {
+              "type": "string"
+            },
             "assignments": {
               "type": "array",
               "items": {

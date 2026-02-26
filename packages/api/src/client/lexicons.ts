@@ -19261,6 +19261,15 @@ export const schemaDict = {
               description:
                 'If specified, returns assignments for these moderators only.',
             },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
           },
         },
         output: {
@@ -19269,6 +19278,9 @@ export const schemaDict = {
             type: 'object',
             required: ['assignments'],
             properties: {
+              cursor: {
+                type: 'string',
+              },
               assignments: {
                 type: 'array',
                 items: {

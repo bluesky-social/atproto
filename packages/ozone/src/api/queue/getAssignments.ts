@@ -5,13 +5,14 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.queue.getAssignments({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
-      const assignments =
+      const result =
         await ctx.assignmentService.getQueueAssignments(params)
 
       return {
         encoding: 'application/json',
         body: {
-          assignments,
+          assignments: result.assignments,
+          cursor: result.cursor,
         },
       }
     },

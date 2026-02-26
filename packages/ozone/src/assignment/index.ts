@@ -2,6 +2,7 @@ import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Selectable } from 'kysely'
 import { Database } from '../db'
+import { paginate, EndAtIdKeyset } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 
 export interface AssignmentServiceOpts {
@@ -14,6 +15,8 @@ export interface GetQueueAssignmentsInput {
   onlyActiveAssignments?: boolean
   queueIds?: number[]
   dids?: string[]
+  limit?: number
+  cursor?: string
 }
 export interface AssignQueueInput {
   did: string
@@ -42,8 +45,12 @@ export class AssignmentService {
 
   async getQueueAssignments(
     input: GetQueueAssignmentsInput,
-  ): Promise<ToolsOzoneQueueDefs.AssignmentView[]> {
-    const { onlyActiveAssignments, queueIds, dids } = input
+  ): Promise<{
+    assignments: ToolsOzoneQueueDefs.AssignmentView[]
+    cursor?: string
+  }> {
+    const { onlyActiveAssignments, queueIds, dids, limit, cursor } = input
+    const { ref } = this.db.db.dynamic
 
     let query = this.db.db
       .selectFrom('moderator_assignment')
@@ -63,9 +70,22 @@ export class AssignmentService {
       query = query.where('did', 'in', dids)
     }
 
-    const results = await query.execute()
+    // use endAt to take advantage of indexes
+    const keyset = new EndAtIdKeyset(ref('endAt'), ref('id'))
+    const paginatedQuery = paginate(query, {
+      limit,
+      cursor,
+      keyset,
+      direction: 'desc',
+      tryIndex: true,
+    })
 
-    return results.map((row) => this.viewQueue(row))
+    const results = await paginatedQuery.execute()
+
+    return {
+      assignments: results.map((row) => this.viewQueue(row)),
+      cursor: keyset.packFromResult(results),
+    }
   }
 
   async getReportAssignments(
