@@ -7,8 +7,8 @@ export interface ModeratorAssignment {
   did: string
   reportId: number | null
   queueId: number | null
-  startAt: Generated<Date>
-  endAt: Date
+  startAt: string
+  endAt: string
 }
 
 export type PartialDB = {

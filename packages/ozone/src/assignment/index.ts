@@ -66,7 +66,7 @@ export class AssignmentService {
       .where('queueId', 'is not', null)
 
     if (onlyActiveAssignments) {
-      query = query.where('endAt', '>', new Date())
+      query = query.where('endAt', '>', new Date().toISOString())
     }
 
     if (queueIds?.length) {
@@ -93,7 +93,7 @@ export class AssignmentService {
       .where('reportId', 'is not', null)
 
     if (onlyActiveAssignments) {
-      query = query.where('endAt', '>', new Date())
+      query = query.where('endAt', '>', new Date().toISOString())
     }
 
     if (reportIds?.length) {
@@ -125,13 +125,15 @@ export class AssignmentService {
         .where('did', '=', did)
         .where('queueId', '=', queueId)
         .where('reportId', 'is', null)
-        .where('endAt', '>', now)
+        .where('endAt', '>', now.toISOString())
         .executeTakeFirst()
 
       if (existing) {
         const updated = await dbTxn.db
           .updateTable('moderator_assignment')
-          .set({ endAt })
+          .set({
+            endAt: endAt.toISOString(),
+          })
           .where('id', '=', existing.id)
           .returningAll()
           .executeTakeFirstOrThrow()
@@ -143,8 +145,8 @@ export class AssignmentService {
         .values({
           did,
           queueId,
-          startAt: now,
-          endAt,
+          startAt: now.toISOString(),
+          endAt: endAt.toISOString(),
         })
         .returningAll()
         .executeTakeFirstOrThrow()
@@ -172,7 +174,7 @@ export class AssignmentService {
         .selectFrom('moderator_assignment')
         .selectAll()
         .where('reportId', '=', reportId)
-        .where('endAt', '>', now)
+        .where('endAt', '>', now.toISOString())
         .executeTakeFirst()
 
       if (existing) {
@@ -186,7 +188,7 @@ export class AssignmentService {
           .updateTable('moderator_assignment')
           .set({
             did: assign ? did : existing.did,
-            endAt,
+            endAt: endAt.toISOString(),
             queueId: queueId ?? existing.queueId ?? null,
           })
           .where('id', '=', existing.id)
@@ -200,8 +202,8 @@ export class AssignmentService {
             did,
             reportId,
             queueId: queueId,
-            startAt: now,
-            endAt,
+            startAt: now.toISOString(),
+            endAt: endAt.toISOString(),
           })
           .returningAll()
           .executeTakeFirstOrThrow()
@@ -223,8 +225,8 @@ export class AssignmentService {
       id: assignment.id,
       did: assignment.did,
       queueId: assignment.queueId!,
-      startAt: assignment.startAt.toISOString(),
-      endAt: assignment.endAt.toISOString(),
+      startAt: assignment.startAt,
+      endAt: assignment.endAt,
     }
   }
 
@@ -234,8 +236,8 @@ export class AssignmentService {
       did: assignment.did,
       reportId: assignment.reportId!,
       queueId: assignment.queueId ?? undefined,
-      startAt: assignment.startAt.toISOString(),
-      endAt: assignment.endAt.toISOString(),
+      startAt: assignment.startAt,
+      endAt: assignment.endAt,
     }
   }
 }

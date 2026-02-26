@@ -10,10 +10,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('reportId', 'integer')
     .addColumn('queueId', 'integer')
     // validity
-    .addColumn('startAt', 'timestamptz', (col) =>
-      col.defaultTo(sql`now()`).notNull(),
-    )
-    .addColumn('endAt', 'timestamptz', (col) => col.notNull())
+    .addColumn('startAt', 'varchar', (col) => col.notNull())
+    .addColumn('endAt', 'varchar', (col) => col.notNull())
     .execute()
 
   // Partial index for getting active queue assignments
