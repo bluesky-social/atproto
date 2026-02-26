@@ -17,17 +17,15 @@ describe('getActorStoreMigrationStatus', () => {
   })
 
   it('requires admin auth', async () => {
-    const attempt =
-      agent.api.com.atproto.unspecced.getActorStoreMigrationStatus()
+    const attempt = agent.api.internal.pds.getActorStoreMigrationStatus()
     await expect(attempt).rejects.toThrow('Authentication Required')
   })
 
   it('returns migration status', async () => {
-    const { data } =
-      await agent.api.com.atproto.unspecced.getActorStoreMigrationStatus(
-        undefined,
-        { headers: network.pds.adminAuthHeaders() },
-      )
+    const { data } = await agent.api.internal.pds.getActorStoreMigrationStatus(
+      undefined,
+      { headers: network.pds.adminAuthHeaders() },
+    )
     expect(data.allMigrated).toBe(true)
     expect(data.inProgressCount).toBe(0)
   })

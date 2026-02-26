@@ -222,7 +222,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
-import * as ComAtprotoUnspeccedGetActorStoreMigrationStatus from './types/com/atproto/unspecced/getActorStoreMigrationStatus.js'
+import * as InternalPdsGetActorStoreMigrationStatus from './types/internal/pds/getActorStoreMigrationStatus.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -386,6 +386,7 @@ export class Server {
   app: AppNS
   chat: ChatNS
   com: ComNS
+  internal: InternalNS
   tools: ToolsNS
 
   constructor(options?: XrpcOptions) {
@@ -393,6 +394,7 @@ export class Server {
     this.app = new AppNS(this)
     this.chat = new ChatNS(this)
     this.com = new ComNS(this)
+    this.internal = new InternalNS(this)
     this.tools = new ToolsNS(this)
   }
 }
@@ -2126,7 +2128,6 @@ export class ComAtprotoNS {
   server: ComAtprotoServerNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
-  unspecced: ComAtprotoUnspeccedNS
 
   constructor(server: Server) {
     this._server = server
@@ -2139,7 +2140,6 @@ export class ComAtprotoNS {
     this.server = new ComAtprotoServerNS(server)
     this.sync = new ComAtprotoSyncNS(server)
     this.temp = new ComAtprotoTempNS(server)
-    this.unspecced = new ComAtprotoUnspeccedNS(server)
   }
 }
 
@@ -3245,7 +3245,17 @@ export class ComAtprotoTempNS {
   }
 }
 
-export class ComAtprotoUnspeccedNS {
+export class InternalNS {
+  _server: Server
+  pds: InternalPdsNS
+
+  constructor(server: Server) {
+    this._server = server
+    this.pds = new InternalPdsNS(server)
+  }
+}
+
+export class InternalPdsNS {
   _server: Server
 
   constructor(server: Server) {
@@ -3255,12 +3265,12 @@ export class ComAtprotoUnspeccedNS {
   getActorStoreMigrationStatus<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
-      ComAtprotoUnspeccedGetActorStoreMigrationStatus.QueryParams,
-      ComAtprotoUnspeccedGetActorStoreMigrationStatus.HandlerInput,
-      ComAtprotoUnspeccedGetActorStoreMigrationStatus.HandlerOutput
+      InternalPdsGetActorStoreMigrationStatus.QueryParams,
+      InternalPdsGetActorStoreMigrationStatus.HandlerInput,
+      InternalPdsGetActorStoreMigrationStatus.HandlerOutput
     >,
   ) {
-    const nsid = 'com.atproto.unspecced.getActorStoreMigrationStatus' // @ts-ignore
+    const nsid = 'internal.pds.getActorStoreMigrationStatus' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

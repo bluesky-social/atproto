@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "com.atproto.unspecced.getActorStoreMigrationStatus",
+  "id": "internal.pds.getActorStoreMigrationStatus",
   "defs": {
     "main": {
       "type": "query",

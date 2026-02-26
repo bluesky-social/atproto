@@ -15448,9 +15448,9 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoUnspeccedGetActorStoreMigrationStatus: {
+  InternalPdsGetActorStoreMigrationStatus: {
     lexicon: 1,
-    id: 'com.atproto.unspecced.getActorStoreMigrationStatus',
+    id: 'internal.pds.getActorStoreMigrationStatus',
     defs: {
       main: {
         type: 'query',
@@ -15476,7 +15476,7 @@ export const schemaDict = {
                 description: 'The number of actors on each schema version.',
                 items: {
                   type: 'ref',
-                  ref: 'lex:com.atproto.unspecced.getActorStoreMigrationStatus#versionCount',
+                  ref: 'lex:internal.pds.getActorStoreMigrationStatus#versionCount',
                 },
               },
             },
@@ -20979,8 +20979,8 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
-  ComAtprotoUnspeccedGetActorStoreMigrationStatus:
-    'com.atproto.unspecced.getActorStoreMigrationStatus',
+  InternalPdsGetActorStoreMigrationStatus:
+    'internal.pds.getActorStoreMigrationStatus',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',
