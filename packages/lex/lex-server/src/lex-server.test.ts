@@ -768,6 +768,7 @@ describe('Routing', () => {
       expect(ctx.error).toBeInstanceOf(LexServerError)
       expect(ctx.error.status).toBe(500)
       expect(ctx.method).toBeDefined()
+      expect(ctx.request).toBe(request)
     })
 
     it('does not call onHandlerError for aborted requests', async () => {

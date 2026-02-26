@@ -116,19 +116,19 @@ describe(LexServerError, () => {
       expect(serverError.cause).toBe(lexError)
     })
 
-    it('converts unknown errors to 500 InternalError', () => {
+    it('converts unknown errors to 500 InternalServerError', () => {
       const serverError = LexServerError.from(new TypeError('oops'))
 
       expect(serverError.status).toBe(500)
-      expect(serverError.body.error).toBe('InternalError')
+      expect(serverError.body.error).toBe('InternalServerError')
       expect(serverError.body.message).toBe('An internal error occurred')
     })
 
-    it('converts non-Error values to 500 InternalError', () => {
+    it('converts non-Error values to 500 InternalServerError', () => {
       const serverError = LexServerError.from('string error')
 
       expect(serverError.status).toBe(500)
-      expect(serverError.body.error).toBe('InternalError')
+      expect(serverError.body.error).toBe('InternalServerError')
     })
   })
 })

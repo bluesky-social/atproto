@@ -67,7 +67,7 @@ export class LexServerError<
 
     return new LexServerError(
       500,
-      { error: 'InternalError', message: 'An internal error occurred' },
+      { error: 'InternalServerError', message: 'An internal error occurred' },
       undefined,
       { cause },
     )
