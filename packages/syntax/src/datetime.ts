@@ -3,7 +3,7 @@
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString}
  */
 export type StandardDatetimeString =
-  `${string}-${string}-${string}T${string}:${string}:${string}Z`
+  `${string}-${string}-${string}T${string}:${string}:${string}.${string}Z`
 
 export type OffsetDatetimeString =
   `${string}-${string}-${string}T${string}:${string}:${string}${'+' | '-'}${string}:${string}`
