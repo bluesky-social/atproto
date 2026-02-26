@@ -22,6 +22,13 @@ import { string } from './string.js'
 export type InferRecordKey<R extends RecordSchema> =
   R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
 
+export type TypedRecord<
+  TType extends NsidString,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = TValue extends { $type: TType }
+  ? TValue
+  : $Typed<Exclude<TValue, Unknown$TypedObject>, TType>
+
 /**
  * Schema for AT Protocol records with a type identifier and key constraints.
  *
@@ -50,6 +57,8 @@ export class RecordSchema<
   $Typed<InferInput<TShape>, TType>,
   $Typed<InferOutput<TShape>, TType>
 > {
+  readonly type = 'record' as const
+
   keySchema: RecordKeySchema<TKey>
 
   constructor(
@@ -61,11 +70,9 @@ export class RecordSchema<
     this.keySchema = recordKey(key)
   }
 
-  isTypeOf<X extends { $type?: unknown }>(
-    value: X,
-  ): value is X extends { $type: TType }
-    ? X
-    : $Typed<Exclude<X, Unknown$TypedObject>, TType> {
+  isTypeOf<TValue extends { $type?: unknown }>(
+    value: TValue,
+  ): value is TypedRecord<TType, TValue> {
     return value.$type === this.$type
   }
 
@@ -75,11 +82,15 @@ export class RecordSchema<
     return this.parse($typed(input, this.$type))
   }
 
-  $isTypeOf<X extends { $type?: unknown }>(value: X) {
-    return this.isTypeOf<X>(value)
+  $isTypeOf<TValue extends { $type?: unknown }>(
+    value: TValue,
+  ): value is TypedRecord<TType, TValue> {
+    return this.isTypeOf<TValue>(value)
   }
 
-  $build(input: Omit<InferInput<this>, '$type'>) {
+  $build(
+    input: Omit<InferInput<this>, '$type'>,
+  ): $Typed<InferOutput<this>, TType> {
     return this.build(input)
   }
 

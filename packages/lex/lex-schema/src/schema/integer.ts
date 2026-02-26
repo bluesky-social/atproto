@@ -25,13 +25,15 @@ export type IntegerSchemaOptions = {
  * ```
  */
 export class IntegerSchema extends Schema<number> {
+  readonly type = 'integer' as const
+
   constructor(readonly options?: IntegerSchemaOptions) {
     super()
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isInteger(input)) {
-      return ctx.issueInvalidType(input, 'integer')
+      return ctx.issueUnexpectedType(input, 'integer')
     }
 
     if (this.options?.minimum != null && input < this.options.minimum) {

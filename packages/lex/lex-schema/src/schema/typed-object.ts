@@ -15,6 +15,13 @@ import {
   Validator,
 } from '../core.js'
 
+export type MaybeTypedObject<
+  TType extends $Type,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = TValue extends { $type?: TType }
+  ? TValue
+  : $TypedMaybe<Exclude<TValue, Unknown$TypedObject>, TType>
+
 /**
  * Schema for typed objects in Lexicon unions.
  *
@@ -40,6 +47,8 @@ export class TypedObjectSchema<
   $TypedMaybe<InferInput<TShape>, TType>,
   $TypedMaybe<InferOutput<TShape>, TType>
 > {
+  readonly type = 'typedObject' as const
+
   constructor(
     readonly $type: TType,
     readonly schema: TShape,
@@ -47,11 +56,9 @@ export class TypedObjectSchema<
     super()
   }
 
-  isTypeOf<X extends Record<string, unknown>>(
-    value: X,
-  ): value is X extends { $type?: TType }
-    ? X
-    : $TypedMaybe<Exclude<X, Unknown$TypedObject>, TType> {
+  isTypeOf<TValue extends Record<string, unknown>>(
+    value: TValue,
+  ): value is MaybeTypedObject<TType, TValue> {
     return value.$type === undefined || value.$type === this.$type
   }
 
@@ -64,17 +71,21 @@ export class TypedObjectSchema<
     >
   }
 
-  $isTypeOf<X extends Record<string, unknown>>(value: X) {
+  $isTypeOf<TValue extends Record<string, unknown>>(
+    value: TValue,
+  ): value is MaybeTypedObject<TType, TValue> {
     return this.isTypeOf(value)
   }
 
-  $build(input: Omit<InferInput<this>, '$type'>) {
+  $build(
+    input: Omit<InferInput<this>, '$type'>,
+  ): $Typed<InferOutput<this>, TType> {
     return this.build(input)
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+      return ctx.issueUnexpectedType(input, 'object')
     }
 
     if (

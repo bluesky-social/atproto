@@ -31,6 +31,8 @@ export class OptionalSchema<TValidator extends Validator> extends Schema<
     ? InferOutput<TValidator>
     : InferOutput<TValidator> | undefined
 > {
+  readonly type = 'optional' as const
+
   constructor(readonly validator: TValidator) {
     super()
   }

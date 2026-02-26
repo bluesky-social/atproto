@@ -1,6 +1,5 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
 import { AtUri, INVALID_HANDLE, normalizeDatetimeAlways } from '@atproto/syntax'
-import { FeatureGateID } from '../feature-gates'
 import { Actor, ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
@@ -503,6 +502,10 @@ export class Views {
   ): VerificationState | undefined {
     const actor = state.actors?.get(did)
     if (!actor) return
+
+    // Currently, the handle comes as "handle.invalid" from the production dataplane.
+    // But the contract allows for empty handle, so we cover both cases.
+    if (!actor.handle || actor.handle === INVALID_HANDLE) return
 
     const isImpersonation = state.labels?.get(did)?.isImpersonation
 
@@ -1416,8 +1419,8 @@ export class Views {
         threadTagsHide: this.threadTagsHide,
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
-      state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsReplyRankingExplorationEnable,
+      state.ctx?.featureGatesMap.get(
+        'threads:reply_ranking_exploration:enable',
       ),
     )
 
@@ -1789,8 +1792,8 @@ export class Views {
         threadTagsHide: this.threadTagsHide,
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
-      state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsReplyRankingExplorationEnable,
+      state.ctx?.featureGatesMap.get(
+        'threads:reply_ranking_exploration:enable',
       ),
     )
   }
@@ -1987,9 +1990,7 @@ export class Views {
 
     let hiddenByTag = false
     if (
-      state.ctx?.featureGates.get(
-        FeatureGateID.ThreadsReplyRankingExplorationEnable,
-      )
+      state.ctx?.featureGatesMap.get('threads:reply_ranking_exploration:enable')
     ) {
       hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
     } else {

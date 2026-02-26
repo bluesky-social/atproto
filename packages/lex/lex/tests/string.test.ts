@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { UnknownString } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.stringLength', () => {
@@ -141,6 +142,30 @@ describe('com.example.stringLengthNoMinLength', () => {
         ).toThrow(error)
       })
     }
+  })
+})
+
+describe('com.example.stringKnownValues', () => {
+  it('properly types known string values', () => {
+    expectTypeOf<com.example.stringKnownValues.Main>().not.toMatchObjectType<{
+      myKey: string
+    }>()
+    expectTypeOf<com.example.stringKnownValues.Main>().not.toMatchObjectType<{
+      myKey: UnknownString
+    }>()
+    expectTypeOf<com.example.stringKnownValues.Main>().toMatchObjectType<{
+      myKey: 'foo' | 'bar' | UnknownString
+    }>()
+
+    expectTypeOf<
+      com.example.stringKnownValues.Main['myKey']
+    >().not.toEqualTypeOf<string>()
+    expectTypeOf<
+      com.example.stringKnownValues.Main['myKey']
+    >().not.toEqualTypeOf<UnknownString>()
+    expectTypeOf<com.example.stringKnownValues.Main['myKey']>().toEqualTypeOf<
+      'foo' | 'bar' | UnknownString
+    >()
   })
 })
 

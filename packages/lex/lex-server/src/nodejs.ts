@@ -11,6 +11,7 @@ import {
 import { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
 import { FetchHandler } from './lex-server.js'
@@ -185,7 +186,7 @@ export async function sendResponse(
   }
 
   if (response.body != null && req.method !== 'HEAD') {
-    const stream = Readable.fromWeb(response.body as any)
+    const stream = Readable.fromWeb(response.body as NodeReadableStream)
     await pipeline(stream, res)
   } else {
     await response.body?.cancel()
@@ -279,7 +280,7 @@ function toHeaders(headers: IncomingHttpHeaders): Headers {
   return result
 }
 
-function toBody(req: IncomingMessage): null | ReadableStream<Uint8Array> {
+function toBody(req: IncomingMessage): null | ReadableStream {
   if (
     req.method === 'GET' ||
     req.method === 'HEAD' ||
@@ -296,7 +297,7 @@ function toBody(req: IncomingMessage): null | ReadableStream<Uint8Array> {
     return null
   }
 
-  return Readable.toWeb(req) as ReadableStream<Uint8Array>
+  return Readable.toWeb(req) as ReadableStream
 }
 
 /**

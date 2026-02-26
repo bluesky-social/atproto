@@ -1,11 +1,5 @@
-import {
-  ArraySchema,
-  BooleanSchema,
-  IntegerSchema,
-  StringSchema,
-  l,
-} from '@atproto/lex-schema'
-import { LexValue } from '../../lex-data/dist/lex.js'
+import { LexValue } from '@atproto/lex-data'
+import { l } from '@atproto/lex-schema'
 import {
   LexiconArray,
   LexiconArrayItems,
@@ -331,7 +325,7 @@ export class LexiconSchemaBuilder {
       case 'bytes':
         return l.bytes(def)
       case 'unknown':
-        return l.unknownObject()
+        return l.lexMap()
       case 'array':
         return l.array(this.compileLeaf(doc, def.items), def)
       default:
@@ -417,17 +411,19 @@ export class LexiconSchemaBuilder {
   protected compileParams(doc: LexiconDocument, def?: LexiconParameters) {
     if (!def) return l.params()
 
-    const shape: l.ParamsSchemaShape = {}
+    const shape: l.ParamsShape = {}
     for (const [paramName, paramDef] of Object.entries(def.properties)) {
       if (paramDef === undefined) continue
 
       const isRequired = def.required?.includes(paramName)
 
       const propSchema = this.compileLeaf(doc, paramDef) as
-        | StringSchema
-        | BooleanSchema
-        | IntegerSchema
-        | ArraySchema<StringSchema | BooleanSchema | IntegerSchema>
+        | l.StringSchema
+        | l.BooleanSchema
+        | l.IntegerSchema
+        | l.ArraySchema<l.StringSchema>
+        | l.ArraySchema<l.BooleanSchema>
+        | l.ArraySchema<l.IntegerSchema>
 
       shape[paramName] = isRequired ? propSchema : l.optional(propSchema)
     }

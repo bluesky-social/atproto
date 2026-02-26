@@ -78,6 +78,8 @@ export class DiscriminatedUnionSchema<
   DiscriminatedUnionSchemaInput<TVariants>,
   DiscriminatedUnionSchemaOutput<TVariants>
 > {
+  readonly type = 'discriminatedUnion' as const
+
   readonly variantsMap: Map<unknown, DiscriminatedUnionVariant<TDiscriminator>>
 
   constructor(
@@ -94,7 +96,7 @@ export class DiscriminatedUnionSchema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+      return ctx.issueUnexpectedType(input, 'object')
     }
 
     const { discriminator } = this

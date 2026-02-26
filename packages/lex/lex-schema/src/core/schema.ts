@@ -11,13 +11,13 @@ import {
  * Options for parsing operations.
  * Excludes the `mode` option as it is implicitly set to `"parse"`.
  */
-type ParseOptions = Omit<ValidationOptions, 'mode'>
+export type ParseOptions = Omit<ValidationOptions, 'mode'>
 
 /**
  * Options for validation operations.
  * Excludes the `mode` option as it is implicitly set to `"validate"`.
  */
-type ValidateOptions = Omit<ValidationOptions, 'mode'>
+export type ValidateOptions = Omit<ValidationOptions, 'mode'>
 
 /**
  * Internal type structure for schema type inference.
@@ -58,7 +58,7 @@ export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
  * class MySchema extends Schema<string> {
  *   validateInContext(input: unknown, ctx: ValidationContext): ValidationResult {
  *     if (typeof input !== 'string') {
- *       return ctx.issueInvalidType(input, 'string')
+ *       return ctx.issueUnexpectedType(input, 'string')
  *     }
  *     return ctx.success(input)
  *   }
@@ -87,6 +87,12 @@ export abstract class Schema<
    * @internal
    */
   declare readonly ['__lex']: TInternals
+
+  // Needed to discriminate multiple schema types when used in unions. Without
+  // this, Typescript could allow an EnumSchema<"foo" | "bar"> to be used where
+  // a StringSchema is expected, since they would both be structurally
+  // compatible.
+  abstract readonly type: string
 
   /**
    * Performs validation of the input value within a validation context.

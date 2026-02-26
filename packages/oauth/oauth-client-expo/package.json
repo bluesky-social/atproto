@@ -1,6 +1,6 @@
 {
   "name": "@atproto/oauth-client-expo",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "MIT",
   "description": "ATPROTO OAuth client for Expo applications",
   "authors": [
@@ -36,7 +36,6 @@
     "@atproto/oauth-client": "workspace:^",
     "@atproto/oauth-client-browser": "workspace:^",
     "core-js": "^3",
-    "event-target-polyfill": "^0.0.4",
     "expo-web-browser": "^15.0.8",
     "react-native-mmkv": "^3.3.3",
     "react-native-url-polyfill": "^3.0.0"
