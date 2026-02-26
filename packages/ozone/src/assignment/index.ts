@@ -1,3 +1,4 @@
+import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Selectable } from 'kysely'
 import { Database } from '../db'
@@ -18,13 +19,6 @@ export interface AssignQueueInput {
   did: string
   queueId: number
 }
-export interface QueueAssignment {
-  id: number
-  did: string
-  queueId: number
-  startAt: string
-  endAt: string
-}
 
 // Report
 export interface GetReportAssignmentsInput {
@@ -39,14 +33,6 @@ export interface AssignReportInput {
   queueId?: number | null
   assign: boolean
 }
-export interface ReportAssignment {
-  id: number
-  did: string
-  reportId: number
-  queueId?: number
-  startAt: string
-  endAt: string
-}
 
 export class AssignmentService {
   constructor(
@@ -56,7 +42,7 @@ export class AssignmentService {
 
   async getQueueAssignments(
     input: GetQueueAssignmentsInput,
-  ): Promise<QueueAssignment[]> {
+  ): Promise<ToolsOzoneQueueDefs.AssignmentView[]> {
     const { onlyActiveAssignments, queueIds, dids } = input
 
     let query = this.db.db
@@ -84,7 +70,7 @@ export class AssignmentService {
 
   async getReportAssignments(
     input: GetReportAssignmentsInput,
-  ): Promise<ReportAssignment[]> {
+  ): Promise<ToolsOzoneReportDefs.AssignmentView[]> {
     const { onlyActiveAssignments, reportIds, queueIds, dids } = input
 
     let query = this.db.db
@@ -113,7 +99,9 @@ export class AssignmentService {
     return results.map((row) => this.viewReport(row))
   }
 
-  async assignQueue(input: AssignQueueInput): Promise<QueueAssignment> {
+  async assignQueue(
+    input: AssignQueueInput,
+  ): Promise<ToolsOzoneQueueDefs.AssignmentView> {
     const { did, queueId } = input
     const now = new Date()
     const endAt = new Date(now.getTime() + this.opts.queueDurationMs)
@@ -162,7 +150,9 @@ export class AssignmentService {
     return row
   }
 
-  async assignReport(input: AssignReportInput): Promise<ReportAssignment> {
+  async assignReport(
+    input: AssignReportInput,
+  ): Promise<ToolsOzoneReportDefs.AssignmentView> {
     const { did, reportId, queueId, assign } = input
     const now = new Date()
     const endAt = assign
@@ -220,7 +210,9 @@ export class AssignmentService {
     return row
   }
 
-  viewQueue(assignment: Selectable<ModeratorAssignment>): QueueAssignment {
+  viewQueue(
+    assignment: Selectable<ModeratorAssignment>,
+  ): ToolsOzoneQueueDefs.AssignmentView {
     return {
       id: assignment.id,
       did: assignment.did,
@@ -230,7 +222,9 @@ export class AssignmentService {
     }
   }
 
-  viewReport(assignment: Selectable<ModeratorAssignment>): ReportAssignment {
+  viewReport(
+    assignment: Selectable<ModeratorAssignment>,
+  ): ToolsOzoneReportDefs.AssignmentView {
     return {
       id: assignment.id,
       did: assignment.did,
