@@ -19676,8 +19676,9 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
-          queueId: {
-            type: 'integer',
+          queueView: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
           },
           reportId: {
             type: 'integer',

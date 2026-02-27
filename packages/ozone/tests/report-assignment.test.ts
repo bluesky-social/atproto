@@ -57,6 +57,29 @@ describe('report-assignment', () => {
     await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
   }
 
+  const createQueue = async (
+    name: string,
+    reportTypes: string[],
+  ) => {
+    const { data } = await agent.tools.ozone.queue.createQueue(
+      {
+        name,
+        subjectTypes: ['account'],
+        reportTypes,
+      },
+      {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneQueueCreateQueue,
+          'admin',
+        ),
+      },
+    )
+    return data
+  }
+
+  let queueId: number
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'report_assignment',
@@ -66,6 +89,12 @@ describe('report-assignment', () => {
     await basicSeed(sc)
     await network.processAll()
     await clearAssignments()
+
+    const queue = await createQueue(
+      'Report Queue',
+      ['com.atproto.moderation.defs#reasonSpam'],
+    )
+    queueId = queue.queue.id
   })
 
   afterAll(async () => {
@@ -313,6 +342,50 @@ describe('report-assignment', () => {
       expect(nextPage.assignments.length).toBe(1)
       expect(nextPage.assignments[0].did).toBe(network.ozone.adminAccnt.did)
     })
+  })
+
+  it('hydrates queueView when queueId is provided', async () => {
+    const reportId = generateId()
+    const assignment = await assignReportModerator(
+      {
+        reportId,
+        queueId,
+        assign: true,
+      },
+      'admin',
+    )
+    expect(assignment.reportId).toBe(reportId)
+    expect(assignment.queueView).toBeDefined()
+    expect(assignment.queueView!.id).toBe(queueId)
+    expect(assignment.queueView!.name).toBe('Report Queue')
+    expect(assignment.queueView!.subjectTypes).toEqual(['account'])
+  })
+
+  it('omits queueView when no queueId is provided', async () => {
+    const reportId = generateId()
+    const assignment = await assignReportModerator(
+      {
+        reportId,
+        assign: true,
+      },
+      'admin',
+    )
+    expect(assignment.reportId).toBe(reportId)
+    expect(assignment.queueView).toBeUndefined()
+  })
+
+  it('hydrates queueView in getAssignments', async () => {
+    await clearAssignments()
+    const reportId = generateId()
+    await assignReportModerator(
+      { reportId, queueId, assign: true },
+      'admin',
+    )
+    const result = await getAssignments({ reportIds: [reportId] })
+    expect(result.assignments.length).toBe(1)
+    expect(result.assignments[0].queueView).toBeDefined()
+    expect(result.assignments[0].queueView!.id).toBe(queueId)
+    expect(result.assignments[0].queueView!.name).toBe('Report Queue')
   })
 
   it('cannot double assign', async () => {
