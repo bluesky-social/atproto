@@ -143,7 +143,7 @@ export interface AssignmentView {
   $type?: 'tools.ozone.report.defs#assignmentView'
   id: number
   did: string
-  queueView?: ToolsOzoneQueueDefs.QueueView
+  queue?: ToolsOzoneQueueDefs.QueueView
   reportId: number
   startAt: string
   endAt: string

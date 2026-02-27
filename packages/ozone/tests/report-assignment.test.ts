@@ -310,7 +310,7 @@ describe('report-assignment', () => {
     })
   })
 
-  it('hydrates queueView when queueId is provided', async () => {
+  it('hydrates queue when queueId is provided', async () => {
     const reportId = 3001
     const assignment = await assignReportModerator(
       {
@@ -321,13 +321,13 @@ describe('report-assignment', () => {
       'admin',
     )
     expect(assignment.reportId).toBe(reportId)
-    expect(assignment.queueView).toBeDefined()
-    expect(assignment.queueView!.id).toBe(queueId)
-    expect(assignment.queueView!.name).toBe('Report Queue')
-    expect(assignment.queueView!.subjectTypes).toEqual(['account'])
+    expect(assignment.queue).toBeDefined()
+    expect(assignment.queue!.id).toBe(queueId)
+    expect(assignment.queue!.name).toBe('Report Queue')
+    expect(assignment.queue!.subjectTypes).toEqual(['account'])
   })
 
-  it('omits queueView when no queueId is provided', async () => {
+  it('omits queue when no queueId is provided', async () => {
     const reportId = 3002
     const assignment = await assignReportModerator(
       {
@@ -337,18 +337,18 @@ describe('report-assignment', () => {
       'admin',
     )
     expect(assignment.reportId).toBe(reportId)
-    expect(assignment.queueView).toBeUndefined()
+    expect(assignment.queue).toBeUndefined()
   })
 
-  it('hydrates queueView in getAssignments', async () => {
+  it('hydrates queue in getAssignments', async () => {
     await clearAssignments()
     const reportId = 3003
     await assignReportModerator({ reportId, queueId, assign: true }, 'admin')
     const result = await getAssignments({ reportIds: [reportId] })
     expect(result.assignments.length).toBe(1)
-    expect(result.assignments[0].queueView).toBeDefined()
-    expect(result.assignments[0].queueView!.id).toBe(queueId)
-    expect(result.assignments[0].queueView!.name).toBe('Report Queue')
+    expect(result.assignments[0].queue).toBeDefined()
+    expect(result.assignments[0].queue!.id).toBe(queueId)
+    expect(result.assignments[0].queue!.name).toBe('Report Queue')
   })
 
   it('cannot double assign', async () => {

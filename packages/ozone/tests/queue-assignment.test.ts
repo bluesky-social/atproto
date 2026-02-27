@@ -9,7 +9,7 @@ describe('queue', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
-  
+
   let q1: number
   let q2: number
   let q3: number
@@ -96,7 +96,7 @@ describe('queue', () => {
     const result = await getAssignments({ onlyActive: true })
 
     expect(result.assignments.length).toBeGreaterThanOrEqual(1)
-    const queueIds = result.assignments.map((a) => a.queueView.id)
+    const queueIds = result.assignments.map((a) => a.queue.id)
     expect(queueIds).toContain(q1)
   })
 
@@ -108,7 +108,7 @@ describe('queue', () => {
     })
 
     expect(result.assignments.length).toBeGreaterThanOrEqual(1)
-    expect(result.assignments[0].queueView.id).toBe(q1)
+    expect(result.assignments[0].queue.id).toBe(q1)
   })
 
   it('filters assignments by dids', async () => {
@@ -237,7 +237,7 @@ describe('queue', () => {
 
       const result = await getAssignments({ queueIds: [q1], limit: 1 })
       expect(result.assignments.length).toBe(1)
-      expect(result.assignments[0].queueView.id).toBe(q1)
+      expect(result.assignments[0].queue.id).toBe(q1)
       expect(result.cursor).toBeDefined()
 
       const nextPage = await getAssignments({
@@ -246,7 +246,7 @@ describe('queue', () => {
         cursor: result.cursor,
       })
       expect(nextPage.assignments.length).toBe(1)
-      expect(nextPage.assignments[0].queueView.id).toBe(q1)
+      expect(nextPage.assignments[0].queue.id).toBe(q1)
     })
   })
 
@@ -254,21 +254,21 @@ describe('queue', () => {
     it('should be able to assign self to a queue', async () => {
       const assignment = await assign({ queueId: q1 }, 'admin')
 
-      expect(assignment.queueView.id).toBe(q1)
+      expect(assignment.queue.id).toBe(q1)
       expect(assignment.did).toBe(network.ozone.adminAccnt.did)
 
       const assignments = await getAssignments({ onlyActive: true }, 'admin')
-      const queueIds = assignments.assignments.map((a) => a.queueView.id)
+      const queueIds = assignments.assignments.map((a) => a.queue.id)
       expect(queueIds).toContain(q1)
     })
     it('should be able to assign a mod to a queue', async () => {
       const assignment = await assign({ queueId: q1, did: sc.dids.bob }, 'admin')
 
-      expect(assignment.queueView.id).toBe(q1)
+      expect(assignment.queue.id).toBe(q1)
       expect(assignment.did).toBe(sc.dids.bob)
 
       const assignments = await getAssignments({ onlyActive: true }, 'admin')
-      const queueIds = assignments.assignments.map((a) => a.queueView.id)
+      const queueIds = assignments.assignments.map((a) => a.queue.id)
       expect(queueIds).toContain(q1)
     })
     it('should be able to assign multiple mods to a queue', async () => {
@@ -288,11 +288,11 @@ describe('queue', () => {
     it('should be able to assign self to a queue', async () => {
       const assignment = await assign({ queueId: q1 }, 'moderator')
 
-      expect(assignment.queueView.id).toBe(q1)
+      expect(assignment.queue.id).toBe(q1)
       expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
 
       const assignments = await getAssignments({ onlyActive: true }, 'admin')
-      const queueIds = assignments.assignments.map((a) => a.queueView.id)
+      const queueIds = assignments.assignments.map((a) => a.queue.id)
       expect(queueIds).toContain(q1)
     })
     it('should not be able to assign another user to a queue', async () => {

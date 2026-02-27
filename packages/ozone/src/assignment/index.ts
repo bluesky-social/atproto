@@ -340,7 +340,7 @@ export class AssignmentService {
     return {
       id: row.id,
       did: row.did,
-      queueView: {
+      queue: {
         id: row.queueId,
         name: row.queueName,
         subjectTypes: row.queueSubjectTypes ?? [],
@@ -367,7 +367,7 @@ export class AssignmentService {
       id: row.id,
       did: row.did,
       reportId: row.reportId!,
-      queueView:
+      queue:
         row.queueId !== null && row.queueName !== null
           ? {
               id: row.queueId,

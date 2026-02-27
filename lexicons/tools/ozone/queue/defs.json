@@ -112,7 +112,7 @@
     },
     "assignmentView": {
       "type": "object",
-      "required": ["id", "did", "queueView", "startAt", "endAt"],
+      "required": ["id", "did", "queue", "startAt", "endAt"],
       "properties": {
         "id": {
           "type": "integer"
@@ -121,7 +121,7 @@
           "type": "string",
           "format": "did"
         },
-        "queueView": {
+        "queue": {
           "type": "ref",
           "ref": "#queueView"
         },
