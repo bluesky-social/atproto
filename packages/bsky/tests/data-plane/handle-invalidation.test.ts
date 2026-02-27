@@ -1,15 +1,15 @@
-import { AtpAgent } from '@atproto/api'
+import { AtpAgent, ids } from '@atproto/api'
 import { DAY } from '@atproto/common'
 import { SeedClient, TestNetwork, usersSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
+import { DidString } from '@atproto/syntax'
 
 describe('handle invalidation', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let pdsAgent: AtpAgent
   let sc: SeedClient
-  let alice: string
-  let bob: string
+  let alice: DidString
+  let bob: DidString
 
   const mockHandles = {}
 
@@ -17,8 +17,8 @@ describe('handle invalidation', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_handle_invalidation',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()

@@ -1,33 +1,35 @@
 import { MINUTE } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { NEW_PASSWORD_MAX_LENGTH } from '../../../../account-manager/helpers/scrypt'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.resetPassword({
+  const { entrywayClient } = ctx
+  server.add(com.atproto.server.resetPassword, {
     rateLimit: [
       {
         durationMs: 5 * MINUTE,
         points: 50,
       },
     ],
-    handler: async ({ input, req }) => {
-      if (ctx.entrywayAgent) {
-        await ctx.entrywayAgent.com.atproto.server.resetPassword(
-          input.body,
-          ctx.entrywayPassthruHeaders(req),
-        )
-        return
-      }
+    handler: entrywayClient
+      ? async ({ input: { body }, req }) => {
+          const { headers } = ctx.entrywayPassthruHeaders(req)
+          await entrywayClient.xrpc(com.atproto.server.resetPassword, {
+            validateResponse: false, // ignore invalid upstream responses
+            headers,
+            body,
+          })
+        }
+      : async ({ input: { body } }) => {
+          const { token, password } = body
 
-      const { token, password } = input.body
+          if (password.length > NEW_PASSWORD_MAX_LENGTH) {
+            throw new InvalidRequestError('Invalid password length.')
+          }
 
-      if (password.length > NEW_PASSWORD_MAX_LENGTH) {
-        throw new InvalidRequestError('Invalid password length.')
-      }
-
-      await ctx.accountManager.resetPassword({ token, password })
-    },
+          await ctx.accountManager.resetPassword({ token, password })
+        },
   })
 }

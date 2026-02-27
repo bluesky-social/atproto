@@ -19,7 +19,7 @@ describe('rate limits', () => {
         rateLimitsEnabled: true,
       },
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.dids.alice

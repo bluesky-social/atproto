@@ -9,6 +9,7 @@ import {
   parseDataKey,
   readCar,
 } from '@atproto/repo'
+import { DidString } from '@atproto/syntax'
 import {
   AccountManager,
   AccountStatus,
@@ -202,7 +203,7 @@ const trackBlobs = async (
 
 const trackFailure = async (
   recoveryDb: RecoveryDb,
-  did: string,
+  did: DidString,
   err: unknown,
 ) => {
   await recoveryDb.db
@@ -216,7 +217,7 @@ const trackFailure = async (
     .execute()
 }
 
-const trackNewAccount = async (recoveryDb: RecoveryDb, did: string) => {
+const trackNewAccount = async (recoveryDb: RecoveryDb, did: DidString) => {
   await recoveryDb.db
     .insertInto('new_account')
     .values({
@@ -274,7 +275,7 @@ const parseCommitEvt = async (
   }
 }
 
-const didFromEvt = (evt: SeqEvt): string | null => {
+const didFromEvt = (evt: SeqEvt): DidString | null => {
   if (evt.type === 'account') {
     return evt.evt.did
   } else if (evt.type === 'commit') {

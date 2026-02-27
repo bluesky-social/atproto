@@ -25,7 +25,7 @@ describe('admin get records view', () => {
       dbPostgresSchema: 'ozone_admin_get_records',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

@@ -1,6 +1,8 @@
 import { DAY } from '@atproto/common'
+import { isDidString, isHandleString } from '@atproto/lex'
+import { DidString, HandleString } from '@atproto/syntax'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { com } from '../../lexicons/index.js'
 import { AccountDb, ActorEntry } from '../db'
 
 export class UserAlreadyExistsError extends Error {}
@@ -54,10 +56,12 @@ export const getAccount = async (
 ): Promise<ActorAccount | null> => {
   const found = await selectAccountQB(db, flags)
     .where((qb) => {
-      if (handleOrDid.startsWith('did:')) {
+      if (isDidString(handleOrDid)) {
         return qb.where('actor.did', '=', handleOrDid)
-      } else {
+      } else if (isHandleString(handleOrDid)) {
         return qb.where('actor.handle', '=', handleOrDid)
+      } else {
+        throw new Error(`Invalid identifier: ${handleOrDid}`)
       }
     })
     .executeTakeFirst()
@@ -66,7 +70,7 @@ export const getAccount = async (
 
 export const getAccounts = async (
   db: AccountDb,
-  dids: string[],
+  dids: DidString[],
   flags?: AvailabilityFlags,
 ): Promise<Map<string, ActorAccount>> => {
   const results = new Map<string, ActorAccount>()
@@ -100,8 +104,8 @@ export const getAccountByEmail = async (
 export const registerActor = async (
   db: AccountDb,
   opts: {
-    did: string
-    handle: string
+    did: DidString
+    handle: HandleString
     deactivated?: boolean
   },
 ) => {
@@ -153,7 +157,7 @@ export const registerAccount = async (
 
 export const deleteAccount = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
 ): Promise<void> => {
   // Not done in transaction because it would be too long, prone to contention.
   // Also, this can safely be run multiple times if it fails.
@@ -176,8 +180,8 @@ export const deleteAccount = async (
 
 export const updateHandle = async (
   db: AccountDb,
-  did: string,
-  handle: string,
+  did: DidString,
+  handle: HandleString,
 ) => {
   const [res] = await db.executeWithRetry(
     db.db
@@ -195,7 +199,7 @@ export const updateHandle = async (
 
 export const updateEmail = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   email: string,
 ) => {
   try {
@@ -218,7 +222,7 @@ export const updateEmail = async (
 
 export const setEmailConfirmedAt = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   emailConfirmedAt: string,
 ) => {
   await db.executeWithRetry(
@@ -231,8 +235,11 @@ export const setEmailConfirmedAt = async (
 
 export const getAccountAdminStatus = async (
   db: AccountDb,
-  did: string,
-): Promise<{ takedown: StatusAttr; deactivated: StatusAttr } | null> => {
+  did: DidString,
+): Promise<{
+  takedown: com.atproto.admin.defs.StatusAttr
+  deactivated: com.atproto.admin.defs.StatusAttr
+} | null> => {
   const res = await db.db
     .selectFrom('actor')
     .select(['takedownRef', 'deactivatedAt'])
@@ -248,8 +255,8 @@ export const getAccountAdminStatus = async (
 
 export const updateAccountTakedownStatus = async (
   db: AccountDb,
-  did: string,
-  takedown: StatusAttr,
+  did: DidString,
+  takedown: com.atproto.admin.defs.StatusAttr,
 ) => {
   const takedownRef = takedown.applied
     ? takedown.ref ?? new Date().toISOString()
@@ -261,7 +268,7 @@ export const updateAccountTakedownStatus = async (
 
 export const deactivateAccount = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   deleteAfter: string | null,
 ) => {
   await db.executeWithRetry(
@@ -275,7 +282,7 @@ export const deactivateAccount = async (
   )
 }
 
-export const activateAccount = async (db: AccountDb, did: string) => {
+export const activateAccount = async (db: AccountDb, did: DidString) => {
   await db.executeWithRetry(
     db.db
       .updateTable('actor')

@@ -2,7 +2,7 @@
 export function lazyProperty<
   O extends object,
   const K extends keyof O,
-  const V extends O[K],
+  const V,
 >(obj: O, key: K, value: V): V {
   Object.defineProperty(obj, key, {
     value,

@@ -1,21 +1,19 @@
 import { Selectable } from 'kysely'
-import { CID } from 'multiformats/cid'
+import { Cid } from '@atproto/lex-data'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
-import * as lex from '../../../../lexicon/lexicons'
-import * as FeedGenerator from '../../../../lexicon/types/app/bsky/feed/generator'
+import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
 import { Database } from '../../db'
 import { DatabaseSchema, DatabaseSchemaType } from '../../db/database-schema'
 import { RecordProcessor } from '../processor'
 
-const lexId = lex.ids.AppBskyFeedGenerator
 type IndexedFeedGenerator = Selectable<DatabaseSchemaType['feed_generator']>
 
 const insertFn = async (
   db: DatabaseSchema,
   uri: AtUri,
-  cid: CID,
-  obj: FeedGenerator.Record,
+  cid: Cid,
+  obj: app.bsky.feed.generator.Main,
   timestamp: string,
 ): Promise<IndexedFeedGenerator | null> => {
   const inserted = await db
@@ -64,17 +62,10 @@ const notifsForDelete = () => {
   return { notifs: [], toDelete: [] }
 }
 
-export type PluginType = RecordProcessor<
-  FeedGenerator.Record,
-  IndexedFeedGenerator
->
-
-export const makePlugin = (
-  db: Database,
-  background: BackgroundQueue,
-): PluginType => {
+export type PluginType = ReturnType<typeof makePlugin>
+export const makePlugin = (db: Database, background: BackgroundQueue) => {
   return new RecordProcessor(db, background, {
-    lexId,
+    schema: app.bsky.feed.generator.main,
     insertFn,
     findDuplicate,
     deleteFn,

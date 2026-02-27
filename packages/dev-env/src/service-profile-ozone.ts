@@ -17,26 +17,26 @@ export class OzoneServiceProfile extends ServiceProfile {
       password: 'hunter2',
     },
   ) {
-    const client = pds.getClient()
-    await client.createAccount(userDetails)
+    const agent = pds.getAgent()
+    await agent.createAccount(userDetails)
 
     const key = await Secp256k1Keypair.create({ exportable: true })
 
-    return new OzoneServiceProfile(pds, client, userDetails, ozoneUrl, key)
+    return new OzoneServiceProfile(pds, agent, userDetails, ozoneUrl, key)
   }
 
   protected constructor(
     pds: TestPds,
-    client: AtpAgent,
+    agent: AtpAgent,
     userDetails: ServiceUserDetails,
     readonly ozoneUrl: string,
     readonly key: Secp256k1Keypair,
   ) {
-    super(pds, client, userDetails)
+    super(pds, agent, userDetails)
   }
 
   async createAppPasswordForVerification() {
-    const { data } = await this.client.com.atproto.server.createAppPassword({
+    const { data } = await this.agent.com.atproto.server.createAppPassword({
       name: 'ozone-verifier',
     })
     return data.password
@@ -60,7 +60,7 @@ export class OzoneServiceProfile extends ServiceProfile {
   }
 
   async createRecords() {
-    await this.client.app.bsky.actor.profile.create(
+    await this.agent.app.bsky.actor.profile.create(
       { repo: this.did },
       {
         displayName: 'Dev-env Moderation',
@@ -68,7 +68,7 @@ export class OzoneServiceProfile extends ServiceProfile {
       },
     )
 
-    await this.client.app.bsky.labeler.service.create(
+    await this.agent.app.bsky.labeler.service.create(
       { repo: this.did, rkey: 'self' },
       {
         policies: {

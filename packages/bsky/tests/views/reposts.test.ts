@@ -1,7 +1,5 @@
-import { AtpAgent } from '@atproto/api'
+import { AppBskyFeedGetRepostedBy, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, repostsSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema as GetRepostedByOutputSchema } from '../../src/lexicon/types/app/bsky/feed/getRepostedBy'
 import { forSnapshot, paginateAll, stripViewer } from '../_util'
 
 describe('pds repost views', () => {
@@ -17,7 +15,7 @@ describe('pds repost views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_reposts',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
     await repostsSeed(sc)
     await network.processAll()
@@ -58,7 +56,7 @@ describe('pds repost views', () => {
   })
 
   it('paginates', async () => {
-    const results = (results: GetRepostedByOutputSchema[]) =>
+    const results = (results: AppBskyFeedGetRepostedBy.OutputSchema[]) =>
       results.flatMap((res) => res.repostedBy)
     const paginator = async (cursor?: string) => {
       const res = await agent.api.app.bsky.feed.getRepostedBy(

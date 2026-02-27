@@ -64,7 +64,7 @@ await serve(router, { port: 3000 })
   - [Custom Authentication](#custom-authentication)
   - [WWW-Authenticate Headers](#www-authenticate-headers)
 - [Error Handling](#error-handling)
-  - [LexError](#lexerror)
+  - [LexServerError](#lexservererror)
   - [LexServerAuthError](#lexserverautherror)
   - [Error Handler Callback](#error-handler-callback)
 - [Node.js Server](#nodejs-server)
@@ -100,7 +100,7 @@ lex build
 **3. Create a router and add handlers**
 
 ```typescript
-import { LexRouter, LexError } from '@atproto/lex-server'
+import { LexRouter, LexServerError } from '@atproto/lex-server'
 import { serve, upgradeWebSocket } from '@atproto/lex-server/nodejs'
 import * as app from './lexicons/app.js'
 
@@ -110,7 +110,10 @@ const router = new LexRouter({ upgradeWebSocket })
 router.add(app.bsky.actor.getProfile, async ({ params }) => {
   const profile = await db.getProfile(params.actor)
   if (!profile) {
-    throw new LexError('NotFound', 'Profile not found')
+    throw new LexServerError(404, {
+      error: 'NotFound',
+      message: 'Profile not found',
+    })
   }
   return { body: profile }
 })
@@ -134,7 +137,7 @@ const router = new LexRouter({
   // Required for WebSocket subscriptions (Node.js)
   upgradeWebSocket,
 
-  // Optional: Handle unexpected errors
+  // Optional: Add logging or error reporting for unexpected errors in handlers
   onHandlerError: ({ error, request, method }) => {
     console.error(`Error in ${method.nsid}:`, error)
   },
@@ -359,7 +362,7 @@ The auth function:
 
 1. Is called **before** parsing the request body
 2. Receives `params`, `request`, and `connection` info
-3. Should throw `LexError` or `LexServerAuthError` on failure
+3. Should throw `LexServerError` (or `LexServerAuthError`) on failure
 4. Returns credentials that are passed to the handler
 
 ### WWW-Authenticate Headers
@@ -391,19 +394,30 @@ throw new LexServerAuthError('AuthenticationRequired', 'Auth required', {
 
 ## Error Handling
 
-### LexError
+### LexServerError
 
-Throw `LexError` to return structured XRPC error responses:
+Throw `LexServerError` to return structured XRPC error responses:
 
 ```typescript
-import { LexError } from '@atproto/lex-server'
+import { LexServerError } from '@atproto/lex-server'
 
 router.add(app.bsky.actor.getProfile, async ({ params }) => {
-  const profile = await db.getProfile(params.actor)
-  if (!profile) {
-    throw new LexError('NotFound', 'Profile not found')
+  try {
+    const profile = await db.getProfile(params.actor)
+    return { body: profile }
+  } catch (cause) {
+    throw new LexServerError(
+      404,
+      {
+        error: 'NotFound',
+        message: 'Profile not found',
+      },
+      {
+        'cache-control': 'max-age=600',
+      },
+      { cause },
+    )
   }
-  return { body: profile }
 })
 ```
 
@@ -418,7 +432,7 @@ Error responses follow the XRPC format:
 
 ### LexServerAuthError
 
-`LexServerAuthError` extends `LexError` with `WWW-Authenticate` header support:
+`LexServerAuthError` extends `LexServerError` with `WWW-Authenticate` header support:
 
 ```typescript
 import { LexServerAuthError } from '@atproto/lex-server'

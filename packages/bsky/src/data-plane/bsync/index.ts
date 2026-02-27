@@ -5,13 +5,9 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
-import { jsonStringToLex } from '@atproto/lexicon'
+import { lexParse } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../../lexicon/lexicons'
-import { Event as AgeAssuranceV2Event } from '../../lexicon/types/app/bsky/ageassurance/defs'
-import { Bookmark } from '../../lexicon/types/app/bsky/bookmark/defs'
-import { SubjectActivitySubscription } from '../../lexicon/types/app/bsky/notification/defs'
-import { AgeAssuranceEvent } from '../../lexicon/types/app/bsky/unspecced/defs'
+import { app } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger'
 import { Service } from '../../proto/bsync_connect'
 import {
@@ -66,7 +62,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             .execute()
         } else {
           const uri = new AtUri(subject)
-          if (uri.collection === ids.AppBskyGraphList) {
+          if (uri.collection === app.bsky.graph.list.$type) {
             await db.db
               .insertInto('list_mute')
               .values({
@@ -97,7 +93,7 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
             .execute()
         } else {
           const uri = new AtUri(subject)
-          if (uri.collection === ids.AppBskyGraphList) {
+          if (uri.collection === app.bsky.graph.list.$type) {
             await db.db
               .deleteFrom('list_mute')
               .where('mutedByDid', '=', actorDid)
@@ -169,18 +165,20 @@ const createRoutes = (db: Database) => (router: ConnectRouter) =>
       try {
         if (
           namespace ===
-          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription
+          Namespaces.AppBskyNotificationDefsSubjectActivitySubscription.$type
         ) {
           await handleSubjectActivitySubscriptionOperation(db, req, now)
         } else if (
-          namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent
+          namespace === Namespaces.AppBskyUnspeccedDefsAgeAssuranceEvent.$type
         ) {
           await handleAgeAssuranceEventOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyAgeassuranceDefsEvent) {
+        } else if (
+          namespace === Namespaces.AppBskyAgeassuranceDefsEvent.$type
+        ) {
           await handleAgeAssuranceV2EventOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark) {
+        } else if (namespace === Namespaces.AppBskyBookmarkDefsBookmark.$type) {
           await handleBookmarkOperation(db, req, now)
-        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId) {
+        } else if (namespace === Namespaces.AppBskyDraftDefsDraftWithId.$type) {
           await handleDraftOperation(db, req, now)
         }
       } catch (err) {
@@ -260,9 +258,10 @@ const handleSubjectActivitySubscriptionOperation = async (
       .execute()
   }
 
-  const parsed = jsonStringToLex(
-    Buffer.from(payload).toString('utf8'),
-  ) as SubjectActivitySubscription
+  const parsed =
+    lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(
+      Buffer.from(payload).toString('utf8'),
+    )
   const {
     subject,
     activitySubscription: { post, reply },
@@ -302,9 +301,10 @@ const handleAgeAssuranceEventOperation = async (
   const { actorDid, method, payload } = req
   if (method !== Method.CREATE) return
 
-  const parsed = jsonStringToLex(
+  const parsed = lexParse<app.bsky.unspecced.defs.AgeAssuranceEvent>(
     Buffer.from(payload).toString('utf8'),
-  ) as AgeAssuranceEvent
+  )
+
   const { status, createdAt } = parsed
 
   const update = {
@@ -327,9 +327,10 @@ const handleAgeAssuranceV2EventOperation = async (
   const { actorDid, method, payload } = req
   if (method !== Method.CREATE) return
 
-  const parsed = jsonStringToLex(
+  const parsed = lexParse<app.bsky.ageassurance.defs.Event>(
     Buffer.from(payload).toString('utf8'),
-  ) as AgeAssuranceV2Event
+  )
+
   const { status, createdAt, access, countryCode, regionCode } = parsed
 
   const update = {
@@ -373,9 +374,9 @@ const handleBookmarkOperation = async (
   }
 
   if (method === Method.CREATE) {
-    const parsed = jsonStringToLex(
+    const parsed = lexParse<app.bsky.bookmark.defs.Bookmark>(
       Buffer.from(payload).toString('utf8'),
-    ) as Bookmark
+    )
     const {
       subject: { uri, cid },
     } = parsed

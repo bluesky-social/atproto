@@ -26,7 +26,7 @@ describe('email confirmation', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     mailer = network.pds.ctx.mailer
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]

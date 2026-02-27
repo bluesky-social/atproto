@@ -1,5 +1,8 @@
+import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { wait } from '@atproto/common'
+import { isDidString } from '@atproto/lex'
+import { DidString } from '@atproto/syntax'
 import { Sequencer } from '../sequencer'
 import { parseIntArg } from './util'
 
@@ -12,6 +15,7 @@ export const publishIdentity = async (
   args: string[],
 ) => {
   const dids = args
+  assert(dids.every(isDidString), 'All arguments must be DIDs')
   await publishIdentityEvtForDids(ctx, dids)
   console.log('DONE')
 }
@@ -31,13 +35,15 @@ export const publishIdentityFromFile = async (
     .split('\n')
     .map((did) => did.trim())
 
+  assert(dids.every(isDidString), 'File contains invalid DIDs')
+
   await publishIdentityEvtForDids(ctx, dids, timeBetween)
   console.log('DONE')
 }
 
 export const publishIdentityEvtForDids = async (
   ctx: PublishIdentityContext,
-  dids: string[],
+  dids: DidString[],
   timeBetween = 0,
 ) => {
   for (const did of dids) {

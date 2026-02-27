@@ -1,9 +1,10 @@
 import stream from 'node:stream'
-import { CID } from 'multiformats/cid'
+import { Cid, parseCid } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore } from '@atproto/repo'
+import { AtUriString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { countAll, countDistinct, notSoftDeletedClause } from '../../db/util'
-import { StatusAttr } from '../../lexicon/types/com/atproto/admin/defs'
+import { com } from '../../lexicons/index.js'
 import { ActorDb } from '../db'
 
 export class BlobReader {
@@ -13,8 +14,8 @@ export class BlobReader {
   ) {}
 
   async getBlobMetadata(
-    cid: CID,
-  ): Promise<{ size: number; mimeType?: string }> {
+    cid: Cid,
+  ): Promise<{ size: number; mimeType?: `${string}/${string}` }> {
     const { ref } = this.db.db.dynamic
     const found = await this.db.db
       .selectFrom('blob')
@@ -27,27 +28,24 @@ export class BlobReader {
     }
     return {
       size: found.size,
-      mimeType: found.mimeType,
+      mimeType: found.mimeType as `${string}/${string}` | undefined,
     }
   }
 
-  async getBlob(
-    cid: CID,
-  ): Promise<{ size: number; mimeType?: string; stream: stream.Readable }> {
+  async getBlob(cid: Cid): Promise<{
+    size: number
+    mimeType?: `${string}/${string}`
+    stream: stream.Readable
+  }> {
     const metadata = await this.getBlobMetadata(cid)
-    let blobStream
-    try {
-      blobStream = await this.blobstore.getStream(cid)
-    } catch (err) {
+    const stream = await this.blobstore.getStream(cid).catch((err) => {
       if (err instanceof BlobNotFoundError) {
         throw new InvalidRequestError('Blob not found')
       }
       throw err
-    }
-    return {
-      ...metadata,
-      stream: blobStream,
-    }
+    })
+
+    return { ...metadata, stream }
   }
 
   async listBlobs(opts: {
@@ -74,7 +72,9 @@ export class BlobReader {
     return res.map((row) => row.blobCid)
   }
 
-  async getBlobTakedownStatus(cid: CID): Promise<StatusAttr | null> {
+  async getBlobTakedownStatus(
+    cid: Cid,
+  ): Promise<com.atproto.admin.defs.StatusAttr | null> {
     const res = await this.db.db
       .selectFrom('blob')
       .select('takedownRef')
@@ -86,13 +86,14 @@ export class BlobReader {
       : { applied: false }
   }
 
-  async getRecordsForBlob(cid: CID): Promise<string[]> {
+  async hasRecordsForBlob(cid: Cid): Promise<boolean> {
     const res = await this.db.db
       .selectFrom('record_blob')
       .where('blobCid', '=', cid.toString())
-      .selectAll()
-      .execute()
-    return res.map((row) => row.recordUri)
+      .select('blobCid')
+      .limit(1)
+      .executeTakeFirst()
+    return res != null
   }
 
   async getBlobsForRecord(recordUri: string): Promise<string[]> {
@@ -125,7 +126,7 @@ export class BlobReader {
   async listMissingBlobs(opts: {
     cursor?: string
     limit: number
-  }): Promise<{ cid: string; recordUri: string }[]> {
+  }): Promise<{ cid: string; recordUri: AtUriString }[]> {
     const { cursor, limit } = opts
     let builder = this.db.db
       .selectFrom('record_blob')
@@ -145,12 +146,12 @@ export class BlobReader {
     const res = await builder.execute()
     return res.map((row) => ({
       cid: row.blobCid,
-      recordUri: row.recordUri,
+      recordUri: row.recordUri as AtUriString,
     }))
   }
 
   async getBlobCids() {
     const blobRows = await this.db.db.selectFrom('blob').select('cid').execute()
-    return blobRows.map((row) => CID.parse(row.cid))
+    return blobRows.map((row) => parseCid(row.cid))
   }
 }

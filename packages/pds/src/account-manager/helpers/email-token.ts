@@ -1,11 +1,12 @@
 import { MINUTE, lessThanAgoMs } from '@atproto/common'
+import { DidString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { getRandomToken } from '../../api/com/atproto/server/util'
 import { AccountDb, EmailTokenPurpose } from '../db'
 
 export const createEmailToken = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   purpose: EmailTokenPurpose,
 ): Promise<string> => {
   const token = getRandomToken().toUpperCase()
@@ -23,7 +24,7 @@ export const createEmailToken = async (
 
 export const deleteEmailToken = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   purpose: EmailTokenPurpose,
 ) => {
   await db.executeWithRetry(
@@ -34,7 +35,7 @@ export const deleteEmailToken = async (
   )
 }
 
-export const deleteAllEmailTokens = async (db: AccountDb, did: string) => {
+export const deleteAllEmailTokens = async (db: AccountDb, did: DidString) => {
   await db.executeWithRetry(
     db.db.deleteFrom('email_token').where('did', '=', did),
   )
@@ -42,7 +43,7 @@ export const deleteAllEmailTokens = async (db: AccountDb, did: string) => {
 
 export const assertValidToken = async (
   db: AccountDb,
-  did: string,
+  did: DidString,
   purpose: EmailTokenPurpose,
   token: string,
   expirationLen = 15 * MINUTE,
@@ -68,7 +69,7 @@ export const assertValidTokenAndFindDid = async (
   purpose: EmailTokenPurpose,
   token: string,
   expirationLen = 15 * MINUTE,
-): Promise<string> => {
+): Promise<DidString> => {
   const res = await db.db
     .selectFrom('email_token')
     .select(['did', 'requestedAt'])

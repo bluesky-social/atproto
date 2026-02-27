@@ -1,8 +1,10 @@
 import fs from 'node:fs'
-import { CID } from 'multiformats'
-import { TID, dataToCborBlock } from '@atproto/common'
+import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import { Keypair, randomBytes } from '@atproto/crypto'
+import * as cbor from '@atproto/lex-cbor'
+import { Cid, cidForCbor, parseCid } from '@atproto/lex-data'
+import { NsidString } from '@atproto/syntax'
 import {
   BlockMap,
   CollectionContents,
@@ -18,15 +20,16 @@ import { MST } from '../src/mst'
 import { Repo } from '../src/repo'
 import { RepoStorage } from '../src/storage'
 
-type IdMapping = Record<string, CID>
+type IdMapping = Record<string, Cid>
 
-export const randomCid = async (storage?: RepoStorage): Promise<CID> => {
-  const block = await dataToCborBlock({ test: randomStr(50) })
+export const randomCid = async (storage?: RepoStorage): Promise<Cid> => {
+  const bytes = cbor.encode({ test: randomStr(50) })
+  const cid = await cidForCbor(bytes)
   if (storage) {
     // @ts-expect-error FIXME remove this comment (and fix the TS error)
-    await storage.putBlock(block.cid, block.bytes)
+    await storage.putBlock(cid, bytes)
   }
-  return block.cid
+  return cid
 }
 
 export const generateBulkDataKeys = async (
@@ -78,7 +81,10 @@ export const generateObject = (): Record<string, string> => {
 // Mass repo mutations & checking
 // -------------------------------
 
-export const testCollections = ['com.example.posts', 'com.example.likes']
+export const testCollections: NsidString[] = [
+  'com.example.posts',
+  'com.example.likes',
+]
 
 export const fillRepo = async (
   repo: Repo,
@@ -173,7 +179,7 @@ export const formatEdit = async (
 export const pathsForOps = (ops: RecordWriteOp[]): RecordPath[] =>
   ops.map((op) => ({ collection: op.collection, rkey: op.rkey }))
 
-export const saveMst = async (storage: RepoStorage, mst: MST): Promise<CID> => {
+export const saveMst = async (storage: RepoStorage, mst: MST): Promise<Cid> => {
   const diff = await mst.getUnstoredBlocks()
   // @ts-expect-error FIXME remove this comment (and fix the TS error)
   await storage.putMany(diff.blocks)
@@ -237,13 +243,23 @@ export const writeMstLog = async (filename: string, tree: MST) => {
   fs.writeFileSync(filename, log)
 }
 
-export const saveMstEntries = (filename: string, entries: [string, CID][]) => {
+export const saveMstEntries = (filename: string, entries: [string, Cid][]) => {
   const writable = entries.map(([key, val]) => [key, val.toString()])
   fs.writeFileSync(filename, JSON.stringify(writable))
 }
 
-export const loadMstEntries = (filename: string): [string, CID][] => {
+export const loadMstEntries = (filename: string): [string, Cid][] => {
   const contents = fs.readFileSync(filename)
   const parsed = JSON.parse(contents.toString())
-  return parsed.map(([key, value]) => [key, CID.parse(value)])
+  return parsed.map(([key, value]) => [key, parseCid(value)])
+}
+
+export async function toBuffer(
+  stream: AsyncIterable<Uint8Array> | Iterable<Uint8Array>,
+): Promise<Buffer> {
+  const chunks: Uint8Array[] = []
+  for await (const chunk of stream) {
+    chunks.push(chunk)
+  }
+  return Buffer.concat(chunks)
 }

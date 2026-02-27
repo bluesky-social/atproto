@@ -1,13 +1,11 @@
-import { jsonStringToLex } from '@atproto/lexicon'
+import { lexParse } from '@atproto/lex-json'
+import { toDatetimeString } from '@atproto/syntax'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import {
-  DraftView,
-  DraftWithId,
-} from '../../../../lexicon/types/app/bsky/draft/defs'
+import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.draft.getDrafts({
+  server.add(app.bsky.draft.getDrafts, {
     auth: ctx.authVerifier.standard,
     handler: async ({ params, auth }) => {
       const viewer = auth.credentials.iss
@@ -18,19 +16,16 @@ export default function (server: Server, ctx: AppContext) {
         cursor: params.cursor,
       })
 
-      const draftViews = drafts.map((d): DraftView => {
-        const draftWithId = jsonStringToLex(
-          Buffer.from(d.payload).toString('utf8'),
-        ) as DraftWithId
+      const draftViews = drafts.map((d): app.bsky.draft.defs.DraftView => {
+        const jsonStr = Buffer.from(d.payload).toString('utf8')
+        const draftWithId = lexParse<app.bsky.draft.defs.DraftWithId>(jsonStr)
         return {
           id: draftWithId.id,
           draft: draftWithId.draft,
           // The date should always be present, but we avoid required fields on protobuf by convention,
           // so requires a fallback value to please TS.
-          createdAt:
-            d.createdAt?.toDate().toISOString() ?? new Date(0).toISOString(),
-          updatedAt:
-            d.updatedAt?.toDate().toISOString() ?? new Date(0).toISOString(),
+          createdAt: toDatetimeString(d.createdAt?.toDate() ?? new Date(0)),
+          updatedAt: toDatetimeString(d.updatedAt?.toDate() ?? new Date(0)),
         }
       })
 

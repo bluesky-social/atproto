@@ -1,16 +1,14 @@
+import { $Typed } from '@atproto/lex'
 import { HydrateCtx } from '../hydration/hydrator'
 import {
+  GetPostThreadV2QueryParams,
+  ThreadItem,
   ThreadItemBlocked,
   ThreadItemNoUnauthenticated,
   ThreadItemNotFound,
   ThreadItemPost,
-} from '../lexicon/types/app/bsky/unspecced/defs'
-import { ThreadItem as ThreadOtherItem } from '../lexicon/types/app/bsky/unspecced/getPostThreadOtherV2'
-import {
-  QueryParams as GetPostThreadV2QueryParams,
-  ThreadItem,
-} from '../lexicon/types/app/bsky/unspecced/getPostThreadV2'
-import { $Typed } from '../lexicon/util'
+  ThreadOtherItem,
+} from './types.js'
 
 type ThreadMaybeOtherPostNode = ThreadPostNode | ThreadOtherPostNode
 type ThreadNodeWithReplies =

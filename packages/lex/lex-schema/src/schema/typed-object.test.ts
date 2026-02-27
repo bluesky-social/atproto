@@ -332,6 +332,44 @@ describe('TypedObjectSchema', () => {
     })
   })
 
+  describe('bound $ methods', () => {
+    it('$build can be used as a detached function', () => {
+      const { $build } = schema
+      const result = $build({ text: 'Hello' })
+      expect(result).toEqual({
+        text: 'Hello',
+        $type: 'app.bsky.feed.post',
+      })
+    })
+
+    it('$isTypeOf can be used as a detached function', () => {
+      const { $isTypeOf } = schema
+      expect($isTypeOf({ text: 'Hello' })).toBe(true)
+      expect($isTypeOf({ $type: 'app.bsky.feed.post', text: 'Hello' })).toBe(
+        true,
+      )
+      expect($isTypeOf({ $type: 'other.type', text: 'Hello' })).toBe(false)
+    })
+
+    it('$parse can be used as a detached function', () => {
+      const { $parse } = schema
+      const result = $parse({ text: 'Hello' })
+      expect(result).toEqual({ text: 'Hello' })
+    })
+
+    it('$matches can be used as a detached function', () => {
+      const { $matches } = schema
+      expect($matches({ text: 'Hello' })).toBe(true)
+      expect($matches(42)).toBe(false)
+    })
+
+    it('lazy property returns the same function on repeated access', () => {
+      const fn1 = schema.$build
+      const fn2 = schema.$build
+      expect(fn1).toBe(fn2)
+    })
+  })
+
   describe('with complex nested schemas', () => {
     const complexSchema = typedObject(
       'app.bsky.actor.profile',

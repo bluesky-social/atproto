@@ -21,17 +21,17 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "prebuild": "lex build --lexicons ../../lexicons --clear --indexFile --include com.atproto.sync.subscribeRepos",
     "build": "tsc --build tsconfig.build.json",
     "test": "../dev-infra/with-test-redis-and-db.sh jest"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
-    "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",
     "ws": "^8.12.0"
   },

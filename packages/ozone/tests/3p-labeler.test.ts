@@ -43,8 +43,8 @@ describe('labels from 3p labelers', () => {
       pdsDid: network.pds.ctx.cfg.service.did,
     })
 
-    thirdPartyAgent = thirdPartyLabeler.getClient()
-    agent = ozone.getClient()
+    thirdPartyAgent = thirdPartyLabeler.getAgent()
+    agent = ozone.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     thirdPartyModClient = thirdPartyLabeler.getModClient()

@@ -1,6 +1,6 @@
 import AwaitLock from 'await-lock'
 import { TID, retry } from '@atproto/common-web'
-import { AtUri, ensureValidDid } from '@atproto/syntax'
+import { AtUri, DidString, ensureValidDid } from '@atproto/syntax'
 import {
   FetchHandler,
   FetchHandlerOptions,
@@ -219,8 +219,9 @@ export class Agent extends XrpcClient {
   /**
    * Get the authenticated user's DID, or throw an error if not authenticated.
    */
-  get assertDid(): string {
+  get assertDid(): DidString {
     this.assertAuthenticated()
+    ensureValidDid(this.did)
     return this.did
   }
 

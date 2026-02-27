@@ -1,15 +1,21 @@
-import { CID } from 'multiformats/cid'
 import * as ui8 from 'uint8arrays'
-import { jsonToLex } from '@atproto/lexicon'
-import { AtUri } from '@atproto/syntax'
-import { lexicons } from '../lexicon/lexicons'
+import { l, lexParse } from '@atproto/lex'
+import {
+  Cid,
+  LexValue,
+  TypedLexMap,
+  isPlainObject,
+  parseCidSafe,
+} from '@atproto/lex-data'
+import { AtUri, AtUriString } from '@atproto/syntax'
+import * as lexicons from '../lexicons/index.js'
 import { Record } from '../proto/bsky_pb'
 
-export class HydrationMap<T> extends Map<string, T | null> implements Merges {
-  merge(map: HydrationMap<T>): this {
-    map.forEach((val, key) => {
+export class HydrationMap<K, T> extends Map<K, T | null> implements Merges {
+  merge(map: HydrationMap<K, T>): this {
+    for (const [key, val] of map) {
       this.set(key, val)
-    })
+    }
     return this
   }
 }
@@ -18,111 +24,130 @@ export interface Merges {
   merge<T extends this>(map: T): this
 }
 
-type UnknownRecord = { $type: string; [x: string]: unknown }
-
-export type RecordInfo<T extends UnknownRecord> = {
-  record: T
+export type RecordInfo<T extends { $type: string }> = {
+  record: T & TypedLexMap
   cid: string
   sortedAt: Date
   indexedAt: Date
   takedownRef: string | undefined
 }
 
-export const mergeMaps = <V, M extends HydrationMap<V>>(
-  mapA?: M,
-  mapB?: M,
-): M | undefined => {
+export const mergeMaps = <V extends HydrationMap<unknown, unknown>>(
+  mapA?: V,
+  mapB?: V,
+): V | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
   return mapA.merge(mapB)
 }
 
-export const mergeNestedMaps = <V, M extends HydrationMap<HydrationMap<V>>>(
-  mapA?: M,
-  mapB?: M,
-): M | undefined => {
+export const mergeNestedMaps = <K, V extends HydrationMap<unknown, unknown>>(
+  mapA?: HydrationMap<K, V>,
+  mapB?: HydrationMap<K, V>,
+): HydrationMap<K, V> | undefined => {
   if (!mapA) return mapB
   if (!mapB) return mapA
 
   for (const [key, map] of mapB) {
-    const merged = mergeMaps(mapA.get(key) ?? undefined, map ?? undefined)
+    const merged = mergeMaps(mapA.get(key) ?? undefined, map ?? undefined) as
+      | V
+      | undefined
     mapA.set(key, merged ?? null)
   }
 
   return mapA
 }
 
-export const mergeManyMaps = <T>(...maps: HydrationMap<T>[]) => {
-  return maps.reduce(mergeMaps, undefined as HydrationMap<T> | undefined)
+export const mergeManyMaps = <K, T>(...maps: HydrationMap<K, T>[]) => {
+  return maps.reduce(mergeMaps, undefined as HydrationMap<K, T> | undefined)
 }
 
-export type ItemRef = { uri: string; cid?: string }
+export type ItemRef = { uri: AtUriString; cid?: string }
 
-export const parseRecord = <T extends UnknownRecord>(
+export const parseRecord = <T extends { $type: string }>(
   entry: Record,
   includeTakedowns: boolean,
 ): RecordInfo<T> | undefined => {
   if (!includeTakedowns && entry.takenDown) {
     return undefined
   }
-  const record = parseRecordBytes<T>(entry.record)
+
   const cid = entry.cid
-  const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
-  const indexedAt = entry.indexedAt?.toDate() ?? new Date(0)
-  if (!record || !cid) return
-  if (!isValidRecord(record)) {
-    return
-  }
+  if (!cid) return
+
+  const record = parseJsonBytes<T>(entry.record)
+  if (!record || !isValidRecord(record)) return
+
   return {
     record,
     cid,
-    sortedAt,
-    indexedAt,
+    sortedAt: entry.sortedAt?.toDate() ?? new Date(0),
+    indexedAt: entry.indexedAt?.toDate() ?? new Date(0),
     takedownRef: safeTakedownRef(entry),
   }
 }
 
-const isValidRecord = (json: unknown) => {
-  const lexRecord = jsonToLex(json)
-  if (typeof lexRecord?.['$type'] !== 'string') {
-    return false
-  }
-  try {
-    lexicons.assertValidRecord(lexRecord['$type'], lexRecord)
-    return true
-  } catch {
-    return false
+/**
+ * Recursively enumerate all RecordSchemas in a namespace.
+ */
+function* enumerateRecordSchemas(namespace: {
+  [key: string]: unknown
+}): Generator<l.RecordSchema> {
+  for (const key of Object.keys(namespace)) {
+    if (key === '$defs') {
+      const { main } = (namespace as { $defs: { main?: unknown } })[key]
+      if (main && main instanceof l.RecordSchema) {
+        yield main
+      }
+    } else if (key.charCodeAt(0) !== 36) {
+      // skip keys starting with '$' (generated utils)
+      const val = namespace[key]
+      if (val && typeof val === 'object') {
+        yield* enumerateRecordSchemas(val as { [key: string]: unknown })
+      }
+    }
   }
 }
 
-// @NOTE not parsed into lex format, so will not match lexicon record types on CID and blob values.
-export const parseRecordBytes = <T>(
+export const KNOWN_RECORD_TYPES = new Map<string, l.RecordSchema>(
+  Array.from(enumerateRecordSchemas(lexicons), (s) => [s.$type, s]),
+)
+
+const isValidRecord = (value: LexValue): boolean => {
+  if (!isPlainObject(value) || typeof value.$type !== 'string') {
+    return false
+  }
+
+  const schema = KNOWN_RECORD_TYPES.get(value.$type)
+  if (!schema) {
+    return false
+  }
+
+  return schema.matches(value)
+}
+
+export const parseJsonBytes = <T extends LexValue = LexValue>(
   bytes: Uint8Array | undefined,
 ): T | undefined => {
-  return parseJsonBytes(bytes) as T
+  if (!bytes || bytes.byteLength === 0) return undefined
+  return lexParse<T>(ui8.toString(bytes, 'utf8'))
 }
 
-export const parseJsonBytes = (bytes: Uint8Array | undefined): unknown => {
-  if (!bytes || bytes.byteLength === 0) return
-  const parsed = JSON.parse(ui8.toString(bytes, 'utf8'))
-  return parsed ?? undefined
+export const parseString = <T extends string | undefined>(
+  str: undefined | string,
+): T | undefined => {
+  return str ? (str as T) : undefined
 }
 
-export const parseString = (str: string | undefined): string | undefined => {
-  return str && str.length > 0 ? str : undefined
+export const parseCid = (cidStr: string | undefined): Cid | null => {
+  if (!cidStr) return null
+  return parseCidSafe(cidStr)
 }
 
-export const parseCid = (cidStr: string | undefined): CID | undefined => {
-  if (!cidStr || cidStr.length === 0) return
-  try {
-    return CID.parse(cidStr)
-  } catch {
-    return
-  }
-}
-
-export const urisByCollection = (uris: string[]): Map<string, string[]> => {
-  const result = new Map<string, string[]>()
+export const urisByCollection = <T extends string>(
+  uris: T[],
+): Map<string, T[]> => {
+  const result = new Map<string, T[]>()
   for (const uri of uris) {
     const collection = new AtUri(uri).collection
     const items = result.get(collection) ?? []

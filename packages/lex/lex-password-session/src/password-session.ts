@@ -316,7 +316,7 @@ export class PasswordSession implements Agent, AsyncDisposable {
         { headers: { Authorization: `Bearer ${sessionData.refreshJwt}` } },
       )
 
-      if (!response.success && response.matchesSchema()) {
+      if (!response.success && response.matchesSchemaErrors()) {
         // Expected errors that indicate the session is no longer valid
         await this.options.onDeleted?.call(this, sessionData)
 
@@ -326,10 +326,6 @@ export class PasswordSession implements Agent, AsyncDisposable {
       }
 
       if (!response.success) {
-        response.error
-        if (response.matchesSchema()) {
-          response.error
-        }
         // We failed to refresh the token, assume the session might still be
         // valid by returning the existing session.
         await this.options.onUpdateFailure?.call(this, sessionData, response)
@@ -393,7 +389,7 @@ export class PasswordSession implements Agent, AsyncDisposable {
         { headers: { Authorization: `Bearer ${sessionData.refreshJwt}` } },
       )
 
-      if (result.success || result.matchesSchema()) {
+      if (result.success || result.matchesSchemaErrors()) {
         await this.options.onDeleted?.call(this, sessionData)
 
         // Update the session promise to a rejected state

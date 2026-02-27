@@ -1,12 +1,12 @@
 import assert from 'node:assert'
 import {
+  AppBskyEmbedRecord,
   AppBskyLabelerDefs,
   AtpAgent,
   ComAtprotoModerationDefs,
+  ids,
 } from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
 import { forSnapshot, stripViewerFromLabeler } from '../_util'
 
 describe('labeler service views', () => {
@@ -26,8 +26,8 @@ describe('labeler service views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_labeler_service',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -158,7 +158,7 @@ describe('labeler service views', () => {
     const serviceViews = await agent.api.app.bsky.labeler.getServices({
       dids: [alice],
     })
-    assert(isRecordEmbedView(postViews.data.posts[0].embed))
+    assert(AppBskyEmbedRecord.isView(postViews.data.posts[0].embed))
     expect(postViews.data.posts[0].embed.record).toMatchObject(
       serviceViews.data.views[0],
     )

@@ -1,9 +1,8 @@
 import { Insertable } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
-import { jsonStringToLex, stringifyLex } from '@atproto/lexicon'
+import { l, lexParse, lexStringify } from '@atproto/lex'
+import { Cid, parseCid } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import { lexicons } from '../../../lexicon/lexicons'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
 import { DatabaseSchema } from '../db/database-schema'
@@ -11,59 +10,57 @@ import { Notification } from '../db/tables/notification'
 
 // @NOTE re: insertions and deletions. Due to how record updates are handled,
 // (insertFn) should have the same effect as (insertFn -> deleteFn -> insertFn).
-type RecordProcessorParams<T, S> = {
-  lexId: string
+type RecordProcessorOptions<TSchema extends l.RecordSchema, TRow> = {
+  schema: TSchema
   insertFn: (
     db: DatabaseSchema,
     uri: AtUri,
-    cid: CID,
-    obj: T,
+    cid: Cid,
+    obj: l.Infer<TSchema>,
     timestamp: string,
-  ) => Promise<S | null>
+  ) => Promise<TRow | null>
   findDuplicate: (
     db: DatabaseSchema,
     uri: AtUri,
-    obj: T,
+    obj: l.Infer<TSchema>,
   ) => Promise<AtUri | null>
-  deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<S | null>
-  notifsForInsert: (obj: S) => Notif[]
+  deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<TRow | null>
+  notifsForInsert: (obj: TRow) => Notif[]
   notifsForDelete: (
-    prev: S,
-    replacedBy: S | null,
+    prev: TRow,
+    replacedBy: TRow | null,
   ) => { notifs: Notif[]; toDelete: string[] }
-  updateAggregates?: (db: DatabaseSchema, obj: S) => Promise<void>
+  updateAggregates?: (db: DatabaseSchema, obj: TRow) => Promise<void>
 }
 
 type Notif = Insertable<Notification>
 
-export class RecordProcessor<T, S> {
-  collection: string
-  db: DatabaseSchema
+export class RecordProcessor<TSchema extends l.RecordSchema, TRow> {
   constructor(
     private appDb: Database,
     private background: BackgroundQueue,
-    private params: RecordProcessorParams<T, S>,
-  ) {
-    this.db = appDb.db
-    this.collection = this.params.lexId
+    private options: RecordProcessorOptions<TSchema, TRow>,
+  ) {}
+
+  get db() {
+    return this.appDb.db
   }
 
-  matchesSchema(obj: unknown): obj is T {
-    try {
-      this.assertValidRecord(obj)
-      return true
-    } catch {
-      return false
-    }
+  get collection(): TSchema['$type'] {
+    return this.options.schema.$type
   }
 
-  assertValidRecord(obj: unknown): asserts obj is T {
-    lexicons.assertValidRecord(this.params.lexId, obj)
+  matchesSchema(obj: unknown): obj is TSchema {
+    return this.options.schema.matches(obj)
+  }
+
+  assertValidRecord(obj: unknown): asserts obj is l.Infer<TSchema> {
+    this.options.schema.check(obj)
   }
 
   async insertRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     timestamp: string,
     opts?: { disableNotifs?: boolean },
@@ -75,12 +72,12 @@ export class RecordProcessor<T, S> {
         uri: uri.toString(),
         cid: cid.toString(),
         did: uri.host,
-        json: stringifyLex(obj),
+        json: lexStringify(obj),
         indexedAt: timestamp,
       })
       .onConflict((oc) => oc.doNothing())
       .execute()
-    const inserted = await this.params.insertFn(
+    const inserted = await this.options.insertFn(
       this.db,
       uri,
       cid,
@@ -95,7 +92,7 @@ export class RecordProcessor<T, S> {
       return
     }
     // if duplicate, insert into duplicates table with no events
-    const found = await this.params.findDuplicate(this.db, uri, obj)
+    const found = await this.options.findDuplicate(this.db, uri, obj)
     if (found && found.toString() !== uri.toString()) {
       await this.db
         .insertInto('duplicate_record')
@@ -116,7 +113,7 @@ export class RecordProcessor<T, S> {
   // straightforward in the general case. We still get nice control over notifications.
   async updateRecord(
     uri: AtUri,
-    cid: CID,
+    cid: Cid,
     obj: unknown,
     timestamp: string,
     opts?: { disableNotifs?: boolean },
@@ -127,12 +124,12 @@ export class RecordProcessor<T, S> {
       .where('uri', '=', uri.toString())
       .set({
         cid: cid.toString(),
-        json: stringifyLex(obj),
+        json: lexStringify(obj),
         indexedAt: timestamp,
       })
       .execute()
     // If the updated record was a dupe, update dupe info for it
-    const dupe = await this.params.findDuplicate(this.db, uri, obj)
+    const dupe = await this.options.findDuplicate(this.db, uri, obj)
     if (dupe) {
       await this.db
         .updateTable('duplicate_record')
@@ -150,13 +147,13 @@ export class RecordProcessor<T, S> {
         .execute()
     }
 
-    const deleted = await this.params.deleteFn(this.db, uri)
+    const deleted = await this.options.deleteFn(this.db, uri)
     if (!deleted) {
       // If a record was updated but hadn't been indexed yet, treat it like a plain insert.
       return this.insertRecord(uri, cid, obj, timestamp)
     }
     this.aggregateOnCommit(deleted)
-    const inserted = await this.params.insertFn(
+    const inserted = await this.options.insertFn(
       this.db,
       uri,
       cid,
@@ -183,7 +180,7 @@ export class RecordProcessor<T, S> {
       .deleteFrom('duplicate_record')
       .where('uri', '=', uri.toString())
       .execute()
-    const deleted = await this.params.deleteFn(this.db, uri)
+    const deleted = await this.options.deleteFn(this.db, uri)
     if (!deleted) return
     this.aggregateOnCommit(deleted)
     if (cascading) {
@@ -205,14 +202,14 @@ export class RecordProcessor<T, S> {
       if (!found) {
         return this.handleNotifs({ deleted })
       }
-      const record = jsonStringToLex(found.json)
+      const record = lexParse(found.json)
       if (!this.matchesSchema(record)) {
         return this.handleNotifs({ deleted })
       }
-      const inserted = await this.params.insertFn(
+      const inserted = await this.options.insertFn(
         this.db,
         new AtUri(found.uri),
-        CID.parse(found.cid),
+        parseCid(found.cid),
         record,
         found.indexedAt,
       )
@@ -223,11 +220,11 @@ export class RecordProcessor<T, S> {
     }
   }
 
-  async handleNotifs(op: { deleted?: S; inserted?: S }) {
+  async handleNotifs(op: { deleted?: TRow; inserted?: TRow }) {
     let notifs: Notif[] = []
     const runOnCommit: ((db: Database) => Promise<void>)[] = []
     if (op.deleted) {
-      const forDelete = this.params.notifsForDelete(
+      const forDelete = this.options.notifsForDelete(
         op.deleted,
         op.inserted ?? null,
       )
@@ -243,7 +240,7 @@ export class RecordProcessor<T, S> {
       }
       notifs = forDelete.notifs
     } else if (op.inserted) {
-      notifs = this.params.notifsForInsert(op.inserted)
+      notifs = this.options.notifsForInsert(op.inserted)
     }
     for (const chunk of chunkArray(notifs, 500)) {
       runOnCommit.push(async (db) => {
@@ -284,8 +281,8 @@ export class RecordProcessor<T, S> {
     return !!threadMute
   }
 
-  aggregateOnCommit(indexed: S) {
-    const { updateAggregates } = this.params
+  aggregateOnCommit(indexed: TRow) {
+    const { updateAggregates } = this.options
     if (!updateAggregates) return
     this.appDb.onCommit(() => {
       this.background.add((db) => updateAggregates(db.db, indexed))

@@ -15,7 +15,7 @@ describe('proxies appview procedures', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'proxy_procedures',
     })
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc, { addModLabels: network.bsky })
     await network.processAll()

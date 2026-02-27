@@ -1,7 +1,11 @@
-import { CID } from 'multiformats/cid'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
+import { parseCid } from '@atproto/lex-data'
+import {
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -10,7 +14,7 @@ import {
 } from '../../../../repo'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.deleteRecord({
+  server.add(com.atproto.repo.deleteRecord, {
     auth: ctx.authVerifier.authorization({
       // @NOTE the "checkTakedown" and "checkDeactivated" checks are typically
       // performed during auth. However, since this method's "repo" parameter
@@ -37,8 +41,8 @@ export default function (server: Server, ctx: AppContext) {
         calcPoints: () => 1,
       },
     ],
-    handler: async ({ input, auth }) => {
-      const { repo, collection, rkey, swapCommit, swapRecord } = input.body
+    handler: async ({ input: { body }, auth }) => {
+      const { repo, collection, rkey, swapCommit, swapRecord } = body
 
       const account = await ctx.authVerifier.findAccount(repo, {
         checkDeactivated: true,
@@ -59,8 +63,8 @@ export default function (server: Server, ctx: AppContext) {
         })
       }
 
-      const swapCommitCid = swapCommit ? CID.parse(swapCommit) : undefined
-      const swapRecordCid = swapRecord ? CID.parse(swapRecord) : undefined
+      const swapCommitCid = swapCommit ? parseCid(swapCommit) : undefined
+      const swapRecordCid = swapRecord ? parseCid(swapRecord) : undefined
 
       const write = prepareDelete({
         did,
@@ -103,7 +107,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: {
           commit: commit
             ? {

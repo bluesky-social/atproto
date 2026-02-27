@@ -30,7 +30,7 @@ describe('verification-listener', () => {
     sc = network.getSeedClient()
     await basicSeed(sc)
 
-    adminAgent = network.pds.getClient()
+    adminAgent = network.pds.getAgent()
     await adminAgent.login({
       identifier: sc.accounts[sc.dids.alice].handle,
       password: sc.accounts[sc.dids.alice].password,
