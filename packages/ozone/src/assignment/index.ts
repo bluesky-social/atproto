@@ -5,6 +5,7 @@ import { Database } from '../db'
 import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 import { QueueServiceCreator } from '../queue/service'
+import { ReportQueue } from '../db/schema/report_queue'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number
@@ -49,12 +50,14 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueCreatedAt: string | null
   queueUpdatedAt: string | null
   queueEnabled: boolean | null
+  queueDeletedAt: string | null
 }
 
 export class AssignmentService {
   constructor(
     public db: Database,
     public opts: AssignmentServiceOpts,
+    public queueServiceCreator: QueueServiceCreator,
   ) {}
 
   async getQueueAssignments(input: GetQueueAssignmentsInput): Promise<{
@@ -81,6 +84,7 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('reportId', 'is', null)
       .where('queueId', 'is not', null)
@@ -114,7 +118,7 @@ export class AssignmentService {
     const results = await paginatedQuery.execute()
 
     return {
-      assignments: results.map((row) => this.viewQueue(row)),
+      assignments: results.map((row) => this.viewQueueAssignment(row)),
       cursor: keyset.packFromResult(results),
     }
   }
@@ -143,6 +147,7 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('reportId', 'is not', null)
 
@@ -178,7 +183,7 @@ export class AssignmentService {
     const results = await paginatedQuery.execute()
 
     return {
-      assignments: results.map((row) => this.viewReport(row)),
+      assignments: results.map((row) => this.viewReportAssignment(row)),
       cursor: keyset.packFromResult(results),
     }
   }
@@ -246,11 +251,12 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('moderator_assignment.id', '=', result.id)
       .executeTakeFirstOrThrow()
 
-    return this.viewQueue(row)
+    return this.viewQueueAssignment(row)
   }
 
   async assignReport(
@@ -325,68 +331,68 @@ export class AssignmentService {
         'report_queue.createdAt as queueCreatedAt',
         'report_queue.updatedAt as queueUpdatedAt',
         'report_queue.enabled as queueEnabled',
+        'report_queue.deletedAt as queueDeletedAt',
       ])
       .where('moderator_assignment.id', '=', result.id)
       .executeTakeFirstOrThrow()
 
-    return this.viewReport(row)
+    return this.viewReportAssignment(row)
   }
 
-  viewQueue(row: AssignmentRowWithQueue): ToolsOzoneQueueDefs.AssignmentView {
+  queueFromJoined(
+    row: AssignmentRowWithQueue,
+  ): Selectable<ReportQueue> | undefined {
     if (row.queueId === null || row.queueName === null) {
-      throw new Error('Queue data missing for queue assignment')
+      return undefined
+    }
+
+    return {
+      id: row.queueId,
+      name: row.queueName,
+      subjectTypes: row.queueSubjectTypes ?? [],
+      collection: row.queueCollection,
+      reportTypes: row.queueReportTypes ?? [],
+      createdBy: row.queueCreatedBy ?? '',
+      createdAt: row.queueCreatedAt ?? '',
+      updatedAt: row.queueUpdatedAt ?? '',
+      enabled: row.queueEnabled ?? false,
+      deletedAt: row.queueDeletedAt,
+    }
+  }
+
+  viewQueueAssignment(
+    row: AssignmentRowWithQueue,
+  ): ToolsOzoneQueueDefs.AssignmentView {
+    const queueService = this.queueServiceCreator(this.db)
+
+    const queue = this.queueFromJoined(row)
+    const queueView = queue ? queueService.view(queue) : undefined
+    if (!queueView) {
+      throw new Error('Failed to hydrate queue')
     }
 
     return {
       id: row.id,
       did: row.did,
-      queue: {
-        id: row.queueId,
-        name: row.queueName,
-        subjectTypes: row.queueSubjectTypes ?? [],
-        collection: row.queueCollection ?? undefined,
-        reportTypes: row.queueReportTypes ?? [],
-        createdBy: row.queueCreatedBy ?? '',
-        createdAt: row.queueCreatedAt ?? '',
-        updatedAt: row.queueUpdatedAt ?? '',
-        enabled: row.queueEnabled ?? false,
-        stats: {
-          pendingCount: 0,
-          actionedCount: 0,
-          escalatedPendingCount: 0,
-          lastUpdated: new Date().toISOString(),
-        },
-      },
+      queue: queueView,
       startAt: row.startAt,
       endAt: row.endAt,
     }
   }
 
-  viewReport(row: AssignmentRowWithQueue): ToolsOzoneReportDefs.AssignmentView {
+  viewReportAssignment(
+    row: AssignmentRowWithQueue,
+  ): ToolsOzoneReportDefs.AssignmentView {
+    const queueService = this.queueServiceCreator(this.db)
+
+    const queue = this.queueFromJoined(row)
+    const queueView = queue ? queueService.view(queue) : undefined
+
     return {
       id: row.id,
       did: row.did,
       reportId: row.reportId!,
-      queue:
-        row.queueId !== null && row.queueName !== null
-          ? {
-              id: row.queueId,
-              name: row.queueName,
-              subjectTypes: row.queueSubjectTypes ?? [],
-              collection: row.queueCollection ?? undefined,
-              reportTypes: row.queueReportTypes ?? [],
-              createdBy: row.queueCreatedBy ?? '',
-              createdAt: row.queueCreatedAt ?? '',
-              updatedAt: row.queueUpdatedAt ?? '',
-              enabled: row.queueEnabled ?? false,
-              stats: {
-                pendingCount: 0,
-                actionedCount: 0,
-                escalatedPendingCount: 0,
-                lastUpdated: new Date().toISOString(),
-              },
-            }
-          : undefined,
+      ...(queueView ? { queue: queueView } : {}),
       startAt: row.startAt,
       endAt: row.endAt,
     }
