@@ -23,7 +23,7 @@ export interface InputSchema {
   reportId: number
   /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
   queueId?: number
-  /** Whether to assign the report to the moderator. */
+  /** Whether to assign or un-assign the report to the user. */
   assign?: boolean
 }
 
