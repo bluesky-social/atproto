@@ -1,6 +1,5 @@
 import assert from 'node:assert'
 import { AtUri } from '@atproto/syntax'
-import { XRPCError } from '@atproto/xrpc'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
@@ -14,7 +13,10 @@ import {
 } from '../../../../lexicon/types/app/bsky/feed/getPostThread'
 import { Record as PostRecord } from '../../../../lexicon/types/app/bsky/feed/post'
 import { $Typed } from '../../../../lexicon/util'
-import { computeProxyTo } from '../../../../pipethrough'
+import {
+  PipethroughUpstreamError,
+  computeProxyTo,
+} from '../../../../pipethrough'
 import {
   LocalRecords,
   LocalViewer,
@@ -40,7 +42,10 @@ export default function (server: Server, ctx: AppContext) {
       try {
         return await pipethroughReadAfterWrite(ctx, reqCtx, getPostThreadMunge)
       } catch (err) {
-        if (err instanceof XRPCError && err.error === 'NotFound') {
+        if (
+          err instanceof PipethroughUpstreamError &&
+          err.error === 'NotFound'
+        ) {
           const { auth, params } = reqCtx
           const requester = auth.credentials.did
 
