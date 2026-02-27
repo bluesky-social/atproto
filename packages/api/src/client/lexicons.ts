@@ -19236,7 +19236,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get moderator assignments, optionally filtered by active status, queue, moderator, or subject.',
+          'Get moderator assignments, optionally filtered by active status, queue, or moderator.',
         parameters: {
           type: 'params',
           properties: {
