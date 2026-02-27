@@ -4,6 +4,7 @@ import { Selectable } from 'kysely'
 import { Database } from '../db'
 import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
+import { QueueServiceCreator } from '../queue/service'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number
@@ -54,6 +55,7 @@ export class AssignmentService {
   constructor(
     public db: Database,
     public opts: AssignmentServiceOpts,
+    public queueServiceCreator: QueueServiceCreator,
   ) {}
 
   async getQueueAssignments(input: GetQueueAssignmentsInput): Promise<{

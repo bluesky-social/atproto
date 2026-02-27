@@ -53,14 +53,14 @@ describe('report-assignment', () => {
     return data
   }
 
+  const clearQueues = async () => {
+    await network.ozone.ctx.db.db.deleteFrom('report_queue').execute()
+  }
   const clearAssignments = async () => {
     await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
   }
 
-  const createQueue = async (
-    name: string,
-    reportTypes: string[],
-  ) => {
+  const createQueue = async (name: string, reportTypes: string[]) => {
     const { data } = await agent.tools.ozone.queue.createQueue(
       {
         name,
@@ -89,11 +89,11 @@ describe('report-assignment', () => {
     await basicSeed(sc)
     await network.processAll()
     await clearAssignments()
+    await clearQueues()
 
-    const queue = await createQueue(
-      'Report Queue',
-      ['com.atproto.moderation.defs#reasonSpam'],
-    )
+    const queue = await createQueue('Report Queue', [
+      'com.atproto.moderation.defs#reasonSpam',
+    ])
     queueId = queue.queue.id
   })
 
@@ -377,10 +377,7 @@ describe('report-assignment', () => {
   it('hydrates queueView in getAssignments', async () => {
     await clearAssignments()
     const reportId = generateId()
-    await assignReportModerator(
-      { reportId, queueId, assign: true },
-      'admin',
-    )
+    await assignReportModerator({ reportId, queueId, assign: true }, 'admin')
     const result = await getAssignments({ reportIds: [reportId] })
     expect(result.assignments.length).toBe(1)
     expect(result.assignments[0].queueView).toBeDefined()
