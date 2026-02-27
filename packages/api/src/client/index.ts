@@ -292,12 +292,16 @@ import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
+import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -614,12 +618,16 @@ export * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
 export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
+export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -5491,6 +5499,18 @@ export class ToolsOzoneQueueNS {
     this._client = client
   }
 
+  assignModerator(
+    data?: ToolsOzoneQueueAssignModerator.InputSchema,
+    opts?: ToolsOzoneQueueAssignModerator.CallOptions,
+  ): Promise<ToolsOzoneQueueAssignModerator.Response> {
+    return this._client.call(
+      'tools.ozone.queue.assignModerator',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
   createQueue(
     data?: ToolsOzoneQueueCreateQueue.InputSchema,
     opts?: ToolsOzoneQueueCreateQueue.CallOptions,
@@ -5510,6 +5530,18 @@ export class ToolsOzoneQueueNS {
       'tools.ozone.queue.deleteQueue',
       opts?.qp,
       data,
+      opts,
+    )
+  }
+
+  getAssignments(
+    params?: ToolsOzoneQueueGetAssignments.QueryParams,
+    opts?: ToolsOzoneQueueGetAssignments.CallOptions,
+  ): Promise<ToolsOzoneQueueGetAssignments.Response> {
+    return this._client.call(
+      'tools.ozone.queue.getAssignments',
+      params,
+      undefined,
       opts,
     )
   }
@@ -5544,6 +5576,29 @@ export class ToolsOzoneReportNS {
 
   constructor(client: XrpcClient) {
     this._client = client
+  }
+
+  assignModerator(
+    data?: ToolsOzoneReportAssignModerator.InputSchema,
+    opts?: ToolsOzoneReportAssignModerator.CallOptions,
+  ): Promise<ToolsOzoneReportAssignModerator.Response> {
+    return this._client
+      .call('tools.ozone.report.assignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportAssignModerator.toKnownErr(e)
+      })
+  }
+
+  getAssignments(
+    params?: ToolsOzoneReportGetAssignments.QueryParams,
+    opts?: ToolsOzoneReportGetAssignments.CallOptions,
+  ): Promise<ToolsOzoneReportGetAssignments.Response> {
+    return this._client.call(
+      'tools.ozone.report.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   reassignQueue(

@@ -243,10 +243,14 @@ import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderatio
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
+import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -3573,6 +3577,18 @@ export class ToolsOzoneQueueNS {
     this._server = server
   }
 
+  assignModerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueAssignModerator.QueryParams,
+      ToolsOzoneQueueAssignModerator.HandlerInput,
+      ToolsOzoneQueueAssignModerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.assignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   createQueue<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3594,6 +3610,18 @@ export class ToolsOzoneQueueNS {
     >,
   ) {
     const nsid = 'tools.ozone.queue.deleteQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueGetAssignments.QueryParams,
+      ToolsOzoneQueueGetAssignments.HandlerInput,
+      ToolsOzoneQueueGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.getAssignments' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -3627,6 +3655,30 @@ export class ToolsOzoneReportNS {
 
   constructor(server: Server) {
     this._server = server
+  }
+
+  assignModerator<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportAssignModerator.QueryParams,
+      ToolsOzoneReportAssignModerator.HandlerInput,
+      ToolsOzoneReportAssignModerator.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.assignModerator' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getAssignments<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetAssignments.QueryParams,
+      ToolsOzoneReportGetAssignments.HandlerInput,
+      ToolsOzoneReportGetAssignments.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getAssignments' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
   }
 
   reassignQueue<A extends Auth = void>(

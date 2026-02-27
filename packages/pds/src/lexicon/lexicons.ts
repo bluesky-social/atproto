@@ -18867,6 +18867,41 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueAssignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.assignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Assign a user to a queue.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['queueId'],
+            properties: {
+              queueId: {
+                type: 'integer',
+                description: 'The ID of the queue to assign the user to.',
+              },
+              did: {
+                type: 'string',
+                description:
+                  'DID to be assigned. Assigns to whomever sent the request if not provided.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#assignmentView',
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneQueueCreateQueue: {
     lexicon: 1,
     id: 'tools.ozone.queue.createQueue',
@@ -19052,6 +19087,31 @@ export const schemaDict = {
           },
         },
       },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'queue', 'startAt', 'endAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
     },
   },
   ToolsOzoneQueueDeleteQueue: {
@@ -19093,6 +19153,72 @@ export const schemaDict = {
                 type: 'integer',
                 description:
                   'Number of reports that were migrated (if migration occurred)',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get moderator assignments, optionally filtered by active status, queue, or moderator.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActive: {
+              type: 'boolean',
+              default: true,
+              description: 'When true, only returns active assignments.',
+            },
+            queueIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              description:
+                'If specified, returns assignments for these queues only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.queue.defs#assignmentView',
+                },
               },
             },
           },
@@ -19209,6 +19335,53 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ToolsOzoneReportAssignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.report.assignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Assign a report to the current user.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to assign.',
+              },
+              queueId: {
+                type: 'integer',
+                description:
+                  'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
+              },
+              assign: {
+                type: 'boolean',
+                default: true,
+                description:
+                  'Whether to assign or un-assign the report to the user.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'AlreadyAssigned',
+            description: 'The report is already assigned to another user.',
+          },
+        ],
       },
     },
   },
@@ -19424,6 +19597,101 @@ export const schemaDict = {
       reasonSelfHarmOther: {
         type: 'token',
         description: 'Other dangerous content',
+      },
+      assignmentView: {
+        type: 'object',
+        required: ['id', 'did', 'reportId', 'startAt', 'endAt'],
+        properties: {
+          id: {
+            type: 'integer',
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+          },
+          reportId: {
+            type: 'integer',
+          },
+          startAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+          endAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetAssignments: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getAssignments',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get assignments for reports.',
+        parameters: {
+          type: 'params',
+          properties: {
+            onlyActive: {
+              type: 'boolean',
+              default: true,
+              description: 'When true, only returns active assignments.',
+            },
+            reportIds: {
+              type: 'array',
+              items: {
+                type: 'integer',
+              },
+              maxLength: 50,
+              description:
+                'If specified, returns assignments for these reports only.',
+            },
+            dids: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'did',
+              },
+              maxLength: 50,
+              description:
+                'If specified, returns assignments for these moderators only.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assignments'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              assignments: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#assignmentView',
+                },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -21620,12 +21888,16 @@ export const ids = {
   ToolsOzoneModerationQueryStatuses: 'tools.ozone.moderation.queryStatuses',
   ToolsOzoneModerationScheduleAction: 'tools.ozone.moderation.scheduleAction',
   ToolsOzoneModerationSearchRepos: 'tools.ozone.moderation.searchRepos',
+  ToolsOzoneQueueAssignModerator: 'tools.ozone.queue.assignModerator',
   ToolsOzoneQueueCreateQueue: 'tools.ozone.queue.createQueue',
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
+  ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
+  ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
+  ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',

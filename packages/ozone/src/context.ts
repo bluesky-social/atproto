@@ -1,10 +1,11 @@
-import assert from 'node:assert'
-import * as plc from '@did-plc/lib'
-import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { DidCache, IdResolver, MemoryCache } from '@atproto/identity'
 import { createServiceAuthHeaders } from '@atproto/xrpc-server'
+import * as plc from '@did-plc/lib'
+import express from 'express'
+import assert from 'node:assert'
+import { AssignmentService } from './assignment'
 import { AuthVerifier } from './auth-verifier'
 import { BackgroundQueue } from './background'
 import {
@@ -75,6 +76,7 @@ export type AppContextOptions = {
   imgInvalidator?: ImageInvalidator
   backgroundQueue: BackgroundQueue
   sequencer: Sequencer
+  assignmentService: AssignmentService
   authVerifier: AuthVerifier
   verificationService: VerificationServiceCreator
   verificationIssuer: VerificationIssuerCreator
@@ -167,6 +169,14 @@ export class AppContext {
       strikeService,
       overrides?.imgInvalidator,
     )
+    const assignmentService = new AssignmentService(
+      db,
+      {
+        queueDurationMs: cfg.assignments.queueDurationMs,
+        reportDurationMs: cfg.assignments.reportDurationMs,
+      },
+      queueService,
+    )
 
     const sequencer = new Sequencer(modService(db))
 
@@ -199,6 +209,7 @@ export class AppContext {
         idResolver,
         backgroundQueue,
         sequencer,
+        assignmentService,
         authVerifier,
         blobDiverter,
         verificationService,
@@ -315,6 +326,10 @@ export class AppContext {
 
   get sequencer(): Sequencer {
     return this.opts.sequencer
+  }
+
+  get assignmentService(): AssignmentService {
+    return this.opts.assignmentService
   }
 
   get authVerifier(): AuthVerifier {

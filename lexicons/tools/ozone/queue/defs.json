@@ -109,6 +109,31 @@
           "description": "When these statistics were last computed"
         }
       }
+    },
+    "assignmentView": {
+      "type": "object",
+      "required": ["id", "did", "queue", "startAt", "endAt"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "queue": {
+          "type": "ref",
+          "ref": "#queueView"
+        },
+        "startAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "endAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
     }
   }
 }
