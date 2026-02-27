@@ -1,4 +1,4 @@
-import { LexError, LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
 import {
   AtIdentifierString,
   CidString,
@@ -331,7 +331,7 @@ export class Client implements Agent {
 
   /**
    * The DID of the authenticated user.
-   * @throws {LexError} with code 'AuthenticationRequired' if not authenticated
+   * @throws {Error} if not authenticated
    */
   get assertDid(): DidString {
     this.assertAuthenticated()
@@ -342,7 +342,7 @@ export class Client implements Agent {
    * Asserts that the client is authenticated.
    * Use as a type guard when you need to ensure authentication.
    *
-   * @throws {LexError} with code 'AuthenticationRequired' if not authenticated
+   * @throws {Error} if not authenticated
    *
    * @example
    * ```typescript
@@ -352,7 +352,7 @@ export class Client implements Agent {
    * ```
    */
   public assertAuthenticated(): asserts this is { did: DidString } {
-    if (!this.did) throw new LexError('AuthenticationRequired')
+    if (!this.did) throw new Error('Client is not authenticated')
   }
 
   /**

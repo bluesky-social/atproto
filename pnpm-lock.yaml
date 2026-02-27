@@ -1084,6 +1084,9 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex-cbor
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex-data
@@ -1106,9 +1109,6 @@ importers:
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex
-      '@atproto/lex-client':
-        specifier: workspace:^
-        version: link:../lex-client
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
@@ -6670,7 +6670,7 @@ packages:
         optional: true
     dependencies:
       '@babel/runtime': 7.22.10
-      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3)
+      '@lingui/babel-plugin-lingui-macro': 5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.2)
       '@lingui/message-utils': 5.2.0
       babel-plugin-macros: 3.1.0
       unraw: 3.0.0
