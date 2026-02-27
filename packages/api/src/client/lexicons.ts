@@ -19431,6 +19431,7 @@ export const schemaDict = {
               },
               assign: {
                 type: 'boolean',
+                default: true,
                 description: 'Whether to assign the report to the moderator.',
               },
             },

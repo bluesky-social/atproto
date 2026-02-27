@@ -23,7 +23,7 @@ export interface InputSchema {
   /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
   queueId?: number
   /** Whether to assign the report to the moderator. */
-  assign?: boolean
+  assign: boolean
 }
 
 export type OutputSchema = ToolsOzoneReportDefs.AssignmentView
