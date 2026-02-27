@@ -255,6 +255,3 @@ export async function stopServer(server: Server) {
     })
   })
 }
-
-/** Generates a unique ID based on the current time */
-export const generateId = (mod: number = 10000) => new Date().getTime() % mod

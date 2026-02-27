@@ -5,7 +5,6 @@ import AtpAgent, {
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
-import { generateId } from './_util'
 
 describe('report-assignment', () => {
   let network: TestNetwork
@@ -102,7 +101,7 @@ describe('report-assignment', () => {
   })
 
   it('can get assignment history', async () => {
-    const reportId = generateId()
+    const reportId = 1001
     await assignReportModerator(
       {
         reportId,
@@ -115,7 +114,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can assigned', async () => {
-    const reportId = generateId()
+    const reportId = 1002
     const assignment1 = await assignReportModerator(
       {
         reportId,
@@ -131,7 +130,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can refresh assignment', async () => {
-    const reportId = generateId()
+    const reportId = 1003
     const assignment1 = await assignReportModerator(
       {
         reportId,
@@ -153,7 +152,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can assign then un-assign a report', async () => {
-    const reportId = generateId()
+    const reportId = 1004
     await assignReportModerator(
       {
         reportId,
@@ -174,7 +173,7 @@ describe('report-assignment', () => {
   })
 
   it('assignment can be exchanged', async () => {
-    const reportId = generateId()
+    const reportId = 1005
     await assignReportModerator(
       {
         reportId,
@@ -206,18 +205,9 @@ describe('report-assignment', () => {
   describe('pagination', () => {
     it('paginates assignments with limit', async () => {
       await clearAssignments()
-      await assignReportModerator(
-        { reportId: generateId(), assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 1, assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 2, assign: true },
-        'admin',
-      )
+      await assignReportModerator({ reportId: 2001, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2002, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2003, assign: true }, 'admin')
 
       const firstPage = await getAssignments({ limit: 2 })
       expect(firstPage.assignments.length).toBe(2)
@@ -226,14 +216,8 @@ describe('report-assignment', () => {
 
     it('returns all results when limit exceeds total', async () => {
       await clearAssignments()
-      await assignReportModerator(
-        { reportId: generateId(), assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 1, assign: true },
-        'admin',
-      )
+      await assignReportModerator({ reportId: 2101, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2102, assign: true }, 'admin')
 
       const result = await getAssignments({ limit: 50 })
       expect(result.assignments.length).toBe(2)
@@ -242,18 +226,9 @@ describe('report-assignment', () => {
 
     it('fetches next page using cursor', async () => {
       await clearAssignments()
-      await assignReportModerator(
-        { reportId: generateId(), assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 1, assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 2, assign: true },
-        'admin',
-      )
+      await assignReportModerator({ reportId: 2201, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2202, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2203, assign: true }, 'admin')
 
       const firstPage = await getAssignments({ limit: 2 })
       expect(firstPage.assignments.length).toBe(2)
@@ -276,18 +251,9 @@ describe('report-assignment', () => {
 
     it('returns all assignments across pages', async () => {
       await clearAssignments()
-      await assignReportModerator(
-        { reportId: generateId(), assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 1, assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: generateId() + 2, assign: true },
-        'admin',
-      )
+      await assignReportModerator({ reportId: 2301, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2302, assign: true }, 'admin')
+      await assignReportModerator({ reportId: 2303, assign: true }, 'admin')
 
       // Collect all assignments via pagination
       const allAssignments: typeof firstPage.assignments = []
@@ -310,9 +276,9 @@ describe('report-assignment', () => {
 
     it('applies filters alongside pagination', async () => {
       await clearAssignments()
-      const reportId1 = generateId()
-      const reportId2 = generateId() + 1
-      const reportId3 = generateId() + 2
+      const reportId1 = 2401
+      const reportId2 = 2402
+      const reportId3 = 2403
       await assignReportModerator(
         { reportId: reportId1, assign: true },
         'admin',
@@ -345,7 +311,7 @@ describe('report-assignment', () => {
   })
 
   it('hydrates queueView when queueId is provided', async () => {
-    const reportId = generateId()
+    const reportId = 3001
     const assignment = await assignReportModerator(
       {
         reportId,
@@ -362,7 +328,7 @@ describe('report-assignment', () => {
   })
 
   it('omits queueView when no queueId is provided', async () => {
-    const reportId = generateId()
+    const reportId = 3002
     const assignment = await assignReportModerator(
       {
         reportId,
@@ -376,7 +342,7 @@ describe('report-assignment', () => {
 
   it('hydrates queueView in getAssignments', async () => {
     await clearAssignments()
-    const reportId = generateId()
+    const reportId = 3003
     await assignReportModerator({ reportId, queueId, assign: true }, 'admin')
     const result = await getAssignments({ reportIds: [reportId] })
     expect(result.assignments.length).toBe(1)
@@ -386,7 +352,7 @@ describe('report-assignment', () => {
   })
 
   it('cannot double assign', async () => {
-    const reportId = generateId()
+    const reportId = 3004
     await assignReportModerator(
       {
         reportId,
