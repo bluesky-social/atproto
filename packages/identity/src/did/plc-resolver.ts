@@ -15,13 +15,23 @@ export class DidPlcResolver extends BaseResolver {
     return timed(this.timeout, async (signal) => {
       const url = new URL(`/${encodeURIComponent(did)}`, this.plcUrl)
       const res = await fetch(url, {
-        redirect: 'error',
+        redirect: 'manual',
         headers: { accept: 'application/did+ld+json,application/json' },
         signal,
       })
 
       // Positively not found, versus due to e.g. network error
       if (res.status === 404) return null
+
+      // Using 'manual' mode: treat opaqueredirect or 3xx responses as redirects
+      if (
+        res.type === 'opaqueredirect' ||
+        (res.status >= 300 && res.status < 400)
+      ) {
+        throw Object.assign(new Error('redirected'), {
+          status: res.status || 302,
+        })
+      }
 
       if (!res.ok) {
         throw Object.assign(new Error(res.statusText), { status: res.status })

@@ -35,9 +35,19 @@ export class DidWebResolver extends BaseResolver {
     return timed(this.timeout, async (signal) => {
       const res = await fetch(url, {
         signal,
-        redirect: 'error',
+        redirect: 'manual',
         headers: { accept: 'application/did+ld+json,application/json' },
       })
+
+      // Using 'manual' mode: treat opaqueredirect or 3xx responses as redirects
+      if (
+        res.type === 'opaqueredirect' ||
+        (res.status >= 300 && res.status < 400)
+      ) {
+        throw Object.assign(new Error('redirected'), {
+          status: res.status || 302,
+        })
+      }
 
       // Positively not found, versus due to e.g. network error
       if (!res.ok) return null
