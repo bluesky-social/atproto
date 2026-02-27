@@ -20,10 +20,15 @@ import getRepos from './moderation/getRepos'
 import getSubjects from './moderation/getSubjects'
 import listScheduledActions from './moderation/listScheduledActions'
 import queryEvents from './moderation/queryEvents'
+import queryReports from './moderation/queryReports'
 import queryStatuses from './moderation/queryStatuses'
 import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
+import createQueue from './queue/createQueue'
+import deleteQueue from './queue/deleteQueue'
+import listQueues from './queue/listQueues'
+import updateQueue from './queue/updateQueue'
 import createReport from './report/createReport'
 import addSafelinkRule from './safelink/addRule'
 import querySafelinkEvents from './safelink/queryEvents'
@@ -47,6 +52,10 @@ import updateMember from './team/updateMember'
 import grantVerifications from './verification/grantVerifications'
 import listVerifications from './verification/listVerifications'
 import revokeVerifications from './verification/revokeVerifications'
+import assignQueueModerator from './queue/assignModerator'
+import getQueueAssignments from './queue/getAssignments'
+import assignReportModerator from './report/assignModerator'
+import getReportAssignments from './report/getAssignments'
 
 export * as health from './health'
 
@@ -62,6 +71,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
+  queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
@@ -77,6 +87,10 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
+  createQueue(server, ctx)
+  listQueues(server, ctx)
+  updateQueue(server, ctx)
+  deleteQueue(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)
@@ -100,5 +114,9 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
+  assignQueueModerator(server, ctx)
+  getQueueAssignments(server, ctx)
+  assignReportModerator(server, ctx)
+  getReportAssignments(server, ctx)
   return server
 }

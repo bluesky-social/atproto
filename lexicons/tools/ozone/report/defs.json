@@ -218,6 +218,34 @@
     "reasonSelfHarmOther": {
       "type": "token",
       "description": "Other dangerous content"
+    },
+    "assignmentView": {
+      "type": "object",
+      "required": ["id", "did", "reportId", "startAt", "endAt"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "queue": {
+          "type": "ref",
+          "ref": "tools.ozone.queue.defs#queueView"
+        },
+        "reportId": {
+          "type": "integer"
+        },
+        "startAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "endAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
     }
   }
 }

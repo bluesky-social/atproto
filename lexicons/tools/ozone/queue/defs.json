@@ -1,0 +1,139 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.defs",
+  "defs": {
+    "queueView": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "subjectTypes",
+        "reportTypes",
+        "createdBy",
+        "createdAt",
+        "updatedAt",
+        "enabled",
+        "stats"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Queue ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the queue"
+        },
+        "subjectTypes": {
+          "type": "array",
+          "minLength": 1,
+          "items": {
+            "type": "string",
+            "knownValues": ["account", "record", "message"]
+          },
+          "description": "Subject types this queue accepts."
+        },
+        "collection": {
+          "type": "string",
+          "format": "nsid",
+          "description": "Collection name for record subjects (e.g., 'app.bsky.feed.post')"
+        },
+        "reportTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minLength": 1,
+          "description": "Report reason types this queue accepts (fully qualified NSIDs)"
+        },
+        "createdBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of moderator who created this queue"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether this queue is currently active"
+        },
+        "stats": {
+          "type": "ref",
+          "ref": "#queueStats",
+          "description": "Statistics about this queue"
+        }
+      }
+    },
+    "queueStats": {
+      "type": "object",
+      "required": [
+        "pendingCount",
+        "actionedCount",
+        "escalatedPendingCount",
+        "lastUpdated"
+      ],
+      "properties": {
+        "pendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'open' status"
+        },
+        "actionedCount": {
+          "type": "integer",
+          "description": "Number of reports in 'closed' status"
+        },
+        "escalatedPendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'escalated' status"
+        },
+        "uniqueReportersCount": {
+          "type": "integer",
+          "description": "Number of distinct reporters with reports in this queue"
+        },
+        "uniqueSubjectsDidCount": {
+          "type": "integer",
+          "description": "Number of distinct subject DIDs with reports in this queue"
+        },
+        "uniqueSubjectsFullCount": {
+          "type": "integer",
+          "description": "Number of distinct subject DID+URI combinations in this queue"
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When these statistics were last computed"
+        }
+      }
+    },
+    "assignmentView": {
+      "type": "object",
+      "required": ["id", "did", "queue", "startAt", "endAt"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "did": {
+          "type": "string",
+          "format": "did"
+        },
+        "queue": {
+          "type": "ref",
+          "ref": "#queueView"
+        },
+        "startAt": {
+          "type": "string",
+          "format": "datetime"
+        },
+        "endAt": {
+          "type": "string",
+          "format": "datetime"
+        }
+      }
+    }
+  }
+}

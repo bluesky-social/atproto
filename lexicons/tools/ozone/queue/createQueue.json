@@ -1,0 +1,65 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.createQueue",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a new moderation queue. Will fail if the queue configuration conflicts with an existing queue.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["name", "subjectTypes", "reportTypes"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Display name for the queue (must be unique)"
+            },
+            "subjectTypes": {
+              "type": "array",
+              "minLength": 1,
+              "items": {
+                "type": "string",
+                "knownValues": ["account", "record", "message"]
+              },
+              "description": "Subject types this queue accepts"
+            },
+            "collection": {
+              "type": "string",
+              "format": "nsid",
+              "description": "Collection name for record subjects. Required if subjectTypes includes 'record'."
+            },
+            "reportTypes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minLength": 1,
+              "maxLength": 25,
+              "description": "Report reason types (fully qualified NSIDs)"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["queue"],
+          "properties": {
+            "queue": {
+              "type": "ref",
+              "ref": "tools.ozone.queue.defs#queueView"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ConflictingQueue",
+          "description": "The queue configuration conflicts with an existing queue"
+        }
+      ]
+    }
+  }
+}

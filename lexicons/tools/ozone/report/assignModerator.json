@@ -1,0 +1,45 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.assignModerator",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Assign a report to the current user.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reportId"],
+          "properties": {
+            "reportId": {
+              "type": "integer",
+              "description": "The ID of the report to assign."
+            },
+            "queueId": {
+              "type": "integer",
+              "description": "Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue."
+            },
+            "assign": {
+              "type": "boolean",
+              "default": true,
+              "description": "Whether to assign or un-assign the report to the user."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "ref",
+          "ref": "tools.ozone.report.defs#assignmentView"
+        }
+      },
+      "errors": [
+        {
+          "name": "AlreadyAssigned",
+          "description": "The report is already assigned to another user."
+        }
+      ]
+    }
+  }
+}
