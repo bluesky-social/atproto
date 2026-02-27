@@ -21,7 +21,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // RBAC
-      if (!auth.credentials.isAdmin && !auth.credentials.isModerator) {
+      if (!auth.credentials.isModerator) {
         throw new ForbiddenError('Unauthorized')
       }
 
