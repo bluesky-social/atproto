@@ -15,12 +15,17 @@ export default function (server: Server, ctx: AppContext) {
             : undefined
       const did = input.body.did ?? authDid
 
-      if (!auth.credentials.isAdmin && !auth.credentials.isModerator) {
-        throw new ForbiddenError('Unauthorized')
-      }
+      // Validation
       if (!did) {
         throw new InvalidRequestError('DID is required')
       }
+
+      // RBAC
+      if (!auth.credentials.isAdmin && !auth.credentials.isModerator) {
+        throw new ForbiddenError('Unauthorized')
+      }
+
+      // RuBAC
       if (did !== authDid && !auth.credentials.isAdmin) {
         throw new ForbiddenError('Unauthorized')
       }
