@@ -426,9 +426,6 @@ importers:
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
-      iso-datestring-validator:
-        specifier: ^2.2.2
-        version: 2.2.2
       multiformats:
         specifier: ^9.9.0
         version: 9.9.0
