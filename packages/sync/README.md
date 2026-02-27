@@ -9,7 +9,7 @@ TypeScript library for syncing data from the [atproto](https://atproto.com) netw
 
 The firehose class will spin up a websocket connection to `com.atproto.sync.subscribeRepos` on a given repo host (by default the Relay run by Bluesky).
 
-Each event will be parsed, authenticated, and then passed on to the supplied `handleEvt` which can handle indexing.
+Each event will be parsed, authenticated, and then passed on to the supplied `handleEvent` which can handle indexing.
 
 On `Commit` events, the firehose will verify signatures and repo proofs to ensure that the event is authentic. This can be disabled with the `unauthenticatedCommits` flag. Similarly on `Identity` events, the firehose will fetch the latest DID document for the repo and do bidirectional verification on the associated handle. This can be disabled with the `unauthenticatedHandles` flag.
 
@@ -27,7 +27,7 @@ const idResolver = new IdResolver()
 const firehose = new Firehose({
   idResolver,
   service: 'wss://bsky.network',
-  handleEvt: async (evt) => {
+  handleEvent: async (evt) => {
     if (evt.event === 'identity') {
       // ...
     } else if (evt.event === 'account') {
@@ -69,7 +69,7 @@ const firehose = new Firehose({
   idResolver,
   runner,
   service: 'wss://bsky.network',
-  handleEvt: async (evt) => {
+  handleEvent: async (evt) => {
     // ...
   },
   onError: (err) => {
