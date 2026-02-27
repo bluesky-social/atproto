@@ -2,7 +2,7 @@ import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Selectable } from 'kysely'
 import { Database } from '../db'
-import { paginate, EndAtIdKeyset } from '../db/pagination'
+import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 
 export interface AssignmentServiceOpts {
@@ -39,15 +39,24 @@ export interface AssignReportInput {
   assign: boolean
 }
 
+type QueueAssignmentRow = Selectable<ModeratorAssignment> & {
+  queueName: string | null
+  queueSubjectTypes: string[] | null
+  queueCollection: string | null
+  queueReportTypes: string[] | null
+  queueCreatedBy: string | null
+  queueCreatedAt: string | null
+  queueUpdatedAt: string | null
+  queueEnabled: boolean | null
+}
+
 export class AssignmentService {
   constructor(
     public db: Database,
     public opts: AssignmentServiceOpts,
   ) {}
 
-  async getQueueAssignments(
-    input: GetQueueAssignmentsInput,
-  ): Promise<{
+  async getQueueAssignments(input: GetQueueAssignmentsInput): Promise<{
     assignments: ToolsOzoneQueueDefs.AssignmentView[]
     cursor?: string
   }> {
@@ -56,7 +65,22 @@ export class AssignmentService {
 
     let query = this.db.db
       .selectFrom('moderator_assignment')
-      .selectAll()
+      .leftJoin(
+        'report_queue',
+        'report_queue.id',
+        'moderator_assignment.queueId',
+      )
+      .selectAll('moderator_assignment')
+      .select([
+        'report_queue.name as queueName',
+        'report_queue.subjectTypes as queueSubjectTypes',
+        'report_queue.collection as queueCollection',
+        'report_queue.reportTypes as queueReportTypes',
+        'report_queue.createdBy as queueCreatedBy',
+        'report_queue.createdAt as queueCreatedAt',
+        'report_queue.updatedAt as queueUpdatedAt',
+        'report_queue.enabled as queueEnabled',
+      ])
       .where('reportId', 'is', null)
       .where('queueId', 'is not', null)
 
@@ -73,7 +97,11 @@ export class AssignmentService {
     }
 
     // use endAt to take advantage of indexes
-    const keyset = new EndAtIdKeyset(ref('endAt'), ref('id'))
+    // Qualify column refs to avoid ambiguity with the report_queue join
+    const keyset = new EndAtIdKeyset(
+      ref('moderator_assignment.endAt'),
+      ref('moderator_assignment.id'),
+    )
     const paginatedQuery = paginate(query, {
       limit,
       cursor,
@@ -183,9 +211,28 @@ export class AssignmentService {
       throw new Error('Failed to assign moderator to queue')
     }
 
-    const row = this.viewQueue(result)
+    const row = await this.db.db
+      .selectFrom('moderator_assignment')
+      .leftJoin(
+        'report_queue',
+        'report_queue.id',
+        'moderator_assignment.queueId',
+      )
+      .selectAll('moderator_assignment')
+      .select([
+        'report_queue.name as queueName',
+        'report_queue.subjectTypes as queueSubjectTypes',
+        'report_queue.collection as queueCollection',
+        'report_queue.reportTypes as queueReportTypes',
+        'report_queue.createdBy as queueCreatedBy',
+        'report_queue.createdAt as queueCreatedAt',
+        'report_queue.updatedAt as queueUpdatedAt',
+        'report_queue.enabled as queueEnabled',
+      ])
+      .where('moderator_assignment.id', '=', result.id)
+      .executeTakeFirstOrThrow()
 
-    return row
+    return this.viewQueue(row)
   }
 
   async assignReport(
@@ -248,15 +295,33 @@ export class AssignmentService {
     return row
   }
 
-  viewQueue(
-    assignment: Selectable<ModeratorAssignment>,
-  ): ToolsOzoneQueueDefs.AssignmentView {
+  viewQueue(row: QueueAssignmentRow): ToolsOzoneQueueDefs.AssignmentView {
+    if (row.queueId === null || row.queueName === null) {
+      throw new Error('Queue data missing for queue assignment')
+    }
+
     return {
-      id: assignment.id,
-      did: assignment.did,
-      queueId: assignment.queueId!,
-      startAt: assignment.startAt,
-      endAt: assignment.endAt,
+      id: row.id,
+      did: row.did,
+      queueView: {
+        id: row.queueId,
+        name: row.queueName,
+        subjectTypes: row.queueSubjectTypes ?? [],
+        collection: row.queueCollection ?? undefined,
+        reportTypes: row.queueReportTypes ?? [],
+        createdBy: row.queueCreatedBy ?? '',
+        createdAt: row.queueCreatedAt ?? '',
+        updatedAt: row.queueUpdatedAt ?? '',
+        enabled: row.queueEnabled ?? false,
+        stats: {
+          pendingCount: 0,
+          actionedCount: 0,
+          escalatedPendingCount: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      },
+      startAt: row.startAt,
+      endAt: row.endAt,
     }
   }
 

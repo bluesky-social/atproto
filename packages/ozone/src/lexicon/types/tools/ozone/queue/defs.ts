@@ -77,7 +77,7 @@ export interface AssignmentView {
   $type?: 'tools.ozone.queue.defs#assignmentView'
   id: number
   did: string
-  queueId: number
+  queueView: QueueView
   startAt: string
   endAt: string
 }

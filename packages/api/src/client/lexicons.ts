@@ -19158,7 +19158,7 @@ export const schemaDict = {
       },
       assignmentView: {
         type: 'object',
-        required: ['id', 'did', 'queueId', 'startAt', 'endAt'],
+        required: ['id', 'did', 'queueView', 'startAt', 'endAt'],
         properties: {
           id: {
             type: 'integer',
@@ -19167,8 +19167,9 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
-          queueId: {
-            type: 'integer',
+          queueView: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
           },
           startAt: {
             type: 'string',
