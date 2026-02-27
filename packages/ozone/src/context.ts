@@ -169,14 +169,10 @@ export class AppContext {
       strikeService,
       overrides?.imgInvalidator,
     )
-    const assignmentService = new AssignmentService(
-      db,
-      {
-        queueDurationMs: cfg.assignments.queueDurationMs,
-        reportDurationMs: cfg.assignments.reportDurationMs,
-      },
-      queueService,
-    )
+    const assignmentService = new AssignmentService(db, {
+      queueDurationMs: cfg.assignments.queueDurationMs,
+      reportDurationMs: cfg.assignments.reportDurationMs,
+    })
 
     const sequencer = new Sequencer(modService(db))
 

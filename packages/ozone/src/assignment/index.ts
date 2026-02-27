@@ -55,7 +55,6 @@ export class AssignmentService {
   constructor(
     public db: Database,
     public opts: AssignmentServiceOpts,
-    public queueServiceCreator: QueueServiceCreator,
   ) {}
 
   async getQueueAssignments(input: GetQueueAssignmentsInput): Promise<{
