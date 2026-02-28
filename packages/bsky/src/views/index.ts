@@ -574,6 +574,7 @@ export class Views {
     }
 
     const uri = AtUri.make(did, ids.AppBskyActorStatus, 'self').toString()
+    const labels = state.labels?.getBySubject(uri)
 
     const minDuration = 5 * MINUTE
     const maxDuration = 4 * HOUR
@@ -599,6 +600,7 @@ export class Views {
       embed: isExternalEmbed(record.embed)
         ? this.externalEmbed(did, record.embed)
         : undefined,
+      labels,
       expiresAt,
       isActive,
     }
