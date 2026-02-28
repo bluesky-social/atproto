@@ -32,7 +32,7 @@ const getTimelineMunge = async (
   local: LocalRecords,
 ): Promise<OutputSchema> => {
   const feed = await localViewer.formatAndInsertPostsInFeed(
-    [...original.feed],
+    original.feed,
     local.posts,
   )
   return {
