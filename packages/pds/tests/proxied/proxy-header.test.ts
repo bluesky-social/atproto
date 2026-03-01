@@ -72,10 +72,13 @@ describe('proxy header', () => {
       'Poorly formatted DID: foo',
     )
 
+    // The service fragment (e.g. #bsky_appview) must be preserved in the
+    // returned `did` so that scope checks match the audience from `include:`
+    // permission-set scopes using `inheritAud`.
     expect(
       parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test`),
     ).resolves.toEqual({
-      did: proxyServer.did,
+      did: `${proxyServer.did}#atproto_test`,
       url: proxyServer.url,
     })
   })
@@ -92,6 +95,9 @@ describe('proxy header', () => {
     assert(req)
     expect(req.url).toEqual(path)
     assert(req.auth)
+    // The JWT audience should be the bare DID (no fragment) because the
+    // receiving service verifies against its own DID without fragments.
+    // The fragment is only used for scope-checking within the PDS.
     const verified = await verifyJwt(
       req.auth.replace('Bearer ', ''),
       proxyServer.did,
