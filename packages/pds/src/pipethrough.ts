@@ -80,7 +80,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         'content-encoding': body && req.headers['content-encoding'],
         'content-length': body && req.headers['content-length'],
 
-        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, aud, lxm)}`,
+        authorization: `Bearer ${await ctx.serviceAuthJwt(credentials.did, stripFragment(aud), lxm)}`,
       }
 
       const dispatchOptions: Dispatcher.RequestOptions = {
@@ -178,7 +178,7 @@ export async function pipethrough(
       ),
 
       authorization: options?.iss
-        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, options.aud ?? aud, options.lxm ?? lxm)}`
+        ? `Bearer ${await ctx.serviceAuthJwt(options.iss, stripFragment(options.aud ?? aud), options.lxm ?? lxm)}`
         : undefined,
     },
 
@@ -226,8 +226,10 @@ export async function parseProxyInfo(
   const proxyToHeader = req.header('atproto-proxy')
   if (proxyToHeader) return parseProxyHeader(ctx, proxyToHeader)
 
-  const { serviceInfo } = defaultService(ctx, lxm)
-  if (serviceInfo) return serviceInfo
+  const { serviceId, serviceInfo } = defaultService(ctx, lxm)
+  if (serviceInfo) {
+    return { url: serviceInfo.url, did: `${serviceInfo.did}#${serviceId}` }
+  }
 
   throw new InvalidRequestError(`No service configured for ${lxm}`)
 }
@@ -266,7 +268,7 @@ export const parseProxyHeader = async (
     ctx.cfg.bskyAppView &&
     proxyTo === `${ctx.cfg.bskyAppView.did}#bsky_appview`
   ) {
-    return { did, url: ctx.cfg.bskyAppView.url }
+    return { did: proxyTo, url: ctx.cfg.bskyAppView.url }
   }
 
   const didDoc = await ctx.idResolver.did.resolve(did)
@@ -280,7 +282,7 @@ export const parseProxyHeader = async (
     throw new InvalidRequestError('could not resolve proxy did service url')
   }
 
-  return { did, url }
+  return { did: proxyTo, url }
 }
 
 /**
@@ -626,6 +628,19 @@ const defaultService = (
         serviceInfo: ctx.cfg.bskyAppView,
       }
   }
+}
+
+/**
+ * Strips the fragment (e.g. `#bsky_appview`) from a DID string.
+ *
+ * `parseProxyInfo` returns the full service ID (DID + fragment) so that
+ * scope-checking can match token audiences that include the fragment.
+ * However the receiving service expects the bare DID as the JWT audience,
+ * so we strip the fragment before creating the service-auth JWT.
+ */
+export const stripFragment = (did: string): string => {
+  const idx = did.indexOf('#')
+  return idx === -1 ? did : did.slice(0, idx)
 }
 
 const safeString = (str: unknown): string | undefined => {

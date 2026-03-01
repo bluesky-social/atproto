@@ -72,10 +72,13 @@ describe('proxy header', () => {
       'Poorly formatted DID: foo',
     )
 
+    // The service fragment (e.g. #bsky_appview) must be preserved in the
+    // returned `did` so that scope checks match the audience from `include:`
+    // permission-set scopes using `inheritAud`.
     expect(
       parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test`),
     ).resolves.toEqual({
-      did: proxyServer.did,
+      did: `${proxyServer.did}#atproto_test`,
       url: proxyServer.url,
     })
   })

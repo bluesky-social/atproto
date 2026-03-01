@@ -3,7 +3,11 @@ import { AuthScope } from '../../../../auth-scope'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
 import { ids } from '../../../../lexicon/lexicons'
-import { computeProxyTo, parseProxyInfo } from '../../../../pipethrough'
+import {
+  computeProxyTo,
+  parseProxyInfo,
+  stripFragment,
+} from '../../../../pipethrough'
 
 export default function (server: Server, ctx: AppContext) {
   server.com.atproto.moderation.createReport({
@@ -24,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
       const agent = new AtpAgent({ service: url })
       const serviceAuth = await ctx.serviceAuthHeaders(
         auth.credentials.did,
-        aud,
+        stripFragment(aud),
         ids.ComAtprotoModerationCreateReport,
       )
       const res = await agent.com.atproto.moderation.createReport(input.body, {
