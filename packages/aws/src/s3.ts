@@ -8,6 +8,8 @@ import { BlobNotFoundError, BlobStore } from '@atproto/repo'
 
 export type S3Config = {
   bucket: string
+  /** Optional prefix for S3 keys */
+  keyPrefix?: string
   /**
    * The maximum time any request to S3 (including individual blob chunks
    * uploads) can take, in milliseconds.
@@ -22,6 +24,7 @@ export type S3Config = {
 export class S3BlobStore implements BlobStore {
   private client: S3
   private bucket: string
+  private keyPrefix: string
   private uploadTimeoutMs: number
 
   constructor(
@@ -30,11 +33,13 @@ export class S3BlobStore implements BlobStore {
   ) {
     const {
       bucket,
+      keyPrefix,
       uploadTimeoutMs = 10 * SECOND,
       requestTimeoutMs = uploadTimeoutMs,
       ...rest
     } = cfg
     this.bucket = bucket
+    this.keyPrefix = keyPrefix ?? ''
     this.uploadTimeoutMs = uploadTimeoutMs
     this.client = new S3({
       ...rest,
@@ -87,7 +92,7 @@ export class S3BlobStore implements BlobStore {
       params: {
         Bucket: this.bucket,
         Body: bytes,
-        Key: path,
+        Key: this.keyPrefix + path,
       },
       // @ts-ignore native implementation fine in node >=15
       abortController,

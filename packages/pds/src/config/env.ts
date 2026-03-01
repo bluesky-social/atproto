@@ -57,6 +57,7 @@ export function readEnv() {
     // blobstore: one required
     // s3
     blobstoreS3Bucket: envStr('PDS_BLOBSTORE_S3_BUCKET'),
+    blobstoreS3KeyPrefix: envStr('PDS_BLOBSTORE_S3_KEY_PREFIX'),
     blobstoreS3Region: envStr('PDS_BLOBSTORE_S3_REGION'),
     blobstoreS3Endpoint: envStr('PDS_BLOBSTORE_S3_ENDPOINT'),
     blobstoreS3ForcePathStyle: envBool('PDS_BLOBSTORE_S3_FORCE_PATH_STYLE'),
