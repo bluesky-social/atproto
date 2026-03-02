@@ -524,7 +524,7 @@ import { toRequestListener } from '@atproto/lex-server/nodejs'
 const app = express()
 
 // Mount the XRPC router
-app.use('/xrpc', toRequestListener(router.handle))
+app.use('/xrpc', toRequestListener(router.fetch))
 
 app.listen(3000)
 ```

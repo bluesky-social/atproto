@@ -15,7 +15,7 @@ import {
   LexRouterAuth,
   LexRouterMethodHandler,
   SocketErrorHook,
-} from './lex-server.js'
+} from './lex-router.js'
 import { serve, upgradeWebSocket } from './nodejs.js'
 
 // ============================================================================

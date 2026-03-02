@@ -1030,6 +1030,8 @@ export class LexRouter {
       // not done already is because we want to perform all the heavy lifting
       // here, while still allowing the possibility to override the endpoint
       // resolution, etc.
+
+      // @NOTE see ./service-auth.ts for potential common code (did resolver, etc.)
     }
 
     return Response.json(
