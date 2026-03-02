@@ -76,47 +76,43 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[0] || ''
   }
 
-  set collection(v: string) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[0] = v
-    this.pathname = parts.join('/')
-  }
-
   get collectionSafe(): NsidString {
     const { collection } = this
-    if (!collection || collection === 'undefined') {
-      throw new TypeError('No collection in AT URI')
-    }
     ensureValidNsid(collection)
     return collection
   }
 
-  set collectionSafe(v: NsidString) {
+  set collection(v: string) {
     ensureValidNsid(v)
-    this.collection = v
+    this.unsafelySetCollection(v)
+  }
+
+  unsafelySetCollection(v: string) {
+    const parts = this.pathname.split('/').filter(Boolean)
+    parts[0] = v
+    this.pathname = parts.join('/')
   }
 
   get rkey() {
     return this.pathname.split('/').filter(Boolean)[1] || ''
   }
 
-  set rkey(v: string) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[0] ||= 'undefined'
-    parts[1] = v
-    this.pathname = parts.join('/')
-  }
-
   get rkeySafe(): RecordKeyString {
     const { rkey } = this
-    if (!rkey) throw new TypeError('No rkey in AT URI')
     ensureValidRecordKey(rkey)
     return rkey
   }
 
-  set rkeySafe(v: RecordKeyString) {
+  set rkey(v: string) {
     ensureValidRecordKey(v)
-    this.rkey = v
+    this.unsafelySetRkey(v)
+  }
+
+  unsafelySetRkey(v: string) {
+    const parts = this.pathname.split('/').filter(Boolean)
+    parts[0] ||= 'undefined'
+    parts[1] = v
+    this.pathname = parts.join('/')
   }
 
   get href() {
