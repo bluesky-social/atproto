@@ -101,7 +101,7 @@ export class RecordSchema<
    * Bound alias for {@link build} for compatibility with generated utilities.
    * @see {@link build}
    */
-  get $build() {
+  get $build(): typeof this.build {
     return lazyProperty(this, '$build', this.build.bind(this))
   }
 
@@ -109,7 +109,7 @@ export class RecordSchema<
    * Bound alias for {@link isTypeOf} for compatibility with generated utilities.
    * @see {@link isTypeOf}
    */
-  get $isTypeOf() {
+  get $isTypeOf(): typeof this.isTypeOf {
     return lazyProperty(this, '$isTypeOf', this.isTypeOf.bind(this))
   }
 }
