@@ -4947,6 +4947,10 @@ export const schemaDict = {
             type: 'object',
             required: ['interactions'],
             properties: {
+              feed: {
+                type: 'string',
+                format: 'at-uri',
+              },
               interactions: {
                 type: 'array',
                 items: {
