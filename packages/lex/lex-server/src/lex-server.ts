@@ -27,6 +27,9 @@ import {
 import { LexServerError } from './errors.js'
 import { drainWebsocket } from './lib/drain-websocket.js'
 
+const XRPC_PATH_PREFIX = '/xrpc/'
+const XRPC_HEALTH_CHECK_PATH = '/xrpc/_health'
+
 type Awaitable<T> = T | Promise<T>
 
 /**
@@ -462,6 +465,14 @@ export type LexRouterOptions = {
    */
   onSocketError?: SocketErrorHook
   /**
+   * Optional health check handler. If provided, this function will be called
+   * for requests to the /xrpc/_health endpoint, allowing for custom health
+   * check logic and responses.
+   */
+  onHealthCheck?: (
+    request: Request,
+  ) => Awaitable<{ [x: string]: unknown; status: 'ok' }>
+  /**
    * Optional fallback handler for requests that are not /xrpc/ paths. Can be
    * used to serve static files or other routes. If not provided, non-/xrpc/
    * requests will return 404 responses.
@@ -651,9 +662,12 @@ export class LexRouter {
       | LexRouterMethodConfig<any, any>,
   ) {
     const method = getMain(ns)
-    if (this.handlers.has(method.nsid)) {
+    const nsid = normalizeNsid(method.nsid)
+
+    if (this.handlers.has(nsid)) {
       throw new TypeError(`Method ${method.nsid} already registered`)
     }
+
     const methodConfig =
       typeof config === 'function'
         ? { handler: config, auth: undefined }
@@ -672,7 +686,7 @@ export class LexRouter {
             methodConfig.auth,
           )
 
-    this.handlers.set(method.nsid, handler)
+    this.handlers.set(nsid, handler)
 
     return this
   }
@@ -697,10 +711,7 @@ export class LexRouter {
           request.method !== 'GET' &&
           request.method !== 'HEAD')
       ) {
-        return Response.json(
-          { error: 'InvalidRequest', message: 'Method not allowed' },
-          { status: 405 },
-        )
+        return invalidRequestResponse('Method not allowed', 405)
       }
 
       try {
@@ -772,33 +783,21 @@ export class LexRouter {
 
     return async (request, connection) => {
       if (request.method !== 'GET') {
-        return Response.json(
-          { error: 'InvalidRequest', message: 'Method not allowed' },
-          { status: 405 },
-        )
+        return invalidRequestResponse('Method not allowed', 405)
       }
 
       if (
         request.headers.get('connection')?.toLowerCase() !== 'upgrade' ||
         request.headers.get('upgrade')?.toLowerCase() !== 'websocket'
       ) {
-        return Response.json(
-          {
-            error: 'InvalidRequest',
-            message: 'XRPC subscriptions are only available over WebSocket',
-          },
-          {
-            status: 426,
-            headers: {
-              Connection: 'Upgrade',
-              Upgrade: 'websocket',
-            },
-          },
-        )
+        return invalidRequestResponse('Upgrade required', 426, {
+          Connection: 'Upgrade',
+          Upgrade: 'websocket',
+        })
       }
 
       if (request.signal.aborted) {
-        return Response.json({ error: 'RequestAborted' }, { status: 499 })
+        return invalidRequestResponse('Request aborted', 499)
       }
 
       try {
@@ -972,47 +971,55 @@ export class LexRouter {
     connection?: ConnectionInfo,
   ): Promise<Response> => {
     const { pathname } = new URL(request.url)
+    const atprotoProxy = request.headers.get('atproto-proxy')
 
-    if (!pathname.startsWith('/xrpc/')) {
+    if (!pathname.startsWith(XRPC_PATH_PREFIX)) {
       // Handle non XRPC paths
       const { fallback } = this.options
       if (fallback) return fallback(request, connection)
       return new Response('Not Found', { status: 404 })
     }
 
-    // @NOTE we don't validate the NSID format *before* checking for the
-    // handler because the presence of a handler is sufficient to ensure that
-    // the NSID is valid. If there is no handler, *then* we can check if the
-    // NSID is invalid in order to return a more specific error message.
-    const nsid = pathname.slice(6)
+    if (pathname === XRPC_HEALTH_CHECK_PATH) {
+      if (request.method !== 'GET') {
+        return invalidRequestResponse('Method not allowed', 405)
+      }
+      if (atprotoProxy != null) {
+        return invalidRequestResponse(
+          'atproto-proxy header is not allowed on health check endpoint',
+        )
+      }
 
-    const atprotoProxy = request.headers.get('atproto-proxy')
+      const { onHealthCheck } = this.options
+      const data = onHealthCheck
+        ? await onHealthCheck(request)
+        : { status: 'ok' }
+
+      return Response.json(data)
+    }
+
+    const nsidRaw = pathname.slice(XRPC_PATH_PREFIX.length)
+
+    if (!isNsidString(nsidRaw)) {
+      return invalidRequestResponse('Invalid NSID in URL path')
+    }
+
+    const nsid = normalizeNsid(nsidRaw)
     if (atprotoProxy == null) {
-      const handler = (this.handlers as Map<string, FetchHandler>).get(nsid)
+      const handler = this.handlers.get(nsid)
       if (handler) return handler(request, connection)
-    }
+    } else {
+      // Handle service proxying logic.
 
-    if (!isNsidString(nsid)) {
-      return Response.json(
-        { error: 'InvalidRequest', message: `Invalid NSID: ${nsid}` },
-        { status: 400 },
-      )
-    }
-
-    if (atprotoProxy != null) {
       const proxyInfo = parseAtprotoProxyHeader(atprotoProxy)
       if (!proxyInfo) {
-        return Response.json(
-          {
-            error: 'InvalidRequest',
-            message: `Invalid atproto-proxy header value: ${atprotoProxy}`,
-          },
-          { status: 400 },
+        return invalidRequestResponse(
+          `Invalid atproto-proxy header value: ${atprotoProxy}`,
         )
       }
 
       // @TODO actually implement service proxying logic here. The reason it was
-      // not done already if because we want to perform all the heavy lifting
+      // not done already is because we want to perform all the heavy lifting
       // here, while still allowing the possibility to override the endpoint
       // resolution, etc.
     }
@@ -1142,19 +1149,58 @@ export type ServiceProxyInfo = {
 function parseAtprotoProxyHeader(value: string): ServiceProxyInfo | null {
   // /!\ Hot path
 
-  // Basic sanity checks
+  // (fast) sanity check to avoid unnecessary parsing for non-DID values
   if (!value.startsWith('did:')) return null
-  if (value.includes(' ')) return null
 
   // The format is expected to be `did:example:service#serviceId`
   const hashIndex = value.indexOf('#')
   if (hashIndex === -1) return null
-  if (hashIndex === value.length - 1) return null
-  if (value.includes('#', hashIndex + 1)) return null
+
+  const fragmentIndex = hashIndex + 1
+  // Basic validation if the fragment
+  if (fragmentIndex === value.length) return null
+  if (value.includes('#', fragmentIndex)) return null
+  if (value.includes(' ', fragmentIndex)) return null
 
   const did = value.slice(0, hashIndex)
   if (!isDidString(did)) return null
 
-  const serviceId = value.slice(hashIndex + 1)
+  const serviceId = value.slice(fragmentIndex)
   return { did, serviceId }
+}
+
+function normalizeNsid(nsid: NsidString): NsidString {
+  const lastDotIdx = nsid.lastIndexOf('.')
+
+  // The domain name part of the NSID is case-insensitive, but the last part is
+  // case-sensitive. Normalize the domain part to lowercase.
+  if (lastDotIdx !== -1 && hasUpperCase(nsid, 0, lastDotIdx)) {
+    return `${nsid.slice(0, lastDotIdx).toLowerCase()}.${nsid.slice(lastDotIdx + 1)}` as NsidString
+  }
+
+  return nsid
+}
+
+function hasUpperCase(str: string, start = 0, end = str.length): boolean {
+  for (let i = start; i < end; i++) {
+    const code = str.charCodeAt(i)
+    if (code >= 0x41 && code <= 0x5a) {
+      return true
+    }
+  }
+  return false
+}
+
+function invalidRequestResponse(
+  message: string,
+  status = 400,
+  headers?: HeadersInit,
+): Response {
+  return Response.json(
+    {
+      error: 'InvalidRequest',
+      message,
+    },
+    { status, headers },
+  )
 }
