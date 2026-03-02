@@ -431,6 +431,10 @@ export type UpgradeWebSocket = (request: Request) => {
   response: Response
 }
 
+export type HealthCheckHandler = (
+  request: Request,
+) => Awaitable<{ [x: string]: unknown; status: 'ok' }>
+
 /**
  * Configuration options for the {@link LexRouter}.
  *
@@ -449,15 +453,16 @@ export type UpgradeWebSocket = (request: Request) => {
  */
 export type LexRouterOptions = {
   /**
-   * Function to upgrade HTTP requests to WebSocket connections.
-   * Required for subscription methods. Defaults to Deno's built-in
-   * upgradeWebSocket if available.
+   * Function to upgrade HTTP requests to WebSocket connections. Required for
+   * subscription methods. Defaults to Deno's built-in
+   * {@link globalThis.upgradeWebSocket} if available. For NodeJS, use the
+   * homonymous export from `@atproto/lex-server/nodejs`.
    */
   upgradeWebSocket?: UpgradeWebSocket
   /**
-   * Callback invoked when an error occurs during request handling.
-   * Useful for logging and error reporting. Not called for client-induced
-   * errors (e.g., request abortion).
+   * Callback invoked when an error occurs during request handling. Useful for
+   * logging and error reporting. Not called for client-induced errors (e.g.,
+   * request abortion).
    */
   onHandlerError?: HandlerErrorHook
   /**
@@ -468,10 +473,11 @@ export type LexRouterOptions = {
    * Optional health check handler. If provided, this function will be called
    * for requests to the /xrpc/_health endpoint, allowing for custom health
    * check logic and responses.
+   *
+   * If not provided, the server will respond to /xrpc/_health requests with a
+   * default JSON response of `{ status: 'ok' }`.
    */
-  onHealthCheck?: (
-    request: Request,
-  ) => Awaitable<{ [x: string]: unknown; status: 'ok' }>
+  healthCheck?: HealthCheckHandler
   /**
    * Optional fallback handler for requests that are not /xrpc/ paths. Can be
    * used to serve static files or other routes. If not provided, non-/xrpc/
@@ -479,13 +485,13 @@ export type LexRouterOptions = {
    */
   fallback?: FetchHandler
   /**
-   * High water mark for WebSocket backpressure (in bytes).
-   * When buffered data exceeds this, the handler will wait before sending more.
+   * High water mark for WebSocket backpressure (in bytes). When buffered data
+   * exceeds this, the handler will wait before sending more.
    */
   highWaterMark?: number
   /**
-   * Low water mark for WebSocket backpressure (in bytes).
-   * The handler resumes sending when buffered data drops below this.
+   * Low water mark for WebSocket backpressure (in bytes). The handler resumes
+   * sending when buffered data drops below this.
    */
   lowWaterMark?: number
 }
@@ -994,10 +1000,8 @@ export class LexRouter {
         )
       }
 
-      const { onHealthCheck } = this.options
-      const data = onHealthCheck
-        ? await onHealthCheck(request)
-        : { status: 'ok' }
+      const { healthCheck } = this.options
+      const data = healthCheck ? await healthCheck(request) : { status: 'ok' }
 
       return Response.json(data)
     }

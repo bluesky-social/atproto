@@ -10,6 +10,7 @@ import { LexError, LexServerAuthError, LexServerError } from './errors.js'
 import {
   ConnectionInfo,
   HandlerErrorHook,
+  HealthCheckHandler,
   LexRouter,
   LexRouterAuth,
   LexRouterMethodHandler,
@@ -658,17 +659,17 @@ describe('Routing', () => {
       expect(await response.json()).toEqual({ status: 'ok' })
     })
 
-    it('calls custom onHealthCheck handler', async () => {
-      const onHealthCheck = vi.fn(async () => ({
-        status: 'ok' as const,
+    it('calls custom healthCheck handler', async () => {
+      const healthCheck = vi.fn<HealthCheckHandler>(async () => ({
+        status: 'ok',
         version: '1.0.0',
       }))
-      const router = new LexRouter({ onHealthCheck })
+      const router = new LexRouter({ healthCheck })
 
       const request = new Request('https://example.com/xrpc/_health')
       const response = await router.fetch(request)
 
-      expect(onHealthCheck).toHaveBeenCalledWith(request)
+      expect(healthCheck).toHaveBeenCalledWith(request)
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({ status: 'ok', version: '1.0.0' })
     })
@@ -699,15 +700,17 @@ describe('Routing', () => {
       expect(data.message).toContain('atproto-proxy')
     })
 
-    it('does not call onHealthCheck when atproto-proxy is set', async () => {
-      const onHealthCheck = vi.fn(async () => ({ status: 'ok' as const }))
-      const router = new LexRouter({ onHealthCheck })
+    it('does not call healthCheck when atproto-proxy is set', async () => {
+      const healthCheck = vi.fn<HealthCheckHandler>(async () => ({
+        status: 'ok',
+      }))
+      const router = new LexRouter({ healthCheck })
       const request = new Request('https://example.com/xrpc/_health', {
         headers: { 'atproto-proxy': 'did:plc:example#atproto_labeler' },
       })
       const response = await router.fetch(request)
 
-      expect(onHealthCheck).not.toHaveBeenCalled()
+      expect(healthCheck).not.toHaveBeenCalled()
       expect(response.status).toBe(400)
     })
   })
