@@ -558,7 +558,6 @@ router.add(schema, async ({ params }) => {
     {
       status: 201,
       headers: {
-        'Content-Type': 'application/json',
         'X-Custom-Header': 'value',
       },
     },
