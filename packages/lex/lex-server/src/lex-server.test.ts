@@ -647,6 +647,70 @@ describe('Routing', () => {
     })
   })
 
+  describe('/xrpc/_health endpoint', () => {
+    it('returns default health check response', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok' })
+    })
+
+    it('calls custom onHealthCheck handler', async () => {
+      const onHealthCheck = vi.fn(async () => ({
+        status: 'ok' as const,
+        version: '1.0.0',
+      }))
+      const router = new LexRouter({ onHealthCheck })
+
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(onHealthCheck).toHaveBeenCalledWith(request)
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok', version: '1.0.0' })
+    })
+
+    it('returns 405 for non-GET requests', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/_health', {
+        method: 'POST',
+      })
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(405)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toBe('Method not allowed')
+    })
+
+    it('returns 400 when atproto-proxy header is set', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/_health', {
+        headers: { 'atproto-proxy': 'did:plc:example#atproto_labeler' },
+      })
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toContain('atproto-proxy')
+    })
+
+    it('does not call onHealthCheck when atproto-proxy is set', async () => {
+      const onHealthCheck = vi.fn(async () => ({ status: 'ok' as const }))
+      const router = new LexRouter({ onHealthCheck })
+      const request = new Request('https://example.com/xrpc/_health', {
+        headers: { 'atproto-proxy': 'did:plc:example#atproto_labeler' },
+      })
+      const response = await router.fetch(request)
+
+      expect(onHealthCheck).not.toHaveBeenCalled()
+      expect(response.status).toBe(400)
+    })
+  })
+
   describe('invalid NSID', () => {
     it('returns 400 for invalid NSID format', async () => {
       const router = new LexRouter()
@@ -748,6 +812,67 @@ describe('Routing', () => {
       const response = await router.fetch(request)
 
       expect(response.status).toBe(400)
+    })
+
+    it('returns 400 for atproto-proxy with space in fragment', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example#service id' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+    })
+  })
+
+  describe('NSID normalization', () => {
+    it('matches handler when URL has uppercase domain segments', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      const request = new Request('https://example.com/xrpc/IO.Example.status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok' })
+    })
+
+    it('matches handler when URL has mixed-case domain segments', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      const request = new Request('https://example.com/xrpc/IO.EXAMPLE.status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok' })
+    })
+
+    it('preserves case sensitivity of method name (last segment)', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      // "Status" (uppercase S) should not match "status"
+      const request = new Request('https://example.com/xrpc/io.example.Status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(501)
+      expect(await response.json()).toMatchObject({
+        error: 'MethodNotImplemented',
+      })
+    })
+
+    it('prevents duplicate registration with different domain casing', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      expect(() => {
+        // Same NSID with different domain casing should be detected as duplicate
+        const statusUpperCase = l.query(
+          'IO.Example.status' as 'io.example.status',
+          l.params(),
+          l.payload('application/json', l.object({ status: l.string() })),
+        )
+        router.add(statusUpperCase, handlers.status)
+      }).toThrow(/already registered/)
     })
   })
 

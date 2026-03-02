@@ -790,10 +790,14 @@ export class LexRouter {
         request.headers.get('connection')?.toLowerCase() !== 'upgrade' ||
         request.headers.get('upgrade')?.toLowerCase() !== 'websocket'
       ) {
-        return invalidRequestResponse('Upgrade required', 426, {
-          Connection: 'Upgrade',
-          Upgrade: 'websocket',
-        })
+        return invalidRequestResponse(
+          'XRPC subscriptions are only available over WebSocket',
+          426,
+          {
+            Connection: 'Upgrade',
+            Upgrade: 'websocket',
+          },
+        )
       }
 
       if (request.signal.aborted) {
@@ -998,13 +1002,13 @@ export class LexRouter {
       return Response.json(data)
     }
 
-    const nsidRaw = pathname.slice(XRPC_PATH_PREFIX.length)
+    const subPath = pathname.slice(XRPC_PATH_PREFIX.length)
 
-    if (!isNsidString(nsidRaw)) {
+    if (!isNsidString(subPath)) {
       return invalidRequestResponse('Invalid NSID in URL path')
     }
 
-    const nsid = normalizeNsid(nsidRaw)
+    const nsid = normalizeNsid(subPath)
     if (atprotoProxy == null) {
       const handler = this.handlers.get(nsid)
       if (handler) return handler(request, connection)
