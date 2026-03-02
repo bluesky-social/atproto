@@ -486,9 +486,9 @@ function stripHopByHopHeaders(headers: Headers): Headers {
     }
   }
 
-  // These are not actually hop-by-hop headers, but we remove them because they
-  // pertain to the transport between us and the upstream server, and should not
-  // be forwarded to downstream clients.
+  // These are not actually hop-by-hop headers, but we remove them because the
+  // upstream payload gets parsed and re-serialized, so content length and
+  // encoding may no longer be accurate.
   result.delete('content-length')
   result.delete('content-encoding')
 

@@ -46,7 +46,7 @@ export type LexErrorData<N extends LexErrorCode = LexErrorCode> = {
  * @typeParam N - The specific error code type
  */
 export class LexError<N extends LexErrorCode = LexErrorCode> extends Error {
-  name = this.constructor.name
+  name = 'LexError'
 
   /**
    * @param error - The error code identifying the type of error, typically used in XRPC error payloads

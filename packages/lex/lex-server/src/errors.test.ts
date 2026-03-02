@@ -24,7 +24,7 @@ describe(LexServerError, () => {
       error: 'InvalidRequest',
       message: 'Bad input',
     })
-    expect(error.headers?.get('X-Custom')).toBe('header')
+    expect(error.headers?.get('x-custom')).toBe('header')
     expect(error.error).toBe('InvalidRequest')
     expect(error.message).toBe('Bad input')
   })
@@ -59,6 +59,11 @@ describe(LexServerError, () => {
   describe('from()', () => {
     it('returns existing LexServerError as-is', () => {
       const original = new LexServerError(400, { error: 'Test' })
+      expect(LexServerError.from(original)).toBe(original)
+    })
+
+    it('returns a LexServerAuthError as-is (since it extends LexServerError)', () => {
+      const original = new LexServerAuthError('AuthenticationRequired', 'test')
       expect(LexServerError.from(original)).toBe(original)
     })
 
@@ -196,7 +201,9 @@ describe(LexServerAuthError, () => {
     const response = error.toResponse()
 
     expect(response.status).toBe(401)
-    expect(response.headers.get('WWW-Authenticate')).toContain('Bearer')
+    expect(response.headers.get('WWW-Authenticate')).toBe(
+      'Bearer error="MissingToken"',
+    )
     const body = await response.json()
     expect(body.error).toBe('AuthenticationRequired')
     expect(body.message).toBe('Missing token')
@@ -206,6 +213,24 @@ describe(LexServerAuthError, () => {
     it('returns existing LexServerAuthError as-is', () => {
       const original = new LexServerAuthError('AuthenticationRequired', 'test')
       expect(LexServerAuthError.from(original)).toBe(original)
+    })
+
+    it('wraps a LexServerError using its error code and message', () => {
+      const serverError = new LexServerError(403, {
+        error: 'Forbidden',
+        message: 'Access denied',
+      })
+      const authError = LexServerAuthError.from(serverError, {
+        Bearer: { error: 'InsufficientScope' },
+      })
+
+      expect(authError).toBeInstanceOf(LexServerAuthError)
+      expect(authError.error).toBe('Forbidden')
+      expect(authError.message).toBe('Access denied')
+      expect(authError.cause).toBe(serverError)
+      expect(authError.headers?.get('WWW-Authenticate')).toBe(
+        'Bearer error="InsufficientScope"',
+      )
     })
 
     it('wraps a LexError preserving error code and message', () => {

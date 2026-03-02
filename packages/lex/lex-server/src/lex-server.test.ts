@@ -6,13 +6,14 @@ import { decodeAll } from '@atproto/lex-cbor'
 import { buildAgent, xrpc } from '@atproto/lex-client'
 import { parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
-import { LexServerAuthError, LexServerError } from './errors.js'
+import { LexError, LexServerAuthError, LexServerError } from './errors.js'
 import {
   ConnectionInfo,
   HandlerErrorHook,
   LexRouter,
   LexRouterAuth,
   LexRouterMethodHandler,
+  SocketErrorHook,
 } from './lex-server.js'
 import { serve, upgradeWebSocket } from './nodejs.js'
 
@@ -1955,18 +1956,231 @@ describe('Subscription', () => {
       'XRPC subscriptions are only available over WebSocket',
     )
   })
+
+  it('closes with 1003 when client sends a message to the subscription', async () => {
+    const router = new LexRouter({ upgradeWebSocket }).add(
+      io.example.subscribe,
+      async function* ({ signal }) {
+        while (true) {
+          await scheduler.wait(50, { signal })
+          yield { message: 'ping', count: 1 }
+        }
+      },
+    )
+
+    await using server = await serve(router)
+    const { port } = server.address() as AddressInfo
+
+    const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(5000)
+
+    const ws = new WebSocket(
+      `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+    )
+    ws.addEventListener('open', () => {
+      ws.send('unexpected message from client')
+    })
+    ws.addEventListener('error', reject)
+    ws.addEventListener('close', resolve)
+
+    const { code } = await promise
+
+    expect(code).toBe(1003)
+  })
+
+  describe('error close codes', () => {
+    const subscribeWithErrors = l.subscription(
+      'io.example.subscribeWithErrors',
+      l.params(),
+      l.object({ message: l.string() }),
+      ['FutureCursor', 'ConsumerTooSlow'],
+    )
+
+    it('closes with 1008 and sends error frame for known LexError', async () => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        subscribeWithErrors,
+        async function* () {
+          yield await Promise.reject(
+            new LexError('FutureCursor', 'Too far in the future'),
+          )
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const receivedFrames: unknown[][] = []
+
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribeWithErrors`,
+      )
+      ws.binaryType = 'arraybuffer'
+      ws.addEventListener('message', (event) => {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        receivedFrames.push([...decodeAll(bytes)])
+      })
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      const { code } = await promise
+
+      expect(code).toBe(1008)
+      expect(receivedFrames).toHaveLength(1)
+      const [header, body] = receivedFrames[0]
+      expect(header).toEqual({ op: -1 })
+      expect(body).toMatchObject({ error: 'FutureCursor' })
+    })
+
+    it('closes with 1011 and sends InternalServerError frame for unknown error', async () => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        subscribeWithErrors,
+        async function* () {
+          yield await Promise.reject(new Error('unexpected failure'))
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const receivedFrames: unknown[][] = []
+
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribeWithErrors`,
+      )
+      ws.binaryType = 'arraybuffer'
+      ws.addEventListener('message', (event) => {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        receivedFrames.push([...decodeAll(bytes)])
+      })
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      const { code } = await promise
+
+      expect(code).toBe(1011)
+      expect(receivedFrames).toHaveLength(1)
+      const [header, body] = receivedFrames[0]
+      expect(header).toEqual({ op: -1 })
+      expect(body).toMatchObject({ error: 'InternalServerError' })
+    })
+
+    it('closes with 1011 for a LexError not listed in method.errors', async () => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        subscribeWithErrors,
+        async function* () {
+          yield await Promise.reject(
+            new LexError('SomeOtherError', 'Not a declared error'),
+          )
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribeWithErrors`,
+      )
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      const { code } = await promise
+
+      expect(code).toBe(1011)
+    })
+  })
+
+  describe('onSocketError hook', () => {
+    it('calls onSocketError when the generator throws a non-abort error', async () => {
+      const onSocketError = vi.fn<SocketErrorHook>()
+      const router = new LexRouter({ upgradeWebSocket, onSocketError }).add(
+        io.example.subscribe,
+        async function* () {
+          yield await Promise.reject(new Error('generator failure'))
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      )
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      await promise
+
+      expect(onSocketError).toHaveBeenCalledTimes(1)
+      const ctx = onSocketError.mock.calls[0][0]
+      expect(ctx.error).toBeInstanceOf(Error)
+      expect(ctx.method).toBeDefined()
+      expect(ctx.request).toBeDefined()
+    })
+
+    it('does not call onSocketError when the error matches the abort reason', async () => {
+      const onSocketError = vi.fn<SocketErrorHook>()
+      const router = new LexRouter({ upgradeWebSocket, onSocketError }).add(
+        io.example.subscribe,
+        async function* ({ signal }) {
+          // Wait for abort, then throw with the abort reason as cause
+          await new Promise<void>((_, reject) => {
+            signal.addEventListener('abort', () => {
+              reject(new Error('aborted', { cause: signal.reason }))
+            })
+          })
+          yield { message: 'never', count: 0 }
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      )
+      // Close from the client side to trigger the abort
+      ws.addEventListener('open', () => ws.close())
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      await promise
+
+      expect(onSocketError).not.toHaveBeenCalled()
+    })
+  })
 })
 
-function timeoutDeferred(ms: number) {
-  let resolve: () => void
-  let reject: (err: unknown) => void
-  const promise = new Promise<void>((res, rej) => {
-    resolve = res
-    reject = rej
+function defer<T = void>() {
+  let res: (value: T | PromiseLike<T>) => void
+  let rej: (err: unknown) => void
+  const promise = new Promise<T>((resolve, reject) => {
+    res = resolve
+    rej = reject
   })
+  return { resolve: res!, reject: rej!, promise }
+}
+
+function timeoutDeferred<T = void>(ms: number) {
+  const { resolve, reject, promise } = defer<T>()
   const to = setTimeout(() => reject(new Error('Timed out')), ms).unref()
-  promise.finally(() => {
-    clearTimeout(to)
-  })
-  return { resolve: resolve!, promise }
+  return {
+    resolve,
+    reject,
+    promise: promise.finally(() => clearTimeout(to)),
+  }
 }

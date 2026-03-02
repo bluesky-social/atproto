@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { formatWWWAuthenticateHeader } from './www-authenticate.js'
 
-describe('formatWWWAuthenticateHeader', () => {
+describe(formatWWWAuthenticateHeader, () => {
   describe('single scheme with params object', () => {
     it('formats a Bearer challenge with params', () => {
       const result = formatWWWAuthenticateHeader({
