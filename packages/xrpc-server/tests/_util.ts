@@ -63,6 +63,13 @@ export function basicAuthHeaders(creds: {
   }
 }
 
+/**
+ * Builds a lexicon server based on an `@atproto/lexicon`
+ * {@link import('@atproto/lexicon').Lexicons} instance. Validation will be
+ * performed by {@link import('@atproto/lexicon').Lexicons}'s various assertion
+ * methods. This allows for testing the server's integration with
+ * `@atproto/lexicon`.
+ */
 export async function buildMethodLexicons(
   lexicons: LexiconDoc[],
   handlers: Record<string, MethodConfigOrHandler | StreamConfigOrHandler>,
@@ -80,18 +87,26 @@ export async function buildMethodLexicons(
   return server
 }
 
+/**
+ * Builds a lexicon server based on `@atproto/lex`'s
+ * {@link import('@atproto/lex').Query},
+ * {@link import('@atproto/lex').Procedure}, and
+ * {@link import('@atproto/lex').Subscription} method definitions. Validation
+ * will be performed through built schema verifiers created by
+ * {@link LexiconSchemaBuilder}. This helper allows for testing the server's
+ * integration with `@atproto/lex`.
+ */
 export async function buildAddLexicons(
   lexicons: LexiconDocument[],
   handlers: Record<string, MethodConfigOrHandler | StreamConfigOrHandler>,
   options?: Options,
 ) {
   const server = new Server(undefined, options)
-  const indexer = new LexiconIterableIndexer(structuredClone(lexicons))
-  const builder = new LexiconSchemaBuilder(indexer)
+  await using indexer = new LexiconIterableIndexer(structuredClone(lexicons))
+  await using builder = new LexiconSchemaBuilder(indexer)
   for (const [id, handler] of Object.entries(handlers)) {
     const schema = await builder.buildFullRef(`${id}#main`)
     server.add(schema as any, handler as any)
   }
-  await builder.done()
   return server
 }

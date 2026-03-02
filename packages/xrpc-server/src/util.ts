@@ -157,11 +157,12 @@ export function createLexiconParamsVerifier<P extends Params = Params>(
   lexicons: Lexicons,
 ): ParamsVerifierInternal<P> {
   return (req) => {
+    const queryParams = getQueryParams(req)
+    const params = decodeQueryParams(def, queryParams)
     try {
-      const queryParams = getQueryParams(req)
-      const params = decodeQueryParams(def, queryParams)
       return lexicons.assertValidXrpcParams(nsid, params) as P
     } catch (e) {
+      // @NOTE WE historically did not check for specific error types here,
       throw new InvalidRequestError(String(e))
     }
   }
@@ -172,12 +173,15 @@ export function createSchemaParamsVerifier<
 >(ns: l.Main<M>): ParamsVerifierInternal<LexMethodParams<M>> {
   const schema = l.getMain(ns)
   return (req) => {
+    const urlSearchParams = getSearchParams(req.url) ?? new URLSearchParams()
     try {
-      return schema.parameters.fromURLSearchParams(
-        getSearchParams(req.url) ?? new URLSearchParams(),
-      ) as LexMethodParams<M>
+      const params = schema.parameters.fromURLSearchParams(urlSearchParams)
+      return params as LexMethodParams<M>
     } catch (err) {
-      throw new InvalidRequestError(String(err))
+      if (err instanceof l.LexValidationError) {
+        throw new InvalidRequestError(err.message)
+      }
+      throw err
     }
   }
 }
@@ -376,14 +380,14 @@ export function createLexiconOutputVerifier<O extends Output = Output>(
 
     // output schema
     try {
-      const result = lexicons.assertValidXrpcOutput(nsid, handlerOutput.body)
+      lexicons.assertValidXrpcOutput(nsid, handlerOutput.body)
       // @TODO Since the output verifier is typically enabled in dev/tests and
       // disabled in production, we don't want to assign the (altered) output
       // back to the handlerOutput object, as this would cause different
-      // behaviors between environments. Instead, we should compare the result
-      // with the original output and throw if they differ (indicating that the
-      // output was mutated during validation, e.g. due to default values).
-      result
+      // behaviors between environments. Instead, we should compare the value
+      // returned by assertValidXrpcOutput with the original output and throw if
+      // they differ (indicating that the output was mutated during validation,
+      // e.g. due to default values being applied).
     } catch (cause) {
       const message =
         cause instanceof Error ? cause.message : 'Output body validation failed'
@@ -397,6 +401,8 @@ export function createSchemaOutputVerifier<M extends l.Procedure | l.Query>(
 ): OutputVerifierInternal<LexMethodOutput<M>> {
   const outputSchema = l.getMain(ns).output
   return (handlerOutput) => {
+    // @NOTE If the user of the lib wants to return an output that doesn't
+    // conform to the schema, they can use HandlerPipeThrough return types
     if (!outputSchema.matchesEncoding(handlerOutput?.encoding)) {
       throw new InternalServerError('Output encoding mismatch')
     }
@@ -449,11 +455,20 @@ function isValidEncoding(output: LexXrpcBody, encoding?: string) {
   const allowed = parseDefEncoding(output)
   if (!allowed.length) return false
 
-  return (
-    allowed.includes(ENCODING_ANY) ||
-    allowed.includes(normalized) ||
-    allowed.includes(`${normalized.split('/', 1)[0]}/*`)
-  )
+  if (allowed.includes(ENCODING_ANY)) return true
+  if (allowed.includes(normalized)) return true
+
+  // Check for wildcard matches (e.g. normalized=application/json, allowed=application/*)
+  for (const allowedEnc of allowed) {
+    if (
+      allowedEnc.endsWith('/*') &&
+      normalized.startsWith(allowedEnc.slice(0, -1))
+    ) {
+      return true
+    }
+  }
+
+  return false
 }
 
 type BodyPresence = 'missing' | 'empty' | 'present'

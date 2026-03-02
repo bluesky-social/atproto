@@ -185,7 +185,10 @@ export class Server {
           config as LexSubscriptionConfig<l.Subscription, A>,
         )
       default:
-        throw new TypeError(`Unsupported schema`)
+        throw new TypeError(
+          // @ts-expect-error should never happen
+          `Unsupported schema ${schema.nsid} of type ${schema.type}`,
+        )
     }
   }
 
@@ -512,7 +515,7 @@ export class Server {
       this.createLexiconParamsVerifier(nsid, def),
       this.createAuthVerifier(cfg),
       // @NOTE outgoing messages are not validated against the lexicon schema
-      // (unlike the handlers for schema based subscriptions)
+      // (unlike the handlers for @atproto/lex based subscriptions)
       cfg.handler,
     )
   }
