@@ -433,6 +433,22 @@ describe('ParamsSchema', () => {
         ),
       ).toThrow('Expected boolean value type at $.foo.bar.bools (got string)')
     })
+
+    it('ignores empty string values', () => {
+      const result = schema.fromURLSearchParams([
+        ['name', 'Alice'],
+        ['extra', ''],
+      ])
+      expect(result).toEqual({ name: 'Alice' })
+    })
+
+    it('ignores empty string values for known parameters', () => {
+      const result = schema.fromURLSearchParams([
+        ['name', 'Alice'],
+        ['age', ''],
+      ])
+      expect(result).toEqual({ name: 'Alice' })
+    })
   })
 
   describe('toURLSearchParams', () => {
