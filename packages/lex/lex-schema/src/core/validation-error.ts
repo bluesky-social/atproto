@@ -19,7 +19,7 @@ import {
  *
  * @example
  * ```typescript
- * const error = new ValidationError([
+ * const error = new LexValidationError([
  *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
  * ])
  * console.log(error.message)
@@ -30,8 +30,8 @@ import {
  * // { error: 'InvalidRequest', message: '...', issues: [...] }
  * ```
  */
-export class ValidationError extends LexError {
-  name = 'ValidationError'
+export class LexValidationError extends LexError<'InvalidRequest'> {
+  name = 'LexValidationError'
 
   /**
    * The list of validation issues that caused this error.
@@ -59,9 +59,9 @@ export class ValidationError extends LexError {
   /**
    * Converts the error to a JSON-serializable object.
    *
-   * @returns An object containing the error details and all issues in JSON format
+   * @returns An object containing the error details and issues details
    */
-  toJSON() {
+  override toJSON() {
     return {
       ...super.toJSON(),
       issues: this.issues.map((issue) => issue.toJSON()),
@@ -81,23 +81,23 @@ export class ValidationError extends LexError {
    * ```typescript
    * const failures = schemas.map(s => s.safeValidate(data)).filter(r => !r.success)
    * if (failures.length === schemas.length) {
-   *   throw ValidationError.fromFailures(failures)
+   *   throw LexValidationError.fromFailures(failures)
    * }
    * ```
    */
   static fromFailures(
-    failures: ResultFailure<ValidationError>[],
-  ): ValidationError {
+    failures: readonly ResultFailure<LexValidationError>[],
+  ): LexValidationError {
     if (failures.length === 1) return failureReason(failures[0])
     const issues = failures.flatMap(extractFailureIssues)
-    return new ValidationError(issues, {
+    return new LexValidationError(issues, {
       // Keep the original errors as the cause chain
       cause: failures.map(failureReason),
     })
   }
 }
 
-function extractFailureIssues(result: ResultFailure<ValidationError>) {
+function extractFailureIssues(result: ResultFailure<LexValidationError>) {
   return result.reason.issues
 }
 
