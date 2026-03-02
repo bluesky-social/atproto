@@ -77,21 +77,23 @@ export class AtUri {
   }
 
   set collection(v: string) {
-    ensureValidNsid(v)
-    this.collectionSafe = v
+    const parts = this.pathname.split('/').filter(Boolean)
+    parts[0] = v
+    this.pathname = parts.join('/')
   }
 
   get collectionSafe(): NsidString {
     const { collection } = this
-    if (!collection) throw new TypeError('No collection in AT URI')
+    if (!collection || collection === 'undefined') {
+      throw new TypeError('No collection in AT URI')
+    }
     ensureValidNsid(collection)
     return collection
   }
 
   set collectionSafe(v: NsidString) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[0] = v
-    this.pathname = parts.join('/')
+    ensureValidNsid(v)
+    this.collection = v
   }
 
   get rkey() {
@@ -99,8 +101,10 @@ export class AtUri {
   }
 
   set rkey(v: string) {
-    ensureValidRecordKey(v)
-    this.rkeySafe = v
+    const parts = this.pathname.split('/').filter(Boolean)
+    parts[0] ||= 'undefined'
+    parts[1] = v
+    this.pathname = parts.join('/')
   }
 
   get rkeySafe(): RecordKeyString {
@@ -111,10 +115,8 @@ export class AtUri {
   }
 
   set rkeySafe(v: RecordKeyString) {
-    const parts = this.pathname.split('/').filter(Boolean)
-    parts[0] ||= 'undefined'
-    parts[1] = v
-    this.pathname = parts.join('/')
+    ensureValidRecordKey(v)
+    this.rkey = v
   }
 
   get href() {
