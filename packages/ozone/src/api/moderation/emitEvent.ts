@@ -8,6 +8,7 @@ import {
   ModEventTag,
   isAgeAssuranceEvent,
   isAgeAssuranceOverrideEvent,
+  isAgeAssurancePurgeEvent,
   isModEventAcknowledge,
   isModEventEmail,
   isModEventLabel,
@@ -67,6 +68,17 @@ const handleModerationEvent = async ({
     if (!auth.credentials.isModerator) {
       throw new AuthRequiredError(
         'Must be a full moderator to override age assurance',
+      )
+    }
+  }
+
+  if (isAgeAssurancePurgeEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new AuthRequiredError(
+        'Must be a full moderator to purge age assurance events',
       )
     }
   }
