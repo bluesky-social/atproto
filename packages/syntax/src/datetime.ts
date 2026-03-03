@@ -132,6 +132,15 @@ export function ifDatetimeString<I>(
 }
 
 /**
+ * Returns the current date and time as a {@link DatetimeString}.
+ *
+ * @see {@link DatetimeString}
+ */
+export function nowDatetimeString(): DatetimeString {
+  return toDatetimeString(new Date())
+}
+
+/**
  * Converts any {@link Date} into a {@link DatetimeString} if possible, throwing
  * an error if the date is not a valid atproto datetime.
  *

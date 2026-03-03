@@ -35,6 +35,7 @@ export {
   asDatetimeString,
   ifDatetimeString,
   isDatetimeString,
+  nowDatetimeString,
   toDatetimeString,
 } from '@atproto/syntax'
 

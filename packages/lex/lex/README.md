@@ -67,6 +67,7 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
 - [Utilities](#utilities)
+  - [Datetime Strings](#datetime-strings)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
   - [Tree-Shaking](#tree-shaking)
@@ -223,13 +224,14 @@ function renderPost(p: app.bsky.feed.post.Main) {
 It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // variable type will be inferred as "app.bsky.feed.post.Main"
 const post = app.bsky.feed.post.$build({
   // No need to specify $type when using $build
   text: 'Hello, world!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 ```
 
@@ -263,12 +265,13 @@ console.log(app.bsky.actor.defs.profileViewBasic.$type) // 'app.bsky.actor.defs#
 Returns `true` if data matches the schema, `false` otherwise. Acts as a TypeScript type guard:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const data = {
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 }
 
 if (app.bsky.feed.post.$check(data)) {
@@ -282,13 +285,14 @@ if (app.bsky.feed.post.$check(data)) {
 Validates and returns typed data, throwing an error if validation fails:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 try {
   const post = app.bsky.feed.post.$main.$parse({
     $type: 'app.bsky.feed.post',
     text: 'Hello!',
-    createdAt: new Date().toISOString(),
+    createdAt: l.toDatetimeString(new Date()),
   })
   // post is now typed and validated
   console.log(post.text)
@@ -306,12 +310,13 @@ try {
 Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const value = {
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 }
 
 // Throws if no valid
@@ -325,12 +330,13 @@ value === result // true
 Returns a detailed validation result object without throwing:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const result = app.bsky.feed.post.$safeParse({
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 
 if (result.success) {
@@ -345,6 +351,7 @@ if (result.success) {
 Builds data without needing to specify the `$type` property, and properly types the result:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // The type of the "like" variable will be "app.bsky.feed.like.Main"
@@ -353,7 +360,7 @@ const like = app.bsky.feed.like.$build({
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
     cid: 'bafyrei...',
   },
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 ```
 
@@ -605,11 +612,12 @@ const timeline = await client.call(
 Create a new record un the authenticated user's repo.
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const result = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 
 console.log(result.uri) // at://did:plc:...
@@ -850,7 +858,7 @@ console.log(response.body)
 
 ## Utilities
 
-Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are exported from the package:
+Various utilities for working with CIDs, datetime strings, string lengths, language tags, and low-level JSON encoding are exported from the package:
 
 ```typescript
 import {
@@ -858,6 +866,12 @@ import {
   parseCid, // Parse CID string (throws on invalid)
   ifCid, // Coerce to Cid or null
   isCid, // Type guard for Cid values
+
+  // Datetime string utilities
+  toDatetimeString, // Convert Date to DatetimeString (throws on invalid)
+  asDatetimeString, // Cast string to DatetimeString (throws on invalid)
+  isDatetimeString, // Type guard for DatetimeString
+  ifDatetimeString, // Returns DatetimeString or undefined
 
   // Blob references
   BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
@@ -884,6 +898,35 @@ const cid = parseCid('bafyreiabc...')
 graphemeLen('👨‍👩‍👧‍👦') // 1
 utf8Len('👨‍👩‍👧‍👦') // 25
 isLanguageString('en-US') // true
+```
+
+### Datetime Strings
+
+Many AT Protocol records (such as posts, likes, and follows) include a `createdAt` field that expects a valid `DatetimeString`. While `new Date().toISOString()` produces a string that looks like a valid datetime, it is not guaranteed to always conform to the AT Protocol's [datetime format requirements](https://atproto.com/specs/lexicon#datetime) (for example, `Date` objects representing dates before year 10 or after year 9999 will produce non-conforming strings). To ensure correctness and type safety, use the `DatetimeString` utilities exported from `@atproto/lex`:
+
+- **`toDatetimeString(date: Date)`** - Converts a `Date` object into a valid `DatetimeString`, throwing an `InvalidDatetimeError` if the date cannot be represented as a valid AT Protocol datetime.
+- **`asDatetimeString(input: string)`** - Validates and casts an arbitrary string to `DatetimeString`, throwing an `InvalidDatetimeError` if the string does not conform.
+- **`isDatetimeString(input)`** - Type guard that returns `true` if the input is a valid `DatetimeString`.
+- **`ifDatetimeString(input)`** - Returns the input as a `DatetimeString` if valid, or `undefined` otherwise.
+- **`nowDatetimeString()`** - Returns the current date and time as `DatetimeString`.
+
+```typescript
+import { l } from '@atproto/lex'
+
+// Convert a Date object to a DatetimeString (or throws)
+const someDate = new Date('2024-01-15T12:30:00Z')
+const now = l.toDatetimeString(someDate)
+
+// Get the current datetime as a DatetimeString
+const now = l.nowDatetimeString()
+
+// Validate and cast an existing string
+const dt = l.asDatetimeString('2024-01-15T12:30:00.000Z')
+
+// Type guard for conditional checks
+if (l.isDatetimeString(someString)) {
+  // someString is now typed as DatetimeString
+}
 ```
 
 ## Advanced Usage
@@ -991,7 +1034,7 @@ Actions receive:
 Actions are called using `client.call()`, the same method used for XRPC queries and procedures:
 
 ```typescript
-import { Action, Client } from '@atproto/lex'
+import { Action, Client, l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // Define an action
@@ -1005,7 +1048,7 @@ export const likePost: Action<
     app.bsky.feed.like,
     {
       subject: { uri, cid },
-      createdAt: new Date().toISOString(),
+      createdAt: l.toDatetimeString(new Date()),
     },
     options,
   )
@@ -1206,7 +1249,7 @@ Actions enable you to create high-level, convenience APIs similar to [@atproto/a
 #### Creating Posts
 
 ```typescript
-import { Action } from '@atproto/lex'
+import { Action, l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 type PostInput = Partial<app.bsky.feed.post.Main> &
@@ -1221,7 +1264,7 @@ export const post: Action<PostInput, { uri: string; cid: string }> = async (
     app.bsky.feed.post,
     {
       ...record,
-      createdAt: record.createdAt || new Date().toISOString(),
+      createdAt: record.createdAt || l.nowDatetimeString(),
     },
     options,
   )
@@ -1237,7 +1280,7 @@ await client.call(post, {
 #### Following Users
 
 ```typescript
-import { Action } from '@atproto/lex'
+import { Action, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import * as app from './lexicons/app.js'
 
@@ -1249,7 +1292,7 @@ export const follow: Action<
     app.bsky.graph.follow,
     {
       subject: did,
-      createdAt: new Date().toISOString(),
+      createdAt: l.nowDatetimeString(),
     },
     options,
   )
