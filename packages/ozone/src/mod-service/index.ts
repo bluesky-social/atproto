@@ -687,13 +687,11 @@ export class ModerationService {
   }
 
   async purgeAgeAssuranceEvents(subjectDid: string) {
+    this.db.assertTransaction()
     await this.db.db
       .deleteFrom('moderation_event')
       .where('subjectDid', '=', subjectDid)
-      .where('action', 'in', [
-        'tools.ozone.moderation.defs#ageAssuranceEvent',
-        'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
-      ])
+      .where('action', '=', 'tools.ozone.moderation.defs#ageAssuranceEvent')
       .execute()
   }
 

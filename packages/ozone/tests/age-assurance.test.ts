@@ -102,17 +102,12 @@ describe('age assurance events', () => {
             ageAssuranceState: 'assured',
           }),
         ])
-      // Filter to the subjects created in this test to avoid count inflation from repeated runs
-      const aliceBobPendingEvents = pendingEvents.filter((e) => {
-        const did = (e.subject as any).did
-        return did === sc.dids.alice || did === sc.dids.bob
-      })
-      expect(aliceBobPendingEvents.length).toEqual(2)
-      aliceBobPendingEvents.forEach((event) => {
+      expect(pendingEvents.length).toEqual(2)
+      pendingEvents.forEach((event) => {
         expect(event.event.$type).toBe(
           'tools.ozone.moderation.defs#ageAssuranceEvent',
         )
-        expect((event.event as any).status).toBe('pending')
+        expect(event.event['status']).toBe('pending')
       })
 
       expect(unknownEvents.length).toBeGreaterThan(0)
@@ -120,7 +115,7 @@ describe('age assurance events', () => {
         expect(event.event.$type).toBe(
           'tools.ozone.moderation.defs#ageAssuranceEvent',
         )
-        expect((event.event as any).status).toBe('assured')
+        expect(event.event['status']).toBe('assured')
       })
     } catch (error) {
       console.error('Error querying events:', error)
@@ -137,33 +132,12 @@ describe('age assurance events', () => {
     })
   })
 
-  it('age assurance event fails for record subjects', async () => {
-    const postSubject = {
-      $type: 'com.atproto.repo.strongRef',
-      uri: sc.posts[sc.dids.alice][0].ref.uriStr,
-      cid: sc.posts[sc.dids.alice][0].ref.cidStr,
-    }
-
-    await expect(
-      modClient.emitEvent({
-        subject: postSubject,
-        event: {
-          $type: 'tools.ozone.moderation.defs#ageAssuranceEvent',
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-          attemptId: 'attempt-123',
-        },
-      }),
-    ).rejects.toThrow('Invalid subject type')
-  })
-
-  it('purge event removes all age assurance events and resets status', async () => {
+  it('purge event removes ageAssuranceEvents but keeps overrides, and resets status', async () => {
     const danSubject = {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.dan,
     }
 
-    // Emit a few age assurance events for dan
     await modClient.emitEvent({
       subject: danSubject,
       event: {
@@ -209,15 +183,19 @@ describe('age assurance events', () => {
       'tools.ozone.moderation.defs#ageAssurancePurgeEvent',
     )
 
-    // Prior age assurance events should be deleted
-    const { events: afterPurgeEvents } = await modClient.queryEvents({
+    // ageAssuranceEvent rows should be deleted
+    const { events: aaEventsAfterPurge } = await modClient.queryEvents({
       subject: sc.dids.dan,
-      types: [
-        'tools.ozone.moderation.defs#ageAssuranceEvent',
-        'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
-      ],
+      types: ['tools.ozone.moderation.defs#ageAssuranceEvent'],
     })
-    expect(afterPurgeEvents.length).toBe(0)
+    expect(aaEventsAfterPurge.length).toBe(0)
+
+    // ageAssuranceOverrideEvent rows should be preserved
+    const { events: overrideEventsAfterPurge } = await modClient.queryEvents({
+      subject: sc.dids.dan,
+      types: ['tools.ozone.moderation.defs#ageAssuranceOverrideEvent'],
+    })
+    expect(overrideEventsAfterPurge.length).toBe(1)
 
     // Status should be reset to unknown and updatedBy set to the purging moderator's DID
     const { subjectStatuses: afterPurge } = await modClient.queryStatuses({
@@ -245,7 +223,7 @@ describe('age assurance events', () => {
     ).rejects.toThrow('Invalid subject type')
   })
 
-  it('purge event only removes age assurance events, not other events', async () => {
+  it('purge event only removes ageAssuranceEvents, not overrides or other events', async () => {
     const carolSubject = {
       $type: 'com.atproto.admin.defs#repoRef',
       did: sc.dids.carol,
@@ -254,14 +232,13 @@ describe('age assurance events', () => {
     // Add a non-AA event that should survive the purge
     const commentEvent = await modClient.emitEvent({
       subject: carolSubject,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       event: {
         $type: 'tools.ozone.moderation.defs#modEventComment',
         comment: 'A non-AA comment that should survive purge',
-      } as any,
+      },
     })
 
-    // Add an AA event that should be removed
+    // Add an ageAssuranceEvent that should be removed
     await modClient.emitEvent({
       subject: carolSubject,
       event: {
@@ -269,6 +246,16 @@ describe('age assurance events', () => {
         status: 'pending',
         createdAt: new Date().toISOString(),
         attemptId: 'attempt-carol-purge-1',
+      },
+    })
+
+    // Add an ageAssuranceOverrideEvent that should survive the purge
+    const overrideEvent = await modClient.emitEvent({
+      subject: carolSubject,
+      event: {
+        $type: 'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+        status: 'assured',
+        comment: 'Override that should survive purge',
       },
     })
 
@@ -284,16 +271,11 @@ describe('age assurance events', () => {
       subject: sc.dids.carol,
     })
 
-    // AA events should be gone
-    const aaAfterPurge = afterPurge.filter(
-      (e) =>
-        e.event.$type === 'tools.ozone.moderation.defs#ageAssuranceEvent' ||
-        e.event.$type ===
-          'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+    const aaEventsAfterPurge = afterPurge.filter(
+      (e) => e.event.$type === 'tools.ozone.moderation.defs#ageAssuranceEvent',
     )
-    expect(aaAfterPurge.length).toBe(0)
-
-    // The non-AA comment event should still be present
+    expect(aaEventsAfterPurge.length).toBe(0)
+    expect(afterPurge.some((e) => e.id === overrideEvent.id)).toBe(true)
     expect(afterPurge.some((e) => e.id === commentEvent.id)).toBe(true)
   })
 
