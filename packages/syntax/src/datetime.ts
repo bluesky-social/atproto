@@ -105,7 +105,7 @@ export function assertDatetimeString<I>(
  * @throws InvalidDatetimeError if the input string does not meet the atproto 'datetime' format requirements.
  * @see {@link DatetimeString}
  */
-export function asDatetimeString(input: string): DatetimeString {
+export function asDatetimeString<I>(input: I): I & DatetimeString {
   assertDatetimeString(input)
   return input
 }
