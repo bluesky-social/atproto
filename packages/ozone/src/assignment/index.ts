@@ -47,6 +47,7 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueName: string | null
   queueSubjectTypes: string[] | null
   queueCollection: string | null
+  queueDescription: string | null
   queueReportTypes: string[] | null
   queueCreatedBy: string | null
   queueCreatedAt: string | null
@@ -81,6 +82,7 @@ export class AssignmentService {
         'report_queue.name as queueName',
         'report_queue.subjectTypes as queueSubjectTypes',
         'report_queue.collection as queueCollection',
+        'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
@@ -144,6 +146,7 @@ export class AssignmentService {
         'report_queue.name as queueName',
         'report_queue.subjectTypes as queueSubjectTypes',
         'report_queue.collection as queueCollection',
+        'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
@@ -259,6 +262,7 @@ export class AssignmentService {
         'report_queue.name as queueName',
         'report_queue.subjectTypes as queueSubjectTypes',
         'report_queue.collection as queueCollection',
+        'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
@@ -404,6 +408,7 @@ export class AssignmentService {
         'report_queue.name as queueName',
         'report_queue.subjectTypes as queueSubjectTypes',
         'report_queue.collection as queueCollection',
+        'report_queue.description as queueDescription',
         'report_queue.reportTypes as queueReportTypes',
         'report_queue.createdBy as queueCreatedBy',
         'report_queue.createdAt as queueCreatedAt',
@@ -430,6 +435,7 @@ export class AssignmentService {
       subjectTypes: row.queueSubjectTypes ?? [],
       collection: row.queueCollection,
       reportTypes: row.queueReportTypes ?? [],
+      description: row.queueDescription ?? null,
       createdBy: row.queueCreatedBy ?? '',
       createdAt: row.queueCreatedAt ?? '',
       updatedAt: row.queueUpdatedAt ?? '',

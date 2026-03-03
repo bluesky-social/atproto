@@ -12,11 +12,15 @@ export default function (server: Server, ctx: AppContext) {
         throw new AuthRequiredError('Must be a moderator to update a queue')
       }
 
-      const { queueId, name, enabled } = input.body
+      const { queueId, name, enabled, description } = input.body
 
-      if (name === undefined && enabled === undefined) {
+      if (
+        name === undefined &&
+        enabled === undefined &&
+        description === undefined
+      ) {
         throw new InvalidRequestError(
-          'At least one of name or enabled must be provided',
+          'At least one of name, enabled, or description must be provided',
         )
       }
 
@@ -30,9 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const updates: { name?: string; enabled?: boolean } = {}
+      const updates: { name?: string; enabled?: boolean; description?: string } =
+        {}
       if (name !== undefined) updates.name = name
       if (enabled !== undefined) updates.enabled = enabled
+      if (description !== undefined) updates.description = description
 
       const queue = await queueService.update(queueId, updates)
 

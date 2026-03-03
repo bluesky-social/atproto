@@ -8,6 +8,7 @@ export interface ReportQueue {
   subjectTypes: string[] // ['account'] or ['record'] or ['account', 'record']
   collection: string | null // Collection name (e.g., 'app.bsky.feed.post'), NULL for accounts
   reportTypes: string[] // Array of report reason types (fully qualified NSIDs)
+  description: string | null // Optional description of the queue
   createdBy: string // DID of moderator who created this queue
   createdAt: string
   updatedAt: string

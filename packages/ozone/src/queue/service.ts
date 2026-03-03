@@ -62,12 +62,14 @@ export class QueueService {
     subjectTypes,
     collection,
     reportTypes,
+    description,
     createdBy,
   }: {
     name: string
     subjectTypes: string[]
     collection?: string | null
     reportTypes: string[]
+    description?: string | null
     createdBy: string
   }): Promise<Selectable<ReportQueue>> {
     const now = new Date().toISOString()
@@ -78,6 +80,7 @@ export class QueueService {
         subjectTypes: jsonb(subjectTypes),
         collection: collection ?? null,
         reportTypes: jsonb(reportTypes),
+        description: description ?? null,
         createdBy,
         enabled: true,
         createdAt: now,
@@ -98,7 +101,7 @@ export class QueueService {
 
   async update(
     id: number,
-    updates: { name?: string; enabled?: boolean },
+    updates: { name?: string; enabled?: boolean; description?: string },
   ): Promise<Selectable<ReportQueue>> {
     const now = new Date().toISOString()
     return await this.db.db
@@ -210,6 +213,7 @@ export class QueueService {
       subjectTypes: queue.subjectTypes,
       collection: queue.collection ?? undefined,
       reportTypes: queue.reportTypes,
+      description: queue.description ?? undefined,
       createdBy: queue.createdBy,
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,
