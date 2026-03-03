@@ -48,15 +48,15 @@ export class NSID {
     return this.segments
       .slice(0, this.segments.length - 1)
       .reverse()
-      .join('.')
+      .join('.') as `${string}.${string}`
   }
 
   get name() {
     return this.segments.at(this.segments.length - 1)
   }
 
-  toString() {
-    return this.segments.join('.')
+  toString(): NsidString {
+    return this.segments.join('.') as NsidString
   }
 }
 
