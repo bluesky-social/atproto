@@ -1,5 +1,13 @@
 # @atproto/lex-data
 
+## 0.0.13
+
+### Patch Changes
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove concept of "downstream error response" (`toResponse()` method) from the `LexError` class
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve messaging of various errors by making them more precisely describe what happened.
+
 ## 0.0.12
 
 ### Patch Changes

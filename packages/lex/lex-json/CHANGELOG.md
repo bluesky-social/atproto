@@ -1,5 +1,12 @@
 # @atproto/lex-json
 
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies [[`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7)]:
+  - @atproto/lex-data@0.0.13
+
 ## 0.0.12
 
 ### Patch Changes

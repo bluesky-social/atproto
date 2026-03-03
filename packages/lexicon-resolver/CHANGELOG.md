@@ -1,5 +1,18 @@
 # @atproto/lexicon-resolver
 
+## 0.3.0
+
+### Minor Changes
+
+- [#4697](https://github.com/bluesky-social/atproto/pull/4697) [`1c473ab`](https://github.com/bluesky-social/atproto/commit/1c473ab555d734fa1bb68d3cdb2e17a94929afd3) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace `@atproto/lex-cli` based codegen with `@atproto/lex`
+
+### Patch Changes
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`e8969b6`](https://github.com/bluesky-social/atproto/commit/e8969b6b3d3fed8912be53fd72b4d5288ca34766), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/lex@0.0.20
+  - @atproto/lex-document@0.0.15
+
 ## 0.2.6
 
 ### Patch Changes
