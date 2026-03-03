@@ -1,4 +1,5 @@
 import AtpAgent, {
+  ComAtprotoModerationDefs,
   ToolsOzoneQueueAssignModerator,
   ToolsOzoneReportAssignModerator,
   ToolsOzoneReportGetAssignments,
@@ -59,6 +60,23 @@ describe('report-assignment', () => {
     await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
   }
 
+  const createReport = async (): Promise<number> => {
+    const event = await sc.createReport({
+      reasonType: ComAtprotoModerationDefs.REASONSPAM,
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.bob,
+      },
+      reportedBy: sc.dids.alice,
+    })
+    const report = await network.ozone.ctx.db.db
+      .selectFrom('report')
+      .select('id')
+      .where('eventId', '=', event.id)
+      .executeTakeFirstOrThrow()
+    return report.id
+  }
+
   const createQueue = async (name: string, reportTypes: string[]) => {
     const { data } = await agent.tools.ozone.queue.createQueue(
       {
@@ -101,7 +119,7 @@ describe('report-assignment', () => {
   })
 
   it('can get assignment history', async () => {
-    const reportId = 1001
+    const reportId = await createReport()
     await assignReportModerator(
       {
         reportId,
@@ -114,7 +132,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can assigned', async () => {
-    const reportId = 1002
+    const reportId = await createReport()
     const assignment1 = await assignReportModerator(
       {
         reportId,
@@ -130,7 +148,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can refresh assignment', async () => {
-    const reportId = 1003
+    const reportId = await createReport()
     const assignment1 = await assignReportModerator(
       {
         reportId,
@@ -152,7 +170,7 @@ describe('report-assignment', () => {
   })
 
   it('moderator can assign then un-assign a report', async () => {
-    const reportId = 1004
+    const reportId = await createReport()
     await assignReportModerator(
       {
         reportId,
@@ -173,7 +191,7 @@ describe('report-assignment', () => {
   })
 
   it('assignment can be exchanged', async () => {
-    const reportId = 1005
+    const reportId = await createReport()
     await assignReportModerator(
       {
         reportId,
@@ -203,7 +221,7 @@ describe('report-assignment', () => {
   })
 
   it('invalid assignment throws error', async () => {
-    const reportId = 1006
+    const reportId = 999999
     await expect(
       assignReportModerator(
         {
@@ -218,9 +236,12 @@ describe('report-assignment', () => {
   describe('pagination', () => {
     it('paginates assignments with limit', async () => {
       await clearAssignments()
-      await assignReportModerator({ reportId: 2001, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2002, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2003, assign: true }, 'admin')
+      const r1 = await createReport()
+      const r2 = await createReport()
+      const r3 = await createReport()
+      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r3, assign: true }, 'admin')
 
       const firstPage = await getAssignments({ limit: 2 })
       expect(firstPage.assignments.length).toBe(2)
@@ -229,8 +250,10 @@ describe('report-assignment', () => {
 
     it('returns all results when limit exceeds total', async () => {
       await clearAssignments()
-      await assignReportModerator({ reportId: 2101, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2102, assign: true }, 'admin')
+      const r1 = await createReport()
+      const r2 = await createReport()
+      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
 
       const result = await getAssignments({ limit: 50 })
       expect(result.assignments.length).toBe(2)
@@ -239,9 +262,12 @@ describe('report-assignment', () => {
 
     it('fetches next page using cursor', async () => {
       await clearAssignments()
-      await assignReportModerator({ reportId: 2201, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2202, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2203, assign: true }, 'admin')
+      const r1 = await createReport()
+      const r2 = await createReport()
+      const r3 = await createReport()
+      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r3, assign: true }, 'admin')
 
       const firstPage = await getAssignments({ limit: 2 })
       expect(firstPage.assignments.length).toBe(2)
@@ -264,9 +290,12 @@ describe('report-assignment', () => {
 
     it('returns all assignments across pages', async () => {
       await clearAssignments()
-      await assignReportModerator({ reportId: 2301, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2302, assign: true }, 'admin')
-      await assignReportModerator({ reportId: 2303, assign: true }, 'admin')
+      const r1 = await createReport()
+      const r2 = await createReport()
+      const r3 = await createReport()
+      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
+      await assignReportModerator({ reportId: r3, assign: true }, 'admin')
 
       // Collect all assignments via pagination
       const allAssignments: typeof firstPage.assignments = []
@@ -289,19 +318,19 @@ describe('report-assignment', () => {
 
     it('applies filters alongside pagination', async () => {
       await clearAssignments()
-      const reportId1 = 2401
-      const reportId2 = 2402
-      const reportId3 = 2403
+      const r1 = await createReport()
+      const r2 = await createReport()
+      const r3 = await createReport()
       await assignReportModerator(
-        { reportId: reportId1, assign: true },
+        { reportId: r1, assign: true },
         'admin',
       )
       await assignReportModerator(
-        { reportId: reportId2, assign: true },
+        { reportId: r2, assign: true },
         'admin',
       )
       await assignReportModerator(
-        { reportId: reportId3, assign: true },
+        { reportId: r3, assign: true },
         'moderator',
       )
 
@@ -324,7 +353,7 @@ describe('report-assignment', () => {
   })
 
   it('hydrates queue when queueId is provided', async () => {
-    const reportId = 3001
+    const reportId = await createReport()
     const assignment = await assignReportModerator(
       {
         reportId,
@@ -341,7 +370,7 @@ describe('report-assignment', () => {
   })
 
   it('omits queue when no queueId is provided', async () => {
-    const reportId = 3002
+    const reportId = await createReport()
     const assignment = await assignReportModerator(
       {
         reportId,
@@ -355,7 +384,7 @@ describe('report-assignment', () => {
 
   it('hydrates queue in getAssignments', async () => {
     await clearAssignments()
-    const reportId = 3003
+    const reportId = await createReport()
     await assignReportModerator({ reportId, queueId, assign: true }, 'admin')
     const result = await getAssignments({ reportIds: [reportId] })
     expect(result.assignments.length).toBe(1)
@@ -365,7 +394,7 @@ describe('report-assignment', () => {
   })
 
   it('cannot double assign', async () => {
-    const reportId = 3004
+    const reportId = await createReport()
     await assignReportModerator(
       {
         reportId,
