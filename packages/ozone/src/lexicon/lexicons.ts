@@ -19388,6 +19388,10 @@ export const schemaDict = {
             name: 'AlreadyAssigned',
             description: 'The report is already assigned to another user.',
           },
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID or queue ID is invalid.',
+          },
         ],
       },
     },

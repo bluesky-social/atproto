@@ -195,19 +195,20 @@ export class AssignmentService {
     const now = new Date()
     const endAt = new Date(now.getTime() + this.opts.queueDurationMs)
 
-    const result = await this.db.transaction(async (dbTxn) => {
-      // Check queue
-      const queue = await dbTxn.db
-        .selectFrom('report_queue')
-        .selectAll()
-        .where('id', '=', queueId)
-        .where('deletedAt', 'is', null)
-        .executeTakeFirst()
-      if (!queue || !queue.enabled) {
-        throw new InvalidRequestError('Invalid queue', 'QueueInvalid')
-      }
+    // Check queue since we aren't using foreign keys
+    const queue = await this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('id', '=', queueId)
+      .where('enabled', '=', true)
+      .where('deletedAt', 'is', null)
+      .executeTakeFirst()
+    if (!queue) {
+      throw new InvalidRequestError('Invalid queue', 'QueueInvalid')
+    }
 
-      // Check assignment
+    // Make assignment
+    const result = await this.db.transaction(async (dbTxn) => {
       const existing = await dbTxn.db
         .selectFrom('moderator_assignment')
         .selectAll()
@@ -278,6 +279,29 @@ export class AssignmentService {
       ? new Date(now.getTime() + this.opts.reportDurationMs)
       : now
 
+    // Check report and queue since we aren't using foreign keys
+    const report = await this.db.db
+      .selectFrom('report')
+      .selectAll()
+      .where('id', '=', reportId)
+      .executeTakeFirst()
+    if (!report) {
+      throw new InvalidRequestError('Invalid report', 'InvalidAssignment')
+    }
+    if (queueId !== undefined && queueId !== null) {
+      const queue = await this.db.db
+        .selectFrom('report_queue')
+        .selectAll()
+        .where('id', '=', queueId)
+        .where('enabled', '=', true)
+        .where('deletedAt', 'is', null)
+        .executeTakeFirst()
+      if (!queue) {
+        throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
+      }
+    }
+
+    // Make assignment
     const result = await this.db.transaction(async (dbTxn) => {
       const existing = await dbTxn.db
         .selectFrom('moderator_assignment')

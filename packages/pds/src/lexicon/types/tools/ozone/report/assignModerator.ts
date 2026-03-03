@@ -42,7 +42,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AlreadyAssigned'
+  error?: 'AlreadyAssigned' | 'InvalidAssignment'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
