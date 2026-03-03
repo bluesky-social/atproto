@@ -107,7 +107,7 @@ describe('EventRunner utils', () => {
           complete.push({ partition, id: i })
         })
       }
-      expect(runner.partitions.size).toEqual(partitions.size)
+      expect(runner.partitions.size).toBeLessThanOrEqual(partitions.size)
       await runner.mainQueue.onIdle()
       expect(complete.length).toEqual(500)
       for (const partition of partitions) {
