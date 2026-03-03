@@ -157,7 +157,7 @@ describe('Lexicon resolution', () => {
         name: 'LexiconResolutionError',
         message: 'Invalid Lexicon document (example.alice.baddoc)',
         cause: expect.objectContaining({
-          name: 'ValidationError',
+          name: 'LexValidationError',
         }),
       }),
     )
