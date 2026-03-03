@@ -135,12 +135,13 @@ export function ifDatetimeString<I>(
  * Converts any {@link Date} into a {@link DatetimeString} if possible, throwing
  * an error if the date is not a valid atproto datetime.
  *
+ * This is short-hand for `asAtprotoDate(date).toISOString()`.
+ *
  * @throws InvalidDatetimeError if the input date is not a valid atproto datetime (eg, it is too far in the future or past, or it normalizes to a negative year).
+ * @see {@link DatetimeString}
  */
 export function toDatetimeString(date: Date): DatetimeString {
-  const res = parseDate(date)
-  if (res.success) return res.value.toISOString()
-  throw new InvalidDatetimeError(res.message)
+  return asAtprotoDate(date).toISOString()
 }
 
 /**
