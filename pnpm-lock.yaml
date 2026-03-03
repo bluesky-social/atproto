@@ -1149,28 +1149,22 @@ importers:
       '@atproto/identity':
         specifier: workspace:^
         version: link:../identity
-      '@atproto/lexicon':
+      '@atproto/lex':
         specifier: workspace:^
-        version: link:../lexicon
+        version: link:../lex/lex
+      '@atproto/lex-document':
+        specifier: workspace:^
+        version: link:../lex/lex-document
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
-      '@atproto/xrpc':
-        specifier: workspace:^
-        version: link:../xrpc
-      multiformats:
-        specifier: ^9.9.0
-        version: 9.9.0
     devDependencies:
-      '@atproto/common':
+      '@atproto/lex-cbor':
         specifier: workspace:^
-        version: link:../common
-      '@atproto/lex-cli':
-        specifier: workspace:^
-        version: link:../lex-cli
+        version: link:../lex/lex-cbor
       jest:
         specifier: ^28.1.2
         version: 28.1.2(@types/node@18.19.67)(ts-node@10.8.2)
@@ -2202,9 +2196,18 @@ importers:
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
+      '@atproto/lex-client':
+        specifier: workspace:^
+        version: link:../lex/lex-client
       '@atproto/lex-data':
         specifier: workspace:^
         version: link:../lex/lex-data
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex/lex-json
+      '@atproto/lex-schema':
+        specifier: workspace:^
+        version: link:../lex/lex-schema
       '@atproto/lexicon':
         specifier: workspace:^
         version: link:../lexicon
@@ -2229,10 +2232,13 @@ importers:
       ws:
         specifier: ^8.12.0
         version: 8.12.0
-      zod:
-        specifier: ^3.23.8
-        version: 3.24.2
     devDependencies:
+      '@atproto/lex':
+        specifier: workspace:^
+        version: link:../lex/lex
+      '@atproto/lex-document':
+        specifier: workspace:^
+        version: link:../lex/lex-document
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.13

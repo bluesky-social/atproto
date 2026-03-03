@@ -1,12 +1,21 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
 import express from 'express'
-import * as xrpc from '../src'
-import { AuthRequiredError } from '../src'
+import {
+  LexiconDocument,
+  LexiconIterableIndexer,
+  LexiconSchemaBuilder,
+} from '@atproto/lex-document'
+import { LexiconDoc } from '@atproto/lexicon'
+import {
+  AuthRequiredError,
+  MethodConfigOrHandler,
+  Options,
+  Server,
+  StreamConfigOrHandler,
+} from '../src'
 
-export async function createServer({
-  router,
-}: xrpc.Server): Promise<http.Server> {
+export async function createServer({ router }: Server): Promise<http.Server> {
   const app = express()
   app.use(router)
   const httpServer = app.listen(0)
@@ -52,4 +61,52 @@ export function basicAuthHeaders(creds: {
       'Basic ' +
       Buffer.from(`${creds.username}:${creds.password}`).toString('base64'),
   }
+}
+
+/**
+ * Builds a lexicon server based on an `@atproto/lexicon`
+ * {@link import('@atproto/lexicon').Lexicons} instance. Validation will be
+ * performed by {@link import('@atproto/lexicon').Lexicons}'s various assertion
+ * methods. This allows for testing the server's integration with
+ * `@atproto/lexicon`.
+ */
+export async function buildMethodLexicons(
+  lexicons: LexiconDoc[],
+  handlers: Record<string, MethodConfigOrHandler | StreamConfigOrHandler>,
+  options?: Options,
+) {
+  const server = new Server(structuredClone(lexicons), options)
+  for (const [id, handler] of Object.entries(handlers)) {
+    const def = server.lex.getDef(id)
+    if (def?.type === 'subscription') {
+      server.addStreamMethod(id, handler as StreamConfigOrHandler)
+    } else {
+      server.method(id, handler as MethodConfigOrHandler)
+    }
+  }
+  return server
+}
+
+/**
+ * Builds a lexicon server based on `@atproto/lex`'s
+ * {@link import('@atproto/lex').Query},
+ * {@link import('@atproto/lex').Procedure}, and
+ * {@link import('@atproto/lex').Subscription} method definitions. Validation
+ * will be performed through built schema verifiers created by
+ * {@link LexiconSchemaBuilder}. This helper allows for testing the server's
+ * integration with `@atproto/lex`.
+ */
+export async function buildAddLexicons(
+  lexicons: LexiconDocument[],
+  handlers: Record<string, MethodConfigOrHandler | StreamConfigOrHandler>,
+  options?: Options,
+) {
+  const server = new Server(undefined, options)
+  await using indexer = new LexiconIterableIndexer(structuredClone(lexicons))
+  await using builder = new LexiconSchemaBuilder(indexer)
+  for (const [id, handler] of Object.entries(handlers)) {
+    const schema = await builder.buildFullRef(`${id}#main`)
+    server.add(schema as any, handler as any)
+  }
+  return server
 }

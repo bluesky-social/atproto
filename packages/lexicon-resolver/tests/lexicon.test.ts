@@ -1,5 +1,5 @@
 import { SeedClient, TestNetworkNoAppView, usersSeed } from '@atproto/dev-env'
-import { NSID } from '@atproto/syntax'
+import { DidString, NSID } from '@atproto/syntax'
 import {
   AtprotoLexiconResolver,
   buildLexiconResolver,
@@ -157,7 +157,7 @@ describe('Lexicon resolution', () => {
         name: 'LexiconResolutionError',
         message: 'Invalid Lexicon document (example.alice.baddoc)',
         cause: expect.objectContaining({
-          name: 'ZodError',
+          name: 'ValidationError',
         }),
       }),
     )
@@ -184,7 +184,7 @@ describe('Lexicon resolution', () => {
       sc.getHeaders(sc.dids.carol),
     )
     const result = await resolveLexicon('example.alice.override', {
-      didAuthority: sc.dids.carol,
+      didAuthority: sc.dids.carol as DidString,
       forceRefresh: true,
     })
     expect(result.commit.did).toEqual(sc.dids.carol)
@@ -248,6 +248,7 @@ describe('Lexicon resolution', () => {
     })
 
     it('fails on invalid NSID', async () => {
+      // @ts-expect-error testing invalid input
       await expect(resolveLexiconDidAuthority('not an nsid')).rejects.toThrow(
         'Disallowed characters in NSID',
       )
