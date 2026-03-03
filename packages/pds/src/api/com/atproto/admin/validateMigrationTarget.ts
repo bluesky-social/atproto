@@ -41,8 +41,9 @@ export default function (server: Server, ctx: AppContext) {
         if (legalId) {
           const existingLink = await ctx.accountManager.db.db
             .selectFrom('neuro_identity_link')
-            .select(['did', 'legalId'])
-            .where('legalId', '=', legalId)
+            .select(['did', 'userJid', 'testUserJid'])
+            .where('userJid', '=', legalId)
+            .where('isTestUser', '=', 0)
             .executeTakeFirst()
 
           checks.legalIdAvailable = !existingLink || existingLink.did === did

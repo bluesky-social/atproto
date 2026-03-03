@@ -8,6 +8,8 @@ export type NeuroCallbackPayload = {
   SessionId: string
   State: string
   JID?: string
+  istestuser?: string // "true" for test users; missing = non-test (WP1)
+  preferredhandle?: string // Optional suggested handle for first create (WP1)
   Provider?: string
   Domain?: string
   Key?: string
@@ -19,75 +21,40 @@ export type NeuroCallbackPayload = {
 }
 
 /**
- * Extract email from Neuro properties (case-insensitive)
+ * Parse and validate QuickLogin payload (WP1)
+ * Returns parsed fields with defaults
  */
-export function extractEmail(
-  properties?: Record<string, any>,
-): string | undefined {
-  if (!properties) return undefined
-
-  // Try common cases
-  if (properties.EMAIL) return properties.EMAIL
-  if (properties.email) return properties.email
-  if (properties.Email) return properties.Email
-
-  // Case-insensitive search
-  const emailKey = Object.keys(properties).find(
-    (key) => key.toLowerCase() === 'email',
-  )
-  return emailKey ? properties[emailKey] : undefined
+export function parseQuickLoginPayload(payload: NeuroCallbackPayload) {
+  return {
+    jid: payload.JID || '',
+    isTestUser: payload.istestuser === 'true' ? 1 : 0,
+    preferredHandle: payload.preferredhandle || undefined,
+  }
 }
 
 /**
- * Extract user name from Neuro properties (case-insensitive)
- * Returns lowercase name for Caddy compatibility
- */
-export function extractUserName(
-  properties?: Record<string, any>,
-): string | undefined {
-  if (!properties) return undefined
-
-  // Try common cases
-  if (properties.NAME) return properties.NAME.toLowerCase()
-  if (properties.name) return properties.name.toLowerCase()
-  if (properties.Name) return properties.Name.toLowerCase()
-
-  // Case-insensitive search
-  const nameKey = Object.keys(properties).find(
-    (key) => key.toLowerCase() === 'name',
-  )
-  return nameKey ? properties[nameKey].toLowerCase() : undefined
-}
-
-/**
- * Derive available handle from email or preferred handle
- * Priority: preferredHandle → email-based → timestamp
+ * Derive available handle from preferred handle or fallback to "auto" + numeric suffix (WP4)
+ * - If preferredHandle provided: normalize to lowercase, validate, use
+ * - If invalid or taken: fall back to "auto<digits>"
+ * - Never use email (privacy separation: no identity fields in PDS)
  */
 export async function deriveAvailableHandle(
   ctx: AppContext,
-  email?: string,
-  preferredHandle?: string | null,
+  preferredHandle?: string,
 ): Promise<string> {
-  let baseName: string
+  let baseName = 'auto' // Default fallback base
 
   if (preferredHandle) {
-    // Use preferred handle if provided
-    baseName = preferredHandle
+    // Normalize preferred handle: lowercase, alphanumeric + dash only
+    const normalized = preferredHandle
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-') // Replace non-alphanumeric with dash
-      .replace(/-+/g, '-') // Collapse multiple dashes
+      .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric except dash
       .replace(/^-|-$/g, '') // Remove leading/trailing dashes
-  } else if (email) {
-    // Extract username from email (e.g., "john.doe@example.com" → "john-doe")
-    const emailUsername = email.split('@')[0]
-    baseName = emailUsername
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-') // Replace non-alphanumeric with dash
-      .replace(/-+/g, '-') // Collapse multiple dashes
-      .replace(/^-|-$/g, '') // Remove leading/trailing dashes
-  } else {
-    // Fallback to timestamp-based handle
-    baseName = `ql-${Date.now()}`
+
+    // Use normalized handle if non-empty and different from "auto"
+    if (normalized && normalized !== 'auto') {
+      baseName = normalized
+    }
   }
 
   // Try base handle first
@@ -98,7 +65,7 @@ export async function deriveAvailableHandle(
     return handle
   }
 
-  // Handle taken, append random digits
+  // Handle taken or base is "auto" - append random digits until available (WP4 fallback)
   let suffix = ''
   for (let attempts = 0; attempts < 10; attempts++) {
     const randomDigit = Math.floor(Math.random() * 10)
@@ -111,22 +78,29 @@ export async function deriveAvailableHandle(
     }
   }
 
-  // Safety fallback: use timestamp
-  return `ql-${Date.now()}.${ctx.cfg.service.hostname}`
+  // Safety fallback: use timestamp-based handle
+  return `auto-${Date.now()}.${ctx.cfg.service.hostname}`
 }
 
 /**
- * Create new account via QuickLogin and return credentials
+ * Create new account via QuickLogin callback (WP3/WP4)
+ * Privacy-separated: only jid (pseudonymous) and isTestUser (policy marker) stored
+ * No identity fields (email, userName) cached from callback
  */
 export async function createAccountViaQuickLogin(
   ctx: AppContext,
-  legalId: string,
-  email?: string,
-  userName?: string,
-  preferredHandle?: string | null,
+  jid: string,
+  isTestUser: number,
+  preferredHandle?: string,
+  log?: any,
+  sessionId?: string,
 ): Promise<QuickLoginResult> {
-  // Derive handle from preferred handle, email, or fallback
-  const handle = await deriveAvailableHandle(ctx, email, preferredHandle)
+  // WP4: Derive handle (preferredHandle → auto+suffix fallback)
+  const handle = await deriveAvailableHandle(ctx, preferredHandle)
+
+  if (log && sessionId) {
+    log.info({ sessionId, derived: handle }, 'Handle derived for new account')
+  }
 
   // Generate signing keypair
   const signingKey = await Secp256k1Keypair.create({ exportable: true })
@@ -151,30 +125,44 @@ export async function createAccountViaQuickLogin(
   // Publish DID to PLC
   await ctx.plcClient.sendOperation(did, plcCreate.op)
 
-  // Create account (without password)
+  // Create account (without password; no email for QuickLogin)
   await ctx.accountManager.createAccount({
     did,
     handle,
-    email: email,
+    email: undefined, // No email stored; privacy separation
     password: undefined, // No password for QuickLogin accounts
     repoCid: commit.cid,
     repoRev: commit.rev,
   })
 
-  // Link Neuro identity (QuickLogin is for real users only)
+  // Email verified by Neuro identity system (just not stored in PDS)
+  // Set emailConfirmedAt to enable full account functionality
+  await ctx.accountManager.db.db
+    .updateTable('account')
+    .set({ emailConfirmedAt: new Date().toISOString() })
+    .where('did', '=', did)
+    .execute()
+
+  // Link Neuro identity (WP3: atomic create)
+  // Store only pseudonymous JID key; no identity attributes from callback
+  const linkData = {
+    did,
+    isTestUser,
+    linkedAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString(),
+    ...(isTestUser === 1
+      ? { testUserJid: jid, userJid: null } // Test user: testUserJid
+      : { userJid: jid, testUserJid: null }), // Real user: userJid
+  }
+
   await ctx.accountManager.db.db
     .insertInto('neuro_identity_link')
-    .values({
-      legalId: legalId, // Real users use Legal ID
-      jid: null, // NULL for real users
-      did,
-      email: email || null,
-      userName: userName || null,
-      isTestUser: 0, // QuickLogin is always for real users (0 = real, 1 = test)
-      linkedAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString(),
-    })
+    .values(linkData as any)
     .execute()
+
+  if (log && sessionId) {
+    log.info({ sessionId, created: did }, 'Neuro identity link created')
+  }
 
   // Sequence events
   await ctx.sequencer.sequenceIdentityEvt(did, handle)

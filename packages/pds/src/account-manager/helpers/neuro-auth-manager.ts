@@ -485,19 +485,21 @@ export class NeuroAuthManager {
       throw new Error('Server configuration error. Please contact support.')
     }
 
-    // First try Legal ID (real users)
+    // First try userJid (real users)
     let result = await this.db.db
       .selectFrom('neuro_identity_link')
       .select('did')
-      .where('legalId', '=', jid)
+      .where('userJid', '=', jid)
+      .where('isTestUser', '=', 0)
       .executeTakeFirst()
 
-    // Fallback to JID column (test users)
+    // Fallback to testUserJid (test users)
     if (!result) {
       result = await this.db.db
         .selectFrom('neuro_identity_link')
         .select('did')
-        .where('jid', '=', jid)
+        .where('testUserJid', '=', jid)
+        .where('isTestUser', '=', 1)
         .executeTakeFirst()
     }
 
@@ -533,11 +535,9 @@ export class NeuroAuthManager {
     await this.db.db
       .insertInto('neuro_identity_link')
       .values({
-        legalId: jid, // For real users (Legal ID) - test users will set this to null
-        jid: null, // For test users only
+        userJid: jid, // For real users (pseudonymous JID)
+        testUserJid: null, // For test users only
         did,
-        email: email || null,
-        userName: userName || null,
         isTestUser: 0, // 0 = real user, 1 = test user
         linkedAt: new Date().toISOString(),
         lastLoginAt: null,
@@ -553,11 +553,12 @@ export class NeuroAuthManager {
       throw new Error('Database not configured')
     }
 
-    // Update for either legal ID or JID
+    // Update for either userJid (real) or testUserJid (test)
+    // Try both since we don't know which type this JID is
     await this.db.db
       .updateTable('neuro_identity_link')
       .set({ lastLoginAt: new Date().toISOString() })
-      .where((eb) => eb.where('legalId', '=', jid).orWhere('jid', '=', jid))
+      .where((eb) => eb.where('userJid', '=', jid).orWhere('testUserJid', '=', jid))
       .execute()
   }
 

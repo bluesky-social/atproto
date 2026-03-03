@@ -311,4 +311,107 @@ describe('auth', () => {
       error: 'AccountTakedown',
     })
   })
+
+  describe('RemoteLogin Removal Regression Tests', () => {
+    it('createSession works with standard password (no RemoteLogin wid: prefix)', async () => {
+      const email = 'regtest1@test.com'
+      await createAccount({
+        handle: 'regtest1.test',
+        email,
+        password: 'mypassword123',
+      })
+
+      // Should NOT accept "wid:" prefix (RemoteLogin is removed)
+      const session = await createSession({
+        identifier: 'regtest1.test',
+        password: 'mypassword123',
+      })
+
+      expect(session.handle).toBe('regtest1.test')
+      expect(session.did).toBeTruthy()
+      expect(session.accessJwt).toBeTruthy()
+    })
+
+    it('createSession rejects RemoteLogin-style wid: password prefix', async () => {
+      const email = 'regtest2@test.com'
+      await createAccount({
+        handle: 'regtest2.test',
+        email,
+        password: 'mypassword',
+      })
+
+      // RemoteLogin used "wid:" prefix - should fail now
+      await expect(
+        createSession({
+          identifier: 'regtest2.test',
+          password: 'wid:mypassword',
+        }),
+      ).rejects.toThrow('Invalid identifier or password')
+    })
+
+    it('createSession does not treat @legal. usernames specially', async () => {
+      const email = 'regtest3@test.com'
+      const account = await createAccount({
+        handle: 'regtest3.test',
+        email,
+        password: 'normalpass',
+      })
+
+      // RemoteLogin allowed usernames like "user@legal.domain.io"
+      // Now these are just invalid identifiers
+      await expect(
+        createSession({
+          identifier: 'regtest3@legal.test.com',
+          password: 'normalpass',
+        }),
+      ).rejects.toThrow()
+
+      // Standard handle login should work
+      const session = await createSession({
+        identifier: 'regtest3.test',
+        password: 'normalpass',
+      })
+      expect(session.did).toBe(account.did)
+    })
+
+    it('createAccount works with standard password', async () => {
+      const account = await createAccount({
+        handle: 'regtest4.test',
+        email: 'regtest4@test.com',
+        password: 'standardPassword456',
+      })
+
+      expect(account.handle).toBe('regtest4.test')
+      expect(account.did).toBeTruthy()
+      expect(account.accessJwt).toBeTruthy()
+
+      // Can login with standard credentials
+      const session = await createSession({
+        identifier: 'regtest4.test',
+        password: 'standardPassword456',
+      })
+      expect(session.did).toBe(account.did)
+    })
+
+    it('createAccount does not perform Legal ID validation', async () => {
+      // RemoteLogin used to validate Legal ID uniqueness during createAccount
+      // This should no longer happen
+      const account1 = await createAccount({
+        handle: 'regtest5.test',
+        email: 'regtest5@test.com',
+        password: 'pass123',
+      })
+
+      const account2 = await createAccount({
+        handle: 'regtest6.test',
+        email: 'regtest6@test.com',
+        password: 'pass456',
+      })
+
+      // Both should succeed without Legal ID checks
+      expect(account1.did).toBeTruthy()
+      expect(account2.did).toBeTruthy()
+      expect(account1.did).not.toBe(account2.did)
+    })
+  })
 })

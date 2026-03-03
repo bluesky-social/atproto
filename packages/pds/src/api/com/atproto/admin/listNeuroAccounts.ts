@@ -33,17 +33,26 @@ export default function (server: Server, ctx: AppContext) {
         .limit(limit + 1)
         .execute()
 
-      // Query neuro links
+      // Query ALL neuro links (a DID may have multiple rows — e.g. one from the
+      // webhook with the real legalId and one from the first QuickLogin with the
+      // JID stored as legalId by the old code).
       const dids = accounts.map((acc) => acc.did)
-      const neuroLinks = dids.length
+      const allNeuroLinks = dids.length
         ? await ctx.accountManager.db.db
             .selectFrom('neuro_identity_link')
             .selectAll()
             .where('did', 'in', dids)
+            .orderBy('linkedAt', 'asc')
             .execute()
         : []
 
-      const neuroLinkMap = new Map(neuroLinks.map((link) => [link.did, link]))
+      // Group all rows by DID
+      const neuroLinksByDid = new Map<string, typeof allNeuroLinks>()
+      for (const link of allNeuroLinks) {
+        const existing = neuroLinksByDid.get(link.did) ?? []
+        existing.push(link)
+        neuroLinksByDid.set(link.did, existing)
+      }
 
       // Paginate
       const hasMore = accounts.length > limit
@@ -56,16 +65,27 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           accounts: accountsToReturn.map((account) => {
-            const neuroLink = neuroLinkMap.get(account.did)
+            const links = neuroLinksByDid.get(account.did) ?? []
+            const primary = links[0] // oldest row (from webhook) is the canonical one
             return {
               did: account.did,
               handle: account.handle || '',
               email: account.email || undefined,
-              legalId: neuroLink?.legalId || undefined,
-              jid: neuroLink?.jid || undefined,
-              isTestUser: neuroLink ? Boolean(neuroLink.isTestUser) : undefined,
-              linkedAt: neuroLink?.linkedAt || undefined,
-              lastLoginAt: neuroLink?.lastLoginAt || undefined,
+              // Top-level scalar fields use the primary (oldest) row for backward compat
+              legalId: primary?.userJid || primary?.testUserJid || undefined,
+              jid: primary?.testUserJid || undefined,
+              isTestUser: primary ? Boolean(primary.isTestUser) : undefined,
+              linkedAt: primary?.linkedAt || undefined,
+              lastLoginAt: primary?.lastLoginAt || undefined,
+              // Full list of all rows — includes duplicates when present
+              neuroLinks: links.map((l) => ({
+                legalId: l.userJid || l.testUserJid || undefined,
+                jid: l.testUserJid || undefined,
+                isTestUser: Boolean(l.isTestUser),
+                linkedAt: l.linkedAt || undefined,
+                lastLoginAt: l.lastLoginAt || undefined,
+              })),
+              duplicateLinks: links.length > 1,
             }
           }),
           cursor: nextCursor || undefined,

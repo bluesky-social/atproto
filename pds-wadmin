@@ -848,16 +848,23 @@ const d=process.env.PDS_DATA_DIRECTORY;
 if(d){dbPath=path.join(d,'account.sqlite');}
 else{for(const p of['/data/account.sqlite','/var/run/account.sqlite','/var/run/pds/account.sqlite']){if(fs.existsSync(p)){dbPath=p;break;}}}
 if(!dbPath||!fs.existsSync(dbPath)){console.error('ERROR: account.sqlite not found');process.exit(1);}
-const db=new DB(dbPath,{readonly:true});
-const rows=db.prepare(sql).all();
-db.close();
-if(rows.length===0){console.log('(no rows)');process.exit(0);}
-const cols=Object.keys(rows[0]);
-const widths=cols.map(c=>Math.max(c.length,...rows.map(r=>String(r[c]??'').length)));
-const fmt=r=>cols.map((c,i)=>String(r[c]??'').padEnd(widths[i])).join('  ');
-console.log(cols.map((c,i)=>c.padEnd(widths[i])).join('  '));
-console.log(widths.map(w=>'-'.repeat(w)).join('  '));
-rows.forEach(r=>console.log(fmt(r)));
+const isWrite=/^\s*(update|insert|delete|replace|create|drop|alter)\b/i.test(sql);
+const db=new DB(dbPath,{readonly:!isWrite});
+if(isWrite){
+  const info=db.prepare(sql).run();
+  db.close();
+  console.log('Changes: '+info.changes);
+} else {
+  const rows=db.prepare(sql).all();
+  db.close();
+  if(rows.length===0){console.log('(no rows)');process.exit(0);}
+  const cols=Object.keys(rows[0]);
+  const widths=cols.map(c=>Math.max(c.length,...rows.map(r=>String(r[c]??'').length)));
+  const fmt=r=>cols.map((c,i)=>String(r[c]??'').padEnd(widths[i])).join('  ');
+  console.log(cols.map((c,i)=>c.padEnd(widths[i])).join('  '));
+  console.log(widths.map(w=>'-'.repeat(w)).join('  '));
+  rows.forEach(r=>console.log(fmt(r)));
+}
 "
 
   # Pass the script as argv[1] of node -e  ("-e SCRIPT" is a single nomad-exec argument,

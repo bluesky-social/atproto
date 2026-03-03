@@ -11,6 +11,7 @@ import * as mig010 from './010-neuro-provision-nonce'
 import * as mig011 from './011-pending-invitations'
 import * as mig012 from './012-invitation-tracking'
 import * as mig013 from './013-test-user-support'
+import * as mig014 from './014-jid-ref'
 
 export default {
   '001': mig001,
@@ -26,4 +27,5 @@ export default {
   '011': mig011,
   '012': mig012,
   '013': mig013,
+  '014': mig014,
 }

@@ -19,7 +19,7 @@ describe('Test User Support', () => {
     beforeAll(async () => {
       network = await TestNetworkNoAppView.create({
         pds: {
-          allowTestUserCreation: false, // Disabled
+          allowTestUserLogin: false, // Disabled
           neuro: {
             enabled: true,
             domain: 'test.lab.tagroot.io',
@@ -37,7 +37,7 @@ describe('Test User Support', () => {
 
     it('should reject test user creation when PDS_ALLOW_TEST_USER_CREATION=false', async () => {
       const ctx = network.pds.ctx
-      expect(ctx.cfg.allowTestUserCreation).toBe(false)
+      expect(ctx.cfg.allowTestUserLogin).toBe(false)
 
       const jid = `TestUser${Date.now()}@lab.tagroot.io`
       const legalId = `${Date.now()}@legal.lab.tagroot.io`
@@ -116,7 +116,7 @@ describe('Test User Support', () => {
     beforeAll(async () => {
       network = await TestNetworkNoAppView.create({
         pds: {
-          allowTestUserCreation: true, // Enabled
+          allowTestUserLogin: true, // Enabled
           neuro: {
             enabled: true,
             domain: 'test.lab.tagroot.io',
@@ -134,7 +134,7 @@ describe('Test User Support', () => {
 
     it('should accept test user creation when enabled', async () => {
       const ctx = network.pds.ctx
-      expect(ctx.cfg.allowTestUserCreation).toBe(true)
+      expect(ctx.cfg.allowTestUserLogin).toBe(true)
 
       const jid = `TestUser${Date.now()}@lab.tagroot.io`
       const legalId = `${Date.now()}@legal.lab.tagroot.io`
@@ -204,24 +204,25 @@ describe('Test User Support', () => {
 
       expect(response.status).toBe(201)
 
-      // Verify stored with legalId, not jid
+      // Verify stored with userJid (new schema), not legalId
       const db = network.pds.ctx.accountManager.db.db
       const link = await db
         .selectFrom('neuro_identity_link')
         .selectAll()
-        .where('legalId', '=', legalId)
+        .where('userJid', '=', legalId)
+        .where('isTestUser', '=', 0)
         .executeTakeFirst()
 
       expect(link).toBeDefined()
-      expect(link!.legalId).toBe(legalId)
-      expect(link!.jid).toBeNull()
+      expect(link!.userJid).toBe(legalId)
+      expect(link!.testUserJid).toBeNull()
       expect(link!.isTestUser).toBe(0) // 0 = real user
     })
 
-    it('should have correct database schema', async () => {
+    it('should have correct database schema (new columns)', async () => {
       const db = network.pds.ctx.accountManager.db.db
 
-      // Verify columns exist by querying a record
+      // Verify new schema columns exist
       const link = await db
         .selectFrom('neuro_identity_link')
         .selectAll()
@@ -229,15 +230,230 @@ describe('Test User Support', () => {
         .executeTakeFirst()
 
       if (link) {
-        expect(link).toHaveProperty('legalId')
-        expect(link).toHaveProperty('jid')
+        expect(link).toHaveProperty('userJid')
+        expect(link).toHaveProperty('testUserJid')
         expect(link).toHaveProperty('isTestUser')
         expect(link).toHaveProperty('did')
-        expect(link).toHaveProperty('email')
-        expect(link).toHaveProperty('userName')
         expect(link).toHaveProperty('linkedAt')
         expect(link).toHaveProperty('lastLoginAt')
+        // Old columns removed in migration 015
+        expect(link).not.toHaveProperty('legalId')
+        expect(link).not.toHaveProperty('jid')
+        expect(link).not.toHaveProperty('email')
+        expect(link).not.toHaveProperty('userName')
       }
+    })
+  })
+
+  describe('QuickLogin Column Storage', () => {
+    it('should store real user in userJid column during QuickLogin', async () => {
+      const userJid = `quicklogin_real${Date.now()}@legal.lab.tagroot.io`
+      const did = `did:plc:quickloginreal${Date.now()}`
+
+      const db = network.pds.ctx.accountManager.db.db
+
+      // Simulate QuickLogin callback for real user (has EMAIL tag)
+      await db
+        .insertInto('account')
+        .values({
+          did,
+          handle: `quickloginreal${Date.now()}.test`,
+          email: `quickloginreal${Date.now()}@test.com`,
+          passwordScrypt: 'fake-hash',
+          createdAt: new Date().toISOString(),
+        })
+        .execute()
+
+      await db
+        .insertInto('neuro_identity_link')
+        .values({
+          did,
+          userJid,
+          testUserJid: null,
+          isTestUser: 0,
+          linkedAt: new Date().toISOString(),
+          lastLoginAt: null,
+        })
+        .execute()
+
+      const link = await db
+        .selectFrom('neuro_identity_link')
+        .selectAll()
+        .where('did', '=', did)
+        .executeTakeFirst()
+
+      expect(link).toBeDefined()
+      expect(link!.userJid).toBe(userJid)
+      expect(link!.testUserJid).toBeNull()
+      expect(link!.isTestUser).toBe(0)
+    })
+
+    it('should store test user in testUserJid column during QuickLogin', async () => {
+      const testUserJid = `QuickLoginTest${Date.now()}@lab.tagroot.io`
+      const did = `did:plc:quicklogintest${Date.now()}`
+
+      const db = network.pds.ctx.accountManager.db.db
+
+      // Simulate QuickLogin callback for test user (no EMAIL tag)
+      await db
+        .insertInto('account')
+        .values({
+          did,
+          handle: `quicklogintest${Date.now()}.test`,
+          email: null, // Test users don't have email
+          passwordScrypt: 'fake-hash',
+          createdAt: new Date().toISOString(),
+        })
+        .execute()
+
+      await db
+        .insertInto('neuro_identity_link')
+        .values({
+          did,
+          userJid: null,
+          testUserJid,
+          isTestUser: 1,
+          linkedAt: new Date().toISOString(),
+          lastLoginAt: null,
+        })
+        .execute()
+
+      const link = await db
+        .selectFrom('neuro_identity_link')
+        .selectAll()
+        .where('did', '=', did)
+        .executeTakeFirst()
+
+      expect(link).toBeDefined()
+      expect(link!.userJid).toBeNull()
+      expect(link!.testUserJid).toBe(testUserJid)
+      expect(link!.isTestUser).toBe(1)
+    })
+
+    it('should find real user by userJid lookup', async () => {
+      const userJid = `lookup_real${Date.now()}@legal.io`
+      const did = `did:plc:lookupreal${Date.now()}`
+
+      const db = network.pds.ctx.accountManager.db.db
+
+      await db
+        .insertInto('account')
+        .values({
+          did,
+          handle: `lookupreal${Date.now()}.test`,
+          email: `lookupreal${Date.now()}@test.com`,
+          passwordScrypt: 'fake-hash',
+          createdAt: new Date().toISOString(),
+        })
+        .execute()
+
+      await db
+        .insertInto('neuro_identity_link')
+        .values({
+          did,
+          userJid,
+          testUserJid: null,
+          isTestUser: 0,
+          linkedAt: new Date().toISOString(),
+          lastLoginAt: null,
+        })
+        .execute()
+
+      // Lookup by userJid (real users only)
+      const link = await db
+        .selectFrom('neuro_identity_link')
+        .select(['did', 'userJid', 'isTestUser'])
+        .where('userJid', '=', userJid)
+        .where('isTestUser', '=', 0)
+        .executeTakeFirst()
+
+      expect(link).toBeDefined()
+      expect(link!.did).toBe(did)
+      expect(link!.userJid).toBe(userJid)
+    })
+
+    it('should find test user by testUserJid lookup', async () => {
+      const testUserJid = `LookupTest${Date.now()}@lab.io`
+      const did = `did:plc:lookuptest${Date.now()}`
+
+      const db = network.pds.ctx.accountManager.db.db
+
+      await db
+        .insertInto('account')
+        .values({
+          did,
+          handle: `lookuptest${Date.now()}.test`,
+          email: null,
+          passwordScrypt: 'fake-hash',
+          createdAt: new Date().toISOString(),
+        })
+        .execute()
+
+      await db
+        .insertInto('neuro_identity_link')
+        .values({
+          did,
+          userJid: null,
+          testUserJid,
+          isTestUser: 1,
+          linkedAt: new Date().toISOString(),
+          lastLoginAt: null,
+        })
+        .execute()
+
+      // Lookup by testUserJid (test users only)
+      const link = await db
+        .selectFrom('neuro_identity_link')
+        .select(['did', 'testUserJid', 'isTestUser'])
+        .where('testUserJid', '=', testUserJid)
+        .where('isTestUser', '=', 1)
+        .executeTakeFirst()
+
+      expect(link).toBeDefined()
+      expect(link!.did).toBe(did)
+      expect(link!.testUserJid).toBe(testUserJid)
+    })
+
+    it('should enforce mutual exclusivity (not both columns)', async () => {
+      const did = `did:plc:exclusive${Date.now()}`
+
+      const db = network.pds.ctx.accountManager.db.db
+
+      await db
+        .insertInto('account')
+        .values({
+          did,
+          handle: `exclusive${Date.now()}.test`,
+          email: `exclusive${Date.now()}@test.com`,
+          passwordScrypt: 'fake-hash',
+          createdAt: new Date().toISOString(),
+        })
+        .execute()
+
+      // Real user: only userJid populated
+      await db
+        .insertInto('neuro_identity_link')
+        .values({
+          did,
+          userJid: `exclusive${Date.now()}@legal.io`,
+          testUserJid: null,
+          isTestUser: 0,
+          linkedAt: new Date().toISOString(),
+          lastLoginAt: null,
+        })
+        .execute()
+
+      const link = await db
+        .selectFrom('neuro_identity_link')
+        .selectAll()
+        .where('did', '=', did)
+        .executeTakeFirst()
+
+      // Verify only one column populated
+      const populatedColumns = [link?.userJid, link?.testUserJid].filter(
+        (col) => col !== null,
+      )
+      expect(populatedColumns).toHaveLength(1)
     })
   })
 })

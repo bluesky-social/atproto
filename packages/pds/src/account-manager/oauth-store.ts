@@ -81,7 +81,6 @@ export class OAuthStore
     private readonly publicUrl: string,
     private readonly recoveryDidKey: string | null,
     private readonly neuroAuthManager?: NeuroAuthManager,
-    private readonly neuroRemoteLoginManager?: import('./helpers/neuro-remotelogin-manager').NeuroRemoteLoginManager,
   ) {}
 
   private get db() {
@@ -129,51 +128,6 @@ export class OAuthStore
   }: SignUpData & { emailOtp?: string }): Promise<Account> {
     // @TODO Send an account creation confirmation email (+verification link) to the user (in their locale)
     // @NOTE Password strength & length already enforced by the OAuthProvider
-
-    // Check if this is a RemoteLogin signup (no password + Legal ID format)
-    if (
-      !password &&
-      emailOtp &&
-      emailOtp.includes('@legal.') &&
-      this.neuroRemoteLoginManager
-    ) {
-      const legalId = emailOtp // Treat emailOtp as Legal ID when it matches pattern
-
-      // Initiate RemoteLogin petition
-      const purpose = `Sign up for @${handle}`
-      const { petitionId } =
-        await this.neuroRemoteLoginManager.initiatePetition(legalId, purpose)
-
-      // Wait for user approval (with timeout)
-      try {
-        const approval =
-          await this.neuroRemoteLoginManager.waitForApproval(petitionId)
-
-        return this.createAccountWithNeuroRemoteLogin({
-          handle,
-          email,
-          inviteCode,
-          locale: _locale,
-          legalId: approval.legalId,
-          jwtClaims: approval.claims,
-        })
-      } catch (err) {
-        const error = err as Error
-        if (error.message.includes('timeout')) {
-          throw new InvalidRequestError(
-            'Authentication timeout. Please try again.',
-            'NEURO_PETITION_TIMEOUT',
-          )
-        }
-        if (error.message.includes('rejected')) {
-          throw new InvalidRequestError(
-            'Authentication was rejected. Please approve the request in your Neuro app.',
-            'NEURO_PETITION_REJECTED',
-          )
-        }
-        throw error
-      }
-    }
 
     // Check if this is a QuickLogin signup (no password + verification code)
     if (!password && emailOtp && this.neuroAuthManager) {
@@ -293,56 +247,6 @@ export class OAuthStore
     emailOtp = undefined,
   }: AuthenticateAccountData): Promise<Account> {
     // @TODO (?) Send an email to the user to notify them of the login attempt
-
-    // REMOTELOGIN AUTHENTICATION FLOW (Legal ID format)
-    if (password?.includes('@legal.') && this.neuroRemoteLoginManager) {
-      // password contains Legal ID - initiate RemoteLogin petition
-      const legalId = password
-      const purpose = `Sign in as ${identifier}`
-
-      const { petitionId } =
-        await this.neuroRemoteLoginManager.initiatePetition(legalId, purpose)
-
-      // Wait for user approval (with timeout)
-      try {
-        await this.neuroRemoteLoginManager.waitForApproval(petitionId)
-
-        // Look up account by Legal ID in neuro_identity_link table
-        const accountLink = await this.db.db
-          .selectFrom('neuro_identity_link')
-          .select(['did', 'legalId'])
-          .where('legalId', '=', legalId)
-          .executeTakeFirst()
-
-        if (!accountLink) {
-          throw new InvalidRequestError('No account linked to this Legal ID')
-        }
-
-        // Get full account object
-        const accountData = await accountHelper.getAccount(
-          this.db,
-          accountLink.did,
-        )
-        if (!accountData) {
-          throw new InvalidRequestError('Account not found')
-        }
-
-        // Convert to OAuth Account format
-        return this.buildAccount(accountData)
-      } catch (err) {
-        const error = err as Error
-        if (error.message?.includes('timeout')) {
-          throw new InvalidRequestError(
-            'Authentication timeout. Please approve the request in your Neuro app.',
-          )
-        }
-        if (error.message?.includes('rejected')) {
-          throw new InvalidRequestError('Authentication was rejected.')
-        }
-        // Re-throw to preserve other errors
-        throw err
-      }
-    }
 
     // QUICKLOGIN AUTHENTICATION FLOW
     if (!password && this.neuroAuthManager) {
@@ -893,108 +797,6 @@ This will authenticate you with your Neuro identity.`
             email,
             identity.userName,
           )
-
-          await this.sequencer.sequenceIdentityEvt(did, data.handle)
-          await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)
-          await this.sequencer.sequenceCommit(did, commit)
-          await this.sequencer.sequenceSyncEvt(
-            did,
-            syncEvtDataFromCommit(commit),
-          )
-          await this.accountManager.updateRepoRoot(did, commit.cid, commit.rev)
-          await this.actorStore.clearReservedKeypair(signingKeyDid, did)
-
-          const account = await this.accountManager.getAccount(did)
-          if (!account) throw new Error('Account not found')
-
-          return await this.buildAccount(account)
-        } catch (err) {
-          await this.accountManager.deleteAccount(did)
-          throw err
-        }
-      } catch (err) {
-        await this.actorStore.destroy(did)
-        throw err
-      }
-    } catch (err) {
-      if (err instanceof XrpcInvalidRequestError) {
-        throw new InvalidRequestError(err.message, err)
-      }
-      throw err
-    }
-  }
-
-  private async createAccountWithNeuroRemoteLogin(data: {
-    handle: string
-    email?: string
-    inviteCode?: string
-    locale?: string
-    legalId: string
-    jwtClaims: import('./helpers/neuro-remotelogin-manager').JWTClaims
-  }): Promise<Account> {
-    if (!this.neuroRemoteLoginManager) {
-      throw new InvalidRequestError('Neuro RemoteLogin not configured')
-    }
-
-    const { legalId, jwtClaims } = data
-
-    // Use email from data or JWT claims
-    const email = data.email
-    if (!email) {
-      throw new InvalidRequestError(
-        'Email is required for account creation',
-        'EMAIL_REQUIRED',
-      )
-    }
-
-    // Verify availability
-    await this.verifyEmailAvailability(email)
-    await this.verifyHandleAvailability(data.handle)
-    if (data.inviteCode) {
-      await this.verifyInviteCode(data.inviteCode)
-    }
-
-    // Create signing key and DID
-    const signingKey = await Secp256k1Keypair.create({ exportable: true })
-    const signingKeyDid = signingKey.did()
-
-    const plcCreate = await createPlcOp({
-      signingKey: signingKeyDid,
-      rotationKeys: this.recoveryDidKey
-        ? [this.recoveryDidKey, this.plcRotationKey.did()]
-        : [this.plcRotationKey.did()],
-      handle: data.handle,
-      pds: this.publicUrl,
-      signer: this.plcRotationKey,
-    })
-
-    const { did, op } = plcCreate
-
-    try {
-      await this.actorStore.create(did, signingKey)
-
-      try {
-        const commit = await this.actorStore.transact(did, (actorTxn) =>
-          actorTxn.repo.createRepo([]),
-        )
-
-        await this.plcClient.sendOperation(did, op)
-
-        // Create account with null password for Neuro RemoteLogin
-        await this.accountManager.createAccount({
-          did,
-          handle: data.handle,
-          email,
-          password: undefined, // RemoteLogin accounts have no password
-          inviteCode: data.inviteCode,
-          repoCid: commit.cid,
-          repoRev: commit.rev,
-        })
-
-        try {
-          // For now, we don't store the Legal ID link in database
-          // This can be added later with database migration
-          // TODO: Store legalId -> did mapping when database schema is updated
 
           await this.sequencer.sequenceIdentityEvt(did, data.handle)
           await this.sequencer.sequenceAccountEvt(did, AccountStatus.Active)

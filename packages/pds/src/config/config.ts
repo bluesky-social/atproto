@@ -356,7 +356,8 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
           apiBaseUrl: env.quickloginApiBaseUrl || 'https://lab.tagroot.io',
         }
       : null,
-    allowTestUserCreation: env.allowTestUserCreation ?? false, // DEFAULT: false (fail-safe)
+    allowTestUserLogin: env.allowTestUserLogin ?? false, // DEFAULT: false (fail-safe)
+    neuroCallbackSignatureRequired: env.neuroCallbackSignatureRequired ?? false, // WP2 feature-flagged pending signature contract
   }
 }
 
@@ -383,7 +384,8 @@ export type ServerConfig = {
   lexicon: LexiconResolverConfig
   neuro: NeuroConfig | null
   quicklogin: QuickLoginConfig | null
-  allowTestUserCreation: boolean
+  allowTestUserLogin: boolean // Enable/disable test-user login (new unified QuickLogin flow)
+  neuroCallbackSignatureRequired: boolean // Feature flag: require callback signature verification (WP2)
 }
 
 export type ServiceConfig = {
@@ -541,19 +543,10 @@ export type NeuroConfig = {
   domain: string
   storageBackend: 'database' | 'redis'
   customUiPath?: string
-  // RemoteLogin API configuration
-  apiType?: 'quicklogin' | 'remotelogin' | 'both'
-  responseMethod?: 'Callback' | 'Poll'
+  // QuickLogin callback configuration
   callbackBaseUrl?: string
-  pollIntervalMs?: number
-  // Authentication for RemoteLogin API
-  authMethod?: 'basic' | 'bearer' | 'mtls'
-  basicUsername?: string
-  basicPassword?: string
-  bearerToken?: string
-  // JWT verification
   verifyJwtSignature?: boolean
-  petitionTimeoutSeconds?: number
+  callbackSignatureRequired?: boolean
 }
 
 export type QuickLoginConfig = {

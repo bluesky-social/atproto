@@ -30,8 +30,9 @@ export default function (server: Server, ctx: AppContext) {
       // Check if the new Legal ID is already linked to a different account
       const existingLink = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
-        .select(['did', 'legalId'])
-        .where('legalId', '=', newLegalId)
+        .select(['did', 'userJid', 'testUserJid'])
+        .where('userJid', '=', newLegalId)
+        .where('isTestUser', '=', 0)
         .executeTakeFirst()
 
       if (existingLink && existingLink.did !== did) {
@@ -44,11 +45,11 @@ export default function (server: Server, ctx: AppContext) {
       // Get current link (if any)
       const currentLink = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
-        .select(['legalId'])
+        .select(['userJid', 'testUserJid'])
         .where('did', '=', did)
         .executeTakeFirst()
 
-      const oldLegalId = currentLink?.legalId || null
+      const oldLegalId = currentLink?.userJid || currentLink?.testUserJid || null
       const updatedAt = new Date().toISOString()
 
       // Update or insert the link
@@ -57,7 +58,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.db.db
           .updateTable('neuro_identity_link')
           .set({
-            legalId: newLegalId,
+            userJid: newLegalId,
+            testUserJid: null,
+            isTestUser: 0,
             linkedAt: updatedAt,
             lastLoginAt: null, // Reset last login
           })
@@ -73,11 +76,9 @@ export default function (server: Server, ctx: AppContext) {
         await ctx.accountManager.db.db
           .insertInto('neuro_identity_link')
           .values({
-            legalId: newLegalId,
-            jid: null,
+            userJid: newLegalId,
+            testUserJid: null,
             did,
-            email: null,
-            userName: null,
             isTestUser: 0,
             linkedAt: updatedAt,
             lastLoginAt: null,

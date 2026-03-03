@@ -39,8 +39,9 @@ export default function (server: Server, ctx: AppContext) {
       if (neuroLink?.legalId) {
         const existingLink = await ctx.accountManager.db.db
           .selectFrom('neuro_identity_link')
-          .select(['did', 'legalId'])
-          .where('legalId', '=', neuroLink.legalId)
+          .select(['did', 'userJid', 'testUserJid'])
+          .where('userJid', '=', neuroLink.legalId)
+          .where('isTestUser', '=', 0)
           .executeTakeFirst()
 
         if (existingLink && existingLink.did !== did) {
@@ -108,10 +109,8 @@ export default function (server: Server, ctx: AppContext) {
             .insertInto('neuro_identity_link')
             .values({
               did,
-              legalId: neuroLink.legalId,
-              jid: null,
-              email: null,
-              userName: null,
+              userJid: neuroLink.legalId,
+              testUserJid: null,
               isTestUser: 0,
               linkedAt: neuroLink.linkedAt || new Date().toISOString(),
               lastLoginAt: neuroLink.lastLoginAt || null,
