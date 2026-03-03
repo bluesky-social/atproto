@@ -1,9 +1,9 @@
 import {
   InferInput,
   InferOutput,
+  LexValidationError,
   Schema,
   ValidationContext,
-  ValidationError,
   ValidationFailure,
   Validator,
 } from '../core.js'
@@ -53,7 +53,7 @@ export class UnionSchema<
       failures.push(result)
     }
 
-    return ctx.failure(ValidationError.fromFailures(failures))
+    return ctx.failure(LexValidationError.fromFailures(failures))
   }
 }
 

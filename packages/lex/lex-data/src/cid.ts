@@ -1,6 +1,7 @@
 import { CID } from 'multiformats/cid'
 import { create as createDigest } from 'multiformats/hashes/digest'
 import { sha256, sha512 } from 'multiformats/hashes/sha2'
+import { isUint8, toHexString } from './lib/util.js'
 import { isObject } from './object.js'
 import { ui8Equals } from './uint8array.js'
 
@@ -286,11 +287,12 @@ export type CheckCidOptions = {
  *
  * @typeParam TOptions - The options used for checking
  */
-export type InferCheckedCid<TOptions> = TOptions extends { flavor: 'raw' }
-  ? RawCid
-  : TOptions extends { flavor: 'cbor' }
-    ? CborCid
-    : Cid
+export type InferCheckedCid<TOptions extends CheckCidOptions> =
+  TOptions extends { flavor: 'raw' }
+    ? RawCid
+    : TOptions extends { flavor: 'cbor' }
+      ? CborCid
+      : Cid
 
 /**
  * Type guard to check whether a {@link Cid} instance meets specific flavor
@@ -341,7 +343,7 @@ export function ifCid<TValue>(
   options?: CheckCidOptions,
 ): (TValue & Cid) | null
 export function ifCid(value: unknown, options?: CheckCidOptions): Cid | null {
-  if (isCidImplementation(value) && checkCid(value, options)) return value
+  if (isCid(value, options)) return value
   return null
 }
 
@@ -357,10 +359,12 @@ export function asCid<TValue, TOptions extends CheckCidOptions>(
 export function asCid<TValue>(
   value: TValue,
   options?: CheckCidOptions,
-): Cid & TValue
+): TValue & Cid
 export function asCid(value: unknown, options?: CheckCidOptions): Cid {
-  if (isCidImplementation(value) && checkCid(value, options)) return value
-  throw new Error('Not a valid CID')
+  if (isCid(value, options)) return value
+  throw new Error(
+    `Invalid ${options?.flavor ? `${options.flavor} CID` : 'CID'} "${value}"`,
+  )
 }
 
 /**
@@ -462,7 +466,7 @@ export function ensureValidCidString(
   options?: CheckCidOptions,
 ): void {
   if (!validateCidString(input, options)) {
-    throw new Error(`Invalid CID string`)
+    throw new Error(`Invalid CID string "${input}"`)
   }
 }
 
@@ -487,7 +491,9 @@ export async function isCidForBytes(
   }
 
   // Don't know how to verify other multihash codes
-  throw new Error('Unsupported CID multihash')
+  throw new Error(
+    `Unsupported CID multihash code: ${toHexString(cid.multihash.code)}`,
+  )
 }
 
 /**
@@ -545,12 +551,14 @@ export async function cidForRawBytes(bytes: Uint8Array): Promise<RawCid> {
  *
  * @param digest - The SHA-256 hash digest (must be 32 bytes)
  * @returns A RawCid with the given digest
- * @throws If the digest length is not 32 bytes
+ * @throws If the digest is not a valid SHA-256 hash (not 32 bytes)
  */
 export function cidForRawHash(digest: Uint8Array): RawCid {
   // Fool-proofing
-  if (digest.length !== 32) {
-    throw new Error(`Invalid SHA-256 hash length: ${digest.length}`)
+  if (digest.length !== 0x20) {
+    throw new Error(
+      `Invalid SHA-256 hash length: ${toHexString(digest.length)}`,
+    )
   }
   return createCid(RAW_DATA_CODEC, sha256.code, digest)
 }
@@ -591,8 +599,4 @@ function isCidImplementation(value: unknown): value is Cid {
       return false
     }
   }
-}
-
-function isUint8(val: unknown): val is number {
-  return Number.isInteger(val) && (val as number) >= 0 && (val as number) < 256
 }

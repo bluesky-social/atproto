@@ -4,13 +4,18 @@ import { describe, expect, it, vi } from 'vitest'
 import { WebSocket } from 'ws'
 import { decodeAll } from '@atproto/lex-cbor'
 import { buildAgent, xrpc } from '@atproto/lex-client'
-import { LexError, parseCid } from '@atproto/lex-data'
+import { parseCid } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
+import { LexError, LexServerAuthError, LexServerError } from './errors.js'
 import {
+  ConnectionInfo,
+  HandlerErrorHook,
+  HealthCheckHandler,
   LexRouter,
   LexRouterAuth,
   LexRouterMethodHandler,
-} from './lex-server.js'
+  SocketErrorHook,
+} from './lex-router.js'
 import { serve, upgradeWebSocket } from './nodejs.js'
 
 // ============================================================================
@@ -83,7 +88,7 @@ const handlers: {
 // Basic LexRouter Tests
 // ============================================================================
 
-describe('LexRouter', () => {
+describe(LexRouter, () => {
   it('returns MethodNotImplemented when the route is not found', async () => {
     const router = new LexRouter()
     const request = new Request(`https://example.com/xrpc/foo.bar.baz`)
@@ -291,14 +296,24 @@ describe('Authentication', () => {
     return async ({ request }) => {
       const header = request.headers.get('authorization') ?? ''
       if (!header.startsWith('Basic ')) {
-        throw new LexError('AuthenticationRequired', 'Authentication required')
+        throw new LexServerAuthError(
+          'AuthenticationRequired',
+          'Authentication required',
+        )
       }
       const original = header.slice(6)
-      const [username, password] = Buffer.from(original, 'base64')
-        .toString()
-        .split(':')
+      const decoded = Buffer.from(original, 'base64').toString()
+      // @NOTE not using .split(':') to allow colons in password
+      const colonIndex = decoded.indexOf(':')
+      const [username, password] =
+        colonIndex === -1
+          ? [decoded, '']
+          : [decoded.slice(0, colonIndex), decoded.slice(colonIndex + 1)]
       if (username !== allowed.username || password !== allowed.password) {
-        throw new LexError('AuthenticationRequired', 'Invalid credentials')
+        throw new LexServerAuthError(
+          'AuthenticationRequired',
+          'Invalid credentials',
+        )
       }
       return { username, original }
     }
@@ -337,7 +352,7 @@ describe('Authentication', () => {
     )
     const response = await router.fetch(request)
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(401)
     const data = await response.json()
     expect(data.error).toBe('AuthenticationRequired')
   })
@@ -407,7 +422,7 @@ describe('Authentication', () => {
     )
     const response = await router.fetch(request)
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(401)
     const data = await response.json()
     expect(data.error).toBe('AuthenticationRequired')
   })
@@ -451,7 +466,10 @@ describe('Error Handling', () => {
         params,
       }) => {
         if (params.which === 'foo') {
-          throw new LexError('Foo', 'It was this one!')
+          throw new LexServerError(400, {
+            error: 'Foo',
+            message: 'It was this one!',
+          })
         }
         return {}
       }
@@ -495,7 +513,7 @@ describe('Error Handling', () => {
       expect(data.message).toBe('It was that one!')
     })
 
-    it('handles falsy values thrown as InternalError', async () => {
+    it('handles falsy values thrown as InternalServerError', async () => {
       const handler: LexRouterMethodHandler<
         typeof io.example.throwFalsyValue
       > = async () => {
@@ -511,7 +529,7 @@ describe('Error Handling', () => {
 
       expect(response.status).toBe(500)
       const data = await response.json()
-      expect(data.error).toBe('InternalError')
+      expect(data.error).toBe('InternalServerError')
     })
   })
 
@@ -577,7 +595,7 @@ describe('Error Handling', () => {
 
   describe('Custom Error Handlers', () => {
     it('allows custom onHandlerError handler', async () => {
-      const onHandlerError = vi.fn()
+      const onHandlerError = vi.fn<HandlerErrorHook>()
       const customRouter = new LexRouter({
         onHandlerError,
       })
@@ -595,6 +613,342 @@ describe('Error Handling', () => {
 
       expect(onHandlerError).toHaveBeenCalled()
       expect(response.status).toBe(500)
+    })
+  })
+})
+
+// ============================================================================
+// Routing Tests
+// ============================================================================
+
+describe('Routing', () => {
+  describe('non-/xrpc/ paths', () => {
+    it('returns 404 for non-xrpc paths without fallback', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(404)
+      expect(await response.text()).toBe('Not Found')
+    })
+
+    it('delegates to fallback handler for non-xrpc paths', async () => {
+      const fallback = vi.fn(async () => new Response('OK from fallback'))
+      const router = new LexRouter({ fallback })
+
+      const request = new Request('https://example.com/health')
+      const connection: ConnectionInfo = {
+        completed: Promise.resolve(),
+        remoteAddr: { hostname: '127.0.0.1', port: 3000, transport: 'tcp' },
+      }
+      const response = await router.fetch(request, connection)
+
+      expect(fallback).toHaveBeenCalledWith(request, connection)
+      expect(response.status).toBe(200)
+      expect(await response.text()).toBe('OK from fallback')
+    })
+  })
+
+  describe('/xrpc/_health endpoint', () => {
+    it('returns default health check response', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok' })
+    })
+
+    it('calls custom healthCheck handler', async () => {
+      const healthCheck = vi.fn<HealthCheckHandler>(async () => ({
+        status: 'ok',
+        version: '1.0.0',
+      }))
+      const router = new LexRouter({ healthCheck })
+
+      const request = new Request('https://example.com/xrpc/_health')
+      const response = await router.fetch(request)
+
+      expect(healthCheck).toHaveBeenCalledWith(request)
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok', version: '1.0.0' })
+    })
+
+    it('returns 405 for non-GET requests', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/_health', {
+        method: 'POST',
+      })
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(405)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toBe('Method not allowed')
+    })
+
+    it('returns 400 when atproto-proxy header is set', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/_health', {
+        headers: { 'atproto-proxy': 'did:plc:example#atproto_labeler' },
+      })
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toContain('atproto-proxy')
+    })
+
+    it('does not call healthCheck when atproto-proxy is set', async () => {
+      const healthCheck = vi.fn<HealthCheckHandler>(async () => ({
+        status: 'ok',
+      }))
+      const router = new LexRouter({ healthCheck })
+      const request = new Request('https://example.com/xrpc/_health', {
+        headers: { 'atproto-proxy': 'did:plc:example#atproto_labeler' },
+      })
+      const response = await router.fetch(request)
+
+      expect(healthCheck).not.toHaveBeenCalled()
+      expect(response.status).toBe(400)
+    })
+  })
+
+  describe('invalid NSID', () => {
+    it('returns 400 for invalid NSID format', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/not-an-nsid!!')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toContain('Invalid NSID')
+    })
+
+    it('returns 400 for empty NSID', async () => {
+      const router = new LexRouter()
+      const request = new Request('https://example.com/xrpc/')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+    })
+  })
+
+  describe('atproto-proxy header', () => {
+    it('bypasses local handler when atproto-proxy header is set', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example#atproto_labeler' } },
+      )
+      const response = await router.fetch(request)
+
+      // The handler should NOT be called - currently returns MethodNotImplemented
+      // because proxy is not yet implemented
+      expect(response.status).toBe(501)
+    })
+
+    it('returns 400 for invalid atproto-proxy header format', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'not-a-valid-proxy' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+      expect(data.message).toContain('atproto-proxy')
+    })
+
+    it('returns 400 for atproto-proxy without fragment', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+      const data = await response.json()
+      expect(data.error).toBe('InvalidRequest')
+    })
+
+    it('returns 400 for atproto-proxy with empty fragment', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example#' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+    })
+
+    it('returns 400 for atproto-proxy with spaces', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example #service' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+    })
+
+    it('returns 400 for atproto-proxy with multiple fragments', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example#svc#extra' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+    })
+
+    it('returns 400 for atproto-proxy with space in fragment', async () => {
+      const router = new LexRouter()
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { headers: { 'atproto-proxy': 'did:plc:example#service id' } },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(400)
+    })
+  })
+
+  describe('NSID normalization', () => {
+    it('matches handler when URL has uppercase domain segments', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      const request = new Request('https://example.com/xrpc/IO.Example.status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok' })
+    })
+
+    it('matches handler when URL has mixed-case domain segments', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      const request = new Request('https://example.com/xrpc/IO.EXAMPLE.status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ status: 'ok' })
+    })
+
+    it('preserves case sensitivity of method name (last segment)', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      // "Status" (uppercase S) should not match "status"
+      const request = new Request('https://example.com/xrpc/io.example.Status')
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(501)
+      expect(await response.json()).toMatchObject({
+        error: 'MethodNotImplemented',
+      })
+    })
+
+    it('prevents duplicate registration with different domain casing', async () => {
+      const router = new LexRouter().add(io.example.status, handlers.status)
+
+      expect(() => {
+        // Same NSID with different domain casing should be detected as duplicate
+        const statusUpperCase = l.query(
+          'IO.Example.status' as 'io.example.status',
+          l.params(),
+          l.payload('application/json', l.object({ status: l.string() })),
+        )
+        router.add(statusUpperCase, handlers.status)
+      }).toThrow(/already registered/)
+    })
+  })
+
+  describe('error handling', () => {
+    it('onHandlerError receives LexServerError', async () => {
+      const onHandlerError = vi.fn<HandlerErrorHook>()
+      const router = new LexRouter({ onHandlerError })
+
+      router.add(io.example.status, async () => {
+        throw new Error('Unexpected error')
+      })
+
+      const request = new Request('https://example.com/xrpc/io.example.status')
+      await router.fetch(request)
+
+      expect(onHandlerError).toHaveBeenCalledTimes(1)
+      const ctx = onHandlerError.mock.calls[0][0]
+      expect(ctx.error).toBeInstanceOf(LexServerError)
+      expect(ctx.error.status).toBe(500)
+      expect(ctx.method).toBeDefined()
+      expect(ctx.request).toBe(request)
+    })
+
+    it('does not call onHandlerError for aborted requests', async () => {
+      const onHandlerError = vi.fn<HandlerErrorHook>()
+      const router = new LexRouter({ onHandlerError })
+
+      router.add(io.example.status, async (_ctx) => {
+        const reason = new Error('aborted')
+        throw new Error('handler error', { cause: reason })
+      })
+
+      const controller = new AbortController()
+      const reason = new Error('aborted')
+      controller.abort(reason)
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { signal: controller.signal },
+      )
+
+      // Need to create a handler that actually throws with the abort reason
+      const router2 = new LexRouter({ onHandlerError })
+      router2.add(io.example.status, async ({ signal }) => {
+        throw new Error('handler error', { cause: signal.reason })
+      })
+
+      const response = await router2.fetch(request)
+
+      expect(response.status).toBe(499)
+      expect(onHandlerError).not.toHaveBeenCalled()
+    })
+
+    it('returns 499 for aborted requests', async () => {
+      const controller = new AbortController()
+      const reason = new Error('Client disconnected')
+      controller.abort(reason)
+
+      const router = new LexRouter()
+      router.add(io.example.status, async () => {
+        throw new Error('after abort', { cause: reason })
+      })
+
+      const request = new Request(
+        'https://example.com/xrpc/io.example.status',
+        { signal: controller.signal },
+      )
+      const response = await router.fetch(request)
+
+      expect(response.status).toBe(499)
+      const data = await response.json()
+      expect(data.error).toBe('RequestAborted')
     })
   })
 })
@@ -1605,18 +1959,231 @@ describe('Subscription', () => {
       'XRPC subscriptions are only available over WebSocket',
     )
   })
+
+  it('closes with 1003 when client sends a message to the subscription', async () => {
+    const router = new LexRouter({ upgradeWebSocket }).add(
+      io.example.subscribe,
+      async function* ({ signal }) {
+        while (true) {
+          await scheduler.wait(50, { signal })
+          yield { message: 'ping', count: 1 }
+        }
+      },
+    )
+
+    await using server = await serve(router)
+    const { port } = server.address() as AddressInfo
+
+    const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(5000)
+
+    const ws = new WebSocket(
+      `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+    )
+    ws.addEventListener('open', () => {
+      ws.send('unexpected message from client')
+    })
+    ws.addEventListener('error', reject)
+    ws.addEventListener('close', resolve)
+
+    const { code } = await promise
+
+    expect(code).toBe(1003)
+  })
+
+  describe('error close codes', () => {
+    const subscribeWithErrors = l.subscription(
+      'io.example.subscribeWithErrors',
+      l.params(),
+      l.object({ message: l.string() }),
+      ['FutureCursor', 'ConsumerTooSlow'],
+    )
+
+    it('closes with 1008 and sends error frame for known LexError', async () => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        subscribeWithErrors,
+        async function* () {
+          yield await Promise.reject(
+            new LexError('FutureCursor', 'Too far in the future'),
+          )
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const receivedFrames: unknown[][] = []
+
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribeWithErrors`,
+      )
+      ws.binaryType = 'arraybuffer'
+      ws.addEventListener('message', (event) => {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        receivedFrames.push([...decodeAll(bytes)])
+      })
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      const { code } = await promise
+
+      expect(code).toBe(1008)
+      expect(receivedFrames).toHaveLength(1)
+      const [header, body] = receivedFrames[0]
+      expect(header).toEqual({ op: -1 })
+      expect(body).toMatchObject({ error: 'FutureCursor' })
+    })
+
+    it('closes with 1011 and sends InternalServerError frame for unknown error', async () => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        subscribeWithErrors,
+        async function* () {
+          yield await Promise.reject(new Error('unexpected failure'))
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const receivedFrames: unknown[][] = []
+
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribeWithErrors`,
+      )
+      ws.binaryType = 'arraybuffer'
+      ws.addEventListener('message', (event) => {
+        const bytes = new Uint8Array(event.data as ArrayBuffer)
+        receivedFrames.push([...decodeAll(bytes)])
+      })
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      const { code } = await promise
+
+      expect(code).toBe(1011)
+      expect(receivedFrames).toHaveLength(1)
+      const [header, body] = receivedFrames[0]
+      expect(header).toEqual({ op: -1 })
+      expect(body).toMatchObject({ error: 'InternalServerError' })
+    })
+
+    it('closes with 1011 for a LexError not listed in method.errors', async () => {
+      const router = new LexRouter({ upgradeWebSocket }).add(
+        subscribeWithErrors,
+        async function* () {
+          yield await Promise.reject(
+            new LexError('SomeOtherError', 'Not a declared error'),
+          )
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribeWithErrors`,
+      )
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      const { code } = await promise
+
+      expect(code).toBe(1011)
+    })
+  })
+
+  describe('onSocketError hook', () => {
+    it('calls onSocketError when the generator throws a non-abort error', async () => {
+      const onSocketError = vi.fn<SocketErrorHook>()
+      const router = new LexRouter({ upgradeWebSocket, onSocketError }).add(
+        io.example.subscribe,
+        async function* () {
+          yield await Promise.reject(new Error('generator failure'))
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      )
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      await promise
+
+      expect(onSocketError).toHaveBeenCalledTimes(1)
+      const ctx = onSocketError.mock.calls[0][0]
+      expect(ctx.error).toBeInstanceOf(Error)
+      expect(ctx.method).toBeDefined()
+      expect(ctx.request).toBeDefined()
+    })
+
+    it('does not call onSocketError when the error matches the abort reason', async () => {
+      const onSocketError = vi.fn<SocketErrorHook>()
+      const router = new LexRouter({ upgradeWebSocket, onSocketError }).add(
+        io.example.subscribe,
+        async function* ({ signal }) {
+          // Wait for abort, then throw with the abort reason as cause
+          await new Promise<void>((_, reject) => {
+            signal.addEventListener('abort', () => {
+              reject(new Error('aborted', { cause: signal.reason }))
+            })
+          })
+          yield { message: 'never', count: 0 }
+        },
+      )
+
+      await using server = await serve(router)
+      const { port } = server.address() as AddressInfo
+
+      const { resolve, reject, promise } = timeoutDeferred<{ code: number }>(
+        5000,
+      )
+      const ws = new WebSocket(
+        `ws://localhost:${port}/xrpc/io.example.subscribe?message=ping`,
+      )
+      // Close from the client side to trigger the abort
+      ws.addEventListener('open', () => ws.close())
+      ws.addEventListener('close', resolve)
+      ws.addEventListener('error', reject)
+
+      await promise
+
+      expect(onSocketError).not.toHaveBeenCalled()
+    })
+  })
 })
 
-function timeoutDeferred(ms: number) {
-  let resolve: () => void
-  let reject: (err: unknown) => void
-  const promise = new Promise<void>((res, rej) => {
-    resolve = res
-    reject = rej
+function defer<T = void>() {
+  let res: (value: T | PromiseLike<T>) => void
+  let rej: (err: unknown) => void
+  const promise = new Promise<T>((resolve, reject) => {
+    res = resolve
+    rej = reject
   })
+  return { resolve: res!, reject: rej!, promise }
+}
+
+function timeoutDeferred<T = void>(ms: number) {
+  const { resolve, reject, promise } = defer<T>()
   const to = setTimeout(() => reject(new Error('Timed out')), ms).unref()
-  promise.finally(() => {
-    clearTimeout(to)
-  })
-  return { resolve: resolve!, promise }
+  return {
+    resolve,
+    reject,
+    promise: promise.finally(() => clearTimeout(to)),
+  }
 }
