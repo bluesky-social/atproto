@@ -18,11 +18,6 @@
             "queueId": {
               "type": "integer",
               "description": "Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue."
-            },
-            "assign": {
-              "type": "boolean",
-              "default": true,
-              "description": "Whether to assign or un-assign the report to the user."
             }
           }
         }

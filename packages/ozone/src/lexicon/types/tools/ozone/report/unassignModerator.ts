@@ -13,15 +13,13 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.assignModerator'
+const id = 'tools.ozone.report.unassignModerator'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The ID of the report to assign. */
+  /** The ID of the report to unassign. */
   reportId: number
-  /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
-  queueId?: number
 }
 
 export type OutputSchema = ToolsOzoneReportDefs.AssignmentView
@@ -40,7 +38,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'AlreadyAssigned' | 'InvalidAssignment'
+  error?: 'InvalidAssignment'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

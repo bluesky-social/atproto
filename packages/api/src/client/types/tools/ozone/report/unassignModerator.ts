@@ -14,15 +14,13 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.assignModerator'
+const id = 'tools.ozone.report.unassignModerator'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The ID of the report to assign. */
+  /** The ID of the report to unassign. */
   reportId: number
-  /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
-  queueId?: number
 }
 
 export type OutputSchema = ToolsOzoneReportDefs.AssignmentView
@@ -40,12 +38,6 @@ export interface Response {
   data: OutputSchema
 }
 
-export class AlreadyAssignedError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
-}
-
 export class InvalidAssignmentError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
@@ -54,7 +46,6 @@ export class InvalidAssignmentError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'AlreadyAssigned') return new AlreadyAssignedError(e)
     if (e.error === 'InvalidAssignment') return new InvalidAssignmentError(e)
   }
 

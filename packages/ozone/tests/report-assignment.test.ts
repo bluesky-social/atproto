@@ -3,6 +3,7 @@ import AtpAgent, {
   ToolsOzoneQueueAssignModerator,
   ToolsOzoneReportAssignModerator,
   ToolsOzoneReportGetAssignments,
+  ToolsOzoneReportUnassignModerator,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
@@ -12,7 +13,7 @@ describe('report-assignment', () => {
   let agent: AtpAgent
   let sc: SeedClient
 
-  const assignReportModerator = async (
+  const assignReport = async (
     input: ToolsOzoneReportAssignModerator.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) => {
@@ -26,14 +27,14 @@ describe('report-assignment', () => {
     return data
   }
 
-  const assignQueueModerator = async (
-    input: ToolsOzoneQueueAssignModerator.InputSchema,
+  const unassignReport = async (
+    input: ToolsOzoneReportUnassignModerator.InputSchema,
     callerRole: 'admin' | 'moderator' | 'triage' = 'moderator',
   ) => {
-    const { data } = await agent.tools.ozone.queue.assignModerator(input, {
+    const { data } = await agent.tools.ozone.report.unassignModerator(input, {
       encoding: 'application/json',
       headers: await network.ozone.modHeaders(
-        ids.ToolsOzoneQueueAssignModerator,
+        ids.ToolsOzoneReportUnassignModerator,
         callerRole,
       ),
     })
@@ -120,49 +121,25 @@ describe('report-assignment', () => {
 
   it('can get assignment history', async () => {
     const reportId = await createReport()
-    await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
+    await assignReport({ reportId }, 'moderator')
     const result = await getAssignments({ reportIds: [reportId] })
     expect(result.assignments.length).toBe(1)
   })
 
-  it('moderator can assigned', async () => {
+  it('moderator can assign', async () => {
     const reportId = await createReport()
-    const assignment1 = await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
-    expect(assignment1.reportId).toBe(reportId)
-    expect(assignment1.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment1.endAt).getTime()).toBeGreaterThanOrEqual(
+    const assignment = await assignReport({ reportId }, 'moderator')
+    expect(assignment.reportId).toBe(reportId)
+    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
+    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
   })
 
   it('moderator can refresh assignment', async () => {
     const reportId = await createReport()
-    const assignment1 = await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
-    const assignment2 = await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
+    const assignment1 = await assignReport({ reportId }, 'moderator')
+    const assignment2 = await assignReport({ reportId }, 'moderator')
     expect(assignment2.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment2.endAt).getTime()).toBeGreaterThan(
       new Date(assignment1.endAt).getTime(),
@@ -171,20 +148,8 @@ describe('report-assignment', () => {
 
   it('moderator can assign then un-assign a report', async () => {
     const reportId = await createReport()
-    await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
-    const assignment = await assignReportModerator(
-      {
-        reportId,
-        assign: false,
-      },
-      'moderator',
-    )
+    await assignReport({ reportId }, 'moderator')
+    const assignment = await unassignReport({ reportId }, 'moderator')
     expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
       new Date().getTime(),
     )
@@ -192,27 +157,9 @@ describe('report-assignment', () => {
 
   it('assignment can be exchanged', async () => {
     const reportId = await createReport()
-    await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'admin',
-    )
-    await assignReportModerator(
-      {
-        reportId,
-        assign: false,
-      },
-      'moderator',
-    )
-    const assignment = await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
+    await assignReport({ reportId }, 'admin')
+    await unassignReport({ reportId }, 'moderator')
+    const assignment = await assignReport({ reportId }, 'moderator')
     expect(assignment.reportId).toBe(reportId)
     expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
     expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
@@ -223,14 +170,15 @@ describe('report-assignment', () => {
   it('invalid assignment throws error', async () => {
     const reportId = 999999
     await expect(
-      assignReportModerator(
-        {
-          reportId,
-          assign: true,
-        },
-        'moderator',
-      ),
+      assignReport({ reportId }, 'moderator'),
     ).rejects.toThrow('Invalid report')
+  })
+
+  it('invalid unassignment throws error', async () => {
+    const reportId = await createReport()
+    await expect(
+      unassignReport({ reportId }, 'moderator'),
+    ).rejects.toThrow('Report is not assigned')
   })
 
   describe('pagination', () => {
@@ -239,9 +187,9 @@ describe('report-assignment', () => {
       const r1 = await createReport()
       const r2 = await createReport()
       const r3 = await createReport()
-      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r3, assign: true }, 'admin')
+      await assignReport({ reportId: r1 }, 'admin')
+      await assignReport({ reportId: r2 }, 'admin')
+      await assignReport({ reportId: r3 }, 'admin')
 
       const firstPage = await getAssignments({ limit: 2 })
       expect(firstPage.assignments.length).toBe(2)
@@ -252,8 +200,8 @@ describe('report-assignment', () => {
       await clearAssignments()
       const r1 = await createReport()
       const r2 = await createReport()
-      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
+      await assignReport({ reportId: r1 }, 'admin')
+      await assignReport({ reportId: r2 }, 'admin')
 
       const result = await getAssignments({ limit: 50 })
       expect(result.assignments.length).toBe(2)
@@ -265,9 +213,9 @@ describe('report-assignment', () => {
       const r1 = await createReport()
       const r2 = await createReport()
       const r3 = await createReport()
-      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r3, assign: true }, 'admin')
+      await assignReport({ reportId: r1 }, 'admin')
+      await assignReport({ reportId: r2 }, 'admin')
+      await assignReport({ reportId: r3 }, 'admin')
 
       const firstPage = await getAssignments({ limit: 2 })
       expect(firstPage.assignments.length).toBe(2)
@@ -293,9 +241,9 @@ describe('report-assignment', () => {
       const r1 = await createReport()
       const r2 = await createReport()
       const r3 = await createReport()
-      await assignReportModerator({ reportId: r1, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r2, assign: true }, 'admin')
-      await assignReportModerator({ reportId: r3, assign: true }, 'admin')
+      await assignReport({ reportId: r1 }, 'admin')
+      await assignReport({ reportId: r2 }, 'admin')
+      await assignReport({ reportId: r3 }, 'admin')
 
       // Collect all assignments via pagination
       const allAssignments: typeof firstPage.assignments = []
@@ -321,18 +269,9 @@ describe('report-assignment', () => {
       const r1 = await createReport()
       const r2 = await createReport()
       const r3 = await createReport()
-      await assignReportModerator(
-        { reportId: r1, assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: r2, assign: true },
-        'admin',
-      )
-      await assignReportModerator(
-        { reportId: r3, assign: true },
-        'moderator',
-      )
+      await assignReport({ reportId: r1 }, 'admin')
+      await assignReport({ reportId: r2 }, 'admin')
+      await assignReport({ reportId: r3 }, 'moderator')
 
       const result = await getAssignments({
         dids: [network.ozone.adminAccnt.did],
@@ -354,12 +293,8 @@ describe('report-assignment', () => {
 
   it('hydrates queue when queueId is provided', async () => {
     const reportId = await createReport()
-    const assignment = await assignReportModerator(
-      {
-        reportId,
-        queueId,
-        assign: true,
-      },
+    const assignment = await assignReport(
+      { reportId, queueId },
       'admin',
     )
     expect(assignment.reportId).toBe(reportId)
@@ -371,13 +306,7 @@ describe('report-assignment', () => {
 
   it('omits queue when no queueId is provided', async () => {
     const reportId = await createReport()
-    const assignment = await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'admin',
-    )
+    const assignment = await assignReport({ reportId }, 'admin')
     expect(assignment.reportId).toBe(reportId)
     expect(assignment.queue).toBeUndefined()
   })
@@ -385,7 +314,7 @@ describe('report-assignment', () => {
   it('hydrates queue in getAssignments', async () => {
     await clearAssignments()
     const reportId = await createReport()
-    await assignReportModerator({ reportId, queueId, assign: true }, 'admin')
+    await assignReport({ reportId, queueId }, 'admin')
     const result = await getAssignments({ reportIds: [reportId] })
     expect(result.assignments.length).toBe(1)
     expect(result.assignments[0].queue).toBeDefined()
@@ -395,21 +324,9 @@ describe('report-assignment', () => {
 
   it('cannot double assign', async () => {
     const reportId = await createReport()
-    await assignReportModerator(
-      {
-        reportId,
-        assign: true,
-      },
-      'moderator',
-    )
+    await assignReport({ reportId }, 'moderator')
     await expect(
-      assignReportModerator(
-        {
-          reportId,
-          assign: true,
-        },
-        'admin',
-      ),
+      assignReport({ reportId }, 'admin'),
     ).rejects.toThrow('Report already assigned')
   })
 })

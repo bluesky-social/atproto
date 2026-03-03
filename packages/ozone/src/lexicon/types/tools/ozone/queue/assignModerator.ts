@@ -40,7 +40,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'QueueInvalid'
+  error?: 'InvalidAssignment'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

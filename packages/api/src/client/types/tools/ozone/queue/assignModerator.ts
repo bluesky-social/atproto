@@ -40,7 +40,7 @@ export interface Response {
   data: OutputSchema
 }
 
-export class QueueInvalidError extends XRPCError {
+export class InvalidAssignmentError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -48,7 +48,7 @@ export class QueueInvalidError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'QueueInvalid') return new QueueInvalidError(e)
+    if (e.error === 'InvalidAssignment') return new InvalidAssignmentError(e)
   }
 
   return e

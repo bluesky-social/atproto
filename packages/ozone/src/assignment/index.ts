@@ -38,7 +38,9 @@ export interface AssignReportInput {
   did: string
   reportId: number
   queueId?: number | null
-  assign: boolean
+}
+export interface UnassignReportInput {
+  reportId: number
 }
 
 type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
@@ -204,7 +206,7 @@ export class AssignmentService {
       .where('deletedAt', 'is', null)
       .executeTakeFirst()
     if (!queue) {
-      throw new InvalidRequestError('Invalid queue', 'QueueInvalid')
+      throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
     }
 
     // Make assignment
@@ -273,32 +275,14 @@ export class AssignmentService {
   async assignReport(
     input: AssignReportInput,
   ): Promise<ToolsOzoneReportDefs.AssignmentView> {
-    const { did, reportId, queueId, assign } = input
+    const { did, reportId, queueId } = input
     const now = new Date()
-    const endAt = assign
-      ? new Date(now.getTime() + this.opts.reportDurationMs)
-      : now
+    const endAt = new Date(now.getTime() + this.opts.reportDurationMs)
 
     // Check report and queue since we aren't using foreign keys
-    const report = await this.db.db
-      .selectFrom('report')
-      .selectAll()
-      .where('id', '=', reportId)
-      .executeTakeFirst()
-    if (!report) {
-      throw new InvalidRequestError('Invalid report', 'InvalidAssignment')
-    }
+    await this.checkReport(reportId)
     if (queueId !== undefined && queueId !== null) {
-      const queue = await this.db.db
-        .selectFrom('report_queue')
-        .selectAll()
-        .where('id', '=', queueId)
-        .where('enabled', '=', true)
-        .where('deletedAt', 'is', null)
-        .executeTakeFirst()
-      if (!queue) {
-        throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
-      }
+      await this.checkQueue(queueId)
     }
 
     // Make assignment
@@ -311,7 +295,7 @@ export class AssignmentService {
         .executeTakeFirst()
 
       if (existing) {
-        if (existing.did !== did && assign) {
+        if (existing.did !== did) {
           throw new InvalidRequestError(
             'Report already assigned',
             'AlreadyAssigned',
@@ -320,7 +304,6 @@ export class AssignmentService {
         const updated = await dbTxn.db
           .updateTable('moderator_assignment')
           .set({
-            did: assign ? did : existing.did,
             endAt: endAt.toISOString(),
             queueId: queueId ?? existing.queueId ?? null,
           })
@@ -344,10 +327,71 @@ export class AssignmentService {
       }
     })
 
-    if (result.reportId === null) {
-      throw new Error('Failed to assign moderator to report')
-    }
+    return this.hydrateReportAssignment(result.id)
+  }
 
+  async unassignReport(
+    input: UnassignReportInput,
+  ): Promise<ToolsOzoneReportDefs.AssignmentView> {
+    const { reportId } = input
+    const now = new Date()
+
+    await this.checkReport(reportId)
+
+    const result = await this.db.transaction(async (dbTxn) => {
+      const existing = await dbTxn.db
+        .selectFrom('moderator_assignment')
+        .selectAll()
+        .where('reportId', '=', reportId)
+        .where('endAt', '>', now.toISOString())
+        .executeTakeFirst()
+
+      if (!existing) {
+        throw new InvalidRequestError(
+          'Report is not assigned',
+          'InvalidAssignment',
+        )
+      }
+
+      const updated = await dbTxn.db
+        .updateTable('moderator_assignment')
+        .set({ endAt: now.toISOString() })
+        .where('id', '=', existing.id)
+        .returningAll()
+        .executeTakeFirstOrThrow()
+      return updated
+    })
+
+    return this.hydrateReportAssignment(result.id)
+  }
+
+  private async checkReport(reportId: number): Promise<void> {
+    const report = await this.db.db
+      .selectFrom('report')
+      .selectAll()
+      .where('id', '=', reportId)
+      .executeTakeFirst()
+    if (!report) {
+      throw new InvalidRequestError('Invalid report', 'InvalidAssignment')
+    }
+  }
+
+  private async checkQueue(queueId: number): Promise<void> {
+    const queue = await this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('id', '=', queueId)
+      .where('enabled', '=', true)
+      .where('deletedAt', 'is', null)
+      .executeTakeFirst()
+    if (!queue) {
+      throw new InvalidRequestError('Invalid queue', 'InvalidAssignment')
+    }
+  }
+
+  private async hydrateReportAssignment(
+    assignmentId: number,
+  ): Promise<ToolsOzoneReportDefs.AssignmentView> {
     const row = await this.db.db
       .selectFrom('moderator_assignment')
       .leftJoin(
@@ -367,7 +411,7 @@ export class AssignmentService {
         'report_queue.enabled as queueEnabled',
         'report_queue.deletedAt as queueDeletedAt',
       ])
-      .where('moderator_assignment.id', '=', result.id)
+      .where('moderator_assignment.id', '=', assignmentId)
       .executeTakeFirstOrThrow()
 
     return this.viewReportAssignment(row)
