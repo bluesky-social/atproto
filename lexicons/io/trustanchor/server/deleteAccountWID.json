@@ -1,0 +1,28 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.server.deleteAccountWID",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Delete a WID-linked account using an approval token obtained from a QuickLogin QR scan. No password field required.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "token"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "DID of the account to delete"
+            },
+            "token": {
+              "type": "string",
+              "description": "Approval token from io.trustanchor.quicklogin.status"
+            }
+          }
+        }
+      }
+    }
+  }
+}

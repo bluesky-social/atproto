@@ -23,14 +23,30 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Invalid session', 'NotFound')
       }
 
+      const statusResponse = {
+        status: session.status,
+        result: session.result || undefined,
+        approvalToken: session.approvalToken || undefined,
+        error: session.error || undefined,
+        expiresAt: session.expiresAt,
+      }
+
+      if (ctx.cfg.debugNeuro && session.status === 'completed') {
+        req.log.info(
+          {
+            sessionId,
+            statusResponse,
+            callbackPayload: session.debugNeuro?.callbackPayload,
+            callbackFieldNames: session.debugNeuro?.receivedFieldNames,
+            unexpectedFieldNames: session.debugNeuro?.unexpectedFieldNames,
+          },
+          'QuickLogin XRPC status completed response (debug)',
+        )
+      }
+
       return {
         encoding: 'application/json',
-        body: {
-          status: session.status,
-          result: session.result || undefined,
-          error: session.error || undefined,
-          expiresAt: session.expiresAt,
-        },
+        body: statusResponse,
       }
     },
   })

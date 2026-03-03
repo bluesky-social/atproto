@@ -21,12 +21,27 @@ export function statusQuickLogin(router: Router, ctx: AppContext) {
         return res.status(404).json({ error: 'Invalid session' })
       }
 
-      return res.json({
+      const statusResponse = {
         status: session.status,
         result: session.result || undefined,
         error: session.error || undefined,
         expiresAt: session.expiresAt,
-      })
+      }
+
+      if (ctx.cfg.debugNeuro && session.status === 'completed') {
+        req.log.info(
+          {
+            sessionId,
+            statusResponse,
+            callbackPayload: session.debugNeuro?.callbackPayload,
+            callbackFieldNames: session.debugNeuro?.receivedFieldNames,
+            unexpectedFieldNames: session.debugNeuro?.unexpectedFieldNames,
+          },
+          'QuickLogin status completed response (debug)',
+        )
+      }
+
+      return res.json(statusResponse)
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error'

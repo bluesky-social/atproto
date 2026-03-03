@@ -12,6 +12,7 @@ import * as mig011 from './011-pending-invitations'
 import * as mig012 from './012-invitation-tracking'
 import * as mig013 from './013-test-user-support'
 import * as mig014 from './014-jid-ref'
+import * as mig015 from './015-privacy-separated-neuro-schema'
 
 export default {
   '001': mig001,
@@ -28,4 +29,5 @@ export default {
   '012': mig012,
   '013': mig013,
   '014': mig014,
+  '015': mig015,
 }

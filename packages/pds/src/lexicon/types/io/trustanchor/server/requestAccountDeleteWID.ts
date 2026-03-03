@@ -12,30 +12,23 @@ import {
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'io.trustanchor.quicklogin.init'
+const id = 'io.trustanchor.server.requestAccountDeleteWID'
 
 export type QueryParams = {}
-
-export interface InputSchema {
-  /** Allow automatic account creation if JID not found */
-  allowCreate?: boolean
-}
+export type InputSchema = undefined
 
 export interface OutputSchema {
-  /** Unique session identifier */
+  /** QuickLogin session ID for polling status */
   sessionId: string
   /** Secret token for polling status */
   sessionToken: string
-  /** When this session expires */
-  expiresAt: string
   /** QR code image URL for display */
   qrCodeUrl: string
+  /** When this session expires */
+  expiresAt: string
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'

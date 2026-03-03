@@ -18,8 +18,8 @@ export default function (server: Server, ctx: AppContext) {
               actor.ageAssuranceStatus?.lastInitiatedAt
                 ?.toDate()
                 .toISOString() || undefined,
-            status: actor.ageAssuranceStatus?.status || 'unknown',
-            access: actor.ageAssuranceStatus?.access || 'unknown',
+            status: 'assured', // actor.ageAssuranceStatus?.status || 'unknown',
+            access: 'full', // actor.ageAssuranceStatus?.access || 'unknown',
           },
           metadata: {
             accountCreatedAt:

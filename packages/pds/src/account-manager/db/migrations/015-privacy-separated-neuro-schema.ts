@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 // Migration 015: Restructure neuro_identity_link for privacy separation.
 //
@@ -21,97 +21,179 @@ import { Kysely } from 'kysely'
 //   6. Drop old jidRef index (replaced by new partial index)
 
 export async function up(db: Kysely<unknown>): Promise<void> {
-  // Step 1: Drop the old jidRef index (it will be replaced by partial unique index)
-  await db.schema.dropIndex('neuro_identity_link_jidRef_idx').execute()
+  // SQLite-safe migration path:
+  // - legalId was historically PRIMARY KEY and cannot be dropped in place.
+  // - Some DBs may be pre-014 (no jidRef), post-014 (has jidRef), or partially migrated.
+  // Rebuild table and map columns dynamically.
 
-  // Step 2: Rename columns
-  // Note: SQLite doesn't have direct RENAME COLUMN in older versions,
-  // so we use alterTable with renameColumn (available in Kysely)
-  await db.schema
-    .alterTable('neuro_identity_link')
-    .renameColumn('jidRef', 'userJid')
-    .execute()
+  const tableRows = (
+    await sql<{ name: string }>`
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name IN ('neuro_identity_link', 'neuro_identity_link_old')
+    `.execute(db)
+  ).rows
 
-  await db.schema
-    .alterTable('neuro_identity_link')
-    .renameColumn('jid', 'testUserJid')
-    .execute()
+  const hasCurrent = tableRows.some((row) => row.name === 'neuro_identity_link')
+  const hasOld = tableRows.some((row) => row.name === 'neuro_identity_link_old')
 
-  // Step 3: Drop obsolete columns (privacy boundary: no identity fields in PDS)
-  await db.schema
-    .alterTable('neuro_identity_link')
-    .dropColumn('legalId')
-    .execute()
+  // If this is first run of migration, move current table aside.
+  if (hasCurrent && !hasOld) {
+    await db.schema
+      .alterTable('neuro_identity_link')
+      .renameTo('neuro_identity_link_old')
+      .execute()
+  }
 
-  await db.schema
-    .alterTable('neuro_identity_link')
-    .dropColumn('email')
-    .execute()
+  // Create target table if missing (works for fresh and re-run cases).
+  await sql`
+    CREATE TABLE IF NOT EXISTS neuro_identity_link (
+      did VARCHAR PRIMARY KEY,
+      userJid VARCHAR,
+      testUserJid VARCHAR,
+      isTestUser INTEGER NOT NULL DEFAULT 0,
+      linkedAt VARCHAR NOT NULL,
+      lastLoginAt VARCHAR
+    )
+  `.execute(db)
 
-  await db.schema
-    .alterTable('neuro_identity_link')
-    .dropColumn('userName')
-    .execute()
+  const tableRowsAfter = (
+    await sql<{ name: string }>`
+      SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name = 'neuro_identity_link_old'
+    `.execute(db)
+  ).rows
 
-  // Step 4: Create unique partial indices for JID lookup
-  // Real users: userJid unique when isTestUser=0
-  await db.schema
-    .createIndex('neuro_identity_link_userJid_real_idx')
-    .on('neuro_identity_link')
-    .column('userJid')
-    .unique()
-    .execute()
+  const hasOldAfter = tableRowsAfter.some(
+    (row) => row.name === 'neuro_identity_link_old',
+  )
 
-  // Test users: testUserJid unique when isTestUser=1
-  await db.schema
-    .createIndex('neuro_identity_link_testUserJid_test_idx')
-    .on('neuro_identity_link')
-    .column('testUserJid')
-    .unique()
-    .execute()
+  if (hasOldAfter) {
+    const oldRows = (
+      await sql<any>`SELECT * FROM neuro_identity_link_old`.execute(db)
+    ).rows as Array<Record<string, any>>
+
+    // Ensure re-runs don't duplicate.
+    await sql`DELETE FROM neuro_identity_link`.execute(db)
+
+    for (const row of oldRows) {
+      const did = row.did as string | undefined
+      if (!did) continue
+
+      // Source compatibility:
+      // - post-014: jidRef exists
+      // - pre-014: only legalId exists
+      // - in-progress/newer: userJid/testUserJid may already exist
+      const userJid = row.userJid ?? row.jidRef ?? row.legalId ?? null
+      const testUserJid = row.testUserJid ?? row.jid ?? null
+      const isTestUser = row.isTestUser ?? (testUserJid ? 1 : 0)
+      const linkedAt = row.linkedAt ?? new Date().toISOString()
+      const lastLoginAt = row.lastLoginAt ?? null
+
+      await sql`
+        INSERT INTO neuro_identity_link (
+          did,
+          userJid,
+          testUserJid,
+          isTestUser,
+          linkedAt,
+          lastLoginAt
+        ) VALUES (
+          ${did},
+          ${userJid},
+          ${testUserJid},
+          ${isTestUser},
+          ${linkedAt},
+          ${lastLoginAt}
+        )
+        ON CONFLICT(did) DO UPDATE SET
+          userJid = excluded.userJid,
+          testUserJid = excluded.testUserJid,
+          isTestUser = excluded.isTestUser,
+          linkedAt = excluded.linkedAt,
+          lastLoginAt = excluded.lastLoginAt
+      `.execute(db)
+    }
+  }
+
+  // Indices (idempotent).
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS neuro_identity_link_userJid_real_idx
+    ON neuro_identity_link(userJid)
+  `.execute(db)
+
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS neuro_identity_link_testUserJid_test_idx
+    ON neuro_identity_link(testUserJid)
+  `.execute(db)
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS neuro_identity_link_test_user_idx
+    ON neuro_identity_link(isTestUser)
+  `.execute(db)
+
+  // Remove old table if present.
+  await sql`DROP TABLE IF EXISTS neuro_identity_link_old`.execute(db)
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  // Reverse the migration (for rollback, though this is a breaking schema change)
+  // Reverse with the same SQLite-safe table rebuild strategy.
 
-  // Step 1: Drop new partial indices
-  await db.schema.dropIndex('neuro_identity_link_userJid_real_idx').execute()
-
-  await db.schema
-    .dropIndex('neuro_identity_link_testUserJid_test_idx')
-    .execute()
-
-  // Step 2: Restore removed columns with NULL defaults
+  // 1) Rename current table
   await db.schema
     .alterTable('neuro_identity_link')
-    .addColumn('legalId', 'varchar')
+    .renameTo('neuro_identity_link_new')
     .execute()
 
+  // 2) Recreate old schema (legalId was the original PRIMARY KEY)
   await db.schema
-    .alterTable('neuro_identity_link')
+    .createTable('neuro_identity_link')
+    .addColumn('legalId', 'varchar', (col) => col.primaryKey())
+    .addColumn('did', 'varchar', (col) => col.notNull())
     .addColumn('email', 'varchar')
-    .execute()
-
-  await db.schema
-    .alterTable('neuro_identity_link')
     .addColumn('userName', 'varchar')
+    .addColumn('linkedAt', 'varchar', (col) => col.notNull())
+    .addColumn('lastLoginAt', 'varchar')
+    .addColumn('jid', 'varchar')
+    .addColumn('isTestUser', 'integer', (col) => col.notNull().defaultTo(0))
+    .addColumn('jidRef', 'varchar')
     .execute()
 
-  // Step 3: Rename columns back
+  // 3) Move data back
+  await sql`
+    INSERT INTO neuro_identity_link (legalId, did, email, userName, linkedAt, lastLoginAt, jid, isTestUser, jidRef)
+    SELECT userJid, did, NULL, NULL, linkedAt, lastLoginAt, testUserJid, isTestUser, userJid
+    FROM neuro_identity_link_new
+  `.execute(db)
+
+  // 4) Recreate old indices
   await db.schema
-    .alterTable('neuro_identity_link')
-    .renameColumn('userJid', 'jidRef')
+    .createIndex('neuro_identity_link_did_idx')
+    .on('neuro_identity_link')
+    .column('did')
     .execute()
 
   await db.schema
-    .alterTable('neuro_identity_link')
-    .renameColumn('testUserJid', 'jid')
+    .createIndex('neuro_identity_link_jid_idx')
+    .on('neuro_identity_link')
+    .column('jid')
     .execute()
 
-  // Step 4: Restore old index
+  await db.schema
+    .createIndex('neuro_identity_link_test_user_idx')
+    .on('neuro_identity_link')
+    .column('isTestUser')
+    .execute()
+
   await db.schema
     .createIndex('neuro_identity_link_jidRef_idx')
     .on('neuro_identity_link')
     .column('jidRef')
     .execute()
+
+  // 5) Drop rebuilt table
+  await db.schema.dropTable('neuro_identity_link_new').execute()
 }

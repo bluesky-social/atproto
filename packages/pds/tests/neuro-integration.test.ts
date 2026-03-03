@@ -7,6 +7,8 @@ import {
   NeuroAuthManager,
   NeuroIdentity,
 } from '../src/account-manager/helpers/neuro-auth-manager'
+import { createAccountViaQuickLogin } from '../src/api/io/trustanchor/quicklogin/helpers'
+import { handleQuickLoginCallback } from '../src/api/io/trustanchor/quicklogin/callback-handler'
 
 /**
  * Neuro Quick Login Integration Tests
@@ -31,6 +33,8 @@ describe('Neuro Quick Login Integration', () => {
   let mockNeuroServerInstance: any = null
   let mockNeuroPort: number | null = null
   let mockNeuroUrl: string | null = null
+  let previousQuickloginEnabled: string | undefined
+  let previousQuickloginApiBaseUrl: string | undefined
 
   // Mock Neuro API state
   const mockSessions = new Map<
@@ -44,7 +48,16 @@ describe('Neuro Quick Login Integration', () => {
     }
   >()
 
+  const callbackLogger = {
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+  }
+
   beforeAll(async () => {
+    previousQuickloginEnabled = process.env.PDS_QUICKLOGIN_ENABLED
+    previousQuickloginApiBaseUrl = process.env.PDS_QUICKLOGIN_API_BASE_URL
+
     // Set up mock Neuro server if not using real API
     if (!USE_REAL_NEURO_API) {
       mockNeuroPort = await getPort()
@@ -123,6 +136,11 @@ describe('Neuro Quick Login Integration', () => {
       console.log(`🧪 Mock Neuro API running at ${mockNeuroUrl}`)
     }
 
+    process.env.PDS_QUICKLOGIN_ENABLED = 'true'
+    process.env.PDS_QUICKLOGIN_API_BASE_URL = USE_REAL_NEURO_API
+      ? `https://${NEURO_DOMAIN}`
+      : mockNeuroUrl!
+
     // Create test network with Neuro enabled
     network = await TestNetworkNoAppView.create({
       pds: {
@@ -144,6 +162,18 @@ describe('Neuro Quick Login Integration', () => {
   })
 
   afterAll(async () => {
+    if (previousQuickloginEnabled === undefined) {
+      delete process.env.PDS_QUICKLOGIN_ENABLED
+    } else {
+      process.env.PDS_QUICKLOGIN_ENABLED = previousQuickloginEnabled
+    }
+
+    if (previousQuickloginApiBaseUrl === undefined) {
+      delete process.env.PDS_QUICKLOGIN_API_BASE_URL
+    } else {
+      process.env.PDS_QUICKLOGIN_API_BASE_URL = previousQuickloginApiBaseUrl
+    }
+
     if (mockNeuroServerInstance) {
       // Close mock server
       await new Promise<void>((resolve) => {
@@ -413,7 +443,8 @@ describe('Neuro Quick Login Integration', () => {
       const beforeUpdate = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
         .select('lastLoginAt')
-        .where('legalId', '=', testJid)
+        .where('userJid', '=', testJid)
+        .where('isTestUser', '=', 0)
         .executeTakeFirst()
 
       await manager.updateLastLogin(testJid)
@@ -421,7 +452,8 @@ describe('Neuro Quick Login Integration', () => {
       const afterUpdate = await ctx.accountManager.db.db
         .selectFrom('neuro_identity_link')
         .select('lastLoginAt')
-        .where('legalId', '=', testJid)
+        .where('userJid', '=', testJid)
+        .where('isTestUser', '=', 0)
         .executeTakeFirst()
 
       expect(afterUpdate?.lastLoginAt).toBeTruthy()
@@ -547,281 +579,217 @@ describe('Neuro Quick Login Integration', () => {
     })
   })
 
-  describe('QuickLogin JWT Security', () => {
-    it('should create valid JWT for session', async () => {
+  describe('QuickLogin Callback Security', () => {
+    it('should reject callback without Key/serviceId', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
 
-      const { sessionId } = await manager.initiateSession()
+      await expect(
+        handleQuickLoginCallback(
+          {
+            SessionId: `missing-key-${Date.now()}`,
+            State: 'Approved',
+            JID: 'missing-key@neuro.example.com',
+          },
+          ctx,
+          callbackLogger,
+        ),
+      ).rejects.toThrow('Missing Key')
 
-      // Create JWT
-      const jwt = await manager.createSessionJwt(sessionId)
-
-      expect(jwt).toBeTruthy()
-      expect(typeof jwt).toBe('string')
-      expect(jwt.split('.')).toHaveLength(3) // Header.Payload.Signature
-
-      console.log('✅ JWT created successfully')
+      console.log('✅ Callback without Key/serviceId rejected')
     })
 
-    it('should verify valid JWT', async () => {
+    it('should reject callback for unknown session key', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
 
-      const { sessionId } = await manager.initiateSession()
-      const jwt = await manager.createSessionJwt(sessionId)
+      await expect(
+        handleQuickLoginCallback(
+          {
+            SessionId: `unknown-session-${Date.now()}`,
+            State: 'Approved',
+            Key: `unknown-key-${Date.now()}`,
+            JID: 'unknown-key@neuro.example.com',
+          },
+          ctx,
+          callbackLogger,
+        ),
+      ).rejects.toThrow('Session not found')
 
-      // Verify JWT
-      const verified = await manager.verifySessionJwt(jwt)
-
-      expect(verified).toBeTruthy()
-      expect(verified.sessionId).toBe(sessionId)
-      expect(verified.exp).toBeTruthy()
-      expect(verified.iat).toBeTruthy()
-
-      console.log('✅ JWT verified successfully')
+      console.log('✅ Callback with unknown session key rejected')
     })
 
-    it('should reject expired JWT', async () => {
+    it('should reject callback that is not approved', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
+      const serviceId = `service-pending-${Date.now()}`
+      const quickSession = ctx.quickloginStore.createSession(true, serviceId)
 
-      const { sessionId } = await manager.initiateSession()
+      await expect(
+        handleQuickLoginCallback(
+          {
+            SessionId: quickSession.sessionId,
+            State: 'Pending',
+            Key: serviceId,
+            JID: 'not-approved@neuro.example.com',
+          },
+          ctx,
+          callbackLogger,
+        ),
+      ).rejects.toThrow('QuickLogin Pending')
 
-      // Create JWT with immediate expiration
-      const expiredJwt = await manager.createSessionJwt(sessionId, 0)
+      const session = ctx.quickloginStore.getSession(quickSession.sessionId)
+      expect(session?.status).toBe('failed')
+      expect(session?.error).toContain('QuickLogin Pending')
 
-      // Wait for expiration
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Verify should reject
-      await expect(manager.verifySessionJwt(expiredJwt)).rejects.toThrow()
-
-      console.log('✅ Expired JWT rejected')
+      console.log('✅ Non-approved callback rejected')
     })
 
-    it('should reject malformed JWT', async () => {
+    it('should reject callback missing JID', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
+      const serviceId = `service-missing-jid-${Date.now()}`
+      const quickSession = ctx.quickloginStore.createSession(true, serviceId)
 
-      // Invalid JWT formats
-      const invalidJwts = [
-        'not.a.jwt',
-        'header.payload', // Missing signature
-        'totally-invalid',
-        '',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.signature',
-      ]
+      await expect(
+        handleQuickLoginCallback(
+          {
+            SessionId: quickSession.sessionId,
+            State: 'Approved',
+            Key: serviceId,
+          },
+          ctx,
+          callbackLogger,
+        ),
+      ).rejects.toThrow('JID missing from callback')
 
-      for (const invalidJwt of invalidJwts) {
-        await expect(manager.verifySessionJwt(invalidJwt)).rejects.toThrow()
-      }
-
-      console.log('✅ Malformed JWTs rejected')
-    })
-
-    it('should reject JWT with wrong signature', async () => {
-      const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
-
-      const { sessionId } = await manager.initiateSession()
-      const validJwt = await manager.createSessionJwt(sessionId)
-
-      // Tamper with JWT signature
-      const parts = validJwt.split('.')
-      const tamperedJwt = `${parts[0]}.${parts[1]}.invalid_signature`
-
-      await expect(manager.verifySessionJwt(tamperedJwt)).rejects.toThrow()
-
-      console.log('✅ Tampered JWT rejected')
-    })
-
-    it('should reject JWT with tampered payload', async () => {
-      const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
-
-      const { sessionId } = await manager.initiateSession()
-      const validJwt = await manager.createSessionJwt(sessionId)
-
-      // Decode and tamper with payload
-      const parts = validJwt.split('.')
-      const payload = JSON.parse(
-        Buffer.from(parts[1], 'base64url').toString(),
-      )
-      payload.sessionId = 'tampered-session-id'
-
-      const tamperedPayload = Buffer.from(JSON.stringify(payload)).toString(
-        'base64url',
-      )
-      const tamperedJwt = `${parts[0]}.${tamperedPayload}.${parts[2]}`
-
-      await expect(manager.verifySessionJwt(tamperedJwt)).rejects.toThrow()
-
-      console.log('✅ Tampered payload JWT rejected')
-    })
-
-    it('should include required claims in JWT', async () => {
-      const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
-
-      const { sessionId } = await manager.initiateSession()
-      const jwt = await manager.createSessionJwt(sessionId)
-
-      const verified = await manager.verifySessionJwt(jwt)
-
-      // Required claims
-      expect(verified.sessionId).toBe(sessionId)
-      expect(verified.exp).toBeGreaterThan(Date.now() / 1000)
-      expect(verified.iat).toBeLessThanOrEqual(Date.now() / 1000)
-      expect(verified.iss).toBe('atproto-pds')
-
-      console.log('✅ JWT contains all required claims')
-    })
-
-    it('should handle JWT expiration timing correctly', async () => {
-      const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
-
-      const { sessionId } = await manager.initiateSession()
-
-      // Create JWT with 2 second expiration
-      const shortJwt = await manager.createSessionJwt(sessionId, 2)
-
-      // Should be valid immediately
-      const verified = await manager.verifySessionJwt(shortJwt)
-      expect(verified.sessionId).toBe(sessionId)
-
-      // Wait for expiration
-      await new Promise((resolve) => setTimeout(resolve, 2500))
-
-      // Should now be expired
-      await expect(manager.verifySessionJwt(shortJwt)).rejects.toThrow()
-
-      console.log('✅ JWT expiration timing works correctly')
+      console.log('✅ Callback missing JID rejected')
     })
   })
 
   describe('QuickLogin Callback Handler', () => {
-    it('should process valid callback with JWT', async () => {
+    it('should process valid callback and complete session', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
+      const serviceId = `service-success-${Date.now()}`
+      const quickSession = ctx.quickloginStore.createSession(true, serviceId)
 
-      const { sessionId } = await manager.initiateSession()
-      const jwt = await manager.createSessionJwt(sessionId)
-
-      const mockIdentity: NeuroIdentity = {
-        sessionId,
-        jid: 'jwt-callback@neuro.example.com',
-        userName: 'jwtcallback',
-        email: 'jwtcallback@example.com',
-      }
-
-      // Process callback with JWT
-      const callbackUrl = `${pdsUrl}/neuro/quicklogin/callback`
-      const response = await fetch(callbackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
+      const result = await handleQuickLoginCallback(
+        {
+          SessionId: quickSession.sessionId,
+          State: 'Approved',
+          Key: serviceId,
+          JID: `callback-success-${Date.now()}@neuro.example.com`,
+          preferredhandle: `callback${Date.now()}`,
         },
-        body: JSON.stringify(mockIdentity),
-      })
+        ctx,
+        callbackLogger,
+      )
 
-      expect(response.ok).toBe(true)
-      expect(manager.isSessionCompleted(sessionId)).toBe(true)
+      expect(result).toBeDefined()
+      expect(result?.did).toBeTruthy()
+      expect(result?.accessJwt).toBeTruthy()
+      expect(result?.refreshJwt).toBeTruthy()
+
+      const session = ctx.quickloginStore.getSession(quickSession.sessionId)
+      expect(session?.status).toBe('completed')
+      expect(session?.result?.did).toBe(result?.did)
 
       console.log('✅ Callback with JWT processed successfully')
     })
 
-    it('should reject callback without JWT', async () => {
+    it('should capture callback payload metadata when debugNeuro is enabled', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
+      const previousDebugNeuro = ctx.cfg.debugNeuro
+      ctx.cfg.debugNeuro = true
 
-      const { sessionId } = await manager.initiateSession()
+      const serviceId = `service-debug-${Date.now()}`
+      const quickSession = ctx.quickloginStore.createSession(true, serviceId)
 
-      const mockIdentity: NeuroIdentity = {
-        sessionId,
-        jid: 'no-jwt@neuro.example.com',
-        userName: 'nojwt',
-        email: 'nojwt@example.com',
+      try {
+        await handleQuickLoginCallback(
+          {
+            SessionId: quickSession.sessionId,
+            State: 'Approved',
+            Key: serviceId,
+            JID: `debug-${Date.now()}@neuro.example.com`,
+            istestuser: 'true',
+            preferredhandle: `dbg${Date.now()}`,
+            unexpectedField: 'surprise',
+          } as any,
+          ctx,
+          callbackLogger,
+        )
+
+        const session = ctx.quickloginStore.getSession(quickSession.sessionId)
+        expect(session?.status).toBe('completed')
+        expect(session?.debugNeuro).toBeDefined()
+        expect(session?.debugNeuro?.receivedFieldNames).toContain('JID')
+        expect(session?.debugNeuro?.receivedFieldNames).toContain(
+          'unexpectedField',
+        )
+        expect(session?.debugNeuro?.unexpectedFieldNames).toContain(
+          'unexpectedField',
+        )
+        expect(session?.debugNeuro?.callbackPayload.JID).toContain('debug-')
+      } finally {
+        ctx.cfg.debugNeuro = previousDebugNeuro
       }
-
-      const callbackUrl = `${pdsUrl}/neuro/quicklogin/callback`
-      const response = await fetch(callbackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // No Authorization header
-        },
-        body: JSON.stringify(mockIdentity),
-      })
-
-      expect(response.ok).toBe(false)
-      expect(response.status).toBe(401)
-
-      console.log('✅ Callback without JWT rejected')
     })
 
-    it('should reject callback with invalid JWT', async () => {
+    it('should reject callback for expired session', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
+      const serviceId = `service-expired-${Date.now()}`
+      const quickSession = ctx.quickloginStore.createSession(true, serviceId)
 
-      const { sessionId } = await manager.initiateSession()
-
-      const mockIdentity: NeuroIdentity = {
-        sessionId,
-        jid: 'invalid-jwt@neuro.example.com',
-        userName: 'invalidjwt',
-        email: 'invalidjwt@example.com',
-      }
-
-      const callbackUrl = `${pdsUrl}/neuro/quicklogin/callback`
-      const response = await fetch(callbackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer invalid.jwt.token',
-        },
-        body: JSON.stringify(mockIdentity),
+      ctx.quickloginStore.updateSession(quickSession.sessionId, {
+        expiresAt: new Date(Date.now() - 1000).toISOString(),
       })
 
-      expect(response.ok).toBe(false)
-      expect(response.status).toBe(401)
+      await expect(
+        handleQuickLoginCallback(
+          {
+            SessionId: quickSession.sessionId,
+            State: 'Approved',
+            Key: serviceId,
+            JID: `expired-${Date.now()}@neuro.example.com`,
+          },
+          ctx,
+          callbackLogger,
+        ),
+      ).rejects.toThrow('Session expired')
 
-      console.log('✅ Callback with invalid JWT rejected')
+      const session = ctx.quickloginStore.getSession(quickSession.sessionId)
+      expect(session?.status).toBe('pending')
+
+      console.log('✅ Callback with expired session rejected')
     })
 
-    it('should reject callback with mismatched sessionId', async () => {
+    it('should login existing linked account on callback', async () => {
       const ctx = network.pds.ctx
-      const manager = ctx.neuroAuthManager!
+      const existingJid = `existing-${Date.now()}@neuro.example.com`
 
-      const { sessionId: sessionId1 } = await manager.initiateSession()
-      const { sessionId: sessionId2 } = await manager.initiateSession()
+      const created = await createAccountViaQuickLogin(
+        ctx,
+        existingJid,
+        0,
+        `existing${Date.now()}`,
+      )
 
-      // Create JWT for session1
-      const jwt = await manager.createSessionJwt(sessionId1)
+      const serviceId = `service-existing-${Date.now()}`
+      const quickSession = ctx.quickloginStore.createSession(true, serviceId)
 
-      // Try to use it for session2
-      const mockIdentity: NeuroIdentity = {
-        sessionId: sessionId2, // Mismatch!
-        jid: 'mismatch@neuro.example.com',
-        userName: 'mismatch',
-        email: 'mismatch@example.com',
-      }
-
-      const callbackUrl = `${pdsUrl}/neuro/quicklogin/callback`
-      const response = await fetch(callbackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${jwt}`,
+      const result = await handleQuickLoginCallback(
+        {
+          SessionId: quickSession.sessionId,
+          State: 'Approved',
+          Key: serviceId,
+          JID: existingJid,
         },
-        body: JSON.stringify(mockIdentity),
-      })
+        ctx,
+        callbackLogger,
+      )
 
-      expect(response.ok).toBe(false)
+      expect(result).toBeDefined()
+      expect(result?.created).toBe(false)
+      expect(result?.did).toBe(created.did)
 
-      console.log('✅ Callback with mismatched sessionId rejected')
+      console.log('✅ Existing account login path works via callback')
     })
   })
 
@@ -832,45 +800,17 @@ describe('Neuro Quick Login Integration', () => {
 
       const userJid = `realuser${Date.now()}@legal.lab.tagroot.io`
 
-      // Simulate QuickLogin identity with EMAIL (real user)
-      const mockIdentity: NeuroIdentity = {
-        sessionId: 'link-test-session',
-        jid: userJid,
-        userName: `realuser${Date.now()}`,
-        email: `realuser${Date.now()}@example.com`,
-      }
-
-      // Process via QuickLogin (implementation depends on your handler)
-      // For now, verify the database linkage
-      const did = `did:plc:linktest${Date.now()}`
-
-      await db.db
-        .insertInto('account')
-        .values({
-          did,
-          handle: `linktest${Date.now()}.test`,
-          email: mockIdentity.email,
-          passwordScrypt: 'fake-hash',
-          createdAt: new Date().toISOString(),
-        })
-        .execute()
-
-      await db.db
-        .insertInto('neuro_identity_link')
-        .values({
-          did,
-          userJid,
-          testUserJid: null,
-          isTestUser: 0,
-          linkedAt: new Date().toISOString(),
-          lastLoginAt: null,
-        })
-        .execute()
+      const result = await createAccountViaQuickLogin(
+        ctx,
+        userJid,
+        0,
+        `realuser${Date.now()}`,
+      )
 
       const link = await db.db
         .selectFrom('neuro_identity_link')
         .selectAll()
-        .where('did', '=', did)
+        .where('did', '=', result.did)
         .executeTakeFirst()
 
       expect(link?.userJid).toBe(userJid)
@@ -886,43 +826,17 @@ describe('Neuro Quick Login Integration', () => {
 
       const testUserJid = `TestUser${Date.now()}@lab.tagroot.io`
 
-      // Test user has no EMAIL
-      const mockIdentity: NeuroIdentity = {
-        sessionId: 'test-link-session',
-        jid: testUserJid,
-        userName: `TestUser${Date.now()}`,
-        email: undefined,
-      }
-
-      const did = `did:plc:testlinktest${Date.now()}`
-
-      await db.db
-        .insertInto('account')
-        .values({
-          did,
-          handle: `testlinktest${Date.now()}.test`,
-          email: null,
-          passwordScrypt: 'fake-hash',
-          createdAt: new Date().toISOString(),
-        })
-        .execute()
-
-      await db.db
-        .insertInto('neuro_identity_link')
-        .values({
-          did,
-          userJid: null,
-          testUserJid,
-          isTestUser: 1,
-          linkedAt: new Date().toISOString(),
-          lastLoginAt: null,
-        })
-        .execute()
+      const result = await createAccountViaQuickLogin(
+        ctx,
+        testUserJid,
+        1,
+        `testuser${Date.now()}`,
+      )
 
       const link = await db.db
         .selectFrom('neuro_identity_link')
         .selectAll()
-        .where('did', '=', did)
+        .where('did', '=', result.did)
         .executeTakeFirst()
 
       expect(link?.userJid).toBeNull()

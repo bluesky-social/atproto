@@ -46,6 +46,10 @@
             "error": {
               "type": "string",
               "description": "Error message if failed"
+            },
+            "approvalToken": {
+              "type": "string",
+              "description": "Approval token for non-login sessions (delete_account, plc_operation). Present only when status is 'completed' and purpose is not 'login'."
             }
           }
         }

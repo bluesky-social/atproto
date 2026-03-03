@@ -1,8 +1,8 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { Server } from '../../../../lexicon'
-import { NeuroCallbackPayload } from './helpers'
 import { handleQuickLoginCallback } from './callback-handler'
+import { NeuroCallbackPayload } from './helpers'
 
 export default function (server: Server, ctx: AppContext) {
   server.io.trustanchor.quicklogin.callback({
@@ -12,6 +12,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const payload = input.body as NeuroCallbackPayload
+      req.log.info({ payload }, 'Callback received on XRPC endpoint')
 
       try {
         // Call shared handler

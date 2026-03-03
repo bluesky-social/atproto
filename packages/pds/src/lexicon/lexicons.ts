@@ -16154,20 +16154,20 @@ export const schemaDict = {
                 description: 'User properties from W ID',
               },
               Created: {
-                type: 'string',
-                format: 'datetime',
+                type: 'integer',
+                description: 'Unix timestamp (seconds) when session was created',
               },
               Updated: {
-                type: 'string',
-                format: 'datetime',
+                type: 'integer',
+                description: 'Unix timestamp (seconds) when session was last updated',
               },
               From: {
-                type: 'string',
-                format: 'datetime',
+                type: 'integer',
+                description: 'Unix timestamp (seconds) for start of validity period',
               },
               To: {
-                type: 'string',
-                format: 'datetime',
+                type: 'integer',
+                description: 'Unix timestamp (seconds) for end of validity period',
               },
             },
           },
@@ -16206,13 +16206,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: [
-              'sessionId',
-              'sessionToken',
-              'serviceId',
-              'expiresAt',
-              'providerBaseUrl',
-            ],
+            required: ['sessionId', 'sessionToken', 'expiresAt', 'qrCodeUrl'],
             properties: {
               sessionId: {
                 type: 'string',
@@ -16222,19 +16216,15 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Secret token for polling status',
               },
-              serviceId: {
-                type: 'string',
-                description: 'Service ID from provider for QR generation',
-              },
               expiresAt: {
                 type: 'string',
                 format: 'datetime',
                 description: 'When this session expires',
               },
-              providerBaseUrl: {
+              qrCodeUrl: {
                 type: 'string',
                 format: 'uri',
-                description: 'Provider base URL for fetching QR code',
+                description: 'QR code image URL for display',
               },
             },
           },
@@ -16291,6 +16281,11 @@ export const schemaDict = {
                 type: 'string',
                 description: 'Error message if failed',
               },
+              approvalToken: {
+                type: 'string',
+                description:
+                  "Approval token for non-login sessions (delete_account, plc_operation). Present only when status is 'completed' and purpose is not 'login'.",
+              },
             },
           },
         },
@@ -16318,6 +16313,74 @@ export const schemaDict = {
           created: {
             type: 'boolean',
             description: 'Whether account was newly created',
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorServerDeleteAccountWID: {
+    lexicon: 1,
+    id: 'io.trustanchor.server.deleteAccountWID',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Delete a WID-linked account using an approval token obtained from a QuickLogin QR scan. No password field required.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'token'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'DID of the account to delete',
+              },
+              token: {
+                type: 'string',
+                description:
+                  'Approval token from io.trustanchor.quicklogin.status',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  IoTrustanchorServerRequestAccountDeleteWID: {
+    lexicon: 1,
+    id: 'io.trustanchor.server.requestAccountDeleteWID',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Initiate WID-authenticated account deletion. Returns a QuickLogin QR session the user must scan to confirm. Requires authentication.',
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['sessionId', 'sessionToken', 'qrCodeUrl', 'expiresAt'],
+            properties: {
+              sessionId: {
+                type: 'string',
+                description: 'QuickLogin session ID for polling status',
+              },
+              sessionToken: {
+                type: 'string',
+                description: 'Secret token for polling status',
+              },
+              qrCodeUrl: {
+                type: 'string',
+                format: 'uri',
+                description: 'QR code image URL for display',
+              },
+              expiresAt: {
+                type: 'string',
+                format: 'datetime',
+                description: 'When this session expires',
+              },
+            },
           },
         },
       },
@@ -21816,6 +21879,9 @@ export const ids = {
   IoTrustanchorQuickloginCallback: 'io.trustanchor.quicklogin.callback',
   IoTrustanchorQuickloginInit: 'io.trustanchor.quicklogin.init',
   IoTrustanchorQuickloginStatus: 'io.trustanchor.quicklogin.status',
+  IoTrustanchorServerDeleteAccountWID: 'io.trustanchor.server.deleteAccountWID',
+  IoTrustanchorServerRequestAccountDeleteWID:
+    'io.trustanchor.server.requestAccountDeleteWID',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',
   ToolsOzoneCommunicationDefs: 'tools.ozone.communication.defs',

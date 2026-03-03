@@ -1,9 +1,11 @@
+import type { EmailTokenPurpose } from '../../../../account-manager/db'
 import { AppContext } from '../../../../context'
 import {
   NeuroCallbackPayload,
   createAccountViaQuickLogin,
   getHandleForDid,
 } from './helpers'
+import type { QuickLoginSession } from './store'
 
 export interface CallbackResult {
   did: string
@@ -18,6 +20,19 @@ export interface Logger {
   warn(obj: any, msg: string): void
   error(obj: any, msg: string): void
 }
+
+const EXPECTED_CALLBACK_FIELDS = new Set([
+  'JID',
+  'Key',
+  'SessionId',
+  'State',
+  'istestuser',
+  'preferredhandle',
+  'Signatures',
+  'Randoms',
+  'Properties',
+  'Attachments',
+])
 
 /**
  * Unified QuickLogin callback handler (both account creation and login).
@@ -51,7 +66,24 @@ export async function handleQuickLoginCallback(
   payload: NeuroCallbackPayload,
   ctx: AppContext,
   log: Logger,
-): Promise<CallbackResult> {
+): Promise<CallbackResult | void> {
+  const callbackPayload = payload as Record<string, unknown>
+  const receivedFieldNames = Object.keys(callbackPayload).sort()
+  const unexpectedFieldNames = receivedFieldNames.filter(
+    (fieldName) => !EXPECTED_CALLBACK_FIELDS.has(fieldName),
+  )
+
+  if (ctx.cfg.debugNeuro) {
+    log.info(
+      {
+        payload: callbackPayload,
+        receivedFieldNames,
+        unexpectedFieldNames,
+      },
+      'QuickLogin callback payload received (debug)',
+    )
+  }
+
   log.info(
     {
       sessionId: payload.SessionId,
@@ -73,6 +105,16 @@ export async function handleQuickLoginCallback(
   if (!session) {
     log.warn({ serviceId }, 'Session not found for serviceId')
     throw new Error('Session not found')
+  }
+
+  if (ctx.cfg.debugNeuro) {
+    ctx.quickloginStore.updateSession(session.sessionId, {
+      debugNeuro: {
+        callbackPayload,
+        receivedFieldNames,
+        unexpectedFieldNames,
+      },
+    })
   }
 
   // Check if session expired
@@ -110,6 +152,11 @@ export async function handleQuickLoginCallback(
 
   // WP1: Parse preferred handle (optional, only for first create)
   const preferredHandle = payload.preferredhandle
+
+  // Branch: non-login approval sessions (delete_account, plc_operation)
+  if (session.purpose && session.purpose !== 'login') {
+    return handleApprovalCallback(session, jid, ctx, log)
+  }
 
   log.info(
     { sessionId: session.sessionId },
@@ -246,6 +293,63 @@ export async function handleQuickLoginCallback(
     handle,
     accessJwt,
     refreshJwt,
-    created: !existingLink,
+    created,
+  }
+}
+
+/**
+ * Handle a QuickLogin callback for a non-login approval session
+ * (delete_account, plc_operation). Creates an internal email-style token
+ * and stores it in the session for the client to retrieve via status polling.
+ */
+async function handleApprovalCallback(
+  session: QuickLoginSession,
+  jid: string,
+  ctx: AppContext,
+  log: Logger,
+): Promise<void> {
+  const { purpose, approvalDid } = session
+
+  if (!approvalDid) {
+    log.error(
+      { sessionId: session.sessionId },
+      'Approval session missing approvalDid',
+    )
+    ctx.quickloginStore.updateSession(session.sessionId, {
+      status: 'failed',
+      error: 'Approval session missing DID',
+    })
+    return
+  }
+
+  log.info(
+    { purpose, did: approvalDid, jid },
+    'WID approval QR scanned — creating token',
+  )
+
+  try {
+    const token = await ctx.accountManager.createEmailToken(
+      approvalDid,
+      purpose as EmailTokenPurpose,
+    )
+
+    log.info(
+      { purpose, did: approvalDid },
+      'WID approval token created successfully',
+    )
+
+    ctx.quickloginStore.updateSession(session.sessionId, {
+      status: 'completed',
+      approvalToken: token,
+    })
+  } catch (err) {
+    log.error(
+      { err, purpose, did: approvalDid },
+      'Failed to create approval token',
+    )
+    ctx.quickloginStore.updateSession(session.sessionId, {
+      status: 'failed',
+      error: 'Failed to create approval token',
+    })
   }
 }

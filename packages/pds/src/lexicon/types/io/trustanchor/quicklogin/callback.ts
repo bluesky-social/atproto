@@ -31,10 +31,14 @@ export interface InputSchema {
   Key?: string
   /** User properties from W ID */
   Properties?: { [_ in string]: unknown }
-  Created?: string
-  Updated?: string
-  From?: string
-  To?: string
+  /** Unix timestamp (seconds) when session was created */
+  Created?: number
+  /** Unix timestamp (seconds) when session was last updated */
+  Updated?: number
+  /** Unix timestamp (seconds) for start of validity period */
+  From?: number
+  /** Unix timestamp (seconds) for end of validity period */
+  To?: number
 }
 
 export interface OutputSchema {}

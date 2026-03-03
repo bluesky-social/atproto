@@ -233,6 +233,8 @@ import * as IoTrustanchorAdminPurgeInvitations from './types/io/trustanchor/admi
 import * as IoTrustanchorQuickloginCallback from './types/io/trustanchor/quicklogin/callback.js'
 import * as IoTrustanchorQuickloginInit from './types/io/trustanchor/quicklogin/init.js'
 import * as IoTrustanchorQuickloginStatus from './types/io/trustanchor/quicklogin/status.js'
+import * as IoTrustanchorServerDeleteAccountWID from './types/io/trustanchor/server/deleteAccountWID.js'
+import * as IoTrustanchorServerRequestAccountDeleteWID from './types/io/trustanchor/server/requestAccountDeleteWID.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -3317,11 +3319,13 @@ export class IoTrustanchorNS {
   _server: Server
   admin: IoTrustanchorAdminNS
   quicklogin: IoTrustanchorQuickloginNS
+  server: IoTrustanchorServerNS
 
   constructor(server: Server) {
     this._server = server
     this.admin = new IoTrustanchorAdminNS(server)
     this.quicklogin = new IoTrustanchorQuickloginNS(server)
+    this.server = new IoTrustanchorServerNS(server)
   }
 }
 
@@ -3421,6 +3425,38 @@ export class IoTrustanchorQuickloginNS {
     >,
   ) {
     const nsid = 'io.trustanchor.quicklogin.status' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class IoTrustanchorServerNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  deleteAccountWID<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorServerDeleteAccountWID.QueryParams,
+      IoTrustanchorServerDeleteAccountWID.HandlerInput,
+      IoTrustanchorServerDeleteAccountWID.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.server.deleteAccountWID' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  requestAccountDeleteWID<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      IoTrustanchorServerRequestAccountDeleteWID.QueryParams,
+      IoTrustanchorServerRequestAccountDeleteWID.HandlerInput,
+      IoTrustanchorServerRequestAccountDeleteWID.HandlerOutput
+    >,
+  ) {
+    const nsid = 'io.trustanchor.server.requestAccountDeleteWID' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

@@ -1,0 +1,37 @@
+{
+  "lexicon": 1,
+  "id": "io.trustanchor.server.requestAccountDeleteWID",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Initiate WID-authenticated account deletion. Returns a QuickLogin QR session the user must scan to confirm. Requires authentication.",
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["sessionId", "sessionToken", "qrCodeUrl", "expiresAt"],
+          "properties": {
+            "sessionId": {
+              "type": "string",
+              "description": "QuickLogin session ID for polling status"
+            },
+            "sessionToken": {
+              "type": "string",
+              "description": "Secret token for polling status"
+            },
+            "qrCodeUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "QR code image URL for display"
+            },
+            "expiresAt": {
+              "type": "string",
+              "format": "datetime",
+              "description": "When this session expires"
+            }
+          }
+        }
+      }
+    }
+  }
+}

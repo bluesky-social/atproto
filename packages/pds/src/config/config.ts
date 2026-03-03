@@ -356,6 +356,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
           apiBaseUrl: env.quickloginApiBaseUrl || 'https://lab.tagroot.io',
         }
       : null,
+    debugNeuro: env.debugNeuro ?? false,
     allowTestUserLogin: env.allowTestUserLogin ?? false, // DEFAULT: false (fail-safe)
     neuroCallbackSignatureRequired: env.neuroCallbackSignatureRequired ?? false, // WP2 feature-flagged pending signature contract
   }
@@ -384,6 +385,7 @@ export type ServerConfig = {
   lexicon: LexiconResolverConfig
   neuro: NeuroConfig | null
   quicklogin: QuickLoginConfig | null
+  debugNeuro: boolean
   allowTestUserLogin: boolean // Enable/disable test-user login (new unified QuickLogin flow)
   neuroCallbackSignatureRequired: boolean // Feature flag: require callback signature verification (WP2)
 }

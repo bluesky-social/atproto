@@ -11,6 +11,18 @@ export function callbackQuickLogin(router: Router, ctx: AppContext) {
       }
 
       const payload = req.body as NeuroCallbackPayload
+      if (ctx.cfg.debugNeuro) {
+        req.log.info({ payload }, 'Callback received on Express endpoint (debug)')
+      } else {
+        req.log.info(
+          {
+            sessionId: payload.SessionId,
+            key: payload.Key,
+            state: payload.State,
+          },
+          'Callback received on Express endpoint',
+        )
+      }
 
       // Call shared handler
       await handleQuickLoginCallback(payload, ctx, req.log)

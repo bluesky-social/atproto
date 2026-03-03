@@ -1,7 +1,21 @@
 /** @type {import('jest').Config} */
 module.exports = {
   displayName: 'PDS',
-  transform: { '^.+\\.(t|j)s$': '@swc/jest' },
+  transform: {
+    '^.+\\.(t|j)s$': '@swc/jest',
+    '^.+\\.hbs$': '<rootDir>/jest.hbs-transform.js',
+  },
+  moduleFileExtensions: [
+    'js',
+    'mjs',
+    'cjs',
+    'jsx',
+    'ts',
+    'tsx',
+    'json',
+    'node',
+    'hbs',
+  ],
   // Jest requires all ESM dependencies to be transpiled (even if they are
   // dynamically import()ed).
   transformIgnorePatterns: [

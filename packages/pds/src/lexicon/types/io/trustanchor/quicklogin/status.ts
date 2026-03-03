@@ -31,6 +31,8 @@ export interface OutputSchema {
   result?: LoginResult
   /** Error message if failed */
   error?: string
+  /** Approval token for non-login sessions (delete_account, plc_operation). Present only when status is 'completed' and purpose is not 'login'. */
+  approvalToken?: string
 }
 
 export interface HandlerInput {

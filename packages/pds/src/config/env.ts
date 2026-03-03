@@ -175,6 +175,7 @@ export function readEnv() {
     // quicklogin (simpler standalone implementation)
     quickloginEnabled: envBool('PDS_QUICKLOGIN_ENABLED'),
     quickloginApiBaseUrl: envStr('PDS_QUICKLOGIN_API_BASE_URL'),
+    debugNeuro: envBool('PDS_DEBUG_NEURO'),
 
     // test user support
     allowTestUserLogin: envBool('PDS_ALLOW_TEST_USER_LOGIN'),

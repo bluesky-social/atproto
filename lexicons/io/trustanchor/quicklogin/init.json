@@ -24,9 +24,8 @@
           "required": [
             "sessionId",
             "sessionToken",
-            "serviceId",
             "expiresAt",
-            "providerBaseUrl"
+            "qrCodeUrl"
           ],
           "properties": {
             "sessionId": {
@@ -37,19 +36,15 @@
               "type": "string",
               "description": "Secret token for polling status"
             },
-            "serviceId": {
-              "type": "string",
-              "description": "Service ID from provider for QR generation"
-            },
             "expiresAt": {
               "type": "string",
               "format": "datetime",
               "description": "When this session expires"
             },
-            "providerBaseUrl": {
+            "qrCodeUrl": {
               "type": "string",
               "format": "uri",
-              "description": "Provider base URL for fetching QR code"
+              "description": "QR code image URL for display"
             }
           }
         }

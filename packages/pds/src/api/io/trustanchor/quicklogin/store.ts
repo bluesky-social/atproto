@@ -4,12 +4,24 @@ export type QuickLoginSession = {
   sessionId: string
   sessionToken: string
   serviceId: string
+  callbackKey?: string
   status: 'pending' | 'completed' | 'failed'
   createdAt: string
   expiresAt: string
   allowCreate: boolean
   result?: QuickLoginResult
   error?: string
+  // Approval mode fields (set for non-login sessions)
+  purpose?: 'login' | 'delete_account' | 'plc_operation'
+  approvalDid?: string // DID of the account being approved
+  approvalToken?: string // email-style token created after QR scan
+  debugNeuro?: QuickLoginDebugInfo
+}
+
+export type QuickLoginDebugInfo = {
+  callbackPayload: Record<string, unknown>
+  receivedFieldNames: string[]
+  unexpectedFieldNames: string[]
 }
 
 export type QuickLoginResult = {
@@ -37,6 +49,8 @@ export class QuickLoginSessionStore {
   createSession(
     allowCreate: boolean,
     serviceId: string,
+    purpose: QuickLoginSession['purpose'] = 'login',
+    approvalDid?: string,
   ): {
     sessionId: string
     sessionToken: string
@@ -54,6 +68,8 @@ export class QuickLoginSessionStore {
       createdAt: new Date().toISOString(),
       expiresAt,
       allowCreate,
+      purpose: purpose ?? 'login',
+      approvalDid,
     })
 
     return { sessionId, sessionToken, expiresAt }
@@ -65,7 +81,10 @@ export class QuickLoginSessionStore {
 
   getSessionByServiceId(serviceId: string): QuickLoginSession | undefined {
     for (const session of this.sessions.values()) {
-      if (session.serviceId === serviceId) {
+      if (
+        session.serviceId === serviceId ||
+        session.callbackKey === serviceId
+      ) {
         return session
       }
     }
@@ -75,7 +94,7 @@ export class QuickLoginSessionStore {
   updateSessionKey(sessionId: string, signKey: string): void {
     const session = this.sessions.get(sessionId)
     if (session) {
-      session.serviceId = signKey // Update to use signKey for lookup
+      session.callbackKey = signKey // Store signKey for callback lookup
     }
   }
 

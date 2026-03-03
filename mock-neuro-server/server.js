@@ -113,16 +113,42 @@ async function sendCallback(callbackUrl, petitionId, approved = true) {
  * Initiates a QuickLogin session (older API, user-initiated)
  */
 app.post('/QuickLogin', async (req, res) => {
-  console.log('\n🔐 POST /QuickLogin (Legacy)')
+  console.log('\n🔐 POST /QuickLogin')
   console.log('Request body:', JSON.stringify(req.body, null, 2))
 
-  const { callbackUrl, sessionId } = req.body
+  // Second call from PDS: fetch QR image for an existing session
+  // PDS sends { mode: 'image', serviceId, tab, purpose }
+  if (req.body.mode === 'image') {
+    const { serviceId: incomingServiceId } = req.body
+    if (!incomingServiceId) {
+      console.error('❌ Missing serviceId for image request')
+      return res.status(400).json({ error: 'Missing serviceId' })
+    }
+    // Derive a deterministic signKey so /mock/qr-scan can look it up later
+    const signKey = `${incomingServiceId}-signkey`
+    // Attach signKey to the stored petition that owns this serviceId
+    for (const [, petition] of petitions) {
+      if (petition.serviceId === incomingServiceId) {
+        petition.signKey = signKey
+        break
+      }
+    }
+    console.log(`✅ QR image requested — serviceId: ${incomingServiceId}, signKey: ${signKey}`)
+    return res.json({
+      src: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      signUrl: `tagsign:provider,${signKey}`,
+    })
+  }
+
+  // First call (registration): XRPC path sends 'service', legacy path sends 'callbackUrl'
+  const { service, callbackUrl: rawCallbackUrl, sessionId } = req.body
+  const actualCallbackUrl = service || rawCallbackUrl
 
   // Validate required fields
-  if (!callbackUrl || !sessionId) {
+  if (!actualCallbackUrl || !sessionId) {
     console.error('❌ Missing required fields')
     return res.status(400).json({
-      error: 'Missing required fields: callbackUrl, sessionId',
+      error: 'Missing required fields: service/callbackUrl, sessionId',
     })
   }
 
@@ -131,13 +157,14 @@ app.post('/QuickLogin', async (req, res) => {
 
   console.log(`✅ QuickLogin session created: ${serviceId}`)
   console.log(`   Session ID: ${sessionId}`)
-  console.log(`   Callback URL: ${callbackUrl}`)
+  console.log(`   Callback URL: ${actualCallbackUrl}`)
 
-  // Store session
+  // Store session (signKey will be set when the 'image' call arrives)
   petitions.set(sessionId, {
     serviceId,
     sessionId,
-    callbackUrl,
+    callbackUrl: actualCallbackUrl,
+    signKey: null,
     createdAt: Date.now(),
     type: 'QuickLogin',
   })
@@ -151,30 +178,33 @@ app.post('/QuickLogin', async (req, res) => {
       `⏱️  Scheduling automatic QuickLogin callback in ${CALLBACK_DELAY_MS}ms...`,
     )
     setTimeout(async () => {
-      console.log(`\n📞 Sending QuickLogin callback to: ${callbackUrl}`)
-
-      // QuickLogin callback payload (legacy format)
-      const identity = {
-        sessionId,
-        jid: MOCK_JID,
-        userName: MOCK_JID.split('@')[0],
-        legalId: MOCK_LEGAL_ID,
-        email: `${MOCK_JID.split('@')[0]}@example.com`,
-        phoneNumber: '+1234567890',
-        firstName: 'Test',
-        lastName: 'User',
-        profilePictureUrl: null,
-        publicKey: null,
+      const petition = petitions.get(sessionId)
+      if (!petition?.signKey) {
+        console.error(
+          `❌ signKey not available for session ${sessionId} — 'image' call may not have arrived yet`,
+        )
+        return
       }
 
-      console.log('   Identity:', JSON.stringify(identity, null, 2))
+      // NeuroCallbackPayload format — matches handleQuickLoginCallback expectations
+      const identity = {
+        SessionId: sessionId,
+        State: 'Approved',
+        JID: MOCK_JID,
+        Key: petition.signKey,
+        Properties: {
+          Email: `${MOCK_JID.split('@')[0]}@example.com`,
+          Name: MOCK_JID.split('@')[0],
+        },
+      }
+
+      console.log(`\n📞 Sending QuickLogin callback to: ${petition.callbackUrl}`)
+      console.log('   Payload:', JSON.stringify(identity, null, 2))
 
       try {
-        const response = await fetch(callbackUrl, {
+        const response = await fetch(petition.callbackUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(identity),
         })
 
@@ -217,22 +247,27 @@ app.post('/mock/qr-scan/:sessionId', async (req, res) => {
 
   // Allow custom identity in request body
   const customJid = req.body.jid || MOCK_JID
-  const customLegalId = req.body.legalId || MOCK_LEGAL_ID
+  const customEmail = req.body.email || `${customJid.split('@')[0]}@example.com`
+  const customName = req.body.userName || customJid.split('@')[0]
 
-  const identity = {
-    sessionId,
-    jid: customJid,
-    userName: req.body.userName || customJid.split('@')[0],
-    legalId: customLegalId,
-    email: req.body.email || `${customJid.split('@')[0]}@example.com`,
-    phoneNumber: req.body.phoneNumber || '+1234567890',
-    firstName: req.body.firstName || 'Test',
-    lastName: req.body.lastName || 'User',
-    profilePictureUrl: req.body.profilePictureUrl || null,
-    publicKey: req.body.publicKey || null,
+  if (!session.signKey) {
+    console.error(`❌ signKey not set for session ${sessionId} — 'image' call may not have arrived yet`)
+    return res.status(400).json({ error: 'signKey not available yet; wait for the PDS image call to complete' })
   }
 
-  console.log('   Sending identity:', JSON.stringify(identity, null, 2))
+  // NeuroCallbackPayload format — matches handleQuickLoginCallback expectations
+  const identity = {
+    SessionId: sessionId,
+    State: 'Approved',
+    JID: customJid,
+    Key: session.signKey,
+    Properties: {
+      Email: customEmail,
+      Name: customName,
+    },
+  }
+
+  console.log('   Sending payload:', JSON.stringify(identity, null, 2))
 
   try {
     const response = await fetch(session.callbackUrl, {

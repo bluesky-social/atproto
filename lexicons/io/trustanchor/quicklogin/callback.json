@@ -40,20 +40,20 @@
               "description": "User properties from W ID"
             },
             "Created": {
-              "type": "string",
-              "format": "datetime"
+              "type": "integer",
+              "description": "Unix timestamp (seconds) when session was created"
             },
             "Updated": {
-              "type": "string",
-              "format": "datetime"
+              "type": "integer",
+              "description": "Unix timestamp (seconds) when session was last updated"
             },
             "From": {
-              "type": "string",
-              "format": "datetime"
+              "type": "integer",
+              "description": "Unix timestamp (seconds) for start of validity period"
             },
             "To": {
-              "type": "string",
-              "format": "datetime"
+              "type": "integer",
+              "description": "Unix timestamp (seconds) for end of validity period"
             }
           }
         }
