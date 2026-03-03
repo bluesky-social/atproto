@@ -908,7 +908,7 @@ Many AT Protocol records (such as posts, likes, and follows) include a `createdA
 - **`asDatetimeString(input: string)`** - Validates and casts an arbitrary string to `DatetimeString`, throwing an `InvalidDatetimeError` if the string does not conform.
 - **`isDatetimeString(input)`** - Type guard that returns `true` if the input is a valid `DatetimeString`.
 - **`ifDatetimeString(input)`** - Returns the input as a `DatetimeString` if valid, or `undefined` otherwise.
-- **`nowDatetimeString()`** - Returns the current date and time as `DatetimeString`.
+- **`currentDatetimeString()`** - Returns the current date and time as `DatetimeString`.
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -918,7 +918,7 @@ const someDate = new Date('2024-01-15T12:30:00Z')
 const now = l.toDatetimeString(someDate)
 
 // Get the current datetime as a DatetimeString
-const now = l.nowDatetimeString()
+const now = l.currentDatetimeString()
 
 // Validate and cast an existing string
 const dt = l.asDatetimeString('2024-01-15T12:30:00.000Z')
@@ -1264,7 +1264,7 @@ export const post: Action<PostInput, { uri: string; cid: string }> = async (
     app.bsky.feed.post,
     {
       ...record,
-      createdAt: record.createdAt || l.nowDatetimeString(),
+      createdAt: record.createdAt || l.currentDatetimeString(),
     },
     options,
   )
@@ -1292,7 +1292,7 @@ export const follow: Action<
     app.bsky.graph.follow,
     {
       subject: did,
-      createdAt: l.nowDatetimeString(),
+      createdAt: l.currentDatetimeString(),
     },
     options,
   )

@@ -33,9 +33,9 @@ import { CheckFn } from '../util/assertion-util.js'
 export {
   type DatetimeString,
   asDatetimeString,
+  currentDatetimeString,
   ifDatetimeString,
   isDatetimeString,
-  nowDatetimeString,
   toDatetimeString,
 } from '@atproto/syntax'
 

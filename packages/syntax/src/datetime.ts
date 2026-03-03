@@ -136,7 +136,7 @@ export function ifDatetimeString<I>(
  *
  * @see {@link DatetimeString}
  */
-export function nowDatetimeString(): DatetimeString {
+export function currentDatetimeString(): DatetimeString {
   return toDatetimeString(new Date())
 }
 
