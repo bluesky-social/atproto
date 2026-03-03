@@ -5503,12 +5503,11 @@ export class ToolsOzoneQueueNS {
     data?: ToolsOzoneQueueAssignModerator.InputSchema,
     opts?: ToolsOzoneQueueAssignModerator.CallOptions,
   ): Promise<ToolsOzoneQueueAssignModerator.Response> {
-    return this._client.call(
-      'tools.ozone.queue.assignModerator',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.queue.assignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueAssignModerator.toKnownErr(e)
+      })
   }
 
   createQueue(

@@ -196,6 +196,18 @@ export class AssignmentService {
     const endAt = new Date(now.getTime() + this.opts.queueDurationMs)
 
     const result = await this.db.transaction(async (dbTxn) => {
+      // Check queue
+      const queue = await dbTxn.db
+        .selectFrom('report_queue')
+        .selectAll()
+        .where('id', '=', queueId)
+        .where('deletedAt', 'is', null)
+        .executeTakeFirst()
+      if (!queue || !queue.enabled) {
+        throw new InvalidRequestError('Invalid queue', 'QueueInvalid')
+      }
+
+      // Check assignment
       const existing = await dbTxn.db
         .selectFrom('moderator_assignment')
         .selectAll()
@@ -204,7 +216,6 @@ export class AssignmentService {
         .where('reportId', 'is', null)
         .where('endAt', '>', now.toISOString())
         .executeTakeFirst()
-
       if (existing) {
         const updated = await dbTxn.db
           .updateTable('moderator_assignment')
@@ -216,7 +227,6 @@ export class AssignmentService {
           .executeTakeFirstOrThrow()
         return updated
       }
-
       const created = await dbTxn.db
         .insertInto('moderator_assignment')
         .values({

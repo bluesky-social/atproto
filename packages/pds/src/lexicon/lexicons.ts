@@ -18899,6 +18899,13 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.queue.defs#assignmentView',
           },
         },
+        errors: [
+          {
+            name: 'QueueInvalid',
+            description:
+              'The specified queue does not exist or is not enabled.',
+          },
+        ],
       },
     },
   },
