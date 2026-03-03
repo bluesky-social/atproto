@@ -1,4 +1,4 @@
-import { ForbiddenError, InvalidRequestError } from '@atproto/xrpc-server'
+import { ForbiddenError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { getAuthDid } from '../util'
@@ -7,14 +7,8 @@ export default function (server: Server, ctx: AppContext) {
   server.tools.ozone.queue.assignModerator({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
-      const queueId = input.body.queueId
+      const { queueId, did } = input.body
       const authDid = getAuthDid(auth, ctx.cfg.service.did)
-      const did = input.body.did ?? authDid
-
-      // Validation
-      if (!did) {
-        throw new InvalidRequestError('DID is required')
-      }
 
       // RBAC
       if (!auth.credentials.isModerator) {

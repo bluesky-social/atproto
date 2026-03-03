@@ -18878,7 +18878,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['queueId'],
+            required: ['queueId', 'did'],
             properties: {
               queueId: {
                 type: 'integer',
@@ -18886,8 +18886,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
-                description:
-                  'DID to be assigned. Assigns to whomever sent the request if not provided.',
+                description: 'DID to be assigned.',
               },
             },
           },
