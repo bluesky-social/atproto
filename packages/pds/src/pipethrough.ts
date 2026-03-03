@@ -9,13 +9,13 @@ import {
   streamToNodeBuffer,
 } from '@atproto/common'
 import { RpcPermissionMatch } from '@atproto/oauth-scopes'
-import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
   HandlerPipeThroughBuffer,
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
+  ResponseType,
   XRPCError as XRPCServerError,
   excludeErrorResult,
   parseReqNsid,
@@ -301,15 +301,9 @@ async function pipethroughStream(
           const passThrough = new PassThrough()
 
           void tryParsingError(upstream.headers, passThrough).then((parsed) => {
-            const xrpcError = new XRPCClientError(
-              upstream.statusCode === 500
-                ? ResponseType.UpstreamFailure
-                : upstream.statusCode,
-              parsed.error,
-              parsed.message,
-              Object.fromEntries(responseHeaders(upstream.headers, false)),
-              { cause: dispatchOptions },
-            )
+            const xrpcError = new PipethroughUpstreamError(upstream, parsed, {
+              cause: dispatchOptions,
+            })
 
             reject(xrpcError)
           }, reject)
@@ -356,18 +350,9 @@ async function pipethroughRequest(
   if (upstream.statusCode >= 400) {
     const parsed = await tryParsingError(upstream.headers, upstream.body)
 
-    // Note "XRPCClientError" is used instead of "XRPCServerError" in order to
-    // allow users of this function to capture & handle these errors (namely in
-    // "app.bsky.feed.getPostThread").
-    throw new XRPCClientError(
-      upstream.statusCode === 500
-        ? ResponseType.UpstreamFailure
-        : upstream.statusCode,
-      parsed.error,
-      parsed.message,
-      Object.fromEntries(responseHeaders(upstream.headers, false)),
-      { cause: dispatchOptions },
-    )
+    throw new PipethroughUpstreamError(upstream, parsed, {
+      cause: dispatchOptions,
+    })
   }
 
   return upstream
@@ -634,4 +619,30 @@ const safeString = (str: unknown): string | undefined => {
 
 function logResponseError(this: ServerResponse, err: unknown): void {
   httpLogger.warn({ err }, 'error forwarding upstream response')
+}
+
+export class PipethroughUpstreamError extends XRPCServerError {
+  constructor(
+    readonly upstream: {
+      statusCode: number
+      headers: IncomingHttpHeaders
+    },
+    payload: { message?: string; error?: string },
+    options?: ErrorOptions,
+  ) {
+    const status =
+      upstream.statusCode === 500
+        ? ResponseType.UpstreamFailure
+        : upstream.statusCode
+
+    super(status, payload.message, payload.error, options)
+  }
+
+  get headers(): Record<string, string> {
+    return Object.fromEntries(responseHeaders(this.upstream.headers, false))
+  }
+
+  get error() {
+    return this.customErrorName ?? this.typeName
+  }
 }
