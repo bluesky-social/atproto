@@ -1034,24 +1034,6 @@ export class LexRouter {
       // @NOTE see ./service-auth.ts for potential common code (did resolver, etc.)
     }
 
-    if (atprotoProxy != null) {
-      const proxyInfo = parseAtprotoProxyHeader(atprotoProxy)
-      if (!proxyInfo) {
-        return Response.json(
-          {
-            error: 'InvalidRequest',
-            message: `Invalid atproto-proxy header value: ${atprotoProxy}`,
-          },
-          { status: 400 },
-        )
-      }
-
-      // @TODO actually implement service proxying logic here. The reason it was
-      // not done already if because we want to perform all the heavy lifting
-      // here, while still allowing the possibility to override the endpoint
-      // resolution, etc.
-    }
-
     return Response.json(
       {
         error: 'MethodNotImplemented',
