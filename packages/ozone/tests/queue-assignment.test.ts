@@ -154,6 +154,11 @@ describe('queue', () => {
     expect(result.assignments.length).toBe(1)
   })
 
+  it('invalid queue ID throws error', async () => {
+    const p = assign({ queueId: 9999 }, 'admin')
+    await expect(p).rejects.toThrow('Invalid queue')
+  })
+
   describe('pagination', () => {
     it('paginates assignments with limit', async () => {
       await clearAssignments()

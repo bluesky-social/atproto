@@ -202,6 +202,19 @@ describe('report-assignment', () => {
     )
   })
 
+  it('invalid assignment throws error', async () => {
+    const reportId = 1006
+    await expect(
+      assignReportModerator(
+        {
+          reportId,
+          assign: true,
+        },
+        'moderator',
+      ),
+    ).rejects.toThrow('Invalid report')
+  })
+
   describe('pagination', () => {
     it('paginates assignments with limit', async () => {
       await clearAssignments()
