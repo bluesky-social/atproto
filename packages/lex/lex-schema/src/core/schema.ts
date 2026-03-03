@@ -338,7 +338,7 @@ export abstract class Schema<
    * Bound alias for {@link assert} for compatibility with generated utilities.
    * @see {@link assert}
    */
-  get $assert() {
+  get $assert(): typeof this.assert {
     return lazyProperty(this, '$assert', this.assert.bind(this))
   }
 
@@ -346,7 +346,7 @@ export abstract class Schema<
    * Bound alias for {@link check} for compatibility with generated utilities.
    * @see {@link check}
    */
-  get $check() {
+  get $check(): typeof this.check {
     return lazyProperty(this, '$check', this.check.bind(this))
   }
 
@@ -354,7 +354,7 @@ export abstract class Schema<
    * Bound alias for {@link cast} for compatibility with generated utilities.
    * @see {@link cast}
    */
-  get $cast() {
+  get $cast(): typeof this.cast {
     return lazyProperty(this, '$cast', this.cast.bind(this))
   }
 
@@ -362,7 +362,7 @@ export abstract class Schema<
    * Bound alias for {@link matches} for compatibility with generated utilities.
    * @see {@link matches}
    */
-  get $matches() {
+  get $matches(): typeof this.matches {
     return lazyProperty(this, '$matches', this.matches.bind(this))
   }
 
@@ -370,7 +370,7 @@ export abstract class Schema<
    * Bound alias for {@link ifMatches} for compatibility with generated utilities.
    * @see {@link ifMatches}
    */
-  get $ifMatches() {
+  get $ifMatches(): typeof this.ifMatches {
     return lazyProperty(this, '$ifMatches', this.ifMatches.bind(this))
   }
 
@@ -378,7 +378,7 @@ export abstract class Schema<
    * Bound alias for {@link parse} for compatibility with generated utilities.
    * @see {@link parse}
    */
-  get $parse() {
+  get $parse(): typeof this.parse {
     return lazyProperty(this, '$parse', this.parse.bind(this))
   }
 
@@ -386,7 +386,7 @@ export abstract class Schema<
    * Bound alias for {@link safeParse} for compatibility with generated utilities.
    * @see {@link safeParse}
    */
-  get $safeParse() {
+  get $safeParse(): typeof this.safeParse {
     return lazyProperty(this, '$safeParse', this.safeParse.bind(this))
   }
 
@@ -394,7 +394,7 @@ export abstract class Schema<
    * Bound alias for {@link validate} for compatibility with generated utilities.
    * @see {@link validate}
    */
-  get $validate() {
+  get $validate(): typeof this.validate {
     return lazyProperty(this, '$validate', this.validate.bind(this))
   }
 
@@ -402,7 +402,7 @@ export abstract class Schema<
    * Bound alias for {@link safeValidate} for compatibility with generated utilities.
    * @see {@link safeValidate}
    */
-  get $safeValidate() {
+  get $safeValidate(): typeof this.safeValidate {
     return lazyProperty(this, '$safeValidate', this.safeValidate.bind(this))
   }
 }

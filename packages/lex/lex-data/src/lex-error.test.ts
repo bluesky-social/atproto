@@ -33,7 +33,7 @@ describe(LexError, () => {
 
   it('subclasses use their own constructor name', () => {
     class MyCustomError extends LexError {
-      // name will be set to this.constructor.name = 'MyCustomError'
+      name = 'MyCustomError'
     }
     const err = new MyCustomError('CustomCode', 'custom message')
     expect(err.name).toBe('MyCustomError')

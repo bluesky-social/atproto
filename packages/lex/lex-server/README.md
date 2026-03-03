@@ -524,7 +524,7 @@ import { toRequestListener } from '@atproto/lex-server/nodejs'
 const app = express()
 
 // Mount the XRPC router
-app.use('/xrpc', toRequestListener(router.handle))
+app.use('/xrpc', toRequestListener(router.fetch))
 
 app.listen(3000)
 ```
@@ -544,7 +544,8 @@ const router = new LexRouter({ upgradeWebSocket })
 
 ### Custom Response Objects
 
-Return a `Response` object for full control over the response:
+Return a `Response` object for full control over the response (disables any kind
+of validation of the body):
 
 ```typescript
 router.add(schema, async ({ params }) => {
@@ -552,13 +553,15 @@ router.add(schema, async ({ params }) => {
     return Response.redirect('https://example.com', 302)
   }
 
-  return new Response(JSON.stringify({ custom: true }), {
-    status: 201,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Custom-Header': 'value',
+  return Response.json(
+    { custom: true },
+    {
+      status: 201,
+      headers: {
+        'X-Custom-Header': 'value',
+      },
     },
-  })
+  )
 })
 ```
 

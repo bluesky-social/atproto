@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isUint8, toHexString } from './util.js'
 
-describe('toHexString', () => {
+describe(toHexString, () => {
   it('converts 0 to 0x00', () => {
     expect(toHexString(0)).toBe('0x00')
   })
@@ -22,7 +22,7 @@ describe('toHexString', () => {
   })
 })
 
-describe('isUint8', () => {
+describe(isUint8, () => {
   it('returns true for valid uint8 values', () => {
     expect(isUint8(0)).toBe(true)
     expect(isUint8(1)).toBe(true)

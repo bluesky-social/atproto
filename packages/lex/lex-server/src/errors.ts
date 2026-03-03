@@ -133,14 +133,16 @@ export class LexServerAuthError<
    * @param wwwAuthenticate - WWW-Authenticate header parameters
    * @returns A LexServerAuthError instance
    *
-   * @example Converting from a LexError
+   * @example
    * ```typescript
-   * try {
-   *   await validateToken(token)
-   * } catch (error) {
-   *   throw LexServerAuthError.from(error, {
-   *     Bearer: { error: 'InvalidToken' }
-   *   })
+   * function authenticate(token: string): Promise<User> {
+   *   try {
+   *     return await validateToken(token)
+   *   } catch (cause) {
+   *     throw LexServerAuthError.from(cause, {
+   *       Bearer: { error: 'InvalidToken' }
+   *     })
+   *   }
    * }
    * ```
    */
