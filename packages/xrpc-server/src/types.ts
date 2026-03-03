@@ -1,7 +1,7 @@
 import { IncomingMessage } from 'node:http'
 import { Readable } from 'node:stream'
 import { NextFunction, Request, Response } from 'express'
-import { z } from 'zod'
+import { l } from '@atproto/lex-schema'
 import { ErrorResult, XRPCError } from './errors'
 import { CalcKeyFn, CalcPointsFn, RateLimiterI } from './rate-limiter'
 
@@ -51,44 +51,50 @@ export type AuthResult = {
   artifacts?: unknown
 }
 
-export const headersSchema = z.record(z.string())
+export const headersSchema = l.dict(l.string(), l.string())
 
-export type Headers = z.infer<typeof headersSchema>
+export type Headers = l.Infer<typeof headersSchema>
 
-export const handlerSuccess = z.object({
-  encoding: z.string(),
-  body: z.any(),
-  headers: headersSchema.optional(),
+export const handlerSuccess = l.object({
+  encoding: l.string(),
+  body: l.unknown(),
+  headers: l.optional(headersSchema),
 })
 
-export type HandlerSuccess = z.infer<typeof handlerSuccess>
+export type HandlerSuccess = l.Infer<typeof handlerSuccess>
 
-export const handlerPipeThroughBuffer = z.object({
-  encoding: z.string(),
-  buffer: z.instanceof(Buffer),
-  headers: headersSchema.optional(),
+export const handlerPipeThroughBuffer = l.object({
+  encoding: l.string(),
+  buffer: l.custom(
+    (v): v is Buffer => v instanceof Buffer,
+    'Expected a Buffer',
+  ),
+  headers: l.optional(headersSchema),
 })
 
-export type HandlerPipeThroughBuffer = z.infer<typeof handlerPipeThroughBuffer>
+export type HandlerPipeThroughBuffer = l.Infer<typeof handlerPipeThroughBuffer>
 
-export const handlerPipeThroughStream = z.object({
-  encoding: z.string(),
-  stream: z.instanceof(Readable),
-  headers: headersSchema.optional(),
+export const handlerPipeThroughStream = l.object({
+  encoding: l.string(),
+  stream: l.custom(
+    (v): v is Readable => v instanceof Readable,
+    'Expected a Readable stream',
+  ),
+  headers: l.optional(headersSchema),
 })
 
-export type HandlerPipeThroughStream = z.infer<typeof handlerPipeThroughStream>
+export type HandlerPipeThroughStream = l.Infer<typeof handlerPipeThroughStream>
 
-export const handlerPipeThrough = z.union([
+export const handlerPipeThrough = l.union([
   handlerPipeThroughBuffer,
   handlerPipeThroughStream,
 ])
 
-export type HandlerPipeThrough = z.infer<typeof handlerPipeThrough>
+export type HandlerPipeThrough = l.Infer<typeof handlerPipeThrough>
 
 export type Auth = void | AuthResult
 export type Input = void | HandlerInput
-export type Output = void | HandlerSuccess | ErrorResult
+export type Output = void | HandlerSuccess | HandlerPipeThrough | ErrorResult
 
 export type AuthVerifier<C, A extends AuthResult = AuthResult> =
   | ((ctx: C) => Awaitable<A | ErrorResult>)
@@ -173,6 +179,19 @@ export type RouteOptions = {
   textLimit?: number
 }
 
+export type MethodAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+> = MethodAuthVerifier<Extract<A, AuthResult>, P>
+
+export type MethodRateLimit<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+> =
+  | RateLimitOpts<HandlerContext<A, P, I>>
+  | RateLimitOpts<HandlerContext<A, P, I>>[]
+
 export type MethodConfig<
   A extends Auth = Auth,
   P extends Params = Params,
@@ -180,11 +199,21 @@ export type MethodConfig<
   O extends Output = Output,
 > = {
   handler: MethodHandler<A, P, I, O>
-  auth?: MethodAuthVerifier<Extract<A, AuthResult>, P>
+  auth?: MethodAuth<A, P>
   opts?: RouteOptions
-  rateLimit?:
-    | RateLimitOpts<HandlerContext<A, P, I>>
-    | RateLimitOpts<HandlerContext<A, P, I>>[]
+  rateLimit?: MethodRateLimit<A, P, I>
+}
+
+export type MethodConfigWithAuth<
+  A extends Auth = Auth,
+  P extends Params = Params,
+  I extends Input = Input,
+  O extends Output = Output,
+> = {
+  handler: MethodHandler<A, P, I, O>
+  auth: MethodAuth<A, P>
+  opts?: RouteOptions
+  rateLimit?: MethodRateLimit<A, P, I>
 }
 
 export type MethodConfigOrHandler<
@@ -198,6 +227,43 @@ export type StreamAuthContext<P extends Params = Params> = {
   params: P
   req: IncomingMessage
 }
+
+export type LexMethodParams<M extends l.Procedure | l.Query | l.Subscription> =
+  l.InferMethodParams<M>
+
+export type LexMethodInput<M extends l.Procedure | l.Query> =
+  l.InferMethodInput<M, Readable>
+
+export type LexMethodOutput<M extends l.Procedure | l.Query> =
+  l.InferMethodOutput<M, Readable> extends undefined
+    ? l.InferMethodOutput<M, Uint8Array | Readable> | void
+    : l.InferMethodOutput<M, Uint8Array | Readable>
+
+export type LexMethodMessage<M extends l.Subscription> = l.InferMethodMessage<M>
+
+export type LexMethodHandler<
+  M extends l.Procedure | l.Query,
+  A extends Auth = Auth,
+> = MethodHandler<A, LexMethodParams<M>, LexMethodInput<M>, LexMethodOutput<M>>
+
+export type LexMethodConfig<
+  M extends l.Procedure | l.Query,
+  A extends Auth = Auth,
+> = MethodConfig<A, LexMethodParams<M>, LexMethodInput<M>, LexMethodOutput<M>>
+
+export type LexSubscriptionHandler<
+  M extends l.Subscription,
+  A extends Auth = Auth,
+> = StreamHandler<
+  Extract<A, AuthResult>,
+  LexMethodParams<M>,
+  LexMethodMessage<M>
+>
+
+export type LexSubscriptionConfig<
+  M extends l.Subscription,
+  A extends Auth = Auth,
+> = StreamConfig<A, LexMethodParams<M>, LexMethodMessage<M>>
 
 export type StreamAuthVerifier<
   A extends AuthResult = AuthResult,
@@ -232,6 +298,21 @@ export type StreamConfigOrHandler<
   P extends Params = Params,
   O = unknown,
 > = StreamHandler<A, P, O> | StreamConfig<A, P, O>
+
+export function isHandlerSuccess(output: Output): output is HandlerSuccess {
+  // We only need to discriminate between possible Output values
+  return (
+    output != null &&
+    'body' in output && // body is non optional (contrary to what type inference may suggest)
+    'encoding' in output &&
+    // Allows using objects that extends HandlerSuccess with a "status" field as
+    // output, as long as the status is < 400, in order to avoid being confused
+    // with ErrorResult objects.
+    (!('status' in output) ||
+      output.status == null ||
+      Number(output.status) < 400)
+  )
+}
 
 export function isHandlerPipeThroughBuffer(
   output: Output,
