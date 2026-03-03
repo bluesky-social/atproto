@@ -18,12 +18,16 @@ export type ISODatetimeString =
 
 /**
  * Represents a {@link Date} that can be safely stringified into a valid atproto
- * datetime string using the {@link Date.toISOString toISOString()} method.
+ * {@link DatetimeString} using the {@link Date.toISOString toISOString()}
+ * method.
  */
 export interface AtprotoDate extends Date {
   toISOString(): ISODatetimeString
 }
 
+/**
+ * @see {@link AtprotoDate}
+ */
 export function assertAtprotoDate(date: Date): asserts date is AtprotoDate {
   const res = parseDate(date)
   if (!res.success) {
@@ -31,90 +35,59 @@ export function assertAtprotoDate(date: Date): asserts date is AtprotoDate {
   }
 }
 
+/**
+ * @see {@link AtprotoDate}
+ */
 export function asAtprotoDate(date: Date): AtprotoDate {
   assertAtprotoDate(date)
   return date
 }
 
+/**
+ * @see {@link AtprotoDate}
+ */
 export function isAtprotoDate(date: Date): date is AtprotoDate {
   return parseDate(date).success
 }
 
-declare global {
-  // Overload the global Date constructor to allow creating AtprotoDate objects
-  // directly from valid datetime strings. This allows for easy creation of
-  // DatetimeStrings by doing `new Date().toISOString()`.
-
-  interface DateConstructor {
-    new (): AtprotoDate // Only true for a few more years (until year 9999)
-    new (value: 0): AtprotoDate
-    new (value: ISODatetimeString): AtprotoDate
-  }
-}
-
 /**
- * A datetime string that meets the requirements of atproto Lexicon 'datetime'
- * format, which is a subset of both
- * {@link https://www.rfc-editor.org/rfc/rfc3339 RFC 3339} and
- * {@link https://www.iso.org/iso-8601-date-and-time-format.html ISO 8601}. This
- * is the expected format for datetime strings in atproto APIs and data
- * structures.
- *
- * @note This literal template type is not accurate enough to ensure that a
- * string is a valid atproto datetime. The {@link assertDatetimeString} function
- * should be used to validate that a string meets the atproto datetime
- * requirements, and the {@link toDatetimeString} function should be used to
- * convert a {@link Date} object into a valid {@link DatetimeString}.
+ * @see {@link AtprotoDate}
  */
-export type DatetimeString =
-  // @TODO Switch to branded types for more accurate type safety.
-  | `${string}-${string}-${string}T${string}:${string}:${string}Z`
-  | `${string}-${string}-${string}T${string}:${string}:${string}${'+' | '-'}${string}:${string}`
-
-declare global {
-  // @NOTE **Not** all valid Javascript Date objects can be converted to a valid
-  // atproto datetime string. For example, dates with years before 0010 or after
-  // 9999, or dates that would normalize to a negative year, are not valid
-  // atproto datetimes. The AtprotoDate interface represents Date objects that
-  // are guaranteed to be valid atproto datetimes when stringified using
-  // toISOString().
-
-  // We *could* overload the global Date interface to always return
-  // ISODatetimeString, which would allow assigning any Date.toISOString() to
-  // places expecting a DatetimeString without needing to check the date, or use
-  // toDatetime(). In practice, this would probably be fine since most real
-  // world dates are in the 1xxx-2xxx range. However, it would technically be
-  // inaccurate.
-
-  // interface Date {
-  //   toISOString(): ISODatetimeString
-  // }
-
-  // Instead, we overload the Date constructor to return AtprotoDate, which
-  // allows us to use "new Date().toISOString()" and "new Date(0).toISOString()"
-  // as valid DatetimeStrings, while still requiring validation for arbitrary
-  // date objects.
-
-  interface DateConstructor {
-    new (value: DatetimeString): AtprotoDate
-  }
-}
-
-// Backwards compatibility exports
-export {
-  assertDatetimeString as ensureValidDatetime,
-  isDatetimeString as isValidDatetime,
+export function ifAtprotoDate(date: Date): AtprotoDate | undefined {
+  return isAtprotoDate(date) ? date : undefined
 }
 
 /**
- * Validates datetime string against atproto 'datetime' format.
- *
- * Datetime strings in atproto should meet the
+ * Datetime strings in atproto data structures and API calls should meet the
  * {@link https://ijmacd.github.io/rfc3339-iso8601/ intersecting} requirements
  * of the RFC 3339, ISO 8601, and WHATWG HTML datetime standards.
  *
+ * @note This literal template type is not accurate enough to ensure that a
+ * string is a valid atproto datetime. The {@link DatetimeString} validation
+ * functions ({@link assertDatetimeString}, {@link isDatetimeString}, etc)
+ * should be used to validate that a string meets the atproto datetime
+ * requirements, and the {@link toDatetimeString} function should be used to
+ * convert a {@link Date} object into a valid {@link DatetimeString} string.
+ *
+ * @example "2024-01-15T12:30:00Z"
+ * @example "2024-01-15T12:30:00.000Z"
+ * @example "2024-01-15T12:30:00+00:00"
+ * @example "2024-01-15T11:30:00-01:00"
+ * @see {@link https://atproto.com/specs/lexicon#datetime atproto Lexicon datetime format}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc3339 RFC 3339}
+ * @see {@link https://www.iso.org/iso-8601-date-and-time-format.html ISO 8601}
+ */
+export type DatetimeString =
+  // @TODO Switch to branded types for more accurate type safety?
+  | `${string}-${string}-${string}T${string}:${string}:${string}Z`
+  | `${string}-${string}-${string}T${string}:${string}:${string}${'+' | '-'}${string}:${string}`
+
+/**
+ * Validates that a string is a valid {@link DatetimeString} format string,
+ * throwing an error if it is not.
+ *
  * @throws InvalidDatetimeError if the input string does not meet the atproto 'datetime' format requirements.
- * @see {@link https://atproto.com/specs/lexicon#datetime}
+ * @see {@link DatetimeString}
  */
 export function assertDatetimeString<I>(
   input: I,
@@ -126,11 +99,11 @@ export function assertDatetimeString<I>(
 }
 
 /**
- * Cast a string to a {@link DatetimeString} after validating that it meets the
- * atproto 'datetime' format.
+ * Casts a string to a {@link DatetimeString} if it is a valid datetime format
+ * string, throwing an error if it is not.
  *
- * @see {@link assertDatetimeString}
  * @throws InvalidDatetimeError if the input string does not meet the atproto 'datetime' format requirements.
+ * @see {@link DatetimeString}
  */
 export function asDatetimeString(input: string): DatetimeString {
   assertDatetimeString(input)
@@ -138,12 +111,24 @@ export function asDatetimeString(input: string): DatetimeString {
 }
 
 /**
- * Checks if a string is a valid atproto 'datetime' format string.
+ * Checks if a string is a valid {@link DatetimeString} format string.
  *
- * @see {@link assertDatetimeString}
+ * @see {@link DatetimeString}
  */
 export function isDatetimeString<I>(input: I): input is I & DatetimeString {
   return parseString(input).success
+}
+
+/**
+ * Returns the input if it is a valid {@link DatetimeString} format string, or
+ * `undefined` if it is not.
+ *
+ * @see {@link DatetimeString}
+ */
+export function ifDatetimeString<I>(
+  input: I,
+): undefined | (I & DatetimeString) {
+  return isDatetimeString(input) ? input : undefined
 }
 
 /**
@@ -206,6 +191,12 @@ export function normalizeDatetimeAlways(dtStr: string): ISODatetimeString {
   } catch (err) {
     return '1970-01-01T00:00:00.000Z'
   }
+}
+
+// Legacy exports (should we deprecate these ?)
+export {
+  assertDatetimeString as ensureValidDatetime,
+  isDatetimeString as isValidDatetime,
 }
 
 // -----------------------------------------------------------------------------

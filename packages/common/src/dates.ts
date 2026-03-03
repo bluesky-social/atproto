@@ -6,11 +6,15 @@ export function toSimplifiedISOSafe(dateStr: string) {
     return new Date(0).toISOString()
   }
   const iso = date.toISOString()
-  // Date.toISOString() always returns YYYY-MM-DDTHH:mm:ss.sssZ or ±YYYYYY-MM-DDTHH:mm:ss.sssZ
-  // developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+
+  // Date.toISOString() always returns `YYYY-MM-DDTHH:mm:ss.sssZ` or
+  // `±YYYYYY-MM-DDTHH:mm:ss.sssZ`
+  // (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+  // However, the leading `±` and 6 digit year can break lexical sorting, so we
+  // need to catch those cases and return a safe value.
   if (iso.startsWith('-') || iso.startsWith('+')) {
-    // Occurs in rare cases, e.g. where resulting UTC year is negative. These also don't preserve lexical sort.
     return new Date(0).toISOString()
   }
+
   return iso // YYYY-MM-DDTHH:mm:ss.sssZ
 }
