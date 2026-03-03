@@ -2,4 +2,4 @@
 '@atproto/common-web': patch
 ---
 
-Add possibility to `reject`, and specify a `resolve` value type, for `Deferrable` values
+Add possibility to `reject` `Deferrable` objects. Also allow specifying a generic for the Promise's value.
