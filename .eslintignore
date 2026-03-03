@@ -7,12 +7,12 @@ packages/bsync/src/proto
 
 # codegen
 packages/api/src/client
-packages/lexicon-resolver/src/client
 packages/bsky/src/lexicon
 packages/pds/src/lexicon
 packages/ozone/src/lexicon
 
 # @atproto/lex
+packages/lexicon-resolver/src/lexicons
 packages/lex/*/src/lexicons
 packages/lex/*/tests/lexicons
 packages/oauth/oauth-client-browser-example/src/lexicons
