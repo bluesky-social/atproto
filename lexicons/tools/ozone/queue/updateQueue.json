@@ -22,6 +22,10 @@
             "enabled": {
               "type": "boolean",
               "description": "Enable or disable the queue"
+            },
+            "description": {
+              "type": "string",
+              "description": "Optional description of the queue"
             }
           }
         }

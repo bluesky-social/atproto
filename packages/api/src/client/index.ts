@@ -303,6 +303,7 @@ import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -629,6 +630,7 @@ export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+export * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
 export * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -5503,12 +5505,11 @@ export class ToolsOzoneQueueNS {
     data?: ToolsOzoneQueueAssignModerator.InputSchema,
     opts?: ToolsOzoneQueueAssignModerator.CallOptions,
   ): Promise<ToolsOzoneQueueAssignModerator.Response> {
-    return this._client.call(
-      'tools.ozone.queue.assignModerator',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.queue.assignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueAssignModerator.toKnownErr(e)
+      })
   }
 
   createQueue(
@@ -5611,6 +5612,17 @@ export class ToolsOzoneReportNS {
       data,
       opts,
     )
+  }
+
+  unassignModerator(
+    data?: ToolsOzoneReportUnassignModerator.InputSchema,
+    opts?: ToolsOzoneReportUnassignModerator.CallOptions,
+  ): Promise<ToolsOzoneReportUnassignModerator.Response> {
+    return this._client
+      .call('tools.ozone.report.unassignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportUnassignModerator.toKnownErr(e)
+      })
   }
 }
 

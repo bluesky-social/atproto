@@ -20,8 +20,8 @@ export type QueryParams = {}
 export interface InputSchema {
   /** The ID of the queue to assign the user to. */
   queueId: number
-  /** DID to be assigned. Assigns to whomever sent the request if not provided. */
-  did?: string
+  /** DID to be assigned. */
+  did: string
 }
 
 export type OutputSchema = ToolsOzoneQueueDefs.AssignmentView
@@ -40,6 +40,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidAssignment'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

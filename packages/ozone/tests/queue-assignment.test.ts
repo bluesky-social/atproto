@@ -92,7 +92,7 @@ describe('queue', () => {
   })
 
   it('get active assignments', async () => {
-    await assign({ queueId: q1 }, 'admin')
+    await assign({ queueId: q1, did: network.ozone.adminAccnt.did }, 'admin')
     const result = await getAssignments({ onlyActive: true })
 
     expect(result.assignments.length).toBeGreaterThanOrEqual(1)
@@ -101,7 +101,7 @@ describe('queue', () => {
   })
 
   it('filters assignments by queueId', async () => {
-    await assign({ queueId: q1 }, 'moderator')
+    await assign({ queueId: q1, did: network.ozone.moderatorAccnt.did }, 'moderator')
 
     const result = await getAssignments({
       queueIds: [q1],
@@ -152,6 +152,11 @@ describe('queue', () => {
       onlyActive: false,
     })
     expect(result.assignments.length).toBe(1)
+  })
+
+  it('invalid queue ID throws error', async () => {
+    const p = assign({ queueId: 9999, did: network.ozone.adminAccnt.did }, 'admin')
+    await expect(p).rejects.toThrow('Invalid queue')
   })
 
   describe('pagination', () => {
@@ -252,7 +257,7 @@ describe('queue', () => {
 
   describe('admin', () => {
     it('should be able to assign self to a queue', async () => {
-      const assignment = await assign({ queueId: q1 }, 'admin')
+      const assignment = await assign({ queueId: q1, did: network.ozone.adminAccnt.did }, 'admin')
 
       expect(assignment.queue.id).toBe(q1)
       expect(assignment.did).toBe(network.ozone.adminAccnt.did)
@@ -286,7 +291,7 @@ describe('queue', () => {
 
   describe('moderator', () => {
     it('should be able to assign self to a queue', async () => {
-      const assignment = await assign({ queueId: q1 }, 'moderator')
+      const assignment = await assign({ queueId: q1, did: network.ozone.moderatorAccnt.did }, 'moderator')
 
       expect(assignment.queue.id).toBe(q1)
       expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
@@ -304,14 +309,14 @@ describe('queue', () => {
     })
 
     it('defaults to assign when param is omitted', async () => {
-      const assignment = await assign({ queueId: q1 }, 'moderator')
+      const assignment = await assign({ queueId: q1, did: network.ozone.moderatorAccnt.did }, 'moderator')
       expect(new Date(assignment.endAt).getTime()).toBeGreaterThan(Date.now())
     })
   })
 
   describe('triage', () => {
     it('should not be able to assign self to a queue', async () => {
-      const p = assign({ queueId: q1 }, 'triage')
+      const p = assign({ queueId: q1, did: network.ozone.triageAccnt.did }, 'triage')
       await expect(p).rejects.toThrow('Unauthorized')
     })
     it('should not be able to assign another user to a queue', async () => {

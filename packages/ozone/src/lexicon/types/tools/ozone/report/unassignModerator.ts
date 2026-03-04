@@ -9,22 +9,20 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ToolsOzoneQueueDefs from './defs.js'
+import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.queue.assignModerator'
+const id = 'tools.ozone.report.unassignModerator'
 
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** The ID of the queue to assign the user to. */
-  queueId: number
-  /** DID to be assigned. */
-  did: string
+  /** The ID of the report to unassign. */
+  reportId: number
 }
 
-export type OutputSchema = ToolsOzoneQueueDefs.AssignmentView
+export type OutputSchema = ToolsOzoneReportDefs.AssignmentView
 
 export interface HandlerInput {
   encoding: 'application/json'

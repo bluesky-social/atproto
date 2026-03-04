@@ -26,6 +26,8 @@ export interface QueueView {
   collection?: string
   /** Report reason types this queue accepts (fully qualified NSIDs) */
   reportTypes: string[]
+  /** Optional description of the queue */
+  description?: string
   /** DID of moderator who created this queue */
   createdBy: string
   createdAt: string

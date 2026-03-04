@@ -18878,7 +18878,7 @@ export const schemaDict = {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['queueId'],
+            required: ['queueId', 'did'],
             properties: {
               queueId: {
                 type: 'integer',
@@ -18886,8 +18886,7 @@ export const schemaDict = {
               },
               did: {
                 type: 'string',
-                description:
-                  'DID to be assigned. Assigns to whomever sent the request if not provided.',
+                description: 'DID to be assigned.',
               },
             },
           },
@@ -18899,6 +18898,13 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.queue.defs#assignmentView',
           },
         },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description:
+              'The specified queue does not exist or is not enabled.',
+          },
+        ],
       },
     },
   },
@@ -18943,6 +18949,10 @@ export const schemaDict = {
                 minLength: 1,
                 maxLength: 25,
                 description: 'Report reason types (fully qualified NSIDs)',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
               },
             },
           },
@@ -19019,6 +19029,10 @@ export const schemaDict = {
             minLength: 1,
             description:
               'Report reason types this queue accepts (fully qualified NSIDs)',
+          },
+          description: {
+            type: 'string',
+            description: 'Optional description of the queue',
           },
           createdBy: {
             type: 'string',
@@ -19319,6 +19333,10 @@ export const schemaDict = {
                 type: 'boolean',
                 description: 'Enable or disable the queue',
               },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
+              },
             },
           },
         },
@@ -19360,12 +19378,6 @@ export const schemaDict = {
                 description:
                   'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
               },
-              assign: {
-                type: 'boolean',
-                default: true,
-                description:
-                  'Whether to assign or un-assign the report to the user.',
-              },
             },
           },
         },
@@ -19380,6 +19392,10 @@ export const schemaDict = {
           {
             name: 'AlreadyAssigned',
             description: 'The report is already assigned to another user.',
+          },
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID or queue ID is invalid.',
           },
         ],
       },
@@ -19733,6 +19749,42 @@ export const schemaDict = {
             },
           },
         },
+      },
+    },
+  },
+  ToolsOzoneReportUnassignModerator: {
+    lexicon: 1,
+    id: 'tools.ozone.report.unassignModerator',
+    defs: {
+      main: {
+        type: 'procedure',
+        description: 'Remove report assignment.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'The ID of the report to unassign.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.report.defs#assignmentView',
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidAssignment',
+            description: 'The report ID is invalid.',
+          },
+        ],
       },
     },
   },
@@ -21899,6 +21951,7 @@ export const ids = {
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
+  ToolsOzoneReportUnassignModerator: 'tools.ozone.report.unassignModerator',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',
   ToolsOzoneSafelinkQueryEvents: 'tools.ozone.safelink.queryEvents',

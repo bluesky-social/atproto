@@ -25,6 +25,7 @@ describe('ozone-queues', () => {
       subjectTypes: string[]
       reportTypes: string[]
       collection?: string
+      description?: string
     },
     role: 'admin' | 'triage' = 'admin',
   ) => {
@@ -74,7 +75,7 @@ describe('ozone-queues', () => {
   }
 
   const updateQueue = async (
-    input: { queueId: number; name?: string; enabled?: boolean },
+    input: { queueId: number; name?: string; enabled?: boolean; description?: string },
     role: 'admin' | 'triage' = 'admin',
   ) => {
     const headers =
@@ -132,6 +133,18 @@ describe('ozone-queues', () => {
       expect(data.queue.createdAt).toBeDefined()
       expect(data.queue.updatedAt).toBeDefined()
       expect(data.queue.stats).toBeDefined()
+    })
+
+    it('creates a queue with description', async () => {
+      const { data } = await createQueue({
+        name: 'CQ: Described Queue',
+        subjectTypes: ['account'],
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+        description: 'Handles spam account reports',
+      })
+      createdIds.push(data.queue.id)
+
+      expect(data.queue.description).toBe('Handles spam account reports')
     })
 
     it('creates a queue with collection filter', async () => {
@@ -418,6 +431,14 @@ describe('ozone-queues', () => {
         enabled: true,
       })
       expect(reEnabled.queue.enabled).toBe(true)
+    })
+
+    it('updates queue description', async () => {
+      const { data } = await updateQueue({
+        queueId: testQueueId,
+        description: 'Updated description',
+      })
+      expect(data.queue.description).toBe('Updated description')
     })
 
     it('updates both name and enabled status', async () => {

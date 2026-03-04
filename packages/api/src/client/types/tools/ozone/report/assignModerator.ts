@@ -23,8 +23,6 @@ export interface InputSchema {
   reportId: number
   /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
   queueId?: number
-  /** Whether to assign or un-assign the report to the user. */
-  assign?: boolean
 }
 
 export type OutputSchema = ToolsOzoneReportDefs.AssignmentView
@@ -48,9 +46,16 @@ export class AlreadyAssignedError extends XRPCError {
   }
 }
 
+export class InvalidAssignmentError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'AlreadyAssigned') return new AlreadyAssignedError(e)
+    if (e.error === 'InvalidAssignment') return new InvalidAssignmentError(e)
   }
 
   return e

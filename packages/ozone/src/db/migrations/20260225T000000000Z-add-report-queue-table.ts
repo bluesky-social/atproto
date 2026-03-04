@@ -6,6 +6,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('report_queue')
     .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('name', 'varchar', (col) => col.notNull()) // uniqueness enforced via partial index below
+    .addColumn('description', 'varchar') // Optional description of the queue
 
     // Queue filters (determine assignment)
     .addColumn('subjectTypes', 'jsonb', (col) => col.notNull()) // Array: ['account'] or ['record'] or both
