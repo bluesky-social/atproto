@@ -80,10 +80,10 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+__bafy/)) {
       return constantKeysetCursor
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+(?:@[\w]+)?$/)) {
       // Match image urls
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, did, cid] = match

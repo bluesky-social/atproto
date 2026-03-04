@@ -1,4 +1,4 @@
-import { Options } from './util'
+import { IncludeFormatLevel, Options, shouldIncludeFormat } from './util'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
 export type ImagePreset =
@@ -7,10 +7,13 @@ export type ImagePreset =
   | 'feed_thumbnail'
   | 'feed_fullsize'
 
-const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)@(.+?)$/
+const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)(?:@(.+?))?$/
 
 export class ImageUriBuilder {
-  constructor(public endpoint: string) {}
+  constructor(
+    public endpoint: string,
+    public includeFormatLevel?: IncludeFormatLevel,
+  ) {}
 
   static presets: ImagePreset[] = [
     'avatar',
@@ -30,13 +33,24 @@ export class ImageUriBuilder {
         preset: id,
         did,
         cid,
+        includeFormatLevel: this.includeFormatLevel,
       })
     )
   }
 
-  static getPath(opts: { preset: ImagePreset } & BlobLocation) {
+  static getPath(
+    opts: { preset: ImagePreset } & BlobLocation & {
+        includeFormatLevel?: IncludeFormatLevel
+      },
+  ) {
     const { format } = presets[opts.preset]
-    return `/${opts.preset}/plain/${opts.did}/${opts.cid}@${format}`
+    const includeFormat =
+      opts.includeFormatLevel != null &&
+      shouldIncludeFormat(opts.cid, opts.includeFormatLevel)
+    return (
+      `/${opts.preset}/plain/${opts.did}/${opts.cid}` +
+      (includeFormat ? `@${format}` : '')
+    )
   }
 
   static getOptions(
@@ -50,17 +64,21 @@ export class ImageUriBuilder {
     if (!(ImageUriBuilder.presets as string[]).includes(presetUnsafe)) {
       throw new BadPathError('Invalid path: bad preset')
     }
-    if (formatUnsafe !== 'jpeg' && formatUnsafe !== 'png') {
+    if (
+      formatUnsafe !== undefined &&
+      formatUnsafe !== 'jpeg' &&
+      formatUnsafe !== 'webp'
+    ) {
       throw new BadPathError('Invalid path: bad format')
     }
     const preset = presetUnsafe as ImagePreset
     const format = formatUnsafe as Options['format']
     return {
       ...presets[preset],
+      format: format ?? presets[preset].format,
       did,
       cid,
       preset,
-      format,
     }
   }
 }
@@ -71,28 +89,28 @@ export class BadPathError extends Error {}
 
 export const presets: Record<ImagePreset, Options> = {
   avatar: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'cover',
     height: 1000,
     width: 1000,
     min: true,
   },
   banner: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'cover',
     height: 1000,
     width: 3000,
     min: true,
   },
   feed_thumbnail: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'inside',
     height: 2000,
     width: 2000,
     min: true,
   },
   feed_fullsize: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'inside',
     height: 1000,
     width: 1000,

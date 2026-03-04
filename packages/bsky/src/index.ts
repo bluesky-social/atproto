@@ -70,9 +70,9 @@ export class BskyAppView {
       plcUrl: config.didPlcUrl,
       backupNameservers: config.handleResolveNameservers,
     })
-
     const imgUriBuilder = new ImageUriBuilder(
       config.cdnUrl || `${config.publicUrl}/img`,
+      config.cdnIncludeFormatLevel,
     )
     const videoUriBuilder = new VideoUriBuilder({
       playlistUrlPattern:

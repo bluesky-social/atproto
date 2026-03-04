@@ -134,7 +134,7 @@ describe('sharp image processor', () => {
 
   it('converts jpeg to png.', async () => {
     const result = await processFixture('key-landscape-small.jpg', {
-      format: 'png',
+      format: 'webp',
       width: 500,
       height: 500,
       min: false,
@@ -144,7 +144,7 @@ describe('sharp image processor', () => {
         height: 87,
         width: 150,
         size: expect.any(Number),
-        mime: 'image/png',
+        mime: 'image/webp',
       }),
     )
   })
@@ -166,21 +166,21 @@ describe('sharp image processor', () => {
     expect(low.size).toBeLessThan(1000)
   })
 
-  it('controls quality (png).', async () => {
+  it('controls quality (webp).', async () => {
     const high = await processFixture('key-portrait-small.jpg', {
-      format: 'png',
+      format: 'webp',
       width: 500,
       height: 500,
       quality: 80,
     })
     const low = await processFixture('key-portrait-small.jpg', {
-      format: 'png',
+      format: 'webp',
       width: 500,
       height: 500,
       quality: 10,
     })
-    expect(high.size).toBeGreaterThan(3000)
-    expect(low.size).toBeLessThan(3000)
+    expect(high.size).toBeGreaterThan(1000)
+    expect(low.size).toBeLessThan(1000)
   })
 
   async function processFixture(fixture: string, options: Options) {
