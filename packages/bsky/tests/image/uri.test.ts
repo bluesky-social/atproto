@@ -16,24 +16,24 @@ describe('image uri builder', () => {
   it('generates paths.', () => {
     expect(
       ImageUriBuilder.getPath({ preset: 'banner', did, cid: cid.toString() }),
-    ).toEqual(`/banner/plain/${did}/${cid.toString()}@jpeg`)
+    ).toEqual(`/banner/plain/${did}/${cid.toString()}@webp`)
     expect(
       ImageUriBuilder.getPath({
         preset: 'feed_thumbnail',
         did,
         cid: cid.toString(),
       }),
-    ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`)
+    ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}@webp`)
   })
 
   it('generates uris.', () => {
     expect(uriBuilder.getPresetUri('banner', did, cid.toString())).toEqual(
-      `https://example.com/img/banner/plain/${did}/${cid.toString()}@jpeg`,
+      `https://example.com/img/banner/plain/${did}/${cid.toString()}@webp`,
     )
     expect(
       uriBuilder.getPresetUri('feed_thumbnail', did, cid.toString()),
     ).toEqual(
-      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`,
+      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@webp`,
     )
   })
 
@@ -80,9 +80,9 @@ describe('image uri builder', () => {
   })
 
   it('errors on bad format.', () => {
-    expect(
-      tryGetOptions(`/banner/plain/${did}/${cid.toString()}@webp`),
-    ).toThrow(new BadPathError('Invalid path: bad format'))
+    expect(tryGetOptions(`/banner/plain/${did}/${cid.toString()}@gif`)).toThrow(
+      new BadPathError('Invalid path: bad format'),
+    )
   })
 
   function tryGetOptions(path: string) {

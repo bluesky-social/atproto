@@ -50,7 +50,11 @@ export class ImageUriBuilder {
     if (!(ImageUriBuilder.presets as string[]).includes(presetUnsafe)) {
       throw new BadPathError('Invalid path: bad preset')
     }
-    if (formatUnsafe !== 'jpeg' && formatUnsafe !== 'png') {
+    if (
+      formatUnsafe !== 'jpeg' &&
+      formatUnsafe !== 'png' &&
+      formatUnsafe !== 'webp'
+    ) {
       throw new BadPathError('Invalid path: bad format')
     }
     const preset = presetUnsafe as ImagePreset
@@ -71,28 +75,28 @@ export class BadPathError extends Error {}
 
 export const presets: Record<ImagePreset, Options> = {
   avatar: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'cover',
     height: 1000,
     width: 1000,
     min: true,
   },
   banner: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'cover',
     height: 1000,
     width: 3000,
     min: true,
   },
   feed_thumbnail: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'inside',
     height: 2000,
     width: 2000,
     min: true,
   },
   feed_fullsize: {
-    format: 'jpeg',
+    format: 'webp',
     fit: 'inside',
     height: 1000,
     width: 1000,

@@ -3,7 +3,7 @@ import { FormatEnum, OutputInfo } from 'sharp'
 export type ImageMime = `image/${string}`
 
 export type Options = Dimensions & {
-  format: 'jpeg' | 'png'
+  format: 'jpeg' | 'png' | 'webp'
   // When 'cover' (default), scale to fill given dimensions, cropping if necessary.
   // When 'inside', scale to fit within given dimensions.
   fit?: 'cover' | 'inside'

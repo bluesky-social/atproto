@@ -46,7 +46,12 @@ export function createMiddleware(
     try {
       const options = ImageUriBuilder.getOptions(path)
 
-      const cacheKey = [options.did, options.cid, options.preset].join('::')
+      const cacheKey = [
+        options.did,
+        options.cid,
+        options.preset,
+        options.format,
+      ].join('::')
 
       // Cached flow
 
