@@ -347,17 +347,11 @@ export class XrpcInvalidResponseError<
 }
 
 /**
- * Error class for internal/client-side errors during XRPC requests.
+ * Error class for unexpected internal/client-side errors during XRPC requests.
  *
- * This represents errors that occur before or during the request that are not
- * server responses, such as:
- * - Network errors (connection refused, DNS failure)
- * - Request timeouts
- * - Request aborted via AbortSignal
- * - Invalid request construction
- *
- * The error code is always 'InternalServerError' and these errors are
- * optimistically considered retryable.
+ * The error code is always 'InternalServerError' and these errors not
+ * considered retryable as they stem from unforeseen issues in the
+ * implementation.
  *
  * @typeParam M - The XRPC method type
  */
@@ -379,12 +373,8 @@ export class XrpcInternalError<
     return this
   }
 
-  override shouldRetry(): true {
-    // Ideally, we would inspect the reason to determine if it's retryable
-    // (by detecting network errors, timeouts, etc.). Since these cases are
-    // highly platform-dependent, we optimistically assume all internal
-    // errors are retryable.
-    return true
+  override shouldRetry(): boolean {
+    return false
   }
 
   override toJSON(): LexErrorData<'InternalServerError'> {
@@ -394,6 +384,50 @@ export class XrpcInternalError<
 
   override toDownstreamError(): DownstreamError {
     return { status: 500, body: this.toJSON() }
+  }
+}
+
+/**
+ * Special case of XrpcInternalError that specifically represents errors thrown
+ * by the fetch handler during the XRPC request. This includes:
+ * - Network errors (connection refused, DNS failure)
+ * - Request timeouts
+ * - Request aborted via AbortSignal
+ *
+ * These errors are optimistically considered retryable, as many fetch errors
+ * are transient and may succeed on retry.
+ */
+export class XrpcFetchError<
+  M extends Procedure | Query = Procedure | Query,
+> extends XrpcInternalError<M> {
+  name = 'XrpcFetchError'
+
+  constructor(method: M, cause: unknown) {
+    const message =
+      cause instanceof Error ? cause.message : 'Unexpected fetch() error'
+    super(method, message, { cause })
+  }
+
+  override shouldRetry(): boolean {
+    // Ideally, we would inspect the reason to determine if it's retryable (by
+    // detecting network errors, timeouts, etc.). Since these cases are highly
+    // platform-dependent, we optimistically assume all fetch errors are
+    // transient and retryable.
+    return true
+  }
+
+  override toJSON(): LexErrorData<'InternalServerError'> {
+    // @NOTE Do not expose internal error details to downstream clients
+    return { error: this.error, message: 'Failed to perform upstream request' }
+  }
+
+  override toDownstreamError(): DownstreamError {
+    // While it might technically be a 500 error, we use 502 Bad Gateway here to
+    // indicate that the error occurred while communicating with the upstream
+    // server, allowing downstream clients to distinguish between errors in our
+    // internal processing (500) and errors in the upstream server or network
+    // (502).
+    return { status: 502, body: this.toJSON() }
   }
 }
 
