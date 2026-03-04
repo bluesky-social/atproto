@@ -24,6 +24,7 @@ packages/lex/*/tests/lexicons
 packages/oauth/oauth-client-browser-example/src/lexicons
 
 # others
+packages/api/src/moderation/const/labels.ts
 packages/oauth/*/src/locales/*/messages.ts
 packages/oauth/oauth-provider-frontend/src/routeTree.gen.ts
 packages/oauth/oauth-client-expo/android/build
