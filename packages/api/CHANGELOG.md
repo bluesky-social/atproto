@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.19.3
+
+### Patch Changes
+
+- [#4717](https://github.com/bluesky-social/atproto/pull/4717) [`76ab6ea`](https://github.com/bluesky-social/atproto/commit/76ab6eaa7bfa49fc218299d09446bb339c700bb5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Trust `status` returned from `refreshSession` and do not fall back to a potentially stale value from `this.session`.
+
 ## 0.19.2
 
 ### Patch Changes
