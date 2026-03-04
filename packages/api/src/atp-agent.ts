@@ -376,43 +376,70 @@ export class CredentialSession implements SessionManager {
     | ComAtprotoServerGetSession.Response
     | ComAtprotoServerRefreshSession.Response
   > {
-    // Protect against multiple calls to resumeSession that would trigger a
-    // refresh for the same session simultaneously.
-    // Ideally, this check would be based on a session identifier, but since
-    // we don't have one, we will just check the refresh token.
-    if (session.refreshJwt === this.session?.refreshJwt) {
-      // Protect against refreshes in progress
-      await this.refreshSessionPromise
+    const tryRefreshSession = () => {
+      // Set the current session, then force a refresh, replacing any pending
+      // refresh operation.
+      this.session = session
+      this.refreshSessionPromise = undefined
 
-      // Another concurrent operation may have replaced the session while we
-      // were waiting for the refresh to complete.
-      if (session.did !== this.session?.did) {
-        throw new Error('DID mismatch on resumeSession')
-      }
+      const promise = this._refreshSessionInner()
 
-      return this.server.getSession(undefined, {
-        headers: { authorization: `Bearer ${this.session.accessJwt}` },
-      })
+      // Discard any concurrent refresh, replacing it with this one.
+      this.refreshSessionPromise = promise
+        .then(
+          (): void => {},
+          (): void => {},
+        )
+        .finally(() => {
+          this.refreshSessionPromise = undefined
+        })
+
+      return promise
     }
 
-    // Set the current session, then force a refresh, replacing any pending
-    // refresh operation.
-    this.session = session
-    this.refreshSessionPromise = undefined
+    try {
+      // Protect against multiple calls to resumeSession that would trigger a
+      // refresh for the same session simultaneously.
+      // Ideally, this check would be based on a session identifier, but since
+      // we don't have one, we will just check the refresh token.
+      if (session.refreshJwt === this.session?.refreshJwt) {
+        // Protect against refreshes in progress
+        await this.refreshSessionPromise
 
-    const promise = this._refreshSessionInner()
+        // Another concurrent operation may have replaced the session while we
+        // were waiting for the refresh to complete.
+        if (session.did !== this.session?.did) {
+          throw new Error('DID mismatch on resumeSession')
+        }
 
-    // Discard any concurrent refresh, replacing it with this one.
-    this.refreshSessionPromise = promise
-      .then(
-        (): void => {},
-        (): void => {},
-      )
-      .finally(() => {
-        this.refreshSessionPromise = undefined
-      })
+        const res = await this.server.getSession(undefined, {
+          headers: { authorization: `Bearer ${this.session.accessJwt}` },
+        })
 
-    return promise
+        session.email = res.data.email
+        session.handle = res.data.handle
+        session.emailConfirmed = res.data.emailConfirmed
+        session.emailAuthFactor = res.data.emailAuthFactor
+        session.active = res.data.active ?? true
+        session.status = res.data.status
+
+        this._updateApiEndpoint(res.data.didDoc)
+        this.persistSession?.('update', session)
+
+        return res
+      }
+    } catch (err) {
+      if (
+        err instanceof XRPCError &&
+        (err.status === 401 ||
+          err.error === 'InvalidDID' ||
+          ['ExpiredToken', 'InvalidToken'].includes(err.error))
+      ) {
+        return tryRefreshSession()
+      }
+    }
+
+    return tryRefreshSession()
   }
 
   /**
