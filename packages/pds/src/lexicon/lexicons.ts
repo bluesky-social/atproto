@@ -17460,6 +17460,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventPriorityScore',
                   'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
                   'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+                  'lex:tools.ozone.moderation.defs#ageAssurancePurgeEvent',
                   'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
                   'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
                   'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',

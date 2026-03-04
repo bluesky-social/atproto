@@ -157,6 +157,7 @@ const eventTypes = new Set([
   'tools.ozone.moderation.defs#modEventPriorityScore',
   'tools.ozone.moderation.defs#ageAssuranceEvent',
   'tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+  'tools.ozone.moderation.defs#ageAssurancePurgeEvent',
   'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
   'tools.ozone.moderation.defs#scheduleTakedownEvent',
   'tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
