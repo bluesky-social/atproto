@@ -1028,6 +1028,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'integer',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8108,6 +8112,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8442,6 +8450,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8569,6 +8581,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8621,6 +8637,10 @@ export const schemaDict = {
                 },
               },
               recId: {
+                type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
                 type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
