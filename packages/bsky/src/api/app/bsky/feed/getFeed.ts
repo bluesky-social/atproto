@@ -214,17 +214,19 @@ const skeletonFromFeedGen = async (
   })
 
   if (!result.success) {
+    // Forward valid schema errors as-is
     if (result.matchesSchemaErrors()) {
       throw new InvalidRequestError(result.message, result.error)
+    }
+    if (result.error === 'InternalServerError') {
+      // Typically a network error
+      throw new UpstreamFailureError('feed unavailable')
     }
     if (result.error === 'UpstreamFailure') {
       throw new UpstreamFailureError(
         'feed provided an invalid response',
         'InvalidFeedResponse',
       )
-    }
-    if (result.error === 'InternalServerError') {
-      throw new UpstreamFailureError('feed unavailable')
     }
     throw result.reason
   }
