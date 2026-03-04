@@ -480,7 +480,7 @@ export class CredentialSession implements SessionManager {
         emailConfirmed: data.emailConfirmed ?? session.emailConfirmed,
         emailAuthFactor: data.emailAuthFactor ?? session.emailAuthFactor,
         active: data.active ?? session.active ?? true,
-        status: data.status ?? session.status,
+        status: data.status,
       }
 
       this._updateApiEndpoint(res.data.didDoc)
