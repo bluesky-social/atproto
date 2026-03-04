@@ -18950,6 +18950,10 @@ export const schemaDict = {
                 maxLength: 25,
                 description: 'Report reason types (fully qualified NSIDs)',
               },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
+              },
             },
           },
         },
@@ -19328,6 +19332,10 @@ export const schemaDict = {
               enabled: {
                 type: 'boolean',
                 description: 'Enable or disable the queue',
+              },
+              description: {
+                type: 'string',
+                description: 'Optional description of the queue',
               },
             },
           },

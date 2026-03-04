@@ -25,6 +25,8 @@ export interface InputSchema {
   name?: string
   /** Enable or disable the queue */
   enabled?: boolean
+  /** Optional description of the queue */
+  description?: string
 }
 
 export interface OutputSchema {

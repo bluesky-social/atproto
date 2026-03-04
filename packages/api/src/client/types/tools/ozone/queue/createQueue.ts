@@ -27,6 +27,8 @@ export interface InputSchema {
   collection?: string
   /** Report reason types (fully qualified NSIDs) */
   reportTypes: string[]
+  /** Optional description of the queue */
+  description?: string
 }
 
 export interface OutputSchema {
