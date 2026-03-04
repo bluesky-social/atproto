@@ -41,9 +41,28 @@ export const formatsToMimes = new Map<keyof FormatEnum, ImageMime>([
 export type SharpInfo = OutputInfo & { format: keyof FormatEnum }
 
 /**
- * Values 0 through 16. Permissively typed.
+ * Values 0 through 16.
+ * 0: never include format in image URL.
+ * 16: always include format in image URL.
  */
-export type IncludeFormatLevel = number
+export type IncludeFormatLevel =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
 
 /**
  * Determines based on cid and level whether to include the image format in the URL
