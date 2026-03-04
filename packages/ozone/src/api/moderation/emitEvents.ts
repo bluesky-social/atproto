@@ -6,7 +6,7 @@ import { InputSchema } from '../../lexicon/types/tools/ozone/moderation/emitEven
 import { ModEventView } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { httpLogger } from '../../logger'
-import { handleModerationEvent } from './emitEvent'
+import { handleModerationEvent } from './util-event'
 
 const CHUNK_SIZE = 10
 
