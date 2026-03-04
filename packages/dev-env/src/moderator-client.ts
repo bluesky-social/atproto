@@ -4,6 +4,7 @@ import {
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  ToolsOzoneModerationEmitEvents as EmitModerationEvents,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
@@ -107,6 +108,21 @@ export class ModeratorClient {
         ),
       },
     )
+    return result.data
+  }
+
+  async emitEvents(
+    input: EmitModerationEvents.InputSchema & { createdBy?: string },
+    role?: ModLevel,
+  ) {
+    input.createdBy ??= 'did:example:admin'
+    const result = await this.agent.tools.ozone.moderation.emitEvents(input, {
+      encoding: 'application/json',
+      headers: await this.ozone.modHeaders(
+        'tools.ozone.moderation.emitEvents',
+        role,
+      ),
+    })
     return result.data
   }
 
