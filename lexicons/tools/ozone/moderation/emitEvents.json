@@ -1,0 +1,119 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.moderation.emitEvents",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Take a moderation action on multiple subjects at once. Each subject is processed independently; partial failures are reported rather than causing a full rollback.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["event", "subjects", "createdBy"],
+          "properties": {
+            "event": {
+              "type": "union",
+              "refs": [
+                "tools.ozone.moderation.defs#modEventTakedown",
+                "tools.ozone.moderation.defs#modEventAcknowledge",
+                "tools.ozone.moderation.defs#modEventEscalate",
+                "tools.ozone.moderation.defs#modEventComment",
+                "tools.ozone.moderation.defs#modEventLabel",
+                "tools.ozone.moderation.defs#modEventReport",
+                "tools.ozone.moderation.defs#modEventMute",
+                "tools.ozone.moderation.defs#modEventUnmute",
+                "tools.ozone.moderation.defs#modEventMuteReporter",
+                "tools.ozone.moderation.defs#modEventUnmuteReporter",
+                "tools.ozone.moderation.defs#modEventReverseTakedown",
+                "tools.ozone.moderation.defs#modEventResolveAppeal",
+                "tools.ozone.moderation.defs#modEventEmail",
+                "tools.ozone.moderation.defs#modEventDivert",
+                "tools.ozone.moderation.defs#modEventTag",
+                "tools.ozone.moderation.defs#accountEvent",
+                "tools.ozone.moderation.defs#identityEvent",
+                "tools.ozone.moderation.defs#recordEvent",
+                "tools.ozone.moderation.defs#modEventPriorityScore",
+                "tools.ozone.moderation.defs#ageAssuranceEvent",
+                "tools.ozone.moderation.defs#ageAssuranceOverrideEvent",
+                "tools.ozone.moderation.defs#revokeAccountCredentialsEvent",
+                "tools.ozone.moderation.defs#scheduleTakedownEvent",
+                "tools.ozone.moderation.defs#cancelScheduledTakedownEvent"
+              ]
+            },
+            "subjects": {
+              "type": "array",
+              "description": "Array of subjects to apply the moderation event to.",
+              "maxLength": 100,
+              "items": {
+                "type": "union",
+                "refs": [
+                  "com.atproto.admin.defs#repoRef",
+                  "com.atproto.repo.strongRef"
+                ]
+              }
+            },
+            "subjectBlobCids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "cid"
+              }
+            },
+            "createdBy": {
+              "type": "string",
+              "format": "did"
+            },
+            "modTool": {
+              "type": "ref",
+              "ref": "tools.ozone.moderation.defs#modTool"
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["events", "failedEvents"],
+          "properties": {
+            "events": {
+              "type": "array",
+              "description": "Successfully processed moderation events.",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.moderation.defs#modEventView"
+              }
+            },
+            "failedEvents": {
+              "type": "array",
+              "description": "Events that failed to process.",
+              "items": {
+                "type": "ref",
+                "ref": "#failedEvent"
+              }
+            }
+          }
+        }
+      }
+    },
+    "failedEvent": {
+      "type": "object",
+      "description": "An event that failed to process.",
+      "required": ["error", "subject"],
+      "properties": {
+        "error": {
+          "type": "string",
+          "description": "Error message describing the reason for failure."
+        },
+        "subject": {
+          "type": "union",
+          "description": "The subject from the failed event input.",
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        }
+      }
+    }
+  }
+}

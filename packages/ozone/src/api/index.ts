@@ -10,6 +10,7 @@ import queryLabels from './label/queryLabels'
 import subscribeLabels from './label/subscribeLabels'
 import cancelScheduledActions from './moderation/cancelScheduledActions'
 import emitEvent from './moderation/emitEvent'
+import emitEvents from './moderation/emitEvents'
 import getAccountTimeline from './moderation/getAccountTimeline'
 import getEvent from './moderation/getEvent'
 import adminGetRecord from './moderation/getRecord'
@@ -55,6 +56,7 @@ export * as wellKnown from './well-known'
 export default function (server: Server, ctx: AppContext) {
   createReport(server, ctx)
   emitEvent(server, ctx)
+  emitEvents(server, ctx)
   searchRepos(server, ctx)
   adminGetRecord(server, ctx)
   adminGetRecords(server, ctx)

@@ -29,7 +29,7 @@ import { retryHttp } from '../../util'
 import { getEventType } from '../util'
 import { assertProtectedTagAction, getProtectedTags } from './util'
 
-const handleModerationEvent = async ({
+export const handleModerationEvent = async ({
   ctx,
   input,
   auth,
