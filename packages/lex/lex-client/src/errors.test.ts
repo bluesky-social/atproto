@@ -43,6 +43,7 @@ describe(XrpcResponseError, () => {
 
   it('exposes status from the response', () => {
     const err = createResponseError(404, 'NotFound')
+    expect(err.reason).toBe(err)
     expect(err.status).toBe(404)
   })
 
@@ -55,6 +56,7 @@ describe(XrpcResponseError, () => {
       encoding: 'application/json',
       body: { error: 'TestError' },
     })
+    expect(err.reason).toBe(err)
     expect(err.headers.get('X-Test')).toBe('value')
   })
 
@@ -64,7 +66,7 @@ describe(XrpcResponseError, () => {
   })
 
   describe('toDownstreamError', () => {
-    it('returns 502 for 5xx upstream errors', () => {
+    it('returns 502 for upstream 500 errors', () => {
       const err = createResponseError(
         500,
         'InternalServerError',
@@ -76,6 +78,17 @@ describe(XrpcResponseError, () => {
       expect(downstream.body).toEqual({
         error: 'InternalServerError',
         message: 'Upstream crashed',
+      })
+    })
+
+    it('preserves original status for non-500 5xx errors', () => {
+      const err = createResponseError(503, 'ServiceUnavailable', 'Try later')
+      const downstream = err.toDownstreamError()
+
+      expect(downstream.status).toBe(503)
+      expect(downstream.body).toEqual({
+        error: 'ServiceUnavailable',
+        message: 'Try later',
       })
     })
 
@@ -160,6 +173,7 @@ describe(XrpcAuthenticationError, () => {
       encoding: 'application/json',
       body: { error: 'AuthenticationRequired' },
     })
+    expect(err.reason).toBe(err)
     expect(err.wwwAuthenticate).toHaveProperty('Bearer')
   })
 
@@ -196,6 +210,7 @@ describe(XrpcUpstreamError, () => {
   it('has error code UpstreamFailure', () => {
     const response = new Response(null, { status: 200 })
     const err = new XrpcUpstreamError(testQuery, response)
+    expect(err.reason).toBe(err)
     expect(err.error).toBe('UpstreamFailure')
   })
 
@@ -237,6 +252,7 @@ describe(XrpcInvalidResponseError, () => {
     )
 
     expect(err).toBeInstanceOf(XrpcUpstreamError)
+    expect(err.reason).toBe(err)
     expect(err.error).toBe('UpstreamFailure')
     expect(err.cause).toBe(validationError)
   })
@@ -278,6 +294,7 @@ describe(XrpcInvalidResponseError, () => {
 describe(XrpcInternalError, () => {
   it('has error code InternalServerError', () => {
     const err = new XrpcInternalError(testQuery)
+    expect(err.reason).toBe(err)
     expect(err.error).toBe('InternalServerError')
   })
 
