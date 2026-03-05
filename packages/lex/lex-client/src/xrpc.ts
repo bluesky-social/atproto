@@ -14,7 +14,7 @@ import {
   getMain,
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
-import { XrpcFailure, asXrpcFailure } from './errors.js'
+import { XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.js'
 import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
 import {
@@ -181,7 +181,9 @@ export async function xrpcSafe<const M extends Query | Procedure>(
     const agent = buildAgent(agentOpts)
     const url = xrpcRequestUrl(method, options)
     const request = xrpcRequestInit(method, options)
-    const response = await agent.fetchHandler(url, request)
+    const response = await agent.fetchHandler(url, request).catch((cause) => {
+      throw new XrpcFetchError(method, cause)
+    })
     return await XrpcResponse.fromFetchResponse<M>(method, response, options)
   } catch (cause) {
     return asXrpcFailure(method, cause)
