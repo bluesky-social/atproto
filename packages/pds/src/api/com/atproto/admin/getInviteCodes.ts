@@ -47,7 +47,7 @@ export default function (server: Server, ctx: AppContext) {
       const codeDetails = res.map(
         ({ disabled, createdAt, ...row }): CodeDetail => ({
           ...row,
-          createdAt: createdAt as DatetimeString,
+          createdAt,
           disabled: disabled === 1,
           uses: uses[row.code] ?? [],
         }),

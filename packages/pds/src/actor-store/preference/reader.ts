@@ -18,8 +18,8 @@ export class PreferenceReader {
     const prefs = prefsRes
       .filter((pref) => !namespace || prefMatchNamespace(namespace, pref.name))
       .map((pref) => JSON.parse(pref.valueJson) as AccountPreference)
-    const personalDetailsPref = prefs.find((v) =>
-      app.bsky.actor.defs.personalDetailsPref.$isTypeOf(v),
+    const personalDetailsPref = prefs.find(
+      app.bsky.actor.defs.personalDetailsPref.$isTypeOf,
     )
 
     if (personalDetailsPref?.birthDate) {

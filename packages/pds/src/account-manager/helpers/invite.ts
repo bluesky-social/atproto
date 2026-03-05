@@ -209,7 +209,7 @@ export const getInvitedByForAccounts = async (
   const codeDetails = codeDetailsRes.map(
     ({ uses: _, disabled, createdAt, ...row }): CodeDetail => ({
       ...row,
-      createdAt: createdAt as DatetimeString,
+      createdAt,
       uses: uses[row.code] ?? [],
       disabled: disabled === 1,
     }),
