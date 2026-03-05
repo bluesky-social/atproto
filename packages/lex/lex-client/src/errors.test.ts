@@ -14,14 +14,14 @@ import {
 const testQuery = l.query(
   'io.example.test',
   l.params(),
-  l.payload('application/json', l.object({ value: l.string() })),
+  l.jsonPayload({ value: l.string() }),
   ['TestError', 'AnotherError'],
 )
 
 const testQueryNoErrors = l.query(
   'io.example.noErrors',
   l.params(),
-  l.payload('application/json', l.object({ value: l.string() })),
+  l.jsonPayload({ value: l.string() }),
 )
 
 // ============================================================================
