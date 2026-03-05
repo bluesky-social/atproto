@@ -662,13 +662,12 @@ describe('moderation-events', () => {
       cid: sc.posts[did][postIndex].ref.cidStr,
     })
 
-    it('batch of valid comments on multiple subjects succeeds', async () => {
+    it('batch of valid acknowledge events on multiple subjects succeeds', async () => {
       const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
 
       const result = await modClient.emitEvents({
         event: {
-          $type: 'tools.ozone.moderation.defs#modEventComment',
-          comment: 'Bulk comment',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subjects,
         createdBy: 'did:example:admin',
@@ -678,7 +677,7 @@ describe('moderation-events', () => {
       expect(result.failedEvents).toHaveLength(0)
       for (const ev of result.events) {
         expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventComment',
+          'tools.ozone.moderation.defs#modEventAcknowledge',
         )
       }
     })
@@ -737,14 +736,13 @@ describe('moderation-events', () => {
 
       const result = await modClient.emitEvents({
         event: {
-          $type: 'tools.ozone.moderation.defs#modEventComment',
-          comment: 'Duplicate subject test',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subjects,
         createdBy: 'did:example:admin',
       })
 
-      // Both succeed since comments don't have the "already taken down" guard
+      // Both succeed since acknowledges don't have the "already taken down" guard
       expect(result.events).toHaveLength(2)
       expect(result.failedEvents).toHaveLength(0)
     })
@@ -752,8 +750,7 @@ describe('moderation-events', () => {
     it('empty subjects array returns empty results', async () => {
       const result = await modClient.emitEvents({
         event: {
-          $type: 'tools.ozone.moderation.defs#modEventComment',
-          comment: 'No subjects',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subjects: [],
         createdBy: 'did:example:admin',
@@ -768,8 +765,7 @@ describe('moderation-events', () => {
 
       const result = await modClient.emitEvents({
         event: {
-          $type: 'tools.ozone.moderation.defs#modEventComment',
-          comment: 'Bulk comment on records',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subjects,
         createdBy: 'did:example:admin',
@@ -784,8 +780,7 @@ describe('moderation-events', () => {
 
       const result = await modClient.emitEvents({
         event: {
-          $type: 'tools.ozone.moderation.defs#modEventComment',
-          comment: 'Mixed subjects',
+          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
         subjects,
         createdBy: 'did:example:admin',
@@ -795,22 +790,21 @@ describe('moderation-events', () => {
       expect(result.failedEvents).toHaveLength(0)
     })
 
-    it('respects auth — triage can comment but not takedown', async () => {
+    it('respects auth — triage can acknowledge but not takedown', async () => {
       const subjects = [repoRef(sc.dids.alice)]
 
-      // Triage can comment
-      const commentResult = await modClient.emitEvents(
+      // Triage can acknowledge
+      const ackResult = await modClient.emitEvents(
         {
           event: {
-            $type: 'tools.ozone.moderation.defs#modEventComment',
-            comment: 'Triage comment',
+            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
           },
           subjects,
           createdBy: 'did:example:admin',
         },
         'triage',
       )
-      expect(commentResult.events).toHaveLength(1)
+      expect(ackResult.events).toHaveLength(1)
 
       // Triage cannot takedown — should fail per-item
       const takedownResult = await modClient.emitEvents(
@@ -957,13 +951,12 @@ describe('moderation-events', () => {
       }
     })
 
-    it('bulk escalate events', async () => {
+    it('bulk resolve appeal events', async () => {
       const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
 
       const result = await modClient.emitEvents({
         event: {
-          $type: 'tools.ozone.moderation.defs#modEventEscalate',
-          comment: 'Bulk escalation',
+          $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
         },
         subjects,
         createdBy: 'did:example:admin',
@@ -973,7 +966,7 @@ describe('moderation-events', () => {
       expect(result.failedEvents).toHaveLength(0)
       for (const ev of result.events) {
         expect(ev.event.$type).toBe(
-          'tools.ozone.moderation.defs#modEventEscalate',
+          'tools.ozone.moderation.defs#modEventResolveAppeal',
         )
       }
     })
