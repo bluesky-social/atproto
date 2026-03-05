@@ -22,15 +22,18 @@ export class ActorStore {
     public cfg: ActorStoreConfig,
     public resources: ActorStoreResources,
   ) {
-    this.reservedKeyDir = path.join(cfg.directory, 'reserved_keys')
+    const keyBase = cfg.keyDirectory ?? cfg.directory
+    this.reservedKeyDir = path.join(keyBase, 'reserved_keys')
   }
 
   async getLocation(did: string) {
     const didHash = await crypto.sha256Hex(did)
     const directory = path.join(this.cfg.directory, didHash.slice(0, 2), did)
     const dbLocation = path.join(directory, `store.sqlite`)
-    const keyLocation = path.join(directory, `key`)
-    return { directory, dbLocation, keyLocation }
+    const keyBase = this.cfg.keyDirectory ?? this.cfg.directory
+    const keyDirectory = path.join(keyBase, didHash.slice(0, 2), did)
+    const keyLocation = path.join(keyDirectory, `key`)
+    return { directory, dbLocation, keyDirectory, keyLocation }
   }
 
   async exists(did: string): Promise<boolean> {
@@ -105,9 +108,13 @@ export class ActorStore {
   }
 
   async create(did: string, keypair: ExportableKeypair) {
-    const { directory, dbLocation, keyLocation } = await this.getLocation(did)
-    // ensure subdir exists
+    const { directory, dbLocation, keyDirectory, keyLocation } =
+      await this.getLocation(did)
+    // ensure subdirs exist
     await mkdir(directory, { recursive: true })
+    if (keyDirectory !== directory) {
+      await mkdir(keyDirectory, { recursive: true })
+    }
     const exists = await fileExists(dbLocation)
     if (exists) {
       throw new InvalidRequestError('Repo already exists', 'AlreadyExists')
@@ -138,8 +145,11 @@ export class ActorStore {
       })
     }
 
-    const { directory } = await this.getLocation(did)
+    const { directory, keyDirectory } = await this.getLocation(did)
     await rmIfExists(directory, true)
+    if (keyDirectory !== directory) {
+      await rmIfExists(keyDirectory, true)
+    }
   }
 
   async reserveKeypair(did?: string): Promise<string> {
