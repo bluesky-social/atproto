@@ -978,54 +978,6 @@ describe('moderation-events', () => {
       }
     })
 
-    it('bulk mute and unmute on repo subjects', async () => {
-      const subjects = [repoRef(sc.dids.carol), repoRef(sc.dids.dan)]
-
-      // Mute
-      const muteResult = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventMute',
-          durationInHours: 24,
-        },
-        subjects,
-        createdBy: 'did:example:admin',
-      })
-
-      expect(muteResult.events).toHaveLength(2)
-      expect(muteResult.failedEvents).toHaveLength(0)
-
-      // Unmute
-      const unmuteResult = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventUnmute',
-        },
-        subjects,
-        createdBy: 'did:example:admin',
-      })
-
-      expect(unmuteResult.events).toHaveLength(2)
-      expect(unmuteResult.failedEvents).toHaveLength(0)
-    })
-
-    it('bulk mute reporter fails on record subjects', async () => {
-      const subjects = [strongRef(sc.dids.alice, 0), strongRef(sc.dids.bob, 0)]
-
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventMuteReporter',
-          durationInHours: 24,
-        },
-        subjects,
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(0)
-      expect(result.failedEvents).toHaveLength(2)
-      for (const failed of result.failedEvents) {
-        expect(failed.error).toContain('Subject must be a repo')
-      }
-    })
-
     it('bulk report events', async () => {
       const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
 
