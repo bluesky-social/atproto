@@ -1,4 +1,4 @@
-import { Cid } from '@atproto/lex-data'
+import { Cid } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { chat } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'

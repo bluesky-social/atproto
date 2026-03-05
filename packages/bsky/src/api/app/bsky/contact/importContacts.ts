@@ -49,7 +49,7 @@ export default function (server: Server, ctx: AppContext) {
 }
 
 const skeleton = async (
-  input: SkeletonFnInput<Context, Input>,
+  input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
   const actor = params.hydrateCtx.viewer
@@ -67,7 +67,7 @@ const skeleton = async (
 }
 
 const hydration = async (
-  input: HydrationFnInput<Context, Input, SkeletonState>,
+  input: HydrationFnInput<Context, Params, SkeletonState>,
 ) => {
   const { ctx, params, skeleton } = input
   const { matches } = skeleton
@@ -77,7 +77,7 @@ const hydration = async (
 
 const presentation = (input: {
   ctx: Context
-  params: Input
+  params: Params
   skeleton: SkeletonState
   hydration: HydrationState
 }) => {
@@ -109,7 +109,7 @@ type Context = {
   views: Views
 }
 
-type Input = app.bsky.contact.importContacts.$InputBody & {
+type Params = app.bsky.contact.importContacts.$InputBody & {
   hydrateCtx: HydrateCtx & { viewer: string }
 }
 

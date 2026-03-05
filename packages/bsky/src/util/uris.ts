@@ -1,4 +1,4 @@
-import { AtUri } from '@atproto/syntax'
+import { AtUri, DidString } from '@atproto/syntax'
 import { StrongRef, parseStrongRef } from '../views/types.js'
 
 /**
@@ -25,7 +25,7 @@ export function postUriToPostgateUri(postUri: string) {
   return urip.toString()
 }
 
-export function uriToDid(uri: string) {
+export function uriToDid(uri: string): DidString {
   return new AtUri(uri).did
 }
 

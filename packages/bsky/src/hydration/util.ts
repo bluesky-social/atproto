@@ -1,13 +1,15 @@
 import * as ui8 from 'uint8arrays'
-import { l, lexParse } from '@atproto/lex'
 import {
+  AtUriString,
   Cid,
   LexValue,
   TypedLexMap,
   isPlainObject,
+  l,
+  lexParse,
   parseCidSafe,
-} from '@atproto/lex-data'
-import { AtUri, AtUriString } from '@atproto/syntax'
+} from '@atproto/lex'
+import { AtUri } from '@atproto/syntax'
 import * as lexicons from '../lexicons/index.js'
 import { Record } from '../proto/bsky_pb'
 
@@ -143,7 +145,7 @@ export const parseCid = (cidStr: string | undefined): Cid | null => {
 }
 
 export const urisByCollection = <T extends string>(
-  uris: T[],
+  uris: Iterable<T>,
 ): Map<string, T[]> => {
   const result = new Map<string, T[]>()
   for (const uri of uris) {
@@ -155,10 +157,10 @@ export const urisByCollection = <T extends string>(
   return result
 }
 
-export const split = <T>(
-  items: T[],
+export function split<T>(
+  items: Iterable<T>,
   predicate: (item: T) => boolean,
-): [T[], T[]] => {
+): [T[], T[]] {
   const yes: T[] = []
   const no: T[] = []
   for (const item of items) {

@@ -2,7 +2,7 @@ import { Timestamp } from '@bufbuild/protobuf'
 import { ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
 import { keyBy } from '@atproto/common'
-import { lexParse } from '@atproto/lex-json'
+import { lexParse } from '@atproto/lex'
 import { app } from '../../../lexicons/index.js'
 import { Service } from '../../../proto/bsky_connect'
 import {

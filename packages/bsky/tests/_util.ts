@@ -9,8 +9,7 @@ import {
   AppBskyLabelerDefs,
   lexToJson,
 } from '@atproto/api'
-import { $Typed } from '@atproto/lex'
-import { ifCid, parseCid } from '@atproto/lex-data'
+import { $Typed, ifCid, parseCid } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 
 type ThreadViewPost = Extract<

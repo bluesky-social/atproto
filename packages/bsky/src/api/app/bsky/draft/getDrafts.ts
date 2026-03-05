@@ -1,5 +1,4 @@
-import { lexParse } from '@atproto/lex-json'
-import { toDatetimeString } from '@atproto/syntax'
+import { lexParse, toDatetimeString } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'

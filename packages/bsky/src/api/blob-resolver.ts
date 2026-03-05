@@ -8,7 +8,7 @@ import {
   createDecoders,
 } from '@atproto/common'
 import { AtprotoDid, isAtprotoDid } from '@atproto/did'
-import { Cid } from '@atproto/lex-data'
+import { Cid } from '@atproto/lex'
 import {
   ACCEPT_ENCODING_COMPRESSED,
   ACCEPT_ENCODING_UNCOMPRESSED,

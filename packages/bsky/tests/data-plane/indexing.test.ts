@@ -10,7 +10,7 @@ import {
 } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed, usersSeed } from '@atproto/dev-env'
-import { Cid } from '@atproto/lex-data'
+import { Cid } from '@atproto/lex'
 import { repoPrepare } from '@atproto/pds'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'

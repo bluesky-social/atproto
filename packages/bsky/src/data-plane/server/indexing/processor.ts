@@ -1,7 +1,6 @@
 import { Insertable } from 'kysely'
 import { chunkArray } from '@atproto/common'
-import { l, lexParse, lexStringify } from '@atproto/lex'
-import { Cid, parseCid } from '@atproto/lex-data'
+import { Cid, l, lexParse, lexStringify, parseCid } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'

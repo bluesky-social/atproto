@@ -1,7 +1,5 @@
 import * as util from 'node:util'
-import { UriString } from '@atproto/lex'
-import { BlobRef } from '@atproto/lex-data'
-import { AtUriString, DidString } from '@atproto/syntax'
+import { AtUriString, BlobRef, DidString, UriString } from '@atproto/lex'
 import {
   GateRecord,
   PostRecord,
@@ -31,9 +29,7 @@ export const parseThreadGate = (
   const allowMentions = gate.allow.some(isMentionRule)
   const allowFollower = gate.allow.some(isFollowerRule)
   const allowFollowing = gate.allow.some(isFollowingRule)
-  const allowListUris = gate.allow
-    .map((item) => (isListRule(item) ? item.list : undefined))
-    .filter((v) => v != null)
+  const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {

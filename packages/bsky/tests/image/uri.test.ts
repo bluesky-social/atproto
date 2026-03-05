@@ -1,5 +1,5 @@
 import { cidForCbor } from '@atproto/common'
-import { Cid } from '@atproto/lex-data'
+import { Cid } from '@atproto/lex'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {

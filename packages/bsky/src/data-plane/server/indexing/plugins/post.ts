@@ -1,6 +1,5 @@
 import { Insertable, Selectable, sql } from 'kysely'
-import { $Typed, lexParse } from '@atproto/lex'
-import { Cid } from '@atproto/lex-data'
+import { $Typed, Cid, lexParse } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { app } from '../../../../lexicons'
 import {

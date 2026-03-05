@@ -1,8 +1,7 @@
 import { Selectable, sql } from 'kysely'
 import { DAY, HOUR } from '@atproto/common'
 import { IdResolver, getPds } from '@atproto/identity'
-import { l, xrpc, xrpcSafe } from '@atproto/lex'
-import { Cid, parseCid } from '@atproto/lex-data'
+import { Cid, l, parseCid, xrpc, xrpcSafe } from '@atproto/lex'
 import {
   VerifiedRepo,
   WriteOpAction,
