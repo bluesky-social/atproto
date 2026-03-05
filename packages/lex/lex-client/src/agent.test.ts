@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { type Agent, type FetchHandler, buildAgent, isAgent } from './agent.js'
+import {
+  type Agent,
+  type AgentConfig,
+  type FetchHandler,
+  buildAgent,
+  isAgent,
+} from './agent.js'
 
 // ============================================================================
 // isAgent
@@ -75,13 +81,18 @@ describe(buildAgent, () => {
       const fetchFn = vi.fn<typeof globalThis.fetch>(async () =>
         Response.json({ ok: true }),
       )
-      const agent = buildAgent({ service: 'https://example.com', fetch: fetchFn })
+      const agent = buildAgent({
+        service: 'https://example.com',
+        fetch: fetchFn,
+      })
 
       await agent.fetchHandler('/xrpc/io.example.test', { method: 'GET' })
 
       expect(fetchFn).toHaveBeenCalledOnce()
       const [url, init] = fetchFn.mock.calls[0]
-      expect(url).toEqual(new URL('/xrpc/io.example.test', 'https://example.com'))
+      expect(url).toEqual(
+        new URL('/xrpc/io.example.test', 'https://example.com'),
+      )
       expect(init?.method).toBe('GET')
     })
 
@@ -121,8 +132,8 @@ describe(buildAgent, () => {
     })
 
     it('reflects did changes on the config object', () => {
-      const config = {
-        did: 'did:plc:original' as `did:${string}` | undefined,
+      const config: AgentConfig = {
+        did: 'did:plc:original',
         service: 'https://example.com',
       }
       const agent = buildAgent(config)
@@ -137,9 +148,9 @@ describe(buildAgent, () => {
       try {
         // @ts-expect-error removing fetch to simulate missing environment
         globalThis.fetch = undefined
-        expect(() =>
-          buildAgent({ service: 'https://example.com' }),
-        ).toThrow(TypeError)
+        expect(() => buildAgent({ service: 'https://example.com' })).toThrow(
+          TypeError,
+        )
       } finally {
         globalThis.fetch = originalFetch
       }
