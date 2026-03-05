@@ -1,5 +1,16 @@
 # @atproto/bsky
 
+## 0.0.220
+
+### Patch Changes
+
+- [#4712](https://github.com/bluesky-social/atproto/pull/4712) [`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33) Thanks [@devinivy](https://github.com/devinivy)! - remove format from img urls by default
+
+- [#4723](https://github.com/bluesky-social/atproto/pull/4723) [`7ed5704`](https://github.com/bluesky-social/atproto/commit/7ed57043c12aedb0faf6b7dc947adfcfff570b6d) Thanks [@devinivy](https://github.com/devinivy)! - switch default image format to jpeg temporarily
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.10.16
+
 ## 0.0.219
 
 ### Patch Changes

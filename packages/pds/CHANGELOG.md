@@ -1,5 +1,15 @@
 # @atproto/pds
 
+## 0.4.215
+
+### Patch Changes
+
+- [#4712](https://github.com/bluesky-social/atproto/pull/4712) [`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33) Thanks [@devinivy](https://github.com/devinivy)! - remove format from img urls by default
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.10.16
+  - @atproto/oauth-provider@0.15.13
+
 ## 0.4.214
 
 ### Patch Changes
