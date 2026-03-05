@@ -2,6 +2,7 @@ import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
 import {
+  $Typed,
   AppBskyEmbedRecord,
   AppBskyEmbedRecordWithMedia,
   AppBskyFeedDefs,
@@ -9,7 +10,7 @@ import {
   AppBskyLabelerDefs,
   lexToJson,
 } from '@atproto/api'
-import { $Typed, ifCid, parseCid } from '@atproto/lex'
+import { ifCid, validateCidString } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 
 type ThreadViewPost = Extract<
@@ -88,14 +89,7 @@ export const forSnapshot = (obj: any) => {
         .replace(did, take(users, decodeURIComponent(did)))
         .replace(cid, take(cids, cid))
     }
-    let isCid: boolean
-    try {
-      parseCid(str)
-      isCid = true
-    } catch (_err) {
-      isCid = false
-    }
-    if (isCid) {
+    if (validateCidString(str)) {
       return take(cids, str)
     }
     return item
