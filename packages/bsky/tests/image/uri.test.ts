@@ -29,23 +29,23 @@ describe('image uri builder', () => {
 
   it('generates uris.', () => {
     expect(uriBuilder.getPresetUri('banner', did, cid.toString())).toEqual(
-      `https://example.com/img/banner/plain/${did}/${cid.toString()}@webp`,
+      `https://example.com/img/banner/plain/${did}/${cid.toString()}@jpeg`,
     )
     expect(
       uriBuilder.getPresetUri('feed_thumbnail', did, cid.toString()),
     ).toEqual(
-      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@webp`,
+      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`,
     )
   })
 
   it('parses options.', () => {
     expect(
-      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@webp`),
+      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@jpeg`),
     ).toEqual({
       did: 'did:plc:xyz',
       cid: cid.toString(),
       fit: 'cover',
-      format: 'webp',
+      format: 'jpeg',
       height: 1000,
       min: true,
       preset: 'banner',
@@ -73,7 +73,7 @@ describe('image uri builder', () => {
       did: 'did:plc:xyz',
       cid: cid.toString(),
       fit: 'inside',
-      format: 'webp',
+      format: 'jpeg',
       height: 2000,
       min: true,
       preset: 'feed_thumbnail',
@@ -96,7 +96,7 @@ describe('image uri builder', () => {
     })
     expect(
       uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
-    ).toBe(`${base}/${testCid}@webp`)
+    ).toBe(`${base}/${testCid}@jpeg`)
 
     mockCheckGates.mockReturnValue(
       new Map([['image:remove_format_from_url', true]]),
