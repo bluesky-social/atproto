@@ -43,23 +43,6 @@ export default function (server: Server, ctx: AppContext) {
               ctx,
             })
 
-            // Divert side-effect: auto-takedown after divert
-            if (isModEventDivert(event)) {
-              await handleModerationEvent({
-                ctx,
-                auth,
-                input: {
-                  ...input.body,
-                  event: {
-                    ...event,
-                    $type: 'tools.ozone.moderation.defs#modEventTakedown',
-                    comment:
-                      '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
-                  },
-                },
-              })
-            }
-
             return { moderationEvent, subject }
           }),
         )

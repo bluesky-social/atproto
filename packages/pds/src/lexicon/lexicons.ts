@@ -17503,7 +17503,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Take a moderation action on multiple subjects at once. Each subject is processed independently; partial failures are reported rather than causing a full rollback.',
+          'Take a moderation action on multiple subjects at once. Each subject is processed independently; partial failures are reported rather than causing a full rollback. This batch endpoint only supports a subset of moderation events.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -17515,28 +17515,13 @@ export const schemaDict = {
                 refs: [
                   'lex:tools.ozone.moderation.defs#modEventTakedown',
                   'lex:tools.ozone.moderation.defs#modEventAcknowledge',
-                  'lex:tools.ozone.moderation.defs#modEventEscalate',
-                  'lex:tools.ozone.moderation.defs#modEventComment',
                   'lex:tools.ozone.moderation.defs#modEventLabel',
                   'lex:tools.ozone.moderation.defs#modEventReport',
-                  'lex:tools.ozone.moderation.defs#modEventMute',
-                  'lex:tools.ozone.moderation.defs#modEventUnmute',
-                  'lex:tools.ozone.moderation.defs#modEventMuteReporter',
-                  'lex:tools.ozone.moderation.defs#modEventUnmuteReporter',
                   'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
                   'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
                   'lex:tools.ozone.moderation.defs#modEventEmail',
-                  'lex:tools.ozone.moderation.defs#modEventDivert',
                   'lex:tools.ozone.moderation.defs#modEventTag',
-                  'lex:tools.ozone.moderation.defs#accountEvent',
-                  'lex:tools.ozone.moderation.defs#identityEvent',
-                  'lex:tools.ozone.moderation.defs#recordEvent',
-                  'lex:tools.ozone.moderation.defs#modEventPriorityScore',
-                  'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
-                  'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
                   'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
-                  'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
-                  'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
                 ],
               },
               subjects: {

@@ -24,28 +24,13 @@ export interface InputSchema {
   event:
     | $Typed<ToolsOzoneModerationDefs.ModEventTakedown>
     | $Typed<ToolsOzoneModerationDefs.ModEventAcknowledge>
-    | $Typed<ToolsOzoneModerationDefs.ModEventEscalate>
-    | $Typed<ToolsOzoneModerationDefs.ModEventComment>
     | $Typed<ToolsOzoneModerationDefs.ModEventLabel>
     | $Typed<ToolsOzoneModerationDefs.ModEventReport>
-    | $Typed<ToolsOzoneModerationDefs.ModEventMute>
-    | $Typed<ToolsOzoneModerationDefs.ModEventUnmute>
-    | $Typed<ToolsOzoneModerationDefs.ModEventMuteReporter>
-    | $Typed<ToolsOzoneModerationDefs.ModEventUnmuteReporter>
     | $Typed<ToolsOzoneModerationDefs.ModEventReverseTakedown>
     | $Typed<ToolsOzoneModerationDefs.ModEventResolveAppeal>
     | $Typed<ToolsOzoneModerationDefs.ModEventEmail>
-    | $Typed<ToolsOzoneModerationDefs.ModEventDivert>
     | $Typed<ToolsOzoneModerationDefs.ModEventTag>
-    | $Typed<ToolsOzoneModerationDefs.AccountEvent>
-    | $Typed<ToolsOzoneModerationDefs.IdentityEvent>
-    | $Typed<ToolsOzoneModerationDefs.RecordEvent>
-    | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
-    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
-    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
     | $Typed<ToolsOzoneModerationDefs.RevokeAccountCredentialsEvent>
-    | $Typed<ToolsOzoneModerationDefs.ScheduleTakedownEvent>
-    | $Typed<ToolsOzoneModerationDefs.CancelScheduledTakedownEvent>
     | { $type: string }
   /** Array of subjects to apply the moderation event to. */
   subjects: (
