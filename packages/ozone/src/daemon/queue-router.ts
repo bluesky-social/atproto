@@ -154,7 +154,10 @@ function findMatchingQueue(
 
   for (const queue of queues) {
     const subjectTypeMatch = queue.subjectTypes.includes(subjectType)
-    const collectionMatch = subjectType === 'record' ? (collection ?? null) === queue.collection : true
+    const collectionMatch =
+      subjectType === 'record' && queue.collection !== null
+        ? (collection ?? null) === queue.collection
+        : true
     const reportTypeMatch = queue.reportTypes.includes(reportType)
 
     if (subjectTypeMatch && collectionMatch && reportTypeMatch) {
