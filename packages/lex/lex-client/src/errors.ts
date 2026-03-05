@@ -7,6 +7,8 @@ import {
   ResultFailure,
   lexErrorDataSchema,
 } from '@atproto/lex-schema'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Agent } from './agent.js'
 import { XrpcResponsePayload } from './util.js'
 import {
   WWWAuthenticate,
@@ -377,7 +379,7 @@ export class XrpcInternalError<
     return false
   }
 
-  override toJSON(): LexErrorData<'InternalServerError'> {
+  override toJSON(): LexErrorData {
     // @NOTE Do not expose internal error details to downstream clients
     return { error: this.error, message: 'Internal Server Error' }
   }
@@ -389,7 +391,7 @@ export class XrpcInternalError<
 
 /**
  * Special case of XrpcInternalError that specifically represents errors thrown
- * by the fetch handler during the XRPC request. This includes:
+ * by {@link Agent.fetchHandler} during the XRPC request. This includes:
  * - Network errors (connection refused, DNS failure)
  * - Request timeouts
  * - Request aborted via AbortSignal
@@ -403,9 +405,8 @@ export class XrpcFetchError<
   name = 'XrpcFetchError'
 
   constructor(method: M, cause: unknown) {
-    const message =
-      cause instanceof Error ? cause.message : 'Unexpected fetch() error'
-    super(method, message, { cause })
+    const message = cause instanceof Error ? cause.message : String(cause)
+    super(method, `Unexpected fetchHandler() error: ${message}`, { cause })
   }
 
   override shouldRetry(): boolean {
@@ -416,7 +417,7 @@ export class XrpcFetchError<
     return true
   }
 
-  override toJSON(): LexErrorData<'InternalServerError'> {
+  override toJSON(): LexErrorData {
     // @NOTE Do not expose internal error details to downstream clients
     return { error: this.error, message: 'Failed to perform upstream request' }
   }
