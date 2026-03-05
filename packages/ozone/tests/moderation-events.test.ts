@@ -1039,6 +1039,94 @@ describe('moderation-events', () => {
       await modClient.performReverseTakedown({ subject })
     })
 
+    it('bulk email events on repo subjects', async () => {
+      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
+
+      const result = await modClient.emitEvents({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventEmail',
+          subjectLine: 'Bulk notice',
+          content: 'This is a bulk email test',
+        },
+        subjects,
+        createdBy: 'did:example:admin',
+      })
+
+      expect(result.events).toHaveLength(2)
+      expect(result.failedEvents).toHaveLength(0)
+      for (const ev of result.events) {
+        expect(ev.event.$type).toBe(
+          'tools.ozone.moderation.defs#modEventEmail',
+        )
+      }
+    })
+
+    it('bulk email events fail on record subjects', async () => {
+      const subjects = [strongRef(sc.dids.alice, 0), strongRef(sc.dids.bob, 0)]
+
+      const result = await modClient.emitEvents({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventEmail',
+          subjectLine: 'Should fail',
+          content: 'Email on records should fail',
+        },
+        subjects,
+        createdBy: 'did:example:admin',
+      })
+
+      expect(result.events).toHaveLength(0)
+      expect(result.failedEvents).toHaveLength(2)
+      expect(result.failedEvents[0].error).toContain(
+        'Email can only be sent to a repo subject',
+      )
+    })
+
+    it('bulk revokeAccountCredentials events on repo subjects', async () => {
+      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
+
+      const result = await modClient.emitEvents(
+        {
+          event: {
+            $type: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+            comment: 'Bulk revoke credentials',
+          },
+          subjects,
+          createdBy: 'did:example:admin',
+        },
+        'admin',
+      )
+
+      expect(result.events).toHaveLength(2)
+      expect(result.failedEvents).toHaveLength(0)
+      for (const ev of result.events) {
+        expect(ev.event.$type).toBe(
+          'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+        )
+      }
+    })
+
+    it('bulk revokeAccountCredentials fails for non-admin', async () => {
+      const subjects = [repoRef(sc.dids.alice)]
+
+      const result = await modClient.emitEvents(
+        {
+          event: {
+            $type: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+            comment: 'Should fail for non-admin',
+          },
+          subjects,
+          createdBy: 'did:example:admin',
+        },
+        'moderator',
+      )
+
+      expect(result.events).toHaveLength(0)
+      expect(result.failedEvents).toHaveLength(1)
+      expect(result.failedEvents[0].error).toContain(
+        'Must be an admin to revoke account credentials',
+      )
+    })
+
     it('rejects bulk label events containing invalid characters', async () => {
       const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
 
