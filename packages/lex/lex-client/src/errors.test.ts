@@ -322,13 +322,13 @@ describe(XrpcFetchError, () => {
   it('uses cause message when cause is an Error', () => {
     const cause = new TypeError('Failed to fetch')
     const err = new XrpcFetchError(testQuery, cause)
-    expect(err.message).toBe('Failed to fetch')
+    expect(err.message).toBe('Unexpected fetchHandler() error: Failed to fetch')
     expect(err.cause).toBe(cause)
   })
 
   it('uses fallback message when cause is not an Error', () => {
     const err = new XrpcFetchError(testQuery, 'string cause')
-    expect(err.message).toBe('Unexpected fetch() error')
+    expect(err.message).toBe('Unexpected fetchHandler() error: string cause')
     expect(err.cause).toBe('string cause')
   })
 
