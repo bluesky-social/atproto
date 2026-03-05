@@ -1,4 +1,5 @@
-import { IncludeFormatLevel, Options, shouldIncludeFormat } from './util'
+import { FeatureGatesClient } from '../feature-gates'
+import { Options } from './util'
 
 // @NOTE if there are any additions here, ensure to include them on ImageUriBuilder.presets
 export type ImagePreset =
@@ -10,10 +11,7 @@ export type ImagePreset =
 const PATH_REGEX = /^\/(.+?)\/plain\/(.+?)\/(.+?)(?:@(.+?))?$/
 
 export class ImageUriBuilder {
-  constructor(
-    public endpoint: string,
-    public includeFormatLevel?: IncludeFormatLevel,
-  ) {}
+  constructor(public endpoint: string) {}
 
   static presets: ImagePreset[] = [
     'avatar',
@@ -22,34 +20,47 @@ export class ImageUriBuilder {
     'feed_fullsize',
   ]
 
-  getPresetUri(id: ImagePreset, did: string, cid: string): string {
+  getPresetUri(
+    id: ImagePreset,
+    did: string,
+    cid: string,
+    featureGatesClient?: FeatureGatesClient,
+  ): string {
     const options = presets[id]
     if (!options) {
       throw new Error(`Unrecognized requested common uri type: ${id}`)
     }
+
+    // TODO: Remove after image migration. It is not ideal to check feature gates outside of handlers with the current setup..
+    const map = featureGatesClient?.checkGates(
+      ['image:remove_format_from_url'],
+      {
+        viewer: did,
+      },
+    )
+    const removeFormat = map?.get('image:remove_format_from_url') ?? false
+    const includeFormat = !removeFormat
+
     return (
       this.endpoint +
       ImageUriBuilder.getPath({
         preset: id,
         did,
         cid,
-        includeFormatLevel: this.includeFormatLevel,
+        includeFormat,
       })
     )
   }
 
   static getPath(
     opts: { preset: ImagePreset } & BlobLocation & {
-        includeFormatLevel?: IncludeFormatLevel
+        includeFormat?: boolean
       },
   ) {
     const { format } = presets[opts.preset]
-    const includeFormat =
-      opts.includeFormatLevel != null &&
-      shouldIncludeFormat(opts.cid, opts.includeFormatLevel)
     return (
       `/${opts.preset}/plain/${opts.did}/${opts.cid}` +
-      (includeFormat ? `@${format}` : '')
+      (opts.includeFormat ? `@${format}` : '')
     )
   }
 

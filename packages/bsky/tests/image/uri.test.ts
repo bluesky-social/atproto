@@ -1,5 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
+import { FeatureGatesClient } from '../../src/feature-gates'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {
@@ -28,12 +29,12 @@ describe('image uri builder', () => {
 
   it('generates uris.', () => {
     expect(uriBuilder.getPresetUri('banner', did, cid.toString())).toEqual(
-      `https://example.com/img/banner/plain/${did}/${cid.toString()}`,
+      `https://example.com/img/banner/plain/${did}/${cid.toString()}@webp`,
     )
     expect(
       uriBuilder.getPresetUri('feed_thumbnail', did, cid.toString()),
     ).toEqual(
-      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}`,
+      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@webp`,
     )
   })
 
@@ -80,37 +81,29 @@ describe('image uri builder', () => {
     })
   })
 
-  it('includes format in path based on level', () => {
-    const did = 'did:example:alice'
-    const base = `https://example.com/img/avatar/plain/${did}`
-    let builder = new ImageUriBuilder(endpoint, 0)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(`${base}/bafka`)
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(`${base}/bafk7`)
-    builder = new ImageUriBuilder(endpoint, 1)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(
-      `${base}/bafka@webp`,
+  it('includes format based on feature gate', () => {
+    const testDid = 'did:example:alice'
+    const testCid = 'bafkabc'
+    const base = `https://example.com/img/avatar/plain/${testDid}`
+
+    const mockFeatureGates = {
+      checkGates: jest.fn(),
+    } as unknown as FeatureGatesClient
+    const mockCheckGates = mockFeatureGates.checkGates as jest.Mock
+
+    mockCheckGates.mockImplementation(() => {
+      return new Map([['image:remove_format_from_url', false]])
+    })
+    expect(
+      uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
+    ).toBe(`${base}/${testCid}@webp`)
+
+    mockCheckGates.mockReturnValue(
+      new Map([['image:remove_format_from_url', true]]),
     )
-    expect(builder.getPresetUri('avatar', did, 'bafkb')).toBe(
-      `${base}/bafkb@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkc')).toBe(`${base}/bafkc`)
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(`${base}/bafk7`)
-    builder = new ImageUriBuilder(endpoint, 8)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(
-      `${base}/bafka@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkp')).toBe(
-      `${base}/bafkp@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafkq')).toBe(`${base}/bafkq`)
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(`${base}/bafk7`)
-    builder = new ImageUriBuilder(endpoint, 16)
-    expect(builder.getPresetUri('avatar', did, 'bafka')).toBe(
-      `${base}/bafka@webp`,
-    )
-    expect(builder.getPresetUri('avatar', did, 'bafk7')).toBe(
-      `${base}/bafk7@webp`,
-    )
+    expect(
+      uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
+    ).toBe(`${base}/${testCid}`)
   })
 
   it('errors on bad url pattern.', () => {

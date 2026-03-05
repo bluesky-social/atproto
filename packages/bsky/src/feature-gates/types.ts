@@ -13,7 +13,8 @@ export type RawUserContext = {
   /**
    * The express request object, used to extract analytics headers for the user context
    */
-  req: express.Request
+  // TODO: remove optional after image migration.
+  req?: express.Request
 }
 
 /**
