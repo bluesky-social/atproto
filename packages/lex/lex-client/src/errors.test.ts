@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { IssueInvalidType, LexValidationError, l } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
+  XrpcFetchError,
   XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
@@ -280,11 +281,6 @@ describe(XrpcInternalError, () => {
     expect(err.error).toBe('InternalServerError')
   })
 
-  it('is always retryable', () => {
-    const err = new XrpcInternalError(testQuery)
-    expect(err.shouldRetry()).toBe(true)
-  })
-
   it('toJSON does not expose internal details', () => {
     const err = new XrpcInternalError(
       testQuery,
@@ -304,6 +300,62 @@ describe(XrpcInternalError, () => {
     expect(downstream.status).toBe(500)
     expect(downstream.body.error).toBe('InternalServerError')
     expect(downstream.body.message).toBe('Internal Server Error')
+  })
+
+  it('is not retryable', () => {
+    const err = new XrpcInternalError(testQuery, 'something broke')
+    expect(err.shouldRetry()).toBe(false)
+  })
+})
+
+// ============================================================================
+// XrpcFetchError
+// ============================================================================
+
+describe(XrpcFetchError, () => {
+  it('extends XrpcInternalError', () => {
+    const err = new XrpcFetchError(testQuery, new TypeError('fetch failed'))
+    expect(err).toBeInstanceOf(XrpcInternalError)
+    expect(err.error).toBe('InternalServerError')
+  })
+
+  it('uses cause message when cause is an Error', () => {
+    const cause = new TypeError('Failed to fetch')
+    const err = new XrpcFetchError(testQuery, cause)
+    expect(err.message).toBe('Failed to fetch')
+    expect(err.cause).toBe(cause)
+  })
+
+  it('uses fallback message when cause is not an Error', () => {
+    const err = new XrpcFetchError(testQuery, 'string cause')
+    expect(err.message).toBe('Unexpected fetch() error')
+    expect(err.cause).toBe('string cause')
+  })
+
+  it('is retryable', () => {
+    const err = new XrpcFetchError(testQuery, new Error('network timeout'))
+    expect(err.shouldRetry()).toBe(true)
+  })
+
+  it('toJSON does not expose internal details', () => {
+    const err = new XrpcFetchError(
+      testQuery,
+      new Error('ECONNREFUSED 10.0.0.1:443'),
+    )
+    const json = err.toJSON()
+
+    expect(json.error).toBe('InternalServerError')
+    expect(json.message).toBe('Failed to perform upstream request')
+    expect(json.message).not.toContain('ECONNREFUSED')
+  })
+
+  it('toDownstreamError returns 502', () => {
+    const err = new XrpcFetchError(testQuery, new Error('DNS lookup failed'))
+    const downstream = err.toDownstreamError()
+
+    expect(downstream.status).toBe(502)
+    expect(downstream.body.error).toBe('InternalServerError')
+    expect(downstream.body.message).toBe('Failed to perform upstream request')
   })
 })
 
