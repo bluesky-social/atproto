@@ -72,7 +72,6 @@ export class BskyAppView {
     })
     const imgUriBuilder = new ImageUriBuilder(
       config.cdnUrl || `${config.publicUrl}/img`,
-      config.cdnIncludeFormatLevel,
     )
     const videoUriBuilder = new VideoUriBuilder({
       playlistUrlPattern:
@@ -120,13 +119,24 @@ export class BskyAppView {
           )
         : new BasicHostList(config.dataplaneUrls)
 
+    const featureGatesClient = new FeatureGatesClient({
+      growthBookApiHost: config.growthBookApiHost,
+      growthBookClientKey: config.growthBookClientKey,
+      eventProxyTrackingEndpoint: config.eventProxyTrackingEndpoint,
+    })
+
     const dataplane = createDataPlaneClient(dataplaneHostList, {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
-      debugFieldAllowedDids: config.debugFieldAllowedDids,
-    })
+    const hydrator = new Hydrator(
+      dataplane,
+      config.labelsFromIssuerDids,
+      {
+        debugFieldAllowedDids: config.debugFieldAllowedDids,
+      },
+      featureGatesClient,
+    )
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
@@ -179,12 +189,6 @@ export class BskyAppView {
       modServiceDid: config.modServiceDid,
       adminPasses: config.adminPasswords,
       entrywayJwtPublicKey,
-    })
-
-    const featureGatesClient = new FeatureGatesClient({
-      growthBookApiHost: config.growthBookApiHost,
-      growthBookClientKey: config.growthBookClientKey,
-      eventProxyTrackingEndpoint: config.eventProxyTrackingEndpoint,
     })
 
     const blobDispatcher = createBlobDispatcher(config)
