@@ -53,6 +53,11 @@ export class FeatureGatesClient {
         apiHost: this.config.growthBookApiHost,
         clientKey: this.config.growthBookClientKey,
         onFeatureUsage: (feature, result, userContext) => {
+          // This is too high-volume, we don't want to track.
+          if (feature === 'image:remove_format_from_url') {
+            return
+          }
+
           this.metrics.track(
             'feature:viewed',
             {
