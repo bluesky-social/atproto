@@ -35,6 +35,10 @@ export class ImageUriBuilder {
     const map = featureGatesClient?.checkGates(
       ['image:remove_format_from_url'],
       {
+        // This is a workaround. We're trying to use the image owner's DID as if it were the viewer,
+        // while in reality it is the owner of the subject (image) being viewed.
+        // My expectation is that it does the effect of, instead of rolling out gradually by the image viewers,
+        // that it rolls out gradually by the image owners.
         viewer: did,
       },
     )
