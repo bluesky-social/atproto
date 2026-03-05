@@ -1045,5 +1045,23 @@ describe('moderation-events', () => {
       // Clean up
       await modClient.performReverseTakedown({ subject })
     })
+
+    it('rejects bulk label events containing invalid characters', async () => {
+      const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
+
+      const result = await modClient.emitEvents({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventLabel',
+          createLabelVals: ['valid', 'has space'],
+          negateLabelVals: [],
+        },
+        subjects,
+        createdBy: 'did:example:admin',
+      })
+
+      expect(result.events).toHaveLength(0)
+      expect(result.failedEvents).toHaveLength(2)
+      expect(result.failedEvents[0].error).toContain('Invalid label')
+    })
   })
 })
