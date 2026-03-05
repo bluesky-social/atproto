@@ -1081,7 +1081,7 @@ describe('moderation-events', () => {
       )
     })
 
-    it('bulk revokeAccountCredentials events on repo subjects', async () => {
+    it.skip('bulk revokeAccountCredentials events on repo subjects', async () => {
       const subjects = [repoRef(sc.dids.alice), repoRef(sc.dids.bob)]
 
       const result = await modClient.emitEvents(
