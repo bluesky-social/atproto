@@ -104,28 +104,28 @@ export class BadPathError extends Error {}
 
 export const presets: Record<ImagePreset, Options> = {
   avatar: {
-    format: 'webp',
+    format: 'jpeg', // @TODO switch these formats to webp after rollout
     fit: 'cover',
     height: 1000,
     width: 1000,
     min: true,
   },
   banner: {
-    format: 'webp',
+    format: 'jpeg',
     fit: 'cover',
     height: 1000,
     width: 3000,
     min: true,
   },
   feed_thumbnail: {
-    format: 'webp',
+    format: 'jpeg',
     fit: 'inside',
     height: 2000,
     width: 2000,
     min: true,
   },
   feed_fullsize: {
-    format: 'webp',
+    format: 'jpeg',
     fit: 'inside',
     height: 1000,
     width: 1000,

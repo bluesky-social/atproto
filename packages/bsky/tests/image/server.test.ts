@@ -43,14 +43,14 @@ describe('image processing server', () => {
     expect(info).toEqual({
       height: 580,
       width: 1000,
-      size: 46594,
-      mime: 'image/webp',
+      mime: 'image/jpeg',
+      size: 127578,
     })
     expect(Object.fromEntries(res.headers)).toEqual(
       expect.objectContaining({
-        'content-type': 'image/webp',
+        'content-type': 'image/jpeg',
         'cache-control': 'public, max-age=31536000',
-        'content-length': '46594',
+        'content-length': '127578',
       }),
     )
   })
