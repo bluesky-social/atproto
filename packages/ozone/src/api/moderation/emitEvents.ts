@@ -38,7 +38,7 @@ export default function (server: Server, ctx: AppContext) {
             }
 
             const moderationEvent = await handleModerationEvent({
-              input,
+              input: input.body,
               auth,
               ctx,
             })
@@ -49,15 +49,12 @@ export default function (server: Server, ctx: AppContext) {
                 ctx,
                 auth,
                 input: {
-                  encoding: 'application/json',
-                  body: {
-                    ...input.body,
-                    event: {
-                      ...event,
-                      $type: 'tools.ozone.moderation.defs#modEventTakedown',
-                      comment:
-                        '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
-                    },
+                  ...input.body,
+                  event: {
+                    ...event,
+                    $type: 'tools.ozone.moderation.defs#modEventTakedown',
+                    comment:
+                      '[DIVERT_SIDE_EFFECT]: Automatically taking down after divert event',
                   },
                 },
               })

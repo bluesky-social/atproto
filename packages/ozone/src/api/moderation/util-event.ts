@@ -1,8 +1,13 @@
+import {
+  $Typed,
+  ComAtprotoAdminDefs,
+  ComAtprotoRepoStrongRef,
+  ToolsOzoneModerationDefs,
+} from '@atproto/api'
 import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
 import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AdminTokenOutput, ModeratorOutput } from '../../auth-verifier'
 import { AppContext } from '../../context'
-import { Server } from '../../lexicon'
 import { ids } from '../../lexicon/lexicons'
 import {
   ModEventTag,
@@ -19,7 +24,6 @@ import {
   isModEventUnmuteReporter,
   isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
-import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { httpLogger } from '../../logger'
 import { subjectFromInput } from '../../mod-service/subject'
 import { SettingService } from '../../setting/service'
@@ -32,32 +36,66 @@ import {
   getProtectedTags,
 } from './util'
 
+interface InputSchema {
+  event:
+    | $Typed<ToolsOzoneModerationDefs.ModEventTakedown>
+    | $Typed<ToolsOzoneModerationDefs.ModEventAcknowledge>
+    | $Typed<ToolsOzoneModerationDefs.ModEventEscalate>
+    | $Typed<ToolsOzoneModerationDefs.ModEventComment>
+    | $Typed<ToolsOzoneModerationDefs.ModEventLabel>
+    | $Typed<ToolsOzoneModerationDefs.ModEventReport>
+    | $Typed<ToolsOzoneModerationDefs.ModEventMute>
+    | $Typed<ToolsOzoneModerationDefs.ModEventUnmute>
+    | $Typed<ToolsOzoneModerationDefs.ModEventMuteReporter>
+    | $Typed<ToolsOzoneModerationDefs.ModEventUnmuteReporter>
+    | $Typed<ToolsOzoneModerationDefs.ModEventReverseTakedown>
+    | $Typed<ToolsOzoneModerationDefs.ModEventResolveAppeal>
+    | $Typed<ToolsOzoneModerationDefs.ModEventEmail>
+    | $Typed<ToolsOzoneModerationDefs.ModEventDivert>
+    | $Typed<ToolsOzoneModerationDefs.ModEventTag>
+    | $Typed<ToolsOzoneModerationDefs.AccountEvent>
+    | $Typed<ToolsOzoneModerationDefs.IdentityEvent>
+    | $Typed<ToolsOzoneModerationDefs.RecordEvent>
+    | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
+    | $Typed<ToolsOzoneModerationDefs.RevokeAccountCredentialsEvent>
+    | $Typed<ToolsOzoneModerationDefs.ScheduleTakedownEvent>
+    | $Typed<ToolsOzoneModerationDefs.CancelScheduledTakedownEvent>
+    | { $type: string }
+  subject:
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
+  subjectBlobCids?: string[]
+  createdBy: string
+  modTool?: ToolsOzoneModerationDefs.ModTool
+  externalId?: string
+}
+
 export const handleModerationEvent = async ({
   ctx,
   input,
   auth,
 }: {
   ctx: AppContext
-  input: HandlerInput
+  input: InputSchema
   auth: ModeratorOutput | AdminTokenOutput
 }) => {
   const access = auth.credentials
   const createdBy =
     auth.credentials.type === 'moderator'
       ? auth.credentials.iss
-      : input.body.createdBy
+      : input.createdBy
   const db = ctx.db
   const moderationService = ctx.modService(db)
   const settingService = ctx.settingService(db)
-  const { event, externalId } = input.body
+  const { event, externalId } = input
   const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
-  const subject = subjectFromInput(
-    input.body.subject,
-    input.body.subjectBlobCids,
-  )
+  const subject = subjectFromInput(input.subject, input.subjectBlobCids)
 
   if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
     throw new InvalidRequestError('Invalid subject type')
@@ -231,7 +269,7 @@ export const handleModerationEvent = async ({
       event,
       subject,
       createdBy,
-      modTool: input.body.modTool,
+      modTool: input.modTool,
       externalId,
     })
 
