@@ -75,7 +75,12 @@ describe('ozone-queues', () => {
   }
 
   const updateQueue = async (
-    input: { queueId: number; name?: string; enabled?: boolean; description?: string },
+    input: {
+      queueId: number
+      name?: string
+      enabled?: boolean
+      description?: string
+    },
     role: 'admin' | 'triage' = 'admin',
   ) => {
     const headers =

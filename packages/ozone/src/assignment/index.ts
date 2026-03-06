@@ -1,11 +1,11 @@
+import { Selectable } from 'kysely'
 import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Selectable } from 'kysely'
 import { Database } from '../db'
 import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
-import { QueueServiceCreator } from '../queue/service'
 import { ReportQueue } from '../db/schema/report_queue'
+import { QueueServiceCreator } from '../queue/service'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number

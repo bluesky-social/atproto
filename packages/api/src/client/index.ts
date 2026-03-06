@@ -288,7 +288,6 @@ import * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/ge
 import * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 import * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
-import * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderation/queryReports.js'
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -302,6 +301,8 @@ import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQue
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -615,7 +616,6 @@ export * as ToolsOzoneModerationGetRepos from './types/tools/ozone/moderation/ge
 export * as ToolsOzoneModerationGetSubjects from './types/tools/ozone/moderation/getSubjects.js'
 export * as ToolsOzoneModerationListScheduledActions from './types/tools/ozone/moderation/listScheduledActions.js'
 export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation/queryEvents.js'
-export * as ToolsOzoneModerationQueryReports from './types/tools/ozone/moderation/queryReports.js'
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
@@ -629,6 +629,8 @@ export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQue
 export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 export * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
@@ -5445,18 +5447,6 @@ export class ToolsOzoneModerationNS {
     )
   }
 
-  queryReports(
-    params?: ToolsOzoneModerationQueryReports.QueryParams,
-    opts?: ToolsOzoneModerationQueryReports.CallOptions,
-  ): Promise<ToolsOzoneModerationQueryReports.Response> {
-    return this._client.call(
-      'tools.ozone.moderation.queryReports',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
   queryStatuses(
     params?: ToolsOzoneModerationQueryStatuses.QueryParams,
     opts?: ToolsOzoneModerationQueryStatuses.CallOptions,
@@ -5596,6 +5586,30 @@ export class ToolsOzoneReportNS {
   ): Promise<ToolsOzoneReportGetAssignments.Response> {
     return this._client.call(
       'tools.ozone.report.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getReport(
+    params?: ToolsOzoneReportGetReport.QueryParams,
+    opts?: ToolsOzoneReportGetReport.CallOptions,
+  ): Promise<ToolsOzoneReportGetReport.Response> {
+    return this._client.call(
+      'tools.ozone.report.getReport',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  queryReports(
+    params?: ToolsOzoneReportQueryReports.QueryParams,
+    opts?: ToolsOzoneReportQueryReports.CallOptions,
+  ): Promise<ToolsOzoneReportQueryReports.Response> {
+    return this._client.call(
+      'tools.ozone.report.queryReports',
       params,
       undefined,
       opts,

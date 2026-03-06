@@ -9,7 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ToolsOzoneModerationQueryReports from '../moderation/queryReports.js'
+import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -25,7 +25,7 @@ export interface InputSchema {
 }
 
 export interface OutputSchema {
-  report: ToolsOzoneModerationQueryReports.ReportView
+  report: ToolsOzoneReportDefs.ReportView
 }
 
 export interface HandlerInput {

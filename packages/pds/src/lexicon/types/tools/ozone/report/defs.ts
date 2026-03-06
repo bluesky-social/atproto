@@ -9,6 +9,8 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ToolsOzoneModerationDefs from '../moderation/defs.js'
+import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
 import type * as ToolsOzoneQueueDefs from '../queue/defs.js'
 
 const is$typed = _is$typed,
@@ -138,6 +140,71 @@ export const REASONSELFHARMSTUNTS = `${id}#reasonSelfHarmStunts`
 export const REASONSELFHARMSUBSTANCES = `${id}#reasonSelfHarmSubstances`
 /** Other dangerous content */
 export const REASONSELFHARMOTHER = `${id}#reasonSelfHarmOther`
+
+/** Information about the moderator currently assigned to a report. */
+export interface ReportAssignment {
+  $type?: 'tools.ozone.report.defs#reportAssignment'
+  profile: { $type: string }
+  /** When the report was assigned */
+  assignedAt: string
+}
+
+const hashReportAssignment = 'reportAssignment'
+
+export function isReportAssignment<V>(v: V) {
+  return is$typed(v, id, hashReportAssignment)
+}
+
+export function validateReportAssignment<V>(v: V) {
+  return validate<ReportAssignment & V>(v, id, hashReportAssignment)
+}
+
+export interface ReportView {
+  $type?: 'tools.ozone.report.defs#reportView'
+  /** Report ID */
+  id: number
+  /** ID of the moderation event that created this report */
+  eventId: number
+  /** Queue ID this report is assigned to. Null = not yet assigned, -1 = no matching queue */
+  queueId?: number
+  /** Display name of the queue (if assigned) */
+  queueName?: string
+  /** Current status of the report */
+  status: 'open' | 'closed' | 'escalated' | (string & {})
+  subject: ToolsOzoneModerationDefs.SubjectView
+  reportType: ComAtprotoModerationDefs.ReasonType
+  /** DID of the user who made the report */
+  reportedBy: string
+  reporter: ToolsOzoneModerationDefs.SubjectView
+  /** Comment provided by the reporter */
+  comment?: string
+  /** When the report was created */
+  createdAt: string
+  /** When the report was last updated */
+  updatedAt?: string
+  /** When the report was assigned to its current queue */
+  queuedAt?: string
+  /** Array of moderation event IDs representing actions taken on this report (sorted DESC, most recent first) */
+  actionEventIds?: number[]
+  /** Optional: expanded action events */
+  actions?: ToolsOzoneModerationDefs.ModEventView[]
+  /** Note sent to reporter when report was actioned */
+  actionNote?: string
+  subjectStatus?: ToolsOzoneModerationDefs.SubjectStatusView
+  /** Number of other pending reports on the same subject */
+  relatedReportCount?: number
+  assignment?: ReportAssignment
+}
+
+const hashReportView = 'reportView'
+
+export function isReportView<V>(v: V) {
+  return is$typed(v, id, hashReportView)
+}
+
+export function validateReportView<V>(v: V) {
+  return validate<ReportView & V>(v, id, hashReportView)
+}
 
 export interface AssignmentView {
   $type?: 'tools.ozone.report.defs#assignmentView'
