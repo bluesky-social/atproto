@@ -66,6 +66,10 @@
         {
           "name": "InvalidSwap",
           "description": "Indicates that 'swapCommit' didn't match current repo commit."
+        },
+        {
+          "name": "RecordAlreadyExists",
+          "description": "Indicates that a record already exists in this repo with the given collection and rkey, so it cannot be created."
         }
       ]
     }

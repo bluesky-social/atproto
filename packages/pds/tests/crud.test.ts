@@ -395,6 +395,68 @@ describe('crud operations', () => {
     })
   })
 
+  describe('createRecord', () => {
+    it("creates a new record if it doesn't already exist", async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const exists = repo.getRecord({
+        repo: bobAgent.assertDid,
+        collection: 'example.a.collection',
+        rkey: 'fresh-key',
+      })
+      await expect(exists).rejects.toThrow('Could not locate record')
+
+      const { data: create } = await repo.createRecord({
+        repo: bobAgent.assertDid,
+        collection: 'example.a.collection',
+        rkey: 'self',
+        record: {},
+      })
+      expect(create.uri).toEqual(
+        `at://${bobAgent.assertDid}/example.a.collection/self`,
+      )
+
+      const existsAfterWrite = await repo.getRecord({
+        repo: bobAgent.assertDid,
+        collection: 'example.a.collection',
+        rkey: 'self',
+      })
+      expect(existsAfterWrite.data.uri).toEqual(
+        `at://${bobAgent.assertDid}/example.a.collection/self`,
+      )
+    })
+
+    it('fails if a record already exists', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const exists = repo.getRecord({
+        repo: bobAgent.assertDid,
+        collection: 'example.b.collection',
+        rkey: 'self',
+      })
+      await expect(exists).rejects.toThrow('Could not locate record')
+
+      const { data: create } = await repo.createRecord({
+        repo: bobAgent.assertDid,
+        collection: 'example.b.collection',
+        rkey: 'self',
+        record: { value: 'before' },
+      })
+      expect(create.uri).toEqual(
+        `at://${bobAgent.assertDid}/example.b.collection/self`,
+      )
+
+      const createAfterExists = repo.createRecord({
+        repo: bobAgent.assertDid,
+        collection: 'example.b.collection',
+        rkey: 'self',
+        record: { value: 'after' },
+      })
+      await expect(createAfterExists).rejects.toMatchObject({
+        error: 'RecordAlreadyExists',
+        message: 'Record already exists: example.b.collection/self',
+      })
+    })
+  })
+
   describe('putRecord', () => {
     const profilePath = {
       collection: ids.AppBskyActorProfile,
