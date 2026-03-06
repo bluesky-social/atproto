@@ -12,6 +12,7 @@ import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedWrite,
+  RecordAlreadyExistsError,
   prepareCreate,
   prepareDelete,
   prepareUpdate,
@@ -168,9 +169,11 @@ export default function (server: Server, ctx: AppContext) {
           .catch((err) => {
             if (err instanceof BadCommitSwapError) {
               throw new InvalidRequestError(err.message, 'InvalidSwap')
-            } else {
-              throw err
             }
+            if (err instanceof RecordAlreadyExistsError) {
+              throw new InvalidRequestError(err.message, 'RecordAlreadyExists')
+            }
+            throw err
           })
 
         await ctx.sequencer.sequenceCommit(did, commit)
