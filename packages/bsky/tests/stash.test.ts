@@ -1,13 +1,10 @@
 import { TestNetwork } from '@atproto/dev-env'
-import { LexMap, lexStringify } from '@atproto/lex'
+import { lexStringify } from '@atproto/lex'
 import { StashClient } from '../dist/stash'
 import { app } from '../src/lexicons/index.js'
 import { Namespaces } from '../src/stash'
 
 type Database = TestNetwork['bsky']['db']
-
-const FAKE_CID_1 = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
-const FAKE_CID_2 = 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq'
 
 describe('private data', () => {
   let network: TestNetwork
@@ -15,23 +12,18 @@ describe('private data', () => {
   let db: Database
 
   const actorDid = 'did:plc:example'
-  // Using bookmark namespace which is available in Namespaces
-  const namespace = Namespaces.AppBskyBookmarkDefsBookmark
+  // This lexicon has nothing special other than being simple, convenient to use in a test.
+  const namespace = Namespaces.AppBskyActorDefsProfileAssociatedChat
   const key = 'self'
 
-  const validPayload0: app.bsky.bookmark.defs.Bookmark = {
-    subject: {
-      uri: 'at://did:plc:example/app.bsky.feed.post/1',
-      cid: FAKE_CID_1,
-    },
+  const validPayload0: app.bsky.actor.defs.ProfileAssociatedChat = {
+    allowIncoming: 'all',
   }
-  const validPayload1: app.bsky.bookmark.defs.Bookmark = {
-    subject: {
-      uri: 'at://did:plc:example/app.bsky.feed.post/2',
-      cid: FAKE_CID_2,
-    },
+  const validPayload1: app.bsky.actor.defs.ProfileAssociatedChat = {
+    allowIncoming: 'following',
   }
-  const invalidPayload: LexMap = {
+  const invalidPayload: app.bsky.actor.defs.ProfileAssociatedChat = {
+    // @ts-expect-error we want invalid
     invalid: 'all',
   }
 
@@ -72,9 +64,7 @@ describe('private data', () => {
         actorDid,
         namespace: namespace.$type,
         key,
-        payload: lexStringify(
-          app.bsky.bookmark.defs.bookmark.$build(validPayload0),
-        ),
+        payload: lexStringify({ $type: namespace.$type, ...validPayload0 }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
@@ -125,9 +115,7 @@ describe('private data', () => {
         actorDid,
         namespace: namespace.$type,
         key,
-        payload: lexStringify(
-          app.bsky.bookmark.defs.bookmark.$build(validPayload1),
-        ),
+        payload: lexStringify({ $type: namespace.$type, ...validPayload1 }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })

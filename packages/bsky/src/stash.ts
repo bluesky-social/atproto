@@ -13,7 +13,9 @@ export const Namespaces = {
     app.bsky.notification.defs.subjectActivitySubscription,
   AppBskyUnspeccedDefsAgeAssuranceEvent:
     app.bsky.unspecced.defs.ageAssuranceEvent,
-} satisfies Record<string, TypedObjectSchema>
+  AppBskyActorDefsProfileAssociatedChat:
+    app.bsky.actor.defs.profileAssociatedChat,
+} as const satisfies Record<string, TypedObjectSchema>
 
 export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]
 
