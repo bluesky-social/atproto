@@ -234,9 +234,11 @@ class Ui8Reader implements BytesReader {
 }
 
 class BufferedReader implements BytesReader {
-  buffer: Uint8Array = new Uint8Array()
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
+
+  private chunks: Uint8Array[] = []
+  private index = 0
 
   constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
     this.iterator =
@@ -245,24 +247,77 @@ class BufferedReader implements BytesReader {
         : stream[Symbol.iterator]()
   }
 
+  get bufferedSize() {
+    let total = -this.index
+    for (let i = 0; i < this.chunks.length; i++) {
+      total += this.chunks[i].byteLength
+    }
+    return total
+  }
+
   async read(bytesToRead: number): Promise<Uint8Array> {
     await this.readUntilBuffered(bytesToRead)
-    const value = this.buffer.subarray(0, bytesToRead)
-    this.buffer = this.buffer.subarray(bytesToRead)
+
+    if (!this.chunks.length) return new Uint8Array()
+    const valueLength = Math.min(bytesToRead, this.bufferedSize)
+
+    const firstChunk = this.chunks[0]!
+    const firstChunkStart = firstChunk.byteOffset + this.index
+
+    if (this.index + valueLength < firstChunk.byteLength) {
+      // read less than first chunk
+      this.index += valueLength
+      return new Uint8Array(firstChunk.buffer, firstChunkStart, valueLength)
+    } else if (this.index + valueLength === firstChunk.byteLength) {
+      // read exactly first chunk (and discard it)
+      this.index = 0
+      this.chunks.shift()
+      return new Uint8Array(firstChunk.buffer, firstChunkStart, valueLength)
+    }
+
+    // We need to combine arrays
+    const value = new Uint8Array(valueLength)
+    let valueIndex = firstChunk.byteLength - firstChunkStart
+
+    // Read all the remaining of first chunk into value
+    value.set(new Uint8Array(firstChunk.buffer, firstChunkStart, valueIndex))
+
+    // Drop the first chunk
+    this.index = 0
+    this.chunks.shift()
+
+    while (valueIndex < valueLength) {
+      const currentChunk = this.chunks[0]
+      const toRead = Math.min(valueLength - valueIndex, currentChunk.byteLength)
+      if (toRead < currentChunk.byteLength) {
+        // read chunk partially
+        value.set(
+          new Uint8Array(currentChunk.buffer, currentChunk.byteOffset, toRead),
+          valueIndex,
+        )
+        this.index = toRead
+        break
+      } else {
+        // read (and discard) the whole chunk
+        value.set(currentChunk, valueIndex)
+        this.chunks.shift()
+        valueIndex += toRead
+      }
+    }
+
     return value
   }
 
   private async readUntilBuffered(bytesToRead: number) {
-    if (this.isDone) {
-      return
-    }
-    while (this.buffer.length < bytesToRead) {
+    if (this.isDone) return
+    while (this.bufferedSize < bytesToRead) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
-        return
+        break
+      } else {
+        this.chunks.push(next.value)
       }
-      this.buffer = ui8.concat([this.buffer, next.value])
     }
   }
 
@@ -271,6 +326,6 @@ class BufferedReader implements BytesReader {
       await this.iterator.return()
     }
     this.isDone = true
-    this.buffer = new Uint8Array()
+    this.chunks.length = 0
   }
 }
