@@ -1,14 +1,9 @@
-import { CID } from 'multiformats/cid'
 import { AtUri } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'
 import { Subscription } from '@atproto/xrpc-server'
-import {
-  OutputSchema as SubscribeReposOutput,
-  RepoOp,
-  isCommit,
-} from '../../src/lexicon/types/com/atproto/sync/subscribeRepos'
-import basicSeed from '../seeds/basic'
+import { com } from '../../src/lexicons.js'
+import basicSeed from '../seeds/basic.js'
 
 describe('invertible ops', () => {
   let network: TestNetworkNoAppView
@@ -54,8 +49,8 @@ describe('invertible ops', () => {
     const sub = new Subscription({
       service: network.pds.url.replace('http://', 'ws://'),
       method: 'com.atproto.sync.subscribeRepos',
-      validate: (value: unknown): SubscribeReposOutput => {
-        return value as any
+      validate: (value: unknown) => {
+        return com.atproto.sync.subscribeRepos.$message.parse(value)
       },
       getParams: () => {
         return { cursor: 0 }
@@ -63,13 +58,12 @@ describe('invertible ops', () => {
     })
 
     for await (const evt of sub) {
-      if (!isCommit(evt)) {
+      if (!com.atproto.sync.subscribeRepos.commit.$isTypeOf(evt)) {
         continue
       }
-      const prevData = evt.prevData as CID | undefined
-      if (!prevData) {
-        continue
-      }
+
+      const { prevData } = evt
+      if (!prevData) continue
 
       const { blocks, root } = await repo.readCarWithRoot(
         evt.blocks as Uint8Array,
@@ -78,7 +72,7 @@ describe('invertible ops', () => {
       const slice = await repo.Repo.load(storage, root)
 
       let data = slice.data
-      const ops = evt.ops as RepoOp[]
+      const ops = evt.ops
       for (const op of ops) {
         if (op.action === 'create') {
           data = await data.delete(op.path)

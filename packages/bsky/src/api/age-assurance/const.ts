@@ -1,7 +1,6 @@
-import {
-  AppBskyAgeassuranceDefs,
-  ageAssuranceRuleIDs as ids,
-} from '@atproto/api'
+import { app } from '../../lexicons/index.js'
+
+const defs = app.bsky.ageassurance.defs
 
 /**
  * Age assurance configuration defining rules for various regions.
@@ -11,27 +10,24 @@ import {
  *
  * NOTE: all regions MUST have a default rule as the last rule.
  */
-export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
+export const AGE_ASSURANCE_CONFIG = defs.config.$build({
   regions: [
     {
       countryCode: 'GB',
       regionCode: undefined,
       minAccessAge: 13,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 13,
           access: 'safe',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -39,30 +35,25 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: undefined,
       minAccessAge: 16,
       rules: [
-        {
-          $type: ids.IfAccountNewerThan,
+        defs.configRegionRuleIfAccountNewerThan.$build({
           date: '2025-12-10T00:00:00Z',
           access: 'none',
-        },
-        {
-          $type: ids.IfAssuredOverAge,
+        }),
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.IfAssuredOverAge,
+        }),
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 16,
           access: 'safe',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 16,
           access: 'safe',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -70,20 +61,17 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: 'SD',
       minAccessAge: 13,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 13,
           access: 'safe',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -91,20 +79,17 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: 'WY',
       minAccessAge: 13,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 13,
           access: 'safe',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -112,20 +97,17 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: 'OH',
       minAccessAge: 13,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 13,
           access: 'safe',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -133,15 +115,13 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: 'MS',
       minAccessAge: 18,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -149,20 +129,17 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: 'VA',
       minAccessAge: 16,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 16,
           access: 'full',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 16,
           access: 'full',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
     {
@@ -170,21 +147,18 @@ export const AGE_ASSURANCE_CONFIG: AppBskyAgeassuranceDefs.Config = {
       regionCode: 'TN',
       minAccessAge: 18,
       rules: [
-        {
-          $type: ids.IfAssuredOverAge,
+        defs.configRegionRuleIfAssuredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.IfDeclaredOverAge,
+        }),
+        defs.configRegionRuleIfDeclaredOverAge.$build({
           age: 18,
           access: 'full',
-        },
-        {
-          $type: ids.Default,
+        }),
+        defs.configRegionRuleDefault.$build({
           access: 'none',
-        },
+        }),
       ],
     },
   ],
-}
+})

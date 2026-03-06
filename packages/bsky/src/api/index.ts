@@ -1,5 +1,5 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
-import { Server } from '../lexicon'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getSuggestions from './app/bsky/actor/getSuggestions'
@@ -200,5 +200,4 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   fetchLabels(server, ctx)
   queryLabels(server, ctx)
-  return server
 }
