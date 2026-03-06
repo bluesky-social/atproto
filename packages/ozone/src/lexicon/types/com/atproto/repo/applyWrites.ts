@@ -50,7 +50,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'InvalidSwap'
+  error?: 'InvalidSwap' | 'RecordAlreadyExists'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

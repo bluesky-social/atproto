@@ -14611,6 +14611,11 @@ export const schemaDict = {
             description:
               "Indicates that the 'swapCommit' parameter did not match current commit.",
           },
+          {
+            name: 'RecordAlreadyExists',
+            description:
+              'Indicates that a record already exists in this repo with the given collection and rkey, so it cannot be created.',
+          },
         ],
       },
       create: {
@@ -14789,6 +14794,11 @@ export const schemaDict = {
             name: 'InvalidSwap',
             description:
               "Indicates that 'swapCommit' didn't match current repo commit.",
+          },
+          {
+            name: 'RecordAlreadyExists',
+            description:
+              'Indicates that a record already exists in this repo with the given collection and rkey, so it cannot be created.',
           },
         ],
       },

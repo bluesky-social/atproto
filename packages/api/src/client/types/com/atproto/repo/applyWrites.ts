@@ -56,9 +56,17 @@ export class InvalidSwapError extends XRPCError {
   }
 }
 
+export class RecordAlreadyExistsError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidSwap') return new InvalidSwapError(e)
+    if (e.error === 'RecordAlreadyExists')
+      return new RecordAlreadyExistsError(e)
   }
 
   return e
