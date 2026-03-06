@@ -5,6 +5,8 @@ import {
   DatetimeString,
   DidString,
   HandleString,
+  isDidIdentifier,
+  isHandleIdentifier,
   toDatetimeString,
 } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
@@ -130,11 +132,6 @@ export type ProfileAgg = {
 }
 
 export type ProfileAggs = HydrationMap<DidString, ProfileAgg>
-
-const isHandleIdentifier = (id: AtIdentifierString): id is HandleString =>
-  !id.startsWith('did:')
-const isDidIdentifier = (id: AtIdentifierString): id is DidString =>
-  id.startsWith('did:')
 
 export class ActorHydrator {
   constructor(public dataplane: DataPlaneClient) {}

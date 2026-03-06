@@ -240,7 +240,7 @@ export const parseCommitAuthenticated = async (
         return verifiedCid === null
       } else {
         return (
-          op.cid != null && verifiedCid != null && verifiedCid?.equals(op.cid)
+          op.cid != null && verifiedCid != null && verifiedCid.equals(op.cid)
         )
       }
     },

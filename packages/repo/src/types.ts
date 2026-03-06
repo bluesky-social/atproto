@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Cid, LexMap, ifCid } from '@atproto/lex-data'
-import { NsidString } from '@atproto/syntax'
+import { NsidString, RecordKeyString } from '@atproto/syntax'
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
 
@@ -117,21 +117,21 @@ export enum WriteOpAction {
 export type RecordCreateOp = {
   action: WriteOpAction.Create
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   record: LexMap
 }
 
 export type RecordUpdateOp = {
   action: WriteOpAction.Update
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   record: LexMap
 }
 
 export type RecordDeleteOp = {
   action: WriteOpAction.Delete
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
 }
 
 export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
@@ -139,14 +139,14 @@ export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
 export type RecordCreateDescript = {
   action: WriteOpAction.Create
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   cid: Cid
 }
 
 export type RecordUpdateDescript = {
   action: WriteOpAction.Update
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   prev: Cid
   cid: Cid
 }
@@ -154,7 +154,7 @@ export type RecordUpdateDescript = {
 export type RecordDeleteDescript = {
   action: WriteOpAction.Delete
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   cid: Cid
 }
 
@@ -193,18 +193,18 @@ export type DatastoreContents = Record<string, Cid>
 
 export type RecordPath = {
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
 }
 
 export type RecordCidClaim = {
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   cid: Cid | null
 }
 
 export type RecordClaim = {
   collection: NsidString
-  rkey: string
+  rkey: RecordKeyString
   record: LexMap | null
 }
 

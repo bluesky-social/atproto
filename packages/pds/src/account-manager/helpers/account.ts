@@ -1,9 +1,11 @@
 import { DAY } from '@atproto/common'
 import {
+  AtIdentifierString,
   DatetimeString,
   DidString,
   HandleString,
   currentDatetimeString,
+  isDidIdentifier,
 } from '@atproto/lex'
 import { isErrUniqueViolation, notSoftDeletedClause } from '../../db'
 import { com } from '../../lexicons/index.js'
@@ -55,15 +57,15 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
 
 export const getAccount = async (
   db: AccountDb,
-  handleOrDid: string,
+  handleOrDid: AtIdentifierString,
   flags?: AvailabilityFlags,
 ): Promise<ActorAccount | null> => {
   const found = await selectAccountQB(db, flags)
     .where((qb) => {
-      if (handleOrDid.startsWith('did:')) {
-        return qb.where('actor.did', '=', handleOrDid as DidString)
+      if (isDidIdentifier(handleOrDid)) {
+        return qb.where('actor.did', '=', handleOrDid)
       } else {
-        return qb.where('actor.handle', '=', handleOrDid as HandleString)
+        return qb.where('actor.handle', '=', handleOrDid)
       }
     })
     .executeTakeFirst()

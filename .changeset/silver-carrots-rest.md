@@ -2,4 +2,4 @@
 '@atproto/api': patch
 ---
 
-Type `assertDid` output to be `DidString`
+Type `did` and `assertDid` `Agent` properties to be typed as `DidString`

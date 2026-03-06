@@ -2,7 +2,12 @@ import assert from 'node:assert'
 import { Client, createOp as createPlcOp } from '@did-plc/lib'
 import { Selectable } from 'kysely'
 import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import { HandleString, isDidString, isHandleString } from '@atproto/lex'
+import {
+  HandleString,
+  asAtIdentifierString,
+  isDidString,
+  isHandleString,
+} from '@atproto/lex'
 import {
   Account,
   AccountStore,
@@ -249,9 +254,12 @@ export class OAuthStore
     account: Account
     authorizedClients: AuthorizedClients
   }> {
-    const accountRow = await accountHelper.getAccount(this.db, sub, {
-      includeDeactivated: true,
-    })
+    const accountRow = await accountHelper.getAccount(
+      this.db,
+      // @TODO @atproto/oauth-provider should strongly type `Sub` as `DidString`
+      asAtIdentifierString(sub),
+      { includeDeactivated: true },
+    )
 
     assert(accountRow, 'Account not found')
 

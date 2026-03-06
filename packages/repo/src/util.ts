@@ -3,7 +3,7 @@ import * as crypto from '@atproto/crypto'
 import { Keypair } from '@atproto/crypto'
 import * as cbor from '@atproto/lex-cbor'
 import { Cid, LexMap, LexValue, isPlainObject } from '@atproto/lex-data'
-import { ensureValidNsid } from '@atproto/syntax'
+import { ensureValidNsid, ensureValidRecordKey } from '@atproto/syntax'
 import { DataDiff } from './data-diff'
 import {
   Commit,
@@ -70,6 +70,7 @@ export const parseDataKey = (key: string): RecordPath => {
   const { length, 0: collection, 1: rkey } = key.split('/')
   if (length !== 2) throw new Error(`Invalid record key: ${key}`)
   ensureValidNsid(collection)
+  ensureValidRecordKey(key)
   return { collection, rkey }
 }
 

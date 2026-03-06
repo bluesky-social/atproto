@@ -1,4 +1,5 @@
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
+import { DidString } from '@atproto/syntax'
 import {
   ErrorResponseBody,
   Gettable,
@@ -22,6 +23,8 @@ import {
   AtpPersistSessionHandler,
   AtpSessionData,
 } from './types'
+
+export type { DidString }
 
 const ReadableStream = globalThis.ReadableStream as
   | typeof globalThis.ReadableStream
@@ -86,10 +89,6 @@ export class AtpAgent extends Agent {
 
   get hasSession() {
     return this.sessionManager.hasSession
-  }
-
-  get did() {
-    return this.sessionManager.did
   }
 
   get serviceUrl() {
