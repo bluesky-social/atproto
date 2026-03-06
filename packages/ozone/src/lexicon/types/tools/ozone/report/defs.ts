@@ -9,7 +9,6 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as AppBskyActorDefs from '../../../app/bsky/actor/defs.js'
 import type * as ToolsOzoneModerationDefs from '../moderation/defs.js'
 import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
 import type * as ToolsOzoneQueueDefs from '../queue/defs.js'
@@ -145,10 +144,7 @@ export const REASONSELFHARMOTHER = `${id}#reasonSelfHarmOther`
 /** Information about the moderator currently assigned to a report. */
 export interface ReportAssignment {
   $type?: 'tools.ozone.report.defs#reportAssignment'
-  profile:
-    | $Typed<AppBskyActorDefs.ProfileViewBasic>
-    | $Typed<AppBskyActorDefs.ProfileViewDetailed>
-    | { $type: string }
+  profile: { $type: string }
   /** When the report was assigned */
   assignedAt: string
 }

@@ -226,10 +226,7 @@
       "properties": {
         "profile": {
           "type": "union",
-          "refs": [
-            "app.bsky.actor.defs#profileViewBasic",
-            "app.bsky.actor.defs#profileViewDetailed"
-          ],
+          "refs": [],
           "description": "Profile of the assigned moderator"
         },
         "assignedAt": {

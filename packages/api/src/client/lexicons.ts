@@ -19454,10 +19454,7 @@ export const schemaDict = {
         properties: {
           profile: {
             type: 'union',
-            refs: [
-              'lex:app.bsky.actor.defs#profileViewBasic',
-              'lex:app.bsky.actor.defs#profileViewDetailed',
-            ],
+            refs: [],
             description: 'Profile of the assigned moderator',
           },
           assignedAt: {

@@ -208,6 +208,7 @@ export async function getActiveReportAssignments(
 
   const result = new Map<number, ActiveReportAssignment>()
   for (const row of rows) {
+    // We already filter by reportId values so reportId will always be non-null, this check is only for ts
     if (row.reportId !== null) {
       result.set(row.reportId, { did: row.did, assignedAt: row.startAt })
     }

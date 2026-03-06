@@ -97,7 +97,7 @@ export function buildReportView(
 
   const subject = isRecord ? report.subjectUri! : report.subjectDid
   const subjectView = {
-    type: isRecord ? ('record' as const) : ('account' as const),
+    type: isRecord ? 'record' : 'account',
     subject,
     repo,
     record,
@@ -123,7 +123,7 @@ export function buildReportView(
   const reporterStatus = reporterRepo?.moderation.subjectStatus
 
   const reporterView = {
-    type: 'account' as const,
+    type: 'account',
     subject: reporterDid,
     repo: reporterRepo,
     profile: reporterProfile
