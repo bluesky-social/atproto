@@ -8,6 +8,7 @@ import {
   BadCommitSwapError,
   InvalidRecordError,
   PreparedCreate,
+  RecordAlreadyExistsError,
   prepareCreate,
   prepareDelete,
 } from '../../../../repo'
@@ -103,6 +104,9 @@ export default function (server: Server, ctx: AppContext) {
           .catch((err) => {
             if (err instanceof BadCommitSwapError) {
               throw new InvalidRequestError(err.message, 'InvalidSwap')
+            }
+            if (err instanceof RecordAlreadyExistsError) {
+              throw new InvalidRequestError(err.message, 'RecordAlreadyExists')
             }
             throw err
           })
