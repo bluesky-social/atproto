@@ -253,13 +253,31 @@ class BufferedReader implements BytesReader {
     if (this.isDone) {
       return
     }
+
+    // @TODO this method could be greatly improved by avoiding to allocate a new
+    // buffer on every loop iteration, and by managing the memory internally
+    // instead.
+
+    // @NOTE as it currently is, this class is *not* concurrency safe.
+    // calling this.read() multiple times in parallel will cause interleaved
+    // reads to happen.
+
     while (this.buffer.length < bytesToRead) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
         return
       }
-      this.buffer = Buffer.concat([this.buffer, next.value])
+
+      // We are using Buffer.concat because it is more efficient for small
+      // memory chunks.
+      const buffer = Buffer.concat([this.buffer, next.value])
+      // But we expose as Uint8Array to avoid differences in behaviors
+      this.buffer = new Uint8Array(
+        buffer.buffer,
+        buffer.byteOffset,
+        buffer.byteLength,
+      )
     }
   }
 
