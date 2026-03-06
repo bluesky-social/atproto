@@ -229,6 +229,7 @@ import * as ToolsOzoneCommunicationUpdateTemplate from './types/tools/ozone/comm
 import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting/getAccountHistory.js'
 import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationEmitEvents from './types/tools/ozone/moderation/emitEvents.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
@@ -3384,6 +3385,18 @@ export class ToolsOzoneModerationNS {
     >,
   ) {
     const nsid = 'tools.ozone.moderation.emitEvent' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  emitEvents<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneModerationEmitEvents.QueryParams,
+      ToolsOzoneModerationEmitEvents.HandlerInput,
+      ToolsOzoneModerationEmitEvents.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.moderation.emitEvents' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
