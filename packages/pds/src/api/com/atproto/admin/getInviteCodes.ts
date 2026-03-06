@@ -1,4 +1,3 @@
-import { DatetimeString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   CodeDetail,
