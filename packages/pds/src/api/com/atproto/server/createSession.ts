@@ -48,6 +48,31 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      // Email 2FA: challenge if enabled and not an app password login
+      if (user.emailAuthFactor && !appPassword) {
+        if (!input.body.authFactorToken) {
+          const token = await ctx.accountManager.createEmailToken(
+            user.did,
+            'email_auth_factor',
+          )
+          if (user.email) {
+            await ctx.mailer.sendLoginAuthFactor(
+              { token },
+              { to: user.email },
+            )
+          }
+          throw new AuthRequiredError(
+            'Email verification code required',
+            'AuthFactorTokenRequired',
+          )
+        }
+        await ctx.accountManager.assertValidEmailTokenAndCleanup(
+          user.did,
+          'email_auth_factor',
+          input.body.authFactorToken,
+        )
+      }
+
       const [{ accessJwt, refreshJwt }, didDoc] = await Promise.all([
         ctx.accountManager.createSession(user.did, appPassword, isSoftDeleted),
         didDocForSession(ctx, user.did),
@@ -66,6 +91,7 @@ export default function (server: Server, ctx: AppContext) {
           handle: user.handle ?? INVALID_HANDLE,
           email: user.email ?? undefined,
           emailConfirmed: !!user.emailConfirmedAt,
+          emailAuthFactor: !!user.emailAuthFactor,
           active,
           status,
         },
