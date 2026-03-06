@@ -56,6 +56,7 @@ export interface InputSchema {
   modTool?: ToolsOzoneModerationDefs.ModTool
   /** An optional external ID for the event, used to deduplicate events from external systems. Fails when an event of same type with the same external ID exists for the same subject. */
   externalId?: string
+  reportAction?: ReportAction
 }
 
 export type OutputSchema = ToolsOzoneModerationDefs.ModEventView
@@ -93,4 +94,27 @@ export function toKnownErr(e: any) {
   }
 
   return e
+}
+
+/** Target specific reports when emitting a moderation event */
+export interface ReportAction {
+  $type?: 'tools.ozone.moderation.emitEvent#reportAction'
+  /** Target specific report IDs */
+  ids?: number[]
+  /** Target reports matching these report types on the subject (fully qualified NSIDs) */
+  types?: string[]
+  /** Target ALL reports on the subject */
+  all?: boolean
+  /** Note to send to reporter(s) when actioning their report */
+  note?: string
+}
+
+const hashReportAction = 'reportAction'
+
+export function isReportAction<V>(v: V) {
+  return is$typed(v, id, hashReportAction)
+}
+
+export function validateReportAction<V>(v: V) {
+  return validate<ReportAction & V>(v, id, hashReportAction)
 }

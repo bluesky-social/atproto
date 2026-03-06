@@ -1,0 +1,40 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.reassignQueue",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Manually reassign a report to a different queue (admin action).",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reportId", "queueId"],
+          "properties": {
+            "reportId": {
+              "type": "integer",
+              "description": "ID of the report to reassign"
+            },
+            "queueId": {
+              "type": "integer",
+              "description": "Target queue ID. Use -1 for 'unassigned'."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["report"],
+          "properties": {
+            "report": {
+              "type": "ref",
+              "ref": "tools.ozone.moderation.queryReports#reportView"
+            }
+          }
+        }
+      }
+    }
+  }
+}
