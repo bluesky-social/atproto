@@ -2,7 +2,7 @@ import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
 import { Report } from '../db/schema/report'
-import { QueryParams } from '../lexicon/types/tools/ozone/moderation/queryReports'
+import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports'
 
 export function getReportStatusForEventType(eventType: string): string | null {
   // Returns the status that reports should transition to for a given event type
@@ -164,6 +164,55 @@ export async function queryReports(
     reports: reportsToReturn,
     cursor,
   }
+}
+
+export async function getReportById(
+  db: Database,
+  id: number,
+): Promise<ReportWithEvent | undefined> {
+  return db.db
+    .selectFrom('report as r')
+    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+    .where('r.id', '=', id)
+    .selectAll('r')
+    .select([
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.createdBy as reportedBy',
+      'me.comment',
+      'me.meta',
+    ])
+    .executeTakeFirst()
+}
+
+export type ActiveReportAssignment = {
+  did: string
+  assignedAt: string
+}
+
+export async function getActiveReportAssignments(
+  db: Database,
+  reportIds: number[],
+): Promise<Map<number, ActiveReportAssignment>> {
+  if (!reportIds.length) return new Map()
+
+  const now = new Date().toISOString()
+  const rows = await db.db
+    .selectFrom('moderator_assignment')
+    .select(['reportId', 'did', 'startAt'])
+    .where('reportId', 'in', reportIds)
+    .where('endAt', '>', now)
+    .execute()
+
+  const result = new Map<number, ActiveReportAssignment>()
+  for (const row of rows) {
+    if (row.reportId !== null) {
+      result.set(row.reportId, { did: row.did, assignedAt: row.startAt })
+    }
+  }
+  return result
 }
 
 export type FindReportsForSubjectParams = {

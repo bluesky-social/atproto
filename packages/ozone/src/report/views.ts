@@ -1,0 +1,174 @@
+import { AppBskyActorDefs } from '@atproto/api'
+import { addAccountInfoToRepoViewDetail } from '../api/util'
+import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
+import {
+  RecordViewDetail,
+  RepoView,
+} from '../lexicon/types/tools/ozone/moderation/defs'
+import { ActiveReportAssignment, ReportWithEvent } from '../mod-service/report'
+import { ParsedLabelers } from '../util'
+
+type ReportViews = {
+  repoDetails(
+    dids: string[],
+    labelers?: ParsedLabelers,
+  ): Promise<Map<string, RepoView>>
+  recordDetails(
+    subjects: { uri: string }[],
+    labelers?: ParsedLabelers,
+  ): Promise<Map<string, RecordViewDetail>>
+  getProfiles(
+    dids: string[],
+  ): Promise<Map<string, AppBskyActorDefs.ProfileViewDetailed>>
+}
+
+export type HydratedReport = {
+  partialRepos: Map<string, RepoView>
+  accountInfo: Map<string, AccountView | null>
+  recordInfo: Map<string, RecordViewDetail>
+  profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
+  assignments: Map<number, ActiveReportAssignment>
+}
+
+export async function hydrateReportInfo(
+  reports: ReportWithEvent[],
+  views: ReportViews,
+  getAccountInfos: (dids: string[]) => Promise<Map<string, AccountView | null>>,
+  getActiveAssignments: (
+    reportIds: number[],
+  ) => Promise<Map<number, ActiveReportAssignment>>,
+  labelers: ParsedLabelers,
+): Promise<HydratedReport> {
+  // Fetch assignments first to include assignee DIDs in the profile fetch
+  const assignments = await getActiveAssignments(reports.map((r) => r.id))
+
+  const dids = new Set<string>()
+  const uris = new Set<string>()
+
+  for (const report of reports) {
+    dids.add(report.subjectDid)
+    dids.add(report.reportedBy)
+    if (report.subjectUri) {
+      uris.add(report.subjectUri)
+    }
+  }
+  for (const assignment of assignments.values()) {
+    dids.add(assignment.did)
+  }
+
+  const didsArray = Array.from(dids)
+  const [partialRepos, accountInfo, recordInfo, profiles] = await Promise.all([
+    views.repoDetails(didsArray, labelers),
+    getAccountInfos(didsArray),
+    views.recordDetails(
+      Array.from(uris).map((uri) => ({ uri })),
+      labelers,
+    ),
+    views.getProfiles(didsArray),
+  ])
+
+  return { partialRepos, accountInfo, recordInfo, profiles, assignments }
+}
+
+export function buildReportView(
+  report: ReportWithEvent,
+  hydrated: HydratedReport,
+  isModerator: boolean,
+) {
+  const { partialRepos, accountInfo, recordInfo, profiles, assignments } =
+    hydrated
+  const isRecord = !!report.subjectUri
+  const did = report.subjectDid
+  const partialRepo = partialRepos.get(did)
+  const repo = partialRepo
+    ? addAccountInfoToRepoViewDetail(
+        partialRepo,
+        accountInfo.get(did) || null,
+        isModerator,
+      )
+    : undefined
+  const profile = profiles.get(did)
+  const record = isRecord ? recordInfo.get(report.subjectUri!) : undefined
+  const status = isRecord
+    ? record?.moderation.subjectStatus
+    : repo?.moderation.subjectStatus
+
+  const reportType = report.meta?.reportType as string
+
+  const subject = isRecord ? report.subjectUri! : report.subjectDid
+  const subjectView = {
+    type: isRecord ? ('record' as const) : ('account' as const),
+    subject,
+    repo,
+    record,
+    profile: profile
+      ? {
+          $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
+          ...profile,
+        }
+      : undefined,
+    status,
+  }
+
+  const reporterDid = report.reportedBy
+  const reporterPartialRepo = partialRepos.get(reporterDid)
+  const reporterRepo = reporterPartialRepo
+    ? addAccountInfoToRepoViewDetail(
+        reporterPartialRepo,
+        accountInfo.get(reporterDid) || null,
+        isModerator,
+      )
+    : undefined
+  const reporterProfile = profiles.get(reporterDid)
+  const reporterStatus = reporterRepo?.moderation.subjectStatus
+
+  const reporterView = {
+    type: 'account' as const,
+    subject: reporterDid,
+    repo: reporterRepo,
+    profile: reporterProfile
+      ? {
+          $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
+          ...reporterProfile,
+        }
+      : undefined,
+    status: reporterStatus,
+  }
+
+  const activeAssignment = assignments.get(report.id)
+  const assigneeProfile = activeAssignment
+    ? profiles.get(activeAssignment.did)
+    : undefined
+  const assignmentView =
+    activeAssignment && assigneeProfile
+      ? {
+          profile: {
+            $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
+            ...assigneeProfile,
+          },
+          assignedAt: activeAssignment.assignedAt,
+        }
+      : undefined
+
+  return {
+    id: report.id,
+    eventId: report.eventId,
+    queueId: report.queueId ?? undefined,
+    queueName: undefined, // Will be populated when queue feature is implemented
+    status: report.status,
+    subject: subjectView,
+    reportType,
+    reportedBy: report.reportedBy,
+    reporter: reporterView,
+    comment: report.comment ?? undefined,
+    createdAt: report.createdAt,
+    updatedAt: report.updatedAt,
+    queuedAt: report.queuedAt ?? undefined,
+    actionEventIds:
+      report.actionEventIds && Array.isArray(report.actionEventIds)
+        ? (report.actionEventIds as number[])
+        : undefined,
+    actionNote: report.actionNote ?? undefined,
+    assignment: assignmentView,
+  }
+}

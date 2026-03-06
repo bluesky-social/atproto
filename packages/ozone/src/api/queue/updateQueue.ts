@@ -34,8 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
-      const updates: { name?: string; enabled?: boolean; description?: string } =
-        {}
+      const updates: {
+        name?: string
+        enabled?: boolean
+        description?: string
+      } = {}
       if (name !== undefined) updates.name = name
       if (enabled !== undefined) updates.enabled = enabled
       if (description !== undefined) updates.description = description

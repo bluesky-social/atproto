@@ -30,7 +30,7 @@
           "properties": {
             "report": {
               "type": "ref",
-              "ref": "tools.ozone.moderation.queryReports#reportView"
+              "ref": "tools.ozone.report.defs#reportView"
             }
           }
         }

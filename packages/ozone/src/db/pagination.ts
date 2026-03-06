@@ -209,10 +209,7 @@ type EndAtIdKeysetParam = {
   endAt: string
 }
 
-export class EndAtIdKeyset extends GenericKeyset<
-  EndAtIdKeysetParam,
-  Cursor
-> {
+export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
   labelResult(result: EndAtIdKeysetParam): Cursor
   labelResult(result: EndAtIdKeysetParam) {
     return { primary: result.endAt, secondary: result.id.toString() }

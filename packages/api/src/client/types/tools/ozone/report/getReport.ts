@@ -14,26 +14,18 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.reassignQueue'
+const id = 'tools.ozone.report.getReport'
 
-export type QueryParams = {}
-
-export interface InputSchema {
-  /** ID of the report to reassign */
-  reportId: number
-  /** Target queue ID. Use -1 for 'unassigned'. */
-  queueId: number
+export type QueryParams = {
+  /** The ID of the report to retrieve. */
+  id: number
 }
-
-export interface OutputSchema {
-  report: ToolsOzoneReportDefs.ReportView
-}
+export type InputSchema = undefined
+export type OutputSchema = ToolsOzoneReportDefs.ReportView
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
-  qp?: QueryParams
-  encoding?: 'application/json'
 }
 
 export interface Response {
