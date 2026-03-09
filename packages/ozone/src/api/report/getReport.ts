@@ -21,11 +21,13 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError(`Report not found: ${params.id}`)
       }
 
+      const queueService = ctx.queueService(db)
       const hydrated = await hydrateReportInfo(
         [report],
         modService.views,
         (dids) => getPdsAccountInfos(ctx, dids),
         (reportIds) => getActiveReportAssignments(db, reportIds),
+        (queueIds) => queueService.getViewsByIds(queueIds),
         labelers,
       )
 

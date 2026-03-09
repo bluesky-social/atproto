@@ -592,7 +592,7 @@ describe('ozone-queues', () => {
       expect(data.reportsMigrated).toBe(1)
 
       const report = await queryLatestReportForSubject(sc.dids.alice)
-      expect(report.queueId).toBe(qBData.queue.id)
+      expect(report.queue?.id).toBe(qBData.queue.id)
       expect(report.queuedAt).toBeDefined()
 
       // Clean up
@@ -616,7 +616,7 @@ describe('ozone-queues', () => {
       expect(data.reportsMigrated).toBe(1)
 
       const report = await queryLatestReportForSubject(sc.dids.bob)
-      expect(report.queueId).toBe(-1)
+      expect(report.queue).toBeUndefined()
       expect(report.queuedAt).toBeUndefined()
     })
 
@@ -633,7 +633,7 @@ describe('ozone-queues', () => {
       await network.ozone.daemon.ctx.queueRouter.routeReports()
 
       const reportBefore = await queryLatestReportForSubject(sc.dids.carol)
-      expect(reportBefore.queueId).toBe(queue.id)
+      expect(reportBefore.queue?.id).toBe(queue.id)
 
       // Close the report directly — no API surface for setting status in tests
       await network.ozone.daemon.ctx.db.db
@@ -648,7 +648,7 @@ describe('ozone-queues', () => {
 
       // Closed report remains assigned to the soft-deleted queue for historical reference
       const reportAfter = await queryLatestReportForSubject(sc.dids.carol)
-      expect(reportAfter.queueId).toBe(queue.id)
+      expect(reportAfter.queue?.id).toBe(queue.id)
     })
 
     it('allows creating a queue with the same name and config after soft delete', async () => {

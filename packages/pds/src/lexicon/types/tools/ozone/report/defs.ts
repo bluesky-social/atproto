@@ -165,10 +165,6 @@ export interface ReportView {
   id: number
   /** ID of the moderation event that created this report */
   eventId: number
-  /** Queue ID this report is assigned to. Null = not yet assigned, -1 = no matching queue */
-  queueId?: number
-  /** Display name of the queue (if assigned) */
-  queueName?: string
   /** Current status of the report */
   status: 'open' | 'closed' | 'escalated' | (string & {})
   subject: ToolsOzoneModerationDefs.SubjectView
@@ -194,6 +190,7 @@ export interface ReportView {
   /** Number of other pending reports on the same subject */
   relatedReportCount?: number
   assignment?: ReportAssignment
+  queue?: ToolsOzoneQueueDefs.QueueView
 }
 
 const hashReportView = 'reportView'

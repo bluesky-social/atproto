@@ -257,14 +257,6 @@
           "type": "integer",
           "description": "ID of the moderation event that created this report"
         },
-        "queueId": {
-          "type": "integer",
-          "description": "Queue ID this report is assigned to. Null = not yet assigned, -1 = no matching queue"
-        },
-        "queueName": {
-          "type": "string",
-          "description": "Display name of the queue (if assigned)"
-        },
         "status": {
           "type": "string",
           "knownValues": ["open", "closed", "escalated"],
@@ -341,6 +333,11 @@
           "type": "ref",
           "ref": "#reportAssignment",
           "description": "Information about moderator currently assigned to this report (if any)"
+        },
+        "queue": {
+          "type": "ref",
+          "ref": "tools.ozone.queue.defs#queueView",
+          "description": "The queue this report is assigned to (if any)"
         }
       }
     },

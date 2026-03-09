@@ -18883,6 +18883,11 @@ export const schemaDict = {
             type: 'boolean',
             description: 'Whether this queue is currently active',
           },
+          deletedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When the queue was deleted, if applicable',
+          },
           stats: {
             type: 'ref',
             ref: 'lex:tools.ozone.queue.defs#queueStats',
@@ -19485,15 +19490,6 @@ export const schemaDict = {
             type: 'integer',
             description: 'ID of the moderation event that created this report',
           },
-          queueId: {
-            type: 'integer',
-            description:
-              'Queue ID this report is assigned to. Null = not yet assigned, -1 = no matching queue',
-          },
-          queueName: {
-            type: 'string',
-            description: 'Display name of the queue (if assigned)',
-          },
           status: {
             type: 'string',
             knownValues: ['open', 'closed', 'escalated'],
@@ -19572,6 +19568,11 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.report.defs#reportAssignment',
             description:
               'Information about moderator currently assigned to this report (if any)',
+          },
+          queue: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.queue.defs#queueView',
+            description: 'The queue this report is assigned to (if any)',
           },
         },
       },

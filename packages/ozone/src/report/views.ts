@@ -1,4 +1,4 @@
-import { AppBskyActorDefs } from '@atproto/api'
+import { AppBskyActorDefs, ToolsOzoneQueueDefs } from '@atproto/api'
 import { addAccountInfoToRepoViewDetail } from '../api/util'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import {
@@ -28,6 +28,7 @@ export type HydratedReport = {
   recordInfo: Map<string, RecordViewDetail>
   profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
   assignments: Map<number, ActiveReportAssignment>
+  queues: Map<number, ToolsOzoneQueueDefs.QueueView>
 }
 
 export async function hydrateReportInfo(
@@ -37,6 +38,9 @@ export async function hydrateReportInfo(
   getActiveAssignments: (
     reportIds: number[],
   ) => Promise<Map<number, ActiveReportAssignment>>,
+  getQueues: (
+    queueIds: number[],
+  ) => Promise<Map<number, ToolsOzoneQueueDefs.QueueView>>,
   labelers: ParsedLabelers,
 ): Promise<HydratedReport> {
   // Fetch assignments first to include assignee DIDs in the profile fetch
@@ -44,30 +48,39 @@ export async function hydrateReportInfo(
 
   const dids = new Set<string>()
   const uris = new Set<string>()
+  const queueIds = new Set<number>()
 
   for (const report of reports) {
     dids.add(report.subjectDid)
     dids.add(report.reportedBy)
-    if (report.subjectUri) {
-      uris.add(report.subjectUri)
-    }
+    if (report.subjectUri) uris.add(report.subjectUri)
+    if (report.queueId && report.queueId > 0) queueIds.add(report.queueId)
   }
   for (const assignment of assignments.values()) {
     dids.add(assignment.did)
   }
 
   const didsArray = Array.from(dids)
-  const [partialRepos, accountInfo, recordInfo, profiles] = await Promise.all([
-    views.repoDetails(didsArray, labelers),
-    getAccountInfos(didsArray),
-    views.recordDetails(
-      Array.from(uris).map((uri) => ({ uri })),
-      labelers,
-    ),
-    views.getProfiles(didsArray),
-  ])
+  const [partialRepos, accountInfo, recordInfo, profiles, queues] =
+    await Promise.all([
+      views.repoDetails(didsArray, labelers),
+      getAccountInfos(didsArray),
+      views.recordDetails(
+        Array.from(uris).map((uri) => ({ uri })),
+        labelers,
+      ),
+      views.getProfiles(didsArray),
+      getQueues(Array.from(queueIds)),
+    ])
 
-  return { partialRepos, accountInfo, recordInfo, profiles, assignments }
+  return {
+    partialRepos,
+    accountInfo,
+    recordInfo,
+    profiles,
+    assignments,
+    queues,
+  }
 }
 
 export function buildReportView(
@@ -75,8 +88,14 @@ export function buildReportView(
   hydrated: HydratedReport,
   isModerator: boolean,
 ) {
-  const { partialRepos, accountInfo, recordInfo, profiles, assignments } =
-    hydrated
+  const {
+    partialRepos,
+    accountInfo,
+    recordInfo,
+    profiles,
+    assignments,
+    queues,
+  } = hydrated
   const isRecord = !!report.subjectUri
   const did = report.subjectDid
   const partialRepo = partialRepos.get(did)
@@ -153,8 +172,6 @@ export function buildReportView(
   return {
     id: report.id,
     eventId: report.eventId,
-    queueId: report.queueId ?? undefined,
-    queueName: undefined, // Will be populated when queue feature is implemented
     status: report.status,
     subject: subjectView,
     reportType,
@@ -170,5 +187,9 @@ export function buildReportView(
         : undefined,
     actionNote: report.actionNote ?? undefined,
     assignment: assignmentView,
+    queue:
+      report.queueId && report.queueId > 0
+        ? queues.get(report.queueId)
+        : undefined,
   }
 }
