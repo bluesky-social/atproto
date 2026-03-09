@@ -19,6 +19,7 @@ import {
 } from '@atproto/repo'
 import {
   AtUri,
+  DidString,
   NsidString,
   RecordKeyString,
   isValidRecordKey,
@@ -106,7 +107,7 @@ const validateRecord = (
 }
 
 export const prepareCreate = async (opts: {
-  did: string
+  did: DidString
   collection: NsidString
   rkey?: RecordKeyString
   swapCid?: Cid | null
@@ -128,7 +129,7 @@ export const prepareCreate = async (opts: {
 }
 
 export const prepareUpdate = async (opts: {
-  did: string
+  did: DidString
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null
@@ -215,7 +216,7 @@ async function prepareWrite(opts: {
 }
 
 export const prepareDelete = (opts: {
-  did: string
+  did: DidString
   collection: NsidString
   rkey: RecordKeyString
   swapCid?: Cid | null

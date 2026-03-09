@@ -1,5 +1,6 @@
 import { rmIfExists } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { DidString, isNsidString, isRecordKeyString } from '@atproto/lex'
 import {
   BlockMap,
   CidSet,
@@ -9,7 +10,6 @@ import {
   parseDataKey,
   readCar,
 } from '@atproto/repo'
-import { DidString } from '@atproto/syntax'
 import {
   AccountManager,
   AccountStatus,
@@ -239,10 +239,14 @@ const parseCommitEvt = async (
   const writesUnfiltered = await Promise.all(
     evt.ops.map(async (op) => {
       const { collection, rkey } = parseDataKey(op.path)
+      if (!isNsidString(collection)) return undefined
+      if (!isRecordKeyString(rkey)) return undefined
+
       if (op.action === 'delete') {
         return prepareDelete({ did, collection, rkey })
       }
       if (!op.cid) return undefined
+
       const recordBytes = evtCar.blocks.get(op.cid)
       if (!recordBytes) return undefined
       const record = cborToLexRecord(recordBytes)
@@ -266,11 +270,9 @@ const parseCommitEvt = async (
       }
     }),
   )
-  const writes = writesUnfiltered.filter(
-    (w) => w !== undefined,
-  ) as PreparedWrite[]
+
   return {
-    writes,
+    writes: writesUnfiltered.filter((w) => w != null),
     blocks: evtCar.blocks,
   }
 }

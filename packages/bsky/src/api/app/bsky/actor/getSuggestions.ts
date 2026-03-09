@@ -83,6 +83,7 @@ const skeleton = async (input: {
       cursor: params.cursor,
       limit: params.limit,
     })
+    // @NOTE filtering to avoid type casting
     let dids = suggestions.dids.filter(isDidString)
     if (viewer !== null) {
       const follows = await ctx.dataplane.getActorFollowsActors({

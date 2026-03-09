@@ -192,19 +192,19 @@ export type RepoContentsWithCids = Record<string, CollectionContentsWithCids>
 export type DatastoreContents = Record<string, Cid>
 
 export type RecordPath = {
-  collection: NsidString
-  rkey: RecordKeyString
+  collection: string
+  rkey: string
 }
 
 export type RecordCidClaim = {
-  collection: NsidString
-  rkey: RecordKeyString
+  collection: string
+  rkey: string
   cid: Cid | null
 }
 
 export type RecordClaim = {
-  collection: NsidString
-  rkey: RecordKeyString
+  collection: string
+  rkey: string
   record: LexMap | null
 }
 

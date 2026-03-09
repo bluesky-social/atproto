@@ -123,12 +123,15 @@ export const commitEvtOp = z.object({
     z.literal('update'),
     z.literal('delete'),
   ]),
+  // @TODO should we validate that the "path" is a valid "<nsid>/<rkey>" ?
   path: z.string(),
   cid: schema.cid.nullable(),
   prev: schema.cid.optional(),
 })
 export type CommitEvtOp = z.infer<typeof commitEvtOp>
 
+// @TODO This runtime code is only used to generate "types". We should either
+// make use of it or only use types.
 export const commitEvt = z.object({
   rebase: z.boolean(),
   tooBig: z.boolean(),
