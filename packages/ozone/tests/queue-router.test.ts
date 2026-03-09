@@ -176,6 +176,30 @@ describe('queue-router', () => {
       )
     })
 
+    it('routes a record report to a queue with null collection (matches all)', async () => {
+      // Create a catch-all record queue with no collection filter
+      const catchAllQueue = await createQueue({
+        name: 'QR: All Records Harassment',
+        subjectTypes: ['record'],
+        reportTypes: [REASON_HARASSMENT],
+      })
+
+      // Use a different post than the collection-filter test to avoid subject overlap
+      const bobPost = sc.posts[sc.dids.bob][0]
+      const postUri = bobPost.ref.uriStr
+      const postCid = bobPost.ref.cidStr
+
+      await reportRecord(postUri, postCid, REASON_HARASSMENT)
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+      const report = await queryLatestReportForSubject(postUri)
+      expect(report).toBeDefined()
+      expect(report.queueId).toBe(catchAllQueue.id)
+
+      // Clean up
+      await deleteQueue(catchAllQueue.id)
+    })
+
     it('sets queueId to -1 for reports with no matching queue', async () => {
       // REASON_MISLEADING has no configured queue
       await reportAccount(sc.dids.carol, REASON_MISLEADING)
