@@ -240,10 +240,10 @@ class BufferedReader implements BytesReader {
   // @NOTE Ideally, this would be based on a fifo double linked list.
   private chunks: Uint8Array[] = []
 
-  /** Number of bytes in chunks[0] that were already consumed */
+  /** Number of bytes that were already consumed from the first {@link chunks} */
   private alreadyRead = 0
 
-  /** Total bytes in  */
+  /** Total bytes in {@link chunks} */
   private chunksByteLength = 0
 
   constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
@@ -265,7 +265,7 @@ class BufferedReader implements BytesReader {
 
     const firstChunk = this.chunks[0]!
     const firstChunkOffset = firstChunk.byteOffset + this.alreadyRead
-    const firstChunkEnd = this.alreadyRead + valueLength // /!\ value id unbound
+    const firstChunkEnd = this.alreadyRead + valueLength // this could overflow the end if bytesToRead is greater than the remaining bytes
 
     // If the data to be read is less or equal to the remaining bytes in the
     // first chunk, return a sub array of that chunk.
