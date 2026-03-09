@@ -194,7 +194,7 @@ describe('queue-router', () => {
 
       const report = await queryLatestReportForSubject(postUri)
       expect(report).toBeDefined()
-      expect(report.queueId).toBe(catchAllQueue.id)
+      expect(report.queue?.id).toBe(catchAllQueue.id)
 
       // Clean up
       await deleteQueue(catchAllQueue.id)
