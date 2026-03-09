@@ -237,8 +237,11 @@ class BufferedReader implements BytesReader {
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
 
+  // @NOTE Ideally, this would be based on a fifo double linked list.
   private chunks: Uint8Array[] = []
-  private index = 0
+
+  /** Number of bytes in chunks[0] that were already consumed */
+  private alreadyRead = 0
 
   constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
     this.iterator =
@@ -248,9 +251,9 @@ class BufferedReader implements BytesReader {
   }
 
   get bufferedSize() {
-    let total = -this.index
-    for (let i = 0; i < this.chunks.length; i++) {
-      total += this.chunks[i].byteLength
+    let total = -this.alreadyRead
+    for (const chunk of this.chunks) {
+      total += chunk.byteLength
     }
     return total
   }
@@ -258,54 +261,62 @@ class BufferedReader implements BytesReader {
   async read(bytesToRead: number): Promise<Uint8Array> {
     await this.readUntilBuffered(bytesToRead)
 
-    if (!this.chunks.length) return new Uint8Array()
     const valueLength = Math.min(bytesToRead, this.bufferedSize)
+    if (valueLength <= 0) return new Uint8Array()
 
     const firstChunk = this.chunks[0]!
-    const firstChunkStart = firstChunk.byteOffset + this.index
+    const firstChunkStart = firstChunk.byteOffset + this.alreadyRead
+    const firstChunkEnd = this.alreadyRead + valueLength // Unbound
 
-    if (this.index + valueLength < firstChunk.byteLength) {
+    // If the data to be read is less or equal to the remaining bytes in the
+    // first chunk, return a sub array of that chunk.
+    if (firstChunkEnd < firstChunk.byteLength) {
       // read less than first chunk
-      this.index += valueLength
+      this.alreadyRead += valueLength
       return new Uint8Array(firstChunk.buffer, firstChunkStart, valueLength)
-    } else if (this.index + valueLength === firstChunk.byteLength) {
+    } else if (firstChunkEnd === firstChunk.byteLength) {
       // read exactly first chunk (and discard it)
-      this.index = 0
-      this.chunks.shift()
+      this.discardFirstChunk()
       return new Uint8Array(firstChunk.buffer, firstChunkStart, valueLength)
     }
 
-    // We need to combine arrays
+    // reading more than one chunk, we will have to copy bytes into a larger
+    // buffer ("value")
     const value = new Uint8Array(valueLength)
     let valueIndex = firstChunk.byteLength - firstChunkStart
 
-    // Read all the remaining of first chunk into value
+    // Copy all the remaining of first chunk into "value"
     value.set(new Uint8Array(firstChunk.buffer, firstChunkStart, valueIndex))
+    this.discardFirstChunk()
 
-    // Drop the first chunk
-    this.index = 0
-    this.chunks.shift()
+    // Copy more chunks as needed. We use a "do-while" since we know we are
+    // reading more than one chunk (while condition always true on first
+    // iteration)
+    do {
+      const toRead = valueLength - valueIndex
 
-    while (valueIndex < valueLength) {
-      const currentChunk = this.chunks[0]
-      const toRead = Math.min(valueLength - valueIndex, currentChunk.byteLength)
-      if (toRead < currentChunk.byteLength) {
-        // read chunk partially
-        value.set(
-          new Uint8Array(currentChunk.buffer, currentChunk.byteOffset, toRead),
-          valueIndex,
-        )
-        this.index = toRead
-        break
-      } else {
-        // read (and discard) the whole chunk
-        value.set(currentChunk, valueIndex)
-        this.chunks.shift()
+      const chunk = this.chunks[0]!
+      if (toRead < chunk.byteLength) {
+        // we are at the last chunk. partially copy the chunk
+        const view = new Uint8Array(chunk.buffer, chunk.byteOffset, toRead)
+        value.set(view, valueIndex)
+        this.alreadyRead = toRead
         valueIndex += toRead
+        break // No need to evaluate the "while" condition (we know we're done)
+      } else {
+        // copy (and discard) the whole chunk
+        value.set(chunk, valueIndex)
+        valueIndex += chunk.byteLength
+        this.discardFirstChunk()
       }
-    }
+    } while (valueIndex < valueLength)
 
     return value
+  }
+
+  private discardFirstChunk() {
+    this.alreadyRead = 0
+    this.chunks.shift()
   }
 
   private async readUntilBuffered(bytesToRead: number) {
