@@ -99,6 +99,18 @@ export class QueueService {
       .executeTakeFirst()
   }
 
+  async getViewsByIds(
+    ids: number[],
+  ): Promise<Map<number, ToolsOzoneQueueDefs.QueueView>> {
+    if (!ids.length) return new Map()
+    const rows = await this.db.db
+      .selectFrom('report_queue')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute()
+    return new Map(rows.map((r) => [r.id, this.view(r)]))
+  }
+
   async update(
     id: number,
     updates: { name?: string; enabled?: boolean; description?: string },
@@ -218,6 +230,7 @@ export class QueueService {
       createdAt: queue.createdAt,
       updatedAt: queue.updatedAt,
       enabled: queue.enabled,
+      deletedAt: queue.deletedAt ?? undefined,
       stats: this.emptyStats(),
     }
   }

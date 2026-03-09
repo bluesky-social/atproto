@@ -100,10 +100,10 @@ describe('queue-router', () => {
     const cursor = await network.ozone.daemon.ctx.queueRouter.getCursor()
     expect(cursor).toBeNull()
 
-    // Report must remain unassigned (queueId absent from API response when null)
+    // Report must remain unassigned (queue absent from API response when null)
     const report = await queryLatestReportForSubject(sc.dids.alice)
     expect(report).toBeDefined()
-    expect(report.queueId).toBeUndefined()
+    expect(report.queue).toBeUndefined()
   })
 
   describe('with queues configured', () => {
@@ -152,7 +152,7 @@ describe('queue-router', () => {
 
       const report = await queryLatestReportForSubject(sc.dids.bob)
       expect(report).toBeDefined()
-      expect(report.queueId).toBe(spamAccountQueueId)
+      expect(report.queue?.id).toBe(spamAccountQueueId)
       expect(new Date(report.queuedAt!).getTime()).toBeGreaterThanOrEqual(
         beforeRouting.getTime(),
       )
@@ -170,7 +170,7 @@ describe('queue-router', () => {
 
       const report = await queryLatestReportForSubject(postUri)
       expect(report).toBeDefined()
-      expect(report.queueId).toBe(spamPostQueueId)
+      expect(report.queue?.id).toBe(spamPostQueueId)
       expect(new Date(report.queuedAt!).getTime()).toBeGreaterThanOrEqual(
         beforeRouting.getTime(),
       )
@@ -208,7 +208,7 @@ describe('queue-router', () => {
 
       const report = await queryLatestReportForSubject(sc.dids.carol)
       expect(report).toBeDefined()
-      expect(report.queueId).toBe(-1)
+      expect(report.queue).toBeUndefined()
       expect(report.queuedAt).toBeUndefined()
     })
 
@@ -219,7 +219,7 @@ describe('queue-router', () => {
 
       const report = await queryLatestReportForSubject(sc.dids.dan)
       expect(report).toBeDefined()
-      expect(report.queueId).toBe(harassmentAccountQueueId)
+      expect(report.queue?.id).toBe(harassmentAccountQueueId)
 
       const cursorAfterFirst =
         await network.ozone.daemon.ctx.queueRouter.getCursor()
@@ -240,7 +240,7 @@ describe('queue-router', () => {
       const reportAfterSecondRun = await queryLatestReportForSubject(
         sc.dids.dan,
       )
-      expect(reportAfterSecondRun.queueId).toBeUndefined()
+      expect(reportAfterSecondRun.queue).toBeUndefined()
     })
 
     it('skips disabled queues when routing', async () => {
@@ -260,8 +260,8 @@ describe('queue-router', () => {
 
       const report = await queryLatestReportForSubject(sc.dids.alice)
       expect(report).toBeDefined()
-      // Harassment queue is disabled, so no match → -1
-      expect(report.queueId).toBe(-1)
+      // Harassment queue is disabled, so no match → queue is absent
+      expect(report.queue).toBeUndefined()
 
       // Re-enable the queue for subsequent tests
       await agent.tools.ozone.queue.updateQueue(

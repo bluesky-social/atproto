@@ -20,16 +20,22 @@ import getRepos from './moderation/getRepos'
 import getSubjects from './moderation/getSubjects'
 import listScheduledActions from './moderation/listScheduledActions'
 import queryEvents from './moderation/queryEvents'
-import queryReports from './moderation/queryReports'
 import queryStatuses from './moderation/queryStatuses'
 import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
+import assignQueueModerator from './queue/assignModerator'
 import createQueue from './queue/createQueue'
 import deleteQueue from './queue/deleteQueue'
+import getQueueAssignments from './queue/getAssignments'
 import listQueues from './queue/listQueues'
 import updateQueue from './queue/updateQueue'
+import assignReportModerator from './report/assignModerator'
 import createReport from './report/createReport'
+import getReportAssignments from './report/getAssignments'
+import getReport from './report/getReport'
+import queryReports from './report/queryReports'
+import unassignReportModerator from './report/unassignModerator'
 import addSafelinkRule from './safelink/addRule'
 import querySafelinkEvents from './safelink/queryEvents'
 import querySafelinkRules from './safelink/queryRules'
@@ -52,11 +58,6 @@ import updateMember from './team/updateMember'
 import grantVerifications from './verification/grantVerifications'
 import listVerifications from './verification/listVerifications'
 import revokeVerifications from './verification/revokeVerifications'
-import assignQueueModerator from './queue/assignModerator'
-import getQueueAssignments from './queue/getAssignments'
-import assignReportModerator from './report/assignModerator'
-import unassignReportModerator from './report/unassignModerator'
-import getReportAssignments from './report/getAssignments'
 
 export * as health from './health'
 
@@ -72,6 +73,7 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
+  getReport(server, ctx)
   queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)

@@ -1,6 +1,5 @@
 import AtpAgent, {
   ComAtprotoModerationDefs,
-  ToolsOzoneQueueAssignModerator,
   ToolsOzoneReportAssignModerator,
   ToolsOzoneReportGetAssignments,
   ToolsOzoneReportUnassignModerator,
@@ -169,16 +168,16 @@ describe('report-assignment', () => {
 
   it('invalid assignment throws error', async () => {
     const reportId = 999999
-    await expect(
-      assignReport({ reportId }, 'moderator'),
-    ).rejects.toThrow('Invalid report')
+    await expect(assignReport({ reportId }, 'moderator')).rejects.toThrow(
+      'Invalid report',
+    )
   })
 
   it('invalid unassignment throws error', async () => {
     const reportId = await createReport()
-    await expect(
-      unassignReport({ reportId }, 'moderator'),
-    ).rejects.toThrow('Report is not assigned')
+    await expect(unassignReport({ reportId }, 'moderator')).rejects.toThrow(
+      'Report is not assigned',
+    )
   })
 
   describe('pagination', () => {
@@ -293,10 +292,7 @@ describe('report-assignment', () => {
 
   it('hydrates queue when queueId is provided', async () => {
     const reportId = await createReport()
-    const assignment = await assignReport(
-      { reportId, queueId },
-      'admin',
-    )
+    const assignment = await assignReport({ reportId, queueId }, 'admin')
     expect(assignment.reportId).toBe(reportId)
     expect(assignment.queue).toBeDefined()
     expect(assignment.queue!.id).toBe(queueId)
@@ -325,8 +321,8 @@ describe('report-assignment', () => {
   it('cannot double assign', async () => {
     const reportId = await createReport()
     await assignReport({ reportId }, 'moderator')
-    await expect(
-      assignReport({ reportId }, 'admin'),
-    ).rejects.toThrow('Report already assigned')
+    await expect(assignReport({ reportId }, 'admin')).rejects.toThrow(
+      'Report already assigned',
+    )
   })
 })

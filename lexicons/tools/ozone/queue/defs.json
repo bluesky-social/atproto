@@ -67,6 +67,11 @@
           "type": "boolean",
           "description": "Whether this queue is currently active"
         },
+        "deletedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When the queue was deleted, if applicable"
+        },
         "stats": {
           "type": "ref",
           "ref": "#queueStats",

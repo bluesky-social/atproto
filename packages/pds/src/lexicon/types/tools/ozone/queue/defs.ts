@@ -34,6 +34,8 @@ export interface QueueView {
   updatedAt: string
   /** Whether this queue is currently active */
   enabled: boolean
+  /** When the queue was deleted, if applicable */
+  deletedAt?: string
   stats: QueueStats
 }
 

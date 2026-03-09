@@ -3,8 +3,8 @@ import {
   ToolsOzoneModerationDefs,
   ToolsOzoneModerationEmitEvent as EmitModerationEvent,
   ToolsOzoneModerationQueryEvents as QueryModerationEvents,
-  ToolsOzoneModerationQueryReports as QueryModerationReports,
   ToolsOzoneModerationQueryStatuses as QueryModerationStatuses,
+  ToolsOzoneReportQueryReports as QueryModerationReports,
   ToolsOzoneSettingRemoveOptions,
   ToolsOzoneSettingUpsertOption,
 } from '@atproto/api'
@@ -72,9 +72,9 @@ export class ModeratorClient {
   }
 
   async queryReports(input: QueryReportsParams, role?: ModLevel) {
-    const result = await this.agent.tools.ozone.moderation.queryReports(input, {
+    const result = await this.agent.tools.ozone.report.queryReports(input, {
       headers: await this.ozone.modHeaders(
-        'tools.ozone.moderation.queryReports',
+        'tools.ozone.report.queryReports',
         role,
       ),
     })
