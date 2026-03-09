@@ -1,0 +1,185 @@
+# skills/_artifacts/skill_tree.yaml
+library:
+  name: '@atproto/lex'
+  version: '0.0.20'
+  repository: 'https://github.com/bluesky-social/atproto'
+  description: >-
+    Type-safe Lexicon tooling for the AT Protocol — schema management,
+    TypeScript code generation, typed XRPC client, and authenticated
+    record management.
+generated_from:
+  domain_map: '_artifacts/domain_map.yaml'
+  skill_spec: '_artifacts/skill_spec.md'
+generated_at: '2026-03-09'
+
+skills:
+  - name: 'Lexicon Management'
+    slug: 'lexicon-management'
+    type: core
+    domain: 'schema-management'
+    path: 'skills/lexicon-management/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      Installing, updating, and verifying Lexicon schemas with lex install,
+      lexicons.json manifest tracking, CID verification, --ci mode, --update,
+      --no-save, recursive NSID dependency resolution.
+    requires: []
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-installer/src/index.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-installer/src/lex-installer.ts'
+    subsystems: []
+    references: []
+
+  - name: 'Schema Code Generation'
+    slug: 'schema-codegen'
+    type: core
+    domain: 'schema-management'
+    path: 'skills/schema-codegen/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      Generating TypeScript from Lexicon JSON with lex build. Options:
+      --out, --clear, --override, --pure-annotations, --importExt, --fileExt,
+      --include, --exclude, --lib, --allowLegacyBlobs, --indexFile. Workflow
+      integration with prebuild and postinstall scripts.
+    requires:
+      - 'lexicon-management'
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-builder/src/lex-builder.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-builder/src/lex-def-builder.ts'
+    subsystems: []
+    references: []
+
+  - name: 'Data Validation'
+    slug: 'data-validation'
+    type: core
+    domain: 'data-handling'
+    path: 'skills/data-validation/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      Using generated schema utilities: $build, $validate, $parse, $safeParse,
+      $check, $isTypeOf, $cast, $assert. The l namespace for imperative schema
+      building (l.string, l.integer, l.object, l.typedObject, l.record,
+      l.query, l.procedure). String format validators: datetime, handle, did,
+      nsid, at-uri, cid, tid, language. LexValidationError handling.
+    requires: []
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-schema/src/schema.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-schema/src/external.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-schema/src/validator.ts'
+    subsystems: []
+    references:
+      - 'references/l-namespace.md'
+      - 'references/string-formats.md'
+
+  - name: 'XRPC Requests'
+    slug: 'xrpc-requests'
+    type: core
+    domain: 'network-communication'
+    path: 'skills/xrpc-requests/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      Making typed XRPC HTTP requests with xrpc() (throws) and xrpcSafe()
+      (returns Result). XrpcResponse, XrpcFailure union (XrpcResponseError,
+      XrpcUpstreamError, XrpcInternalError, XrpcFetchError). shouldRetry(),
+      matchesSchemaErrors(). CallOptions: signal, headers, validateRequest,
+      validateResponse. Retryable HTTP status codes.
+    requires: []
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-client/src/xrpc.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-client/src/errors.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-client/src/response.ts'
+    subsystems: []
+    references: []
+
+  - name: 'Client API'
+    slug: 'client-api'
+    type: core
+    domain: 'network-communication'
+    path: 'skills/client-api/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      Client class for authenticated XRPC. OAuth and PasswordSession auth.
+      Record CRUD: client.create(), get(), put(), delete(), list(). client.call()
+      for queries, procedures, and Actions. client.xrpc(), client.xrpcSafe().
+      assertAuthenticated(), did, assertDid. Labeler configuration: setLabelers,
+      addLabelers, clearLabelers, Client.configure(). Service proxy. Creating
+      child Clients from parent Clients. swapCommit, swapRecord concurrency.
+    requires:
+      - 'xrpc-requests'
+      - 'data-validation'
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-client/src/client.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-password-session/src/password-session.ts'
+    subsystems: []
+    references: []
+
+  - name: 'Data Model'
+    slug: 'data-model'
+    type: core
+    domain: 'data-handling'
+    path: 'skills/data-model/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      AT Protocol data model types: LexValue, LexMap, LexScalar, TypedLexMap.
+      Cid (parseCid, ifCid, isCid), BlobRef (isBlobRef, isLegacyBlobRef).
+      JSON encoding: lexParse, lexStringify, jsonToLex, lexToJson. CBOR:
+      encode/decode from @atproto/lex-cbor. DatetimeString utilities:
+      toDatetimeString, asDatetimeString, isDatetimeString, currentDatetimeString.
+      String measurement: graphemeLen, utf8Len. lexEquals deep comparison.
+    requires: []
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-data/src/cid.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-data/src/blob.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-data/src/lex.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-json/src/lex-json.ts'
+    subsystems: []
+    references: []
+
+  - name: 'Actions Composition'
+    slug: 'actions-composition'
+    type: core
+    domain: 'composition-extension'
+    path: 'skills/actions-composition/SKILL.md'
+    package: 'packages/lex/lex'
+    description: >-
+      Building composable Action<Input, Output> functions combining multiple
+      XRPC calls. client.call(action, input, options). Higher-order Actions
+      composing other Actions. Retry patterns with swapRecord/swapCommit.
+      Packaging Actions as individually exported functions for tree-shaking.
+      Best practices: assertAuthenticated, forward options/signal, type params.
+    requires:
+      - 'client-api'
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex/README.md'
+      - 'bluesky-social/atproto:packages/lex/lex-client/src/client.ts'
+    subsystems: []
+    references: []
+
+  - name: 'Server Setup'
+    slug: 'server-setup'
+    type: core
+    domain: 'composition-extension'
+    path: 'skills/server-setup/SKILL.md'
+    package: 'packages/lex/lex-server'
+    description: >-
+      Building AT Protocol XRPC servers with @atproto/lex-server. LexRouter
+      for registering query, procedure, subscription handlers. Service
+      authentication: JWT Bearer validation, DID document refresh, lxm
+      claim checking. WebSocket subscription lifecycle, upgradeWebSocket.
+      LexServerError, LexServerAuthError. Node.js HTTP adapter. Error hooks:
+      onHandlerError, onSocketError.
+    requires:
+      - 'data-validation'
+    sources:
+      - 'bluesky-social/atproto:packages/lex/lex-server/src/lex-router.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-server/src/errors.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-server/src/service-auth.ts'
+      - 'bluesky-social/atproto:packages/lex/lex-server/src/nodejs.ts'
+    subsystems: []
+    references: []
