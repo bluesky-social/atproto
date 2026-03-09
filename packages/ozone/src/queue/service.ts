@@ -5,6 +5,7 @@ import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'
 import { jsonb } from '../db/types'
+import { JOB_NAME } from '../daemon/queue-router'
 
 export type QueueServiceCreator = (db: Database) => QueueService
 
@@ -233,5 +234,47 @@ export class QueueService {
       deletedAt: queue.deletedAt ?? undefined,
       stats: this.emptyStats(),
     }
+  }
+
+  async routeReports(
+    startReportId: number,
+    endReportId: number,
+  ): Promise<number> {
+    return this.db.transaction(async (txDb) => {
+      const now = new Date().toISOString()
+
+      // Mark as unassigned
+      const results = await txDb.db
+        .updateTable('report')
+        .set({ queueId: null, queuedAt: null, updatedAt: now })
+        .where('id', '>=', startReportId)
+        .where('id', '<=', endReportId)
+        .execute()
+
+      const count = results.reduce(
+        (sum, r) => sum + Number(r.numUpdatedRows),
+        0,
+      )
+
+      // Update router cursor if needed
+      const cursorEntry = await txDb.db
+        .selectFrom('job_cursor')
+        .select('cursor')
+        .where('job', '=', JOB_NAME)
+        .executeTakeFirst()
+      const cursor = cursorEntry?.cursor
+        ? parseInt(cursorEntry.cursor, 10)
+        : null
+      const newCursor = startReportId - 1
+      if (cursor === null || newCursor < cursor) {
+        await txDb.db
+          .updateTable('job_cursor')
+          .set({ cursor: String(newCursor) })
+          .where('job', '=', JOB_NAME)
+          .execute()
+      }
+
+      return count
+    })
   }
 }

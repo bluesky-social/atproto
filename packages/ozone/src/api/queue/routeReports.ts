@@ -20,10 +20,13 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
 
+      const queueService = ctx.queueService(ctx.db)
+      const count = await queueService.routeReports(startReportId, endReportId)
+
       return {
         encoding: 'application/json' as const,
         body: {
-          assigned: 0,
+          assigned: count,
           unmatched: 0,
         },
       }
