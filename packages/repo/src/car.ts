@@ -284,7 +284,7 @@ class BufferedReader implements BytesReader {
     const value = new Uint8Array(valueLength)
 
     // This is the index, within "value" at which data can be written in the
-    // loop bellow. Before the loop begins, this is exactly the remaining bytes
+    // loop below. Before the loop begins, this is exactly the remaining bytes
     // to be copied from the first chunk.
     let valueIndex = firstChunk.byteLength - this.alreadyRead
 
