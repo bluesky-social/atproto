@@ -19075,6 +19075,51 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueRouteReports: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.routeReports',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Re-route reports within an ID range to matching queues based on current queue configuration.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startReportId', 'endReportId'],
+            properties: {
+              startReportId: {
+                type: 'integer',
+                description: 'Start of report ID range (inclusive)',
+              },
+              endReportId: {
+                type: 'integer',
+                description: 'End of report ID range (inclusive)',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assigned', 'unmatched'],
+            properties: {
+              assigned: {
+                type: 'integer',
+                description: 'Number of reports assigned to a queue',
+              },
+              unmatched: {
+                type: 'integer',
+                description: 'Number of reports with no matching queue',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneQueueUpdateQueue: {
     lexicon: 1,
     id: 'tools.ozone.queue.updateQueue',
@@ -21973,6 +22018,7 @@ export const ids = {
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
+  ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',

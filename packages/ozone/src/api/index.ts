@@ -29,6 +29,7 @@ import createQueue from './queue/createQueue'
 import deleteQueue from './queue/deleteQueue'
 import getQueueAssignments from './queue/getAssignments'
 import listQueues from './queue/listQueues'
+import routeReports from './queue/routeReports'
 import updateQueue from './queue/updateQueue'
 import assignReportModerator from './report/assignModerator'
 import createReport from './report/createReport'
@@ -117,6 +118,7 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
+  routeReports(server, ctx)
   assignQueueModerator(server, ctx)
   getQueueAssignments(server, ctx)
   assignReportModerator(server, ctx)
