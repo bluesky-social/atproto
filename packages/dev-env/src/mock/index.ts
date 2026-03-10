@@ -144,14 +144,12 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   })
 
-  // Reports that target each queue
-  // 1. Spam account reports (alice reports bob for spam)
+  // Reports that target queues
   await alice.com.atproto.moderation.createReport({
     reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
     reason: 'This account is spamming',
     subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.did },
   })
-  // 2. Harassment account reports (bob reports carla for harassment)
   await bob.com.atproto.moderation.createReport({
     reasonType: 'com.atproto.moderation.defs#reasonHarassment',
     reason: 'Harassing behavior',
@@ -217,7 +215,7 @@ export async function generateMockSetup(env: TestNetwork) {
     }
   }
 
-  // 3. Spam post report (carla reports first post for spam → routes to Spam Posts queue)
+  // Spam post report
   if (posts.length > 0) {
     await carla.com.atproto.moderation.createReport({
       reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
