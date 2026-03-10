@@ -241,7 +241,7 @@ export class QueueService {
    */
   async assignReportBatch(
     params:
-      | { start: number; end: number }
+      | { start: number; end: number; limit: number }
       | { cursor: number | null; limit: number },
     opts?: { includeUnmatched?: boolean },
   ): Promise<{
@@ -261,6 +261,7 @@ export class QueueService {
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
       .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
       .orderBy('r.id', 'asc')
+      .limit(params.limit)
 
     if (opts?.includeUnmatched) {
       query = query.where((qb) => {
@@ -275,7 +276,6 @@ export class QueueService {
         .where('r.id', '>=', params.start)
         .where('r.id', '<=', params.end)
     } else {
-      query = query.limit(params.limit)
       if (params.cursor !== null) {
         query = query.where('r.id', '>', params.cursor)
       }

@@ -28,7 +28,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const queueService = ctx.queueService(ctx.db)
       const { assigned, unmatched } = await queueService.assignReportBatch(
-        { start: startReportId, end: endReportId },
+        { start: startReportId, end: endReportId, limit: MAX_REPORTS },
         { includeUnmatched: true },
       )
 
