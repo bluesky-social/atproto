@@ -157,10 +157,10 @@ export const urisByCollection = <T extends string>(
   return result
 }
 
-export function split<T>(
-  items: Iterable<T>,
+export const split = <T>(
+  items: T[],
   predicate: (item: T) => boolean,
-): [T[], T[]] {
+): [T[], T[]] => {
   const yes: T[] = []
   const no: T[] = []
   for (const item of items) {
