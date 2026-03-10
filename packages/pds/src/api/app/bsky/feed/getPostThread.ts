@@ -207,7 +207,7 @@ const readAfterWriteNotFound = async (
     try {
       assert(ctx.bskyAppView)
       const parentsRes = await ctx.bskyAppView.client.call(
-        app.bsky.feed.getPostThread.main,
+        app.bsky.feed.getPostThread,
         { uri: highestParent, parentHeight: params.parentHeight, depth: 0 },
         await ctx.appviewAuthHeaders(
           requester,

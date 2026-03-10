@@ -29,7 +29,7 @@ export const parseThreadGate = (
   const allowMentions = gate.allow.some(isMentionRule)
   const allowFollower = gate.allow.some(isFollowerRule)
   const allowFollowing = gate.allow.some(isFollowingRule)
-  const allowListUris = gate.allow?.filter(isListRule).map((item) => item.list)
+  const allowListUris = gate.allow.filter(isListRule).map((item) => item.list)
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {

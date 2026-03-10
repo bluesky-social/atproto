@@ -1,3 +1,4 @@
+import { setImmediate } from 'node:timers/promises'
 import * as varint from 'varint'
 import * as cbor from '@atproto/lex-cbor'
 import { Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
@@ -162,15 +163,11 @@ async function* readCarBlocksIterGenerator(
       const bytes = blockBytes.subarray(36)
       yield { cid, bytes }
 
-      // yield to the event loop every 25 blocks in the case the incoming CAR is
-      // synchronous, this can end up jamming up the thread
+      // yield to the event loop every 25 blocks
+      // in the case the incoming CAR is synchronous, this can end up jamming up the thread
       blocks++
       if (blocks % 25 === 0) {
-        // @NOTE using `setTimeout` instead of `setImmediate` to remove
-        // dependency on runtime specific functions, allowing to (eventually)
-        // ensure that this package can be used in any JS environment (including
-        // browsers).
-        await new Promise<void>((resolve) => setTimeout(resolve))
+        await setImmediate()
       }
     }
   } finally {
