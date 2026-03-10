@@ -79,7 +79,7 @@ describe('private data', () => {
         }),
       ).toThrow(
         expect.objectContaining({
-          message: expect.stringContaining('subject'),
+          message: expect.stringContaining('allowIncoming'),
         }),
       )
     })
