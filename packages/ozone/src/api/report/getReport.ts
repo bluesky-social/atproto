@@ -22,12 +22,14 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       const queueService = ctx.queueService(db)
+      const teamService = ctx.teamService(db)
       const hydrated = await hydrateReportInfo(
         [report],
         modService.views,
         (dids) => getPdsAccountInfos(ctx, dids),
         (reportIds) => getActiveReportAssignments(db, reportIds),
         (queueIds) => queueService.getViewsByIds(queueIds),
+        (dids) => teamService.viewByDids(dids),
         labelers,
       )
 

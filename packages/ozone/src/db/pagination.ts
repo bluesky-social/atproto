@@ -206,13 +206,20 @@ export class CreatedAtUriKeyset extends GenericKeyset<
 
 type EndAtIdKeysetParam = {
   id: number
-  endAt: string
+  endAt: string | null
 }
+
+// Special value used here to represent a "permanent" endAt (i.e. a record that should be sorted as if it has an endAt infinitely far in the future).
+// Chosen to sort before all real timestamps in DESC order.
+const PERMANENT_ENDSAT = '9999-12-31T23:59:59.999Z'
 
 export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
   labelResult(result: EndAtIdKeysetParam): Cursor
   labelResult(result: EndAtIdKeysetParam) {
-    return { primary: result.endAt, secondary: result.id.toString() }
+    return {
+      primary: result.endAt ?? PERMANENT_ENDSAT,
+      secondary: result.id.toString(),
+    }
   }
   labeledResultToCursor(labeled: Cursor) {
     return {

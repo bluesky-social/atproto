@@ -17,6 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         did: authDid,
         reportId: input.body.reportId,
         queueId: input.body.queueId,
+        isPermanent: input.body.isPermanent,
       })
 
       return {

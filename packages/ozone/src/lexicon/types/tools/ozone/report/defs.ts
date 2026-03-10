@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ToolsOzoneTeamDefs from '../team/defs.js'
 import type * as ToolsOzoneModerationDefs from '../moderation/defs.js'
 import type * as ComAtprotoModerationDefs from '../../../com/atproto/moderation/defs.js'
 import type * as ToolsOzoneQueueDefs from '../queue/defs.js'
@@ -144,7 +145,9 @@ export const REASONSELFHARMOTHER = `${id}#reasonSelfHarmOther`
 /** Information about the moderator currently assigned to a report. */
 export interface ReportAssignment {
   $type?: 'tools.ozone.report.defs#reportAssignment'
-  profile: { $type: string }
+  /** DID of the assigned moderator */
+  did: string
+  moderator?: ToolsOzoneTeamDefs.Member
   /** When the report was assigned */
   assignedAt: string
 }
@@ -207,10 +210,11 @@ export interface AssignmentView {
   $type?: 'tools.ozone.report.defs#assignmentView'
   id: number
   did: string
+  moderator?: ToolsOzoneTeamDefs.Member
   queue?: ToolsOzoneQueueDefs.QueueView
   reportId: number
   startAt: string
-  endAt: string
+  endAt?: string
 }
 
 const hashAssignmentView = 'assignmentView'

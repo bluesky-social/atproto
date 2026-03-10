@@ -9,6 +9,7 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
+import type * as ToolsOzoneTeamDefs from '../team/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
@@ -81,6 +82,7 @@ export interface AssignmentView {
   $type?: 'tools.ozone.queue.defs#assignmentView'
   id: number
   did: string
+  moderator?: ToolsOzoneTeamDefs.Member
   queue: QueueView
   startAt: string
   endAt: string
