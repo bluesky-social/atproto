@@ -391,7 +391,9 @@ export class AssignmentService {
         .selectAll()
         .where('reportId', '=', reportId)
         .where((qb) =>
-          qb.where('endAt', '>', now.toISOString()).orWhere('endAt', 'is', null),
+          qb
+            .where('endAt', '>', now.toISOString())
+            .orWhere('endAt', 'is', null),
         )
         .executeTakeFirst()
 
@@ -451,7 +453,9 @@ export class AssignmentService {
         .selectAll()
         .where('reportId', '=', reportId)
         .where((qb) =>
-          qb.where('endAt', '>', now.toISOString()).orWhere('endAt', 'is', null),
+          qb
+            .where('endAt', '>', now.toISOString())
+            .orWhere('endAt', 'is', null),
         )
         .executeTakeFirst()
 

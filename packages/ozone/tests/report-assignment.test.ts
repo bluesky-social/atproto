@@ -130,7 +130,7 @@ describe('report-assignment', () => {
     const assignment = await assignReport({ reportId }, 'moderator')
     expect(assignment.reportId).toBe(reportId)
     expect(assignment.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
+    expect(new Date(assignment.endAt!).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
   })
@@ -140,8 +140,8 @@ describe('report-assignment', () => {
     const assignment1 = await assignReport({ reportId }, 'moderator')
     const assignment2 = await assignReport({ reportId }, 'moderator')
     expect(assignment2.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment2.endAt).getTime()).toBeGreaterThan(
-      new Date(assignment1.endAt).getTime(),
+    expect(new Date(assignment2.endAt!).getTime()).toBeGreaterThan(
+      new Date(assignment1.endAt!).getTime(),
     )
   })
 
@@ -149,7 +149,7 @@ describe('report-assignment', () => {
     const reportId = await createReport()
     await assignReport({ reportId }, 'moderator')
     const assignment = await unassignReport({ reportId }, 'moderator')
-    expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
+    expect(new Date(assignment.endAt!).getTime()).toBeLessThanOrEqual(
       new Date().getTime(),
     )
   })
@@ -161,7 +161,7 @@ describe('report-assignment', () => {
     const assignment = await assignReport({ reportId }, 'moderator')
     expect(assignment.reportId).toBe(reportId)
     expect(assignment.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
+    expect(new Date(assignment.endAt!).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
   })
