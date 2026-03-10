@@ -2,4 +2,4 @@
 '@atproto/lex-schema': patch
 ---
 
-Add `message` property to the `Issue` interface
+Add a read-only `message` property to the `Issue` class
