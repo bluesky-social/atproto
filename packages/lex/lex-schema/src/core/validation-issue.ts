@@ -37,7 +37,7 @@ export abstract class Issue {
     return {
       code: this.code,
       path: this.path,
-      message: this.toString(),
+      message: this.message,
     }
   }
 }
@@ -72,15 +72,8 @@ export class IssueInvalidFormat extends Issue {
     super('invalid_format', path, input)
   }
 
-  get message() {
+  override get message(): string {
     return `Invalid ${this.formatDescription}${this.detail ? ` (${this.detail}, ` : ' ('}got ${stringifyValue(this.input)})`
-  }
-
-  toJSON() {
-    return {
-      ...super.toJSON(),
-      format: this.format,
-    }
   }
 
   /** Returns a human-readable description of the expected format. */
@@ -102,6 +95,13 @@ export class IssueInvalidFormat extends Issue {
         return this.format
     }
   }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      format: this.format,
+    }
+  }
 }
 
 /**
@@ -119,7 +119,7 @@ export class IssueInvalidType extends Issue {
     super('invalid_type', path, input)
   }
 
-  get message() {
+  override get message(): string {
     return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type (got ${stringifyType(this.input)})`
   }
 
@@ -146,7 +146,7 @@ export class IssueInvalidValue extends Issue {
     super('invalid_value', path, input)
   }
 
-  get message() {
+  override get message(): string {
     return `Expected ${oneOf(this.values.map(stringifyValue))} (got ${stringifyValue(this.input)})`
   }
 
@@ -170,7 +170,7 @@ export class IssueRequiredKey extends Issue {
     super('required_key', path, input)
   }
 
-  get message() {
+  override get message(): string {
     return `Missing required key "${String(this.key)}"`
   }
 
@@ -214,7 +214,7 @@ export class IssueTooBig extends Issue {
     super('too_big', path, input)
   }
 
-  get message() {
+  override get message(): string {
     return `${this.type} too big (maximum ${this.maximum}, got ${this.actual})`
   }
 
@@ -241,7 +241,7 @@ export class IssueTooSmall extends Issue {
     super('too_small', path, input)
   }
 
-  get message() {
+  override get message(): string {
     return `${this.type} too small (minimum ${this.minimum}, got ${this.actual})`
   }
 
