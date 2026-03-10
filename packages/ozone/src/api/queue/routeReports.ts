@@ -19,7 +19,7 @@ export default function (server: Server, ctx: AppContext) {
           'startReportId must be less than or equal to endReportId',
         )
       }
-      if (endReportId - startReportId > MAX_REPORTS) {
+      if (endReportId - startReportId + 1 > MAX_REPORTS) {
         throw new InvalidRequestError(
           `Cannot route more than ${MAX_REPORTS} reports at a time`,
           'OutOfRange',
