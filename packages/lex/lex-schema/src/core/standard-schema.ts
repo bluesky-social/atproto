@@ -4,7 +4,7 @@ import { ValidationContext, Validator } from './validator.js'
 /**
  * The Standard Schema adapter for {@link Validator} instances.
  */
-export class StandardSchemaValidator<TInput, TOutput>
+export class StandardSchemaAdapter<TInput, TOutput>
   implements StandardSchemaV1.Props<TInput, TOutput>
 {
   readonly version = 1
