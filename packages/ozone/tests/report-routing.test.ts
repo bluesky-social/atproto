@@ -66,13 +66,25 @@ describe('queue-router', () => {
     })
   }
 
-  // Returns the most recent report for a subject using the queryReports API.
+  // Returns the most recent report row for a subject directly from the DB.
   // Pass a DID for account subjects or an at:// URI for record subjects.
-  const queryLatestReportForSubject = async (subjectOrUri: string) => {
-    const { reports } = await modClient.queryReports({
-      subject: subjectOrUri,
-    })
-    return reports[0]
+  const getLatestReportForSubject = async (subjectOrUri: string) => {
+    const db = network.ozone.daemon.ctx.db
+    const isDid = subjectOrUri.startsWith('did:')
+    let query = db.db
+      .selectFrom('report as r')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+      .select(['r.id', 'r.queueId', 'r.queuedAt', 'r.status'])
+      .orderBy('r.id', 'desc')
+      .limit(1)
+    if (isDid) {
+      query = query
+        .where('me.subjectDid', '=', subjectOrUri)
+        .where('me.subjectUri', 'is', null)
+    } else {
+      query = query.where('me.subjectUri', '=', subjectOrUri)
+    }
+    return query.executeTakeFirstOrThrow()
   }
 
   const routeReports = async (startReportId: number, endReportId: number) => {
@@ -137,17 +149,16 @@ describe('queue-router', () => {
   })
 
   it('routes unassigned AND unmatched reports to a newly created queue', async () => {
-    // Create unmatchable report
+    // Create unmatchable report (queueId will be set to -1)
     await reportAccount(sc.dids.bob, REASON_MISLEADING)
     await network.ozone.daemon.ctx.queueRouter.routeReports()
+    const unmatchedReport = await getLatestReportForSubject(sc.dids.bob)
+    expect(unmatchedReport.queueId).toBe(-1)
 
-    const unmatchedReport = await queryLatestReportForSubject(sc.dids.bob)
-    expect(unmatchedReport.queue).toBeUndefined()
-
-    // Create an unassigned report after daemon runs
+    // Create an unassigned report
     await reportAccount(sc.dids.carol, REASON_MISLEADING)
-    const unassignedReport = await queryLatestReportForSubject(sc.dids.carol)
-    expect(unassignedReport.queue).toBeUndefined()
+    const unassignedReport = await getLatestReportForSubject(sc.dids.carol)
+    expect(unassignedReport.queueId).toBeNull()
 
     // Create a queue that now matches misleading account reports
     const misleadingQueue = await createQueue({
@@ -162,10 +173,12 @@ describe('queue-router', () => {
     const result = await routeReports(startId, endId)
     expect(result.assigned).toBe(2)
     expect(result.unmatched).toBe(0)
-    const unmatchedAfter = await queryLatestReportForSubject(sc.dids.bob)
-    expect(unmatchedAfter.queue?.id).toBe(misleadingQueue.id)
-    const unassignedAfter = await queryLatestReportForSubject(sc.dids.carol)
-    expect(unassignedAfter.queue?.id).toBe(misleadingQueue.id)
+
+    // Verify both reports match
+    const unmatchedAfter = await getLatestReportForSubject(sc.dids.bob)
+    expect(unmatchedAfter.queueId).toBe(misleadingQueue.id)
+    const unassignedAfter = await getLatestReportForSubject(sc.dids.carol)
+    expect(unassignedAfter.queueId).toBe(misleadingQueue.id)
 
     // cleanup
     await deleteQueue(misleadingQueue.id)
@@ -175,8 +188,8 @@ describe('queue-router', () => {
     await reportAccount(sc.dids.bob, REASON_SPAM)
     await network.ozone.daemon.ctx.queueRouter.routeReports()
 
-    const reportBob = await queryLatestReportForSubject(sc.dids.bob)
-    expect(reportBob.queue?.id).toBe(spamAccountQueueId)
+    const reportBob = await getLatestReportForSubject(sc.dids.bob)
+    expect(reportBob.queueId).toBe(spamAccountQueueId)
 
     // Report is already assigned — endpoint only processes null/unmatched
     const result = await routeReports(reportBob.id, reportBob.id)
