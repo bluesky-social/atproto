@@ -1,11 +1,11 @@
-import { Selectable, sql } from 'kysely'
 import { ToolsOzoneQueueDefs } from '@atproto/api'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { Selectable, sql } from 'kysely'
 import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'
 import { jsonb } from '../db/types'
-import { JOB_NAME } from '../daemon/queue-router'
 
 export type QueueServiceCreator = (db: Database) => QueueService
 
@@ -236,45 +236,126 @@ export class QueueService {
     }
   }
 
-  async routeReports(
-    startReportId: number,
-    endReportId: number,
-  ): Promise<number> {
-    return this.db.transaction(async (txDb) => {
-      const now = new Date().toISOString()
+  /**
+   * Fetch a batch of unassigned reports and assign them to matching queues.
+   * Returns stats about the batch processed and the max report ID seen.
+   */
+  async assignReportBatch({
+    cursor,
+    batchSize,
+    maxId: upperBound,
+  }: {
+    cursor: number | null
+    batchSize: number
+    maxId?: number
+  }): Promise<{
+    processed: number
+    assigned: number
+    unmatched: number
+    maxId: number
+  }> {
+    const { queues } = await this.list({ limit: 1000, enabled: true })
 
-      // Mark as unassigned
-      const results = await txDb.db
-        .updateTable('report')
-        .set({ queueId: null, queuedAt: null, updatedAt: now })
-        .where('id', '>=', startReportId)
-        .where('id', '<=', endReportId)
-        .execute()
+    if (!queues.length) {
+      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
+    }
 
-      const count = results.reduce(
-        (sum, r) => sum + Number(r.numUpdatedRows),
-        0,
-      )
+    let query = this.db.db
+      .selectFrom('report as r')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+      .where('r.queueId', 'is', null)
+      .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
+      .orderBy('r.id', 'asc')
+      .limit(batchSize)
 
-      // Update router cursor if needed
-      const cursorEntry = await txDb.db
-        .selectFrom('job_cursor')
-        .select('cursor')
-        .where('job', '=', JOB_NAME)
-        .executeTakeFirst()
-      const cursor = cursorEntry?.cursor
-        ? parseInt(cursorEntry.cursor, 10)
-        : null
-      const newCursor = startReportId - 1
-      if (cursor === null || newCursor < cursor) {
-        await txDb.db
-          .updateTable('job_cursor')
-          .set({ cursor: String(newCursor) })
-          .where('job', '=', JOB_NAME)
-          .execute()
+    if (cursor !== null) {
+      query = query.where('r.id', '>', cursor)
+    }
+
+    if (upperBound !== undefined) {
+      query = query.where('r.id', '<=', upperBound)
+    }
+
+    const reports = await query.execute()
+
+    if (!reports.length) {
+      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
+    }
+
+    const now = new Date().toISOString()
+    let assigned = 0
+    let unmatched = 0
+    let maxReportId = 0
+
+    for (const report of reports) {
+      const subjectType = report.subjectMessageId
+        ? 'message'
+        : report.subjectUri
+          ? 'record'
+          : 'account'
+
+      let collection: string | null = null
+      if (report.subjectUri) {
+        try {
+          collection = new AtUri(report.subjectUri).collection || null
+        } catch {
+          collection = null
+        }
       }
 
-      return count
-    })
+      const reportType = (report.meta as Record<string, unknown> | null)
+        ?.reportType as string | undefined
+
+      const matchingQueue = findMatchingQueue(
+        queues,
+        subjectType,
+        collection,
+        reportType,
+      )
+
+      await this.db.db
+        .updateTable('report')
+        .set({
+          queueId: matchingQueue?.id ?? -1,
+          queuedAt: matchingQueue ? now : null,
+          updatedAt: now,
+        })
+        .where('id', '=', report.id)
+        .execute()
+
+      if (matchingQueue) {
+        assigned++
+      } else {
+        unmatched++
+      }
+
+      if (report.id > maxReportId) maxReportId = report.id
+    }
+
+    return { processed: reports.length, assigned, unmatched, maxId: maxReportId }
   }
+}
+
+export function findMatchingQueue(
+  queues: Selectable<ReportQueue>[],
+  subjectType: string,
+  collection: string | null,
+  reportType: string | undefined,
+): Selectable<ReportQueue> | null {
+  if (!reportType) return null
+
+  for (const queue of queues) {
+    const subjectTypeMatch = queue.subjectTypes.includes(subjectType)
+    const collectionMatch =
+      subjectType === 'record' && queue.collection !== null
+        ? (collection ?? null) === queue.collection
+        : true
+    const reportTypeMatch = queue.reportTypes.includes(reportType)
+
+    if (subjectTypeMatch && collectionMatch && reportTypeMatch) {
+      return queue
+    }
+  }
+
+  return null
 }
