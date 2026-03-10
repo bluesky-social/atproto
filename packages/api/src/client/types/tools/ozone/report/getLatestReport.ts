@@ -10,11 +10,11 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ToolsOzoneReportDefs from '../report/defs.js'
+import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.queue.getLatest'
+const id = 'tools.ozone.report.getLatestReport'
 
 export type QueryParams = {}
 export type InputSchema = undefined

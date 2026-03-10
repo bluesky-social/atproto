@@ -19077,33 +19077,6 @@ export const schemaDict = {
       },
     },
   },
-  ToolsOzoneQueueGetLatest: {
-    lexicon: 1,
-    id: 'tools.ozone.queue.getLatest',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get the most recent report.',
-        parameters: {
-          type: 'params',
-          properties: {},
-        },
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['report'],
-            properties: {
-              report: {
-                type: 'ref',
-                ref: 'lex:tools.ozone.report.defs#reportView',
-              },
-            },
-          },
-        },
-      },
-    },
-  },
   ToolsOzoneQueueListQueues: {
     lexicon: 1,
     id: 'tools.ozone.queue.listQueues',
@@ -19746,6 +19719,33 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:tools.ozone.report.defs#assignmentView',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportGetLatestReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLatestReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the most recent report.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
               },
             },
           },
@@ -22122,13 +22122,13 @@ export const ids = {
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
-  ToolsOzoneQueueGetLatest: 'tools.ozone.queue.getLatest',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
+  ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',

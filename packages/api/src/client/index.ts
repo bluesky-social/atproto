@@ -296,13 +296,13 @@ import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQue
 import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
-import * as ToolsOzoneQueueGetLatest from './types/tools/ozone/queue/getLatest.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
@@ -626,13 +626,13 @@ export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQue
 export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
-export * as ToolsOzoneQueueGetLatest from './types/tools/ozone/queue/getLatest.js'
 export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 export * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+export * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
@@ -5541,18 +5541,6 @@ export class ToolsOzoneQueueNS {
     )
   }
 
-  getLatest(
-    params?: ToolsOzoneQueueGetLatest.QueryParams,
-    opts?: ToolsOzoneQueueGetLatest.CallOptions,
-  ): Promise<ToolsOzoneQueueGetLatest.Response> {
-    return this._client.call(
-      'tools.ozone.queue.getLatest',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
   listQueues(
     params?: ToolsOzoneQueueListQueues.QueryParams,
     opts?: ToolsOzoneQueueListQueues.CallOptions,
@@ -5613,6 +5601,18 @@ export class ToolsOzoneReportNS {
   ): Promise<ToolsOzoneReportGetAssignments.Response> {
     return this._client.call(
       'tools.ozone.report.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getLatestReport(
+    params?: ToolsOzoneReportGetLatestReport.QueryParams,
+    opts?: ToolsOzoneReportGetLatestReport.CallOptions,
+  ): Promise<ToolsOzoneReportGetLatestReport.Response> {
+    return this._client.call(
+      'tools.ozone.report.getLatestReport',
       params,
       undefined,
       opts,

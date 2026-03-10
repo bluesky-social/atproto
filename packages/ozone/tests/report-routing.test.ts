@@ -88,9 +88,9 @@ describe('queue-router', () => {
   }
 
   const getLatest = async () => {
-    const { data } = await agent.tools.ozone.queue.getLatest(
+    const { data } = await agent.tools.ozone.report.getLatestReport(
       {},
-      { headers: await modHeaders(ids.ToolsOzoneQueueGetLatest) },
+      { headers: await modHeaders(ids.ToolsOzoneReportGetLatestReport) },
     )
     return data.report
   }

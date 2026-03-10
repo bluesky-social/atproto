@@ -9,7 +9,7 @@ import { buildReportView, hydrateReportInfo } from '../../report/views'
 import { getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.getLatest({
+  server.tools.ozone.report.getLatestReport({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ auth, req }) => {
       const db = ctx.db

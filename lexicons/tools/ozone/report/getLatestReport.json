@@ -1,6 +1,6 @@
 {
   "lexicon": 1,
-  "id": "tools.ozone.queue.getLatest",
+  "id": "tools.ozone.report.getLatestReport",
   "defs": {
     "main": {
       "type": "query",

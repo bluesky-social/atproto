@@ -246,12 +246,12 @@ import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assig
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
-import * as ToolsOzoneQueueGetLatest from './types/tools/ozone/queue/getLatest.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
@@ -3617,18 +3617,6 @@ export class ToolsOzoneQueueNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
-  getLatest<A extends Auth = void>(
-    cfg: MethodConfigOrHandler<
-      A,
-      ToolsOzoneQueueGetLatest.QueryParams,
-      ToolsOzoneQueueGetLatest.HandlerInput,
-      ToolsOzoneQueueGetLatest.HandlerOutput
-    >,
-  ) {
-    const nsid = 'tools.ozone.queue.getLatest' // @ts-ignore
-    return this._server.xrpc.method(nsid, cfg)
-  }
-
   listQueues<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3694,6 +3682,18 @@ export class ToolsOzoneReportNS {
     >,
   ) {
     const nsid = 'tools.ozone.report.getAssignments' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLatestReport<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetLatestReport.QueryParams,
+      ToolsOzoneReportGetLatestReport.HandlerInput,
+      ToolsOzoneReportGetLatestReport.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getLatestReport' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
