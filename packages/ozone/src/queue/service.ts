@@ -262,9 +262,12 @@ export class QueueService {
       .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
       .orderBy('r.id', 'asc')
 
-    query = query.where('r.queueId', 'is', null)
     if (opts?.includeUnmatched) {
-      query = query.orWhere('r.queueId', '=', -1)
+      query = query.where((qb) => {
+        return qb.orWhere('r.queueId', 'is', null).orWhere('r.queueId', '=', -1)
+      })
+    } else {
+      query = query.where('r.queueId', 'is', null)
     }
 
     if ('end' in params) {
