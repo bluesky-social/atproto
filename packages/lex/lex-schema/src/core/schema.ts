@@ -87,8 +87,7 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
   get '~standard'(): StandardSchemaV1.Props<TInput, TOutput> {
     // Lazily create, and cache, the Standard Schema adapter for this schema
     // instance.
-    const standard = new StandardSchemaAdapter<TInput, TOutput>(this)
-    return lazyProperty(this, '~standard', standard)
+    return lazyProperty(this, '~standard', new StandardSchemaAdapter(this))
   }
 
   // Needed to discriminate multiple schema types when used in unions. Without
