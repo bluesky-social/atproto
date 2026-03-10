@@ -20,7 +20,7 @@ const newPost = app.bsky.feed.post.$build({
 app.bsky.actor.profile.$validate({
   $type: 'app.bsky.actor.profile',
   displayName: 'Ha'.repeat(32) + '!',
-}) // Error: grapheme too big (maximum 64) at $.displayName (got 65)
+}) // Error: grapheme too big (maximum 64, got 65) at $.displayName
 ```
 
 ```typescript
@@ -75,6 +75,7 @@ const posts = await client.list(app.bsky.feed.post, { limit: 10 })
   - [Actions](#actions)
   - [Creating a Client from Another Client](#creating-a-client-from-another-client)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
+  - [Standard Schema Compatibility](#standard-schema-compatibility)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -1422,6 +1423,33 @@ await client.call(actions.post, { text: 'Hello!' })
 4. **Composition**: Build complex actions from simpler ones
 5. **Retries**: Implement retry logic for operations with optimistic concurrency control
 6. **Tree-shaking**: Export actions individually to allow tree-shaking (instead of bundling them in a single class)
+
+### Standard Schema Compatibility
+
+All generated schemas implement the [Standard Schema](https://standardschema.dev/) interface (`StandardSchemaV1`), which means they can be used with any library or framework that supports Standard Schema, such as form validation libraries, API frameworks, and more.
+
+Every `Schema` instance exposes a `~standard` property conforming to the spec:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// Use with any Standard Schema-compatible library
+const schema = app.bsky.feed.post
+
+schema['~standard'].version // 1
+schema['~standard'].vendor // '@atproto/lex-schema'
+
+// Validate using the Standard Schema interface
+const result = schema['~standard'].validate(someData)
+
+if ('value' in result) {
+  console.log(result.value) // Parsed and validated data
+} else {
+  console.error(result.issues)
+}
+```
+
+When validated through the Standard Schema interface, schemas operate in "parse" mode, meaning transformations like defaults and coercions are applied to the output.
 
 ## License
 

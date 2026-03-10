@@ -415,7 +415,7 @@ describe('Client', () => {
             validateRequest: true,
           },
         )
-      }).rejects.toThrow('Invalid DID at $.did')
+      }).rejects.toThrow('Invalid DID (got "not-a-did") at $.did')
 
       // validate performs schema validation before making the request
       expect(fetchHandler).toHaveBeenCalledTimes(0)

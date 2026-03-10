@@ -1,5 +1,5 @@
-import { PropertyKey } from './property-key.js'
-import { ResultFailure, ResultSuccess, failure, success } from './result.js'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ResultFailure, ResultSuccess, success } from './result.js'
 import { LexValidationError } from './validation-error.js'
 import {
   Issue,
@@ -21,8 +21,12 @@ export type ValidationSuccess<Value = unknown> = ResultSuccess<Value>
 
 /**
  * Represents a failed validation result containing a {@link LexValidationError}.
+ *
+ * @extends ResultFailure<LexValidationError>
+ * @see {@link ResultFailure}
+ * @see {@link LexValidationError}
  */
-export type ValidationFailure = ResultFailure<LexValidationError>
+export type ValidationFailure = LexValidationError
 
 /**
  * Discriminated union representing the outcome of a validation operation.
@@ -326,7 +330,7 @@ export class ValidationContext {
       if (this.issues.length > 0) {
         // Validator returned a success but issues were added via the context.
         // This means the overall validation failed.
-        return failure(new LexValidationError(Array.from(this.issues)))
+        return new LexValidationError(Array.from(this.issues))
       }
 
       if (this.options.mode !== 'parse' && !Object.is(result.value, input)) {
@@ -426,7 +430,7 @@ export class ValidationContext {
    * @returns A failed validation result
    */
   failure(reason: LexValidationError): ValidationFailure {
-    return failure(reason)
+    return reason
   }
 
   /**
