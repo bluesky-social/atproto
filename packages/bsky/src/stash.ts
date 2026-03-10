@@ -13,11 +13,7 @@ export const Namespaces = {
     app.bsky.notification.defs.subjectActivitySubscription,
   AppBskyUnspeccedDefsAgeAssuranceEvent:
     app.bsky.unspecced.defs.ageAssuranceEvent,
-  AppBskyActorDefsProfileAssociatedChat:
-    app.bsky.actor.defs.profileAssociatedChat,
 } as const satisfies Record<string, TypedObjectSchema>
-
-export type Namespace = (typeof Namespaces)[keyof typeof Namespaces]
 
 export const createStashClient = (bsyncClient: BsyncClient): StashClient => {
   return new StashClient(bsyncClient)
@@ -66,7 +62,7 @@ export class StashClient {
 
 type CreateInput = {
   actorDid: string
-  namespace: Namespace
+  namespace: TypedObjectSchema
   key: string
   payload: LexMap
 }
@@ -75,6 +71,6 @@ type UpdateInput = CreateInput
 
 type DeleteInput = {
   actorDid: string
-  namespace: Namespace
+  namespace: TypedObjectSchema
   key: string
 }

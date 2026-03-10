@@ -2,7 +2,6 @@ import { TestNetwork } from '@atproto/dev-env'
 import { lexStringify } from '@atproto/lex'
 import { StashClient } from '../dist/stash'
 import { app } from '../src/lexicons/index.js'
-import { Namespaces } from '../src/stash'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -13,7 +12,7 @@ describe('private data', () => {
 
   const actorDid = 'did:plc:example'
   // This lexicon has nothing special other than being simple, convenient to use in a test.
-  const namespace = Namespaces.AppBskyActorDefsProfileAssociatedChat
+  const namespace = app.bsky.actor.defs.profileAssociatedChat
   const key = 'self'
 
   const validPayload0: app.bsky.actor.defs.ProfileAssociatedChat = {
