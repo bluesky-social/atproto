@@ -4,7 +4,7 @@ import { dbLogger } from '../logger'
 import { QueueServiceCreator } from '../queue/service'
 import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor'
 
-export const JOB_NAME = 'queue_router'
+const JOB_NAME = 'queue_router'
 const BATCH_SIZE = 100
 
 export class QueueRouter {
