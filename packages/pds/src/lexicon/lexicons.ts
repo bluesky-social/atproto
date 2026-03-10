@@ -19091,11 +19091,12 @@ export const schemaDict = {
             properties: {
               startReportId: {
                 type: 'integer',
-                description: 'Start of report ID range (inclusive)',
+                description: 'Start of report ID range (inclusive).',
               },
               endReportId: {
                 type: 'integer',
-                description: 'End of report ID range (inclusive)',
+                description:
+                  'End of report ID range (inclusive). Difference between start and end must be less than 5,000.',
               },
             },
           },
@@ -19108,15 +19109,22 @@ export const schemaDict = {
             properties: {
               assigned: {
                 type: 'integer',
-                description: 'Number of reports assigned to a queue',
+                description: 'The number of reports assigned to a queue.',
               },
               unmatched: {
                 type: 'integer',
-                description: 'Number of reports with no matching queue',
+                description: 'The number of reports with no matching queue.',
               },
             },
           },
         },
+        errors: [
+          {
+            name: 'OutOfRange',
+            description:
+              'The request is invalid, such as missing required fields or invalid field values.',
+          },
+        ],
       },
     },
   },

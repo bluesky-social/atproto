@@ -237,18 +237,14 @@ export class QueueService {
   }
 
   /**
-   * Fetch a batch of unassigned reports and assign them to matching queues.
-   * Returns stats about the batch processed and the max report ID seen.
+   * Assign a batch of reports.
    */
-  async assignReportBatch({
-    cursor,
-    batchSize,
-    maxId: upperBound,
-  }: {
-    cursor: number | null
-    batchSize: number
-    maxId?: number
-  }): Promise<{
+  async assignReportBatch(
+    params:
+      | { start: number; end: number }
+      | { cursor: number | null; limit: number },
+    opts?: { includeUnmatched?: boolean },
+  ): Promise<{
     processed: number
     assigned: number
     unmatched: number
@@ -263,17 +259,23 @@ export class QueueService {
     let query = this.db.db
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-      .where('r.queueId', 'is', null)
       .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
       .orderBy('r.id', 'asc')
-      .limit(batchSize)
 
-    if (cursor !== null) {
-      query = query.where('r.id', '>', cursor)
+    query = query.where('r.queueId', 'is', null)
+    if (opts?.includeUnmatched) {
+      query = query.orWhere('r.queueId', '=', -1)
     }
 
-    if (upperBound !== undefined) {
-      query = query.where('r.id', '<=', upperBound)
+    if ('end' in params) {
+      query = query
+        .where('r.id', '>=', params.start)
+        .where('r.id', '<=', params.end)
+    } else {
+      query = query.limit(params.limit)
+      if (params.cursor !== null) {
+        query = query.where('r.id', '>', params.cursor)
+      }
     }
 
     const reports = await query.execute()
@@ -284,7 +286,7 @@ export class QueueService {
 
     const now = new Date().toISOString()
     let assigned = 0
-    let unmatched = 0
+    let unassigned = 0
     let maxReportId = 0
 
     for (const report of reports) {
@@ -326,13 +328,18 @@ export class QueueService {
       if (matchingQueue) {
         assigned++
       } else {
-        unmatched++
+        unassigned++
       }
 
       if (report.id > maxReportId) maxReportId = report.id
     }
 
-    return { processed: reports.length, assigned, unmatched, maxId: maxReportId }
+    return {
+      processed: reports.length,
+      assigned,
+      unmatched: unassigned,
+      maxId: maxReportId,
+    }
   }
 }
 

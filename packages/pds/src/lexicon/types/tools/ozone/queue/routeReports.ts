@@ -17,16 +17,16 @@ const id = 'tools.ozone.queue.routeReports'
 export type QueryParams = {}
 
 export interface InputSchema {
-  /** Start of report ID range (inclusive) */
+  /** Start of report ID range (inclusive). */
   startReportId: number
-  /** End of report ID range (inclusive) */
+  /** End of report ID range (inclusive). Difference between start and end must be less than 5,000. */
   endReportId: number
 }
 
 export interface OutputSchema {
-  /** Number of reports assigned to a queue */
+  /** The number of reports assigned to a queue. */
   assigned: number
-  /** Number of reports with no matching queue */
+  /** The number of reports with no matching queue. */
   unmatched: number
 }
 
@@ -44,6 +44,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'OutOfRange'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

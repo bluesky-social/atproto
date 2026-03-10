@@ -58,7 +58,7 @@ export class QueueRouter {
 
     const result = await queueService.assignReportBatch({
       cursor: lastId,
-      batchSize: BATCH_SIZE,
+      limit: BATCH_SIZE,
     })
 
     if (result.processed === 0) {

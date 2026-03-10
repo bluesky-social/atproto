@@ -5555,12 +5555,11 @@ export class ToolsOzoneQueueNS {
     data?: ToolsOzoneQueueRouteReports.InputSchema,
     opts?: ToolsOzoneQueueRouteReports.CallOptions,
   ): Promise<ToolsOzoneQueueRouteReports.Response> {
-    return this._client.call(
-      'tools.ozone.queue.routeReports',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.queue.routeReports', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueRouteReports.toKnownErr(e)
+      })
   }
 
   updateQueue(
