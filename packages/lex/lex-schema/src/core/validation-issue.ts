@@ -8,8 +8,9 @@ import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
  * - The path to the invalid value in the data structure
  * - The actual input value that failed validation
  *
- * Subclasses add specific properties relevant to each issue type and
- * implement the {@link toString} method for human-readable error messages.
+ * Subclasses add specific properties relevant to each issue type and implement
+ * the {@link message} property for human-readable error messages (that don't
+ * contain the error path)
  */
 export abstract class Issue {
   abstract readonly message: string
