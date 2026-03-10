@@ -21,12 +21,11 @@ export class StandardSchemaAdapter<TInput, TOutput>
   ): StandardSchemaV1.Result<TOutput> {
     // Perform validation in "parse" mode to ensure transformations (defaults,
     // coercions, etc.) are applied. Also ensures that the output type is
-    // returned.
-    const result = ValidationContext.validate(value, this.validator, {
+    // returned. Note that ValidationResult is compatible with
+    // StandardSchemaV1.Result :-)
+    return ValidationContext.validate(value, this.validator, {
       ...options?.libraryOptions,
       mode: 'parse',
     })
-    // Transform the result into the Standard Schema result format.
-    return result.success ? result : result.reason
   }
 }
