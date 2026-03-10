@@ -1,4 +1,3 @@
-import { PropertyKey } from './property-key.js'
 import { ResultFailure, ResultSuccess, failure, success } from './result.js'
 import { LexValidationError } from './validation-error.js'
 import {

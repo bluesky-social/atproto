@@ -1,4 +1,6 @@
+import { StandardSchemaV1 } from '@standard-schema/spec'
 import { lazyProperty } from '../util/lazy-property.js'
+import { StandardSchemaValidator } from './standard-schema.js'
 import {
   InferInput,
   InferOutput,
@@ -52,7 +54,6 @@ export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
  *
  * @typeParam TInput - The type accepted as valid input during validation
  * @typeParam TOutput - The type returned after parsing (may include transformations)
- * @typeParam TInternals - Internal type structure for type inference
  *
  * @example
  * ```typescript
@@ -72,14 +73,8 @@ export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
  * schema.matches(123)        // false
  * ```
  */
-export abstract class Schema<
-  out TInput = unknown,
-  out TOutput = TInput,
-  out TInternals extends SchemaInternals<TInput, TOutput> = SchemaInternals<
-    TInput,
-    TOutput
-  >,
-> implements Validator<TInternals['input'], TInternals['output']>
+export abstract class Schema<out TInput = unknown, out TOutput = TInput>
+  implements Validator<TInput, TOutput>, StandardSchemaV1<TInput, TOutput>
 {
   /**
    * Internal phantom property for type inference.
@@ -87,7 +82,14 @@ export abstract class Schema<
    *
    * @internal
    */
-  declare readonly ['__lex']: TInternals
+  declare readonly ['__lex']: SchemaInternals<TInput, TOutput>
+
+  get '~standard'(): StandardSchemaV1.Props<TInput, TOutput> {
+    // Lazily create, and cache, the Standard Schema adapter for this schema
+    // instance.
+    const standard = new StandardSchemaValidator<TInput, TOutput>(this)
+    return lazyProperty(this, '~standard', standard)
+  }
 
   // Needed to discriminate multiple schema types when used in unions. Without
   // this, Typescript could allow an EnumSchema<"foo" | "bar"> to be used where

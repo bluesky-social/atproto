@@ -1,5 +1,4 @@
 import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
-import { PropertyKey } from './property-key.js'
 
 /**
  * Abstract base class for all validation issues.
@@ -13,6 +12,8 @@ import { PropertyKey } from './property-key.js'
  * implement the {@link toString} method for human-readable error messages.
  */
 export abstract class Issue {
+  abstract readonly message: string
+
   constructor(
     readonly code: string,
     readonly path: readonly PropertyKey[],
@@ -22,7 +23,9 @@ export abstract class Issue {
   /**
    * Returns a human-readable description of the validation issue.
    */
-  abstract toString(): string
+  toString() {
+    return `${this.message}${stringifyPath(this.path)}`
+  }
 
   /**
    * Converts the issue to a JSON-serializable object.
@@ -51,10 +54,6 @@ export class IssueCustom extends Issue {
   ) {
     super('custom', path, input)
   }
-
-  toString() {
-    return `${this.message}${stringifyPath(this.path)}`
-  }
 }
 
 /**
@@ -67,13 +66,13 @@ export class IssueInvalidFormat extends Issue {
     path: readonly PropertyKey[],
     input: unknown,
     readonly format: string,
-    readonly message?: string,
+    readonly detail?: string,
   ) {
     super('invalid_format', path, input)
   }
 
-  toString() {
-    return `Invalid ${this.formatDescription}${this.message ? ` (${this.message})` : ''}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  get message() {
+    return `Invalid ${this.formatDescription}${this.detail ? ` (${this.detail}, ` : ' ('}got ${stringifyValue(this.input)})`
   }
 
   toJSON() {
@@ -119,8 +118,8 @@ export class IssueInvalidType extends Issue {
     super('invalid_type', path, input)
   }
 
-  toString() {
-    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type${stringifyPath(this.path)} (got ${stringifyType(this.input)})`
+  get message() {
+    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type (got ${stringifyType(this.input)})`
   }
 
   toJSON() {
@@ -146,8 +145,8 @@ export class IssueInvalidValue extends Issue {
     super('invalid_value', path, input)
   }
 
-  toString() {
-    return `Expected ${oneOf(this.values.map(stringifyValue))}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  get message() {
+    return `Expected ${oneOf(this.values.map(stringifyValue))} (got ${stringifyValue(this.input)})`
   }
 
   toJSON() {
@@ -170,8 +169,8 @@ export class IssueRequiredKey extends Issue {
     super('required_key', path, input)
   }
 
-  toString() {
-    return `Missing required key "${String(this.key)}"${stringifyPath(this.path)}`
+  get message() {
+    return `Missing required key "${String(this.key)}"`
   }
 
   toJSON() {
@@ -214,8 +213,8 @@ export class IssueTooBig extends Issue {
     super('too_big', path, input)
   }
 
-  toString() {
-    return `${this.type} too big (maximum ${this.maximum})${stringifyPath(this.path)} (got ${this.actual})`
+  get message() {
+    return `${this.type} too big (maximum ${this.maximum}, got ${this.actual})`
   }
 
   toJSON() {
@@ -241,8 +240,8 @@ export class IssueTooSmall extends Issue {
     super('too_small', path, input)
   }
 
-  toString() {
-    return `${this.type} too small (minimum ${this.minimum})${stringifyPath(this.path)} (got ${this.actual})`
+  get message() {
+    return `${this.type} too small (minimum ${this.minimum}, got ${this.actual})`
   }
 
   toJSON() {
@@ -274,9 +273,9 @@ function buildJsonPath(path: readonly PropertyKey[]): string {
 }
 
 function toJsonPathSegment(segment: PropertyKey): string {
-  if (typeof segment === 'number') {
-    return `[${segment}]`
-  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment as string)) {
+  if (typeof segment === 'number' || typeof segment === 'symbol') {
+    return `[${String(segment)}]`
+  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment)) {
     return `.${segment}`
   } else {
     return `[${JSON.stringify(segment)}]`

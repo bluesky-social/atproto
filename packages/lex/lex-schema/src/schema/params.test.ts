@@ -419,7 +419,7 @@ describe('ParamsSchema', () => {
           ['name', 'Alice'],
           ['bools', 'notabool'],
         ]),
-      ).toThrow('Expected boolean value type at $.bools (got string)')
+      ).toThrow('Expected boolean value type (got string) at $.bools')
 
       expect(() =>
         schema.fromURLSearchParams(
@@ -431,7 +431,7 @@ describe('ParamsSchema', () => {
             path: ['foo', 'bar'],
           },
         ),
-      ).toThrow('Expected boolean value type at $.foo.bar.bools (got string)')
+      ).toThrow('Expected boolean value type (got string) at $.foo.bar.bools')
     })
 
     it('ignores empty string values', () => {

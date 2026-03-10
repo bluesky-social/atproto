@@ -81,7 +81,7 @@ describe('ArraySchema', () => {
         success: false,
         reason: expect.objectContaining({
           message: expect.stringContaining(
-            'Expected array value type at $ (got integer)',
+            'Expected array value type (got integer) at $',
           ),
         }),
       })
