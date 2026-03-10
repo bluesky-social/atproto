@@ -19008,6 +19008,33 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueGetLatest: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getLatest',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the most recent report.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneQueueListQueues: {
     lexicon: 1,
     id: 'tools.ozone.queue.listQueues',
@@ -22025,6 +22052,7 @@ export const ids = {
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
+  ToolsOzoneQueueGetLatest: 'tools.ozone.queue.getLatest',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',

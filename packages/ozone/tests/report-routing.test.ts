@@ -87,6 +87,14 @@ describe('queue-router', () => {
     return query.executeTakeFirstOrThrow()
   }
 
+  const getLatest = async () => {
+    const { data } = await agent.tools.ozone.queue.getLatest(
+      {},
+      { headers: await modHeaders(ids.ToolsOzoneQueueGetLatest) },
+    )
+    return data.report
+  }
+
   const routeReports = async (startReportId: number, endReportId: number) => {
     const { data } = await agent.tools.ozone.queue.routeReports(
       { startReportId, endReportId },
@@ -98,25 +106,25 @@ describe('queue-router', () => {
     return data
   }
 
+  const clearQueues = async () => {
+    const db = network.ozone.ctx.db.db
+    await db.deleteFrom('report_queue').execute()
+  }
+
+  let spamAccountQueueId: number
+  let harassmentAccountQueueId: number
+  let spamPostQueueId: number
+
   beforeAll(async () => {
     network = await TestNetwork.create({
-      dbPostgresSchema: 'ozone_queue_router',
+      dbPostgresSchema: 'ozone_report_routing',
     })
     agent = network.ozone.getClient()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
     await network.processAll()
-  })
-
-  afterAll(async () => {
-    await network.close()
-  })
-
-  let spamAccountQueueId: number
-  let harassmentAccountQueueId: number
-  let spamPostQueueId: number
-  beforeAll(async () => {
+    await clearQueues()
     const [spamAccountQueue, harassmentAccountQueue, spamPostQueue] =
       await Promise.all([
         createQueue({
@@ -140,12 +148,9 @@ describe('queue-router', () => {
     harassmentAccountQueueId = harassmentAccountQueue.id
     spamPostQueueId = spamPostQueue.id
   })
+
   afterAll(async () => {
-    await Promise.all([
-      deleteQueue(spamAccountQueueId).catch(() => {}),
-      deleteQueue(harassmentAccountQueueId).catch(() => {}),
-      deleteQueue(spamPostQueueId).catch(() => {}),
-    ])
+    await network.close()
   })
 
   it('routes unassigned AND unmatched reports to a newly created queue', async () => {
@@ -207,5 +212,29 @@ describe('queue-router', () => {
     await expect(routeReports(100, 5101)).rejects.toThrow(
       'Cannot route more than 5000 reports at a time',
     )
+  })
+
+  describe('get latest report', () => {
+    it('returns latest report', async () => {
+      // Create a new report so we know what the latest should be
+      await reportAccount(sc.dids.dan, REASON_SPAM)
+
+      const latest = await getLatest()
+      expect(latest).toBeDefined()
+      expect(latest.id).toBeGreaterThan(0)
+
+      // Verify it matches the DB
+      const dbReport = await getLatestReportForSubject(sc.dids.dan)
+      expect(latest.id).toBe(dbReport.id)
+    })
+
+    it('returns a newer report after creating one', async () => {
+      const first = await getLatest()
+
+      await reportAccount(sc.dids.alice, REASON_HARASSMENT)
+
+      const second = await getLatest()
+      expect(second.id).toBeGreaterThan(first.id)
+    })
   })
 })

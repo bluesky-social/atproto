@@ -187,6 +187,27 @@ export async function getReportById(
     .executeTakeFirst()
 }
 
+export async function getLatestReport(
+  db: Database,
+): Promise<ReportWithEvent | undefined> {
+  return db.db
+    .selectFrom('report as r')
+    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+    .selectAll('r')
+    .select([
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.createdBy as reportedBy',
+      'me.comment',
+      'me.meta',
+    ])
+    .orderBy('r.id', 'desc')
+    .limit(1)
+    .executeTakeFirst()
+}
+
 export type ActiveReportAssignment = {
   did: string
   assignedAt: string

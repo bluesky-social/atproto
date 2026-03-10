@@ -1,0 +1,27 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.getLatest",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the most recent report.",
+      "parameters": {
+        "type": "params",
+        "properties": {}
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["report"],
+          "properties": {
+            "report": {
+              "type": "ref",
+              "ref": "tools.ozone.report.defs#reportView"
+            }
+          }
+        }
+      }
+    }
+  }
+}

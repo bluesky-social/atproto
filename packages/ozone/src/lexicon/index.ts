@@ -246,6 +246,7 @@ import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assig
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+import * as ToolsOzoneQueueGetLatest from './types/tools/ozone/queue/getLatest.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
@@ -3613,6 +3614,18 @@ export class ToolsOzoneQueueNS {
     >,
   ) {
     const nsid = 'tools.ozone.queue.getAssignments' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLatest<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueGetLatest.QueryParams,
+      ToolsOzoneQueueGetLatest.HandlerInput,
+      ToolsOzoneQueueGetLatest.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.getLatest' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

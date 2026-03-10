@@ -27,6 +27,7 @@ import proxied from './proxied'
 import assignQueueModerator from './queue/assignModerator'
 import createQueue from './queue/createQueue'
 import deleteQueue from './queue/deleteQueue'
+import getLatest from './queue/getLatest'
 import getQueueAssignments from './queue/getAssignments'
 import listQueues from './queue/listQueues'
 import routeReports from './queue/routeReports'
@@ -119,6 +120,7 @@ export default function (server: Server, ctx: AppContext) {
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
   routeReports(server, ctx)
+  getLatest(server, ctx)
   assignQueueModerator(server, ctx)
   getQueueAssignments(server, ctx)
   assignReportModerator(server, ctx)
