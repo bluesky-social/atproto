@@ -3,6 +3,7 @@ import { wait } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { readCarWithRoot, verifyRepo } from '@atproto/repo'
+import { DidString } from '@atproto/syntax'
 import { AppContext } from '../src/context'
 import { PreparedCreate, prepareCreate } from '../src/repo'
 
@@ -10,7 +11,7 @@ describe('races', () => {
   let network: TestNetworkNoAppView
   let ctx: AppContext
   let agent: AtpAgent
-  let did: string
+  let did: DidString
   let signingKey: Keypair
 
   beforeAll(async () => {
