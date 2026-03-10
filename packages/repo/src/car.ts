@@ -253,73 +253,83 @@ class BufferedReader implements BytesReader {
         : stream[Symbol.iterator]()
   }
 
-  get availableByteLength() {
+  /** Number of bytes currently buffered and available for reading */
+  get bufferedByteLength() {
     return this.chunksByteLength - this.alreadyRead
   }
 
   async read(bytesToRead: number): Promise<Uint8Array> {
     await this.readUntilBuffered(bytesToRead)
 
-    const valueLength = Math.min(bytesToRead, this.availableByteLength)
-    if (valueLength <= 0) return new Uint8Array()
+    const resultLength = Math.min(bytesToRead, this.bufferedByteLength)
+    if (resultLength <= 0) return new Uint8Array()
 
     const firstChunk = this.chunks[0]!
-    const firstChunkOffset = firstChunk.byteOffset + this.alreadyRead
-    const firstChunkEnd = this.alreadyRead + valueLength // this could overflow the end if bytesToRead is greater than the remaining bytes
+    const firstChunkRemaining = firstChunk.byteLength - this.alreadyRead
+
+    if (firstChunkRemaining <= 0) {
+      // Should never happen
+      throw new Error('Unexpected BufferedReader state')
+    }
 
     // If the data to be read is less or equal to the remaining bytes in the
     // first chunk, return a sub array of that chunk.
-    if (firstChunkEnd < firstChunk.byteLength) {
-      // read less than first chunk
-      this.alreadyRead += valueLength
-      return new Uint8Array(firstChunk.buffer, firstChunkOffset, valueLength)
-    } else if (firstChunkEnd === firstChunk.byteLength) {
-      // read exactly first chunk (and discard it)
-      this.discardFirstChunk()
-      return new Uint8Array(firstChunk.buffer, firstChunkOffset, valueLength)
+    if (resultLength < firstChunkRemaining) {
+      // reading sub part than first chunk
+      const result = firstChunk.subarray(
+        this.alreadyRead,
+        this.alreadyRead + resultLength,
+      )
+      this.alreadyRead += resultLength
+      return result
+    } else if (resultLength === firstChunkRemaining) {
+      // read exactly the remaining bytes of first chunk (and discard it)
+      const result = firstChunk.subarray(this.alreadyRead)
+      this.discardFirstChunk() // /!\ updates this.alreadyRead
+      return result
     }
 
     // reading more than one chunk, we will have to copy bytes into a larger
-    // buffer ("value")
-    const value = new Uint8Array(valueLength)
+    // buffer
+    const result = new Uint8Array(resultLength)
 
-    // This is the index, within "value" at which data can be written in the
+    // Copy all the remaining of first chunk into "result"
+    copy(result, 0, firstChunk, this.alreadyRead, firstChunkRemaining)
+    this.discardFirstChunk()
+
+    // This is the index, within "result" at which data can be written in the
     // loop below. Before the loop begins, this is exactly the remaining bytes
     // to be copied from the first chunk.
-    let valueIndex = firstChunk.byteLength - this.alreadyRead
-
-    // Copy all the remaining of first chunk into "value"
-    value.set(new Uint8Array(firstChunk.buffer, firstChunkOffset, valueIndex))
-    this.discardFirstChunk()
+    let resultIndex = firstChunkRemaining
 
     // Copy more chunks as needed. We use a "do-while" since we know we are
     // reading more than one chunk (the condition will always be true on first
     // iteration)
     do {
-      const toRead = valueLength - valueIndex
+      const missingLength = resultLength - resultIndex
 
-      const chunk = this.chunks[0]!
-      if (toRead < chunk.byteLength) {
-        // we are at the last chunk. partially copy the chunk
-        const view = new Uint8Array(chunk.buffer, chunk.byteOffset, toRead)
-        value.set(view, valueIndex)
-        this.alreadyRead = toRead
-        valueIndex += toRead
-        break // No need to evaluate the "while" condition (we know we're done)
-      } else {
+      const currentChunk = this.chunks[0]!
+      if (missingLength >= currentChunk.byteLength) {
         // copy (and discard) the whole chunk
-        value.set(chunk, valueIndex)
-        valueIndex += chunk.byteLength
+        copy(result, resultIndex, currentChunk)
         this.discardFirstChunk()
+        resultIndex += currentChunk.byteLength
+      } else {
+        // the current chunk has more bytes than we need (missingLength), so we
+        // copy only what we need and update "alreadyRead" accordingly
+        copy(result, resultIndex, currentChunk, 0, missingLength)
+        this.alreadyRead = missingLength
+        resultIndex += missingLength
+        break // we're done (no need to eval the loop condition)
       }
-    } while (valueIndex < valueLength)
+    } while (resultIndex < resultLength)
 
-    return value
+    return result
   }
 
   private async readUntilBuffered(bytesToRead: number) {
     if (this.isDone) return
-    while (this.availableByteLength < bytesToRead) {
+    while (this.bufferedByteLength < bytesToRead) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
@@ -347,7 +357,21 @@ class BufferedReader implements BytesReader {
 
   private clearChunks() {
     this.alreadyRead = 0
-    this.chunksByteLength = 0
     this.chunks.length = 0
+    this.chunksByteLength = 0
   }
+}
+
+function copy(
+  dest: Uint8Array,
+  destOffset: number,
+  src: Uint8Array,
+  srcOffset: number = 0,
+  length: number = src.byteLength - srcOffset,
+) {
+  const srcView =
+    srcOffset === 0 && length === src.byteLength
+      ? src // No need to create a view of the source if we're using all of it
+      : src.subarray(srcOffset, srcOffset + length)
+  dest.set(srcView, destOffset)
 }
