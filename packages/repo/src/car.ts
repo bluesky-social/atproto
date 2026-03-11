@@ -233,6 +233,11 @@ class Ui8Reader implements BytesReader {
   async close(): Promise<void> {}
 }
 
+/**
+ * This code was optimized for performance. See
+ * {@link https://github.com/bluesky-social/atproto/pull/4729 #4729} for more details
+ * and benchmarks.
+ */
 class BufferedReader implements BytesReader {
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
