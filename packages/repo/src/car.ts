@@ -262,7 +262,10 @@ class BufferedReader implements BytesReader {
    * read()s to be processed in fifo order.
    */
   async read(bytesToRead: number): Promise<Uint8Array> {
-    await this.readUntilBuffered(bytesToRead)
+    let bytesNeeded = bytesToRead - this.bufferedByteLength
+    if (bytesNeeded > 0 && !this.isDone) {
+      bytesNeeded -= await this.readUntilBuffered(bytesNeeded)
+    }
 
     const resultLength = Math.min(bytesToRead, this.bufferedByteLength)
     if (resultLength <= 0) return new Uint8Array()
@@ -296,19 +299,19 @@ class BufferedReader implements BytesReader {
     return result
   }
 
-  private async readUntilBuffered(bytesToRead: number) {
-    if (this.isDone) return
-    bytesToRead -= this.bufferedByteLength
-    while (bytesToRead > 0) {
+  private async readUntilBuffered(bytesNeeded: number) {
+    let bytesRead = 0
+    while (bytesRead < bytesNeeded) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
         break
       } else {
         this.chunks.push(next.value)
-        bytesToRead -= next.value.byteLength
+        bytesRead += next.value.byteLength
       }
     }
+    return bytesRead
   }
 
   private consumeChunk(bytesToConsume: number) {
