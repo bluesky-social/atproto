@@ -88,6 +88,8 @@ export interface FailedEvent {
   $type?: 'tools.ozone.moderation.emitEvents#failedEvent'
   /** Error message describing the reason for failure. */
   error: string
+  /** Typed error identifier for programmatic handling. Omitted when the error is unexpected/uncategorized. */
+  errorName?: 'InvalidSubject' | (string & {})
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>

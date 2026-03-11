@@ -1,4 +1,5 @@
 import { chunkArray } from '@atproto/common'
+import { XRPCError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { ModEventView } from '../../lexicon/types/tools/ozone/moderation/defs'
@@ -54,16 +55,21 @@ export default function (server: Server, ctx: AppContext) {
           } else {
             const idx = results.indexOf(settled)
             const subject = chunk[idx]
-            const errorMessage =
-              settled.reason instanceof Error
-                ? settled.reason.message
-                : String(settled.reason)
             httpLogger.error(
               { err: settled.reason, subject },
               'failed to emit bulk moderation event',
             )
+            const errorMessage =
+              settled.reason instanceof Error
+                ? settled.reason.message
+                : String(settled.reason)
+            const errorName =
+              settled.reason instanceof XRPCError
+                ? settled.reason.customErrorName
+                : undefined
             failedEvents.push({
               error: errorMessage,
+              errorName: errorName,
               subject: subject.subject,
             })
           }

@@ -17607,6 +17607,12 @@ export const schemaDict = {
             type: 'string',
             description: 'Error message describing the reason for failure.',
           },
+          errorName: {
+            type: 'string',
+            description:
+              'Typed error identifier for programmatic handling. Omitted when the error is unexpected/uncategorized.',
+            knownValues: ['InvalidSubject'],
+          },
           subject: {
             type: 'union',
             description: 'The subject from the failed event input.',

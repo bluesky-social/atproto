@@ -89,12 +89,12 @@ export const validateSubjectForEvent = ({
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
 
   if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
-    throw new InvalidRequestError('Invalid subject type')
+    throw new InvalidRequestError('Invalid subject type', 'InvalidSubject')
   }
 
   if (isAgeAssuranceOverrideEvent(event)) {
     if (!subject.isRepo()) {
-      throw new InvalidRequestError('Invalid subject type')
+      throw new InvalidRequestError('Invalid subject type', 'InvalidSubject')
     }
     if (!auth.credentials.isModerator) {
       throw new AuthRequiredError(
@@ -105,7 +105,7 @@ export const validateSubjectForEvent = ({
 
   if (isRevokeAccountCredentialsEvent(event)) {
     if (!subject.isRepo()) {
-      throw new InvalidRequestError('Invalid subject type')
+      throw new InvalidRequestError('Invalid subject type', 'InvalidSubject')
     }
 
     if (!auth.credentials.isAdmin) {
