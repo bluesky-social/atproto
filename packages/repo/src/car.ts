@@ -233,6 +233,11 @@ class Ui8Reader implements BytesReader {
   async close(): Promise<void> {}
 }
 
+/**
+ * This code was optimized for performance. See
+ * {@link https://github.com/bluesky-social/atproto/pull/4729 #4729} for more details
+ * and benchmarks.
+ */
 class BufferedReader implements BytesReader {
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
@@ -262,7 +267,10 @@ class BufferedReader implements BytesReader {
    * read()s to be processed in fifo order.
    */
   async read(bytesToRead: number): Promise<Uint8Array> {
-    await this.readUntilBuffered(bytesToRead)
+    const bytesNeeded = bytesToRead - this.bufferedByteLength
+    if (bytesNeeded > 0 && !this.isDone) {
+      await this.readUntilBuffered(bytesNeeded)
+    }
 
     const resultLength = Math.min(bytesToRead, this.bufferedByteLength)
     if (resultLength <= 0) return new Uint8Array()
@@ -296,19 +304,19 @@ class BufferedReader implements BytesReader {
     return result
   }
 
-  private async readUntilBuffered(bytesToRead: number) {
-    if (this.isDone) return
-    bytesToRead -= this.bufferedByteLength
-    while (bytesToRead > 0) {
+  private async readUntilBuffered(bytesNeeded: number) {
+    let bytesRead = 0
+    while (bytesRead < bytesNeeded) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
         break
       } else {
         this.chunks.push(next.value)
-        bytesToRead -= next.value.byteLength
+        bytesRead += next.value.byteLength
       }
     }
+    return bytesRead
   }
 
   private consumeChunk(bytesToConsume: number) {
