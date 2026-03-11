@@ -234,9 +234,11 @@ class Ui8Reader implements BytesReader {
 }
 
 class BufferedReader implements BytesReader {
-  buffer: Uint8Array = new Uint8Array()
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
+
+  /** fifo list of chunks to consume */
+  private chunks: Uint8Array[] = []
 
   constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
     this.iterator =
@@ -245,32 +247,107 @@ class BufferedReader implements BytesReader {
         : stream[Symbol.iterator]()
   }
 
+  /** Number of bytes currently buffered and available for reading */
+  get bufferedByteLength() {
+    let total = 0
+    for (let i = 0; i < this.chunks.length; i++) {
+      total += this.chunks[i].byteLength
+    }
+    return total
+  }
+
+  /**
+   * @note concurrent reads are **NOT** supported by the current implementation
+   * and would require call to readUntilBuffered to be using a fifo lock for
+   * read()s to be processed in fifo order.
+   */
   async read(bytesToRead: number): Promise<Uint8Array> {
     await this.readUntilBuffered(bytesToRead)
-    const value = this.buffer.subarray(0, bytesToRead)
-    this.buffer = this.buffer.subarray(bytesToRead)
-    return value
+
+    const resultLength = Math.min(bytesToRead, this.bufferedByteLength)
+    if (resultLength <= 0) return new Uint8Array()
+
+    const firstChunk = this.consumeChunk(resultLength)
+    if (firstChunk.byteLength === resultLength) {
+      // If the data consumed from the first chunk contains all we need, return
+      // it as-is. This allows to avoid any copy operation.
+      return firstChunk
+    }
+
+    // The first chunk does not have all the data we need. We have to copy
+    // multiple chunks into a larger buffer
+    const result = new Uint8Array(resultLength)
+    let resultWriteIndex = 0
+
+    // Copy the first chunk into the result buffer
+    result.set(firstChunk, resultWriteIndex)
+    resultWriteIndex += firstChunk.byteLength
+
+    // Copy more chunks as needed (we use do-while because we *know* we need
+    // more than one chunk)
+    do {
+      const missingLength = resultLength - resultWriteIndex
+      const currentChunk = this.consumeChunk(missingLength)
+
+      result.set(currentChunk, resultWriteIndex)
+      resultWriteIndex += currentChunk.byteLength
+    } while (resultWriteIndex < resultLength)
+
+    return result
   }
 
   private async readUntilBuffered(bytesToRead: number) {
-    if (this.isDone) {
-      return
-    }
-    while (this.buffer.length < bytesToRead) {
+    if (this.isDone) return
+    bytesToRead -= this.bufferedByteLength
+    while (bytesToRead > 0) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
-        return
+        break
+      } else {
+        this.chunks.push(next.value)
+        bytesToRead -= next.value.byteLength
       }
-      this.buffer = ui8.concat([this.buffer, next.value])
+    }
+  }
+
+  private consumeChunk(bytesToConsume: number) {
+    const firstChunk = this.chunks[0]!
+    if (bytesToConsume < firstChunk.byteLength) {
+      // return a sub-view of the data being read and replace the first chunk
+      // with a sub-view that does not contain that data.
+
+      // @NOTE for some reason, subarray() revealed to be 7-8% slower in NodeJS
+      // benchmarks.
+
+      // this.chunks[0] = firstChunk.subarray(bytesToConsume)
+      // return firstChunk.subarray(0, bytesToConsume)
+
+      this.chunks[0] = new Uint8Array(
+        firstChunk.buffer,
+        firstChunk.byteOffset + bytesToConsume,
+        firstChunk.byteLength - bytesToConsume,
+      )
+      return new Uint8Array(
+        firstChunk.buffer,
+        firstChunk.byteOffset,
+        bytesToConsume,
+      )
+    } else {
+      // First chunk is being read in full, discard it
+      this.chunks.shift()
+      return firstChunk
     }
   }
 
   async close(): Promise<void> {
-    if (!this.isDone && this.iterator.return) {
-      await this.iterator.return()
+    try {
+      if (!this.isDone && this.iterator.return) {
+        await this.iterator.return()
+      }
+    } finally {
+      this.isDone = true
+      this.chunks.length = 0
     }
-    this.isDone = true
-    this.buffer = new Uint8Array()
   }
 }
