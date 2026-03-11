@@ -17639,6 +17639,12 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'InvalidLabel',
+            description: 'One or more labels contain invalid characters.',
+          },
+        ],
       },
       subjectEntry: {
         type: 'object',

@@ -5301,12 +5301,11 @@ export class ToolsOzoneModerationNS {
     data?: ToolsOzoneModerationEmitEvents.InputSchema,
     opts?: ToolsOzoneModerationEmitEvents.CallOptions,
   ): Promise<ToolsOzoneModerationEmitEvents.Response> {
-    return this._client.call(
-      'tools.ozone.moderation.emitEvents',
-      opts?.qp,
-      data,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.moderation.emitEvents', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneModerationEmitEvents.toKnownErr(e)
+      })
   }
 
   getAccountTimeline(

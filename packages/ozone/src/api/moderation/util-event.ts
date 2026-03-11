@@ -441,7 +441,7 @@ const validateLabels = (labels: string[]) => {
   for (const label of labels) {
     for (const char of badChars) {
       if (label.includes(char)) {
-        throw new InvalidRequestError(`Invalid label: ${label}`)
+        throw new InvalidRequestError(`Invalid label: ${label}`, 'InvalidLabel')
       }
     }
   }
