@@ -192,18 +192,17 @@ export type ActiveReportAssignment = {
   assignedAt: string
 }
 
-export async function getActiveReportAssignments(
+export async function getPermanentReportAssignments(
   db: Database,
   reportIds: number[],
 ): Promise<Map<number, ActiveReportAssignment>> {
   if (!reportIds.length) return new Map()
 
-  const now = new Date().toISOString()
   const rows = await db.db
     .selectFrom('moderator_assignment')
     .select(['reportId', 'did', 'startAt'])
     .where('reportId', 'in', reportIds)
-    .where('endAt', '>', now)
+    .where('endAt', 'is', null)
     .execute()
 
   const result = new Map<number, ActiveReportAssignment>()

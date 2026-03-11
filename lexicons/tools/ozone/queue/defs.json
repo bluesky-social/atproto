@@ -130,6 +130,11 @@
           "type": "string",
           "format": "did"
         },
+        "moderator": {
+          "type": "ref",
+          "ref": "tools.ozone.team.defs#member",
+          "description": "The moderator assigned to this queue"
+        },
         "queue": {
           "type": "ref",
           "ref": "#queueView"

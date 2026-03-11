@@ -5,7 +5,9 @@ import { Database } from '../db'
 import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 import { ReportQueue } from '../db/schema/report_queue'
-import { QueueServiceCreator } from '../queue/service'
+import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
+import { QueueService, QueueServiceCreator } from '../queue/service'
+import { TeamService, TeamServiceCreator } from '../team'
 
 export interface AssignmentServiceOpts {
   queueDurationMs: number
@@ -38,6 +40,7 @@ export interface AssignReportInput {
   did: string
   reportId: number
   queueId?: number | null
+  isPermanent?: boolean
 }
 export interface UnassignReportInput {
   reportId: number
@@ -56,12 +59,35 @@ type AssignmentRowWithQueue = Selectable<ModeratorAssignment> & {
   queueDeletedAt: string | null
 }
 
+export type AssignmentServiceCreator = (db: Database) => AssignmentService
+
 export class AssignmentService {
   constructor(
     public db: Database,
     public opts: AssignmentServiceOpts,
-    public queueServiceCreator: QueueServiceCreator,
+    private queueService: QueueService,
+    private teamService: TeamService,
   ) {}
+
+  static creator(
+    opts: AssignmentServiceOpts,
+    queueServiceCreator: QueueServiceCreator,
+    teamServiceCreator: TeamServiceCreator,
+  ): AssignmentServiceCreator {
+    return (db: Database) =>
+      new AssignmentService(
+        db,
+        opts,
+        queueServiceCreator(db),
+        teamServiceCreator(db),
+      )
+  }
+
+  private async fetchMemberViews(
+    dids: string[],
+  ): Promise<Map<string, TeamMember>> {
+    return this.teamService.viewByDids(dids)
+  }
 
   async getQueueAssignments(input: GetQueueAssignmentsInput): Promise<{
     assignments: ToolsOzoneQueueDefs.AssignmentView[]
@@ -120,9 +146,12 @@ export class AssignmentService {
     })
 
     const results = await paginatedQuery.execute()
+    const memberViews = await this.fetchMemberViews(results.map((r) => r.did))
 
     return {
-      assignments: results.map((row) => this.viewQueueAssignment(row)),
+      assignments: results.map((row) =>
+        this.viewQueueAssignment(row, memberViews.get(row.did)),
+      ),
       cursor: keyset.packFromResult(results),
     }
   }
@@ -157,7 +186,10 @@ export class AssignmentService {
       .where('reportId', 'is not', null)
 
     if (onlyActive) {
-      query = query.where('endAt', '>', new Date().toISOString())
+      const now = new Date().toISOString()
+      query = query.where((qb) =>
+        qb.where('endAt', '>', now).orWhere('endAt', 'is', null),
+      )
     }
 
     if (reportIds?.length) {
@@ -186,9 +218,12 @@ export class AssignmentService {
     })
 
     const results = await paginatedQuery.execute()
+    const memberViews = await this.fetchMemberViews(results.map((r) => r.did))
 
     return {
-      assignments: results.map((row) => this.viewReportAssignment(row)),
+      assignments: results.map((row) =>
+        this.viewReportAssignment(row, memberViews.get(row.did)),
+      ),
       cursor: keyset.packFromResult(results),
     }
   }
@@ -273,15 +308,15 @@ export class AssignmentService {
       .where('moderator_assignment.id', '=', result.id)
       .executeTakeFirstOrThrow()
 
-    return this.viewQueueAssignment(row)
+    const memberViews = await this.fetchMemberViews([result.did])
+    return this.viewQueueAssignment(row, memberViews.get(result.did))
   }
 
   async assignReport(
     input: AssignReportInput,
   ): Promise<ToolsOzoneReportDefs.AssignmentView> {
-    const { did, reportId, queueId } = input
+    const { did, reportId, queueId, isPermanent = false } = input
     const now = new Date()
-    const endAt = new Date(now.getTime() + this.opts.reportDurationMs)
 
     // Check report and queue since we aren't using foreign keys
     await this.checkReport(reportId)
@@ -291,11 +326,76 @@ export class AssignmentService {
 
     // Make assignment
     const result = await this.db.transaction(async (dbTxn) => {
+      if (isPermanent) {
+        // Check for an existing permanent assignment (endAt IS NULL)
+        const permanentExisting = await dbTxn.db
+          .selectFrom('moderator_assignment')
+          .selectAll()
+          .where('reportId', '=', reportId)
+          .where('endAt', 'is', null)
+          .executeTakeFirst()
+
+        if (permanentExisting) {
+          if (permanentExisting.did !== did) {
+            throw new InvalidRequestError(
+              'Report already assigned',
+              'AlreadyAssigned',
+            )
+          }
+          // Same user — update queueId if provided
+          return dbTxn.db
+            .updateTable('moderator_assignment')
+            .set({ queueId: queueId ?? permanentExisting.queueId ?? null })
+            .where('id', '=', permanentExisting.id)
+            .returningAll()
+            .executeTakeFirstOrThrow()
+        }
+
+        // Upgrade an existing active (non-permanent) assignment to permanent
+        const activeExisting = await dbTxn.db
+          .selectFrom('moderator_assignment')
+          .selectAll()
+          .where('reportId', '=', reportId)
+          .where('endAt', '>', now.toISOString())
+          .executeTakeFirst()
+
+        if (activeExisting) {
+          return dbTxn.db
+            .updateTable('moderator_assignment')
+            .set({
+              did,
+              endAt: null,
+              queueId: queueId ?? activeExisting.queueId ?? null,
+            })
+            .where('id', '=', activeExisting.id)
+            .returningAll()
+            .executeTakeFirstOrThrow()
+        }
+
+        // Create new permanent assignment
+        return dbTxn.db
+          .insertInto('moderator_assignment')
+          .values({
+            did,
+            reportId,
+            queueId: queueId,
+            startAt: now.toISOString(),
+            endAt: null,
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow()
+      }
+
+      // Non-permanent: find any active or permanent assignment
       const existing = await dbTxn.db
         .selectFrom('moderator_assignment')
         .selectAll()
         .where('reportId', '=', reportId)
-        .where('endAt', '>', now.toISOString())
+        .where((qb) =>
+          qb
+            .where('endAt', '>', now.toISOString())
+            .orWhere('endAt', 'is', null),
+        )
         .executeTakeFirst()
 
       if (existing) {
@@ -305,30 +405,36 @@ export class AssignmentService {
             'AlreadyAssigned',
           )
         }
-        const updated = await dbTxn.db
+        // Refresh the expiry unless the assignment is already permanent
+        const newEndAt =
+          existing.endAt === null
+            ? null
+            : new Date(now.getTime() + this.opts.reportDurationMs).toISOString()
+        return dbTxn.db
           .updateTable('moderator_assignment')
           .set({
-            endAt: endAt.toISOString(),
+            endAt: newEndAt,
             queueId: queueId ?? existing.queueId ?? null,
           })
           .where('id', '=', existing.id)
           .returningAll()
           .executeTakeFirstOrThrow()
-        return updated
-      } else {
-        const created = await dbTxn.db
-          .insertInto('moderator_assignment')
-          .values({
-            did,
-            reportId,
-            queueId: queueId,
-            startAt: now.toISOString(),
-            endAt: endAt.toISOString(),
-          })
-          .returningAll()
-          .executeTakeFirstOrThrow()
-        return created
       }
+
+      const endAt = new Date(
+        now.getTime() + this.opts.reportDurationMs,
+      ).toISOString()
+      return dbTxn.db
+        .insertInto('moderator_assignment')
+        .values({
+          did,
+          reportId,
+          queueId: queueId,
+          startAt: now.toISOString(),
+          endAt,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow()
     })
 
     return this.hydrateReportAssignment(result.id)
@@ -347,7 +453,11 @@ export class AssignmentService {
         .selectFrom('moderator_assignment')
         .selectAll()
         .where('reportId', '=', reportId)
-        .where('endAt', '>', now.toISOString())
+        .where((qb) =>
+          qb
+            .where('endAt', '>', now.toISOString())
+            .orWhere('endAt', 'is', null),
+        )
         .executeTakeFirst()
 
       if (!existing) {
@@ -419,7 +529,8 @@ export class AssignmentService {
       .where('moderator_assignment.id', '=', assignmentId)
       .executeTakeFirstOrThrow()
 
-    return this.viewReportAssignment(row)
+    const memberViews = await this.fetchMemberViews([row.did])
+    return this.viewReportAssignment(row, memberViews.get(row.did))
   }
 
   queueFromJoined(
@@ -446,8 +557,9 @@ export class AssignmentService {
 
   viewQueueAssignment(
     row: AssignmentRowWithQueue,
+    member?: TeamMember,
   ): ToolsOzoneQueueDefs.AssignmentView {
-    const queueService = this.queueServiceCreator(this.db)
+    const queueService = this.queueService
 
     const queue = this.queueFromJoined(row)
     const queueView = queue ? queueService.view(queue) : undefined
@@ -458,16 +570,18 @@ export class AssignmentService {
     return {
       id: row.id,
       did: row.did,
+      ...(member ? { moderator: member } : {}),
       queue: queueView,
       startAt: row.startAt,
-      endAt: row.endAt,
+      endAt: row.endAt ?? '',
     }
   }
 
   viewReportAssignment(
     row: AssignmentRowWithQueue,
+    member?: TeamMember,
   ): ToolsOzoneReportDefs.AssignmentView {
-    const queueService = this.queueServiceCreator(this.db)
+    const queueService = this.queueService
 
     const queue = this.queueFromJoined(row)
     const queueView = queue ? queueService.view(queue) : undefined
@@ -475,10 +589,11 @@ export class AssignmentService {
     return {
       id: row.id,
       did: row.did,
+      ...(member ? { moderator: member } : {}),
       reportId: row.reportId!,
       ...(queueView ? { queue: queueView } : {}),
       startAt: row.startAt,
-      endAt: row.endAt,
+      ...(row.endAt !== null ? { endAt: row.endAt } : {}),
     }
   }
 }

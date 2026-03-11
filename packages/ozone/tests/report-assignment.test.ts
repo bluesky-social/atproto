@@ -129,8 +129,8 @@ describe('report-assignment', () => {
     const reportId = await createReport()
     const assignment = await assignReport({ reportId }, 'moderator')
     expect(assignment.reportId).toBe(reportId)
-    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
+    expect(assignment.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
+    expect(new Date(assignment.endAt!).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
   })
@@ -139,9 +139,9 @@ describe('report-assignment', () => {
     const reportId = await createReport()
     const assignment1 = await assignReport({ reportId }, 'moderator')
     const assignment2 = await assignReport({ reportId }, 'moderator')
-    expect(assignment2.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment2.endAt).getTime()).toBeGreaterThan(
-      new Date(assignment1.endAt).getTime(),
+    expect(assignment2.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
+    expect(new Date(assignment2.endAt!).getTime()).toBeGreaterThan(
+      new Date(assignment1.endAt!).getTime(),
     )
   })
 
@@ -149,7 +149,7 @@ describe('report-assignment', () => {
     const reportId = await createReport()
     await assignReport({ reportId }, 'moderator')
     const assignment = await unassignReport({ reportId }, 'moderator')
-    expect(new Date(assignment.endAt).getTime()).toBeLessThanOrEqual(
+    expect(new Date(assignment.endAt!).getTime()).toBeLessThanOrEqual(
       new Date().getTime(),
     )
   })
@@ -160,8 +160,8 @@ describe('report-assignment', () => {
     await unassignReport({ reportId }, 'moderator')
     const assignment = await assignReport({ reportId }, 'moderator')
     expect(assignment.reportId).toBe(reportId)
-    expect(assignment.did).toBe(network.ozone.moderatorAccnt.did)
-    expect(new Date(assignment.endAt).getTime()).toBeGreaterThanOrEqual(
+    expect(assignment.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
+    expect(new Date(assignment.endAt!).getTime()).toBeGreaterThanOrEqual(
       new Date().getTime(),
     )
   })
@@ -277,7 +277,9 @@ describe('report-assignment', () => {
         limit: 1,
       })
       expect(result.assignments.length).toBe(1)
-      expect(result.assignments[0].did).toBe(network.ozone.adminAccnt.did)
+      expect(result.assignments[0].moderator?.did).toBe(
+        network.ozone.adminAccnt.did,
+      )
       expect(result.cursor).toBeDefined()
 
       const nextPage = await getAssignments({
@@ -286,7 +288,9 @@ describe('report-assignment', () => {
         cursor: result.cursor,
       })
       expect(nextPage.assignments.length).toBe(1)
-      expect(nextPage.assignments[0].did).toBe(network.ozone.adminAccnt.did)
+      expect(nextPage.assignments[0].moderator?.did).toBe(
+        network.ozone.adminAccnt.did,
+      )
     })
   })
 
@@ -324,5 +328,74 @@ describe('report-assignment', () => {
     await expect(assignReport({ reportId }, 'admin')).rejects.toThrow(
       'Report already assigned',
     )
+  })
+
+  describe('isPermanent', () => {
+    it('creates a permanent assignment with no endAt', async () => {
+      const reportId = await createReport()
+      const assignment = await assignReport(
+        { reportId, isPermanent: true },
+        'moderator',
+      )
+      expect(assignment.reportId).toBe(reportId)
+      expect(assignment.endAt).toBeUndefined()
+    })
+
+    it('upgrades an active assignment to permanent', async () => {
+      const reportId = await createReport()
+      const temp = await assignReport({ reportId }, 'moderator')
+      expect(temp.endAt).toBeDefined()
+
+      const permanent = await assignReport(
+        { reportId, isPermanent: true },
+        'moderator',
+      )
+      expect(permanent.id).toBe(temp.id)
+      expect(permanent.endAt).toBeUndefined()
+    })
+
+    it('permanent assignment is unassignable', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true }, 'moderator')
+      const unassigned = await unassignReport({ reportId }, 'moderator')
+      expect(new Date(unassigned.endAt!).getTime()).toBeLessThanOrEqual(
+        new Date().getTime(),
+      )
+    })
+
+    it('throws AlreadyAssigned when another user has a permanent assignment', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true }, 'moderator')
+      await expect(
+        assignReport({ reportId, isPermanent: true }, 'admin'),
+      ).rejects.toThrow('Report already assigned')
+    })
+
+    it('throws AlreadyAssigned for non-permanent assignment when another user holds permanent', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true }, 'moderator')
+      await expect(assignReport({ reportId }, 'admin')).rejects.toThrow(
+        'Report already assigned',
+      )
+    })
+
+    it('same user can call isPermanent again idempotently', async () => {
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true }, 'moderator')
+      const again = await assignReport(
+        { reportId, isPermanent: true },
+        'moderator',
+      )
+      expect(again.endAt).toBeUndefined()
+    })
+
+    it('permanent assignment appears in onlyActive filter', async () => {
+      await clearAssignments()
+      const reportId = await createReport()
+      await assignReport({ reportId, isPermanent: true }, 'moderator')
+      const result = await getAssignments({ reportIds: [reportId] })
+      expect(result.assignments.length).toBe(1)
+      expect(result.assignments[0].endAt).toBeUndefined()
+    })
   })
 })

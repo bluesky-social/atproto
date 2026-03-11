@@ -18949,6 +18949,11 @@ export const schemaDict = {
             type: 'string',
             format: 'did',
           },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'The moderator assigned to this queue',
+          },
           queue: {
             type: 'ref',
             ref: 'lex:tools.ozone.queue.defs#queueView',
@@ -19215,6 +19220,11 @@ export const schemaDict = {
                 description:
                   'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
               },
+              isPermanent: {
+                type: 'boolean',
+                description:
+                  'When true, the assignment has no expiry (endAt is null). Throws AlreadyAssigned if another user already has a permanent assignment on this report.',
+              },
             },
           },
         },
@@ -19455,12 +19465,17 @@ export const schemaDict = {
         type: 'object',
         description:
           'Information about the moderator currently assigned to a report.',
-        required: ['profile', 'assignedAt'],
+        required: ['did', 'assignedAt'],
         properties: {
-          profile: {
-            type: 'union',
-            refs: [],
-            description: 'Profile of the assigned moderator',
+          did: {
+            type: 'string',
+            format: 'did',
+            description: 'DID of the assigned moderator',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'Full member record of the assigned moderator',
           },
           assignedAt: {
             type: 'string',
@@ -19578,7 +19593,7 @@ export const schemaDict = {
       },
       assignmentView: {
         type: 'object',
-        required: ['id', 'did', 'reportId', 'startAt', 'endAt'],
+        required: ['id', 'did', 'reportId', 'startAt'],
         properties: {
           id: {
             type: 'integer',
@@ -19586,6 +19601,11 @@ export const schemaDict = {
           did: {
             type: 'string',
             format: 'did',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description: 'The moderator assigned to this report',
           },
           queue: {
             type: 'ref',

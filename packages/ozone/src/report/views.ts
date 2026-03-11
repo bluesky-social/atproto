@@ -5,6 +5,7 @@ import {
   RecordViewDetail,
   RepoView,
 } from '../lexicon/types/tools/ozone/moderation/defs'
+import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
 import { ActiveReportAssignment, ReportWithEvent } from '../mod-service/report'
 import { ParsedLabelers } from '../util'
 
@@ -29,6 +30,7 @@ export type HydratedReport = {
   profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
   assignments: Map<number, ActiveReportAssignment>
   queues: Map<number, ToolsOzoneQueueDefs.QueueView>
+  memberViews: Map<string, TeamMember>
 }
 
 export async function hydrateReportInfo(
@@ -41,6 +43,7 @@ export async function hydrateReportInfo(
   getQueues: (
     queueIds: number[],
   ) => Promise<Map<number, ToolsOzoneQueueDefs.QueueView>>,
+  getTeamMembers: (dids: string[]) => Promise<Map<string, TeamMember>>,
   labelers: ParsedLabelers,
 ): Promise<HydratedReport> {
   // Fetch assignments first to include assignee DIDs in the profile fetch
@@ -49,6 +52,7 @@ export async function hydrateReportInfo(
   const dids = new Set<string>()
   const uris = new Set<string>()
   const queueIds = new Set<number>()
+  const assignmentDids: string[] = []
 
   for (const report of reports) {
     dids.add(report.subjectDid)
@@ -58,10 +62,11 @@ export async function hydrateReportInfo(
   }
   for (const assignment of assignments.values()) {
     dids.add(assignment.did)
+    assignmentDids.push(assignment.did)
   }
 
   const didsArray = Array.from(dids)
-  const [partialRepos, accountInfo, recordInfo, profiles, queues] =
+  const [partialRepos, accountInfo, recordInfo, profiles, queues, memberViews] =
     await Promise.all([
       views.repoDetails(didsArray, labelers),
       getAccountInfos(didsArray),
@@ -71,6 +76,7 @@ export async function hydrateReportInfo(
       ),
       views.getProfiles(didsArray),
       getQueues(Array.from(queueIds)),
+      getTeamMembers(assignmentDids),
     ])
 
   return {
@@ -80,6 +86,7 @@ export async function hydrateReportInfo(
     profiles,
     assignments,
     queues,
+    memberViews,
   }
 }
 
@@ -95,6 +102,7 @@ export function buildReportView(
     profiles,
     assignments,
     queues,
+    memberViews,
   } = hydrated
   const isRecord = !!report.subjectUri
   const did = report.subjectDid
@@ -155,19 +163,13 @@ export function buildReportView(
   }
 
   const activeAssignment = assignments.get(report.id)
-  const assigneeProfile = activeAssignment
-    ? profiles.get(activeAssignment.did)
+  const assignmentView = activeAssignment
+    ? {
+        did: activeAssignment.did,
+        moderator: memberViews.get(activeAssignment.did),
+        assignedAt: activeAssignment.assignedAt,
+      }
     : undefined
-  const assignmentView =
-    activeAssignment && assigneeProfile
-      ? {
-          profile: {
-            $type: 'app.bsky.actor.defs#profileViewDetailed' as const,
-            ...assigneeProfile,
-          },
-          assignedAt: activeAssignment.assignedAt,
-        }
-      : undefined
 
   return {
     id: report.id,

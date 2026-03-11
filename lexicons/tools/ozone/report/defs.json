@@ -222,12 +222,17 @@
     "reportAssignment": {
       "type": "object",
       "description": "Information about the moderator currently assigned to a report.",
-      "required": ["profile", "assignedAt"],
+      "required": ["did", "assignedAt"],
       "properties": {
-        "profile": {
-          "type": "union",
-          "refs": [],
-          "description": "Profile of the assigned moderator"
+        "did": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the assigned moderator"
+        },
+        "moderator": {
+          "type": "ref",
+          "ref": "tools.ozone.team.defs#member",
+          "description": "Full member record of the assigned moderator"
         },
         "assignedAt": {
           "type": "string",
@@ -343,7 +348,7 @@
     },
     "assignmentView": {
       "type": "object",
-      "required": ["id", "did", "reportId", "startAt", "endAt"],
+      "required": ["id", "did", "reportId", "startAt"],
       "properties": {
         "id": {
           "type": "integer"
@@ -351,6 +356,11 @@
         "did": {
           "type": "string",
           "format": "did"
+        },
+        "moderator": {
+          "type": "ref",
+          "ref": "tools.ozone.team.defs#member",
+          "description": "The moderator assigned to this report"
         },
         "queue": {
           "type": "ref",

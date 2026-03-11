@@ -1,7 +1,7 @@
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import {
-  getActiveReportAssignments,
+  getPermanentReportAssignments,
   queryReports,
 } from '../../mod-service/report'
 import { buildReportView, hydrateReportInfo } from '../../report/views'
@@ -21,12 +21,14 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       const queueService = ctx.queueService(db)
+      const teamService = ctx.teamService(db)
       const hydrated = await hydrateReportInfo(
         reportsToReturn,
         modService.views,
         (dids) => getPdsAccountInfos(ctx, dids),
-        (reportIds) => getActiveReportAssignments(db, reportIds),
+        (reportIds) => getPermanentReportAssignments(db, reportIds),
         (queueIds) => queueService.getViewsByIds(queueIds),
+        (dids) => teamService.viewByDids(dids),
         labelers,
       )
 
