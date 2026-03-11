@@ -237,14 +237,8 @@ class BufferedReader implements BytesReader {
   iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>
   isDone = false
 
-  // @NOTE Ideally, this would be based on a fifo double linked list.
+  /** fifo list of chunks to consume */
   private chunks: Uint8Array[] = []
-
-  /** Number of bytes that were already consumed from the first {@link chunks} */
-  private alreadyRead = 0
-
-  /** Total bytes in {@link chunks} */
-  private chunksByteLength = 0
 
   constructor(stream: Iterable<Uint8Array> | AsyncIterable<Uint8Array>) {
     this.iterator =
@@ -255,120 +249,106 @@ class BufferedReader implements BytesReader {
 
   /** Number of bytes currently buffered and available for reading */
   get bufferedByteLength() {
-    return this.chunksByteLength - this.alreadyRead
+    let total = 0
+    for (let i = 0; i < this.chunks.length; i++) {
+      total += this.chunks[i].byteLength
+    }
+    return total
   }
 
+  /**
+   * @note concurrent reads are **NOT** supported by the current implementation
+   * and would require call to readUntilBuffered to be using a fifo lock for
+   * read()s to be processed in fifo order.
+   */
   async read(bytesToRead: number): Promise<Uint8Array> {
     await this.readUntilBuffered(bytesToRead)
 
     const resultLength = Math.min(bytesToRead, this.bufferedByteLength)
     if (resultLength <= 0) return new Uint8Array()
 
-    const firstChunk = this.chunks[0]!
-    const firstChunkStart = this.alreadyRead
-    const firstChunkRemaining = firstChunk.byteLength - firstChunkStart
-
-    if (firstChunkRemaining < 0) {
-      // Should never happen
-      throw new Error('Unexpected BufferedReader state')
+    const firstChunk = this.consumeChunk(resultLength)
+    if (firstChunk.byteLength === resultLength) {
+      // If the data consumed from the first chunk contains all we need, return
+      // it as-is. This allows to avoid any copy operation.
+      return firstChunk
     }
 
-    // If the data to be read is less or equal to the remaining bytes in the
-    // first chunk, return a sub array of that chunk.
-    if (resultLength < firstChunkRemaining) {
-      // partial read of first chunk
-      const firstChunkEnd = firstChunkStart + resultLength
-      this.alreadyRead = firstChunkEnd
-      return firstChunk.subarray(firstChunkStart, firstChunkEnd)
-    } else if (resultLength === firstChunkRemaining) {
-      // read exactly the remaining bytes of first chunk (and discard it)
-      this.discardFirstChunk() // updates this.alreadyRead
-      return firstChunk.subarray(firstChunkStart)
-    }
-
-    // reading more than one chunk, we will have to copy bytes into a larger
-    // buffer
+    // The first chunk does not have all the data we need. We have to copy
+    // multiple chunks into a larger buffer
     const result = new Uint8Array(resultLength)
+    let resultWriteIndex = 0
 
-    // Copy all the remaining of first chunk into "result"
-    copy(result, 0, firstChunk, firstChunkStart, firstChunkRemaining)
-    this.discardFirstChunk()
-
-    // This is the index, within "result" at which data can be written in the
-    // loop below. Before the loop begins, this is exactly the remaining bytes
-    // to be copied from the first chunk.
-    let resultIndex = firstChunkRemaining
+    result.set(firstChunk, resultWriteIndex)
+    resultWriteIndex += firstChunk.byteLength
 
     // Copy more chunks as needed. We use a "do-while" since we know we are
     // reading more than one chunk (the condition will always be true on first
     // iteration)
     do {
-      const missingLength = resultLength - resultIndex
+      const missingLength = resultLength - resultWriteIndex
+      const currentChunk = this.consumeChunk(missingLength)
 
-      const currentChunk = this.chunks[0]!
-      if (missingLength >= currentChunk.byteLength) {
-        // copy (and discard) the whole chunk
-        copy(result, resultIndex, currentChunk)
-        this.discardFirstChunk()
-        resultIndex += currentChunk.byteLength
-      } else {
-        // the current chunk has more bytes than we need (missingLength), so we
-        // copy only what we need and update "alreadyRead" accordingly
-        copy(result, resultIndex, currentChunk, 0, missingLength)
-        this.alreadyRead = missingLength
-        resultIndex += missingLength
-        break // we're done (no need to eval the loop condition)
-      }
-    } while (resultIndex < resultLength)
+      result.set(currentChunk, resultWriteIndex)
+      resultWriteIndex += currentChunk.byteLength
+    } while (resultWriteIndex < resultLength)
 
     return result
   }
 
   private async readUntilBuffered(bytesToRead: number) {
     if (this.isDone) return
-    while (this.bufferedByteLength < bytesToRead) {
+    bytesToRead -= this.bufferedByteLength
+    while (bytesToRead > 0) {
       const next = await this.iterator.next()
       if (next.done) {
         this.isDone = true
         break
       } else {
         this.chunks.push(next.value)
-        this.chunksByteLength += next.value.byteLength
+        bytesToRead -= next.value.byteLength
       }
     }
   }
 
-  async close(): Promise<void> {
-    if (!this.isDone && this.iterator.return) {
-      await this.iterator.return()
+  private consumeChunk(bytesToConsume: number) {
+    const { chunks } = this
+    const firstChunk = chunks[0]!
+    if (bytesToConsume < firstChunk.byteLength) {
+      // return a sub-view of the data being read and replace the first chunk
+      // with a sub-view that does not contain that data.
+
+      // @NOTE for some reason, subarray() revealed to be 7-8% slower in NodeJS
+      // benchmarks.
+
+      // chunks[0] = firstChunk.subarray(bytesToConsume)
+      // return firstChunk.subarray(0, bytesToConsume)
+
+      chunks[0] = new Uint8Array(
+        firstChunk.buffer,
+        firstChunk.byteOffset + bytesToConsume,
+        firstChunk.byteLength - bytesToConsume,
+      )
+      return new Uint8Array(
+        firstChunk.buffer,
+        firstChunk.byteOffset,
+        bytesToConsume,
+      )
+    } else {
+      // First chunk is being read in full, discard it
+      chunks.shift()
+      return firstChunk
     }
-    this.isDone = true
-    this.clearChunks()
   }
 
-  private discardFirstChunk() {
-    this.alreadyRead = 0
-    const chunk = this.chunks.shift()
-    if (chunk) this.chunksByteLength -= chunk.byteLength
+  async close(): Promise<void> {
+    try {
+      if (!this.isDone && this.iterator.return) {
+        await this.iterator.return()
+      }
+    } finally {
+      this.isDone = true
+      this.chunks.length = 0
+    }
   }
-
-  private clearChunks() {
-    this.alreadyRead = 0
-    this.chunks.length = 0
-    this.chunksByteLength = 0
-  }
-}
-
-function copy(
-  dest: Uint8Array,
-  destOffset: number,
-  src: Uint8Array,
-  srcOffset: number = 0,
-  length: number = src.byteLength - srcOffset,
-) {
-  const srcView =
-    srcOffset === 0 && length === src.byteLength
-      ? src // No need to create a view of the source if we're using all of it
-      : src.subarray(srcOffset, srcOffset + length)
-  dest.set(srcView, destOffset)
 }
