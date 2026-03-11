@@ -66,7 +66,7 @@ export const validateSubjectForEvent = ({
   auth: ModeratorOutput | AdminTokenOutput
 }): void => {}
 
-interface InputSchema {
+export interface InputSchema {
   event:
     | $Typed<ToolsOzoneModerationDefs.ModEventTakedown>
     | $Typed<ToolsOzoneModerationDefs.ModEventAcknowledge>

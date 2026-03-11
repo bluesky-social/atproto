@@ -1,17 +1,15 @@
-import { isModEventDivert } from '@atproto/api/dist/client/types/tools/ozone/moderation/defs'
 import { chunkArray } from '@atproto/common'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import { InputSchema } from '../../lexicon/types/tools/ozone/moderation/emitEvents'
 import { ModEventView } from '../../lexicon/types/tools/ozone/moderation/defs'
-import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
+import { InputSchema } from '../../lexicon/types/tools/ozone/moderation/emitEvents'
 import { httpLogger } from '../../logger'
+import { subjectFromInput } from '../../mod-service/subject'
 import {
   handleModerationEvent,
   validateEventAuth,
   validateSubjectForEvent,
 } from './util-event'
-import { subjectFromInput } from '../../mod-service/subject'
 
 const CHUNK_SIZE = 10
 
@@ -33,22 +31,18 @@ export default function (server: Server, ctx: AppContext) {
       for (const chunk of chunkArray(subjects, CHUNK_SIZE)) {
         const results = await Promise.allSettled(
           chunk.map(async (sub) => {
-            const input: HandlerInput = {
-              encoding: 'application/json',
-              body: {
+            const subject = subjectFromInput(sub, subjectBlobCids)
+            validateSubjectForEvent({ event, subject, auth })
+            const moderationEvent = await handleModerationEvent({
+              auth,
+              ctx,
+              input: {
                 event,
                 subject: sub,
                 subjectBlobCids,
                 createdBy,
                 modTool,
               },
-            }
-            const subject = subjectFromInput(sub, subjectBlobCids)
-            validateSubjectForEvent({ event, subject, auth })
-            const moderationEvent = await handleModerationEvent({
-              input: input.body,
-              auth,
-              ctx,
             })
 
             return { moderationEvent, subject }
