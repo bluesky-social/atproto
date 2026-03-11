@@ -265,9 +265,10 @@ class BufferedReader implements BytesReader {
     if (resultLength <= 0) return new Uint8Array()
 
     const firstChunk = this.chunks[0]!
-    const firstChunkRemaining = firstChunk.byteLength - this.alreadyRead
+    const firstChunkStart = this.alreadyRead
+    const firstChunkRemaining = firstChunk.byteLength - firstChunkStart
 
-    if (firstChunkRemaining <= 0) {
+    if (firstChunkRemaining < 0) {
       // Should never happen
       throw new Error('Unexpected BufferedReader state')
     }
@@ -275,18 +276,14 @@ class BufferedReader implements BytesReader {
     // If the data to be read is less or equal to the remaining bytes in the
     // first chunk, return a sub array of that chunk.
     if (resultLength < firstChunkRemaining) {
-      // reading sub part than first chunk
-      const result = firstChunk.subarray(
-        this.alreadyRead,
-        this.alreadyRead + resultLength,
-      )
-      this.alreadyRead += resultLength
-      return result
+      // partial read of first chunk
+      const firstChunkEnd = firstChunkStart + resultLength
+      this.alreadyRead = firstChunkEnd
+      return firstChunk.subarray(firstChunkStart, firstChunkEnd)
     } else if (resultLength === firstChunkRemaining) {
       // read exactly the remaining bytes of first chunk (and discard it)
-      const result = firstChunk.subarray(this.alreadyRead)
-      this.discardFirstChunk() // /!\ updates this.alreadyRead
-      return result
+      this.discardFirstChunk() // updates this.alreadyRead
+      return firstChunk.subarray(firstChunkStart)
     }
 
     // reading more than one chunk, we will have to copy bytes into a larger
@@ -294,7 +291,7 @@ class BufferedReader implements BytesReader {
     const result = new Uint8Array(resultLength)
 
     // Copy all the remaining of first chunk into "result"
-    copy(result, 0, firstChunk, this.alreadyRead, firstChunkRemaining)
+    copy(result, 0, firstChunk, firstChunkStart, firstChunkRemaining)
     this.discardFirstChunk()
 
     // This is the index, within "result" at which data can be written in the
