@@ -111,7 +111,12 @@
           "type": "string",
           "description": "Typed error identifier for programmatic handling. Omitted when the error is unexpected/uncategorized.",
           "knownValues": [
-            "InvalidSubject"
+            "InvalidSubject",
+            "SubjectHasAction",
+            "AlreadyTakendown",
+            "NotTakendown",
+            "DuplicateExternalId",
+            "InvalidConfiguration"
           ]
         },
         "subject": {

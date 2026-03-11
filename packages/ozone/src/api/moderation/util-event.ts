@@ -138,7 +138,10 @@ export const validateSubjectForEvent = ({
     (isModEventMuteReporter(event) || isModEventUnmuteReporter(event)) &&
     !subject.isRepo()
   ) {
-    throw new InvalidRequestError('Subject must be a repo when muting reporter')
+    throw new InvalidRequestError(
+      'Subject must be a repo when muting reporter',
+      'InvalidSubject',
+    )
   }
 }
 
@@ -204,7 +207,10 @@ export const handleModerationEvent = async ({
 
   if (isRevokeAccountCredentialsEvent(event)) {
     if (!ctx.pdsAgent) {
-      throw new InvalidRequestError('PDS not configured')
+      throw new InvalidRequestError(
+        'PDS not configured',
+        'InvalidConfiguration',
+      )
     }
 
     await ctx.pdsAgent.com.atproto.temp.revokeAccountCredentials(
@@ -219,11 +225,14 @@ export const handleModerationEvent = async ({
     const status = await moderationService.getStatus(subject)
 
     if (status?.takendown && isTakedownEvent) {
-      throw new InvalidRequestError(`Subject is already taken down`)
+      throw new InvalidRequestError(
+        `Subject is already taken down`,
+        'AlreadyTakendown',
+      )
     }
 
     if (!status?.takendown && isReverseTakedownEvent) {
-      throw new InvalidRequestError(`Subject is not taken down`)
+      throw new InvalidRequestError(`Subject is not taken down`, 'NotTakendown')
     }
 
     if (status?.tags?.length) {
@@ -254,7 +263,10 @@ export const handleModerationEvent = async ({
   if (isModEventEmail(event) && event.content) {
     // sending email prior to logging the event to avoid a long transaction below
     if (!subject.isRepo()) {
-      throw new InvalidRequestError('Email can only be sent to a repo subject')
+      throw new InvalidRequestError(
+        'Email can only be sent to a repo subject',
+        'InvalidSubject',
+      )
     }
     const { content, subjectLine } = event
     // on error, don't fail the whole event. instead, log the event data with isDelivered false
@@ -277,6 +289,7 @@ export const handleModerationEvent = async ({
     if (!ctx.blobDiverter) {
       throw new InvalidRequestError(
         'BlobDiverter not configured for this service',
+        'InvalidConfiguration',
       )
     }
     await ctx.blobDiverter.uploadBlobOnService(subject.info())

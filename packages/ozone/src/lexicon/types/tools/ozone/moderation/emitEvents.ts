@@ -89,7 +89,14 @@ export interface FailedEvent {
   /** Error message describing the reason for failure. */
   error: string
   /** Typed error identifier for programmatic handling. Omitted when the error is unexpected/uncategorized. */
-  errorName?: 'InvalidSubject' | (string & {})
+  errorName?:
+    | 'InvalidSubject'
+    | 'SubjectHasAction'
+    | 'AlreadyTakendown'
+    | 'NotTakendown'
+    | 'DuplicateExternalId'
+    | 'InvalidConfiguration'
+    | (string & {})
   subject:
     | $Typed<ComAtprotoAdminDefs.RepoRef>
     | $Typed<ComAtprotoRepoStrongRef.Main>

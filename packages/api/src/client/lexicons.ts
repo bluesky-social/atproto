@@ -17680,7 +17680,14 @@ export const schemaDict = {
             type: 'string',
             description:
               'Typed error identifier for programmatic handling. Omitted when the error is unexpected/uncategorized.',
-            knownValues: ['InvalidSubject'],
+            knownValues: [
+              'InvalidSubject',
+              'SubjectHasAction',
+              'AlreadyTakendown',
+              'NotTakendown',
+              'DuplicateExternalId',
+              'InvalidConfiguration',
+            ],
           },
           subject: {
             type: 'union',
