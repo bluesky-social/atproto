@@ -105,7 +105,7 @@ export class HydrateCtx {
 
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
-  viewer: string | null
+  viewer: DidString | null
   includeTakedowns?: boolean
   overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
@@ -544,7 +544,7 @@ export class Hydrator {
     addPostsToHydrationState(postsLayer2)
 
     // collect list/feedgen embeds, lists in threadgates, post record hydration
-    const threadgateListUris = [...getListUrisFromThreadgates(threadgates)]
+    const threadgateListUris = getListUrisFromThreadgates(threadgates)
     const nestedListUris = [
       ...(urisLayer1ByCollection.get(app.bsky.graph.list.$type) ?? []),
       ...(urisLayer2ByCollection.get(app.bsky.graph.list.$type) ?? []),
@@ -1455,18 +1455,15 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   return uris
 }
 
-function* getListUrisFromThreadgates(
-  gates: Threadgates,
-): Generator<AtUriString, void, unknown> {
+const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
+  const uris: AtUriString[] = []
   for (const gate of gates.values()) {
-    if (gate?.record.allow) {
-      for (const rule of gate.record.allow) {
-        if (isListRule(rule)) {
-          yield rule.list
-        }
-      }
+    const listRules = gate?.record.allow?.filter(isListRule) ?? []
+    for (const rule of listRules) {
+      uris.push(rule.list)
     }
   }
+  return uris
 }
 
 const isBlocked = (blocks: BidirectionalBlocks, [a, b]: RelationshipPair) => {

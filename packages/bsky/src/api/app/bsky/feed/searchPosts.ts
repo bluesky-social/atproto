@@ -89,7 +89,7 @@ const skeleton = async (
     )
     return {
       posts: res.posts.map(({ uri }) => uri as AtUriString),
-      cursor: res.cursor,
+      cursor: parseString(res.cursor),
       parsedQuery,
     }
   }

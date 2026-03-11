@@ -15,13 +15,13 @@ type RecordProcessorOptions<TSchema extends l.RecordSchema, TRow> = {
     db: DatabaseSchema,
     uri: AtUri,
     cid: Cid,
-    obj: l.Infer<TSchema>,
+    obj: l.InferInput<TSchema>,
     timestamp: string,
   ) => Promise<TRow | null>
   findDuplicate: (
     db: DatabaseSchema,
     uri: AtUri,
-    obj: l.Infer<TSchema>,
+    obj: l.InferInput<TSchema>,
   ) => Promise<AtUri | null>
   deleteFn: (db: DatabaseSchema, uri: AtUri) => Promise<TRow | null>
   notifsForInsert: (obj: TRow) => Notif[]
@@ -49,11 +49,11 @@ export class RecordProcessor<TSchema extends l.RecordSchema, TRow> {
     return this.options.schema.$type
   }
 
-  matchesSchema(obj: unknown): obj is TSchema {
+  matchesSchema<I>(obj: I): obj is I & l.InferInput<TSchema> {
     return this.options.schema.matches(obj)
   }
 
-  assertValidRecord(obj: unknown): asserts obj is l.Infer<TSchema> {
+  assertValidRecord(obj: unknown): asserts obj is l.InferInput<TSchema> {
     this.options.schema.check(obj)
   }
 

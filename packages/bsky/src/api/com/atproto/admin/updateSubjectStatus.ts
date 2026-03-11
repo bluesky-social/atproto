@@ -20,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date()
       const { subject, takedown } = input.body
       if (takedown) {
-        if (com.atproto.admin.defs.repoRef.$matches(subject)) {
+        if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownActor({
               did: subject.did,
@@ -33,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
               seen: Timestamp.fromDate(now),
             })
           }
-        } else if (com.atproto.repo.strongRef.$matches(subject)) {
+        } else if (com.atproto.repo.strongRef.$isTypeOf(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownRecord({
               recordUri: subject.uri,
@@ -46,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
               seen: Timestamp.fromDate(now),
             })
           }
-        } else if (com.atproto.admin.defs.repoBlobRef.$matches(subject)) {
+        } else if (com.atproto.admin.defs.repoBlobRef.$isTypeOf(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownBlob({
               did: subject.did,
@@ -62,7 +62,9 @@ export default function (server: Server, ctx: AppContext) {
             })
           }
         } else {
-          throw new InvalidRequestError('Invalid subject')
+          throw new InvalidRequestError(
+            `Invalid subject type: ${subject.$type}`,
+          )
         }
       }
 

@@ -1,19 +1,14 @@
-import { isDidString } from '@atproto/lex'
-import { InvalidRequestError, Server } from '@atproto/xrpc-server'
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.graph.getRelationships, {
     handler: async ({ params }) => {
-      const { actor, others = [] } = params
+      const { others = [] } = params
 
-      // @TODO Should this be validated at the schema level?
-      if (!isDidString(actor) || !others.every(isDidString)) {
-        throw new InvalidRequestError('Invalid DID format')
-      }
-
-      if (others.length < 1) {
+      const [actor] = await ctx.hydrator.actor.getDids([params.actor])
+      if (!actor || others.length < 1) {
         return {
           encoding: 'application/json',
           body: {
@@ -27,11 +22,12 @@ export default function (server: Server, ctx: AppContext) {
         others,
         actor,
       )
-      const relationships = others.map((did) => {
-        const subject = res.get(did)
+
+      const relationships = others.map((actor) => {
+        const subject = res.get(actor)
         return subject
           ? app.bsky.graph.defs.relationship.$build({
-              did,
+              did: subject.did,
               following: subject.following,
               followedBy: subject.followedBy,
               blocking: subject.blocking,
@@ -40,17 +36,18 @@ export default function (server: Server, ctx: AppContext) {
               blockedByList: subject.blockedByList,
             })
           : app.bsky.graph.defs.notFoundActor.$build({
-              actor: did,
+              actor,
               notFound: true,
             })
       })
+
       return {
         encoding: 'application/json',
         body: {
           actor,
           relationships,
         },
-      } satisfies app.bsky.graph.getRelationships.$Output
+      }
     },
   })
 }

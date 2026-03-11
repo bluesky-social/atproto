@@ -173,38 +173,37 @@ export class FeedHydrator {
     viewer: string,
   ): Promise<PostViewerStates> {
     const map: PostViewerStates = new HydrationMap()
+    if (!refs.length) return map
 
-    if (refs.length) {
-      const [likes, reposts, bookmarks, threadMutesMap] = await Promise.all([
-        this.dataplane.getLikesByActorAndSubjects({
-          actorDid: viewer,
-          refs,
-        }),
-        this.dataplane.getRepostsByActorAndSubjects({
-          actorDid: viewer,
-          refs,
-        }),
-        this.dataplane.getBookmarksByActorAndSubjects({
-          actorDid: viewer,
-          uris: refs.map((r) => r.uri),
-        }),
-        this.getThreadMutes(
-          refs.map((r) => r.threadRoot),
-          viewer,
-        ),
-      ])
+    const [likes, reposts, bookmarks, threadMutesMap] = await Promise.all([
+      this.dataplane.getLikesByActorAndSubjects({
+        actorDid: viewer,
+        refs,
+      }),
+      this.dataplane.getRepostsByActorAndSubjects({
+        actorDid: viewer,
+        refs,
+      }),
+      this.dataplane.getBookmarksByActorAndSubjects({
+        actorDid: viewer,
+        uris: refs.map((r) => r.uri),
+      }),
+      this.getThreadMutes(
+        refs.map((r) => r.threadRoot),
+        viewer,
+      ),
+    ])
 
-      for (let i = 0; i < refs.length; i++) {
-        const { uri, threadRoot } = refs[i]
-        map.set(uri, {
-          like: parseString(likes.uris[i]),
-          repost: parseString(reposts.uris[i]),
-          // @NOTE: The dataplane contract is that the array position will be present,
-          // but the optional chaining is to ensure it works regardless of the dataplane being update to provide the data.
-          bookmarked: !!bookmarks.bookmarks.at(i)?.ref?.key,
-          threadMuted: threadMutesMap.get(threadRoot) ?? false,
-        })
-      }
+    for (let i = 0; i < refs.length; i++) {
+      const { uri, threadRoot } = refs[i]
+      map.set(uri, {
+        like: parseString(likes.uris[i]),
+        repost: parseString(reposts.uris[i]),
+        // @NOTE: The dataplane contract is that the array position will be present,
+        // but the optional chaining is to ensure it works regardless of the dataplane being update to provide the data.
+        bookmarked: !!bookmarks.bookmarks.at(i)?.ref?.key,
+        threadMuted: threadMutesMap.get(threadRoot) ?? false,
+      })
     }
 
     return map
@@ -229,44 +228,43 @@ export class FeedHydrator {
 
   async getThreadContexts(refs: ThreadRef[]): Promise<ThreadContexts> {
     const map: ThreadContexts = new HydrationMap()
+    if (!refs.length) return map
 
-    if (refs.length) {
-      const refsByRootAuthor = new Map<DidString, ThreadRef[]>()
+    const refsByRootAuthor = new Map<DidString, ThreadRef[]>()
 
-      for (const ref of refs) {
-        const { threadRoot } = ref
-        const rootAuthor = didFromUri(threadRoot)
-        const existingValue = refsByRootAuthor.get(rootAuthor) ?? []
-        refsByRootAuthor.set(rootAuthor, [...existingValue, ref])
+    for (const ref of refs) {
+      const { threadRoot } = ref
+      const rootAuthor = didFromUri(threadRoot)
+      const existingValue = refsByRootAuthor.get(rootAuthor) ?? []
+      refsByRootAuthor.set(rootAuthor, [...existingValue, ref])
+    }
+
+    const refsByRootAuthorEntries = Array.from(refsByRootAuthor.entries())
+
+    const rootAuthorsLikes = await Promise.all(
+      refsByRootAuthorEntries.map(([rootAuthor, refsForAuthor]) =>
+        this.dataplane.getLikesByActorAndSubjects({
+          actorDid: rootAuthor,
+          refs: refsForAuthor.map(({ uri, cid }) => ({ uri, cid })),
+        }),
+      ),
+    )
+
+    const likesByUri = new Map<AtUriString, AtUriString>()
+
+    for (let i = 0; i < refsByRootAuthorEntries.length; i++) {
+      const [_rootAuthor, refsForAuthor] = refsByRootAuthorEntries[i]
+      const likesForRootAuthor = rootAuthorsLikes[i]
+      for (let j = 0; j < refsForAuthor.length; j++) {
+        const { uri } = refsForAuthor[j]
+        likesByUri.set(uri, likesForRootAuthor.uris[j] as AtUriString)
       }
+    }
 
-      const refsByRootAuthorEntries = Array.from(refsByRootAuthor.entries())
-
-      const rootAuthorsLikes = await Promise.all(
-        refsByRootAuthorEntries.map(([rootAuthor, refsForAuthor]) =>
-          this.dataplane.getLikesByActorAndSubjects({
-            actorDid: rootAuthor,
-            refs: refsForAuthor.map(({ uri, cid }) => ({ uri, cid })),
-          }),
-        ),
-      )
-
-      const likesByUri = new Map<AtUriString, AtUriString>()
-
-      for (let i = 0; i < refsByRootAuthorEntries.length; i++) {
-        const [_rootAuthor, refsForAuthor] = refsByRootAuthorEntries[i]
-        const likesForRootAuthor = rootAuthorsLikes[i]
-        for (let j = 0; j < refsForAuthor.length; j++) {
-          const { uri } = refsForAuthor[j]
-          likesByUri.set(uri, likesForRootAuthor.uris[j] as AtUriString)
-        }
-      }
-
-      for (const { uri } of refs) {
-        map.set(uri, {
-          like: parseString(likesByUri.get(uri)),
-        })
-      }
+    for (const { uri } of refs) {
+      map.set(uri, {
+        like: parseString(likesByUri.get(uri)),
+      })
     }
 
     return map
@@ -274,25 +272,24 @@ export class FeedHydrator {
 
   async getPostAggregates(
     refs: ItemRef[],
-    viewer: string | null,
+    viewer: DidString | null,
   ): Promise<PostAggs> {
     const map: PostAggs = new HydrationMap()
+    if (!refs.length) map
 
-    if (refs.length) {
-      const counts = await this.dataplane.getInteractionCounts({
-        refs,
-        skipCacheForDids: viewer ? [viewer] : undefined,
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
+
+    for (let i = 0; i < refs.length; i++) {
+      map.set(refs[i].uri, {
+        likes: counts.likes[i] ?? 0,
+        replies: counts.replies[i] ?? 0,
+        reposts: counts.reposts[i] ?? 0,
+        quotes: counts.quotes[i] ?? 0,
+        bookmarks: counts.bookmarks[i] ?? 0,
       })
-
-      for (let i = 0; i < refs.length; i++) {
-        map.set(refs[i].uri, {
-          likes: counts.likes[i] ?? 0,
-          replies: counts.replies[i] ?? 0,
-          reposts: counts.reposts[i] ?? 0,
-          quotes: counts.quotes[i] ?? 0,
-          bookmarks: counts.bookmarks[i] ?? 0,
-        })
-      }
     }
 
     return map
@@ -303,16 +300,15 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<FeedGens> {
     const map: FeedGens = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getFeedGeneratorRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<FeedGenRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uris[i], record ?? null)
-      }
+    const res = await this.dataplane.getFeedGeneratorRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<FeedGenRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uris[i], record ?? null)
     }
 
     return map
@@ -320,20 +316,19 @@ export class FeedHydrator {
 
   async getFeedGenViewerStates(
     uris: AtUriString[],
-    viewer: string,
+    viewer: DidString,
   ): Promise<FeedGenViewerStates> {
     const map: FeedGenViewerStates = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const likes = await this.dataplane.getLikesByActorAndSubjects({
-        actorDid: viewer,
-        refs: uris.map((uri) => ({ uri })),
+    const likes = await this.dataplane.getLikesByActorAndSubjects({
+      actorDid: viewer,
+      refs: uris.map((uri) => ({ uri })),
+    })
+    for (let i = 0; i < uris.length; i++) {
+      map.set(uris[i], {
+        like: parseString(likes.uris[i]),
       })
-      for (let i = 0; i < uris.length; i++) {
-        map.set(uris[i], {
-          like: parseString(likes.uris[i]),
-        })
-      }
     }
 
     return map
@@ -341,18 +336,17 @@ export class FeedHydrator {
 
   async getFeedGenAggregates(
     refs: ItemRef[],
-    viewer: string | null,
+    viewer: DidString | null,
   ): Promise<FeedGenAggs> {
     const map: FeedGenAggs = new HydrationMap()
+    if (!refs.length) return map
 
-    if (refs.length) {
-      const counts = await this.dataplane.getInteractionCounts({
-        refs,
-        skipCacheForDids: viewer ? [viewer] : undefined,
-      })
-      for (let i = 0; i < refs.length; i++) {
-        map.set(refs[i].uri, { likes: counts.likes[i] ?? 0 })
-      }
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
+    for (let i = 0; i < refs.length; i++) {
+      map.set(refs[i].uri, { likes: counts.likes[i] ?? 0 })
     }
 
     return map
@@ -371,13 +365,12 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Threadgates> {
     const map: Threadgates = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getThreadGateRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<GateRecord>(res.records[i], includeTakedowns)
-        map.set(uris[i], record ?? null)
-      }
+    const res = await this.dataplane.getThreadGateRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<GateRecord>(res.records[i], includeTakedowns)
+      map.set(uris[i], record ?? null)
     }
 
     return map
@@ -396,16 +389,15 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Postgates> {
     const map: Postgates = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getPostgateRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<PostgateRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uris[i], record ?? null)
-      }
+    const res = await this.dataplane.getPostgateRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<PostgateRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uris[i], record ?? null)
     }
 
     return map
@@ -416,13 +408,12 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Likes> {
     const map: Likes = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getLikeRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<LikeRecord>(res.records[i], includeTakedowns)
-        map.set(uris[i], record ?? null)
-      }
+    const res = await this.dataplane.getLikeRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<LikeRecord>(res.records[i], includeTakedowns)
+      map.set(uris[i], record ?? null)
     }
 
     return map
@@ -433,16 +424,12 @@ export class FeedHydrator {
     includeTakedowns = false,
   ): Promise<Reposts> {
     const map: Reposts = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getRepostRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<RepostRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uris[i], record ?? null)
-      }
+    const res = await this.dataplane.getRepostRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<RepostRecord>(res.records[i], includeTakedowns)
+      map.set(uris[i], record ?? null)
     }
 
     return map

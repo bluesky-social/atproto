@@ -106,7 +106,7 @@ const presentation = (
     height: params.parentHeight!,
     depth: getDepth(ctx, skeleton.anchor, params),
   })
-  if (app.bsky.feed.defs.notFoundPost.$matches(thread)) {
+  if (app.bsky.feed.defs.notFoundPost.$isTypeOf(thread)) {
     // @TODO technically this could be returned as a NotFoundPost based on lexicon
     throw new InvalidRequestError(
       `Post not found: ${skeleton.anchor}`,

@@ -3,6 +3,7 @@ import { AtUriString, DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -66,7 +67,7 @@ const skeleton = async (
   return {
     actorDid,
     listUris: listUris as AtUriString[],
-    cursor: cursor || undefined,
+    cursor: parseString(cursor),
   }
 }
 

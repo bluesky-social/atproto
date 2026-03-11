@@ -9,11 +9,12 @@ import {
 import { AppContext } from '../../../../context'
 import { KwsExternalPayloadError } from '../../../../kws'
 import { app } from '../../../../lexicons/index.js'
-type InputSchema = app.bsky.unspecced.initAgeAssurance.$InputBody
 import { httpLogger as log } from '../../../../logger'
 import { ActorInfo } from '../../../../proto/bsky_pb'
 import { KwsExternalPayload } from '../../../kws/types'
 import { createStashEvent, getClientUa } from '../../../kws/util'
+
+type InputSchema = app.bsky.unspecced.initAgeAssurance.$InputBody
 
 export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.unspecced.initAgeAssurance, {

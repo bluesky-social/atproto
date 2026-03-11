@@ -28,7 +28,7 @@ export function assertIsThreadViewPost(
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
-export const forSnapshot = (obj: any) => {
+export const forSnapshot = (obj: unknown) => {
   const records = { [kTake]: 'record' }
   const collections = { [kTake]: 'collection' }
   const users = { [kTake]: 'user' }

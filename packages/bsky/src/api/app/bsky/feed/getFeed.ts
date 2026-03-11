@@ -234,9 +234,11 @@ const skeletonFromFeedGen = async (
   const { feed: feedSkele, cursor, ...skele } = result.body
   const feedItems = feedSkele.slice(0, params.limit).map((item) => ({
     post: { uri: item.post },
-    repost: app.bsky.feed.defs.skeletonReasonRepost.$matches(item.reason)
-      ? { uri: item.reason.repost }
-      : undefined,
+    repost:
+      item.reason != null &&
+      app.bsky.feed.defs.skeletonReasonRepost.$isTypeOf(item.reason)
+        ? { uri: item.reason.repost }
+        : undefined,
     feedContext: item.feedContext,
   }))
 

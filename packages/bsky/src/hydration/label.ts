@@ -134,19 +134,18 @@ export class LabelHydrator {
     includeTakedowns = false,
   ): Promise<Labelers> {
     const map: Labelers = new HydrationMap()
+    if (!dids.length) return map
 
-    if (dids.length) {
-      const res = await this.dataplane.getLabelerRecords({
-        uris: dids.map(labelerDidToUri),
-      })
-      for (let i = 0; i < dids.length; i++) {
-        const did = dids[i]
-        const record = parseRecord<LabelerRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(did, record ?? null)
-      }
+    const res = await this.dataplane.getLabelerRecords({
+      uris: dids.map(labelerDidToUri),
+    })
+    for (let i = 0; i < dids.length; i++) {
+      const did = dids[i]
+      const record = parseRecord<LabelerRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(did, record ?? null)
     }
 
     return map
@@ -154,22 +153,21 @@ export class LabelHydrator {
 
   async getLabelerViewerStates(
     dids: DidString[],
-    viewer: string,
+    viewer: DidString,
   ): Promise<LabelerViewerStates> {
     const map: LabelerViewerStates = new HydrationMap()
+    if (!dids.length) return map
 
-    if (dids.length) {
-      const likes = await this.dataplane.getLikesByActorAndSubjects({
-        actorDid: viewer,
-        refs: dids.map((did) => ({ uri: labelerDidToUri(did) })),
+    const likes = await this.dataplane.getLikesByActorAndSubjects({
+      actorDid: viewer,
+      refs: dids.map((did) => ({ uri: labelerDidToUri(did) })),
+    })
+
+    for (let i = 0; i < dids.length; i++) {
+      const did = dids[i]
+      map.set(did, {
+        like: parseString(likes.uris[i]),
       })
-
-      for (let i = 0; i < dids.length; i++) {
-        const did = dids[i]
-        map.set(did, {
-          like: parseString(likes.uris[i]),
-        })
-      }
     }
 
     return map
@@ -177,22 +175,23 @@ export class LabelHydrator {
 
   async getLabelerAggregates(
     dids: DidString[],
-    viewer: string | null,
+    viewer: DidString | null,
   ): Promise<LabelerAggs> {
     const map: LabelerAggs = new HydrationMap()
-    if (dids.length) {
-      const refs = dids.map((did) => ({ uri: labelerDidToUri(did) }))
-      const counts = await this.dataplane.getInteractionCounts({
-        refs,
-        skipCacheForDids: viewer ? [viewer] : undefined,
+    if (!dids.length) return map
+
+    const refs = dids.map((did) => ({ uri: labelerDidToUri(did) }))
+    const counts = await this.dataplane.getInteractionCounts({
+      refs,
+      skipCacheForDids: viewer ? [viewer] : undefined,
+    })
+    for (let i = 0; i < dids.length; i++) {
+      const did = dids[i]
+      map.set(did, {
+        likes: counts.likes[i] ?? 0,
       })
-      for (let i = 0; i < dids.length; i++) {
-        const did = dids[i]
-        map.set(did, {
-          likes: counts.likes[i] ?? 0,
-        })
-      }
     }
+
     return map
   }
 }
