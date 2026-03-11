@@ -18,6 +18,8 @@ import { XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.js'
 import { XrpcResponse } from './response.js'
 import { BinaryBodyInit, CallOptions } from './types.js'
 import {
+  CONTENT_TYPE_CBOR,
+  CONTENT_TYPE_JSON,
   buildAtprotoHeaders,
   isAsyncIterable,
   isBlobLike,
@@ -213,7 +215,10 @@ function xrpcRequestInit<T extends Procedure | Query>(
   const headers = buildAtprotoHeaders(options)
 
   // Tell the server what type of response we're expecting
-  if (schema.output.encoding) {
+  if (schema.output.encoding === CONTENT_TYPE_JSON) {
+    // If the schema describes structured data, tell the server we prefer cbor
+    headers.set('accept', `${CONTENT_TYPE_CBOR},${CONTENT_TYPE_JSON};q=0.9`)
+  } else if (schema.output.encoding) {
     headers.set('accept', schema.output.encoding)
   }
 
@@ -271,7 +276,7 @@ function xrpcProcedureInput(
   }
 
   // Special handling for endpoints expecting application/json input
-  if (input.encoding === 'application/json') {
+  if (input.encoding === CONTENT_TYPE_JSON) {
     // @NOTE **NOT** using isLexValue here to avoid deep checks in order to
     // distinguish between LexValue and BinaryBodyInit.
     if (!isLexScalar(body) && !isPlainObject(body) && !Array.isArray(body)) {

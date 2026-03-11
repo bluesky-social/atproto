@@ -1,3 +1,4 @@
+import { decode } from '@atproto/lex-cbor'
 import { lexParse } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
@@ -12,10 +13,13 @@ import {
   XrpcUpstreamError,
   isXrpcErrorPayload,
 } from './errors.js'
-import { XrpcResponseBody, XrpcResponsePayload } from './util.js'
-
-const CONTENT_TYPE_BINARY = 'application/octet-stream'
-const CONTENT_TYPE_JSON = 'application/json'
+import {
+  CONTENT_TYPE_BINARY,
+  CONTENT_TYPE_CBOR,
+  CONTENT_TYPE_JSON,
+  XrpcResponseBody,
+  XrpcResponsePayload,
+} from './util.js'
 
 export type { XrpcResponseBody, XrpcResponsePayload }
 
@@ -88,7 +92,7 @@ export class XrpcResponse<M extends Procedure | Query>
 
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
-      // Always parse json for error responses
+      // Always parse structured data from error responses
       const payload = await readPayload(response, { parse: true }).catch(
         (cause) => {
           throw new XrpcUpstreamError(
@@ -122,9 +126,8 @@ export class XrpcResponse<M extends Procedure | Query>
     }
 
     // Only parse json if the schema expects it
-    const payload = await readPayload(response, {
-      parse: method.output.encoding === CONTENT_TYPE_JSON,
-    }).catch((cause) => {
+    const parse = method.output.encoding === CONTENT_TYPE_JSON
+    const payload = await readPayload(response, { parse }).catch((cause) => {
       throw new XrpcUpstreamError(
         method,
         response,
@@ -147,14 +150,23 @@ export class XrpcResponse<M extends Procedure | Query>
       }
     } else {
       // Schema expects a payload
-      if (!payload || !method.output.matchesEncoding(payload.encoding)) {
+      if (!payload) {
         throw new XrpcUpstreamError(
           method,
           response,
           payload,
-          payload
-            ? `Expected ${method.output.encoding} response, got ${payload.encoding}`
-            : `Expected non-empty response with content-type ${method.output.encoding}`,
+          `Expected non-empty response with content-type ${method.output.encoding}`,
+        )
+      }
+
+      if (parse && payload.encoding === CONTENT_TYPE_CBOR) {
+        // Special case, we Accept'd cbor
+      } else if (!method.output.matchesEncoding(payload.encoding)) {
+        throw new XrpcUpstreamError(
+          method,
+          response,
+          payload,
+          `Expected ${method.output.encoding} response, got ${payload.encoding}`,
         )
       }
 
@@ -211,20 +223,34 @@ async function readPayload(
     }
   }
 
-  if (options?.parse && encoding === CONTENT_TYPE_JSON) {
-    // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
-    // perform the lex parsing using cborg/json, allowing to do
-    // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
-    // This would require adding encode/decode utilities to lex-json (similar
-    // to @ipld/dag-json)
-    const text = await response.text()
+  if (options?.parse) {
+    if (encoding === CONTENT_TYPE_JSON) {
+      // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
+      // perform the lex parsing using cborg/json, allowing to do
+      // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
+      // This would require adding encode/decode utilities to lex-json (similar
+      // to @ipld/dag-json)
+      const text = await response.text()
 
-    // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
-    // using a reviver function during JSON.parse should be faster than
-    // parsing to JSON then converting to Lex (?)
+      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
+      // using a reviver function during JSON.parse should be faster than
+      // parsing to JSON then converting to Lex (?)
 
-    // @TODO verify statement above
-    return { encoding, body: lexParse(text) }
+      // @TODO verify statement above
+      return { encoding, body: lexParse(text) }
+    }
+
+    if (encoding === CONTENT_TYPE_CBOR) {
+      const bytes = new Uint8Array(await response.arrayBuffer())
+
+      return { encoding, body: decode(bytes) }
+    }
+
+    if (encoding.startsWith('text/')) {
+      const text = await response.text()
+
+      return { encoding, body: text }
+    }
   }
 
   return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
