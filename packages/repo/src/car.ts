@@ -279,12 +279,12 @@ class BufferedReader implements BytesReader {
     const result = new Uint8Array(resultLength)
     let resultWriteIndex = 0
 
+    // Copy the first chunk into the result buffer
     result.set(firstChunk, resultWriteIndex)
     resultWriteIndex += firstChunk.byteLength
 
-    // Copy more chunks as needed. We use a "do-while" since we know we are
-    // reading more than one chunk (the condition will always be true on first
-    // iteration)
+    // Copy more chunks as needed (we use do-while because we *know* we need
+    // more than one chunk)
     do {
       const missingLength = resultLength - resultWriteIndex
       const currentChunk = this.consumeChunk(missingLength)
@@ -312,8 +312,7 @@ class BufferedReader implements BytesReader {
   }
 
   private consumeChunk(bytesToConsume: number) {
-    const { chunks } = this
-    const firstChunk = chunks[0]!
+    const firstChunk = this.chunks[0]!
     if (bytesToConsume < firstChunk.byteLength) {
       // return a sub-view of the data being read and replace the first chunk
       // with a sub-view that does not contain that data.
@@ -321,10 +320,10 @@ class BufferedReader implements BytesReader {
       // @NOTE for some reason, subarray() revealed to be 7-8% slower in NodeJS
       // benchmarks.
 
-      // chunks[0] = firstChunk.subarray(bytesToConsume)
+      // this.chunks[0] = firstChunk.subarray(bytesToConsume)
       // return firstChunk.subarray(0, bytesToConsume)
 
-      chunks[0] = new Uint8Array(
+      this.chunks[0] = new Uint8Array(
         firstChunk.buffer,
         firstChunk.byteOffset + bytesToConsume,
         firstChunk.byteLength - bytesToConsume,
@@ -336,7 +335,7 @@ class BufferedReader implements BytesReader {
       )
     } else {
       // First chunk is being read in full, discard it
-      chunks.shift()
+      this.chunks.shift()
       return firstChunk
     }
   }
