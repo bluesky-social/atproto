@@ -1,5 +1,9 @@
 import { mapDefined, noUndefinedVals } from '@atproto/common'
-import { xrpcSafe } from '@atproto/lex'
+import {
+  XrpcInvalidResponseError,
+  XrpcResponseError,
+  xrpcSafe,
+} from '@atproto/lex'
 import {
   Headers as HeadersMap,
   InvalidRequestError,
@@ -214,21 +218,33 @@ const skeletonFromFeedGen = async (
   })
 
   if (!result.success) {
+    const cause = result.reason
+
     // Forward valid schema errors as-is
-    if (result.matchesSchemaErrors()) {
-      throw new InvalidRequestError(result.message, result.error)
+    if (cause.matchesSchemaErrors()) {
+      throw new InvalidRequestError(cause.message, cause.error, { cause })
     }
-    if (result.error === 'InternalServerError') {
-      // Typically a network error
-      throw new UpstreamFailureError('feed unavailable')
+
+    // Structurally valid XRPC error response (4xx/5xx) that does not match the schema
+    if (cause instanceof XrpcResponseError) {
+      throw new UpstreamFailureError(
+        `feed unavailable: ${cause.message || cause.error}`,
+        undefined,
+        { cause },
+      )
     }
-    if (result.error === 'UpstreamFailure') {
+
+    // The response does not match the schema
+    if (cause instanceof XrpcInvalidResponseError) {
       throw new UpstreamFailureError(
         'feed provided an invalid response',
         'InvalidFeedResponse',
+        { cause },
       )
     }
-    throw result.reason
+
+    // Typically a network error.
+    throw new UpstreamFailureError('feed unavailable', undefined, { cause })
   }
 
   const { feed: feedSkele, cursor, ...skele } = result.body
