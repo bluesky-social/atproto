@@ -267,9 +267,9 @@ class BufferedReader implements BytesReader {
    * read()s to be processed in fifo order.
    */
   async read(bytesToRead: number): Promise<Uint8Array> {
-    let bytesNeeded = bytesToRead - this.bufferedByteLength
+    const bytesNeeded = bytesToRead - this.bufferedByteLength
     if (bytesNeeded > 0 && !this.isDone) {
-      bytesNeeded -= await this.readUntilBuffered(bytesNeeded)
+      await this.readUntilBuffered(bytesNeeded)
     }
 
     const resultLength = Math.min(bytesToRead, this.bufferedByteLength)
