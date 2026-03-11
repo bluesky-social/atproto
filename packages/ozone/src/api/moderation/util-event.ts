@@ -48,9 +48,30 @@ export const validateEventAuth = async ({
   event: ModerationEvent
 }): Promise<void> => {
   const access = auth.credentials
+  const settingService = ctx.settingService(ctx.db)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
+
+  // if less than moderator access then can not apply labels
+  if (!access.isModerator && isLabelEvent) {
+    throw new AuthRequiredError('Must be a full moderator to label content')
+  }
+
+  if (isLabelEvent) {
+    validateLabels([
+      ...(event.createLabelVals ?? []),
+      ...(event.negateLabelVals ?? []),
+    ])
+  }
+
+  if (isModEventTag(event)) {
+    await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
+  }
+
+  if (isModEventReport(event)) {
+    await ctx.moderationServiceProfile().validateReasonType(event.reportType)
+  }
 }
 
 /**
@@ -115,6 +136,13 @@ export const validateSubjectForEvent = ({
         'Must be a full admin to take this type of action on feed generators',
       )
     }
+  }
+
+  if (
+    (isModEventMuteReporter(event) || isModEventUnmuteReporter(event)) &&
+    !subject.isRepo()
+  ) {
+    throw new InvalidRequestError('Subject must be a repo when muting reporter')
   }
 }
 
@@ -190,18 +218,6 @@ export const handleModerationEvent = async ({
     )
   }
 
-  // if less than moderator access then can not apply labels
-  if (!access.isModerator && isLabelEvent) {
-    throw new AuthRequiredError('Must be a full moderator to label content')
-  }
-
-  if (isLabelEvent) {
-    validateLabels([
-      ...(event.createLabelVals ?? []),
-      ...(event.negateLabelVals ?? []),
-    ])
-  }
-
   const isTakedownOrReverseTakedownEvent =
     isTakedownEvent || isReverseTakedownEvent
   if (isTakedownOrReverseTakedownEvent || isLabelEvent) {
@@ -269,21 +285,6 @@ export const handleModerationEvent = async ({
       )
     }
     await ctx.blobDiverter.uploadBlobOnService(subject.info())
-  }
-
-  if (
-    (isModEventMuteReporter(event) || isModEventUnmuteReporter(event)) &&
-    !subject.isRepo()
-  ) {
-    throw new InvalidRequestError('Subject must be a repo when muting reporter')
-  }
-
-  if (isModEventTag(event)) {
-    await assertTagAuth(settingService, ctx.cfg.service.did, event, auth)
-  }
-
-  if (isModEventReport(event)) {
-    await ctx.moderationServiceProfile().validateReasonType(event.reportType)
   }
 
   const moderationEvent = await db.transaction(async (dbTxn) => {
