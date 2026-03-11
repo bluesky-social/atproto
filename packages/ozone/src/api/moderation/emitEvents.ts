@@ -19,7 +19,6 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const { event, subjects, createdBy, modTool } = input.body
-
       const events: ModEventView[] = []
       const failedEvents: ToolsOzoneModerationEmitEvents.FailedEvent[] = []
 

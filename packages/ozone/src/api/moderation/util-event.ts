@@ -49,8 +49,6 @@ export const validateEventAuth = async ({
 }): Promise<void> => {
   const access = auth.credentials
   const settingService = ctx.settingService(ctx.db)
-  const isTakedownEvent = isModEventTakedown(event)
-  const isReverseTakedownEvent = isModEventReverseTakedown(event)
   const isLabelEvent = isModEventLabel(event)
 
   // if less than moderator access then can not apply labels
@@ -87,10 +85,8 @@ export const validateSubjectForEvent = ({
   auth: ModeratorOutput | AdminTokenOutput
 }): void => {
   const access = auth.credentials
-  const isAcknowledgeEvent = isModEventAcknowledge(event)
   const isTakedownEvent = isModEventTakedown(event)
   const isReverseTakedownEvent = isModEventReverseTakedown(event)
-  const isLabelEvent = isModEventLabel(event)
 
   if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
     throw new InvalidRequestError('Invalid subject type')
@@ -192,7 +188,6 @@ export const handleModerationEvent = async ({
   input: InputSchema
   auth: ModeratorOutput | AdminTokenOutput
 }) => {
-  const access = auth.credentials
   const createdBy =
     auth.credentials.type === 'moderator'
       ? auth.credentials.iss
