@@ -17530,18 +17530,8 @@ export const schemaDict = {
                   'Array of subjects to apply the moderation event to.',
                 maxLength: 100,
                 items: {
-                  type: 'union',
-                  refs: [
-                    'lex:com.atproto.admin.defs#repoRef',
-                    'lex:com.atproto.repo.strongRef',
-                  ],
-                },
-              },
-              subjectBlobCids: {
-                type: 'array',
-                items: {
-                  type: 'string',
-                  format: 'cid',
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.emitEvents#subjectEntry',
                 },
               },
               createdBy: {
@@ -17577,6 +17567,27 @@ export const schemaDict = {
                   ref: 'lex:tools.ozone.moderation.emitEvents#failedEvent',
                 },
               },
+            },
+          },
+        },
+      },
+      subjectEntry: {
+        type: 'object',
+        description: 'A subject with optional per-subject blob CIDs.',
+        required: ['subject'],
+        properties: {
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
             },
           },
         },

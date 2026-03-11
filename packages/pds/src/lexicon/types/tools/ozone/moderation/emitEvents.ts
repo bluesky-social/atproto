@@ -32,12 +32,7 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.RevokeAccountCredentialsEvent>
     | { $type: string }
   /** Array of subjects to apply the moderation event to. */
-  subjects: (
-    | $Typed<ComAtprotoAdminDefs.RepoRef>
-    | $Typed<ComAtprotoRepoStrongRef.Main>
-    | { $type: string }
-  )[]
-  subjectBlobCids?: string[]
+  subjects: SubjectEntry[]
   createdBy: string
   modTool?: ToolsOzoneModerationDefs.ModTool
 }
@@ -66,6 +61,26 @@ export interface HandlerError {
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
+
+/** A subject with optional per-subject blob CIDs. */
+export interface SubjectEntry {
+  $type?: 'tools.ozone.moderation.emitEvents#subjectEntry'
+  subject:
+    | $Typed<ComAtprotoAdminDefs.RepoRef>
+    | $Typed<ComAtprotoRepoStrongRef.Main>
+    | { $type: string }
+  subjectBlobCids?: string[]
+}
+
+const hashSubjectEntry = 'subjectEntry'
+
+export function isSubjectEntry<V>(v: V) {
+  return is$typed(v, id, hashSubjectEntry)
+}
+
+export function validateSubjectEntry<V>(v: V) {
+  return validate<SubjectEntry & V>(v, id, hashSubjectEntry)
+}
 
 /** An event that failed to process. */
 export interface FailedEvent {

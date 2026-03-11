@@ -30,18 +30,8 @@
               "description": "Array of subjects to apply the moderation event to.",
               "maxLength": 100,
               "items": {
-                "type": "union",
-                "refs": [
-                  "com.atproto.admin.defs#repoRef",
-                  "com.atproto.repo.strongRef"
-                ]
-              }
-            },
-            "subjectBlobCids": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "format": "cid"
+                "type": "ref",
+                "ref": "#subjectEntry"
               }
             },
             "createdBy": {
@@ -77,6 +67,27 @@
                 "ref": "#failedEvent"
               }
             }
+          }
+        }
+      }
+    },
+    "subjectEntry": {
+      "type": "object",
+      "description": "A subject with optional per-subject blob CIDs.",
+      "required": ["subject"],
+      "properties": {
+        "subject": {
+          "type": "union",
+          "refs": [
+            "com.atproto.admin.defs#repoRef",
+            "com.atproto.repo.strongRef"
+          ]
+        },
+        "subjectBlobCids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "cid"
           }
         }
       }

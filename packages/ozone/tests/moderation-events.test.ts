@@ -669,7 +669,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -689,7 +689,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -715,7 +715,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -738,7 +738,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -767,7 +767,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -782,7 +782,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -799,7 +799,7 @@ describe('moderation-events', () => {
           event: {
             $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
           },
-          subjects,
+          subjects: subjects.map((s) => ({ subject: s })),
           createdBy: 'did:example:admin',
         },
         'triage',
@@ -812,7 +812,7 @@ describe('moderation-events', () => {
           event: {
             $type: 'tools.ozone.moderation.defs#modEventTakedown',
           },
-          subjects,
+          subjects: subjects.map((s) => ({ subject: s })),
           createdBy: 'did:example:admin',
         },
         'triage',
@@ -833,7 +833,7 @@ describe('moderation-events', () => {
           add: ['bulk-tag'],
           remove: [],
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -850,7 +850,7 @@ describe('moderation-events', () => {
           createLabelVals: ['spam'],
           negateLabelVals: [],
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -875,7 +875,7 @@ describe('moderation-events', () => {
           createLabelVals: ['nsfw'],
           negateLabelVals: [],
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -901,7 +901,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -922,7 +922,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventReverseTakedown',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -938,7 +938,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -958,7 +958,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventResolveAppeal',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -980,7 +980,7 @@ describe('moderation-events', () => {
           reportType: REASONSPAM,
           comment: 'Bulk report',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -1000,7 +1000,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -1021,7 +1021,7 @@ describe('moderation-events', () => {
         event: {
           $type: 'tools.ozone.moderation.defs#modEventTakedown',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -1048,7 +1048,7 @@ describe('moderation-events', () => {
           subjectLine: 'Bulk notice',
           content: 'This is a bulk email test',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -1070,7 +1070,7 @@ describe('moderation-events', () => {
           subjectLine: 'Should fail',
           content: 'Email on records should fail',
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
@@ -1090,7 +1090,7 @@ describe('moderation-events', () => {
             $type: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
             comment: 'Bulk revoke credentials',
           },
-          subjects,
+          subjects: subjects.map((s) => ({ subject: s })),
           createdBy: 'did:example:admin',
         },
         'admin',
@@ -1114,7 +1114,7 @@ describe('moderation-events', () => {
             $type: 'tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
             comment: 'Should fail for non-admin',
           },
-          subjects,
+          subjects: subjects.map((s) => ({ subject: s })),
           createdBy: 'did:example:admin',
         },
         'moderator',
@@ -1136,7 +1136,7 @@ describe('moderation-events', () => {
           createLabelVals: ['valid', 'has space'],
           negateLabelVals: [],
         },
-        subjects,
+        subjects: subjects.map((s) => ({ subject: s })),
         createdBy: 'did:example:admin',
       })
 
