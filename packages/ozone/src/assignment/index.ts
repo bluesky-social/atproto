@@ -363,6 +363,7 @@ export class AssignmentService {
           return dbTxn.db
             .updateTable('moderator_assignment')
             .set({
+              did,
               endAt: null,
               queueId: queueId ?? activeExisting.queueId ?? null,
             })
