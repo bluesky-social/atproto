@@ -6,7 +6,12 @@ import { InputSchema } from '../../lexicon/types/tools/ozone/moderation/emitEven
 import { ModEventView } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { HandlerInput } from '../../lexicon/types/tools/ozone/moderation/emitEvent'
 import { httpLogger } from '../../logger'
-import { handleModerationEvent } from './util-event'
+import {
+  handleModerationEvent,
+  validateEventAuth,
+  validateSubjectForEvent,
+} from './util-event'
+import { subjectFromInput } from '../../mod-service/subject'
 
 const CHUNK_SIZE = 10
 
@@ -23,20 +28,23 @@ export default function (server: Server, ctx: AppContext) {
         subject: InputSchema['subjects'][0]
       }[] = []
 
+      await validateEventAuth({ event, auth, ctx })
+
       for (const chunk of chunkArray(subjects, CHUNK_SIZE)) {
         const results = await Promise.allSettled(
-          chunk.map(async (subject) => {
+          chunk.map(async (sub) => {
             const input: HandlerInput = {
               encoding: 'application/json',
               body: {
                 event,
-                subject,
+                subject: sub,
                 subjectBlobCids,
                 createdBy,
                 modTool,
               },
             }
-
+            const subject = subjectFromInput(sub, subjectBlobCids)
+            validateSubjectForEvent({ event, subject, auth })
             const moderationEvent = await handleModerationEvent({
               input: input.body,
               auth,

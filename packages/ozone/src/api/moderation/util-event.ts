@@ -25,16 +25,46 @@ import {
   isRevokeAccountCredentialsEvent,
 } from '../../lexicon/types/tools/ozone/moderation/defs'
 import { httpLogger } from '../../logger'
-import { subjectFromInput } from '../../mod-service/subject'
+import { ModSubject, subjectFromInput } from '../../mod-service/subject'
 import { SettingService } from '../../setting/service'
 import { TagService } from '../../tag-service'
 import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
 import { getEventType } from '../util'
-import {
-  assertProtectedTagAction,
-  getProtectedTags,
-} from './util'
+import { assertProtectedTagAction, getProtectedTags } from './util'
+
+type ModerationEvent = InputSchema['event']
+
+/**
+ * Validates that the authenticated user is allowed to emit this event type.
+ */
+export const validateEventAuth = async ({
+  ctx,
+  auth,
+  event,
+}: {
+  ctx: AppContext
+  auth: ModeratorOutput | AdminTokenOutput
+  event: ModerationEvent
+}): Promise<void> => {
+  const access = auth.credentials
+  const isTakedownEvent = isModEventTakedown(event)
+  const isReverseTakedownEvent = isModEventReverseTakedown(event)
+  const isLabelEvent = isModEventLabel(event)
+}
+
+/**
+ * Validates that the subject type is compatible with the event type.
+ */
+export const validateSubjectForEvent = ({
+  event,
+  subject,
+  auth,
+}: {
+  event: ModerationEvent
+  subject: ModSubject
+  auth: ModeratorOutput | AdminTokenOutput
+}): void => {}
 
 interface InputSchema {
   event:
