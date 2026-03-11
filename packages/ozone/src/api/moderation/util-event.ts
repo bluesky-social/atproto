@@ -64,7 +64,59 @@ export const validateSubjectForEvent = ({
   event: ModerationEvent
   subject: ModSubject
   auth: ModeratorOutput | AdminTokenOutput
-}): void => {}
+}): void => {
+  const access = auth.credentials
+  const isAcknowledgeEvent = isModEventAcknowledge(event)
+  const isTakedownEvent = isModEventTakedown(event)
+  const isReverseTakedownEvent = isModEventReverseTakedown(event)
+  const isLabelEvent = isModEventLabel(event)
+
+  if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
+    throw new InvalidRequestError('Invalid subject type')
+  }
+
+  if (isAgeAssuranceOverrideEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+    if (!auth.credentials.isModerator) {
+      throw new AuthRequiredError(
+        'Must be a full moderator to override age assurance',
+      )
+    }
+  }
+
+  if (isRevokeAccountCredentialsEvent(event)) {
+    if (!subject.isRepo()) {
+      throw new InvalidRequestError('Invalid subject type')
+    }
+
+    if (!auth.credentials.isAdmin) {
+      throw new AuthRequiredError(
+        'Must be an admin to revoke account credentials',
+      )
+    }
+  }
+
+  // if less than moderator access then can only take ack and escalation actions
+  if (isTakedownEvent || isReverseTakedownEvent) {
+    if (!access.isModerator) {
+      throw new AuthRequiredError(
+        'Must be a full moderator to take this type of action',
+      )
+    }
+
+    // Non admins should not be able to take down feed generators
+    if (
+      !access.isAdmin &&
+      subject.recordPath?.includes('app.bsky.feed.generator/')
+    ) {
+      throw new AuthRequiredError(
+        'Must be a full admin to take this type of action on feed generators',
+      )
+    }
+  }
+}
 
 export interface InputSchema {
   event:
@@ -127,32 +179,7 @@ export const handleModerationEvent = async ({
   const isLabelEvent = isModEventLabel(event)
   const subject = subjectFromInput(input.subject, input.subjectBlobCids)
 
-  if (isAgeAssuranceEvent(event) && !subject.isRepo()) {
-    throw new InvalidRequestError('Invalid subject type')
-  }
-
-  if (isAgeAssuranceOverrideEvent(event)) {
-    if (!subject.isRepo()) {
-      throw new InvalidRequestError('Invalid subject type')
-    }
-    if (!auth.credentials.isModerator) {
-      throw new AuthRequiredError(
-        'Must be a full moderator to override age assurance',
-      )
-    }
-  }
-
   if (isRevokeAccountCredentialsEvent(event)) {
-    if (!subject.isRepo()) {
-      throw new InvalidRequestError('Invalid subject type')
-    }
-
-    if (!auth.credentials.isAdmin) {
-      throw new AuthRequiredError(
-        'Must be an admin to revoke account credentials',
-      )
-    }
-
     if (!ctx.pdsAgent) {
       throw new InvalidRequestError('PDS not configured')
     }
@@ -163,24 +190,6 @@ export const handleModerationEvent = async ({
     )
   }
 
-  // if less than moderator access then can only take ack and escalation actions
-  if (isTakedownEvent || isReverseTakedownEvent) {
-    if (!access.isModerator) {
-      throw new AuthRequiredError(
-        'Must be a full moderator to take this type of action',
-      )
-    }
-
-    // Non admins should not be able to take down feed generators
-    if (
-      !access.isAdmin &&
-      subject.recordPath?.includes('app.bsky.feed.generator/')
-    ) {
-      throw new AuthRequiredError(
-        'Must be a full admin to take this type of action on feed generators',
-      )
-    }
-  }
   // if less than moderator access then can not apply labels
   if (!access.isModerator && isLabelEvent) {
     throw new AuthRequiredError('Must be a full moderator to label content')
