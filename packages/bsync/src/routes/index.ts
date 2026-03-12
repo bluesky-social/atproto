@@ -4,6 +4,7 @@ import { AppContext } from '../context'
 import { Service } from '../proto/bsync_connect'
 import addMuteOperation from './add-mute-operation'
 import addNotifOperation from './add-notif-operation'
+import deleteOperations from './delete-operations'
 import putOperation from './put-operation'
 import scanMuteOperations from './scan-mute-operations'
 import scanNotifOperations from './scan-notif-operations'
@@ -17,6 +18,7 @@ export default (ctx: AppContext) => (router: ConnectRouter) => {
     ...scanNotifOperations(ctx),
     ...putOperation(ctx),
     ...scanOperations(ctx),
+    ...deleteOperations(ctx),
     async ping() {
       const { db } = ctx
       await sql`select 1`.execute(db.db)
