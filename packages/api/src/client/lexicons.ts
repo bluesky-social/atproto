@@ -17644,6 +17644,14 @@ export const schemaDict = {
             name: 'InvalidLabel',
             description: 'One or more labels contain invalid characters.',
           },
+          {
+            name: 'DuplicateSubjects',
+            description: 'The subjects array contains duplicate entries.',
+          },
+          {
+            name: 'EmptySubjects',
+            description: 'The subjects array is empty.',
+          },
         ],
       },
       subjectEntry: {

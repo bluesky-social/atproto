@@ -10,6 +10,7 @@ import {
   handleModerationEvent,
   validateEventAuth,
   validateSubjectForEvent,
+  validateSubjects,
 } from './util-event'
 import { ToolsOzoneModerationEmitEvents } from '@atproto/api'
 
@@ -23,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
       const events: ModEventView[] = []
       const failedEvents: ToolsOzoneModerationEmitEvents.FailedEvent[] = []
 
+      validateSubjects(subjects)
       await validateEventAuth({ event, auth, ctx })
 
       for (const chunk of chunkArray(subjects, CHUNK_SIZE)) {

@@ -58,7 +58,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'InvalidLabel'
+  error?: 'InvalidLabel' | 'DuplicateSubjects' | 'EmptySubjects'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

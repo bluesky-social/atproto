@@ -32,8 +32,37 @@ import { getTagForReport } from '../../tag-service/util'
 import { retryHttp } from '../../util'
 import { getEventType } from '../util'
 import { assertProtectedTagAction, getProtectedTags } from './util'
+import { SubjectEntry } from '../../lexicon/types/tools/ozone/moderation/emitEvents'
 
 type ModerationEvent = InputSchema['event']
+
+/**
+ * Validates subjects array.
+ */
+export const validateSubjects = (
+  subjects: SubjectEntry[],
+): void => {
+  if (subjects.length === 0) {
+    throw new InvalidRequestError(
+      'Subjects array must not be empty',
+      'EmptySubjects',
+    )
+  }
+
+  const seen = new Set<string>()
+  for (const entry of subjects) {
+    const key = ComAtprotoAdminDefs.isRepoRef(entry.subject)
+      ? entry.subject.did
+      : (entry.subject as { uri: string }).uri
+    if (seen.has(key)) {
+      throw new InvalidRequestError(
+        'Subjects array contains duplicates',
+        'DuplicateSubjects',
+      )
+    }
+    seen.add(key)
+  }
+}
 
 /**
  * Validates that the authenticated user is allowed to emit this event type.

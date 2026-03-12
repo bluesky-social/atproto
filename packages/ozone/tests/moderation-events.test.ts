@@ -730,34 +730,31 @@ describe('moderation-events', () => {
       await modClient.performReverseTakedown({ subject: repoRef(sc.dids.bob) })
     })
 
-    it('batch with duplicate subjects in same chunk both process concurrently', async () => {
+    it('rejects duplicate subjects', async () => {
       const subject = repoRef(sc.dids.carol)
       const subjects = [subject, subject]
 
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      // Both succeed since acknowledges don't have the "already taken down" guard
-      expect(result.events).toHaveLength(2)
-      expect(result.failedEvents).toHaveLength(0)
+      await expect(
+        modClient.emitEvents({
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+          },
+          subjects: subjects.map((s) => ({ subject: s })),
+          createdBy: 'did:example:admin',
+        }),
+      ).rejects.toThrow('Subjects array contains duplicates')
     })
 
-    it('empty subjects array returns empty results', async () => {
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
-        },
-        subjects: [],
-        createdBy: 'did:example:admin',
-      })
-
-      expect(result.events).toHaveLength(0)
-      expect(result.failedEvents).toHaveLength(0)
+    it('rejects empty subjects array', async () => {
+      await expect(
+        modClient.emitEvents({
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+          },
+          subjects: [],
+          createdBy: 'did:example:admin',
+        }),
+      ).rejects.toThrow('Subjects array must not be empty')
     })
 
     it('works with strongRef subjects (records)', async () => {
@@ -1013,30 +1010,19 @@ describe('moderation-events', () => {
       }
     })
 
-    it('duplicate takedown in same batch — one fails due to race', async () => {
+    it('duplicate takedown in same batch is rejected', async () => {
       const subject = repoRef(sc.dids.carol)
       const subjects = [subject, subject]
 
-      const result = await modClient.emitEvents({
-        event: {
-          $type: 'tools.ozone.moderation.defs#modEventTakedown',
-        },
-        subjects: subjects.map((s) => ({ subject: s })),
-        createdBy: 'did:example:admin',
-      })
-
-      // One should succeed and one should fail (already taken down)
-      expect(result.events.length + result.failedEvents.length).toBe(2)
-      expect(result.events.length).toBeGreaterThanOrEqual(1)
-      expect(result.failedEvents.length).toBeGreaterThanOrEqual(0)
-
-      // If one failed, it should be the "already taken down" error
-      if (result.failedEvents.length > 0) {
-        expect(result.failedEvents[0].error).toContain('already taken down')
-      }
-
-      // Clean up
-      await modClient.performReverseTakedown({ subject })
+      await expect(
+        modClient.emitEvents({
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventTakedown',
+          },
+          subjects: subjects.map((s) => ({ subject: s })),
+          createdBy: 'did:example:admin',
+        }),
+      ).rejects.toThrow('Subjects array contains duplicates')
     })
 
     it('bulk email events on repo subjects', async () => {

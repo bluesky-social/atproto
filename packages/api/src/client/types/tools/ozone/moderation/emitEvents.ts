@@ -64,9 +64,23 @@ export class InvalidLabelError extends XRPCError {
   }
 }
 
+export class DuplicateSubjectsError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class EmptySubjectsError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'InvalidLabel') return new InvalidLabelError(e)
+    if (e.error === 'DuplicateSubjects') return new DuplicateSubjectsError(e)
+    if (e.error === 'EmptySubjects') return new EmptySubjectsError(e)
   }
 
   return e
