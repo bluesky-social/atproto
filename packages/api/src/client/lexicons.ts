@@ -16018,6 +16018,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'lex:tools.ozone.moderation.defs#ageAssurancePurgeEvent',
               'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
               'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
               'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
@@ -16095,6 +16096,7 @@ export const schemaDict = {
               'lex:tools.ozone.moderation.defs#modEventPriorityScore',
               'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
               'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+              'lex:tools.ozone.moderation.defs#ageAssurancePurgeEvent',
               'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
               'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
               'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
@@ -16658,6 +16660,19 @@ export const schemaDict = {
             type: 'string',
             minLength: 1,
             description: 'Comment describing the reason for the override.',
+          },
+        },
+      },
+      ageAssurancePurgeEvent: {
+        type: 'object',
+        description:
+          'Purges all age assurance events for the subject. Only works on DID subjects. Moderator-only.',
+        required: ['comment'],
+        properties: {
+          comment: {
+            type: 'string',
+            minLength: 1,
+            description: 'Comment describing the reason for the purge.',
           },
         },
       },
@@ -17534,6 +17549,7 @@ export const schemaDict = {
                   'lex:tools.ozone.moderation.defs#modEventPriorityScore',
                   'lex:tools.ozone.moderation.defs#ageAssuranceEvent',
                   'lex:tools.ozone.moderation.defs#ageAssuranceOverrideEvent',
+                  'lex:tools.ozone.moderation.defs#ageAssurancePurgeEvent',
                   'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
                   'lex:tools.ozone.moderation.defs#scheduleTakedownEvent',
                   'lex:tools.ozone.moderation.defs#cancelScheduledTakedownEvent',
