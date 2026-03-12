@@ -96,7 +96,6 @@ export const verifyDiff = async (
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids,
-      preorderOps: [],
     },
   }
 }

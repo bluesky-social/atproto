@@ -25,7 +25,7 @@ export type MstDiffOpts = {
 
 export const nullDiff = async (
   tree: MST,
-  trackPreorder: boolean,
+  trackPreorder: boolean = false,
 ): Promise<DataDiff> => {
   if (!trackPreorder) {
     const diff = new DataDiff()

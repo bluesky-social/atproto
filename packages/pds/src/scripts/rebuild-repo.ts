@@ -97,7 +97,6 @@ export const rebuildRepo = async (
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids: toDelete,
-      preorderOps: [],
       ops: [],
       blobs: new CidSet(),
       prevData: null,

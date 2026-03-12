@@ -153,7 +153,7 @@ export type CommitData = {
   newBlocks: BlockMap
   relevantBlocks: BlockMap
   removedCids: CidSet
-  preorderOps: PreorderOp[]
+  preorderOps?: PreorderOp[]
 }
 
 export type RepoUpdate = CommitData & {

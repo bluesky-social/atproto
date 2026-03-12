@@ -90,9 +90,13 @@ export class SqlRepoReader extends ReadableBlockstore {
   async *iterateCarBlocksPreorder(root: CID): AsyncIterable<CarBlock> {
     // Yield the commit block first (not in preorder_map)
     const commitBytes = await this.getBytes(root)
-    if (commitBytes) {
-      yield { cid: root, bytes: commitBytes }
+    if (!commitBytes) {
+      throw new Error(
+        `Missing commit block bytes for root CID ${root.toString()}`,
+      )
     }
+    yield { cid: root, bytes: commitBytes }
+
     // Yield remaining blocks in preorder traversal order
     const { ref } = this.db.db.dynamic
     let lastLpath = ''

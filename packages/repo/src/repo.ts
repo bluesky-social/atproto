@@ -73,7 +73,7 @@ export class Repo extends ReadableRepo {
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids: diff.removedCids,
-      preorderOps: diff.preorderOps ?? [],
+      preorderOps: diff.preorderOps ?? undefined,
     }
   }
 
@@ -185,7 +185,7 @@ export class Repo extends ReadableRepo {
       newBlocks,
       relevantBlocks,
       removedCids,
-      preorderOps: diff.preorderOps ?? [],
+      preorderOps: diff.preorderOps ?? undefined,
     }
   }
 
@@ -223,7 +223,6 @@ export class Repo extends ReadableRepo {
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids: new CidSet([this.cid]),
-      preorderOps: [],
     }
   }
 
