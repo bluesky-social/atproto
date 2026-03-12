@@ -123,3 +123,24 @@ export const ensureV3Commit = (commit: LegacyV2Commit | Commit): Commit => {
     }
   }
 }
+
+export async function concatBytesAsync(iterable: AsyncIterable<Uint8Array>) {
+  const chunks: Uint8Array[] = []
+  for await (const chunk of iterable) chunks.push(chunk)
+  return concatBytes(chunks)
+}
+
+/**
+ * This is the same as {@link Buffer.concat}, without the `totalLength` argument.
+ */
+export function concatBytes(chunks: readonly Uint8Array[]): Uint8Array {
+  let totalLength = 0
+  for (const chunk of chunks) totalLength += chunk.byteLength
+  const result = new Uint8Array(totalLength)
+  let offset = 0
+  for (const chunk of chunks) {
+    result.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return result
+}

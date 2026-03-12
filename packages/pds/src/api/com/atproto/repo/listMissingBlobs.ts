@@ -11,8 +11,7 @@ export default function (server: Server, ctx: AppContext) {
     }),
     handler: async ({ auth, params }) => {
       const { did } = auth.credentials
-      // @TODO infer that "limit" cannot be undefined thanks to "default" in schema
-      const { limit = 500, cursor } = params
+      const { limit, cursor } = params
 
       const blobs = await ctx.actorStore.read(did, (store) =>
         store.repo.blob.listMissingBlobs({ limit, cursor }),

@@ -3,7 +3,13 @@ import stream from 'node:stream'
 import { fromStream as fileTypeFromStream } from 'file-type'
 import PQueue from 'p-queue'
 import { SECOND, cloneStream, streamSize } from '@atproto/common'
-import { BlobRef, Cid, cidForRawHash, parseCid } from '@atproto/lex-data'
+import {
+  BlobRef,
+  Cid,
+  LegacyBlobRef,
+  cidForRawHash,
+  parseCid,
+} from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
 import { AtUri, currentDatetimeString } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
@@ -30,10 +36,13 @@ export class BlobTransactor extends BlobReader {
     super(db, blobstore)
   }
 
-  async insertBlobs(recordUri: string, blobs: Iterable<BlobRef>) {
-    const values = Array.from(blobs, (cid) => ({
+  async insertBlobs(
+    recordUri: string,
+    blobs: Iterable<BlobRef | LegacyBlobRef>,
+  ) {
+    const values = Array.from(blobs, (blob) => ({
       recordUri,
-      blobCid: cid.ref.toString(),
+      blobCid: '$type' in blob ? blob.ref.toString() : blob.cid,
     }))
 
     if (values.length) {

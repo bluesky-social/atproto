@@ -568,7 +568,7 @@ export class ServerConfig {
   }
 
   get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids?.filter(isDidString) ?? []
+    return (this.cfg.labelsFromIssuerDids ?? []) as readonly DidString[]
   }
 
   get blobCacheLocation() {

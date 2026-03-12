@@ -41,9 +41,6 @@ import {
   BlockedPost,
   BookmarkView,
   Embed,
-  EmbedBlocked,
-  EmbedDetached,
-  EmbedNotFound,
   EmbedView,
   ExternalEmbed,
   ExternalEmbedView,
@@ -114,9 +111,8 @@ import {
   parseThreadGate,
 } from './util'
 
-const notificationDeletedRecord = {
-  $type: 'app.bsky.notification.defs#recordDeleted' as const,
-}
+const notificationDeletedRecord =
+  app.bsky.notification.defs.recordDeleted.$build({})
 
 // Pre-computed CID for the `notificationDeletedRecord`.
 const notificationDeletedRecordCid =
@@ -809,7 +805,11 @@ export class Views {
     const viewer = state.labelerViewers?.get(did)
     const aggs = state.labelerAggs?.get(did)
 
-    const uri = AtUri.make(did, 'app.bsky.labeler.service', 'self').toString()
+    const uri = AtUri.make(
+      did,
+      app.bsky.labeler.service.$type,
+      'self',
+    ).toString()
     const labels = [
       ...(state.labels?.getBySubject(uri) ?? []),
       ...this.selfLabels({
@@ -1077,10 +1077,7 @@ export class Views {
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(uri, post.author.did, state)
     }
-    return {
-      ...post,
-      $type: 'app.bsky.feed.defs#postView',
-    }
+    return app.bsky.feed.defs.postView.$build(post)
   }
 
   blockedPost(
@@ -1088,23 +1085,21 @@ export class Views {
     authorDid: DidString,
     state: HydrationState,
   ): $Typed<BlockedPost> {
-    return {
-      $type: 'app.bsky.feed.defs#blockedPost',
+    return app.bsky.feed.defs.blockedPost.$build({
       uri,
       blocked: true,
       author: {
         did: authorDid,
         viewer: this.blockedProfileViewer(authorDid, state),
       },
-    }
+    })
   }
 
   notFoundPost(uri: AtUriString): $Typed<NotFoundPost> {
-    return {
-      $type: 'app.bsky.feed.defs#notFoundPost',
+    return app.bsky.feed.defs.notFoundPost.$build({
       uri,
       notFound: true,
-    }
+    })
   }
 
   reasonRepost(
@@ -1115,19 +1110,16 @@ export class Views {
     const creatorDid = creatorFromUri(uri)
     const creator = this.profileBasic(creatorDid, state)
     if (!creator) return
-    return {
-      $type: 'app.bsky.feed.defs#reasonRepost',
+    return app.bsky.feed.defs.reasonRepost.$build({
       by: creator,
       uri,
       cid: repost.cid,
       indexedAt: toDatetimeString(this.indexedAt(repost)),
-    }
+    })
   }
 
   reasonPin(): $Typed<ReasonPin> {
-    return {
-      $type: 'app.bsky.feed.defs#reasonPin',
-    }
+    return app.bsky.feed.defs.reasonPin.$build({})
   }
 
   // Bookmarks
@@ -1143,7 +1135,7 @@ export class Views {
     if (!bookmark) return
 
     const atUri = new AtUri(bookmark.subjectUri)
-    if (atUri.collection !== 'app.bsky.feed.post') return
+    if (atUri.collection !== app.bsky.feed.post.$type) return
 
     const item = this.maybePost(atUri.href, state)
     return {
@@ -1187,8 +1179,7 @@ export class Views {
     const rootUri = getRootUri(anchor, postInfo)
     const violatesThreadGate = postInfo.violatesThreadGate
 
-    return {
-      $type: 'app.bsky.feed.defs#threadViewPost',
+    return app.bsky.feed.defs.threadViewPost.$build({
       post,
       parent: !violatesThreadGate
         ? this.threadParent(anchor, rootUri, state, opts.height)
@@ -1205,7 +1196,7 @@ export class Views {
       threadContext: {
         rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
       },
-    }
+    })
   }
 
   threadParent(
@@ -1234,14 +1225,13 @@ export class Views {
     if (this.viewerBlockExists(post.author.did, state)) {
       return this.blockedPost(parentUri, post.author.did, state)
     }
-    return {
-      $type: 'app.bsky.feed.defs#threadViewPost',
+    return app.bsky.feed.defs.threadViewPost.$build({
       post,
       parent: this.threadParent(parentUri, rootUri, state, height - 1),
       threadContext: {
         rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
       },
-    }
+    })
   }
 
   threadReplies(
@@ -1275,8 +1265,7 @@ export class Views {
       if (!this.viewerSeesNeedsReview({ uri, did: post.author.did }, state)) {
         return undefined
       }
-      return {
-        $type: 'app.bsky.feed.defs#threadViewPost',
+      return app.bsky.feed.defs.threadViewPost.$build({
         post,
         replies: this.threadReplies(
           uri,
@@ -1288,7 +1277,7 @@ export class Views {
         threadContext: {
           rootAuthorLike: state.threadContexts?.get(post.uri)?.like,
         },
-      }
+      })
     })
   }
 
@@ -1681,15 +1670,14 @@ export class Views {
     return {
       uri,
       depth,
-      value: {
-        $type: 'app.bsky.unspecced.defs#threadItemPost',
+      value: app.bsky.unspecced.defs.threadItemPost.$build({
         post: postView,
         moreParents: moreParents ?? false,
         moreReplies,
         opThread: isOPThread,
         hiddenByThreadgate: false, // Hidden posts are handled by threadOtherV2
         mutedByViewer: false, // Hidden posts are handled by threadOtherV2
-      },
+      }),
     }
   }
 
@@ -1703,9 +1691,7 @@ export class Views {
     return {
       uri,
       depth,
-      value: {
-        $type: 'app.bsky.unspecced.defs#threadItemNoUnauthenticated',
-      },
+      value: app.bsky.unspecced.defs.threadItemNoUnauthenticated.$build({}),
     }
   }
 
@@ -1719,9 +1705,7 @@ export class Views {
     return {
       uri,
       depth,
-      value: {
-        $type: 'app.bsky.unspecced.defs#threadItemNotFound',
-      },
+      value: app.bsky.unspecced.defs.threadItemNotFound.$build({}),
     }
   }
 
@@ -1739,13 +1723,12 @@ export class Views {
     return {
       uri,
       depth,
-      value: {
-        $type: 'app.bsky.unspecced.defs#threadItemBlocked',
+      value: app.bsky.unspecced.defs.threadItemBlocked.$build({
         author: {
           did: authorDid,
           viewer: this.blockedProfileViewer(authorDid, state),
         },
-      },
+      }),
     }
   }
 
@@ -1922,15 +1905,14 @@ export class Views {
     const base = this.threadOtherV2ItemPostAnchor({ depth, uri })
     return {
       ...base,
-      value: {
-        $type: 'app.bsky.unspecced.defs#threadItemPost',
+      value: app.bsky.unspecced.defs.threadItemPost.$build({
         post: postView,
         hiddenByThreadgate,
         mutedByViewer,
         moreParents: false, // "Other" replies don't have parents.
         moreReplies: 0, // "Other" replies don't have replies hydrated.
         opThread: false, // "Other" replies don't contain OP threads.
-      },
+      }),
     }
   }
 
@@ -2092,23 +2074,21 @@ export class Views {
       alt: img.alt,
       aspectRatio: img.aspectRatio,
     }))
-    return {
-      $type: 'app.bsky.embed.images#view',
+    return app.bsky.embed.images.view.$build({
       images: imgViews,
-    }
+    })
   }
 
   videoEmbed(did: DidString, embed: VideoEmbed): $Typed<VideoEmbedView> {
     const cid = cidFromBlobJson(embed.video)
-    return {
-      $type: 'app.bsky.embed.video#view',
+    return app.bsky.embed.video.view.$build({
       cid,
       playlist: this.videoUriBuilder.playlist({ did, cid }),
       thumbnail: this.videoUriBuilder.thumbnail({ did, cid }),
       alt: embed.alt,
       aspectRatio: embed.aspectRatio,
       presentation: embed.presentation,
-    }
+    })
   }
 
   externalEmbed(
@@ -2116,8 +2096,7 @@ export class Views {
     embed: ExternalEmbed,
   ): $Typed<ExternalEmbedView> {
     const { uri, title, description, thumb } = embed.external
-    return {
-      $type: 'app.bsky.embed.external#view',
+    return app.bsky.embed.external.view.$build({
       external: {
         uri,
         title,
@@ -2130,57 +2109,42 @@ export class Views {
             )
           : undefined,
       },
-    }
+    })
   }
 
-  embedNotFound(uri: AtUriString): {
-    $type: 'app.bsky.embed.record#view'
-    record: $Typed<EmbedNotFound>
-  } {
-    return {
-      $type: 'app.bsky.embed.record#view',
-      record: {
-        $type: 'app.bsky.embed.record#viewNotFound',
+  embedNotFound(uri: AtUriString): $Typed<RecordEmbedView> {
+    return app.bsky.embed.record.view.$build({
+      record: app.bsky.embed.record.viewNotFound.$build({
         uri,
         notFound: true,
-      },
-    }
+      }),
+    })
   }
 
-  embedDetached(uri: AtUriString): {
-    $type: 'app.bsky.embed.record#view'
-    record: $Typed<EmbedDetached>
-  } {
-    return {
-      $type: 'app.bsky.embed.record#view',
-      record: {
-        $type: 'app.bsky.embed.record#viewDetached',
+  embedDetached(uri: AtUriString): $Typed<RecordEmbedView> {
+    return app.bsky.embed.record.view.$build({
+      record: app.bsky.embed.record.viewDetached.$build({
         uri,
         detached: true,
-      },
-    }
+      }),
+    })
   }
 
   embedBlocked(
     uri: AtUriString,
     state: HydrationState,
-  ): {
-    $type: 'app.bsky.embed.record#view'
-    record: $Typed<EmbedBlocked>
-  } {
+  ): $Typed<RecordEmbedView> {
     const creator = creatorFromUri(uri)
-    return {
-      $type: 'app.bsky.embed.record#view',
-      record: {
-        $type: 'app.bsky.embed.record#viewBlocked',
+    return app.bsky.embed.record.view.$build({
+      record: app.bsky.embed.record.viewBlocked.$build({
         uri,
         blocked: true,
         author: {
           did: creator,
           viewer: this.blockedProfileViewer(creator, state),
         },
-      },
-    }
+      }),
+    })
   }
 
   embedPostView(
@@ -2190,8 +2154,7 @@ export class Views {
   ): $Typed<PostEmbedView> | undefined {
     const postView = this.post(uri, state, depth)
     if (!postView) return
-    return {
-      $type: 'app.bsky.embed.record#viewRecord',
+    return app.bsky.embed.record.viewRecord.$build({
       uri: postView.uri,
       cid: postView.cid,
       author: postView.author,
@@ -2203,7 +2166,7 @@ export class Views {
       quoteCount: postView.quoteCount,
       indexedAt: postView.indexedAt,
       embeds: depth > 1 ? undefined : postView.embed ? [postView.embed] : [],
-    }
+    })
   }
 
   recordEmbed(
@@ -2241,7 +2204,7 @@ export class Views {
       return this.embedDetached(uri)
     }
 
-    if (parsedUri.collection === 'app.bsky.feed.post') {
+    if (parsedUri.collection === app.bsky.feed.post.$type) {
       const view = this.embedPostView(uri, state, depth)
       if (!view) return this.embedNotFound(uri)
       const postgateRecordUri = postUriToPostgateUri(parsedUri.toString())
@@ -2250,32 +2213,32 @@ export class Views {
         return this.embedDetached(uri)
       }
       return this.recordEmbedWrapper(view, withTypeTag)
-    } else if (parsedUri.collection === 'app.bsky.feed.generator') {
+    } else if (parsedUri.collection === app.bsky.feed.generator.$type) {
       const view = this.feedGenerator(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
-        { ...view, $type: 'app.bsky.feed.defs#generatorView' },
+        app.bsky.feed.defs.generatorView.$build(view),
         withTypeTag,
       )
-    } else if (parsedUri.collection === 'app.bsky.graph.list') {
+    } else if (parsedUri.collection === app.bsky.graph.list.$type) {
       const view = this.list(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
-        { ...view, $type: 'app.bsky.graph.defs#listView' },
+        app.bsky.graph.defs.listView.$build(view),
         withTypeTag,
       )
-    } else if (parsedUri.collection === 'app.bsky.labeler.service') {
+    } else if (parsedUri.collection === app.bsky.labeler.service.$type) {
       const view = this.labeler(parsedUri.did, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
-        { ...view, $type: 'app.bsky.labeler.defs#labelerView' },
+        app.bsky.labeler.defs.labelerView.$build(view),
         withTypeTag,
       )
-    } else if (parsedUri.collection === 'app.bsky.graph.starterpack') {
+    } else if (parsedUri.collection === app.bsky.graph.starterpack.$type) {
       const view = this.starterPackBasic(uri, state)
       if (!view) return this.embedNotFound(uri)
       return this.recordEmbedWrapper(
-        { ...view, $type: 'app.bsky.graph.defs#starterPackViewBasic' },
+        app.bsky.graph.defs.starterPackViewBasic.$build(view),
         withTypeTag,
       )
     }
@@ -2285,11 +2248,10 @@ export class Views {
   private recordEmbedWrapper<T extends $Typed<RecordEmbedViewInternal>>(
     record: T,
     withTypeTag: boolean,
-  ) {
-    return {
-      $type: withTypeTag ? ('app.bsky.embed.record#view' as const) : undefined,
-      record,
-    } satisfies RecordEmbedView
+  ): RecordEmbedView {
+    return withTypeTag
+      ? app.bsky.embed.record.view.$build({ record })
+      : { record }
   }
 
   recordWithMediaEmbed(
@@ -2312,11 +2274,10 @@ export class Views {
     } else {
       return
     }
-    return {
-      $type: 'app.bsky.embed.recordWithMedia#view',
+    return app.bsky.embed.recordWithMedia.view.$build({
       media: mediaEmbed,
       record: this.recordEmbed(postUri, embed.record, state, depth, false),
-    }
+    })
   }
 
   userReplyDisabled(
@@ -2416,22 +2377,22 @@ export class Views {
       | undefined
       | null
 
-    if (uri.collection === 'app.bsky.feed.post') {
+    if (uri.collection === app.bsky.feed.post.$type) {
       recordInfo = state.posts?.get(notif.uri as AtUriString)
-    } else if (uri.collection === 'app.bsky.feed.like') {
+    } else if (uri.collection === app.bsky.feed.like.$type) {
       recordInfo = state.likes?.get(notif.uri as AtUriString)
-    } else if (uri.collection === 'app.bsky.feed.repost') {
+    } else if (uri.collection === app.bsky.feed.repost.$type) {
       recordInfo = state.reposts?.get(notif.uri as AtUriString)
-    } else if (uri.collection === 'app.bsky.graph.follow') {
+    } else if (uri.collection === app.bsky.graph.follow.$type) {
       recordInfo = state.follows?.get(notif.uri as AtUriString)
-    } else if (uri.collection === 'app.bsky.graph.verification') {
+    } else if (uri.collection === app.bsky.graph.verification.$type) {
       // When a verification record is removed, the record won't be found,
       // both for the `verified` and `unverified` notifications.
       recordInfo = state.verifications?.get(notif.uri as AtUriString) ?? {
         record: notificationDeletedRecord,
         cid: notificationDeletedRecordCid,
       }
-    } else if (uri.collection === 'app.bsky.actor.profile') {
+    } else if (uri.collection === app.bsky.actor.profile.$type) {
       const actor = state.actors?.get(author.did)
       recordInfo =
         actor && actor.profile && actor.profileCid

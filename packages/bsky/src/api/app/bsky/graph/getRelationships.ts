@@ -13,7 +13,12 @@ export default function (server: Server, ctx: AppContext) {
           encoding: 'application/json',
           body: {
             actor,
-            relationships: [],
+            relationships: others.map((actor) => {
+              return app.bsky.graph.defs.notFoundActor.$build({
+                actor,
+                notFound: true,
+              })
+            }),
           },
         }
       }

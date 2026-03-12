@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     handler: async ({ params, auth }) => {
-      const { did, since, limit = 500, cursor } = params
+      const { did, since, limit, cursor } = params
       await assertRepoAvailability(ctx, did, isUserOrAdmin(auth, did))
 
       const blobCids = await ctx.actorStore.read(did, (store) =>

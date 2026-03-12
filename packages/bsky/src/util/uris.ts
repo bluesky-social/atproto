@@ -1,4 +1,6 @@
+import assert from 'node:assert'
 import { AtUri, DidString } from '@atproto/syntax'
+import { app } from '../lexicons/index.js'
 import { StrongRef, parseStrongRef } from '../views/types.js'
 
 /**
@@ -7,8 +9,8 @@ import { StrongRef, parseStrongRef } from '../views/types.js'
  */
 export function postUriToThreadgateUri(postUri: string) {
   const urip = new AtUri(postUri)
-  if (urip.collection === 'app.bsky.feed.post') {
-    urip.collection = 'app.bsky.feed.threadgate'
+  if (urip.collection === app.bsky.feed.post.$type) {
+    urip.collection = app.bsky.feed.threadgate.$type
   }
   return urip.toString()
 }
@@ -19,14 +21,18 @@ export function postUriToThreadgateUri(postUri: string) {
  */
 export function postUriToPostgateUri(postUri: string) {
   const urip = new AtUri(postUri)
-  if (urip.collection === 'app.bsky.feed.post') {
-    urip.collection = 'app.bsky.feed.postgate'
+  if (urip.collection === app.bsky.feed.post.$type) {
+    urip.collection = app.bsky.feed.postgate.$type
   }
   return urip.toString()
 }
 
 export function uriToDid(uri: string): DidString {
-  return new AtUri(uri).did
+  const atUri = new AtUri(uri)
+  const { hostname } = atUri
+  // @NOTE not using atUri.did to avoid re-validating dids (the URIs should be safe)
+  assert(hostname.startsWith('did:'), 'Unexpected uri without DID')
+  return hostname as DidString
 }
 
 // @TODO temp fix for proliferation of invalid pinned post values

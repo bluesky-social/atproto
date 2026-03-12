@@ -111,13 +111,14 @@ export class GraphHydrator {
     includeTakedowns = false,
   ): Promise<Lists> {
     const map: Lists = new HydrationMap()
-    if (uris.length) {
-      const res = await this.dataplane.getListRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<ListRecord>(res.records[i], includeTakedowns)
-        map.set(uris[i], record ?? null)
-      }
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getListRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<ListRecord>(res.records[i], includeTakedowns)
+      map.set(uris[i], record ?? null)
     }
+
     return map
   }
 
@@ -126,16 +127,15 @@ export class GraphHydrator {
     includeTakedowns = false,
   ): Promise<ListItems> {
     const map: ListItems = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getListItemRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const record = parseRecord<ListItemRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uris[i], record ?? null)
-      }
+    const res = await this.dataplane.getListItemRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const record = parseRecord<ListItemRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uris[i], record ?? null)
     }
 
     return map
@@ -146,23 +146,22 @@ export class GraphHydrator {
     viewer: string,
   ): Promise<ListViewerStates> {
     const map: ListViewerStates = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const mutesAndBlocks = await Promise.all(
-        uris.map((uri) => this.getMutesAndBlocks(uri, viewer)),
-      )
-      const listMemberships = await this.dataplane.getListMembership({
-        actorDid: viewer,
-        listUris: uris,
+    const mutesAndBlocks = await Promise.all(
+      uris.map((uri) => this.getMutesAndBlocks(uri, viewer)),
+    )
+    const listMemberships = await this.dataplane.getListMembership({
+      actorDid: viewer,
+      listUris: uris,
+    })
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i]
+      map.set(uri, {
+        viewerMuted: mutesAndBlocks[i].muted ? uri : undefined,
+        viewerListBlockUri: mutesAndBlocks[i].listBlockUri || undefined,
+        viewerInList: listMemberships.listitemUris[i],
       })
-      for (let i = 0; i < uris.length; i++) {
-        const uri = uris[i]
-        map.set(uri, {
-          viewerMuted: mutesAndBlocks[i].muted ? uri : undefined,
-          viewerListBlockUri: mutesAndBlocks[i].listBlockUri || undefined,
-          viewerInList: listMemberships.listitemUris[i],
-        })
-      }
     }
 
     return map
@@ -210,17 +209,15 @@ export class GraphHydrator {
     includeTakedowns = false,
   ): Promise<Follows> {
     const map: Follows = new HydrationMap()
-    if (uris.length) {
-      const res = await this.dataplane.getFollowRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const uri = uris[i]
-        const record = parseRecord<FollowRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uri, record ?? null)
-      }
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getFollowRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i]
+      const record = parseRecord<FollowRecord>(res.records[i], includeTakedowns)
+      map.set(uri, record ?? null)
     }
+
     return map
   }
 
@@ -229,17 +226,18 @@ export class GraphHydrator {
     includeTakedowns = false,
   ): Promise<Verifications> {
     const map: Verifications = new HydrationMap()
-    if (uris.length) {
-      const res = await this.dataplane.getVerificationRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const uri = uris[i]
-        const record = parseRecord<VerificationRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uri, record ?? null)
-      }
+    if (!uris.length) return map
+
+    const res = await this.dataplane.getVerificationRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i]
+      const record = parseRecord<VerificationRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uri, record ?? null)
     }
+
     return map
   }
 
@@ -248,17 +246,13 @@ export class GraphHydrator {
     includeTakedowns = false,
   ): Promise<HydrationMap<AtUriString, Block>> {
     const map = new HydrationMap<AtUriString, Block>()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getBlockRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const uri = uris[i]
-        const record = parseRecord<BlockRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uri, record ?? null)
-      }
+    const res = await this.dataplane.getBlockRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i]
+      const record = parseRecord<BlockRecord>(res.records[i], includeTakedowns)
+      map.set(uri, record ?? null)
     }
 
     return map
@@ -297,17 +291,16 @@ export class GraphHydrator {
     includeTakedowns = false,
   ): Promise<StarterPacks> {
     const map: StarterPacks = new HydrationMap()
+    if (!uris.length) return map
 
-    if (uris.length) {
-      const res = await this.dataplane.getStarterPackRecords({ uris })
-      for (let i = 0; i < uris.length; i++) {
-        const uri = uris[i]
-        const record = parseRecord<StarterPackRecord>(
-          res.records[i],
-          includeTakedowns,
-        )
-        map.set(uri, record ?? null)
-      }
+    const res = await this.dataplane.getStarterPackRecords({ uris })
+    for (let i = 0; i < uris.length; i++) {
+      const uri = uris[i]
+      const record = parseRecord<StarterPackRecord>(
+        res.records[i],
+        includeTakedowns,
+      )
+      map.set(uri, record ?? null)
     }
 
     return map

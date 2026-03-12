@@ -91,7 +91,7 @@ const getPostThreadMunge: MungeFn<
 > = async (localViewer, original, local) => {
   // @TODO if is NotFoundPost, handle similarly to error
   // @NOTE not necessary right now as we never return those for the requested uri
-  if (!app.bsky.feed.defs.threadViewPost.$matches(original.thread)) {
+  if (!app.bsky.feed.defs.threadViewPost.$isTypeOf(original.thread)) {
     return original
   }
   const thread = await addPostsToThread(
@@ -151,7 +151,7 @@ const insertIntoThreadReplies = async (
   if (!view.replies) return view
   const replies = await Promise.all(
     view.replies.map(async (reply) =>
-      app.bsky.feed.defs.threadViewPost.$matches(reply)
+      app.bsky.feed.defs.threadViewPost.$isTypeOf(reply)
         ? await insertIntoThreadReplies(localViewer, reply, descript)
         : reply,
     ),
@@ -168,10 +168,9 @@ const threadPostView = async (
 ): Promise<l.$Typed<app.bsky.feed.defs.ThreadViewPost> | null> => {
   const postView = await localViewer.getPost(descript)
   if (!postView) return null
-  return {
-    $type: 'app.bsky.feed.defs#threadViewPost',
+  return app.bsky.feed.defs.threadViewPost.$build({
     post: postView,
-  }
+  })
 }
 
 // Read after write on error

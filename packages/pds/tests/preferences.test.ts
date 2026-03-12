@@ -1,5 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import type { Unknown$Type } from '@atproto/lex'
 import usersSeed from './seeds/users'
 
 describe('user preferences', () => {
@@ -55,10 +56,7 @@ describe('user preferences', () => {
   it('only gets preferences in app.bsky namespace.', async () => {
     await network.pds.ctx.actorStore.transact(sc.dids.alice, (store) =>
       store.pref.putPreferences(
-        [
-          // @ts-expect-error unspecced pref
-          { $type: 'com.atproto.server.defs#unknown' },
-        ],
+        [{ $type: 'com.atproto.server.defs#unknown' as Unknown$Type }],
         'com.atproto',
         {
           hasAccessFull: true,

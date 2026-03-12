@@ -1,5 +1,6 @@
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { app } from '../lexicons/index.js'
 import { ParsedLabelers } from '../util'
 import { Label, LabelerRecord } from '../views/types.js'
 import {
@@ -197,7 +198,7 @@ export class LabelHydrator {
 }
 
 const labelerDidToUri = (did: DidString): AtUriString => {
-  return AtUri.make(did, 'app.bsky.labeler.service', 'self').toString()
+  return AtUri.make(did, app.bsky.labeler.service.$type, 'self').toString()
 }
 
 const IMPERSONATION_LABEL = 'impersonation'

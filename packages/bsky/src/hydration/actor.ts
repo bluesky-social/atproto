@@ -392,14 +392,12 @@ export class ActorHydrator {
     const map: ProfileViewerStates = new HydrationMap()
     if (!actors.length) return map
 
-    // @NOTE we are not using getDidsDefined here because we want to preserve
-    // the order of the input and be able to handle cases where some of the
-    // inputs don't resolve to a DID.
-    const actorDids = await this.getDids(actors).catch(() => {
-      // Failed to resolve handles. Ignore handles from input.
-      return actors.map((actor) => (isDidIdentifier(actor) ? actor : undefined))
-    })
+    // @TODO we could use "await this.getDids(actors)" here to resolve the
+    // handles (no other code change should be needed). This was not done as
+    // part of this PR to avoid changing the behavior of this method.
+    const actorDids = actors.map((a) => (isDidIdentifier(a) ? a : undefined))
 
+    // getRelationships requires DidString so we string anything that isn't one
     const actorDidsDefined = Array.from(
       new Set(
         actorDids

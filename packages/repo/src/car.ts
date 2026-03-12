@@ -4,6 +4,7 @@ import * as cbor from '@atproto/lex-cbor'
 import { Cid, decodeCid, isCidForBytes } from '@atproto/lex-data'
 import { BlockMap } from './block-map'
 import { CarBlock, schema } from './types'
+import { concatBytesAsync } from './util'
 
 export async function* writeCarStream(
   root: Cid | null,
@@ -30,11 +31,7 @@ export async function blocksToCarFile(
   root: Cid | null,
   blocks: BlockMap,
 ): Promise<Uint8Array> {
-  const chunks: Uint8Array[] = []
-  for await (const chunk of blocksToCarStream(root, blocks)) {
-    chunks.push(chunk)
-  }
-  return Buffer.concat(chunks)
+  return concatBytesAsync(blocksToCarStream(root, blocks))
 }
 
 export const blocksToCarStream = (

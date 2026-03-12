@@ -6,25 +6,30 @@ import { com } from '../../../../lexicons/index.js'
 export default function (server: Server, ctx: AppContext) {
   const { entrywayClient } = ctx
 
-  server.add(com.atproto.admin.updateAccountPassword, {
-    auth: ctx.authVerifier.adminToken,
-    handler: entrywayClient
-      ? async ({ input: { body }, req }) => {
-          const { headers } = ctx.entrywayPassthruHeaders(req)
-          await entrywayClient.xrpc(com.atproto.admin.updateAccountPassword, {
-            validateResponse: false, // ignore invalid upstream responses
-            body,
-            headers,
-          })
+  if (entrywayClient) {
+    server.add(com.atproto.admin.updateAccountPassword, {
+      auth: ctx.authVerifier.adminToken,
+      handler: async ({ input: { body }, req }) => {
+        const { headers } = ctx.entrywayPassthruHeaders(req)
+        await entrywayClient.xrpc(com.atproto.admin.updateAccountPassword, {
+          validateResponse: false, // ignore invalid upstream responses
+          body,
+          headers,
+        })
+      },
+    })
+  } else {
+    server.add(com.atproto.admin.updateAccountPassword, {
+      auth: ctx.authVerifier.adminToken,
+      handler: async ({ input: { body } }) => {
+        const { did, password } = body
+
+        if (password.length > NEW_PASSWORD_MAX_LENGTH) {
+          throw new InvalidRequestError('Invalid password length.')
         }
-      : async ({ input: { body } }) => {
-          const { did, password } = body
 
-          if (password.length > NEW_PASSWORD_MAX_LENGTH) {
-            throw new InvalidRequestError('Invalid password length.')
-          }
-
-          await ctx.accountManager.updateAccountPassword({ did, password })
-        },
-  })
+        await ctx.accountManager.updateAccountPassword({ did, password })
+      },
+    })
+  }
 }
