@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { MST, def } from '@atproto/repo'
+import { MST, def, readCarStream } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { AppContext } from '../src/context'
 
@@ -178,5 +178,46 @@ describe('preorder map', () => {
       })
     }
     await verifyPreorderMap()
+  })
+
+  it('getRepo CAR contains duplicate blocks for records with the same CID', async () => {
+    // Create two records with identical content — different rkeys, same CID
+    const record = {
+      $type: 'app.bsky.feed.post',
+      text: 'duplicate content',
+      createdAt: '2024-01-01T00:00:00.000Z',
+    }
+    await agent.api.com.atproto.repo.createRecord({
+      repo: agent.accountDid,
+      collection: 'app.bsky.feed.post',
+      rkey: 'dup-a',
+      record,
+    })
+    await agent.api.com.atproto.repo.createRecord({
+      repo: agent.accountDid,
+      collection: 'app.bsky.feed.post',
+      rkey: 'dup-b',
+      record,
+    })
+
+    // Export via getRepo
+    const carRes = await agent.api.com.atproto.sync.getRepo({
+      did: agent.accountDid,
+    })
+
+    // Parse the CAR stream, counting CID occurrences
+    const { blocks } = await readCarStream([carRes.data])
+    const cidCounts = new Map<string, number>()
+    for await (const block of blocks) {
+      const key = block.cid.toString()
+      cidCounts.set(key, (cidCounts.get(key) ?? 0) + 1)
+    }
+
+    // Find the duplicate record CID (appears more than once)
+    const duplicates = [...cidCounts.entries()].filter(
+      ([_, count]) => count > 1,
+    )
+    expect(duplicates.length).toBe(1)
+    expect(duplicates[0][1]).toBe(2)
   })
 })
