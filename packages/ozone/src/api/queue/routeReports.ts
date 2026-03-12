@@ -11,7 +11,7 @@ export default function (server: Server, ctx: AppContext) {
       const access = auth.credentials
       const { startReportId, endReportId } = input.body
 
-      if (!access.isAdmin) {
+      if (!access.isModerator) {
         throw new AuthRequiredError('Must be an admin to re-route reports')
       }
       if (startReportId > endReportId) {
