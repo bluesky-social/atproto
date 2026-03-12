@@ -18,7 +18,10 @@ export default function (server: Server, ctx: AppContext) {
 
       const report = await getReportById(db, params.id)
       if (!report) {
-        throw new InvalidRequestError(`Report not found: ${params.id}`, 'NotFound')
+        throw new InvalidRequestError(
+          `Report not found: ${params.id}`,
+          'NotFound',
+        )
       }
 
       const queueService = ctx.queueService(db)
