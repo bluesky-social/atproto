@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Re-route reports within an ID range to matching queues based on current queue configuration.",
+      "description": "Route reports within an ID range to matching queues based.",
       "input": {
         "encoding": "application/json",
         "schema": {

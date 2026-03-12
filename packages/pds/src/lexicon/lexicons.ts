@@ -19082,7 +19082,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Re-route reports within an ID range to matching queues based on current queue configuration.',
+          'Route reports within an ID range to matching queues based.',
         input: {
           encoding: 'application/json',
           schema: {
