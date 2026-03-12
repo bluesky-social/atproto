@@ -1,10 +1,30 @@
-import { sql } from 'kysely'
 import { AtUri } from '@atproto/syntax'
+import { sql } from 'kysely'
 import { Database } from '../db'
 import { Report } from '../db/schema/report'
 import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports'
 
-export function getReportStatusForEventType(eventType: string): string | null {
+export type ReportStatus = 'open' | 'assigned' | 'closed' | 'escalated'
+
+const transitions: Record<ReportStatus, ReportStatus[]> = {
+  open: ['assigned', 'closed', 'escalated'],
+  assigned: ['open', 'closed', 'escalated'],
+  escalated: ['assigned', 'closed'],
+  closed: ['open', 'assigned', 'escalated'],
+}
+export function transitionReportStatus(
+  current: ReportStatus,
+  next: ReportStatus,
+): ReportStatus | null {
+  if (transitions[current].includes(next)) {
+    return next
+  }
+  return null
+}
+
+export function getReportStatusForEventType(
+  eventType: string,
+): ReportStatus | null {
   // Returns the status that reports should transition to for a given event type
   // Returns null if the event type doesn't affect report status
   switch (eventType) {
@@ -254,7 +274,7 @@ export async function findReportsForSubject(
 
   if (params.targetAll) {
     // Target all open/escalated reports on the subject
-    builder = builder.where('r.status', 'in', ['open', 'escalated'])
+    builder = builder.where('r.status', 'in', ['open', 'assigned', 'escalated'])
   } else if (params.reportIds?.length) {
     // Target specific report IDs
     builder = builder.where('r.id', 'in', params.reportIds)
@@ -342,28 +362,30 @@ export async function processReportAction(
   }
 
   // Determine the new status based on event type
-  const newStatus = getReportStatusForEventType(eventType)
-  if (!newStatus) {
+  const requestedStatus = getReportStatusForEventType(eventType)
+  if (!requestedStatus) {
     // Event type doesn't affect report status, no updates needed
     return 0
   }
 
   // Update all matched reports
   const now = new Date().toISOString()
-  const reportIds = matchingReports.map((r) => r.id)
-
-  for (const reportId of reportIds) {
+  for (const report of matchingReports) {
+    const newStatus = transitionReportStatus(
+      report.status as ReportStatus,
+      requestedStatus,
+    )
     await db.db
       .updateTable('report')
       .set({
         actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
         actionNote: reportAction.note ?? null,
-        status: newStatus,
+        status: newStatus ?? undefined,
         updatedAt: now,
       })
-      .where('id', '=', reportId)
+      .where('id', '=', report.id)
       .execute()
   }
 
-  return reportIds.length
+  return matchingReports.length
 }

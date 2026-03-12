@@ -6,6 +6,10 @@ import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 import { ReportQueue } from '../db/schema/report_queue'
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
+import {
+  ReportStatus,
+  transitionReportStatus,
+} from '../mod-service/report'
 import { QueueService, QueueServiceCreator } from '../queue/service'
 import { TeamService, TeamServiceCreator } from '../team'
 
@@ -437,6 +441,7 @@ export class AssignmentService {
         .executeTakeFirstOrThrow()
     })
 
+    await this.updateReportStatus(reportId, 'assigned')
     return this.hydrateReportAssignment(result.id)
   }
 
@@ -476,7 +481,33 @@ export class AssignmentService {
       return updated
     })
 
+    await this.updateReportStatus(reportId, 'open')
+
     return this.hydrateReportAssignment(result.id)
+  }
+
+  private async updateReportStatus(
+    reportId: number,
+    next: ReportStatus,
+  ): Promise<void> {
+    const report = await this.db.db
+      .selectFrom('report')
+      .select(['id', 'status'])
+      .where('id', '=', reportId)
+      .executeTakeFirst()
+    if (!report) return
+
+    const newStatus = transitionReportStatus(
+      report.status as ReportStatus,
+      next,
+    )
+    if (!newStatus) return
+
+    await this.db.db
+      .updateTable('report')
+      .set({ status: newStatus, updatedAt: new Date().toISOString() })
+      .where('id', '=', reportId)
+      .execute()
   }
 
   private async checkReport(reportId: number): Promise<void> {
@@ -593,7 +624,7 @@ export class AssignmentService {
       reportId: row.reportId!,
       ...(queueView ? { queue: queueView } : {}),
       startAt: row.startAt,
-      ...(row.endAt !== null ? { endAt: row.endAt } : {}),
+      endAt: row.endAt ?? undefined,
     }
   }
 }

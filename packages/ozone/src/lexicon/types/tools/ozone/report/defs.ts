@@ -169,7 +169,7 @@ export interface ReportView {
   /** ID of the moderation event that created this report */
   eventId: number
   /** Current status of the report */
-  status: 'open' | 'closed' | 'escalated' | (string & {})
+  status: 'open' | 'assigned' | 'closed' | 'escalated' | (string & {})
   subject: ToolsOzoneModerationDefs.SubjectView
   reportType: ComAtprotoModerationDefs.ReasonType
   /** DID of the user who made the report */

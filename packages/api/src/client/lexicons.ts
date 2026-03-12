@@ -19507,7 +19507,7 @@ export const schemaDict = {
           },
           status: {
             type: 'string',
-            knownValues: ['open', 'closed', 'escalated'],
+            knownValues: ['open', 'assigned', 'closed', 'escalated'],
             description: 'Current status of the report',
           },
           subject: {
@@ -19745,7 +19745,7 @@ export const schemaDict = {
             },
             status: {
               type: 'string',
-              knownValues: ['open', 'closed', 'escalated'],
+              knownValues: ['open', 'assigned', 'closed', 'escalated'],
               description: 'Filter by report status.',
             },
             subject: {

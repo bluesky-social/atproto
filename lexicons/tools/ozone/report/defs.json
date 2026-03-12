@@ -264,7 +264,7 @@
         },
         "status": {
           "type": "string",
-          "knownValues": ["open", "closed", "escalated"],
+          "knownValues": ["open", "assigned", "closed", "escalated"],
           "description": "Current status of the report"
         },
         "subject": {
