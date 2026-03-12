@@ -12,7 +12,11 @@ export class DataDiff {
   newMstBlocks: BlockMap = new BlockMap()
   newLeafCids: CidSet = new CidSet()
   removedCids: CidSet = new CidSet()
-  preorderOps: PreorderOp[] = []
+  preorderOps: PreorderOp[] | null
+
+  constructor(opts?: { trackPreorder?: boolean }) {
+    this.preorderOps = opts?.trackPreorder ? [] : null
+  }
 
   static async of(
     curr: MST,
@@ -20,6 +24,10 @@ export class DataDiff {
     opts?: MstDiffOpts,
   ): Promise<DataDiff> {
     return mstDiff(curr, prev, opts)
+  }
+
+  get trackPreorder(): boolean {
+    return this.preorderOps !== null
   }
 
   async nodeAdd(node: NodeEntry) {
@@ -81,6 +89,46 @@ export class DataDiff {
       this.newMstBlocks.delete(cid)
     } else {
       this.removedCids.add(cid)
+    }
+  }
+
+  // Preorder tracking: emit insert op for a node (no-op if not tracking)
+  async preorderInsert(node: NodeEntry, lpath: string): Promise<void> {
+    if (!this.preorderOps) return
+    if (node.isTree()) {
+      const layer = await node.getLayer()
+      this.preorderOps.push({
+        action: 'insert',
+        lpath,
+        depth: 129 - layer,
+        cid: node.pointer.toString(),
+      })
+    } else {
+      this.preorderOps.push({
+        action: 'insert',
+        lpath: node.key,
+        depth: 0,
+        cid: node.value.toString(),
+      })
+    }
+  }
+
+  // Preorder tracking: emit delete op for a node (no-op if not tracking)
+  async preorderDelete(node: NodeEntry, lpath: string): Promise<void> {
+    if (!this.preorderOps) return
+    if (node.isTree()) {
+      const layer = await node.getLayer()
+      this.preorderOps.push({
+        action: 'delete',
+        lpath,
+        depth: 129 - layer,
+      })
+    } else {
+      this.preorderOps.push({
+        action: 'delete',
+        lpath: node.key,
+        depth: 0,
+      })
     }
   }
 
