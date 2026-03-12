@@ -13,9 +13,20 @@ type WalkerStatusProgress = {
 
 type WalkerStatus = WalkerStatusDone | WalkerStatusProgress
 
+export const rightmostLeaf = async (node: MST): Promise<string | null> => {
+  const entries = await node.getEntries()
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const entry = entries[i]
+    if (entry.isLeaf()) return entry.key
+    if (entry.isTree()) return rightmostLeaf(entry)
+  }
+  return null
+}
+
 export class MstWalker {
   stack: WalkerStatus[] = []
   status: WalkerStatus
+  lastLeafKey: string = ''
 
   constructor(public root: MST) {
     this.status = {
@@ -110,6 +121,7 @@ export class MstWalker {
   async advance(): Promise<void> {
     if (this.status.done) return
     if (this.status.curr.isLeaf()) {
+      this.lastLeafKey = this.status.curr.key
       await this.stepOver()
     } else {
       await this.stepInto()

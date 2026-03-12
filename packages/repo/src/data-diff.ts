@@ -1,7 +1,8 @@
 import { CID } from 'multiformats'
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
-import { MST, NodeEntry, mstDiff } from './mst'
+import { MST, MstDiffOpts, NodeEntry, mstDiff } from './mst'
+import { PreorderOp } from './types'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
@@ -11,9 +12,14 @@ export class DataDiff {
   newMstBlocks: BlockMap = new BlockMap()
   newLeafCids: CidSet = new CidSet()
   removedCids: CidSet = new CidSet()
+  preorderOps: PreorderOp[] = []
 
-  static async of(curr: MST, prev: MST | null): Promise<DataDiff> {
-    return mstDiff(curr, prev)
+  static async of(
+    curr: MST,
+    prev: MST | null,
+    opts?: MstDiffOpts,
+  ): Promise<DataDiff> {
+    return mstDiff(curr, prev, opts)
   }
 
   async nodeAdd(node: NodeEntry) {

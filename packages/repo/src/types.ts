@@ -124,6 +124,24 @@ export type RecordWriteDescript =
 
 export type WriteLog = RecordWriteDescript[][]
 
+// Preorder Map
+// ---------------
+
+export type PreorderOpInsert = {
+  action: 'insert'
+  lpath: string
+  depth: number
+  cid: string
+}
+
+export type PreorderOpDelete = {
+  action: 'delete'
+  lpath: string
+  depth: number
+}
+
+export type PreorderOp = PreorderOpInsert | PreorderOpDelete
+
 // Updates/Commits
 // ---------------
 
@@ -135,6 +153,7 @@ export type CommitData = {
   newBlocks: BlockMap
   relevantBlocks: BlockMap
   removedCids: CidSet
+  preorderOps: PreorderOp[]
 }
 
 export type RepoUpdate = CommitData & {
