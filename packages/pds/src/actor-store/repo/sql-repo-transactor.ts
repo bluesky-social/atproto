@@ -1,11 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
-import {
-  BlockMap,
-  CommitData,
-  PreorderOp,
-  RepoStorage,
-} from '@atproto/repo'
+import { BlockMap, CommitData, PreorderOp, RepoStorage } from '@atproto/repo'
 import { ActorDb, RepoBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
@@ -103,10 +98,7 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
       }
     }
     for (const batch of chunkArray(inserts, 50)) {
-      await this.db.db
-        .insertInto('preorder_map')
-        .values(batch)
-        .execute()
+      await this.db.db.insertInto('preorder_map').values(batch).execute()
     }
   }
 
