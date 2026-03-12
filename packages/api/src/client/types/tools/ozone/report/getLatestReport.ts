@@ -14,14 +14,14 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.getReport'
+const id = 'tools.ozone.report.getLatestReport'
 
-export type QueryParams = {
-  /** The ID of the report to retrieve. */
-  id: number
-}
+export type QueryParams = {}
 export type InputSchema = undefined
-export type OutputSchema = ToolsOzoneReportDefs.ReportView
+
+export interface OutputSchema {
+  report: ToolsOzoneReportDefs.ReportView
+}
 
 export interface CallOptions {
   signal?: AbortSignal

@@ -212,6 +212,20 @@ describe('queue-router', () => {
       expect(report.queuedAt).toBeUndefined()
     })
 
+    it('skips unmatched reports (queueId = -1)', async () => {
+      // The previous test already set carol's report to queueId = -1 (REASON_MISLEADING)
+      const report = await queryLatestReportForSubject(sc.dids.carol)
+      expect(report).toBeDefined()
+      expect(report.queue).toBeUndefined() // queueId = -1
+
+      // Run the routing again
+      await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+      const reportAfter = await queryLatestReportForSubject(sc.dids.carol)
+      expect(reportAfter.queue).toBeUndefined() // still unmatched, was skipped
+      expect(reportAfter.id).toBe(report.id) // same report, unchanged
+    })
+
     it('advances cursor so already-processed reports are skipped on subsequent runs', async () => {
       await reportAccount(sc.dids.dan, REASON_HARASSMENT)
 

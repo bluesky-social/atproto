@@ -1,5 +1,6 @@
 import { Selectable, sql } from 'kysely'
 import { ToolsOzoneQueueDefs } from '@atproto/api'
+import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
@@ -234,4 +235,137 @@ export class QueueService {
       stats: this.emptyStats(),
     }
   }
+
+  /**
+   * Assign a batch of reports.
+   */
+  async assignReportBatch(
+    params:
+      | { start: number; end: number; limit: number }
+      | { cursor: number | null; limit: number },
+    opts?: { includeUnmatched?: boolean },
+  ): Promise<{
+    processed: number
+    assigned: number
+    unmatched: number
+    maxId: number
+  }> {
+    const { queues } = await this.list({ limit: 1000, enabled: true })
+
+    if (!queues.length) {
+      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
+    }
+
+    let query = this.db.db
+      .selectFrom('report as r')
+      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+      .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
+      .orderBy('r.id', 'asc')
+      .limit(params.limit)
+
+    if (opts?.includeUnmatched) {
+      query = query.where((qb) => {
+        return qb.orWhere('r.queueId', 'is', null).orWhere('r.queueId', '=', -1)
+      })
+    } else {
+      query = query.where('r.queueId', 'is', null)
+    }
+
+    if ('end' in params) {
+      query = query
+        .where('r.id', '>=', params.start)
+        .where('r.id', '<=', params.end)
+    } else {
+      if (params.cursor !== null) {
+        query = query.where('r.id', '>', params.cursor)
+      }
+    }
+
+    const reports = await query.execute()
+
+    if (!reports.length) {
+      return { processed: 0, assigned: 0, unmatched: 0, maxId: 0 }
+    }
+
+    const now = new Date().toISOString()
+    let assigned = 0
+    let unassigned = 0
+    let maxReportId = 0
+
+    for (const report of reports) {
+      const subjectType = report.subjectMessageId
+        ? 'message'
+        : report.subjectUri
+          ? 'record'
+          : 'account'
+
+      let collection: string | null = null
+      if (report.subjectUri) {
+        try {
+          collection = new AtUri(report.subjectUri).collection || null
+        } catch {
+          collection = null
+        }
+      }
+
+      const reportType = (report.meta as Record<string, unknown> | null)
+        ?.reportType as string | undefined
+
+      const matchingQueue = findMatchingQueue(
+        queues,
+        subjectType,
+        collection,
+        reportType,
+      )
+
+      await this.db.db
+        .updateTable('report')
+        .set({
+          queueId: matchingQueue?.id ?? -1,
+          queuedAt: matchingQueue ? now : null,
+          updatedAt: now,
+        })
+        .where('id', '=', report.id)
+        .execute()
+
+      if (matchingQueue) {
+        assigned++
+      } else {
+        unassigned++
+      }
+
+      if (report.id > maxReportId) maxReportId = report.id
+    }
+
+    return {
+      processed: reports.length,
+      assigned,
+      unmatched: unassigned,
+      maxId: maxReportId,
+    }
+  }
+}
+
+export function findMatchingQueue(
+  queues: Selectable<ReportQueue>[],
+  subjectType: string,
+  collection: string | null,
+  reportType: string | undefined,
+): Selectable<ReportQueue> | null {
+  if (!reportType) return null
+
+  for (const queue of queues) {
+    const subjectTypeMatch = queue.subjectTypes.includes(subjectType)
+    const collectionMatch =
+      subjectType === 'record' && queue.collection !== null
+        ? (collection ?? null) === queue.collection
+        : true
+    const reportTypeMatch = queue.reportTypes.includes(reportType)
+
+    if (subjectTypeMatch && collectionMatch && reportTypeMatch) {
+      return queue
+    }
+  }
+
+  return null
 }

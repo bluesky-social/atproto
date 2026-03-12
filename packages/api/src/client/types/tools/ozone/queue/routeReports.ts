@@ -10,22 +10,32 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.getReport'
+const id = 'tools.ozone.queue.routeReports'
 
-export type QueryParams = {
-  /** The ID of the report to retrieve. */
-  id: number
+export type QueryParams = {}
+
+export interface InputSchema {
+  /** Start of report ID range (inclusive). */
+  startReportId: number
+  /** End of report ID range (inclusive). Difference between start and end must be less than 5,000. */
+  endReportId: number
 }
-export type InputSchema = undefined
-export type OutputSchema = ToolsOzoneReportDefs.ReportView
+
+export interface OutputSchema {
+  /** The number of reports assigned to a queue. */
+  assigned: number
+  /** The number of reports with no matching queue. */
+  unmatched: number
+}
 
 export interface CallOptions {
   signal?: AbortSignal
   headers?: HeadersMap
+  qp?: QueryParams
+  encoding?: 'application/json'
 }
 
 export interface Response {
@@ -34,7 +44,7 @@ export interface Response {
   data: OutputSchema
 }
 
-export class NotFoundError extends XRPCError {
+export class OutOfRangeError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
   }
@@ -42,7 +52,7 @@ export class NotFoundError extends XRPCError {
 
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
-    if (e.error === 'NotFound') return new NotFoundError(e)
+    if (e.error === 'OutOfRange') return new OutOfRangeError(e)
   }
 
   return e

@@ -21,7 +21,13 @@
           "type": "ref",
           "ref": "tools.ozone.report.defs#reportView"
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "NotFound",
+          "description": "No report found."
+        }
+      ]
     }
   }
 }
