@@ -54,18 +54,6 @@ describe('queue-router', () => {
     })
   }
 
-  // Creates a record-level report event via modClient
-  const reportRecord = async (uri: string, cid: string, reportType: string) => {
-    await modClient.emitEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventReport',
-        reportType,
-        comment: 'automated test report',
-      },
-      subject: { $type: 'com.atproto.repo.strongRef', uri, cid },
-    })
-  }
-
   // Returns the most recent report row for a subject directly from the DB.
   // Pass a DID for account subjects or an at:// URI for record subjects.
   const getLatestReportForSubject = async (subjectOrUri: string) => {
@@ -112,8 +100,6 @@ describe('queue-router', () => {
   }
 
   let spamAccountQueueId: number
-  let harassmentAccountQueueId: number
-  let spamPostQueueId: number
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -125,28 +111,14 @@ describe('queue-router', () => {
     await basicSeed(sc)
     await network.processAll()
     await clearQueues()
-    const [spamAccountQueue, harassmentAccountQueue, spamPostQueue] =
-      await Promise.all([
-        createQueue({
-          name: 'QR: Spam Accounts',
-          subjectTypes: ['account'],
-          reportTypes: [REASON_SPAM],
-        }),
-        createQueue({
-          name: 'QR: Harassment Accounts',
-          subjectTypes: ['account'],
-          reportTypes: [REASON_HARASSMENT],
-        }),
-        createQueue({
-          name: 'QR: Spam Posts',
-          subjectTypes: ['record'],
-          reportTypes: [REASON_SPAM],
-          collection: 'app.bsky.feed.post',
-        }),
-      ])
+    const [spamAccountQueue] = await Promise.all([
+      createQueue({
+        name: 'QR: Spam Accounts',
+        subjectTypes: ['account'],
+        reportTypes: [REASON_SPAM],
+      }),
+    ])
     spamAccountQueueId = spamAccountQueue.id
-    harassmentAccountQueueId = harassmentAccountQueue.id
-    spamPostQueueId = spamPostQueue.id
   })
 
   afterAll(async () => {
