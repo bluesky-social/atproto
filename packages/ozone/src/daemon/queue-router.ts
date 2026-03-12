@@ -1,8 +1,5 @@
-import { Selectable } from 'kysely'
 import { MINUTE } from '@atproto/common'
-import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
-import { ReportQueue } from '../db/schema/report_queue'
 import { dbLogger } from '../logger'
 import { QueueServiceCreator } from '../queue/service'
 import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor'
@@ -57,115 +54,29 @@ export class QueueRouter {
 
   async routeReports() {
     const queueService = this.queueServiceCreator(this.db)
-    const { queues } = await queueService.list({ limit: 1000, enabled: true })
-
-    if (!queues.length) {
-      dbLogger.info('no queues configured, skipping queue routing')
-      return
-    }
-
     const lastId = await this.getCursor()
 
-    let query = this.db.db
-      .selectFrom('report as r')
-      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-      .where('r.queueId', 'is', null)
-      .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
-      .orderBy('r.id', 'asc')
-      .limit(BATCH_SIZE)
+    const result = await queueService.assignReportBatch({
+      cursor: lastId,
+      limit: BATCH_SIZE,
+    })
 
-    if (lastId !== null) {
-      query = query.where('r.id', '>', lastId)
-    }
-
-    const reports = await query.execute()
-
-    if (!reports.length) {
+    if (result.processed === 0) {
       dbLogger.info('no unassigned reports to route')
       return
     }
 
-    const now = new Date().toISOString()
-    let assigned = 0
-    let unmatched = 0
-    let maxId = 0
-
-    for (const report of reports) {
-      const subjectType = report.subjectMessageId
-        ? 'message'
-        : report.subjectUri
-          ? 'record'
-          : 'account'
-
-      let collection: string | null = null
-      if (report.subjectUri) {
-        try {
-          collection = new AtUri(report.subjectUri).collection || null
-        } catch {
-          collection = null
-        }
-      }
-
-      const reportType = (report.meta as Record<string, unknown> | null)
-        ?.reportType as string | undefined
-
-      const matchingQueue = findMatchingQueue(
-        queues,
-        subjectType,
-        collection,
-        reportType,
-      )
-
-      await this.db.db
-        .updateTable('report')
-        .set({
-          queueId: matchingQueue?.id ?? -1,
-          queuedAt: matchingQueue ? now : null,
-          updatedAt: now,
-        })
-        .where('id', '=', report.id)
-        .execute()
-
-      if (matchingQueue) {
-        assigned++
-      } else {
-        unmatched++
-      }
-
-      if (report.id > maxId) maxId = report.id
-    }
-
-    await this.updateCursor(maxId)
+    await this.updateCursor(result.maxId)
 
     dbLogger.info(
-      { processed: reports.length, assigned, unmatched },
+      {
+        processed: result.processed,
+        assigned: result.assigned,
+        unmatched: result.unmatched,
+      },
       'queue routing completed',
     )
   }
-}
-
-function findMatchingQueue(
-  queues: Selectable<ReportQueue>[],
-  subjectType: string,
-  collection: string | null,
-  reportType: string | undefined,
-): Selectable<ReportQueue> | null {
-  if (!reportType) return null
-
-  for (const queue of queues) {
-    const subjectTypeMatch = queue.subjectTypes.includes(subjectType)
-    const collectionMatch =
-      subjectType === 'record' && queue.collection !== null
-        ? (collection ?? null) === queue.collection
-        : true
-    const reportTypeMatch = queue.reportTypes.includes(reportType)
-
-    if (subjectTypeMatch && collectionMatch && reportTypeMatch) {
-      return queue
-    }
-  }
-
-  return null
 }
 
 // Poll every 5 minutes

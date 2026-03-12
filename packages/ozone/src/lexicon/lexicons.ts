@@ -19080,6 +19080,59 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneQueueRouteReports: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.routeReports',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Route reports within an ID range to matching queues based.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startReportId', 'endReportId'],
+            properties: {
+              startReportId: {
+                type: 'integer',
+                description: 'Start of report ID range (inclusive).',
+              },
+              endReportId: {
+                type: 'integer',
+                description:
+                  'End of report ID range (inclusive). Difference between start and end must be less than 5,000.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['assigned', 'unmatched'],
+            properties: {
+              assigned: {
+                type: 'integer',
+                description: 'The number of reports assigned to a queue.',
+              },
+              unmatched: {
+                type: 'integer',
+                description: 'The number of reports with no matching queue.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'OutOfRange',
+            description:
+              'The request is invalid, such as missing required fields or invalid field values.',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneQueueUpdateQueue: {
     lexicon: 1,
     id: 'tools.ozone.queue.updateQueue',
@@ -19624,6 +19677,39 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportGetLatestReport: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLatestReport',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get the most recent report.',
+        parameters: {
+          type: 'params',
+          properties: {},
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['report'],
+            properties: {
+              report: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneReportGetReport: {
     lexicon: 1,
     id: 'tools.ozone.report.getReport',
@@ -19648,6 +19734,12 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.report.defs#reportView',
           },
         },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
       },
     },
   },
@@ -21993,10 +22085,12 @@ export const ids = {
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
+  ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
+  ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',

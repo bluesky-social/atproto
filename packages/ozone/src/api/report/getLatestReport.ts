@@ -2,43 +2,44 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import {
-  getPermanentReportAssignments,
-  getReportById,
+  getActiveReportAssignments,
+  getLatestReport,
 } from '../../mod-service/report'
 import { buildReportView, hydrateReportInfo } from '../../report/views'
 import { getPdsAccountInfos } from '../util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.report.getReport({
+  server.tools.ozone.report.getLatestReport({
     auth: ctx.authVerifier.modOrAdminToken,
-    handler: async ({ params, auth, req }) => {
+    handler: async ({ auth, req }) => {
       const db = ctx.db
       const modService = ctx.modService(db)
       const labelers = ctx.reqLabelers(req)
 
-      const report = await getReportById(db, params.id)
+      const report = await getLatestReport(db)
       if (!report) {
-        throw new InvalidRequestError(
-          `Report not found: ${params.id}`,
-          'NotFound',
-        )
+        throw new InvalidRequestError('No report found', 'NotFound')
       }
 
       const queueService = ctx.queueService(db)
-      const teamService = ctx.teamService(db)
       const hydrated = await hydrateReportInfo(
         [report],
         modService.views,
         (dids) => getPdsAccountInfos(ctx, dids),
-        (reportIds) => getPermanentReportAssignments(db, reportIds),
+        (reportIds) => getActiveReportAssignments(db, reportIds),
         (queueIds) => queueService.getViewsByIds(queueIds),
-        (dids) => teamService.viewByDids(dids),
         labelers,
       )
 
       return {
-        encoding: 'application/json',
-        body: buildReportView(report, hydrated, auth.credentials.isModerator),
+        encoding: 'application/json' as const,
+        body: {
+          report: buildReportView(
+            report,
+            hydrated,
+            auth.credentials.isModerator,
+          ),
+        },
       }
     },
   })

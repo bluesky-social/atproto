@@ -9,19 +9,31 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.getReport'
+const id = 'tools.ozone.queue.routeReports'
 
-export type QueryParams = {
-  /** The ID of the report to retrieve. */
-  id: number
+export type QueryParams = {}
+
+export interface InputSchema {
+  /** Start of report ID range (inclusive). */
+  startReportId: number
+  /** End of report ID range (inclusive). Difference between start and end must be less than 5,000. */
+  endReportId: number
 }
-export type InputSchema = undefined
-export type OutputSchema = ToolsOzoneReportDefs.ReportView
-export type HandlerInput = void
+
+export interface OutputSchema {
+  /** The number of reports assigned to a queue. */
+  assigned: number
+  /** The number of reports with no matching queue. */
+  unmatched: number
+}
+
+export interface HandlerInput {
+  encoding: 'application/json'
+  body: InputSchema
+}
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -32,7 +44,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'NotFound'
+  error?: 'OutOfRange'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

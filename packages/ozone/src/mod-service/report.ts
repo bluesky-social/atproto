@@ -54,15 +54,18 @@ export type QueryReportsResult = {
   reports: ReportWithEvent[]
   cursor: string | undefined
 }
+function reportQuery(db: Database) {
+  return db.db
+    .selectFrom('report as r')
+    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
+    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+}
 
 export async function queryReports(
   db: Database,
   params: QueryParams,
 ): Promise<QueryReportsResult> {
-  let builder = db.db
-    .selectFrom('report as r')
-    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+  let builder = reportQuery(db)
 
   if (params.queueId !== undefined) {
     builder = builder.where('r.queueId', '=', params.queueId)
@@ -190,10 +193,7 @@ export async function getReportById(
   db: Database,
   id: number,
 ): Promise<ReportWithEvent | undefined> {
-  return db.db
-    .selectFrom('report as r')
-    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
+  return reportQuery(db)
     .where('r.id', '=', id)
     .selectAll('r')
     .select([
@@ -204,6 +204,24 @@ export async function getReportById(
       'me.comment',
       'me.meta',
     ])
+    .executeTakeFirst()
+}
+
+export async function getLatestReport(
+  db: Database,
+): Promise<ReportWithEvent | undefined> {
+  return reportQuery(db)
+    .selectAll('r')
+    .select([
+      'me.subjectDid',
+      'me.subjectUri',
+      'me.subjectCid',
+      'me.createdBy as reportedBy',
+      'me.comment',
+      'me.meta',
+    ])
+    .orderBy('r.id', 'desc')
+    .limit(1)
     .executeTakeFirst()
 }
 
@@ -259,11 +277,7 @@ export async function findReportsForSubject(
   db: Database,
   params: FindReportsForSubjectParams,
 ): Promise<ReportResult[]> {
-  let builder = db.db
-    .selectFrom('report as r')
-    .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-    .where('me.action', '=', 'tools.ozone.moderation.defs#modEventReport')
-    .where('me.subjectDid', '=', params.subjectDid)
+  let builder = reportQuery(db).where('me.subjectDid', '=', params.subjectDid)
 
   // Filter by subject URI (if provided, match exactly; if null/undefined, match repo-level)
   if (params.subjectUri) {
