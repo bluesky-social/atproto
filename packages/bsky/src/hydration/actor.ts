@@ -397,7 +397,7 @@ export class ActorHydrator {
     // part of this PR to avoid changing the behavior of this method.
     const actorDids = actors.map((a) => (isDidIdentifier(a) ? a : undefined))
 
-    // getRelationships requires DidString so we string anything that isn't one
+    // getRelationships requires DidString so we remove anything that isn't one
     const actorDidsDefined = Array.from(
       new Set(
         actorDids
@@ -414,13 +414,15 @@ export class ActorHydrator {
       targetDids: actorDidsDefined,
     })
 
-    const actorToDid = new Map(actors.map((actor, i) => [actor, actorDids[i]]))
+    const actorToDid = new Map<AtIdentifierString, DidString | undefined>(
+      actors.map((actor, i) => [actor, actorDids[i]]),
+    )
 
     for (let i = 0; i < actors.length; i++) {
       const actor = actors[i]
 
       const did = actorToDid.get(actor)
-      // ignore if handle could no be resolved
+      // ignore unresolved handles
       if (!did) continue
 
       if (did === viewer) {

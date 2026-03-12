@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { AtUri, DidString } from '@atproto/syntax'
 import { app } from '../lexicons/index.js'
 import { StrongRef, parseStrongRef } from '../views/types.js'
@@ -28,11 +27,8 @@ export function postUriToPostgateUri(postUri: string) {
 }
 
 export function uriToDid(uri: string): DidString {
-  const atUri = new AtUri(uri)
-  const { hostname } = atUri
-  // @NOTE not using atUri.did to avoid re-validating dids (the URIs should be safe)
-  assert(hostname.startsWith('did:'), 'Unexpected uri without DID')
-  return hostname as DidString
+  // @NOTE URIs returned from the dataplane are always in DID form.
+  return new AtUri(uri).hostname as DidString
 }
 
 // @TODO temp fix for proliferation of invalid pinned post values
