@@ -21,7 +21,13 @@
             }
           }
         }
-      }
+      },
+      "errors": [
+        {
+          "name": "NotFound",
+          "description": "No report found."
+        }
+      ]
     }
   }
 }

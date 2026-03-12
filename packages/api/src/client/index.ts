@@ -5611,24 +5611,22 @@ export class ToolsOzoneReportNS {
     params?: ToolsOzoneReportGetLatestReport.QueryParams,
     opts?: ToolsOzoneReportGetLatestReport.CallOptions,
   ): Promise<ToolsOzoneReportGetLatestReport.Response> {
-    return this._client.call(
-      'tools.ozone.report.getLatestReport',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.report.getLatestReport', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportGetLatestReport.toKnownErr(e)
+      })
   }
 
   getReport(
     params?: ToolsOzoneReportGetReport.QueryParams,
     opts?: ToolsOzoneReportGetReport.CallOptions,
   ): Promise<ToolsOzoneReportGetReport.Response> {
-    return this._client.call(
-      'tools.ozone.report.getReport',
-      params,
-      undefined,
-      opts,
-    )
+    return this._client
+      .call('tools.ozone.report.getReport', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportGetReport.toKnownErr(e)
+      })
   }
 
   queryReports(

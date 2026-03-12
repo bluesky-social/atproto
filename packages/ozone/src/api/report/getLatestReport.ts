@@ -18,7 +18,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const report = await getLatestReport(db)
       if (!report) {
-        throw new InvalidRequestError('No reports found')
+        throw new InvalidRequestError('No report found', 'NotFound')
       }
 
       const queueService = ctx.queueService(db)

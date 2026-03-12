@@ -19750,6 +19750,12 @@ export const schemaDict = {
             },
           },
         },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
       },
     },
   },
@@ -19777,6 +19783,12 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.report.defs#reportView',
           },
         },
+        errors: [
+          {
+            name: 'NotFound',
+            description: 'No report found.',
+          },
+        ],
       },
     },
   },
