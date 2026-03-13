@@ -18,8 +18,9 @@
  * implementation does *not* enforce method specific constraints, it only
  * ensures that the syntax is valid according to the AT protocol specification.
  *
- * @note This implementation allows lower case hex digits when they are strictly
- * disallowed by DID-core
+ * @note This implementation does not validate that the percent encoding is
+ * valid, only that the syntax is right (ie. every percent symbol is followed
+ * by exactly two upper case hexadecimal digits).
  *
  * @example "did:plc:7iza6de2dwap2sbkpav7c6c6"
  * @example "did:onion:2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid"
@@ -36,8 +37,7 @@ export type DidString<M extends string = string> = `did:${M}:${string}`
 
 // Regexp manually written based on the constraints above (note that the length,
 // and ":" end char are not enforced by this regexp)
-const DID_STRING_REGEX =
-  /^did:[a-z]+(?::(?:%[a-fA-F0-9]{2}|[a-zA-Z0-9._-]+)*)+$/
+const DID_STRING_REGEX = /^did:[a-z]+(?::(?:%[A-F0-9]{2}|[a-zA-Z0-9._-]+)*)+$/
 
 /**
  * Checks if a string is a valid {@link DidString} format string.

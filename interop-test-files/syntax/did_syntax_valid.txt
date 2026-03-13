@@ -11,7 +11,7 @@ did:method:vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 did:m:v
 did:method::::val
 did:method:-
-did:method:-:_:.:%ab
+did:method:-:_:.:%AB
 did:method:.
 did:method:_
 did:method::.
