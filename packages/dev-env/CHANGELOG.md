@@ -1,5 +1,16 @@
 # @atproto/dev-env
 
+## 0.3.214
+
+### Patch Changes
+
+- Updated dependencies [[`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33), [`7ed5704`](https://github.com/bluesky-social/atproto/commit/7ed57043c12aedb0faf6b7dc947adfcfff570b6d), [`eaee3d4`](https://github.com/bluesky-social/atproto/commit/eaee3d430554436964d45f38bbeb1132ae9b8862), [`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa)]:
+  - @atproto/bsky@0.0.220
+  - @atproto/pds@0.4.215
+  - @atproto/ozone@0.1.167
+  - @atproto/api@0.19.4
+  - @atproto/xrpc-server@0.10.16
+
 ## 0.3.213
 
 ### Patch Changes
