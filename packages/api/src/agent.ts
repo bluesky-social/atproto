@@ -230,7 +230,7 @@ export class Agent extends XrpcClient {
   /**
    * Assert that the user is authenticated.
    */
-  public assertAuthenticated(): asserts this is { did: string } {
+  public assertAuthenticated(): asserts this is { did: DidString } {
     if (!this.did) throw new Error('Not logged in')
   }
 
