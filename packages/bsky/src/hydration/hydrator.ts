@@ -191,7 +191,7 @@ export class Hydrator {
 
   constructor(
     public dataplane: DataPlaneClient,
-    serviceLabelers: string[] = [],
+    serviceLabelers: readonly DidString[] = [],
     config: HydratorConfig,
   ) {
     this.config = config
