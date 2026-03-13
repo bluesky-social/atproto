@@ -6243,20 +6243,20 @@ export const schemaDict = {
                   ref: 'lex:app.bsky.actor.defs#profileView',
                 },
               },
+              recIdStr: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
               isFallback: {
                 type: 'boolean',
                 description:
-                  'If true, response has fallen-back to generic results, and is not scoped using relativeToDid',
+                  'DEPRECATED, unused. Previously: if true, response has fallen-back to generic results, and is not scoped using relativeToDid',
                 default: false,
               },
               recId: {
                 type: 'integer',
                 description: 'DEPRECATED: use recIdStr instead.',
-              },
-              recIdStr: {
-                type: 'string',
-                description:
-                  'Snowflake for this recommendation, use when submitting recommendation events.',
               },
             },
           },
