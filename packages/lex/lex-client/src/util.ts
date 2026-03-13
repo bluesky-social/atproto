@@ -6,6 +6,10 @@ import {
   Query,
 } from '@atproto/lex-schema'
 
+export const CONTENT_TYPE_BINARY = 'application/octet-stream'
+export const CONTENT_TYPE_JSON = 'application/json'
+export const CONTENT_TYPE_CBOR = 'application/dag+cbor'
+
 /**
  * The body type of an XRPC response, inferred from the method's output schema.
  *
