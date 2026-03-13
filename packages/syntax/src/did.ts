@@ -78,11 +78,16 @@ export function ifDidString<I>(input: I): undefined | (I & DidString) {
 }
 
 /**
+ * Assert the validity of a {@link DidString}, throwing a detailed error if the
+ * {@link input} if not a valid DID identifier.
+ *
  * @throws InvalidDidError if the {@link input} is not a valid {@link DidString}
  */
 export function assertDidString<I>(input: I): asserts input is I & DidString {
   // Optimistically use faster isDidString(), throwing a detailed error only in
   // case of failure.
+  // This check, and the fact that the code after it always throws, also ensures
+  // that isDidString() and assertDidString()'s behavior are always consistent.
   if (isDidString(input)) return
 
   if (typeof input !== 'string') {
@@ -123,12 +128,10 @@ export function assertDidString<I>(input: I): asserts input is I & DidString {
   throw new InvalidDidError('DID must properly percent encode values')
 }
 
+// Legacy exports (should we deprecate these ?)
 export {
-  /** @deprecated use {@link assertDidString} instead */
   assertDidString as ensureValidDid,
-  /** @deprecated use {@link assertDidString} instead */
   assertDidString as ensureValidDidRegex,
-  /** @deprecated use {@link isValidDid} instead */
   isDidString as isValidDid,
 }
 
