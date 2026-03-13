@@ -34,11 +34,11 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         viewer,
         featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['suggested_users:discover_agent:enable'],
-          {
+          [ctx.featureGatesClient.Gate.SuggestedUsersDiscoverEnable],
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const headers = noUndefinedVals({

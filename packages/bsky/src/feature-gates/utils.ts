@@ -1,52 +1,30 @@
 import crypto from 'node:crypto'
 import { type UserContext as GrowthBookUserContext } from '@growthbook/growthbook'
-import { ParsedUserContext, RawUserContext, TrackingMetadata } from './types'
+import { NormalizedUserContext, TrackingMetadata, UserContext } from './types'
 
-/**
- * These need to match what the client sends
- */
-const ANALYTICS_HEADER_DEVICE_ID = 'X-Bsky-Device-Id'
-const ANALYTICS_HEADER_SESSION_ID = 'X-Bsky-Session-Id'
+export function normalizeUserContext(
+  userContext: UserContext,
+): NormalizedUserContext {
+  const did = userContext.did ?? undefined
+  let deviceId = userContext.deviceId
+  let sessionId = userContext.sessionId
 
-/**
- * Parse the `RawUserContext` into a `ParsedUserContext` that is used as
- * GrowthBook `attributes` as well as the metadata payload for our analytics
- * events. This ensures that the same user properties are used for both feature
- * gate targeting and analytics.
- */
-export function parseRawUserContext(
-  userContext: RawUserContext,
-): ParsedUserContext {
-  const did = userContext.viewer
-
-  // prioritize passthrough header
-  // TODO: remove optional after image rollout.
-  let deviceId = userContext.req?.header(ANALYTICS_HEADER_DEVICE_ID)
   if (!deviceId) {
-    if (did) {
-      /*
-       * If we don't have a device header, fall back to the DID. Our event
-       * proxy ensures ordering based on this deviceId (also called a stableId
-       * in the proxy), so if we have a DID, we want to use it to ensure client
-       * and server events are properly ordered.
-       */
-      deviceId = did
-    } else {
-      /*
-       * Without any better option for identifying the user, we generate a
-       * random deviceId.
-       */
-      deviceId = `anon-${crypto.randomUUID()}`
-    }
-  }
-
-  // prioritize passthrough header
-  // TODO: remove optional after image rollout.
-  let sessionId = userContext.req?.header(ANALYTICS_HEADER_SESSION_ID)
-  if (!sessionId) {
     /*
+     * If we don't have a deviceId by other means, such as a request header,
+     * fall back to the DID. Our event proxy ensures ordering based on this
+     * deviceId (also called a stableId in the proxy), so if we have a DID, we
+     * want to use it to ensure client and server events are properly ordered.
+     *
      * Without any better option for identifying the user, we generate a
      * random deviceId.
+     */
+    deviceId = did ?? `anon-${crypto.randomUUID()}`
+  }
+  if (!sessionId) {
+    /*
+     * If we don't have a sessionId by other means, such as a request header,
+     * generate a random sessionId.
      */
     sessionId = `anon-${crypto.randomUUID()}`
   }
@@ -59,34 +37,40 @@ export function parseRawUserContext(
 }
 
 /**
- * Extract the `ParsedUserContext` from the GrowthBook `UserContext`, which we
+ * Extract the `UserContext` from GrowthBook's own `UserContext`, which we
  * passed into `isOn` as `attributes`.
  */
-export function extractParsedUserContextFromGrowthBookUserContext(
+export function extractUserContextFromGrowthbookUserContext(
   userContext: GrowthBookUserContext,
-): ParsedUserContext {
-  return {
+): NormalizedUserContext {
+  /*
+   * The values passed to Growthbook already should have been
+   * `NormalizedUserContext`, but for type safety we run them through the
+   * normalizer again to ensure we have all the required properties and
+   * fallbacks in place.
+   */
+  return normalizeUserContext({
     did: userContext.attributes?.did,
     deviceId: userContext.attributes?.deviceId,
     sessionId: userContext.attributes?.sessionId,
-  }
+  })
 }
 
 /**
- * Convert the `ParsedUserContext` into the `TrackingMetadata` format that we
+ * Convert the `UserContext` into the `TrackingMetadata` format that we
  * use for our analytics events. This ensures that we have the same user
  * properties as we do for events from our client app.
  */
 export function parsedUserContextToTrackingMetadata(
-  parsedUserContext: ParsedUserContext,
+  userContext: NormalizedUserContext,
 ): TrackingMetadata {
   return {
     base: {
-      deviceId: parsedUserContext.deviceId,
-      sessionId: parsedUserContext.sessionId,
+      deviceId: userContext.deviceId,
+      sessionId: userContext.sessionId,
     },
     session: {
-      did: parsedUserContext.did ?? undefined,
+      did: userContext.did ?? undefined,
     },
   }
 }

@@ -39,11 +39,11 @@ export default function (server: Server, ctx: AppContext) {
         labelers,
         viewer,
         featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['search:filtering_exploration:enable'],
-          {
+          [ctx.featureGatesClient.Gate.SearchFilteringExplorationEnable],
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const results = await searchPosts(
