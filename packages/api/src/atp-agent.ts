@@ -43,11 +43,9 @@ export type AtpAgentOptions = {
  * with a {@link CredentialSession} instead:
  *
  *  ```ts
- *  const session = new CredentialSession({
- *    service: new URL('https://example.com'),
- *  })
- *
+ *  const session = new CredentialSession(new URL('https://example.com'))
  *  const agent = new Agent(session)
+ *  session.login({identifier:handle,password:'string'})
  *  ```
  */
 export class AtpAgent extends Agent {
