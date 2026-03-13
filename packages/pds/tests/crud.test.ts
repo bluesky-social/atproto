@@ -5,6 +5,7 @@ import {
   AppBskyFeedPost,
   AppBskyFeedPostRecord,
   AtpAgent,
+  BlobRef,
 } from '@atproto/api'
 import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
@@ -531,31 +532,32 @@ describe('crud operations', () => {
       })
     })
 
-    it('rejects creation of legacy blobs', async () => {
-      const file = crypto.getRandomValues(new Uint8Array(100))
-      const {
-        data: { blob },
-      } = await bobAgent.com.atproto.repo.uploadBlob(file, {
+    // @TODO remove after migrating legacy blobs
+    it('updates a legacy blob ref when updating profile', async () => {
+      const { repo } = bobAgent.api.com.atproto
+      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
+      const uploadedRes = await repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       })
 
-      await expect(
-        bobAgent.com.atproto.repo.putRecord({
-          ...profilePath,
-          repo: bobAgent.assertDid,
-          record: {
-            displayName: 'Robert',
-            avatar: {
-              mimeType: blob.mimeType,
-              cid: blob.ref.toString(),
-            },
-          },
-        }),
-      ).rejects.toMatchObject({
-        error: 'InvalidRequest',
-        message:
-          'Invalid app.bsky.actor.profile record: Expected blob value type at $.record.avatar (got legacy-blob)',
+      await repo.putRecord({
+        ...profilePath,
+        repo: bobAgent.accountDid,
+        record: {
+          displayName: 'Robert',
+          avatar: BlobRef.fromJsonRef({
+            mimeType: uploadedRes.data.blob.mimeType,
+            cid: uploadedRes.data.blob.ref.toString(),
+          }),
+        },
       })
+
+      const got = await repo.getRecord({
+        ...profilePath,
+        repo: bobAgent.accountDid,
+      })
+      const gotAvatar = got.data.value['avatar'] as BlobRef
+      expect(gotAvatar.original).toEqual(uploadedRes.data.blob.original)
     })
   })
 

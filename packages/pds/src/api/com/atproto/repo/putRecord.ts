@@ -1,12 +1,19 @@
-import { parseCid } from '@atproto/lex-data'
+import {
+  BlobRef,
+  LegacyBlobRef,
+  LexMap,
+  isLegacyBlobRef,
+  parseCid,
+} from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
 import {
   AuthRequiredError,
   InvalidRequestError,
   Server,
 } from '@atproto/xrpc-server'
+import { ActorStoreTransactor } from '../../../../actor-store/actor-store-transactor'
 import { AppContext } from '../../../../context'
-import { com } from '../../../../lexicons/index.js'
+import { app, com } from '../../../../lexicons/index.js'
 import { dbLogger } from '../../../../logger'
 import {
   BadCommitSwapError,
@@ -91,6 +98,11 @@ export default function (server: Server, ctx: AppContext) {
           const current = await actorTxn.record.getRecord(uri, null, true)
           const isUpdate = current !== null
 
+          // @TODO temporaray hack for legacy blob refs in profiles - remove after migrating legacy blobs
+          if (isUpdate && collection === app.bsky.actor.profile.$type) {
+            await updateProfileLegacyBlobRef(actorTxn, record)
+          }
+
           const writeInfo = {
             did,
             collection,
@@ -111,6 +123,7 @@ export default function (server: Server, ctx: AppContext) {
             }
             throw err
           }
+
           // no-op
           if (current && current.cid === write.cid.toString()) {
             return {
@@ -150,7 +163,7 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           uri: write.uri.toString(),
           cid: write.cid.toString(),
@@ -165,4 +178,31 @@ export default function (server: Server, ctx: AppContext) {
       }
     },
   })
+}
+
+// WARNING: mutates object
+async function updateProfileLegacyBlobRef(
+  actorStore: ActorStoreTransactor,
+  record: LexMap,
+): Promise<void> {
+  if (isLegacyBlobRef(record.avatar)) {
+    record.avatar = await upgradeLegacyBlob(actorStore, record.avatar)
+  }
+  if (isLegacyBlobRef(record.banner)) {
+    record.banner = await upgradeLegacyBlob(actorStore, record.banner)
+  }
+}
+
+async function upgradeLegacyBlob(
+  actorStore: ActorStoreTransactor,
+  legacyBlob: LegacyBlobRef,
+): Promise<BlobRef> {
+  const ref = parseCid(legacyBlob.cid)
+  const blob = await actorStore.repo.blob.getBlobMetadata(ref)
+  return {
+    $type: 'blob',
+    mimeType: legacyBlob.mimeType,
+    ref,
+    size: blob.size,
+  }
 }
