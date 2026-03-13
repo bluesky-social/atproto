@@ -15,22 +15,26 @@ export class HandleResolver {
   }
 
   async resolve(handle: string): Promise<string | undefined> {
-    const dnsPromise = this.resolveDns(handle)
-    const httpAbort = new AbortController()
-    const httpPromise = this.resolveHttp(handle, httpAbort.signal).catch(
-      () => undefined,
+    return (async () => {
+      const dnsPromise = this.resolveDns(handle)
+      const httpAbort = new AbortController()
+      const httpPromise = this.resolveHttp(handle, httpAbort.signal).catch(
+        () => undefined,
+      )
+  
+      const dnsRes = await dnsPromise
+      if (dnsRes) {
+        httpAbort.abort()
+        return dnsRes
+      }
+      const res = await httpPromise
+      if (res) {
+        return res
+      }
+      return this.resolveDnsBackup(handle)
+    })().then(
+      result => result?.split('\n')[0].trim()
     )
-
-    const dnsRes = await dnsPromise
-    if (dnsRes) {
-      httpAbort.abort()
-      return dnsRes
-    }
-    const res = await httpPromise
-    if (res) {
-      return res
-    }
-    return this.resolveDnsBackup(handle)
   }
 
   async resolveDns(handle: string): Promise<string | undefined> {
@@ -50,7 +54,7 @@ export class HandleResolver {
     const url = new URL('/.well-known/atproto-did', `https://${handle}`)
     try {
       const res = await fetch(url, { signal })
-      const did = (await res.text()).split('\n')[0].trim()
+      const did = await res.text()
       if (typeof did === 'string' && did.startsWith('did:')) {
         return did
       }
