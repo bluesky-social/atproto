@@ -1,5 +1,15 @@
 # @atproto/ozone
 
+## 0.1.167
+
+### Patch Changes
+
+- [#4709](https://github.com/bluesky-social/atproto/pull/4709) [`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a purge event to remove ozone's data on age assurance
+
+- Updated dependencies [[`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa)]:
+  - @atproto/api@0.19.4
+  - @atproto/xrpc-server@0.10.16
+
 ## 0.1.166
 
 ### Patch Changes

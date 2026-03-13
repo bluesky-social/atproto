@@ -1,5 +1,14 @@
 # @atproto/lex-client
 
+## 0.0.16
+
+### Patch Changes
+
+- [#4714](https://github.com/bluesky-social/atproto/pull/4714) [`5a2f884`](https://github.com/bluesky-social/atproto/commit/5a2f8847efd91252971fa243d21bd52ada7aa8f4) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Create a specific error class for wrapping unexpected error returned by the `fetchHandler`. This allows to better distinguish unexpected internal server errors (due to implementation encountering an unexpected case) from potentially transient errors that occur when performing network HTTP requests.
+
+- Updated dependencies [[`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe)]:
+  - @atproto/lex-schema@0.0.15
+
 ## 0.0.15
 
 ### Patch Changes

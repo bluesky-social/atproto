@@ -1,5 +1,21 @@
 # @atproto/lex-schema
 
+## 0.0.15
+
+### Patch Changes
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `IssueInvalidFormat`'s `message` property to `detail`
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add a read-only `message` property to the `Issue` class
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `LexValidationError` class now implements `ResultFailure` allowing it to be used as validation return value directly (without the need to be wrapped)
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update stringification of issues (`toString()`) to consistently display the error path at the end.
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `PropertyKey` is no longer exported. Use the global value instead.
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add [Standard Schema](https://standardschema.dev/) compatibility
+
 ## 0.0.14
 
 ### Patch Changes
