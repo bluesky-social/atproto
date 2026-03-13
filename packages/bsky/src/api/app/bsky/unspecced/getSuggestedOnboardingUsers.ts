@@ -1,6 +1,10 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
-import { InternalServerError, Server } from '@atproto/xrpc-server'
+import {
+  InternalServerError,
+  MethodNotImplementedError,
+  Server,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
@@ -87,8 +91,11 @@ const skeletonFromTopics = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (!ctx.topicsClient)
-    throw new InternalServerError('Topics agent not available')
+
+  if (!ctx.topicsClient) {
+    // Use 501 instead of 500 as these are not considered retry-able by clients
+    throw new MethodNotImplementedError('Topics agent not available')
+  }
 
   // NOTE: This is intentionally using `getSuggestedUsersSkeleton`, not `getSuggestedOnboardingUsersSkeleton`.
   // We won't bother implementing `getSuggestedOnboardingUsersSkeleton` in topics since we're phasing out of it.

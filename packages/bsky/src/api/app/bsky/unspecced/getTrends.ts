@@ -1,6 +1,6 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
-import { InternalServerError, Server } from '@atproto/xrpc-server'
+import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
@@ -49,20 +49,22 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (ctx.topicsClient) {
-    return ctx.topicsClient.call(
-      app.bsky.unspecced.getTrendsSkeleton,
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-  } else {
-    throw new InternalServerError('Topics agent not available')
+
+  if (!ctx.topicsClient) {
+    // Use 501 instead of 500 as these are not considered retry-able by clients
+    throw new MethodNotImplementedError('Topics agent not available')
   }
+
+  return ctx.topicsClient.call(
+    app.bsky.unspecced.getTrendsSkeleton,
+    {
+      limit: params.limit,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+    },
+  )
 }
 
 const hydration = async (

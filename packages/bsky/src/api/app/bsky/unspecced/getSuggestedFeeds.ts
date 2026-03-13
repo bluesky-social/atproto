@@ -47,21 +47,22 @@ const skeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
   const { params, ctx } = input
-  if (ctx.topicsClient) {
-    return ctx.topicsClient.call(
-      app.bsky.unspecced.getSuggestedFeedsSkeleton,
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-  } else {
+
+  if (!ctx.topicsClient) {
     // Use 501 instead of 500 as these are not considered retry-able by clients
     throw new MethodNotImplementedError('Topics agent not available')
   }
+
+  return ctx.topicsClient.call(
+    app.bsky.unspecced.getSuggestedFeedsSkeleton,
+    {
+      limit: params.limit,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+    },
+    {
+      headers: params.headers,
+    },
+  )
 }
 
 const hydration = async (
