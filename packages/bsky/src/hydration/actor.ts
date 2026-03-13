@@ -44,7 +44,7 @@ export type Actor = {
    * Debug information for internal development
    */
   debug?: {
-    pagerank?: number
+    pagerank?: string
     accountTags?: string[]
     profileTags?: string[]
     [key: string]: unknown
@@ -238,7 +238,7 @@ export class ActorHydrator {
       }
 
       const debug = {
-        pagerank: actor.pagerank,
+        pagerank: actor.pagerank ? actor.pagerank.toString() : undefined,
         accountTags: actor.tags,
         profileTags: actor.profileTags,
       }
