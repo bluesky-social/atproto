@@ -17605,6 +17605,150 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneModerationEmitEvents: {
+    lexicon: 1,
+    id: 'tools.ozone.moderation.emitEvents',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Take a moderation action on multiple subjects at once. Each subject is processed independently; partial failures are reported rather than causing a full rollback. This batch endpoint only supports a subset of moderation events.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['event', 'subjects', 'createdBy'],
+            properties: {
+              event: {
+                type: 'union',
+                refs: [
+                  'lex:tools.ozone.moderation.defs#modEventTakedown',
+                  'lex:tools.ozone.moderation.defs#modEventAcknowledge',
+                  'lex:tools.ozone.moderation.defs#modEventLabel',
+                  'lex:tools.ozone.moderation.defs#modEventReport',
+                  'lex:tools.ozone.moderation.defs#modEventReverseTakedown',
+                  'lex:tools.ozone.moderation.defs#modEventResolveAppeal',
+                  'lex:tools.ozone.moderation.defs#modEventEmail',
+                  'lex:tools.ozone.moderation.defs#modEventTag',
+                  'lex:tools.ozone.moderation.defs#revokeAccountCredentialsEvent',
+                ],
+              },
+              subjects: {
+                type: 'array',
+                description:
+                  'Array of subjects to apply the moderation event to.',
+                maxLength: 100,
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.emitEvents#subjectEntry',
+                },
+              },
+              createdBy: {
+                type: 'string',
+                format: 'did',
+              },
+              modTool: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.moderation.defs#modTool',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['events', 'failedEvents'],
+            properties: {
+              events: {
+                type: 'array',
+                description: 'Successfully processed moderation events.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.defs#modEventView',
+                },
+              },
+              failedEvents: {
+                type: 'array',
+                description: 'Events that failed to process.',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.moderation.emitEvents#failedEvent',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidLabel',
+            description: 'One or more labels contain invalid characters.',
+          },
+          {
+            name: 'DuplicateSubjects',
+            description: 'The subjects array contains duplicate entries.',
+          },
+          {
+            name: 'EmptySubjects',
+            description: 'The subjects array is empty.',
+          },
+        ],
+      },
+      subjectEntry: {
+        type: 'object',
+        description: 'A subject with optional per-subject blob CIDs.',
+        required: ['subject'],
+        properties: {
+          subject: {
+            type: 'union',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+          subjectBlobCids: {
+            type: 'array',
+            items: {
+              type: 'string',
+              format: 'cid',
+            },
+          },
+        },
+      },
+      failedEvent: {
+        type: 'object',
+        description: 'An event that failed to process.',
+        required: ['error', 'subject'],
+        properties: {
+          error: {
+            type: 'string',
+            description: 'Error message describing the reason for failure.',
+          },
+          errorName: {
+            type: 'string',
+            description:
+              'Typed error identifier for programmatic handling. Omitted when the error is unexpected/uncategorized.',
+            knownValues: [
+              'InvalidSubject',
+              'SubjectHasAction',
+              'AlreadyTakendown',
+              'NotTakendown',
+              'DuplicateExternalId',
+              'InvalidConfiguration',
+            ],
+          },
+          subject: {
+            type: 'union',
+            description: 'The subject from the failed event input.',
+            refs: [
+              'lex:com.atproto.admin.defs#repoRef',
+              'lex:com.atproto.repo.strongRef',
+            ],
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneModerationGetAccountTimeline: {
     lexicon: 1,
     id: 'tools.ozone.moderation.getAccountTimeline',
@@ -21054,6 +21198,7 @@ export const ids = {
     'tools.ozone.moderation.cancelScheduledActions',
   ToolsOzoneModerationDefs: 'tools.ozone.moderation.defs',
   ToolsOzoneModerationEmitEvent: 'tools.ozone.moderation.emitEvent',
+  ToolsOzoneModerationEmitEvents: 'tools.ozone.moderation.emitEvents',
   ToolsOzoneModerationGetAccountTimeline:
     'tools.ozone.moderation.getAccountTimeline',
   ToolsOzoneModerationGetEvent: 'tools.ozone.moderation.getEvent',

@@ -278,6 +278,7 @@ import * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting
 import * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 import * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 import * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+import * as ToolsOzoneModerationEmitEvents from './types/tools/ozone/moderation/emitEvents.js'
 import * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 import * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 import * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
@@ -593,6 +594,7 @@ export * as ToolsOzoneHostingGetAccountHistory from './types/tools/ozone/hosting
 export * as ToolsOzoneModerationCancelScheduledActions from './types/tools/ozone/moderation/cancelScheduledActions.js'
 export * as ToolsOzoneModerationDefs from './types/tools/ozone/moderation/defs.js'
 export * as ToolsOzoneModerationEmitEvent from './types/tools/ozone/moderation/emitEvent.js'
+export * as ToolsOzoneModerationEmitEvents from './types/tools/ozone/moderation/emitEvents.js'
 export * as ToolsOzoneModerationGetAccountTimeline from './types/tools/ozone/moderation/getAccountTimeline.js'
 export * as ToolsOzoneModerationGetEvent from './types/tools/ozone/moderation/getEvent.js'
 export * as ToolsOzoneModerationGetRecord from './types/tools/ozone/moderation/getRecord.js'
@@ -5292,6 +5294,17 @@ export class ToolsOzoneModerationNS {
       .call('tools.ozone.moderation.emitEvent', opts?.qp, data, opts)
       .catch((e) => {
         throw ToolsOzoneModerationEmitEvent.toKnownErr(e)
+      })
+  }
+
+  emitEvents(
+    data?: ToolsOzoneModerationEmitEvents.InputSchema,
+    opts?: ToolsOzoneModerationEmitEvents.CallOptions,
+  ): Promise<ToolsOzoneModerationEmitEvents.Response> {
+    return this._client
+      .call('tools.ozone.moderation.emitEvents', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneModerationEmitEvents.toKnownErr(e)
       })
   }
 
