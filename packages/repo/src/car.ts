@@ -157,10 +157,19 @@ async function* readCarBlocksIterGenerator(
 ): AsyncGenerator<CarBlock, void, unknown> {
   let blocks = 0
   try {
+    let blocksSinceBreak = 0
     while (!reader.isDone) {
       const blockSize = await readVarint(reader)
       if (blockSize === null) {
         break
+      }
+      blocksSinceBreak = (blocksSinceBreak + 1) % 100
+      if (blocksSinceBreak === 0) {
+        // Every 100 records let the event loop run again so we don't block the main thread
+        // This is needed because just an await without there being any IO keeps processing
+        // the pending tasks and doesn't allow other phases of the event loop (like timers)
+        // to run
+        await new Promise(resolve => setImmediate(resolve))
       }
       const blockBytes = await reader.read(blockSize)
       const cid = parseCidFromBytes(blockBytes.subarray(0, 36))
