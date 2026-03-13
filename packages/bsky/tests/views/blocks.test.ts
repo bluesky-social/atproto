@@ -1,9 +1,12 @@
 import assert from 'node:assert'
-import { AtUri, AtpAgent } from '@atproto/api'
+import {
+  AppBskyEmbedRecord,
+  AppBskyFeedDefs,
+  AtUri,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
 import { RecordRef, SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { isView as isRecordEmbedView } from '../../src/lexicon/types/app/bsky/embed/record'
-import { isPostView } from '../../src/lexicon/types/app/bsky/feed/defs'
 import { assertIsThreadViewPost, forSnapshot } from '../_util'
 
 describe('pds views with blocking', () => {
@@ -25,8 +28,8 @@ describe('pds views with blocking', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_block',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice
@@ -171,7 +174,7 @@ describe('pds views with blocking', () => {
       {
         headers: await network.serviceHeaders(
           dan,
-          ids.AppBskyFeedGetPostThread,
+          'app.bsky.feed.getPostThread',
         ),
       },
     )
@@ -222,7 +225,7 @@ describe('pds views with blocking', () => {
       resCarol.data.feed.some(
         (post) =>
           post.post.author.did === dan ||
-          (isPostView(post.reply?.parent) &&
+          (AppBskyFeedDefs.isPostView(post.reply?.parent) &&
             post.reply.parent.author.did === dan) ||
           post.reply?.grandparentAuthor?.did === dan,
       ),
@@ -231,14 +234,14 @@ describe('pds views with blocking', () => {
     const resDan = await agent.api.app.bsky.feed.getTimeline(
       { limit: 100 },
       {
-        headers: await network.serviceHeaders(dan, ids.AppBskyFeedGetTimeline),
+        headers: await network.serviceHeaders(dan, 'app.bsky.feed.getTimeline'),
       },
     )
     expect(
       resDan.data.feed.some(
         (post) =>
           post.post.author.did === carol ||
-          (isPostView(post.reply?.parent) &&
+          (AppBskyFeedDefs.isPostView(post.reply?.parent) &&
             post.reply.parent.author.did === carol) ||
           post.reply?.grandparentAuthor?.did === carol,
       ),
@@ -662,7 +665,7 @@ describe('pds views with blocking', () => {
 
     assertIsThreadViewPost(embedThenBlock.thread)
 
-    assert(isRecordEmbedView(embedThenBlock.thread.post.embed))
+    assert(AppBskyEmbedRecord.isView(embedThenBlock.thread.post.embed))
     expect(embedThenBlock.thread.post.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
@@ -685,7 +688,7 @@ describe('pds views with blocking', () => {
 
     assertIsThreadViewPost(unblock.thread)
 
-    assert(isRecordEmbedView(unblock.thread.post?.embed))
+    assert(AppBskyEmbedRecord.isView(unblock.thread.post?.embed))
     expect(unblock.thread.post?.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewRecord',
     })
@@ -715,7 +718,7 @@ describe('pds views with blocking', () => {
         },
       )
     assertIsThreadViewPost(blockThenEmbed.thread)
-    assert(isRecordEmbedView(blockThenEmbed.thread.post.embed))
+    assert(AppBskyEmbedRecord.isView(blockThenEmbed.thread.post.embed))
     expect(blockThenEmbed.thread.post.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })
@@ -759,7 +762,7 @@ describe('pds views with blocking', () => {
       (item) => item.post.uri === embedBlockedUri,
     )
     assert(embedBlockedPost)
-    assert(isRecordEmbedView(embedBlockedPost.post.embed))
+    assert(AppBskyEmbedRecord.isView(embedBlockedPost.post.embed))
     expect(embedBlockedPost.post.embed.record).toMatchObject({
       $type: 'app.bsky.embed.record#viewBlocked',
     })

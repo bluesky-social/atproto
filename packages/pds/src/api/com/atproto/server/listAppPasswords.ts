@@ -1,39 +1,46 @@
-import { ForbiddenError } from '@atproto/xrpc-server'
+import { ForbiddenError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { ids } from '../../../../lexicon/lexicons'
-import { resultPassthru } from '../../../proxy'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.server.listAppPasswords({
-    auth: ctx.authVerifier.authorization({
-      authorize: () => {
-        throw new ForbiddenError(
-          'OAuth credentials are not supported for this endpoint',
-        )
-      },
-    }),
-    handler: async ({ auth, req }) => {
-      if (ctx.entrywayAgent) {
-        return resultPassthru(
-          await ctx.entrywayAgent.com.atproto.server.listAppPasswords(
-            undefined,
-            await ctx.entrywayAuthHeaders(
-              req,
-              auth.credentials.did,
-              ids.ComAtprotoServerListAppPasswords,
-            ),
-          ),
-        )
-      }
+  const { entrywayClient } = ctx
 
-      const passwords = await ctx.accountManager.listAppPasswords(
-        auth.credentials.did,
+  const auth = ctx.authVerifier.authorization({
+    authorize: () => {
+      throw new ForbiddenError(
+        'OAuth credentials are not supported for this endpoint',
       )
-      return {
-        encoding: 'application/json',
-        body: { passwords },
-      }
     },
   })
+
+  if (entrywayClient) {
+    server.add(com.atproto.server.listAppPasswords, {
+      auth,
+      handler: async ({ auth, req }) => {
+        const { headers } = await ctx.entrywayAuthHeaders(
+          req,
+          auth.credentials.did,
+          com.atproto.server.listAppPasswords.$lxm,
+        )
+
+        return entrywayClient.xrpc(com.atproto.server.listAppPasswords, {
+          validateResponse: false, // ignore invalid upstream responses
+          headers,
+        })
+      },
+    })
+  } else {
+    server.add(com.atproto.server.listAppPasswords, {
+      auth,
+      handler: async ({ auth }) => {
+        const passwords = await ctx.accountManager.listAppPasswords(
+          auth.credentials.did,
+        )
+        return {
+          encoding: 'application/json',
+          body: { passwords },
+        }
+      },
+    })
+  }
 }

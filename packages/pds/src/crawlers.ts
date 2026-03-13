@@ -1,44 +1,43 @@
-import { AtpAgent } from '@atproto/api'
-import { MINUTE } from '@atproto/common'
-import { BackgroundQueue } from './background'
-import { crawlerLogger as log } from './logger'
+import { xrpc } from '@atproto/lex'
+import { BackgroundQueue } from './background.js'
+import { com } from './lexicons/index.js'
+import { crawlerLogger as log } from './logger.js'
 
-const NOTIFY_THRESHOLD = 20 * MINUTE
+const NOTIFY_THRESHOLD = 20 * 60e3
 
 export class Crawlers {
-  public agents: AtpAgent[]
-  public lastNotified = 0
+  private lastNotified = -Infinity
 
   constructor(
-    public hostname: string,
-    public crawlers: string[],
-    public backgroundQueue: BackgroundQueue,
-  ) {
-    this.agents = crawlers.map((service) => new AtpAgent({ service }))
+    private readonly backgroundQueue: BackgroundQueue,
+    private readonly hostname: string,
+    private readonly crawlers: Iterable<string>,
+  ) {}
+
+  notifyOfUpdate() {
+    const now = Date.now()
+    if (this.lastNotified < now - NOTIFY_THRESHOLD) {
+      this.lastNotified = now
+      this.requestCrawl()
+    } else {
+      // @TODO We should probably actually schedule (setTimeout) a crawl for
+      // when the threshold is met, instead of just waiting for the next update
+      // to trigger it. Not doing this now as it requires cleanup logic on
+      // shutdown.
+    }
   }
 
-  async notifyOfUpdate() {
-    const now = Date.now()
-    if (now - this.lastNotified < NOTIFY_THRESHOLD) {
-      return
+  private requestCrawl() {
+    for (const crawler of this.crawlers) {
+      this.backgroundQueue.add(async () => {
+        try {
+          await xrpc(crawler, com.atproto.sync.requestCrawl, {
+            body: { hostname: this.hostname },
+          })
+        } catch (err) {
+          log.warn({ err, crawler }, 'failed to request crawl')
+        }
+      })
     }
-
-    this.backgroundQueue.add(async () => {
-      await Promise.all(
-        this.agents.map(async (agent) => {
-          try {
-            await agent.api.com.atproto.sync.requestCrawl({
-              hostname: this.hostname,
-            })
-          } catch (err) {
-            log.warn(
-              { err, cralwer: agent.service.toString() },
-              'failed to request crawl',
-            )
-          }
-        }),
-      )
-      this.lastNotified = now
-    })
   }
 }

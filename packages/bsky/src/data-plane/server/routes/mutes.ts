@@ -2,7 +2,7 @@ import assert from 'node:assert'
 import { ServiceImpl } from '@connectrpc/connect'
 import { keyBy } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
-import { ids } from '../../../lexicon/lexicons'
+import { app } from '../../../lexicons'
 import { Service } from '../../../proto/bsky_connect'
 import { Database } from '../db'
 import { CreatedAtDidKeyset, TimeCidKeyset, paginate } from '../db/pagination'
@@ -186,4 +186,4 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 })
 
 const isListUri = (uri: string) =>
-  new AtUri(uri).collection === ids.AppBskyGraphList
+  new AtUri(uri).collection === app.bsky.graph.list.$type

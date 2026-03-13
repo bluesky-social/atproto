@@ -1,10 +1,23 @@
-import { AtIdentifierString, ensureValidAtIdentifier } from './at-identifier.js'
+import {
+  AtIdentifierString,
+  ensureValidAtIdentifier,
+  isDidIdentifier,
+} from './at-identifier.js'
 import { AtUriString } from './aturi_validation.js'
-import { DidString, ensureValidDid } from './did.js'
+import { DidString, InvalidDidError } from './did.js'
 import { NsidString, ensureValidNsid } from './nsid.js'
 import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
 
 export * from './aturi_validation.js'
+
+// Re-export types used in public interface
+export type {
+  AtIdentifierString,
+  AtUriString,
+  DidString,
+  NsidString,
+  RecordKeyString,
+}
 
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
@@ -50,12 +63,12 @@ export class AtUri {
   }
 
   get did(): DidString {
-    const { hostname } = this
-    ensureValidDid(hostname)
-    return hostname
+    const { host } = this
+    if (isDidIdentifier(host)) return host
+    throw new InvalidDidError(`AtUri "${this}" does not have a DID hostname`)
   }
 
-  get hostname() {
+  get hostname(): AtIdentifierString {
     return this.host
   }
 
