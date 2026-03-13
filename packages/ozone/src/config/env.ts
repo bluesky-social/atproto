@@ -43,6 +43,8 @@ export const readEnv = (): OzoneEnvironment => {
     verifierPassword: envStr('OZONE_VERIFIER_PASSWORD'),
     verifierIssuersToIndex: envList('OZONE_VERIFIER_ISSUERS_TO_INDEX'),
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
+    assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
+    assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
   }
 }
 
@@ -84,4 +86,6 @@ export type OzoneEnvironment = {
   verifierPassword?: string
   verifierIssuersToIndex?: string[]
   jetstreamUrl?: string
+  assignmentQueueDurationMs?: number
+  assignmentReportDurationMs?: number
 }

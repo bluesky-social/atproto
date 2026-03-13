@@ -1,4 +1,5 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
+import { AdminTokenOutput, ModeratorOutput } from '../auth-verifier'
 import { AppContext } from '../context'
 import { Member } from '../db/schema/member'
 import { ModerationEvent } from '../db/schema/moderation_event'
@@ -20,6 +21,17 @@ import {
   ROLEVERIFIER,
 } from '../lexicon/types/tools/ozone/team/defs'
 import { ModerationSubjectStatusRow } from '../mod-service/types'
+
+export const getAuthDid = (
+  auth: ModeratorOutput | AdminTokenOutput,
+  serviceDid: string,
+): string | undefined => {
+  return auth.credentials.type === 'moderator'
+    ? auth.credentials.iss
+    : auth.credentials.type === 'admin_token'
+      ? serviceDid
+      : undefined
+}
 
 export const getPdsAccountInfos = async (
   ctx: AppContext,
