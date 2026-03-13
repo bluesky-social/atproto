@@ -1,16 +1,16 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
 import { describe, expect, it } from 'vitest'
-import { InvalidDidError, ensureValidDid, ensureValidDidRegex } from '../src'
+import { InvalidDidError, assertDidString, isDidString } from '../src'
 
 describe('DID permissive validation', () => {
   const expectValid = (h: string) => {
-    ensureValidDid(h)
-    ensureValidDidRegex(h)
+    expect(isDidString(h)).toBe(true)
+    assertDidString(h)
   }
   const expectInvalid = (h: string) => {
-    expect(() => ensureValidDid(h)).toThrow(InvalidDidError)
-    expect(() => ensureValidDidRegex(h)).toThrow(InvalidDidError)
+    expect(isDidString(h)).toBe(false)
+    expect(() => assertDidString(h)).toThrow(InvalidDidError)
   }
 
   it('enforces spec details', () => {
@@ -23,6 +23,7 @@ describe('DID permissive validation', () => {
     expectValid('did:method:val.two')
     expectValid('did:method:val:two')
     expectValid('did:method:val%BB')
+    expectValid('did:method:val%bb') // We allow both upper and lower case
 
     expectInvalid('did')
     expectInvalid('didmethodval')
@@ -52,6 +53,10 @@ describe('DID permissive validation', () => {
     expectInvalid('did:method:val/two')
     expectInvalid('did:method:val?two')
     expectInvalid('did:method:val#two')
+
+    // Invalid URL encoding
+    expectInvalid('did:method:val%B')
+    expectInvalid('did:method:v%BZal')
     expectInvalid('did:method:val%')
 
     expectValid(
