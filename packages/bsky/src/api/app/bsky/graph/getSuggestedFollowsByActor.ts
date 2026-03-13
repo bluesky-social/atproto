@@ -1,7 +1,7 @@
 import { AtpAgent } from '@atproto/api'
 import { mapDefined, noUndefinedVals } from '@atproto/common'
 import { HeadersMap } from '@atproto/xrpc'
-import { InvalidRequestError, InternalServerError } from '@atproto/xrpc-server'
+import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
