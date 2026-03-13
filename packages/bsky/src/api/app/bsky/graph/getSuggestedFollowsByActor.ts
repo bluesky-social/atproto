@@ -5,7 +5,10 @@ import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
+import {
+  OutputSchema,
+  QueryParams,
+} from '../../../../lexicon/types/app/bsky/graph/getSuggestedFollowsByActor'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -35,16 +38,26 @@ export default function (server: Server, ctx: AppContext) {
           ? req.headers['x-bsky-topics'].join(',')
           : req.headers['x-bsky-topics'],
       })
-      const { skeletonHeaders, ...result } = await getSuggestedFollowsByActor(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
-        ctx,
-      )
-      const responseHeaders = noUndefinedVals({
-        'content-language': skeletonHeaders?.['content-language'],
-      })
+
+      let output: OutputSchema
+      let responseHeaders = {}
+
+      if (!ctx.suggestionsAgent) {
+        output = { suggestions: [] }
+      } else {
+        const { skeletonHeaders, ...result } = await getSuggestedFollowsByActor(
+          { ...params, hydrateCtx: hydrateCtx.copy({ viewer }), headers },
+          ctx,
+        )
+        output = result
+        responseHeaders = noUndefinedVals({
+          'content-language': skeletonHeaders?.['content-language'],
+        })
+      }
+
       return {
         encoding: 'application/json',
-        body: result,
+        body: output,
         headers: {
           ...responseHeaders,
           ...resHeaders({ labelers: hydrateCtx.labelers }),
@@ -56,6 +69,8 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
+
+  // handled above already, this branch should not be reached
   if (!ctx.suggestionsAgent) {
     throw new InternalServerError('Suggestions service not configured')
   }
@@ -112,10 +127,6 @@ const presentation = (
     recIdStr: skeleton.recIdStr,
     suggestions,
     skeletonHeaders,
-    /** @deprecated */
-    isFallback: false,
-    /** @deprecated use recIdStr */
-    recId: 0,
   }
 }
 
