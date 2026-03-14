@@ -9,6 +9,7 @@ export type ActorAccount = ActorEntry & {
   email: string | null
   emailConfirmedAt: string | null
   invitesDisabled: 0 | 1 | null
+  emailAuthFactor: 0 | 1 | null
 }
 
 export type AvailabilityFlags = {
@@ -44,6 +45,7 @@ export const selectAccountQB = (db: AccountDb, flags?: AvailabilityFlags) => {
       'account.email',
       'account.emailConfirmedAt',
       'account.invitesDisabled',
+      'account.emailAuthFactor',
     ])
 }
 
@@ -214,6 +216,19 @@ export const updateEmail = async (
     }
     throw err
   }
+}
+
+export const setEmailAuthFactor = async (
+  db: AccountDb,
+  did: string,
+  enabled: boolean,
+) => {
+  await db.executeWithRetry(
+    db.db
+      .updateTable('account')
+      .set({ emailAuthFactor: enabled ? 1 : 0 })
+      .where('did', '=', did),
+  )
 }
 
 export const setEmailConfirmedAt = async (
