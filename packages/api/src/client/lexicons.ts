@@ -19301,6 +19301,86 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportCreateActivity: {
+    lexicon: 1,
+    id: 'tools.ozone.report.createActivity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Register an activity on a report. For status_change actions, validates the transition and optionally updates report.status atomically.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId', 'action'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'ID of the report to record activity on',
+              },
+              action: {
+                type: 'string',
+                knownValues: ['status_change', 'note'],
+                description: 'Type of activity to record',
+              },
+              toState: {
+                type: 'string',
+                knownValues: [
+                  'open',
+                  'closed',
+                  'escalated',
+                  'queued',
+                  'assigned',
+                ],
+                description:
+                  'Target status. Required when action is status_change.',
+              },
+              note: {
+                type: 'string',
+                description:
+                  'Optional free-text note. Can accompany any action type.',
+              },
+              updateStatus: {
+                type: 'boolean',
+                description:
+                  'When action is status_change, also update report.status to toState. Defaults to true.',
+                default: true,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activity'],
+            properties: {
+              activity: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportActivityView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReportNotFound',
+            description: 'No report exists with the given reportId',
+          },
+          {
+            name: 'MissingTargetState',
+            description: 'toState is required when action is status_change',
+          },
+          {
+            name: 'InvalidStateTransition',
+            description:
+              "The requested state transition is not permitted from the report's current status",
+          },
+        ],
+      },
+    },
+  },
   ToolsOzoneReportDefs: {
     lexicon: 1,
     id: 'tools.ozone.report.defs',
@@ -19560,7 +19640,7 @@ export const schemaDict = {
           },
           status: {
             type: 'string',
-            knownValues: ['open', 'closed', 'escalated'],
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
             description: 'Current status of the report',
           },
           subject: {
@@ -19641,6 +19721,72 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.queue.defs#queueView',
             description: 'The queue this report is assigned to (if any)',
+          },
+        },
+      },
+      reportActivityView: {
+        type: 'object',
+        description:
+          'A single activity entry on a report, capturing state transitions or internal notes.',
+        required: [
+          'id',
+          'reportId',
+          'action',
+          'isAutomated',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Activity ID',
+          },
+          reportId: {
+            type: 'integer',
+            description: 'ID of the report this activity belongs to',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['status_change', 'note'],
+            description: 'Type of activity',
+          },
+          fromState: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              'Status before the transition. Only set for status_change actions.',
+          },
+          toState: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              'Status after the transition. Only set for status_change actions.',
+          },
+          note: {
+            type: 'string',
+            description:
+              'Optional free-text note. Can accompany any action type.',
+          },
+          meta: {
+            type: 'unknown',
+            description:
+              'Extensible JSON payload for future action-specific metadata.',
+          },
+          isAutomated: {
+            type: 'boolean',
+            description:
+              'True if this activity was created by an automated process (e.g. queue router) rather than a direct human action.',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description:
+              'DID of the actor who created this activity, or the service DID for automated activities.',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this activity was created',
           },
         },
       },
@@ -19809,6 +19955,55 @@ export const schemaDict = {
             description: 'No report found.',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneReportListActivities: {
+    lexicon: 1,
+    id: 'tools.ozone.report.listActivities',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List all activities for a report, sorted most-recent-first.',
+        parameters: {
+          type: 'params',
+          required: ['reportId'],
+          properties: {
+            reportId: {
+              type: 'integer',
+              description: 'ID of the report whose activities to list',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activities'],
+            properties: {
+              activities: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#reportActivityView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -22158,10 +22353,12 @@ export const ids = {
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
+  ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
+  ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
   ToolsOzoneReportUnassignModerator: 'tools.ozone.report.unassignModerator',

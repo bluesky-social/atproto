@@ -169,7 +169,13 @@ export interface ReportView {
   /** ID of the moderation event that created this report */
   eventId: number
   /** Current status of the report */
-  status: 'open' | 'closed' | 'escalated' | (string & {})
+  status:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
   subject: ToolsOzoneModerationDefs.SubjectView
   reportType: ComAtprotoModerationDefs.ReasonType
   /** DID of the user who made the report */
@@ -204,6 +210,53 @@ export function isReportView<V>(v: V) {
 
 export function validateReportView<V>(v: V) {
   return validate<ReportView & V>(v, id, hashReportView)
+}
+
+/** A single activity entry on a report, capturing state transitions or internal notes. */
+export interface ReportActivityView {
+  $type?: 'tools.ozone.report.defs#reportActivityView'
+  /** Activity ID */
+  id: number
+  /** ID of the report this activity belongs to */
+  reportId: number
+  /** Type of activity */
+  action: 'status_change' | 'note' | (string & {})
+  /** Status before the transition. Only set for status_change actions. */
+  fromState?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+  /** Status after the transition. Only set for status_change actions. */
+  toState?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
+  /** Optional free-text note. Can accompany any action type. */
+  note?: string
+  /** Extensible JSON payload for future action-specific metadata. */
+  meta?: { [_ in string]: unknown }
+  /** True if this activity was created by an automated process (e.g. queue router) rather than a direct human action. */
+  isAutomated: boolean
+  /** DID of the actor who created this activity, or the service DID for automated activities. */
+  createdBy: string
+  /** When this activity was created */
+  createdAt: string
+}
+
+const hashReportActivityView = 'reportActivityView'
+
+export function isReportActivityView<V>(v: V) {
+  return is$typed(v, id, hashReportActivityView)
+}
+
+export function validateReportActivityView<V>(v: V) {
+  return validate<ReportActivityView & V>(v, id, hashReportActivityView)
 }
 
 export interface AssignmentView {

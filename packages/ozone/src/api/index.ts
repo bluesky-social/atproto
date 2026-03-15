@@ -32,10 +32,12 @@ import listQueues from './queue/listQueues'
 import routeReports from './queue/routeReports'
 import updateQueue from './queue/updateQueue'
 import assignReportModerator from './report/assignModerator'
+import createActivity from './report/createActivity'
 import createReport from './report/createReport'
 import getReportAssignments from './report/getAssignments'
 import getLatestReport from './report/getLatestReport'
 import getReport from './report/getReport'
+import listActivities from './report/listActivities'
 import queryReports from './report/queryReports'
 import unassignReportModerator from './report/unassignModerator'
 import addSafelinkRule from './safelink/addRule'
@@ -126,5 +128,7 @@ export default function (server: Server, ctx: AppContext) {
   assignReportModerator(server, ctx)
   unassignReportModerator(server, ctx)
   getReportAssignments(server, ctx)
+  createActivity(server, ctx)
+  listActivities(server, ctx)
   return server
 }

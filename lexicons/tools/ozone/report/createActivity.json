@@ -1,0 +1,69 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.createActivity",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Register an activity on a report. For status_change actions, validates the transition and optionally updates report.status atomically.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reportId", "action"],
+          "properties": {
+            "reportId": {
+              "type": "integer",
+              "description": "ID of the report to record activity on"
+            },
+            "action": {
+              "type": "string",
+              "knownValues": ["status_change", "note"],
+              "description": "Type of activity to record"
+            },
+            "toState": {
+              "type": "string",
+              "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+              "description": "Target status. Required when action is status_change."
+            },
+            "note": {
+              "type": "string",
+              "description": "Optional free-text note. Can accompany any action type."
+            },
+            "updateStatus": {
+              "type": "boolean",
+              "description": "When action is status_change, also update report.status to toState. Defaults to true.",
+              "default": true
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["activity"],
+          "properties": {
+            "activity": {
+              "type": "ref",
+              "ref": "tools.ozone.report.defs#reportActivityView"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ReportNotFound",
+          "description": "No report exists with the given reportId"
+        },
+        {
+          "name": "MissingTargetState",
+          "description": "toState is required when action is status_change"
+        },
+        {
+          "name": "InvalidStateTransition",
+          "description": "The requested state transition is not permitted from the report's current status"
+        }
+      ]
+    }
+  }
+}

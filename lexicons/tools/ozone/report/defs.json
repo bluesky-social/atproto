@@ -264,7 +264,7 @@
         },
         "status": {
           "type": "string",
-          "knownValues": ["open", "closed", "escalated"],
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
           "description": "Current status of the report"
         },
         "subject": {
@@ -343,6 +343,58 @@
           "type": "ref",
           "ref": "tools.ozone.queue.defs#queueView",
           "description": "The queue this report is assigned to (if any)"
+        }
+      }
+    },
+    "reportActivityView": {
+      "type": "object",
+      "description": "A single activity entry on a report, capturing state transitions or internal notes.",
+      "required": ["id", "reportId", "action", "isAutomated", "createdBy", "createdAt"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Activity ID"
+        },
+        "reportId": {
+          "type": "integer",
+          "description": "ID of the report this activity belongs to"
+        },
+        "action": {
+          "type": "string",
+          "knownValues": ["status_change", "note"],
+          "description": "Type of activity"
+        },
+        "fromState": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "Status before the transition. Only set for status_change actions."
+        },
+        "toState": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "Status after the transition. Only set for status_change actions."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional free-text note. Can accompany any action type."
+        },
+        "meta": {
+          "type": "unknown",
+          "description": "Extensible JSON payload for future action-specific metadata."
+        },
+        "isAutomated": {
+          "type": "boolean",
+          "description": "True if this activity was created by an automated process (e.g. queue router) rather than a direct human action."
+        },
+        "createdBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the actor who created this activity, or the service DID for automated activities."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When this activity was created"
         }
       }
     },
