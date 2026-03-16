@@ -7,6 +7,9 @@ did:methodval)
 :did:method:val
 did.method.val
 did:method:val:
+did:method:val::::
+did:method::
+did:method:::::
 did:method:val%
 did:method:val%bb
 did:method:-:_:.:%ab

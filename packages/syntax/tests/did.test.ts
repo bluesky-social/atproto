@@ -32,12 +32,9 @@ describe('additional tests (not covered by interop)', () => {
   testInvalidDid([])
   // @ts-expect-error
   testInvalidDid({ toString: () => 'did:method:val' })
+})
 
-  // Cannot end with ":"
-  testInvalidDid('did:method::::')
-  testValidDid('did:method::::::a')
-
-  // Length boundary
+describe('length boundary', () => {
   testValidDid('did:method:' + 'v'.repeat(2048 - 'did:method:'.length))
   testInvalidDid('did:method:' + 'v'.repeat(2048 - 'did:method:'.length + 1))
 })
