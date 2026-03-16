@@ -7,4 +7,3 @@ export type FeatureGate =
   | 'suggested_onboarding_users:discover_agent:enable'
   | 'threads:reply_ranking_exploration:enable'
   | 'search:filtering_exploration:enable'
-  | 'image:remove_format_from_url'
