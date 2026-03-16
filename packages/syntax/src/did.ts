@@ -1,26 +1,25 @@
 /**
  * A DID identifier string as used in AT protocol
  *
- * DID identifiers must respect the following constraints (as prescribed by
- * DID-core, and the AT protocol specification):
+ * DID identifiers must respect the following syntax (as prescribed by DID-core,
+ * and the AT protocol specification):
  *
- * - entire value is ASCII: [a-zA-Z0-9._:%-]
- * - always starts "did:" (lower-case)
- * - method name is one or more lower-case letters, followed by ":"
- * - remaining identifier can have any of the above chars, but can not end in ":"
- * - it seems that a bunch of ":" can be included, and don't need spaces between
- * - "%" is used only for "percent encoding" and must be followed by two hex characters
+ * - the entire value is ASCII: [a-zA-Z0-9._:%-]
+ * - must starts with "did:" (lower-case)
+ * - the method name is one or more lower-case letters & digits, followed by ":"
+ * - remaining identifier can have upper-case letters and properly percent encoded characters
+ * - it seems that a bunch of ":" can be included, and don't need spaces between, but the value can not end in ":"
+ * - "%" is used only for "percent encoding" and must be followed by exactly two upper-case hex characters
  * - query ("?") and fragment ("#") stuff is defined for "DID URIs", but not as part of identifier itself
  * - hard length limit of 2048 chars (imposed by AT protocol)
  *
- * @note Current AT protocol specification only allows `did:plc` and `did:web`
- * methods. But this is not enforced at when checking Lexicon strings. This
- * implementation does *not* enforce method specific constraints, it only
- * ensures that the syntax is valid according to the AT protocol specification.
- *
- * @note This implementation does not validate that the percent encoding is
- * valid, only that the syntax is right (ie. every percent symbol is followed
- * by exactly two upper case hexadecimal digits).
+ * @note This implementation only validates the DID **syntax**. Method specific
+ * semantics (like those from `did:plc` and `did:web`) are not checked here. In
+ * particular, some methods might be prescriptive about how percent encoding
+ * can be used. This implementation will **not** validate that percent encoding
+ * respects those methods specific rules, or that the percent encoding
+ * represents a valid UTF-8 character. Those invalid values are expected to be
+ * rejected during resolution.
  *
  * @example "did:plc:7iza6de2dwap2sbkpav7c6c6"
  * @example "did:onion:2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid"
