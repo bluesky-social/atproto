@@ -13,13 +13,13 @@
  * - query ("?") and fragment ("#") stuff is defined for "DID URIs", but not as part of identifier itself
  * - hard length limit of 2048 chars (imposed by AT protocol)
  *
- * @note This implementation only validates the DID **syntax**. Method specific
- * semantics (like those from `did:plc` and `did:web`) are not checked here. In
- * particular, some methods might be prescriptive about how percent encoding
- * can be used. This implementation will **not** validate that percent encoding
- * respects those methods specific rules, or that the percent encoding
- * represents a valid UTF-8 character. Those invalid values are expected to be
- * rejected during resolution.
+ * @note This implementation only validates the DID identifier **syntax**.
+ * Method specific semantics (like those from `did:plc` and `did:web`) are not
+ * checked here. In particular, some methods might be prescriptive about how
+ * percent encoding can be used. This implementation will **not** validate that
+ * percent encoding respects those methods specific rules, or that the percent
+ * encoding represents a valid UTF-8 character. Those invalid values are
+ * expected to be rejected during resolution.
  *
  * @example "did:plc:7iza6de2dwap2sbkpav7c6c6"
  * @example "did:onion:2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid"
