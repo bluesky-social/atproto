@@ -147,19 +147,8 @@ describe('moderation', () => {
   })
 
   describe('blob takedown', () => {
-    let blobUri: string
-    let imageUri: string
-
-    beforeAll(async () => {
-      blobUri = `${network.bsky.url}/blob/${blobSubject.did}/${blobSubject.cid}`
-      imageUri = network.bsky.ctx.views.imgUriBuilder
-        .getPresetUri('feed_thumbnail', blobSubject.did, blobSubject.cid)
-        .replace(network.bsky.ctx.cfg.publicUrl || '', network.bsky.url)
-      // Warm image server cache
-      await fetch(imageUri)
-      const cached = await fetch(imageUri)
-      expect(cached.headers.get('x-cache')).toEqual('hit')
-    })
+    const getBlobUri = (subject: RepoBlobRef) =>
+      `${network.bsky.url}/blob/${subject.did}/${subject.cid}`
 
     it('takes down blobs', async () => {
       await agent.api.com.atproto.admin.updateSubjectStatus(
@@ -187,7 +176,7 @@ describe('moderation', () => {
     })
 
     it('prevents resolution of blob', async () => {
-      const resolveBlob = await fetch(blobUri)
+      const resolveBlob = await fetch(getBlobUri(blobSubject))
       expect(resolveBlob.status).toEqual(404)
       expect(await resolveBlob.json()).toEqual({
         error: 'NotFoundError',
@@ -208,14 +197,8 @@ describe('moderation', () => {
       )
 
       // Can resolve blob
-      const resolveBlob = await fetch(blobUri)
+      const resolveBlob = await fetch(getBlobUri(blobSubject))
       expect(resolveBlob.status).toEqual(200)
-
-      // Can fetch through image server
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(200)
-      const size = Number(fetchImage.headers.get('content-length'))
-      expect(size).toBeGreaterThan(9000)
     })
   })
 })

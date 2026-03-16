@@ -25,7 +25,6 @@ import {
 import * as error from './error'
 import { FeatureGatesClient } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
-import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
 import { createKwsClient } from './kws'
 import { createServer } from './lexicon'
@@ -229,7 +228,6 @@ export class BskyAppView {
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
     app.use(blobResolver.createMiddleware(ctx))
-    app.use(imageServer.createMiddleware(ctx, { prefix: '/img/' }))
 
     if (config.dataplaneUrls.length > 0 || config.dataplaneUrlsEtcdKeyPrefix) {
       app.use(sitemap.createRouter(ctx))
