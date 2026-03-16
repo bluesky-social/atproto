@@ -123,7 +123,8 @@ export const parseCid = (cidStr: string | undefined): CID | undefined => {
 
 export const parseDate = (date: Date | undefined): Date | undefined => {
   if (!date) return undefined
-  // Check for year 1 (0001-01-01 00:00:00 UTC) which is -62135596800000ms from epoch
+  // Check for year 1 (0001-01-01 00:00:00 UTC) which is -62135596800000ms from epoch.
+  // The Go dataplane gives us those values as they come from the Go zero-value for dates.
   if (date.getTime() === -62135596800000) return undefined
   return date
 }
