@@ -802,22 +802,9 @@ describe('moderation', () => {
   describe('blob takedown', () => {
     let post: { ref: RecordRef; images: ImageRef[] }
     let blob: ImageRef
-    let imageUri: string
     beforeAll(async () => {
-      const { ctx } = network.bsky
       post = sc.posts[sc.dids.carol][0]
       blob = post.images[1]
-      imageUri = ctx.views.imgUriBuilder
-        .getPresetUri(
-          'feed_thumbnail',
-          sc.dids.carol,
-          blob.image.ref.toString(),
-        )
-        .replace(ctx.cfg.publicUrl || '', network.bsky.url)
-      // Warm image server cache
-      await fetch(imageUri)
-      const cached = await fetch(imageUri)
-      expect(cached.headers.get('x-cache')).toEqual('hit')
       await modClient.performTakedown({
         subject: recordSubject(post.ref),
         subjectBlobCids: [blob.image.ref.toString()],
@@ -841,15 +828,6 @@ describe('moderation', () => {
       expect(resolveBlob.status).toEqual(404)
       expect(await resolveBlob.json()).toEqual({
         error: 'NotFoundError',
-        message: 'Blob not found',
-      })
-    })
-
-    // @TODO add back in with image invalidation, see bluesky-social/atproto#2087
-    it.skip('prevents image blob from being served, even when cached.', async () => {
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(404)
-      expect(await fetchImage.json()).toMatchObject({
         message: 'Blob not found',
       })
     })
@@ -889,12 +867,6 @@ describe('moderation', () => {
       const blobPath = `/blob/${sc.dids.carol}/${blob.image.ref.toString()}`
       const resolveBlob = await fetch(`${network.bsky.url}${blobPath}`)
       expect(resolveBlob.status).toEqual(200)
-
-      // Can fetch through image server
-      const fetchImage = await fetch(imageUri)
-      expect(fetchImage.status).toEqual(200)
-      const size = Number(fetchImage.headers.get('content-length'))
-      expect(size).toBeGreaterThan(9000)
     })
 
     it('fans reversal out to pds', async () => {

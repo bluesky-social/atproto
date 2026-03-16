@@ -10,10 +10,9 @@ This is the service entrypoint for the bsky appview. The entrypoint command shou
 - `NODE_ENV` - (recommended) for production usage, should be set to `production`. Otherwise all responses are validated on their way out. There may be other effects of not setting this to `production`, as dependencies may also implement debug modes based on its value.
 - `BSKY_VERSION` - (recommended) version of the bsky service. This is advertised by the health endpoint.
 - `BSKY_PORT` - (recommended) the port that the service will run on.
-- `BSKY_IMG_URI_ENDPOINT` - (recommended) the base url for resized images, e.g. `https://cdn.bsky.app/img`. When not set, sets-up an image resizing service directly on the appview.
+- `BSKY_IMG_URI_ENDPOINT` - (recommended) the base url for resized images, e.g. `https://cdn.bsky.app/img`.
 - `BSKY_SERVER_DID` - (recommended) the did of the appview service. When this is a `did:web` that matches the appview's public url, a `did:web` document is served.
 - `BSKY_HANDLE_RESOLVE_NAMESERVERS` - alternative domain name servers used for handle resolution, comma-separated.
-- `BSKY_BLOB_CACHE_LOC` - when `BSKY_IMG_URI_ENDPOINT` is not set, this determines where resized blobs are cached by the image resizing service.
 - `BSKY_COURIER_URL` - URL of courier service.
 - `BSKY_COURIER_API_KEY` - API key for courier service.
 - `BSKY_BSYNC_URL` - URL of bsync service.

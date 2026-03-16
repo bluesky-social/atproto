@@ -80,7 +80,6 @@ export interface ServerConfigValues {
   labelsFromIssuerDids?: string[]
   indexedAtEpoch?: Date
   // misc/dev
-  blobCacheLocation?: string
   eventProxyTrackingEndpoint?: string
   growthBookApiHost?: string
   growthBookClientKey?: string
@@ -153,7 +152,6 @@ export class ServerConfig {
     // e.g. https://video.invalid/watch/%s/%s/thumbnail.jpg
     const videoThumbnailUrlPattern =
       process.env.BSKY_VIDEO_THUMBNAIL_URL_PATTERN
-    const blobCacheLocation = process.env.BSKY_BLOB_CACHE_LOC
     const searchUrl =
       process.env.BSKY_SEARCH_URL ||
       process.env.BSKY_SEARCH_ENDPOINT ||
@@ -356,7 +354,6 @@ export class ServerConfig {
       cdnUrl,
       videoPlaylistUrlPattern,
       videoThumbnailUrlPattern,
-      blobCacheLocation,
       bsyncUrl,
       bsyncApiKey,
       bsyncHttpVersion,
@@ -569,10 +566,6 @@ export class ServerConfig {
 
   get labelsFromIssuerDids() {
     return this.cfg.labelsFromIssuerDids ?? []
-  }
-
-  get blobCacheLocation() {
-    return this.cfg.blobCacheLocation
   }
 
   get eventProxyTrackingEndpoint() {
