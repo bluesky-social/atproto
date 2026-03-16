@@ -17572,7 +17572,7 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Take a moderation action on multiple subjects at once. Each subject is processed independently; partial failures are reported rather than causing a full rollback. This batch endpoint only supports a subset of moderation events.',
+          'Take a moderation action on multiple subjects at once. Failures for a individual subjects are listed in failedEvents. Only a subset of moderation events is supported.',
         input: {
           encoding: 'application/json',
           schema: {
