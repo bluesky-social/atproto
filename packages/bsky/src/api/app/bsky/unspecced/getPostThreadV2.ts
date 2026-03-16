@@ -33,9 +33,11 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         include3pBlocks,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          [ctx.featureGatesClient.Gate.ThreadsReplyRankingExplorationEnable],
-          ctx.featureGatesClient.parseUserContextFromHandler({ viewer, req }),
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
+            viewer,
+            req,
+          }),
         ),
       })
 

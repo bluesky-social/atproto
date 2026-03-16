@@ -43,3 +43,12 @@ export type TrackingMetadata = {
  * `ctx.FeatureGatesClient.checkGates()`
  */
 export type CheckedFeatureGatesMap = Map<Gate, boolean>
+
+export type ScopedFeatureGatesClient = {
+  Gate: typeof Gate
+  checkGates(
+    gates: Gate[],
+    userContextOverrides?: UserContext,
+  ): CheckedFeatureGatesMap
+  checkGate(gate: Gate, userContextOverrides?: UserContext): boolean
+}
