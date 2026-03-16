@@ -37,7 +37,8 @@ export type DidString<M extends string = string> = `did:${M}:${string}`
 
 // Regexp manually written based on the constraints above (note that the length,
 // and ":" end char are not enforced by this regexp)
-const DID_STRING_REGEX = /^did:[a-z]+(?::(?:%[A-F0-9]{2}|[a-zA-Z0-9._-]+)*)+$/
+const DID_STRING_REGEX =
+  /^did:[a-z0-9]+(?::(?:%[A-F0-9]{2}|[a-zA-Z0-9._-]+)*)+$/
 
 /**
  * Checks if a string is a valid {@link DidString} format string.

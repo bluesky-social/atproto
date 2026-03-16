@@ -7,6 +7,9 @@ did:method:val_two
 did:method:val.two
 did:method:val:two
 did:method:val%BB
+did:method:%BB:%BB:%BB:%BB:%BB
+did:method:%BB:foo:%BB:foo:%BB:foo:%BB:foo:%BB
+did:method:val%BBval%BBval%BBval%BBval%BBval
 did:method:vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 did:m:v
 did:method::::val
@@ -15,12 +18,5 @@ did:method:-:_:.:%AB
 did:method:.
 did:method:_
 did:method::.
+did:m123:val
 
-# allows some real DID values
-did:onion:2gzyxa5ihm7nsggfxnu52rck2vv4rvmdlkiu3zzui5du4xyclen53wid
-did:example:123456789abcdefghi
-did:plc:7iza6de2dwap2sbkpav7c6c6
-did:web:example.com
-did:web:localhost%3A1234
-did:key:zQ3shZc2QzApp2oymGvQbzP8eKheVshBHbU4ZYjeXqwSKEn6N
-did:ethr:0xb9c5714089478a327f09197987f16f9e5d936e8a

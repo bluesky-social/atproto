@@ -10,9 +10,16 @@ did:method:val:
 did:method:val%
 did:method:val%bb
 did:method:-:_:.:%ab
+did:method:val%ZZ
+did:method:val%FG
+did:method:val%F
+did:method:val%FG:tt
+did:method:val%B:foo
+did:method:val%zz
 DID:method:val
+Did:method:val
 did:METHOD:val
-did:m123:val
+did:Method:val
 did:method:val/two
 did:method:val?two
 did:method:val#two
