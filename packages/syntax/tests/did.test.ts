@@ -18,9 +18,24 @@ function testInvalidDid(value: string) {
 }
 
 describe('additional tests (not covered by interop)', () => {
+  // @ts-expect-error
+  testInvalidDid(4)
+  // @ts-expect-error
+  testInvalidDid(true)
+  // @ts-expect-error
+  testInvalidDid(Symbol.iterator)
+  // @ts-expect-error
+  testInvalidDid(null)
+  // @ts-expect-error
+  testInvalidDid(undefined)
+  // @ts-expect-error
+  testInvalidDid([])
+  // @ts-expect-error
+  testInvalidDid({ toString: () => 'did:method:val' })
+
   // Cannot end with ":"
   testInvalidDid('did:method::::')
-  testValidDid('did:method::::a')
+  testValidDid('did:method::::::a')
 
   // Length boundary
   testValidDid('did:method:' + 'v'.repeat(2048 - 'did:method:'.length))

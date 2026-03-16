@@ -34,8 +34,12 @@
  */
 export type DidString<M extends string = string> = `did:${M}:${string}`
 
-// Regexp based on the constraints above (note that the length is not enforced
-// by this regexp)
+// Regexp based on the constraints above (without the length constraint)
+//
+// @NOTE the total length constraint could be enforced here by a lookahead
+// anchored at ^ (as in /^(?=.{8,2048})did:[...]/ ) but this causes the string
+// to be processed twice by the regexp, which is way less efficient (O(n)) than
+// using the "length" property of the string (O(1)).
 const DID_STRING_REGEX =
   /^did:[a-z0-9]+(?::(?:%[A-F0-9]{2}|[a-zA-Z0-9._-]+)*)+(?<!:)$/
 
