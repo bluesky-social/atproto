@@ -2,4 +2,4 @@
 '@atproto/bsky': patch
 ---
 
-Remove feature gate for including formate in image URLs.
+Remove feature gate for including format in image URLs.
