@@ -71,12 +71,12 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
   }
 
   async applyCommit(commit: CommitData, isCreate?: boolean) {
-    await this.updateRoot(commit.cid, commit.rev, isCreate)
-    await this.putMany(commit.newBlocks, commit.rev)
-    await this.deleteMany(commit.removedCids.toList())
     if (!commit.preorderOps) {
       throw new Error('Commit is missing preorderOps')
     }
+    await this.updateRoot(commit.cid, commit.rev, isCreate)
+    await this.putMany(commit.newBlocks, commit.rev)
+    await this.deleteMany(commit.removedCids.toList())
     await this.applyPreorderOps(commit.preorderOps)
   }
 

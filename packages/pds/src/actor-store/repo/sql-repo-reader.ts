@@ -101,7 +101,7 @@ export class SqlRepoReader extends ReadableBlockstore {
     const { ref } = this.db.db.dynamic
     let lastLpath = ''
     let lastDepth = 0
-    for (;;) {
+    while (true) {
       const res = await this.db.db
         .selectFrom('preorder_map')
         .innerJoin('repo_block', 'repo_block.cid', 'preorder_map.cid')

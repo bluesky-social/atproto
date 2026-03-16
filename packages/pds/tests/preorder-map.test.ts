@@ -29,11 +29,10 @@ async function computeExpectedRows(
       })
       currentLpath = entry.key
     } else {
-      const childLayer = (await entry.getLayer()) ?? layer - 1
       const childRows = await computeExpectedRows(
         entry,
         currentLpath,
-        childLayer,
+        layer - 1,
       )
       rows.push(...childRows)
     }

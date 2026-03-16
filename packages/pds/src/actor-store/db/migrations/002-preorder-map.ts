@@ -100,8 +100,7 @@ async function preorderTraverse(
       })
       currentLpath = entry.key
     } else {
-      const childLayer = (await entry.getLayer()) ?? layer - 1
-      await preorderTraverse(entry, currentLpath, childLayer, inserter)
+      await preorderTraverse(entry, currentLpath, layer - 1, inserter)
     }
   }
 }
