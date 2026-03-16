@@ -8,7 +8,7 @@
  * - must starts with "did:" (lower-case)
  * - the method name is one or more lower-case letters & digits, followed by ":"
  * - remaining identifier can have upper-case letters and properly percent encoded characters
- * - it seems that a bunch of ":" can be included, and don't need spaces between, but the value can not end in ":"
+ * - any number of ":" can appear, even without any char in between, but the value can not end in ":"
  * - "%" is used only for "percent encoding" and must be followed by exactly two upper-case hex characters
  * - query ("?") and fragment ("#") stuff is defined for "DID URIs", but not as part of identifier itself
  * - hard length limit of 2048 chars (imposed by AT protocol)
@@ -34,10 +34,10 @@
  */
 export type DidString<M extends string = string> = `did:${M}:${string}`
 
-// Regexp manually written based on the constraints above (note that the length,
-// and ":" end char are not enforced by this regexp)
+// Regexp based on the constraints above (note that the length is not enforced
+// by this regexp)
 const DID_STRING_REGEX =
-  /^did:[a-z0-9]+(?::(?:%[A-F0-9]{2}|[a-zA-Z0-9._-]+)*)+$/
+  /^did:[a-z0-9]+(?::(?:%[A-F0-9]{2}|[a-zA-Z0-9._-]+)*)+(?<!:)$/
 
 /**
  * Checks if a string is a valid {@link DidString} format string.
@@ -50,7 +50,6 @@ export function isDidString<I>(input: I): input is I & DidString {
   return (
     typeof input === 'string' &&
     input.length <= 2048 &&
-    input.charCodeAt(input.length - 1) !== 0x3a && // faster than .endsWith(':')
     DID_STRING_REGEX.test(input)
   )
 }
