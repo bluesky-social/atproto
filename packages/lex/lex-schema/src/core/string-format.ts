@@ -9,9 +9,9 @@ import {
   RecordKeyString,
   TidString,
   UriString,
+  isAtIdentifierString,
   isDatetimeString,
   isDidString,
-  isValidAtIdentifier as isValidAtId,
   isValidAtUri,
   isValidHandle,
   isValidLanguage,
@@ -30,14 +30,26 @@ import { CheckFn } from '../util/assertion-util.js'
 // documentation for types and utilities that are already well-defined there.
 // @TODO rework other string formats in @atproto/syntax to follow this pattern
 // and re-export here, e.g. language tags, NSIDs, record keys, etc.
+
+export {
+  type AtIdentifierString,
+  asAtIdentifierString,
+  ifAtIdentifierString,
+  isAtIdentifierString,
+} from '@atproto/syntax'
+
+// AtIdentifierString utilities
+export { isDidIdentifier, isHandleIdentifier } from '@atproto/syntax'
+
 export {
   type DatetimeString,
   asDatetimeString,
-  currentDatetimeString,
   ifDatetimeString,
   isDatetimeString,
-  toDatetimeString,
 } from '@atproto/syntax'
+
+// DatetimeString utilities
+export { currentDatetimeString, toDatetimeString } from '@atproto/syntax'
 
 export {
   type DidString,
@@ -45,22 +57,6 @@ export {
   ifDidString,
   isDidString,
 } from '@atproto/syntax'
-
-/**
- * Type guard that checks if a value is a valid AT identifier (DID or handle).
- *
- * @param value - The value to check
- * @returns `true` if the value is a valid AT identifier
- */
-export const isAtIdentifierString: CheckFn<AtIdentifierString> = isValidAtId
-export type {
-  /**
-   * An AT identifier string - either a DID or a handle.
-   *
-   * @example `"did:plc:1234..."` or `"alice.bsky.social"`
-   */
-  AtIdentifierString,
-}
 
 /**
  * Type guard that checks if a value is a valid AT URI.
