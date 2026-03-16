@@ -93,10 +93,10 @@ export class DataDiff {
   }
 
   // Preorder tracking: emit insert op for a node (no-op if not tracking)
-  async preorderInsert(node: NodeEntry, lpath: string): Promise<void> {
+  // `layer` is the MST layer of the node (ignored for leaves)
+  preorderInsert(node: NodeEntry, lpath: string, layer: number): void {
     if (!this.preorderOps) return
     if (node.isTree()) {
-      const layer = await node.getLayer()
       this.preorderOps.push({
         action: 'insert',
         lpath,
@@ -114,10 +114,10 @@ export class DataDiff {
   }
 
   // Preorder tracking: emit delete op for a node (no-op if not tracking)
-  async preorderDelete(node: NodeEntry, lpath: string): Promise<void> {
+  // `layer` is the MST layer of the node (ignored for leaves)
+  preorderDelete(node: NodeEntry, lpath: string, layer: number): void {
     if (!this.preorderOps) return
     if (node.isTree()) {
-      const layer = await node.getLayer()
       this.preorderOps.push({
         action: 'delete',
         lpath,

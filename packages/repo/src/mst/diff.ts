@@ -10,12 +10,13 @@ const emitLpathFixups = async (
   node: MST,
   oldLpath: string,
   newLpath: string,
+  layer: number,
 ): Promise<void> => {
-  await diff.preorderDelete(node, oldLpath)
-  await diff.preorderInsert(node, newLpath)
+  diff.preorderDelete(node, oldLpath, layer)
+  diff.preorderInsert(node, newLpath, layer)
   const entries = await node.getEntries()
   if (entries.length > 0 && entries[0].isTree()) {
-    await emitLpathFixups(diff, entries[0], oldLpath, newLpath)
+    await emitLpathFixups(diff, entries[0], oldLpath, newLpath, layer - 1)
   }
 }
 
@@ -38,13 +39,14 @@ export const nullDiff = async (
   const walker = new MstWalker(tree)
   while (!walker.status.done) {
     const curr = walker.status.curr
+    const layer = walker.layer() - 1
     if (curr.isTree()) {
       await diff.nodeAdd(curr)
-      await diff.preorderInsert(curr, walker.lastLeafKey)
+      diff.preorderInsert(curr, walker.lastLeafKey, layer)
       await walker.stepInto()
     } else {
       diff.leafAdd(curr.key, curr.value)
-      await diff.preorderInsert(curr, walker.lastLeafKey)
+      diff.preorderInsert(curr, walker.lastLeafKey, layer)
       await walker.advance()
     }
   }
@@ -71,15 +73,20 @@ export const mstDiff = async (
     // if one walker is finished, continue walking the other & logging all nodes
     if (leftWalker.status.done && !rightWalker.status.done) {
       await diff.nodeAdd(rightWalker.status.curr)
-      await diff.preorderInsert(
+      diff.preorderInsert(
         rightWalker.status.curr,
         rightWalker.lastLeafKey,
+        rightWalker.layer() - 1,
       )
       await rightWalker.advance()
       continue
     } else if (!leftWalker.status.done && rightWalker.status.done) {
       await diff.nodeDelete(leftWalker.status.curr)
-      await diff.preorderDelete(leftWalker.status.curr, leftWalker.lastLeafKey)
+      diff.preorderDelete(
+        leftWalker.status.curr,
+        leftWalker.lastLeafKey,
+        leftWalker.layer() - 1,
+      )
       await leftWalker.advance()
       continue
     }
@@ -93,18 +100,18 @@ export const mstDiff = async (
       if (left.key === right.key) {
         if (!left.value.equals(right.value)) {
           diff.leafUpdate(left.key, left.value, right.value)
-          await diff.preorderDelete(left, leftWalker.lastLeafKey)
-          await diff.preorderInsert(right, rightWalker.lastLeafKey)
+          diff.preorderDelete(left, leftWalker.lastLeafKey, 0)
+          diff.preorderInsert(right, rightWalker.lastLeafKey, 0)
         }
         await leftWalker.advance()
         await rightWalker.advance()
       } else if (left.key < right.key) {
         diff.leafDelete(left.key, left.value)
-        await diff.preorderDelete(left, leftWalker.lastLeafKey)
+        diff.preorderDelete(left, leftWalker.lastLeafKey, 0)
         await leftWalker.advance()
       } else {
         diff.leafAdd(right.key, right.value)
-        await diff.preorderInsert(right, rightWalker.lastLeafKey)
+        diff.preorderInsert(right, rightWalker.lastLeafKey, 0)
         await rightWalker.advance()
       }
       continue
@@ -117,22 +124,38 @@ export const mstDiff = async (
     if (leftWalker.layer() > rightWalker.layer()) {
       if (left.isLeaf()) {
         await diff.nodeAdd(right)
-        await diff.preorderInsert(right, rightWalker.lastLeafKey)
+        diff.preorderInsert(
+          right,
+          rightWalker.lastLeafKey,
+          rightWalker.layer() - 1,
+        )
         await rightWalker.advance()
       } else {
         await diff.nodeDelete(left)
-        await diff.preorderDelete(left, leftWalker.lastLeafKey)
+        diff.preorderDelete(
+          left,
+          leftWalker.lastLeafKey,
+          leftWalker.layer() - 1,
+        )
         await leftWalker.stepInto()
       }
       continue
     } else if (leftWalker.layer() < rightWalker.layer()) {
       if (right.isLeaf()) {
         await diff.nodeDelete(left)
-        await diff.preorderDelete(left, leftWalker.lastLeafKey)
+        diff.preorderDelete(
+          left,
+          leftWalker.lastLeafKey,
+          leftWalker.layer() - 1,
+        )
         await leftWalker.advance()
       } else {
         await diff.nodeAdd(right)
-        await diff.preorderInsert(right, rightWalker.lastLeafKey)
+        diff.preorderInsert(
+          right,
+          rightWalker.lastLeafKey,
+          rightWalker.layer() - 1,
+        )
         await rightWalker.stepInto()
       }
       continue
@@ -150,6 +173,7 @@ export const mstDiff = async (
               left,
               leftWalker.lastLeafKey,
               rightWalker.lastLeafKey,
+              leftWalker.layer() - 1,
             )
           }
           // Update lastLeafKey to rightmost leaf of skipped subtree
@@ -164,8 +188,16 @@ export const mstDiff = async (
       } else {
         await diff.nodeAdd(right)
         await diff.nodeDelete(left)
-        await diff.preorderDelete(left, leftWalker.lastLeafKey)
-        await diff.preorderInsert(right, rightWalker.lastLeafKey)
+        diff.preorderDelete(
+          left,
+          leftWalker.lastLeafKey,
+          leftWalker.layer() - 1,
+        )
+        diff.preorderInsert(
+          right,
+          rightWalker.lastLeafKey,
+          rightWalker.layer() - 1,
+        )
         await leftWalker.stepInto()
         await rightWalker.stepInto()
       }
@@ -175,12 +207,16 @@ export const mstDiff = async (
     // finally, if one pointer is a tree and the other is a leaf, simply step into the tree
     if (left.isLeaf() && right.isTree()) {
       await diff.nodeAdd(right)
-      await diff.preorderInsert(right, rightWalker.lastLeafKey)
+      diff.preorderInsert(
+        right,
+        rightWalker.lastLeafKey,
+        rightWalker.layer() - 1,
+      )
       await rightWalker.stepInto()
       continue
     } else if (left.isTree() && right.isLeaf()) {
       await diff.nodeDelete(left)
-      await diff.preorderDelete(left, leftWalker.lastLeafKey)
+      diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer() - 1)
       await leftWalker.stepInto()
       continue
     }
