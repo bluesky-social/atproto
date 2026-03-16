@@ -349,7 +349,14 @@
     "reportActivityView": {
       "type": "object",
       "description": "A single activity entry on a report, capturing state transitions or internal notes.",
-      "required": ["id", "reportId", "action", "isAutomated", "createdBy", "createdAt"],
+      "required": [
+        "id",
+        "reportId",
+        "action",
+        "isAutomated",
+        "createdBy",
+        "createdAt"
+      ],
       "properties": {
         "id": {
           "type": "integer",

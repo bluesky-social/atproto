@@ -72,12 +72,20 @@ export class InvalidStateTransitionError extends XRPCError {
   }
 }
 
+export class AlreadyInTargetStateError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'ReportNotFound') return new ReportNotFoundError(e)
     if (e.error === 'MissingTargetState') return new MissingTargetStateError(e)
     if (e.error === 'InvalidStateTransition')
       return new InvalidStateTransitionError(e)
+    if (e.error === 'AlreadyInTargetState')
+      return new AlreadyInTargetStateError(e)
   }
 
   return e

@@ -302,21 +302,30 @@ export type ProcessReportActionParams = {
   subjectUri: string | null
   eventId: number
   eventType: string
+  createdBy: string
 }
 
 /**
  * Validates and processes a report action by:
  * 1. Finding matching reports based on targeting criteria
  * 2. Validating that specified report IDs exist and belong to the subject
- * 3. Updating reports with the action event ID, note, and status
+ * 3. Bulk-updating reports with the action event ID, note, and status
+ * 4. Bulk-inserting a report_activity row for each updated report
  *
  * @throws InvalidRequestError if validation fails
  */
 export async function processReportAction(
   params: ProcessReportActionParams,
 ): Promise<number> {
-  const { db, reportAction, subjectDid, subjectUri, eventId, eventType } =
-    params
+  const {
+    db,
+    reportAction,
+    subjectDid,
+    subjectUri,
+    eventId,
+    eventType,
+    createdBy,
+  } = params
 
   // Find reports matching the criteria
   const matchingReports = await findReportsForSubject(db, {
@@ -362,22 +371,38 @@ export async function processReportAction(
     return 0
   }
 
-  // Update all matched reports
   const now = new Date().toISOString()
   const reportIds = matchingReports.map((r) => r.id)
 
-  for (const reportId of reportIds) {
-    await db.db
-      .updateTable('report')
-      .set({
-        actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
-        actionNote: reportAction.note ?? null,
-        status: newStatus,
-        updatedAt: now,
-      })
-      .where('id', '=', reportId)
-      .execute()
-  }
+  // Bulk UPDATE all matched reports in a single query
+  await db.db
+    .updateTable('report')
+    .set({
+      actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
+      actionNote: reportAction.note ?? null,
+      status: newStatus,
+      updatedAt: now,
+    })
+    .where('id', 'in', reportIds)
+    .execute()
+
+  // Bulk INSERT one activity per updated report
+  await db.db
+    .insertInto('report_activity')
+    .values(
+      matchingReports.map((r) => ({
+        reportId: r.id,
+        action: 'status_change',
+        fromState: r.status,
+        toState: newStatus,
+        note: reportAction.note ?? null,
+        meta: null,
+        isAutomated: false,
+        createdBy,
+        createdAt: now,
+      })),
+    )
+    .execute()
 
   return reportIds.length
 }

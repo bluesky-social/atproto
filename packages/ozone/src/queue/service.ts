@@ -243,7 +243,7 @@ export class QueueService {
     params:
       | { start: number; end: number; limit: number }
       | { cursor: number | null; limit: number },
-    opts?: { includeUnmatched?: boolean },
+    opts?: { includeUnmatched?: boolean; serviceDid?: string },
   ): Promise<{
     processed: number
     assigned: number
@@ -259,7 +259,13 @@ export class QueueService {
     let query = this.db.db
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-      .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
+      .select([
+        'r.id',
+        'r.status',
+        'me.subjectUri',
+        'me.subjectMessageId',
+        'me.meta',
+      ])
       .orderBy('r.id', 'asc')
       .limit(params.limit)
 
@@ -288,8 +294,12 @@ export class QueueService {
     }
 
     const now = new Date().toISOString()
-    let assigned = 0
-    let unassigned = 0
+
+    // Resolve each report's destination in memory — no DB calls in this loop
+    type MatchedEntry = { id: number; fromStatus: string; queueId: number }
+
+    const matchedByQueue = new Map<number, MatchedEntry[]>()
+    const unmatchedIds: number[] = []
     let maxReportId = 0
 
     for (const report of reports) {
@@ -318,29 +328,77 @@ export class QueueService {
         reportType,
       )
 
-      await this.db.db
-        .updateTable('report')
-        .set({
-          queueId: matchingQueue?.id ?? -1,
-          queuedAt: matchingQueue ? now : null,
-          updatedAt: now,
-        })
-        .where('id', '=', report.id)
-        .execute()
-
       if (matchingQueue) {
-        assigned++
+        const group = matchedByQueue.get(matchingQueue.id) ?? []
+        group.push({
+          id: report.id,
+          fromStatus: report.status,
+          queueId: matchingQueue.id,
+        })
+        matchedByQueue.set(matchingQueue.id, group)
       } else {
-        unassigned++
+        unmatchedIds.push(report.id)
       }
 
       if (report.id > maxReportId) maxReportId = report.id
     }
 
+    // Bulk UPDATE matched reports — one query per distinct queue, combines
+    // queueId + queuedAt + status into a single UPDATE
+    for (const [queueId, group] of matchedByQueue) {
+      await this.db.db
+        .updateTable('report')
+        .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
+        .where(
+          'id',
+          'in',
+          group.map((r) => r.id),
+        )
+        .execute()
+    }
+
+    // Bulk UPDATE unmatched reports — status stays unchanged
+    if (unmatchedIds.length) {
+      await this.db.db
+        .updateTable('report')
+        .set({ queueId: -1, queuedAt: null, updatedAt: now })
+        .where('id', 'in', unmatchedIds)
+        .execute()
+    }
+
+    // Bulk INSERT activities for matched reports only.
+    // Unmatched reports stay 'open' — no status change, no activity.
+    if (opts?.serviceDid) {
+      const allMatched = [...matchedByQueue.values()].flat()
+      if (allMatched.length) {
+        await this.db.db
+          .insertInto('report_activity')
+          .values(
+            allMatched.map((r) => ({
+              reportId: r.id,
+              action: 'status_change',
+              fromState: r.fromStatus,
+              toState: 'queued',
+              note: null,
+              meta: null,
+              isAutomated: true,
+              createdBy: opts.serviceDid!,
+              createdAt: now,
+            })),
+          )
+          .execute()
+      }
+    }
+
+    const assigned = [...matchedByQueue.values()].reduce(
+      (sum, g) => sum + g.length,
+      0,
+    )
+
     return {
       processed: reports.length,
       assigned,
-      unmatched: unassigned,
+      unmatched: unmatchedIds.length,
       maxId: maxReportId,
     }
   }

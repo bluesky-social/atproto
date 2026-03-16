@@ -276,6 +276,7 @@ const handleModerationEvent = async ({
           subjectUri,
           eventId: result.event.id,
           eventType: event.$type,
+          createdBy,
         })
       } catch (err) {
         throw new InvalidRequestError(

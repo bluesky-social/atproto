@@ -11,10 +11,6 @@ describe('report-activity', () => {
   const modHeaders = async (nsid: string) =>
     network.ozone.modHeaders(nsid, 'admin')
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
   const createReport = async (subjectDid: string) => {
     await sc.createReport({
       reasonType: REASONSPAM,
@@ -66,10 +62,6 @@ describe('report-activity', () => {
     })
   }
 
-  // ---------------------------------------------------------------------------
-  // Setup
-  // ---------------------------------------------------------------------------
-
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_report_activity',
@@ -83,10 +75,6 @@ describe('report-activity', () => {
   afterAll(async () => {
     await network.close()
   })
-
-  // ---------------------------------------------------------------------------
-  // createActivity — notes
-  // ---------------------------------------------------------------------------
 
   describe('createActivity — note', () => {
     it('creates a standalone note', async () => {
@@ -136,10 +124,6 @@ describe('report-activity', () => {
       expect(updated.status).toBe('open')
     })
   })
-
-  // ---------------------------------------------------------------------------
-  // createActivity — status_change valid transitions
-  // ---------------------------------------------------------------------------
 
   describe('createActivity — status_change valid transitions', () => {
     it('open → closed', async () => {
@@ -342,10 +326,6 @@ describe('report-activity', () => {
     })
   })
 
-  // ---------------------------------------------------------------------------
-  // createActivity — updateStatus flag
-  // ---------------------------------------------------------------------------
-
   describe('createActivity — updateStatus flag', () => {
     it('does not update report.status when updateStatus is false', async () => {
       const report = await createReport(sc.dids.alice)
@@ -369,12 +349,36 @@ describe('report-activity', () => {
     })
   })
 
-  // ---------------------------------------------------------------------------
-  // createActivity — invalid transitions
-  // ---------------------------------------------------------------------------
+  describe('createActivity — already in target state', () => {
+    it('rejects when report is already in the requested status', async () => {
+      const report = await createReport(sc.dids.alice)
+      // report starts as 'open'
+      await expect(
+        createActivity({
+          reportId: report.id,
+          action: 'status_change',
+          toState: 'open',
+        }),
+      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
+    })
 
-  describe('createActivity — invalid transitions', () => {
-    it('rejects open → open', async () => {
+    it('rejects AlreadyInTargetState for non-open statuses too', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        action: 'status_change',
+        toState: 'closed',
+      })
+      await expect(
+        createActivity({
+          reportId: report.id,
+          action: 'status_change',
+          toState: 'closed',
+        }),
+      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
+    })
+
+    it('does not record an activity when AlreadyInTargetState is thrown', async () => {
       const report = await createReport(sc.dids.alice)
       await expect(
         createActivity({
@@ -382,9 +386,14 @@ describe('report-activity', () => {
           action: 'status_change',
           toState: 'open',
         }),
-      ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
-    })
+      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
 
+      const { data } = await listActivities({ reportId: report.id })
+      expect(data.activities).toHaveLength(0)
+    })
+  })
+
+  describe('createActivity — invalid transitions', () => {
     it('rejects closed → escalated', async () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
@@ -450,10 +459,6 @@ describe('report-activity', () => {
     })
   })
 
-  // ---------------------------------------------------------------------------
-  // createActivity — input validation errors
-  // ---------------------------------------------------------------------------
-
   describe('createActivity — input validation errors', () => {
     it('rejects status_change without toState', async () => {
       const report = await createReport(sc.dids.alice)
@@ -475,10 +480,6 @@ describe('report-activity', () => {
       ).rejects.toMatchObject({ error: 'ReportNotFound' })
     })
   })
-
-  // ---------------------------------------------------------------------------
-  // listActivities
-  // ---------------------------------------------------------------------------
 
   describe('listActivities', () => {
     it('returns empty list for report with no activities', async () => {
@@ -603,9 +604,7 @@ describe('report-activity', () => {
       })
 
       const { data } = await listActivities({ reportId: reportA.id })
-      expect(data.activities.every((a) => a.reportId === reportA.id)).toBe(
-        true,
-      )
+      expect(data.activities.every((a) => a.reportId === reportA.id)).toBe(true)
       expect(data.activities.some((a) => a.reportId === reportB.id)).toBe(false)
     })
   })

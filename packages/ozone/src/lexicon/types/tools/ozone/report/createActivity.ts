@@ -54,7 +54,11 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?: 'ReportNotFound' | 'MissingTargetState' | 'InvalidStateTransition'
+  error?:
+    | 'ReportNotFound'
+    | 'MissingTargetState'
+    | 'InvalidStateTransition'
+    | 'AlreadyInTargetState'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

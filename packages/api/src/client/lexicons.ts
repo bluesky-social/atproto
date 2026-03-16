@@ -19377,6 +19377,10 @@ export const schemaDict = {
             description:
               "The requested state transition is not permitted from the report's current status",
           },
+          {
+            name: 'AlreadyInTargetState',
+            description: 'The report is already in the requested status',
+          },
         ],
       },
     },

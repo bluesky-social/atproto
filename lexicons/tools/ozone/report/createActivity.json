@@ -22,7 +22,13 @@
             },
             "toState": {
               "type": "string",
-              "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+              "knownValues": [
+                "open",
+                "closed",
+                "escalated",
+                "queued",
+                "assigned"
+              ],
               "description": "Target status. Required when action is status_change."
             },
             "note": {
@@ -62,6 +68,10 @@
         {
           "name": "InvalidStateTransition",
           "description": "The requested state transition is not permitted from the report's current status"
+        },
+        {
+          "name": "AlreadyInTargetState",
+          "description": "The report is already in the requested status"
         }
       ]
     }

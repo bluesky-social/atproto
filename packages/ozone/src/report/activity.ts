@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 
@@ -36,62 +37,114 @@ export async function createReportActivity(
     createdBy,
   } = params
 
-  const report = await db.db
-    .selectFrom('report')
-    .select(['id', 'status'])
-    .where('id', '=', reportId)
-    .executeTakeFirst()
-
-  if (!report) {
+  // Validate inputs that don't require DB access before opening the transaction
+  if (action === 'status_change' && !toState) {
     throw new InvalidRequestError(
-      `Report ${reportId} not found`,
-      'ReportNotFound',
+      'toState is required when action is status_change',
+      'MissingTargetState',
     )
   }
 
-  const fromState = report.status
-  const now = new Date().toISOString()
+  return db.transaction(async (dbTxn) => {
+    // Lock the report row for the duration of the transaction to prevent
+    // concurrent writes from racing on status validation + update.
+    const rows = await sql<{
+      id: number
+      status: string
+    }>`SELECT id, status FROM report WHERE id = ${reportId} FOR UPDATE`.execute(
+      dbTxn.db,
+    )
+    const report = rows.rows[0]
 
-  if (action === 'status_change') {
-    if (!toState) {
+    if (!report) {
       throw new InvalidRequestError(
-        'toState is required when action is status_change',
-        'MissingTargetState',
+        `Report ${reportId} not found`,
+        'ReportNotFound',
       )
     }
-    const allowed = VALID_TRANSITIONS[fromState] ?? []
-    if (!allowed.includes(toState)) {
-      throw new InvalidRequestError(
-        `Cannot transition report from '${fromState}' to '${toState}'`,
-        'InvalidStateTransition',
-      )
-    }
-    if (updateStatus) {
-      await db.db
-        .updateTable('report')
-        .set({ status: toState, updatedAt: now })
-        .where('id', '=', reportId)
-        .execute()
-    }
-  }
 
-  const [activity] = await db.db
+    const fromState = report.status
+    const now = new Date().toISOString()
+
+    if (action === 'status_change') {
+      if (fromState === toState) {
+        throw new InvalidRequestError(
+          `Report is already in '${toState}' status`,
+          'AlreadyInTargetState',
+        )
+      }
+      const allowed = VALID_TRANSITIONS[fromState] ?? []
+      if (!allowed.includes(toState!)) {
+        throw new InvalidRequestError(
+          `Cannot transition report from '${fromState}' to '${toState}'`,
+          'InvalidStateTransition',
+        )
+      }
+      if (updateStatus) {
+        await dbTxn.db
+          .updateTable('report')
+          .set({ status: toState!, updatedAt: now })
+          .where('id', '=', reportId)
+          .execute()
+      }
+    }
+
+    const [activity] = await dbTxn.db
+      .insertInto('report_activity')
+      .values({
+        reportId,
+        action,
+        fromState: action === 'status_change' ? fromState : null,
+        toState: action === 'status_change' ? toState ?? null : null,
+        note: note ?? null,
+        meta: null,
+        isAutomated,
+        createdBy,
+        createdAt: now,
+      })
+      .returningAll()
+      .execute()
+
+    return activity
+  })
+}
+
+export type BulkActivityInsert = {
+  reportId: number
+  action: string
+  fromState: string | null
+  toState: string | null
+  note?: string
+  isAutomated: boolean
+  createdBy: string
+  createdAt: string
+}
+
+/**
+ * Insert multiple activity rows in a single query. No validation — caller is
+ * responsible for correctness and for being inside an appropriate transaction.
+ */
+export async function bulkInsertReportActivities(
+  db: Database,
+  activities: BulkActivityInsert[],
+) {
+  if (!activities.length) return
+  await db.db
     .insertInto('report_activity')
-    .values({
-      reportId,
-      action,
-      fromState: action === 'status_change' ? fromState : null,
-      toState: action === 'status_change' ? (toState ?? null) : null,
-      note: note ?? null,
-      meta: null,
-      isAutomated,
-      createdBy,
-      createdAt: now,
-    })
-    .returningAll()
+    .values(
+      activities.map((a) => ({
+        reportId: a.reportId,
+        action: a.action,
+        fromState: a.fromState,
+        toState: a.toState,
+        note: a.note ?? null,
+        meta: null,
+        isAutomated: a.isAutomated,
+        createdBy: a.createdBy,
+        createdAt: a.createdAt,
+      })),
+    )
     .execute()
-
-  return activity
 }
 
 export type ListActivitiesParams = {
