@@ -610,7 +610,7 @@ describe('pds profile views', () => {
     })
   })
 
-  it.only('filters out Go zero-value dates from dataplane', async () => {
+  it('filters out Go zero-value dates from dataplane', async () => {
     // Spy on the dataplane getActors method
     const getActorsSpy = jest.spyOn(network.bsky.ctx.dataplane, 'getActors')
 
