@@ -1,6 +1,6 @@
 ---
 '@atproto/lex': patch
-'@atproto/lex-syntax': patch
+'@atproto/lex-schema': patch
 '@atproto/syntax': patch
 ---
 
