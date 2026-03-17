@@ -9,7 +9,7 @@ type WalkerStatusProgress = {
   curr: NodeEntry
   walking: MST | null // walking set to null if `curr` is the root of the tree
   index: number
-  layer: number // layer of the `walking` node (one above curr)
+  layer: number // layer of `curr`
 }
 
 type WalkerStatus = WalkerStatusDone | WalkerStatusProgress
@@ -38,11 +38,11 @@ export class MstWalker {
       curr: root,
       walking: null,
       index: 0,
-      layer: rootLayer + 1,
+      layer: rootLayer,
     }
   }
 
-  // return the layer of the node being walked (parent of curr)
+  // return the layer of the current node
   layer(): number {
     if (this.status.done) {
       throw new Error('Walk is done')

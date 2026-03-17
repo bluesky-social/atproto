@@ -40,7 +40,7 @@ export const nullDiff = async (
   const walker = new MstWalker(tree, treeLayer)
   while (!walker.status.done) {
     const curr = walker.status.curr
-    const layer = walker.layer() - 1
+    const layer = walker.layer()
     if (curr.isTree()) {
       await diff.nodeAdd(curr)
       diff.preorderInsert(curr, walker.lastLeafKey, layer)
@@ -79,7 +79,7 @@ export const mstDiff = async (
       diff.preorderInsert(
         rightWalker.status.curr,
         rightWalker.lastLeafKey,
-        rightWalker.layer() - 1,
+        rightWalker.layer(),
       )
       await rightWalker.advance()
       continue
@@ -88,7 +88,7 @@ export const mstDiff = async (
       diff.preorderDelete(
         leftWalker.status.curr,
         leftWalker.lastLeafKey,
-        leftWalker.layer() - 1,
+        leftWalker.layer(),
       )
       await leftWalker.advance()
       continue
@@ -127,38 +127,22 @@ export const mstDiff = async (
     if (leftWalker.layer() > rightWalker.layer()) {
       if (left.isLeaf()) {
         await diff.nodeAdd(right)
-        diff.preorderInsert(
-          right,
-          rightWalker.lastLeafKey,
-          rightWalker.layer() - 1,
-        )
+        diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
         await rightWalker.advance()
       } else {
         await diff.nodeDelete(left)
-        diff.preorderDelete(
-          left,
-          leftWalker.lastLeafKey,
-          leftWalker.layer() - 1,
-        )
+        diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
         await leftWalker.stepInto()
       }
       continue
     } else if (leftWalker.layer() < rightWalker.layer()) {
       if (right.isLeaf()) {
         await diff.nodeDelete(left)
-        diff.preorderDelete(
-          left,
-          leftWalker.lastLeafKey,
-          leftWalker.layer() - 1,
-        )
+        diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
         await leftWalker.advance()
       } else {
         await diff.nodeAdd(right)
-        diff.preorderInsert(
-          right,
-          rightWalker.lastLeafKey,
-          rightWalker.layer() - 1,
-        )
+        diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
         await rightWalker.stepInto()
       }
       continue
@@ -176,7 +160,7 @@ export const mstDiff = async (
               left,
               leftWalker.lastLeafKey,
               rightWalker.lastLeafKey,
-              leftWalker.layer() - 1,
+              leftWalker.layer(),
             )
           }
           // Update lastLeafKey to rightmost leaf of skipped subtree
@@ -191,16 +175,8 @@ export const mstDiff = async (
       } else {
         await diff.nodeAdd(right)
         await diff.nodeDelete(left)
-        diff.preorderDelete(
-          left,
-          leftWalker.lastLeafKey,
-          leftWalker.layer() - 1,
-        )
-        diff.preorderInsert(
-          right,
-          rightWalker.lastLeafKey,
-          rightWalker.layer() - 1,
-        )
+        diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
+        diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
         await leftWalker.stepInto()
         await rightWalker.stepInto()
       }
@@ -210,16 +186,12 @@ export const mstDiff = async (
     // finally, if one pointer is a tree and the other is a leaf, simply step into the tree
     if (left.isLeaf() && right.isTree()) {
       await diff.nodeAdd(right)
-      diff.preorderInsert(
-        right,
-        rightWalker.lastLeafKey,
-        rightWalker.layer() - 1,
-      )
+      diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
       await rightWalker.stepInto()
       continue
     } else if (left.isTree() && right.isLeaf()) {
       await diff.nodeDelete(left)
-      diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer() - 1)
+      diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
       await leftWalker.stepInto()
       continue
     }
