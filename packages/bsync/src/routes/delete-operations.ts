@@ -1,12 +1,18 @@
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
-import { ensureValidNsid } from '@atproto/syntax'
 import { AppContext } from '../context'
 import { Service } from '../proto/bsync_connect'
 import { DeleteOperationsByActorAndNamespaceResponse } from '../proto/bsync_pb'
 import { authWithApiKey } from './auth'
-import { isValidDid } from './util'
+import { isValidDid, validateNamespace } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
+  /**
+   * This method is responsible for deleting log rows from the bsync db, it has
+   * no other downstream effects. This method is called from the dataplane in
+   * response to a data deletion request initiated by a moderator in Ozone.
+   * It's the final step of the deletion process, basically cleaning up the
+   * breadcrumbs that resulted in the state we store in the dataplane.
+   */
   async deleteOperationsByActorAndNamespace(req, handlerCtx) {
     authWithApiKey(ctx, handlerCtx)
     const { db } = ctx
@@ -37,18 +43,3 @@ export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
     })
   },
 })
-
-const validateNamespace = (namespace: string): void => {
-  const parts = namespace.split('#')
-
-  if (parts.length !== 1 && parts.length !== 2) {
-    throw new Error('namespace must be in the format "nsid[#fragment]"')
-  }
-
-  const [nsid, fragment] = parts
-
-  ensureValidNsid(nsid)
-  if (fragment && !/^[a-zA-Z][a-zA-Z0-9]*$/.test(fragment)) {
-    throw new Error('namespace fragment must be a valid identifier')
-  }
-}
