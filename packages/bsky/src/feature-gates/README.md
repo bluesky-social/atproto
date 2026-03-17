@@ -42,7 +42,7 @@ const features: ScopedFeatureGatesClient = ctx.featureGatesClient.scope(
     viewer,
     req,
   }),
-),
+)
 
 const hydrateCtx = await ctx.hydrator.createContext({
   labelers,
