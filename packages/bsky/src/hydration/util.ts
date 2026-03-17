@@ -122,7 +122,9 @@ export const parseCid = (cidStr: string | undefined): CID | undefined => {
   }
 }
 
-export const parseDate = (timestamp: Timestamp | undefined): Date | undefined => {
+export const parseDate = (
+  timestamp: Timestamp | undefined,
+): Date | undefined => {
   if (!timestamp) return undefined
   const date = timestamp.toDate()
   // Check for year 1 (0001-01-01 00:00:00 UTC) which is -62135596800000ms from epoch.
