@@ -177,11 +177,15 @@ export function normalizeDatetime(dtStr: string): ISODatetimeString {
     /[+-]\d\d:?\d\d/.test(dtStr) ||
     // 'Z' timezone designator
     /\dZ\b/.test(dtStr) ||
-    // Timezone abbreviation (eg. "PST", "UTC", "GMT", etc)
-    /\b[A-Z]{3}\b/.test(dtStr)
+    // Timezone abbreviation (eg. "EST", "PST", "UTC", "GMT", etc)
+    /\b[A-Z]{3,4}\b/.test(dtStr)
   ) {
     // Since we do have a timezone designator, we can try parsing "as is" and
     // should get consistent results regardless of local timezone.
+
+    // @NOTE NodeJS will reject dates with an un-recognized timezone designator
+    // (like "AFT"), even if we add a well-known timezone abbreviation like
+    // "UTC" or "Z".
     const date = new Date(dtStr)
     if (isAtprotoDate(date)) {
       return date.toISOString()
