@@ -5,15 +5,15 @@
  */
 export class InvalidDatetimeError extends Error {}
 
-// new Date(`0000-01-01T00:00:00Z`).getTime()
-const YEAR_UTC_0000_START_MS = -62167219200000
-// new Date(`9999-12-31T23:59:59.999Z`).getTime()
-const YEAR_UTC_9999_END_MS = 253402300799999
-
-// new Date(`9999-12-31T23:59:59.999-23:59`).getTime()
-const DATETIME_HIGHEST_MS = 253402387139999
 // new Date(`0000-01-01T00:00:00+23:59`).getTime()
 const DATETIME_LOWEST_MS = -62167305540000
+// new Date(`9999-12-31T23:59:59.999-23:59`).getTime()
+const DATETIME_HIGHEST_MS = 253402387139999
+
+// new Date(`0000-01-01T00:00:00Z`).getTime()
+const DATETIME_UTC_LOWEST_MS = -62167219200000
+// new Date(`9999-12-31T23:59:59.999Z`).getTime()
+const DATETIME_UTC_HIGHEST_MS = 253402300799999
 
 /**
  * A subset of {@link DatetimeString} that represent valid datetime strings with
@@ -177,10 +177,10 @@ export function toDatetimeString(date: Date): DatetimeString {
   // valid datetime can round-trip through this function and be normalized to a
   // valid datetime string.
 
-  // date is between 0000-01-01T00:00:00+23:59 and 0000-01-01T00:00:00Z
-  if (DATETIME_LOWEST_MS <= time && time < YEAR_UTC_0000_START_MS) {
+  // date before 0000-01-01T00:00:00Z but can be represented as 0000-01-01T00:00:00+hh:mm
+  if (DATETIME_LOWEST_MS <= time && time < DATETIME_UTC_LOWEST_MS) {
     // Use a positive offset to express the local time in year 0000
-    const offsetMin = Math.ceil((YEAR_UTC_0000_START_MS - time) / 60_000)
+    const offsetMin = Math.ceil((DATETIME_UTC_LOWEST_MS - time) / 60_000)
     const local = new Date(time + offsetMin * 60_000)
     const hh = String(local.getUTCHours()).padStart(2, '0')
     const mm = String(local.getUTCMinutes()).padStart(2, '0')
@@ -191,10 +191,10 @@ export function toDatetimeString(date: Date): DatetimeString {
     return `0000-01-01T${hh}:${mm}:${ss}.${ms}+${oH}:${oM}`
   }
 
-  // date is between 9999-12-31T23:59:59.999Z and 9999-12-31T23:59:59.999-23:59
-  if (YEAR_UTC_9999_END_MS < time && time <= DATETIME_HIGHEST_MS) {
+  // date after 9999-12-31T23:59:59.999Z but can be represented as 9999-12-31T23:59:59.999-hh:mm
+  if (DATETIME_UTC_HIGHEST_MS < time && time <= DATETIME_HIGHEST_MS) {
     // Use a negative offset to express the local time in year 9999
-    const offsetMin = Math.ceil((time - YEAR_UTC_9999_END_MS) / 60_000)
+    const offsetMin = Math.ceil((time - DATETIME_UTC_HIGHEST_MS) / 60_000)
     const local = new Date(time - offsetMin * 60_000)
     const hh = String(local.getUTCHours()).padStart(2, '0')
     const mm = String(local.getUTCMinutes()).padStart(2, '0')
