@@ -1,6 +1,6 @@
 import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
-import { MST, def, readCarStream } from '@atproto/repo'
+import { MST, PREORDER_MAX_DEPTH, def, readCarStream } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import { AppContext } from '../src/context'
 
@@ -15,7 +15,7 @@ async function computeExpectedRows(
   const rows: PreorderRow[] = []
   rows.push({
     lpath,
-    depth: 129 - layer,
+    depth: PREORDER_MAX_DEPTH - layer,
     cid: (await node.getPointer()).toString(),
   })
   const entries = await node.getEntries()

@@ -1,7 +1,13 @@
 import { Kysely } from 'kysely'
 import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
-import { BlockMap, MST, ReadableBlockstore, def } from '@atproto/repo'
+import {
+  BlockMap,
+  MST,
+  PREORDER_MAX_DEPTH,
+  ReadableBlockstore,
+  def,
+} from '@atproto/repo'
 
 class MigrationBlockstore extends ReadableBlockstore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,7 +91,7 @@ async function preorderTraverse(
 ): Promise<void> {
   await inserter.add({
     lpath,
-    depth: 129 - layer,
+    depth: PREORDER_MAX_DEPTH - layer,
     cid: (await node.getPointer()).toString(),
   })
 

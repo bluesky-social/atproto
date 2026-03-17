@@ -12,8 +12,7 @@ const emitLpathFixups = async (
   newLpath: string,
   layer: number,
 ): Promise<void> => {
-  diff.preorderDelete(node, oldLpath, layer)
-  diff.preorderInsert(node, newLpath, layer)
+  diff.nodeUpdatePreorder(node, oldLpath, newLpath, layer)
   const entries = await node.getEntries()
   if (entries.length > 0 && entries[0].isTree()) {
     await emitLpathFixups(diff, entries[0], oldLpath, newLpath, layer - 1)
@@ -26,28 +25,19 @@ export type MstDiffOpts = {
 
 export const nullDiff = async (
   tree: MST,
-  trackPreorder: boolean = false,
+  opts?: MstDiffOpts,
 ): Promise<DataDiff> => {
-  if (!trackPreorder) {
-    const diff = new DataDiff()
-    for await (const entry of tree.walk()) {
-      await diff.nodeAdd(entry)
-    }
-    return diff
-  }
-  const diff = new DataDiff({ trackPreorder: true })
+  const diff = new DataDiff({ trackPreorder: opts?.trackPreorder })
   const treeLayer = await tree.getLayer()
   const walker = new MstWalker(tree, treeLayer)
   while (!walker.status.done) {
     const curr = walker.status.curr
     const layer = walker.layer()
     if (curr.isTree()) {
-      await diff.nodeAdd(curr)
-      diff.preorderInsert(curr, walker.lastLeafKey, layer)
+      await diff.nodeAdd(curr, walker.lastLeafKey, layer)
       await walker.stepInto()
     } else {
       diff.leafAdd(curr.key, curr.value)
-      diff.preorderInsert(curr, walker.lastLeafKey, layer)
       await walker.advance()
     }
   }
@@ -59,14 +49,13 @@ export const mstDiff = async (
   prev: MST | null,
   opts?: MstDiffOpts,
 ): Promise<DataDiff> => {
-  const trackPreorder = opts?.trackPreorder ?? false
   await curr.getPointer()
   if (prev === null) {
-    return nullDiff(curr, trackPreorder)
+    return nullDiff(curr, opts)
   }
 
   await prev.getPointer()
-  const diff = new DataDiff({ trackPreorder })
+  const diff = new DataDiff({ trackPreorder: opts?.trackPreorder })
 
   const currLayer = await curr.getLayer()
   const prevLayer = await prev.getLayer()
@@ -75,8 +64,7 @@ export const mstDiff = async (
   while (!leftWalker.status.done || !rightWalker.status.done) {
     // if one walker is finished, continue walking the other & logging all nodes
     if (leftWalker.status.done && !rightWalker.status.done) {
-      await diff.nodeAdd(rightWalker.status.curr)
-      diff.preorderInsert(
+      await diff.nodeAdd(
         rightWalker.status.curr,
         rightWalker.lastLeafKey,
         rightWalker.layer(),
@@ -84,8 +72,7 @@ export const mstDiff = async (
       await rightWalker.advance()
       continue
     } else if (!leftWalker.status.done && rightWalker.status.done) {
-      await diff.nodeDelete(leftWalker.status.curr)
-      diff.preorderDelete(
+      await diff.nodeDelete(
         leftWalker.status.curr,
         leftWalker.lastLeafKey,
         leftWalker.layer(),
@@ -103,18 +90,14 @@ export const mstDiff = async (
       if (left.key === right.key) {
         if (!left.value.equals(right.value)) {
           diff.leafUpdate(left.key, left.value, right.value)
-          diff.preorderDelete(left, leftWalker.lastLeafKey, 0)
-          diff.preorderInsert(right, rightWalker.lastLeafKey, 0)
         }
         await leftWalker.advance()
         await rightWalker.advance()
       } else if (left.key < right.key) {
         diff.leafDelete(left.key, left.value)
-        diff.preorderDelete(left, leftWalker.lastLeafKey, 0)
         await leftWalker.advance()
       } else {
         diff.leafAdd(right.key, right.value)
-        diff.preorderInsert(right, rightWalker.lastLeafKey, 0)
         await rightWalker.advance()
       }
       continue
@@ -126,23 +109,19 @@ export const mstDiff = async (
     // if the higher walker is pointed at a leaf, then advance the lower walker to try to catch up the higher
     if (leftWalker.layer() > rightWalker.layer()) {
       if (left.isLeaf()) {
-        await diff.nodeAdd(right)
-        diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
+        await diff.nodeAdd(right, rightWalker.lastLeafKey, rightWalker.layer())
         await rightWalker.advance()
       } else {
-        await diff.nodeDelete(left)
-        diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
+        await diff.nodeDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
         await leftWalker.stepInto()
       }
       continue
     } else if (leftWalker.layer() < rightWalker.layer()) {
       if (right.isLeaf()) {
-        await diff.nodeDelete(left)
-        diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
+        await diff.nodeDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
         await leftWalker.advance()
       } else {
-        await diff.nodeAdd(right)
-        diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
+        await diff.nodeAdd(right, rightWalker.lastLeafKey, rightWalker.layer())
         await rightWalker.stepInto()
       }
       continue
@@ -173,10 +152,8 @@ export const mstDiff = async (
         await leftWalker.stepOver()
         await rightWalker.stepOver()
       } else {
-        await diff.nodeAdd(right)
-        await diff.nodeDelete(left)
-        diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
-        diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
+        await diff.nodeAdd(right, rightWalker.lastLeafKey, rightWalker.layer())
+        await diff.nodeDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
         await leftWalker.stepInto()
         await rightWalker.stepInto()
       }
@@ -185,13 +162,11 @@ export const mstDiff = async (
 
     // finally, if one pointer is a tree and the other is a leaf, simply step into the tree
     if (left.isLeaf() && right.isTree()) {
-      await diff.nodeAdd(right)
-      diff.preorderInsert(right, rightWalker.lastLeafKey, rightWalker.layer())
+      await diff.nodeAdd(right, rightWalker.lastLeafKey, rightWalker.layer())
       await rightWalker.stepInto()
       continue
     } else if (left.isTree() && right.isLeaf()) {
-      await diff.nodeDelete(left)
-      diff.preorderDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
+      await diff.nodeDelete(left, leftWalker.lastLeafKey, leftWalker.layer())
       await leftWalker.stepInto()
       continue
     }

@@ -127,6 +127,10 @@ export type WriteLog = RecordWriteDescript[][]
 // Preorder Map
 // ---------------
 
+// The hypothetical max MST layer is 128, so `PREORDER_MAX_DEPTH - layer` is always > 0
+// (depth=0 is used to represent records, rather than MST nodes)
+export const PREORDER_MAX_DEPTH = 129
+
 export type PreorderOpInsert = {
   action: 'insert'
   lpath: string

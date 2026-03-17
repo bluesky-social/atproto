@@ -2,7 +2,7 @@ import { CID } from 'multiformats'
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
 import { MST, MstDiffOpts, NodeEntry, mstDiff } from './mst'
-import { PreorderOp } from './types'
+import { PREORDER_MAX_DEPTH, PreorderOp } from './types'
 
 export class DataDiff {
   adds: Record<string, DataAdd> = {}
@@ -30,25 +30,51 @@ export class DataDiff {
     return this.preorderOps !== null
   }
 
-  async nodeAdd(node: NodeEntry) {
+  async nodeAdd(node: NodeEntry, lpath: string, layer: number) {
     if (node.isLeaf()) {
       this.leafAdd(node.key, node.value)
     } else {
       const data = await node.serialize()
       this.treeAdd(data.cid, data.bytes)
+      this.preorderOps?.push({
+        action: 'insert',
+        lpath,
+        depth: PREORDER_MAX_DEPTH - layer,
+        cid: node.pointer.toString(),
+      })
     }
   }
 
-  async nodeDelete(node: NodeEntry) {
+  async nodeDelete(node: NodeEntry, lpath: string, layer: number) {
     if (node.isLeaf()) {
-      const key = node.key
-      const cid = node.value
-      this.deletes[key] = { key, cid }
-      this.removedCids.add(cid)
+      this.leafDelete(node.key, node.value)
     } else {
       const cid = await node.getPointer()
       this.treeDelete(cid)
+      this.preorderOps?.push({
+        action: 'delete',
+        lpath,
+        depth: PREORDER_MAX_DEPTH - layer,
+      })
     }
+  }
+
+  nodeUpdatePreorder(
+    node: MST,
+    oldLpath: string,
+    newLpath: string,
+    layer: number,
+  ) {
+    const depth = PREORDER_MAX_DEPTH - layer
+    this.preorderOps?.push(
+      { action: 'delete', lpath: oldLpath, depth },
+      {
+        action: 'insert',
+        lpath: newLpath,
+        depth,
+        cid: node.pointer.toString(),
+      },
+    )
   }
 
   leafAdd(key: string, cid: CID) {
@@ -58,6 +84,12 @@ export class DataDiff {
     } else {
       this.newLeafCids.add(cid)
     }
+    this.preorderOps?.push({
+      action: 'insert',
+      lpath: key,
+      depth: 0,
+      cid: cid.toString(),
+    })
   }
 
   leafUpdate(key: string, prev: CID, cid: CID) {
@@ -65,6 +97,10 @@ export class DataDiff {
     this.updates[key] = { key, prev, cid }
     this.removedCids.add(prev)
     this.newLeafCids.add(cid)
+    this.preorderOps?.push(
+      { action: 'delete', lpath: key, depth: 0 },
+      { action: 'insert', lpath: key, depth: 0, cid: cid.toString() },
+    )
   }
 
   leafDelete(key: string, cid: CID) {
@@ -74,6 +110,7 @@ export class DataDiff {
     } else {
       this.removedCids.add(cid)
     }
+    this.preorderOps?.push({ action: 'delete', lpath: key, depth: 0 })
   }
 
   treeAdd(cid: CID, bytes: Uint8Array) {
@@ -89,46 +126,6 @@ export class DataDiff {
       this.newMstBlocks.delete(cid)
     } else {
       this.removedCids.add(cid)
-    }
-  }
-
-  // Preorder tracking: emit insert op for a node (no-op if not tracking)
-  // `layer` is the MST layer of the node (ignored for leaves)
-  preorderInsert(node: NodeEntry, lpath: string, layer: number): void {
-    if (!this.preorderOps) return
-    if (node.isTree()) {
-      this.preorderOps.push({
-        action: 'insert',
-        lpath,
-        depth: 129 - layer,
-        cid: node.pointer.toString(),
-      })
-    } else {
-      this.preorderOps.push({
-        action: 'insert',
-        lpath: node.key,
-        depth: 0,
-        cid: node.value.toString(),
-      })
-    }
-  }
-
-  // Preorder tracking: emit delete op for a node (no-op if not tracking)
-  // `layer` is the MST layer of the node (ignored for leaves)
-  preorderDelete(node: NodeEntry, lpath: string, layer: number): void {
-    if (!this.preorderOps) return
-    if (node.isTree()) {
-      this.preorderOps.push({
-        action: 'delete',
-        lpath,
-        depth: 129 - layer,
-      })
-    } else {
-      this.preorderOps.push({
-        action: 'delete',
-        lpath: node.key,
-        depth: 0,
-      })
     }
   }
 
