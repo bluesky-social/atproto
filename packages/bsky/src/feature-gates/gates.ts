@@ -8,7 +8,6 @@ export enum Gate {
   SuggestedOnboardingUsersDiscoverEnable = 'suggested_onboarding_users:discover_agent:enable',
   ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
-  ImageRemoveFormatEnable = 'image:remove_format_from_url',
 }
 
 /**
@@ -16,6 +15,4 @@ export enum Gate {
  * analytics purposes. This is useful for gates that are not user-facing or are
  * overly noisy.
  */
-export const IGNORE_METRICS_FOR_GATES: Set<Gate> = new Set([
-  Gate.ImageRemoveFormatEnable,
-])
+export const IGNORE_METRICS_FOR_GATES: Set<Gate> = new Set([])
