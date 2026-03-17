@@ -1085,7 +1085,7 @@ export class Hydrator {
               ref: bookmark.ref,
               subjectUri: bookmark.subjectUri,
               subjectCid: bookmark.subjectCid,
-              indexedAt: parseDate(bookmark.indexedAt?.toDate()),
+              indexedAt: parseDate(bookmark.indexedAt),
             }
             return [key, processed]
           }),
