@@ -5,43 +5,79 @@ evaluation and experiment tracking.
 
 ## Usage
 
-Call `checkGates` at the **top of each request handler** to evaluate feature
-gates for the current user. This ensures consistent targeting throughout the
-request lifecycle.
+Feature gates are accessible on `HydrationCtx` as `features`. A default "scope"
+is defined in `Hydrator.createContext`, which is called by every request
+handler. The default scope supplies anonymous `deviceId` and `sessionId`
+identifiers for targeting unauthenticated users.
 
-> [!NOTE]
-> Only pass in the gates you wish to check for this endpoint. Passing in more
-> will result in extraneous calls to our exposures endpoint, which could skew
-> experiment results in unexpected ways.
+Feature gates can be checked via the following methods.
 
-```ts
+```typescript
+// check a single gate
+const enabled = ctx.features.checkGate(
+  ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
+)
+
+// check multiple gates
+const gates = ctx.features.checkGates([
+  ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
+  ctx.features.Gate.SomeOtherGate,
+])
+const enabled = gates.get(
+  ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
+)
+```
+
+### User Context
+
+To accurately gate features by user, we need additional context about that user.
+For most use cases, we get this data from within the request handlers.
+
+Here, the `features` client will be scoped to the current user, allowing for
+accurate gate checks throughout the request lifecycle.
+
+```typescript
+const features: ScopedFeatureGatesClient = ctx.featureGatesClient.scope(
+  ctx.featureGatesClient.parseUserContextFromHandler({
+    viewer,
+    req,
+  }),
+),
+
 const hydrateCtx = await ctx.hydrator.createContext({
-  // ...
-  featureGatesMap: ctx.featureGatesClient.checkGates(
-    ['threads:reply_ranking_exploration:enable'],
-    { viewer, req },
-  ),
+  labelers,
+  viewer,
+  features,
 })
 ```
 
-The returned `CheckedFeatureGatesMap` can then be passed through context and
-accessed wherever needed.
+> [!NOTE]
+> Although `ctx.featureGatesClient` also has a `checkGates` method, the
+> intention is to use the `ScopedFeatureGatesClient` returned by `scope()` for
+> gate checks within the application.
 
-## User Identification
+You can also pass the user context directly to `checkGate` or `checkGates`. This
+overrides any default scope set on the client, allowing for flexibility in cases
+where user context is only available at the point of gate evaluation.
 
-If the user is authenticated, we use their DID as the identifier for feature
-targeting via the `viewer` param of the `checkGates` call.
+```typescript
+const enabled = ctx.featureGatesClient.checkGate(
+  ctx.featureGatesClient.Gate.ImageFeatureEnabled,
+  { did: imageAuthor.did },
+)
+```
 
-For unauthenticated users, and for experiments that don't require DID-level
-targeting, we rely on identifiers passed from the client as headers:
+### Adding Gates
 
-- `X-Bsky-Device-Id` - persistent device/client identifier
-- `X-Bsky-Session-Id` - current session identifier
+See `gates.ts` and add them to the enum. You can optionally prevent metrics from
+being emitted for a gate by adding the gate to the `IGNORE_METRICS_FOR_GATES`
+set.
 
-> [!WARNING]
-> If both `stableId` and `did` are missing, all gates return `false`. This
-> prevents untargeted users from being enrolled in experiments.
+## Metrics
 
-## Adding New Gates
+Check out the Growthbook docs for more info here. Basically, every feature eval
+fires the `onFeatureUsage` callback. Any feature that is part of an experiment
+_will also fire the `trackingCallback` callback._
 
-Add new gate IDs to the `FeatureGate` type in `gates.ts`.
+For some use cases, this can be noisy and/or performance intensive, so make use
+of `IGNORE_METRICS_FOR_GATES` to silence metrics for specific gates.
