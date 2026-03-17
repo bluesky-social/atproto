@@ -67,8 +67,8 @@ export const parseRecord = <T extends UnknownRecord>(
   }
   const record = parseRecordBytes<T>(entry.record)
   const cid = entry.cid
-  const sortedAt = entry.sortedAt?.toDate() ?? new Date(0)
-  const indexedAt = entry.indexedAt?.toDate() ?? new Date(0)
+  const sortedAt = parseDate(entry.sortedAt?.toDate()) ?? new Date(0)
+  const indexedAt = parseDate(entry.indexedAt?.toDate()) ?? new Date(0)
   if (!record || !cid) return
   if (!isValidRecord(record)) {
     return
@@ -119,6 +119,14 @@ export const parseCid = (cidStr: string | undefined): CID | undefined => {
   } catch {
     return
   }
+}
+
+export const parseDate = (date: Date | undefined): Date | undefined => {
+  if (!date) return undefined
+  // Check for year 1 (0001-01-01 00:00:00 UTC) which is -62135596800000ms from epoch.
+  // The Go dataplane gives us those values as they come from the Go zero-value for dates.
+  if (date.getTime() === -62135596800000) return undefined
+  return date
 }
 
 export const urisByCollection = (uris: string[]): Map<string, string[]> => {
