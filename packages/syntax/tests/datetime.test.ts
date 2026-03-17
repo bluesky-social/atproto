@@ -10,45 +10,41 @@ import {
   toDatetimeString,
 } from '../src/datetime.js'
 
-describe('interop', () => {
-  describe('datetime_syntax_valid.txt', () => {
-    for (const input of readLines(
-      `${__dirname}/../../../interop-test-files/syntax/datetime_syntax_valid.txt`,
-    )) {
-      test(JSON.stringify(input), () => {
-        expect(isValidDatetime(input)).toBe(true)
-        expect(() => assertDatetimeString(input)).not.toThrow()
-
-        // Ensure that values round-trip through Date without throwing
-        expect(() => toDatetimeString(new Date(input))).not.toThrow()
-      })
-    }
-  })
-
-  describe('datetime_syntax_invalid.txt', () => {
-    for (const input of readLines(
-      `${__dirname}/../../../interop-test-files/syntax/datetime_syntax_invalid.txt`,
-    )) {
-      test(JSON.stringify(input), () => {
-        expect(isValidDatetime(input)).toBe(false)
-        expect(() => assertDatetimeString(input)).toThrow(InvalidDatetimeError)
-      })
-    }
-  })
-
-  describe('datetime_parse_invalid.txt', () => {
-    for (const input of readLines(
-      `${__dirname}/../../../interop-test-files/syntax/datetime_parse_invalid.txt`,
-    )) {
-      test(JSON.stringify(input), () => {
-        expect(isValidDatetime(input)).toBe(false)
-        expect(() => assertDatetimeString(input)).toThrow(InvalidDatetimeError)
-      })
-    }
-  })
-})
+const interopValid = readLines(
+  `${__dirname}/../../../interop-test-files/syntax/datetime_syntax_valid.txt`,
+)
+const interopInvalidSyntax = readLines(
+  `${__dirname}/../../../interop-test-files/syntax/datetime_syntax_invalid.txt`,
+)
+const interopInvalidParse = readLines(
+  `${__dirname}/../../../interop-test-files/syntax/datetime_parse_invalid.txt`,
+)
 
 describe(assertDatetimeString, () => {
+  describe('valid interop', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        expect(() => assertDatetimeString(dt)).not.toThrow()
+      })
+    }
+  })
+
+  describe('fails on interop (invalid syntax)', () => {
+    for (const dt of interopInvalidSyntax) {
+      test(dt, () => {
+        expect(() => assertDatetimeString(dt)).toThrow(InvalidDatetimeError)
+      })
+    }
+  })
+
+  describe('fails on interop (invalid parse)', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(() => assertDatetimeString(dt)).toThrow(InvalidDatetimeError)
+      })
+    }
+  })
+
   it('accepts boundary datetimes with offsets near year 0000', () => {
     expect(() =>
       assertDatetimeString('0000-01-01T00:00:00+23:59'),
@@ -194,9 +190,41 @@ describe(assertDatetimeString, () => {
       InvalidDatetimeError,
     )
   })
+
+  it('allows datetime that normalizes past year 9999 due to negative offset', () => {
+    // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to
+    // UTC advances it to 10000-01-01T00:00:00Z, which is out of range
+    expect(() => assertDatetimeString('9999-12-31T23:59:00-00:01')).not.toThrow(
+      InvalidDatetimeError,
+    )
+  })
 })
 
 describe(isValidDatetime, () => {
+  describe('valid interop', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        expect(isValidDatetime(dt)).toBe(true)
+      })
+    }
+  })
+
+  describe('fails on interop (invalid syntax)', () => {
+    for (const dt of interopInvalidSyntax) {
+      test(dt, () => {
+        expect(isValidDatetime(dt)).toBe(false)
+      })
+    }
+  })
+
+  describe('fails on interop (invalid parse)', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(isValidDatetime(dt)).toBe(false)
+      })
+    }
+  })
+
   it('accepts boundary datetimes with offsets near year 0000', () => {
     expect(isValidDatetime('0000-01-01T00:00:00+23:59')).toBe(true)
     expect(isValidDatetime('0000-01-01T00:00:00Z')).toBe(true)
@@ -281,6 +309,33 @@ describe(isValidDatetime, () => {
 })
 
 describe(normalizeDatetime, () => {
+  describe('valid interop', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        expect(() => normalizeDatetime(dt)).not.toThrow()
+      })
+    }
+  })
+
+  // @NOTE Normalize will actually succeed on some of the invalid syntax cases,
+  // because it is more lenient than the regex validation.
+
+  // describe('fails on interop (invalid syntax)', () => {
+  //   for (const dt of interopInvalidSyntax) {
+  //     test(dt, () => {
+  //       expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
+  //     })
+  //   }
+  // })
+
+  describe('fails on interop (invalid parse)', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(() => normalizeDatetime(dt)).toThrow(InvalidDatetimeError)
+      })
+    }
+  })
+
   it('normalizes valid input', () => {
     expect(normalizeDatetime('1234-04-12T23:20:50Z')).toEqual(
       '1234-04-12T23:20:50.000Z',
@@ -361,6 +416,9 @@ describe(normalizeDatetime, () => {
     expect(() => normalizeDatetime('0000-01-01T00:00:00+01:00')).toThrow(
       InvalidDatetimeError,
     )
+    // expect(() => normalizeDatetime('0001-01-01T00:00:00+01:00')).toThrow(
+    //   InvalidDatetimeError,
+    // )
     // 9999-12-31T23:59:00-00:01 normalizes to year 10000, out of isAtprotoDate range
     expect(() => normalizeDatetime('9999-12-31T23:59:00-00:01')).toThrow(
       InvalidDatetimeError,
@@ -407,6 +465,32 @@ describe(normalizeDatetimeAlways, () => {
     const result = normalizeDatetimeAlways('anything invalid')
     expect(result).toMatch(/Z$/)
   })
+
+  describe('datetime_syntax_valid.txt', () => {
+    for (const dt of interopValid) {
+      test(dt, () => {
+        // @NOTE we can't test the returned value as some will normalize while others won't.
+        expect(() => normalizeDatetimeAlways(dt)).not.toThrow()
+      })
+    }
+  })
+
+  describe('datetime_syntax_invalid.txt', () => {
+    for (const dt of interopInvalidSyntax) {
+      test(dt, () => {
+        // @NOTE we can't test the returned value as some will normalize while others won't.
+        expect(() => normalizeDatetimeAlways(dt)).not.toThrow()
+      })
+    }
+  })
+
+  describe('datetime_parse_invalid.txt', () => {
+    for (const dt of interopInvalidParse) {
+      test(dt, () => {
+        expect(normalizeDatetimeAlways(dt)).toEqual('1970-01-01T00:00:00.000Z')
+      })
+    }
+  })
 })
 
 describe(isAtprotoDate, () => {
@@ -449,6 +533,18 @@ describe(isAtprotoDate, () => {
 })
 
 describe(toDatetimeString, () => {
+  describe('datetime_syntax_valid.txt', () => {
+    for (const input of interopValid) {
+      test(JSON.stringify(input), () => {
+        expect(isValidDatetime(input)).toBe(true)
+        expect(() => assertDatetimeString(input)).not.toThrow()
+
+        // Ensure that values round-trip through Date without throwing
+        expect(() => toDatetimeString(new Date(input))).not.toThrow()
+      })
+    }
+  })
+
   it('converts normal dates', () => {
     expect(toDatetimeString(new Date('2024-01-15T12:30:00Z'))).toEqual(
       '2024-01-15T12:30:00.000Z',
