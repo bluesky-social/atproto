@@ -1419,8 +1419,8 @@ export class Views {
         threadTagsHide: this.threadTagsHide,
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
-      state.ctx?.featureGatesMap.get(
-        'threads:reply_ranking_exploration:enable',
+      state.ctx?.features.checkGate(
+        state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       ),
     )
 
@@ -1792,8 +1792,8 @@ export class Views {
         threadTagsHide: this.threadTagsHide,
         visibilityTagRankPrefix: this.visibilityTagRankPrefix,
       },
-      state.ctx?.featureGatesMap.get(
-        'threads:reply_ranking_exploration:enable',
+      state.ctx?.features.checkGate(
+        state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       ),
     )
   }
@@ -1990,7 +1990,9 @@ export class Views {
 
     let hiddenByTag = false
     if (
-      state.ctx?.featureGatesMap.get('threads:reply_ranking_exploration:enable')
+      state.ctx?.features.checkGate(
+        state.ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
+      )
     ) {
       hiddenByTag = authorDid !== opDid && post.tags.has(this.visibilityTagHide)
     } else {

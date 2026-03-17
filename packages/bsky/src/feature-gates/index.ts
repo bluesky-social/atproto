@@ -94,8 +94,6 @@ export class FeatureGatesClient {
            * attached in Growthbook. Howerver, we want to be extra sure that a
            * misconfigured experiment doesn't result in a huge increase in events, so we
            * protect this here.
-           *
-           * TODO test this
            */
           if (
             result.featureId &&
