@@ -331,7 +331,9 @@ describe('auth', () => {
       password: 'password',
     })
     const refreshWithAccess = refreshSession(account.accessJwt)
-    await expect(refreshWithAccess).rejects.toThrow('Invalid token type')
+    await expect(refreshWithAccess).rejects.toThrow(
+      'Token could not be verified',
+    )
   })
 
   it('expired refresh token cannot be used to refresh a session.', async () => {
