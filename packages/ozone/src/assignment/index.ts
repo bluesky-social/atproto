@@ -7,6 +7,7 @@ import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 import { ReportQueue } from '../db/schema/report_queue'
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
 import { QueueService, QueueServiceCreator } from '../queue/service'
+import { createReportActivity } from '../report/activity'
 import { TeamService, TeamServiceCreator } from '../team'
 
 export interface AssignmentServiceOpts {
@@ -436,6 +437,29 @@ export class AssignmentService {
         .returningAll()
         .executeTakeFirstOrThrow()
     })
+
+    // Log a status_change activity to 'assigned' ONLY for permanent assignments. Swallow AlreadyInTargetState
+    // so that re-assignments (e.g. refreshing expiry) don't throw.
+    if (input.isPermanent) {
+      try {
+        await createReportActivity(this.db, {
+          reportId,
+          action: 'status_change',
+          toState: 'assigned',
+          isAutomated: false,
+          createdBy: did,
+        })
+      } catch (err) {
+        if (
+          err instanceof InvalidRequestError &&
+          err.customErrorName === 'AlreadyInTargetState'
+        ) {
+          // no-op — report already assigned, no state change to record
+        } else {
+          throw err
+        }
+      }
+    }
 
     return this.hydrateReportAssignment(result.id)
   }

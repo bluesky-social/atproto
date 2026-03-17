@@ -22,7 +22,13 @@ export type QueryParams = {
   /** Filter by report types (fully qualified string in the format of com.atproto.moderation.defs#reason<name>). */
   reportTypes?: string[]
   /** Filter by report status. */
-  status?: 'open' | 'closed' | 'escalated' | (string & {})
+  status?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
   /** Filter by subject DID or AT-URI. */
   subject?: string
   /** If specified, reports of the given type (account or record) will be returned. */

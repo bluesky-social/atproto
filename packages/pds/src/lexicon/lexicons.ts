@@ -19967,7 +19967,13 @@ export const schemaDict = {
             },
             status: {
               type: 'string',
-              knownValues: ['open', 'closed', 'escalated'],
+              knownValues: [
+                'open',
+                'closed',
+                'escalated',
+                'queued',
+                'assigned',
+              ],
               description: 'Filter by report status.',
             },
             subject: {
