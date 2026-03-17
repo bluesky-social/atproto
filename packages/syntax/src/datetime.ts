@@ -302,7 +302,7 @@ type Result<V> = FailureResult | SuccessResult<V>
  * ```
  */
 const DATETIME_REGEX =
-  /^(?<full_year>[0-9]{4})-(?!00)(?<date_month>0[1-9]|1[012])-(?!00)(?<date_mday>[0-2][0-9]|3[01])T(?<time_hour>[0-1][0-9]|2[0-3]):(?<time_minute>[0-5][0-9]):(?<time_second>[0-5][0-9]|60)(?<time_secfrac>\.[0-9]+)?(?<time_offset>Z|(?<time_numoffset>[+-](?:[0-1][0-9]|2[0-3]):[0-5][0-9]))$/
+  /^(?<full_year>[0-9]{4})-(?<date_month>0[1-9]|1[012])-(?<date_mday>0[1-9]|[1-2][0-9]|3[01])T(?<time_hour>[0-1][0-9]|2[0-3]):(?<time_minute>[0-5][0-9]):(?<time_second>[0-5][0-9]|60)(?<time_secfrac>\.[0-9]+)?(?<time_offset>Z|(?<time_numoffset>[+-](?:[0-1][0-9]|2[0-3]):[0-5][0-9]))$/
 
 /**
  * Validates that the input is a datetime string according to atproto Lexicon
