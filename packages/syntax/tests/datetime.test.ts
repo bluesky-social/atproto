@@ -2,7 +2,7 @@ import * as fs from 'node:fs'
 import { describe, expect, it, test } from 'vitest'
 import {
   InvalidDatetimeError,
-  assertDatetimeString,
+  ensureValidDatetime,
   isAtprotoDate,
   isValidDatetime,
   normalizeDatetime,
@@ -20,11 +20,11 @@ const interopInvalidParse = readLines(
   `${__dirname}/../../../interop-test-files/syntax/datetime_parse_invalid.txt`,
 )
 
-describe(assertDatetimeString, () => {
+describe(ensureValidDatetime, () => {
   describe('valid interop', () => {
     for (const dt of interopValid) {
       test(dt, () => {
-        expect(() => assertDatetimeString(dt)).not.toThrow()
+        expect(() => ensureValidDatetime(dt)).not.toThrow()
       })
     }
   })
@@ -32,7 +32,7 @@ describe(assertDatetimeString, () => {
   describe('fails on interop (invalid syntax)', () => {
     for (const dt of interopInvalidSyntax) {
       test(dt, () => {
-        expect(() => assertDatetimeString(dt)).toThrow(InvalidDatetimeError)
+        expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
       })
     }
   })
@@ -40,153 +40,143 @@ describe(assertDatetimeString, () => {
   describe('fails on interop (invalid parse)', () => {
     for (const dt of interopInvalidParse) {
       test(dt, () => {
-        expect(() => assertDatetimeString(dt)).toThrow(InvalidDatetimeError)
+        expect(() => ensureValidDatetime(dt)).toThrow(InvalidDatetimeError)
       })
     }
   })
 
   it('accepts boundary datetimes with offsets near year 0000', () => {
-    expect(() =>
-      assertDatetimeString('0000-01-01T00:00:00+23:59'),
-    ).not.toThrow()
-    expect(() => assertDatetimeString('0000-01-01T00:00:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('0000-01-01T00:00:00+23:59')).not.toThrow()
+    expect(() => ensureValidDatetime('0000-01-01T00:00:00Z')).not.toThrow()
   })
 
   it('accepts boundary datetimes with offsets near year 9999', () => {
     expect(() =>
-      assertDatetimeString('9999-12-31T23:59:59.999-23:59'),
+      ensureValidDatetime('9999-12-31T23:59:59.999-23:59'),
     ).not.toThrow()
-    expect(() =>
-      assertDatetimeString('9999-12-31T23:59:00-00:01'),
-    ).not.toThrow()
+    expect(() => ensureValidDatetime('9999-12-31T23:59:00-00:01')).not.toThrow()
   })
 
   it('accepts datetimes with years 0-9', () => {
-    expect(() => assertDatetimeString('0001-01-01T00:00:00Z')).not.toThrow()
-    expect(() => assertDatetimeString('0009-06-15T12:00:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('0001-01-01T00:00:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('0009-06-15T12:00:00Z')).not.toThrow()
   })
 
   it('accepts datetimes with fractional seconds', () => {
-    expect(() => assertDatetimeString('2024-01-15T12:30:00.1Z')).not.toThrow()
-    expect(() => assertDatetimeString('2024-01-15T12:30:00.12Z')).not.toThrow()
-    expect(() => assertDatetimeString('2024-01-15T12:30:00.123Z')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00.1Z')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00.12Z')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00.123Z')).not.toThrow()
     expect(() =>
-      assertDatetimeString('2024-01-15T12:30:00.123456789Z'),
+      ensureValidDatetime('2024-01-15T12:30:00.123456789Z'),
     ).not.toThrow()
   })
 
   it('accepts datetimes with no fractional seconds', () => {
-    expect(() => assertDatetimeString('2024-01-15T12:30:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00Z')).not.toThrow()
   })
 
   it('accepts datetimes with positive and negative offsets', () => {
-    expect(() =>
-      assertDatetimeString('2024-01-15T12:30:00+05:30'),
-    ).not.toThrow()
-    expect(() =>
-      assertDatetimeString('2024-01-15T12:30:00-05:30'),
-    ).not.toThrow()
-    expect(() =>
-      assertDatetimeString('2024-01-15T12:30:00+00:00'),
-    ).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00+05:30')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00-05:30')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00+00:00')).not.toThrow()
   })
 
   it('rejects -00:00 offset', () => {
-    expect(() => assertDatetimeString('2024-01-15T12:30:00-00:00')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00-00:00')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects non-string input', () => {
-    expect(() => assertDatetimeString(123)).toThrow(InvalidDatetimeError)
-    expect(() => assertDatetimeString(null)).toThrow(InvalidDatetimeError)
-    expect(() => assertDatetimeString(undefined)).toThrow(InvalidDatetimeError)
+    expect(() => ensureValidDatetime(123)).toThrow(InvalidDatetimeError)
+    expect(() => ensureValidDatetime(null)).toThrow(InvalidDatetimeError)
+    expect(() => ensureValidDatetime(undefined)).toThrow(InvalidDatetimeError)
   })
 
   it('rejects strings that are too long', () => {
     expect(() =>
-      assertDatetimeString('2024-01-15T12:30:00.' + '0'.repeat(50) + 'Z'),
+      ensureValidDatetime('2024-01-15T12:30:00.' + '0'.repeat(50) + 'Z'),
     ).toThrow(InvalidDatetimeError)
   })
 
   it('rejects invalid month values', () => {
-    expect(() => assertDatetimeString('2024-00-15T12:30:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-00-15T12:30:00Z')).toThrow(
       InvalidDatetimeError,
     )
-    expect(() => assertDatetimeString('2024-13-15T12:30:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-13-15T12:30:00Z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects invalid day values', () => {
-    expect(() => assertDatetimeString('2024-01-00T12:30:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-00T12:30:00Z')).toThrow(
       InvalidDatetimeError,
     )
-    expect(() => assertDatetimeString('2024-01-32T12:30:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-32T12:30:00Z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects invalid hour values', () => {
-    expect(() => assertDatetimeString('2024-01-15T24:00:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15T24:00:00Z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects invalid minute values', () => {
-    expect(() => assertDatetimeString('2024-01-15T12:60:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15T12:60:00Z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects missing timezone', () => {
-    expect(() => assertDatetimeString('2024-01-15T12:30:00')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects lowercase t separator', () => {
-    expect(() => assertDatetimeString('2024-01-15t12:30:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15t12:30:00Z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects lowercase z timezone', () => {
-    expect(() => assertDatetimeString('2024-01-15T12:30:00z')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15T12:30:00z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects date-only strings', () => {
-    expect(() => assertDatetimeString('2024-01-15')).toThrow(
+    expect(() => ensureValidDatetime('2024-01-15')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('rejects empty string', () => {
-    expect(() => assertDatetimeString('')).toThrow(InvalidDatetimeError)
+    expect(() => ensureValidDatetime('')).toThrow(InvalidDatetimeError)
   })
 
   it('rejects leap second (not supported by Date parser)', () => {
-    expect(() => assertDatetimeString('2016-12-31T23:59:60Z')).toThrow(
+    expect(() => ensureValidDatetime('2016-12-31T23:59:60Z')).toThrow(
       InvalidDatetimeError,
     )
   })
 
   it('accepts Feb 29 in leap years', () => {
-    expect(() => assertDatetimeString('2024-02-29T00:00:00Z')).not.toThrow()
-    expect(() => assertDatetimeString('2000-02-29T00:00:00Z')).not.toThrow()
-    expect(() => assertDatetimeString('0400-02-29T00:00:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('2024-02-29T00:00:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('2000-02-29T00:00:00Z')).not.toThrow()
+    expect(() => ensureValidDatetime('0400-02-29T00:00:00Z')).not.toThrow()
   })
 
   it('rejects Feb 29 in non-leap years', () => {
-    expect(() => assertDatetimeString('2023-02-29T00:00:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2023-02-29T00:00:00Z')).toThrow(
       InvalidDatetimeError,
     )
-    expect(() => assertDatetimeString('1900-02-29T00:00:00Z')).toThrow(
+    expect(() => ensureValidDatetime('1900-02-29T00:00:00Z')).toThrow(
       InvalidDatetimeError,
     )
-    expect(() => assertDatetimeString('2100-02-29T00:00:00Z')).toThrow(
+    expect(() => ensureValidDatetime('2100-02-29T00:00:00Z')).toThrow(
       InvalidDatetimeError,
     )
   })
@@ -194,7 +184,7 @@ describe(assertDatetimeString, () => {
   it('allows datetime that normalizes past year 9999 due to negative offset', () => {
     // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to
     // UTC advances it to 10000-01-01T00:00:00Z, which is out of range
-    expect(() => assertDatetimeString('9999-12-31T23:59:00-00:01')).not.toThrow(
+    expect(() => ensureValidDatetime('9999-12-31T23:59:00-00:01')).not.toThrow(
       InvalidDatetimeError,
     )
   })
@@ -227,6 +217,7 @@ describe(isValidDatetime, () => {
 
   it('accepts boundary datetimes with offsets near year 0000', () => {
     expect(isValidDatetime('0000-01-01T00:00:00+23:59')).toBe(true)
+    expect(isValidDatetime('0000-01-01T00:00:00+00:01')).toBe(true)
     expect(isValidDatetime('0000-01-01T00:00:00Z')).toBe(true)
   })
 
@@ -357,15 +348,6 @@ describe(normalizeDatetime, () => {
     )
   })
 
-  it('normalizes datetimes with years 0-9', () => {
-    expect(normalizeDatetime('0001-01-01T00:00:00+01:00')).toEqual(
-      '0000-12-31T23:00:00.000Z',
-    )
-    expect(normalizeDatetime('0009-06-15T12:00:00Z')).toEqual(
-      '0009-06-15T12:00:00.000Z',
-    )
-  })
-
   it('normalizes to millisecond precision with trailing Z', () => {
     expect(normalizeDatetime('2024-06-15T12:00:00Z')).toEqual(
       '2024-06-15T12:00:00.000Z',
@@ -391,11 +373,9 @@ describe(normalizeDatetime, () => {
   })
 
   it('normalizes datetime strings missing timezone', () => {
-    // Without a timezone suffix, new Date() parses as local time first;
-    // only if that fails does normalizeDatetime append Z and retry.
-    // So we just verify it returns *something* valid rather than throwing.
-    const result = normalizeDatetime('2024-06-15T12:00:00')
-    expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    expect(normalizeDatetime('2024-06-15T12:00:00')).toEqual(
+      '2024-06-15T12:00:00.000Z',
+    )
   })
 
   it('normalizes epoch', () => {
@@ -416,12 +396,15 @@ describe(normalizeDatetime, () => {
     expect(() => normalizeDatetime('0000-01-01T00:00:00+01:00')).toThrow(
       InvalidDatetimeError,
     )
-    // expect(() => normalizeDatetime('0001-01-01T00:00:00+01:00')).toThrow(
-    //   InvalidDatetimeError,
-    // )
     // 9999-12-31T23:59:00-00:01 normalizes to year 10000, out of isAtprotoDate range
     expect(() => normalizeDatetime('9999-12-31T23:59:00-00:01')).toThrow(
       InvalidDatetimeError,
+    )
+  })
+
+  it('normalizes datetimes with years 0-9', () => {
+    expect(normalizeDatetime('0001-01-01T00:00:00+01:00')).toEqual(
+      '0000-12-31T23:00:00.000Z',
     )
   })
 
@@ -537,7 +520,7 @@ describe(toDatetimeString, () => {
     for (const input of interopValid) {
       test(JSON.stringify(input), () => {
         expect(isValidDatetime(input)).toBe(true)
-        expect(() => assertDatetimeString(input)).not.toThrow()
+        expect(() => ensureValidDatetime(input)).not.toThrow()
 
         // Ensure that values round-trip through Date without throwing
         expect(() => toDatetimeString(new Date(input))).not.toThrow()
@@ -597,7 +580,7 @@ describe(toDatetimeString, () => {
     )
   })
 
-  it('returns valid datetime strings that round-trip through assertDatetimeString', () => {
+  it('returns valid datetime strings that round-trip through ensureValidDatetime', () => {
     const dates = [
       new Date('2024-06-15T12:00:00Z'),
       new Date('0000-01-01T00:00:00Z'),
@@ -605,7 +588,7 @@ describe(toDatetimeString, () => {
     ]
     for (const date of dates) {
       const str = toDatetimeString(date)
-      expect(() => assertDatetimeString(str)).not.toThrow()
+      expect(() => ensureValidDatetime(str)).not.toThrow()
     }
   })
 

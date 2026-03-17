@@ -329,8 +329,8 @@ function parseDatetimeString(input: unknown): Result<DatetimeString> {
   const { full_year, date_month, date_mday, time_second } = matches.groups!
 
   // @NOTE JS will allow parsing of some invalid calendar dates (e.g. new
-  // Date("2024-02-30T00:00:00Z") will parse as "2024-03-01T00:00:00Z"), but RFC
-  // 3339 requires that the calendar date is valid, so we need to check this
+  // Date("2024-02-30T00:00:00Z") will parse as "2024-03-01T00:00:00Z"), but
+  // RFC3339 requires that the calendar date be valid, so we need to check this
   // here.
   if (date_mday > '28' && date_mday > getMaxMonthDay(full_year, date_month)) {
     return failure(
@@ -340,7 +340,7 @@ function parseDatetimeString(input: unknown): Result<DatetimeString> {
 
   // While technically valid according to RFC 3339, leap seconds are not
   // supported by the JS Date parser, and thus we reject them here to avoid
-  // confusion and potential downstream issues.
+  // incompatibilities with older version of this implementation.
   if (time_second === '60') {
     return failure('datetime does not support leap seconds')
   }
@@ -368,10 +368,6 @@ function getMaxMonthDay(year: string, month: string): string {
  */
 function parseAtprotoDate(date: Date): Result<AtprotoDate> {
   const fullYear = date.getUTCFullYear()
-  // Ensures that the date.toISOString() will result in a valid datetime string.
-  // We could check isNaN(date.getTime()) here but since we'll check the year
-  // anyway, we just use that for the validity check since an invalid date will
-  // have NaN year.
   if (Number.isNaN(fullYear)) {
     return failure('datetime did not parse as ISO 8601')
   }
