@@ -163,6 +163,11 @@ export function toDatetimeString(date: Date): DatetimeString {
  * One use-case is a consistent, sortable string. Another is to work with older
  * invalid createdAt datetimes.
  *
+ * @note This function might return different normalized strings for the same
+ * input depending on the timezone of the machine it is run on, since it will
+ * first attempt to parse the input "as is" if it contains no timezone
+ * information.
+ *
  * @returns ISODatetimeString - a valid atproto datetime with millisecond precision (3 sub-second digits) and UTC timezone with trailing 'Z' syntax.
  * @throws InvalidDatetimeError - if the input string could not be parsed as a datetime, even with permissive parsing.
  */
@@ -183,7 +188,7 @@ export function normalizeDatetime(dtStr: string): ISODatetimeString {
     }
   } else {
     // If there is no timezone information, try parsing as UTC using two
-    // different syntaxes.
+    // different syntaxes, falling back to parsing "as is".
 
     const dateZ = new Date(`${dtStr}Z`)
     if (isAtprotoDate(dateZ)) {
@@ -195,9 +200,13 @@ export function normalizeDatetime(dtStr: string): ISODatetimeString {
       return dateUTC.toISOString()
     }
 
-    // @NOTE we avoid parsing "as is" without a timezone designator, since that
-    // can lead to inconsistent results depending on the local timezone of the
-    // machine running the code.
+    // Despite our best efforts to parse as a consistent value, appending "Z" or
+    // " UTC" did not work, so we will try parsing "as is", which may yield
+    // different results depending on the local timezone of the machine.
+    const date = new Date(dtStr)
+    if (isAtprotoDate(date)) {
+      return date.toISOString()
+    }
   }
 
   throw new InvalidDatetimeError(
