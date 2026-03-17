@@ -165,8 +165,8 @@ export function toDatetimeString(date: Date): DatetimeString {
  *
  * @note This function might return different normalized strings for the same
  * input depending on the timezone of the machine it is run on, since it will
- * first attempt to parse the input "as is" if it contains no timezone
- * information.
+ * attempt to parse the input "as is" if it fails to parse with an explicit
+ * timezone.
  *
  * @returns ISODatetimeString - a valid atproto datetime with millisecond precision (3 sub-second digits) and UTC timezone with trailing 'Z' syntax.
  * @throws InvalidDatetimeError - if the input string could not be parsed as a datetime, even with permissive parsing.
