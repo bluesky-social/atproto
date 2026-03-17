@@ -158,6 +158,9 @@ describe(normalizeDatetime, () => {
     expect(() => normalizeDatetime('1999-19-39T23:20:50.123Z')).toThrow(
       InvalidDatetimeError,
     )
+    expect(() => normalizeDatetime('Fri, 02 Jan 1999 12:34:56 AFT')).toThrow(
+      InvalidDatetimeError,
+    )
     expect(() => normalizeDatetime('-000001-12-31T23:00:00.000Z')).toThrow(
       InvalidDatetimeError,
     )
