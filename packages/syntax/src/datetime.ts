@@ -167,18 +167,37 @@ export function toDatetimeString(date: Date): DatetimeString {
  * @throws InvalidDatetimeError - if the input string could not be parsed as a datetime, even with permissive parsing.
  */
 export function normalizeDatetime(dtStr: string): ISODatetimeString {
-  // Parse the string as is
-  const date = new Date(dtStr)
-  if (isAtprotoDate(date)) {
-    return date.toISOString()
-  }
-
-  // if dtStr is not a valid date, try parsing again with a timezone
-  if (isNaN(date.getTime()) && !/.*(([+-]\d\d:?\d\d)|[a-zA-Z])$/.test(dtStr)) {
-    const date = new Date(`${dtStr}Z`)
+  if (
+    // Explicit timezone offset
+    /[+-]\d\d:?\d\d/.test(dtStr) ||
+    // 'Z' timezone designator
+    /\dZ\b/.test(dtStr) ||
+    // Timezone abbreviation (eg. "PST", "UTC", "GMT", etc)
+    /\b[A-Z]{3}\b/.test(dtStr)
+  ) {
+    // Since we do have a timezone designator, we can try parsing "as is" and
+    // should get consistent results regardless of local timezone.
+    const date = new Date(dtStr)
     if (isAtprotoDate(date)) {
       return date.toISOString()
     }
+  } else {
+    // If there is no timezone information, try parsing as UTC using two
+    // different syntaxes.
+
+    const dateZ = new Date(`${dtStr}Z`)
+    if (isAtprotoDate(dateZ)) {
+      return dateZ.toISOString()
+    }
+
+    const dateUTC = new Date(`${dtStr} UTC`)
+    if (isAtprotoDate(dateUTC)) {
+      return dateUTC.toISOString()
+    }
+
+    // @NOTE we avoid parsing "as is" without a timezone designator, since that
+    // can lead to inconsistent results depending on the local timezone of the
+    // machine running the code.
   }
 
   throw new InvalidDatetimeError(
