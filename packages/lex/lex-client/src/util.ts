@@ -5,6 +5,7 @@ import {
   Procedure,
   Query,
 } from '@atproto/lex-schema'
+import type { Service } from './types.js'
 
 /**
  * The body type of an XRPC response, inferred from the method's output schema.
@@ -64,6 +65,17 @@ export function isAsyncIterable<T>(
   )
 }
 
+export type AtprotoHeadersOptions = {
+  /** Additional HTTP headers to include in the request. */
+  headers?: HeadersInit
+
+  /** Labeler DIDs to request labels from for content moderation. */
+  labelers?: Iterable<DidString>
+
+  /** Service proxy identifier for routing requests through a specific service. */
+  service?: Service
+}
+
 /**
  * Builds HTTP headers for AT Protocol requests.
  *
@@ -71,17 +83,10 @@ export function isAsyncIterable<T>(
  * - `atproto-proxy`: Service routing header (if service is specified)
  * - `atproto-accept-labelers`: Comma-separated list of labeler DIDs
  *
- * @param options - Header building options
- * @param options.headers - Base headers to include
- * @param options.service - Service proxy identifier
- * @param options.labelers - Labeler DIDs to request labels from
+ * @see {@link AtprotoHeadersOptions}
  * @returns A new Headers object with AT Protocol headers added
  */
-export function buildAtprotoHeaders(options: {
-  headers?: HeadersInit
-  service?: `${DidString}#${string}`
-  labelers?: Iterable<DidString>
-}): Headers {
+export function buildAtprotoHeaders(options: AtprotoHeadersOptions): Headers {
   const headers = new Headers(options?.headers)
 
   if (options.service && !headers.has('atproto-proxy')) {

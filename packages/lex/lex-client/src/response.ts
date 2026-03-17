@@ -1,4 +1,4 @@
-import { lexParse } from '@atproto/lex-json'
+import { LexParseOptions, lexParse } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
   Procedure,
@@ -18,6 +18,38 @@ const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'
 
 export type { XrpcResponseBody, XrpcResponsePayload }
+
+export type XrpcResponseOptions = {
+  /**
+   * Whether to validate the response against the method's output schema.
+   * Disabling this can improve performance but may lead to runtime errors if
+   * the response does not conform to the expected schema. Only set this to
+   * `false` if you are certain that the upstream service will always return
+   * valid responses.
+   *
+   * @default true
+   */
+  validateResponse?: boolean
+
+  /**
+   * Whether to allow invalid Lex data in the response payload. By default, the
+   * client will reject responses with invalid Lex data (floats and invalid
+   * $bytes / $link objects).
+   *
+   * Setting this option to `true` will allow the client to accept such
+   * responses, but the invalid Lex data will be returned as-is (e.g., floats
+   * will not be rejected, and invalid $bytes / $link objects will not be
+   * converted to Uint8Array / Cid).
+   *
+   * When validation is enabled (the default), the values defined through the
+   * method schema will be enforced, ensuring that the client can still process
+   * the response even if the server returns invalid Lex data.
+   *
+   * @default false
+   * @see {@link LexParseOptions.strict}
+   */
+  allowInvalidLexData?: boolean
+}
 
 /**
  * Small container for XRPC response data.
@@ -80,7 +112,7 @@ export class XrpcResponse<M extends Procedure | Query>
   static async fromFetchResponse<const M extends Procedure | Query>(
     method: M,
     response: Response,
-    options?: { validateResponse?: boolean },
+    options?: XrpcResponseOptions,
   ): Promise<XrpcResponse<M>> {
     // @NOTE The body MUST either be read or canceled to avoid resource leaks.
     // Since nothing should cause an exception before "readPayload" is
@@ -89,17 +121,17 @@ export class XrpcResponse<M extends Procedure | Query>
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
       // Always parse json for error responses
-      const payload = await readPayload(response, { parse: true }).catch(
-        (cause) => {
-          throw new XrpcUpstreamError(
-            method,
-            response,
-            null,
-            'Unable to parse response payload',
-            { cause },
-          )
-        },
-      )
+      const payload = await readPayload(response, {
+        parse: { strict: !options?.allowInvalidLexData },
+      }).catch((cause) => {
+        throw new XrpcUpstreamError(
+          method,
+          response,
+          null,
+          'Unable to parse response payload',
+          { cause },
+        )
+      })
 
       // Properly formatted XRPC error response ?
       if (response.status >= 400 && isXrpcErrorPayload(payload)) {
@@ -121,9 +153,11 @@ export class XrpcResponse<M extends Procedure | Query>
       )
     }
 
-    // Only parse json if the schema expects it
     const payload = await readPayload(response, {
-      parse: method.output.encoding === CONTENT_TYPE_JSON,
+      // Only parse json if the schema expects it
+      parse: method.output.encoding === CONTENT_TYPE_JSON && {
+        strict: !options?.allowInvalidLexData,
+      },
     }).catch((cause) => {
       throw new XrpcUpstreamError(
         method,
@@ -182,12 +216,21 @@ export class XrpcResponse<M extends Procedure | Query>
   }
 }
 
+type ReadPayloadOptions = {
+  /**
+   * Whether to parse the response body as JSON and convert it to LexValue.
+   *
+   * @default false
+   */
+  parse?: false | LexParseOptions
+}
+
 /**
  * @note this function always consumes the response body
  */
 async function readPayload(
   response: Response,
-  options?: { parse?: boolean },
+  options?: ReadPayloadOptions,
 ): Promise<XrpcResponsePayload> {
   // @TODO Should we limit the maximum response size here (this could also be
   // done by the FetchHandler)?
@@ -224,7 +267,7 @@ async function readPayload(
     // parsing to JSON then converting to Lex (?)
 
     // @TODO verify statement above
-    return { encoding, body: lexParse(text) }
+    return { encoding, body: lexParse(text, options.parse) }
   }
 
   return { encoding, body: new Uint8Array(await response.arrayBuffer()) }

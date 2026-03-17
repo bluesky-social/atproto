@@ -506,6 +506,8 @@ if (result.success) {
 }
 ```
 
+Both `xrpc()` and `xrpcSafe()` accept `validateRequest`, `validateResponse`, and `allowInvalidLexData` options to control validation and strictness per-call. See [Validation and Strictness Options](#validation-and-strictness-options) for details.
+
 ## Client API
 
 The `Client` class provides high-level helpers for common AT Protocol "repo" operations: `create()`, `get()`, `put()`, `delete()`, `list()`, `uploadBlob()`, and more. A `Client` instance is typically useful for making requests in the context of an authenticated user session, as it automatically handles headers and provides default values based on the authenticated user's DID.
@@ -574,6 +576,28 @@ const client = new Client(session, {
 })
 ```
 
+#### Validation and Strictness Options
+
+The `Client` constructor accepts options to control request/response validation and how invalid Lex data is handled. These defaults apply to all XRPC calls made through the client, and can be overridden per-call via `client.xrpc()` or `client.xrpcSafe()`.
+
+```typescript
+const client = new Client(session, {
+  // Validate requests against the method's input schema (default: false)
+  validateRequest: true,
+
+  // Validate responses against the method's output schema (default: true)
+  validateResponse: true,
+
+  // Accept responses containing invalid Lex data such as floats or
+  // malformed $bytes/$link objects (default: false)
+  allowInvalidLexData: true,
+})
+```
+
+- **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
+- **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
+- **`allowInvalidLexData`** — When `true`, the client will accept responses containing data that doesn't conform to the Lex encoding (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). Invalid values are returned as-is rather than being rejected or converted. Default: `false`.
+
 ### Core Methods
 
 #### `client.call()`
@@ -603,7 +627,6 @@ const timeline = await client.call(
   },
   {
     signal: abortSignal,
-    headers: { 'custom-header': 'value' },
   },
 )
 ```
@@ -857,6 +880,16 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
+Validation and strictness options (`validateRequest`, `validateResponse`, `allowInvalidLexData`) can also be passed per-call to override the client defaults:
+
+```typescript
+const response = await client.xrpc(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+  allowInvalidLexData: true, // Accept non-strict Lex data for this call
+  validateResponse: false, // Skip schema validation for this call
+})
+```
+
 ## Utilities
 
 Various utilities for working with CIDs, datetime strings, string lengths, language tags, and low-level JSON encoding are exported from the package:
@@ -1028,7 +1061,7 @@ Actions receive:
 
 - `client` - The Client instance (to make XRPC calls)
 - `input` - The input data for the action
-- `options` - Call options (signal, headers)
+- `options` - Call options (signal)
 
 #### Using Actions
 

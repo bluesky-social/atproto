@@ -583,6 +583,111 @@ describe(xrpc, () => {
       expect(response.body).toEqual({ value: 'hello' })
     })
   })
+
+  describe('allowInvalidLexData', () => {
+    // Helper: returns a JSON response containing a float (invalid lex data)
+    const jsonResponseWithFloat = () =>
+      new Response(JSON.stringify({ value: 'hello', extra: 1.5 }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+
+    // Helper: returns a JSON error response containing a float
+    const jsonErrorResponseWithFloat = () =>
+      new Response(
+        JSON.stringify({ error: 'TestError', message: 'bad', extra: 1.5 }),
+        {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        },
+      )
+
+    it('rejects response with invalid lex data by default (strict parsing)', async () => {
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      await expect(
+        xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toBe('Unable to parse response payload')
+        expect(err.cause).toBeInstanceOf(TypeError)
+        return true
+      })
+    })
+
+    it('accepts response with invalid lex data when enabled', async () => {
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      const response = await xrpc(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: true,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({ value: 'hello', extra: 1.5 })
+    })
+
+    it('rejects response with invalid lex data when explicitly disabled', async () => {
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      await expect(
+        xrpc(fetchHandler, testQuery, {
+          params: { limit: 10 },
+          allowInvalidLexData: false,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toBe('Unable to parse response payload')
+        expect(err.cause).toBeInstanceOf(TypeError)
+        return true
+      })
+    })
+
+    it('rejects error response with invalid lex data by default', async () => {
+      const fetchHandler: FetchHandler = async () =>
+        jsonErrorResponseWithFloat()
+
+      await expect(
+        xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toBe('Unable to parse response payload')
+        return true
+      })
+    })
+
+    it('parses error response with invalid lex data when enabled', async () => {
+      const fetchHandler: FetchHandler = async () =>
+        jsonErrorResponseWithFloat()
+
+      await expect(
+        xrpc(fetchHandler, testQuery, {
+          params: { limit: 10 },
+          allowInvalidLexData: true,
+        }),
+      ).rejects.toSatisfy((err) => {
+        // Error response is still an error, but it should be parsed successfully
+        assert(err instanceof XrpcResponseError)
+        expect(err.status).toBe(400)
+        return true
+      })
+    })
+
+    it('does not affect binary responses', async () => {
+      const bytes = new Uint8Array([1, 2, 3])
+      const fetchHandler: FetchHandler = async () =>
+        new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+
+      const response = await xrpc(fetchHandler, testBinaryQuery, {
+        allowInvalidLexData: true,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual(bytes)
+    })
+  })
 })
 
 describe(xrpcSafe, () => {
@@ -899,6 +1004,87 @@ describe(xrpcSafe, () => {
 
       assert(result.success)
       expect(result.body).toEqual({ value: 'hello' })
+    })
+  })
+
+  describe('allowInvalidLexData', () => {
+    const jsonResponseWithFloat = () =>
+      new Response(JSON.stringify({ value: 'hello', extra: 1.5 }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+
+    const jsonErrorResponseWithFloat = () =>
+      new Response(
+        JSON.stringify({ error: 'TestError', message: 'bad', extra: 1.5 }),
+        {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        },
+      )
+
+    it('returns error for invalid lex data by default (strict parsing)', async () => {
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toBe('Unable to parse response payload')
+    })
+
+    it('accepts response with invalid lex data when enabled', async () => {
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: true,
+      })
+
+      assert(result.success)
+      expect(result.body).toEqual({ value: 'hello', extra: 1.5 })
+    })
+
+    it('returns error for invalid lex data when explicitly disabled', async () => {
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: false,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toBe('Unable to parse response payload')
+    })
+
+    it('returns error for error response with invalid lex data by default', async () => {
+      const fetchHandler: FetchHandler = async () =>
+        jsonErrorResponseWithFloat()
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toBe('Unable to parse response payload')
+    })
+
+    it('parses error response with invalid lex data when enabled', async () => {
+      const fetchHandler: FetchHandler = async () =>
+        jsonErrorResponseWithFloat()
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: true,
+      })
+
+      assert(!result.success)
+      assert(result instanceof XrpcResponseError)
+      expect(result.status).toBe(400)
     })
   })
 })
