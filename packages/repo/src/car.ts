@@ -13,8 +13,6 @@ import {
 import { BlockMap } from './block-map'
 import { CarBlock } from './types'
 
-const CAR_BUFFER_SIZE = 0x4000 // 16KiB
-
 export async function* writeCarStream(
   root: CID | null,
   blocks: AsyncIterable<CarBlock>,
@@ -25,60 +23,14 @@ export async function* writeCarStream(
       roots: root ? [root] : [],
     }),
   )
-
-  let buf = new Uint8Array(CAR_BUFFER_SIZE)
-  let pos = 0
-
-  const flush = (): Uint8Array => {
-    const out = buf.subarray(0, pos)
-    buf = new Uint8Array(CAR_BUFFER_SIZE)
-    pos = 0
-    return out
-  }
-
-  // Returns null if data fit, or a chunk to yield if the buffer was flushed.
-  const write = (data: Uint8Array): Uint8Array | null => {
-    if (pos + data.byteLength > buf.byteLength) {
-      if (pos === 0) {
-        return data
-      }
-      const out = flush()
-      if (data.byteLength > buf.byteLength) {
-        const combined = new Uint8Array(out.byteLength + data.byteLength)
-        combined.set(out, 0)
-        combined.set(data, out.byteLength)
-        return combined
-      }
-      buf.set(data, 0)
-      pos = data.byteLength
-      return out
-    }
-    buf.set(data, pos)
-    pos += data.byteLength
-    return null
-  }
-
-  let pending: Uint8Array | null
-  pending = write(new Uint8Array(varint.encode(header.byteLength)))
-  if (pending) yield pending
-  pending = write(header)
-  if (pending) yield pending
-
+  yield new Uint8Array(varint.encode(header.byteLength))
+  yield header
   for await (const block of blocks) {
-    pending = write(
-      new Uint8Array(
-        varint.encode(block.cid.bytes.byteLength + block.bytes.byteLength),
-      ),
+    yield new Uint8Array(
+      varint.encode(block.cid.bytes.byteLength + block.bytes.byteLength),
     )
-    if (pending) yield pending
-    pending = write(block.cid.bytes)
-    if (pending) yield pending
-    pending = write(block.bytes)
-    if (pending) yield pending
-  }
-
-  if (pos > 0) {
-    yield buf.subarray(0, pos)
+    yield block.cid.bytes
+    yield block.bytes
   }
 }
 

@@ -1,5 +1,5 @@
 import stream from 'node:stream'
-import { byteIterableToStream } from '@atproto/common'
+import { byteIterableToStream, coalesceByteIterable } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -43,7 +43,7 @@ export const getCarStream = async (
   try {
     const storage = new SqlRepoReader(actorDb)
     const carIter = await storage.getCarStream(since)
-    carStream = byteIterableToStream(carIter)
+    carStream = byteIterableToStream(coalesceByteIterable(carIter))
   } catch (err) {
     await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {
