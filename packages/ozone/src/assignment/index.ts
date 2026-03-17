@@ -1,5 +1,6 @@
 import { Selectable } from 'kysely'
-import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
+import { ToolsOzoneQueueDefs } from '@atproto/api'
+import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 import { EndAtIdKeyset, paginate } from '../db/pagination'
@@ -438,14 +439,13 @@ export class AssignmentService {
         .executeTakeFirstOrThrow()
     })
 
-    // Log a status_change activity to 'assigned' ONLY for permanent assignments. Swallow AlreadyInTargetState
+    // Log an assignmentActivity ONLY for permanent assignments. Swallow AlreadyInTargetState
     // so that re-assignments (e.g. refreshing expiry) don't throw.
     if (input.isPermanent) {
       try {
         await createReportActivity(this.db, {
           reportId,
-          action: 'status_change',
-          toState: 'assigned',
+          activityType: 'assignmentActivity',
           isAutomated: false,
           createdBy: did,
         })

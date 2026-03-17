@@ -6,21 +6,22 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('reportId', 'integer', (col) => col.notNull())
 
-    // Type of activity: 'status_change', 'note'
-    .addColumn('action', 'varchar', (col) => col.notNull())
+    // Discriminator: one of queueActivity | assignmentActivity | escalationActivity
+    //                        | closeActivity | internalNoteActivity | publicNoteActivity
+    .addColumn('activityType', 'varchar', (col) => col.notNull())
 
-    // State transition fields — only populated for status_change actions
-    .addColumn('fromState', 'varchar')
-    .addColumn('toState', 'varchar')
+    // The report's status at the moment this activity was recorded.
+    // Populated for state-change activity types; null for note-only activities.
+    .addColumn('previousStatus', 'varchar')
 
-    // Optional human-readable note, usable on any action type
-    .addColumn('note', 'text')
+    // Note fields — separated by audience
+    .addColumn('internalNote', 'text') // moderator-only
+    .addColumn('publicNote', 'text') // potentially reporter-visible
 
-    // Extensible JSON payload for future action-specific metadata
+    // Free-form JSON for loose activity-specific metadata (e.g. { assignmentId: 42 })
     .addColumn('meta', 'jsonb')
 
-    // True when this activity was created by an automated process (e.g. queue router)
-    // rather than a direct human action
+    // True when created by an automated process (e.g. queue router)
     .addColumn('isAutomated', 'boolean', (col) =>
       col.notNull().defaultTo(false),
     )

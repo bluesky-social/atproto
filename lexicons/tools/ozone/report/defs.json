@@ -346,13 +346,72 @@
         }
       }
     },
+    "queueActivity": {
+      "type": "object",
+      "description": "Activity recording a report being routed to a queue.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "assignmentActivity": {
+      "type": "object",
+      "description": "Activity recording a moderator being assigned to a report.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "escalationActivity": {
+      "type": "object",
+      "description": "Activity recording a report being escalated.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "closeActivity": {
+      "type": "object",
+      "description": "Activity recording a report being closed.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "reopenActivity": {
+      "type": "object",
+      "description": "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
+      "properties": {}
+    },
+    "internalNoteActivity": {
+      "type": "object",
+      "description": "Activity recording an internal moderator-only note on a report.",
+      "properties": {}
+    },
+    "publicNoteActivity": {
+      "type": "object",
+      "description": "Activity recording a public-facing note on a report, potentially visible to the reporter.",
+      "properties": {}
+    },
     "reportActivityView": {
       "type": "object",
-      "description": "A single activity entry on a report, capturing state transitions or internal notes.",
+      "description": "A single activity entry on a report.",
       "required": [
         "id",
         "reportId",
-        "action",
+        "activity",
         "isAutomated",
         "createdBy",
         "createdAt"
@@ -366,28 +425,30 @@
           "type": "integer",
           "description": "ID of the report this activity belongs to"
         },
-        "action": {
-          "type": "string",
-          "knownValues": ["status_change", "note"],
-          "description": "Type of activity"
+        "activity": {
+          "type": "union",
+          "refs": [
+            "#queueActivity",
+            "#assignmentActivity",
+            "#escalationActivity",
+            "#closeActivity",
+            "#reopenActivity",
+            "#internalNoteActivity",
+            "#publicNoteActivity"
+          ],
+          "description": "The typed activity object describing what occurred."
         },
-        "fromState": {
+        "internalNote": {
           "type": "string",
-          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
-          "description": "Status before the transition. Only set for status_change actions."
+          "description": "Optional moderator-only note. Not visible to reporters."
         },
-        "toState": {
+        "publicNote": {
           "type": "string",
-          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
-          "description": "Status after the transition. Only set for status_change actions."
-        },
-        "note": {
-          "type": "string",
-          "description": "Optional free-text note. Can accompany any action type."
+          "description": "Optional public note, potentially visible to the reporter."
         },
         "meta": {
           "type": "unknown",
-          "description": "Extensible JSON payload for future action-specific metadata."
+          "description": "Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId)."
         },
         "isAutomated": {
           "type": "boolean",

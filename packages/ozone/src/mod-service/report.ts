@@ -386,16 +386,19 @@ export async function processReportAction(
     .where('id', 'in', reportIds)
     .execute()
 
+  const activityType =
+    newStatus === 'escalated' ? 'escalationActivity' : 'closeActivity'
+
   // Bulk INSERT one activity per updated report
   await db.db
     .insertInto('report_activity')
     .values(
       matchingReports.map((r) => ({
         reportId: r.id,
-        action: 'status_change',
-        fromState: r.status,
-        toState: newStatus,
-        note: reportAction.note ?? null,
+        activityType,
+        previousStatus: r.status,
+        internalNote: null,
+        publicNote: reportAction.note ?? null,
         meta: null,
         isAutomated: false,
         createdBy,

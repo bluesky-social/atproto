@@ -3,6 +3,8 @@ import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
 import { REASONSPAM } from '../src/lexicon/types/com/atproto/moderation/defs'
 
+const DEFS = 'tools.ozone.report.defs'
+
 describe('report-activity', () => {
   let network: TestNetwork
   let agent: AtpAgent
@@ -34,10 +36,10 @@ describe('report-activity', () => {
   const createActivity = async (
     input: {
       reportId: number
-      action: string
-      toState?: string
-      note?: string
-      updateStatus?: boolean
+      activity: { $type: string; [k: string]: unknown }
+      internalNote?: string
+      publicNote?: string
+      isAutomated?: boolean
     },
     role: 'admin' | 'triage' = 'admin',
   ) => {
@@ -76,45 +78,46 @@ describe('report-activity', () => {
     await network.close()
   })
 
-  describe('createActivity — note', () => {
-    it('creates a standalone note', async () => {
+  describe('createActivity — internalNoteActivity', () => {
+    it('creates an internal note with text', async () => {
       const report = await createReport(sc.dids.alice)
       const { data } = await createActivity({
         reportId: report.id,
-        action: 'note',
-        note: 'Looks like this may be a bot account.',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'Looks like this may be a bot account.',
       })
 
       expect(data.activity.reportId).toBe(report.id)
-      expect(data.activity.action).toBe('note')
-      expect(data.activity.note).toBe('Looks like this may be a bot account.')
-      expect(data.activity.fromState).toBeUndefined()
-      expect(data.activity.toState).toBeUndefined()
+      expect(data.activity.activity.$type).toBe(`${DEFS}#internalNoteActivity`)
+      expect(data.activity.internalNote).toBe(
+        'Looks like this may be a bot account.',
+      )
+      expect(data.activity.publicNote).toBeUndefined()
       expect(data.activity.isAutomated).toBe(false)
       expect(data.activity.createdBy).toBeDefined()
       expect(data.activity.createdAt).toBeDefined()
       expect(data.activity.id).toBeDefined()
     })
 
-    it('creates a note without a note text (note field is optional)', async () => {
+    it('creates an internal note without text', async () => {
       const report = await createReport(sc.dids.alice)
       const { data } = await createActivity({
         reportId: report.id,
-        action: 'note',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
       })
 
-      expect(data.activity.action).toBe('note')
-      expect(data.activity.note).toBeUndefined()
+      expect(data.activity.activity.$type).toBe(`${DEFS}#internalNoteActivity`)
+      expect(data.activity.internalNote).toBeUndefined()
     })
 
-    it('does not change report status when action is note', async () => {
+    it('does not change report status', async () => {
       const report = await createReport(sc.dids.alice)
       expect(report.status).toBe('open')
 
       await createActivity({
         reportId: report.id,
-        action: 'note',
-        note: 'Just noting this.',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'Just noting this.',
       })
 
       const { data: updated } = await agent.tools.ozone.report.getReport(
@@ -125,18 +128,46 @@ describe('report-activity', () => {
     })
   })
 
-  describe('createActivity — status_change valid transitions', () => {
-    it('open → closed', async () => {
+  describe('createActivity — publicNoteActivity', () => {
+    it('creates a public note with text', async () => {
       const report = await createReport(sc.dids.alice)
       const { data } = await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
+        activity: { $type: `${DEFS}#publicNoteActivity` },
+        publicNote: 'We have reviewed your report.',
       })
 
-      expect(data.activity.action).toBe('status_change')
-      expect(data.activity.fromState).toBe('open')
-      expect(data.activity.toState).toBe('closed')
+      expect(data.activity.activity.$type).toBe(`${DEFS}#publicNoteActivity`)
+      expect(data.activity.publicNote).toBe('We have reviewed your report.')
+      expect(data.activity.internalNote).toBeUndefined()
+    })
+
+    it('does not change report status', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#publicNoteActivity` },
+        publicNote: 'Thank you for your report.',
+      })
+
+      const { data: updated } = await agent.tools.ozone.report.getReport(
+        { id: report.id },
+        { headers: await modHeaders(ids.ToolsOzoneReportGetReport) },
+      )
+      expect(updated.status).toBe('open')
+    })
+  })
+
+  describe('createActivity — state-change activities (valid transitions)', () => {
+    it('open → closed (closeActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#closeActivity`)
+      expect(data.activity.activity.previousStatus).toBe('open')
 
       const { data: updated } = await agent.tools.ozone.report.getReport(
         { id: report.id },
@@ -145,22 +176,108 @@ describe('report-activity', () => {
       expect(updated.status).toBe('closed')
     })
 
-    it('closed → open (reopen)', async () => {
+    it('open → escalated (escalationActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#escalationActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#escalationActivity`)
+      expect(data.activity.activity.previousStatus).toBe('open')
+    })
+
+    it('open → queued (queueActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#queueActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#queueActivity`)
+      expect(data.activity.activity.previousStatus).toBe('open')
+    })
+
+    it('open → assigned (assignmentActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#assignmentActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#assignmentActivity`)
+      expect(data.activity.activity.previousStatus).toBe('open')
+    })
+
+    it('queued → assigned (assignmentActivity)', async () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
+        activity: { $type: `${DEFS}#queueActivity` },
       })
-
       const { data } = await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'open',
+        activity: { $type: `${DEFS}#assignmentActivity` },
       })
 
-      expect(data.activity.fromState).toBe('closed')
-      expect(data.activity.toState).toBe('open')
+      expect(data.activity.activity.previousStatus).toBe('queued')
+    })
+
+    it('escalated → closed (closeActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#escalationActivity` },
+      })
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+
+      expect(data.activity.activity.previousStatus).toBe('escalated')
+    })
+
+    it('assigned → closed (closeActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#assignmentActivity` },
+      })
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+
+      expect(data.activity.activity.previousStatus).toBe('assigned')
+    })
+
+    it('assigned → escalated (escalationActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#assignmentActivity` },
+      })
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#escalationActivity` },
+      })
+
+      expect(data.activity.activity.previousStatus).toBe('assigned')
+    })
+
+    it('closed → open (reopenActivity)', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#reopenActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#reopenActivity`)
+      expect(data.activity.activity.previousStatus).toBe('closed')
 
       const { data: updated } = await agent.tools.ozone.report.getReport(
         { id: report.id },
@@ -169,243 +286,67 @@ describe('report-activity', () => {
       expect(updated.status).toBe('open')
     })
 
-    it('open → escalated', async () => {
+    it('attaches internalNote and publicNote alongside a state-change', async () => {
       const report = await createReport(sc.dids.alice)
       const { data } = await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'escalated',
+        activity: { $type: `${DEFS}#closeActivity` },
+        internalNote: 'Confirmed spam internally.',
+        publicNote: 'We have closed your report.',
       })
 
-      expect(data.activity.fromState).toBe('open')
-      expect(data.activity.toState).toBe('escalated')
-    })
-
-    it('escalated → open', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'escalated',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'open',
-      })
-
-      expect(data.activity.fromState).toBe('escalated')
-      expect(data.activity.toState).toBe('open')
-    })
-
-    it('escalated → closed', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'escalated',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
-      })
-
-      expect(data.activity.fromState).toBe('escalated')
-      expect(data.activity.toState).toBe('closed')
-    })
-
-    it('open → queued', async () => {
-      const report = await createReport(sc.dids.alice)
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'queued',
-      })
-
-      expect(data.activity.fromState).toBe('open')
-      expect(data.activity.toState).toBe('queued')
-    })
-
-    it('queued → assigned', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'queued',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'assigned',
-      })
-
-      expect(data.activity.fromState).toBe('queued')
-      expect(data.activity.toState).toBe('assigned')
-    })
-
-    it('queued → open', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'queued',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'open',
-      })
-
-      expect(data.activity.fromState).toBe('queued')
-      expect(data.activity.toState).toBe('open')
-    })
-
-    it('assigned → open', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'assigned',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'open',
-      })
-
-      expect(data.activity.fromState).toBe('assigned')
-      expect(data.activity.toState).toBe('open')
-    })
-
-    it('assigned → closed', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'assigned',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
-      })
-
-      expect(data.activity.fromState).toBe('assigned')
-      expect(data.activity.toState).toBe('closed')
-    })
-
-    it('assigned → escalated', async () => {
-      const report = await createReport(sc.dids.alice)
-      await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'assigned',
-      })
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'escalated',
-      })
-
-      expect(data.activity.fromState).toBe('assigned')
-      expect(data.activity.toState).toBe('escalated')
-    })
-
-    it('includes optional note on a status_change', async () => {
-      const report = await createReport(sc.dids.alice)
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
-        note: 'Resolved — confirmed spam.',
-      })
-
-      expect(data.activity.toState).toBe('closed')
-      expect(data.activity.note).toBe('Resolved — confirmed spam.')
+      expect(data.activity.activity.$type).toBe(`${DEFS}#closeActivity`)
+      expect(data.activity.internalNote).toBe('Confirmed spam internally.')
+      expect(data.activity.publicNote).toBe('We have closed your report.')
     })
   })
 
-  describe('createActivity — updateStatus flag', () => {
-    it('does not update report.status when updateStatus is false', async () => {
+  describe('createActivity — AlreadyInTargetState', () => {
+    it('rejects when report is already in the target status', async () => {
       const report = await createReport(sc.dids.alice)
-      const { data } = await createActivity({
-        reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
-        updateStatus: false,
-      })
-
-      // Activity is logged
-      expect(data.activity.fromState).toBe('open')
-      expect(data.activity.toState).toBe('closed')
-
-      // Report status is unchanged
-      const { data: updated } = await agent.tools.ozone.report.getReport(
-        { id: report.id },
-        { headers: await modHeaders(ids.ToolsOzoneReportGetReport) },
-      )
-      expect(updated.status).toBe('open')
-    })
-  })
-
-  describe('createActivity — already in target state', () => {
-    it('rejects when report is already in the requested status', async () => {
-      const report = await createReport(sc.dids.alice)
-      // report starts as 'open'
-      await expect(
-        createActivity({
-          reportId: report.id,
-          action: 'status_change',
-          toState: 'open',
-        }),
-      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
-    })
-
-    it('rejects AlreadyInTargetState for non-open statuses too', async () => {
-      const report = await createReport(sc.dids.alice)
+      // Report starts as 'open', closeActivity targets 'closed'
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
+        activity: { $type: `${DEFS}#closeActivity` },
       })
       await expect(
         createActivity({
           reportId: report.id,
-          action: 'status_change',
-          toState: 'closed',
+          activity: { $type: `${DEFS}#closeActivity` },
         }),
       ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
     })
 
     it('does not record an activity when AlreadyInTargetState is thrown', async () => {
       const report = await createReport(sc.dids.alice)
-      await expect(
-        createActivity({
-          reportId: report.id,
-          action: 'status_change',
-          toState: 'open',
-        }),
-      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
-
-      const { data } = await listActivities({ reportId: report.id })
-      expect(data.activities).toHaveLength(0)
-    })
-  })
-
-  describe('createActivity — invalid transitions', () => {
-    it('rejects closed → escalated', async () => {
-      const report = await createReport(sc.dids.alice)
+      // queueActivity targets 'queued' — report already starts 'open' so first one works
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
+        activity: { $type: `${DEFS}#queueActivity` },
       })
       await expect(
         createActivity({
           reportId: report.id,
-          action: 'status_change',
-          toState: 'escalated',
+          activity: { $type: `${DEFS}#queueActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'AlreadyInTargetState' })
+
+      const { data } = await listActivities({ reportId: report.id })
+      expect(data.activities).toHaveLength(1)
+    })
+  })
+
+  describe('createActivity — InvalidStateTransition', () => {
+    it('rejects closed → escalated', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
+      })
+      await expect(
+        createActivity({
+          reportId: report.id,
+          activity: { $type: `${DEFS}#escalationActivity` },
         }),
       ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
     })
@@ -414,14 +355,12 @@ describe('report-activity', () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
+        activity: { $type: `${DEFS}#closeActivity` },
       })
       await expect(
         createActivity({
           reportId: report.id,
-          action: 'status_change',
-          toState: 'queued',
+          activity: { $type: `${DEFS}#queueActivity` },
         }),
       ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
     })
@@ -430,14 +369,12 @@ describe('report-activity', () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'escalated',
+        activity: { $type: `${DEFS}#escalationActivity` },
       })
       await expect(
         createActivity({
           reportId: report.id,
-          action: 'status_change',
-          toState: 'queued',
+          activity: { $type: `${DEFS}#queueActivity` },
         }),
       ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
     })
@@ -446,36 +383,59 @@ describe('report-activity', () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'queued',
+        activity: { $type: `${DEFS}#queueActivity` },
       })
       await expect(
         createActivity({
           reportId: report.id,
-          action: 'status_change',
-          toState: 'closed',
+          activity: { $type: `${DEFS}#closeActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
+    })
+
+    it('rejects reopenActivity on open report', async () => {
+      const report = await createReport(sc.dids.alice)
+      // report starts as 'open', reopenActivity only valid from 'closed'
+      await expect(
+        createActivity({
+          reportId: report.id,
+          activity: { $type: `${DEFS}#reopenActivity` },
+        }),
+      ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
+    })
+
+    it('rejects reopenActivity on escalated report', async () => {
+      const report = await createReport(sc.dids.alice)
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#escalationActivity` },
+      })
+      await expect(
+        createActivity({
+          reportId: report.id,
+          activity: { $type: `${DEFS}#reopenActivity` },
         }),
       ).rejects.toMatchObject({ error: 'InvalidStateTransition' })
     })
   })
 
   describe('createActivity — input validation errors', () => {
-    it('rejects status_change without toState', async () => {
+    it('rejects unknown activity type', async () => {
       const report = await createReport(sc.dids.alice)
       await expect(
         createActivity({
           reportId: report.id,
-          action: 'status_change',
+          activity: { $type: `${DEFS}#unknownActivity` },
         }),
-      ).rejects.toMatchObject({ error: 'MissingTargetState' })
+      ).rejects.toMatchObject({ error: 'InvalidActivityType' })
     })
 
     it('rejects unknown reportId', async () => {
       await expect(
         createActivity({
           reportId: 999999,
-          action: 'note',
-          note: 'Ghost report',
+          activity: { $type: `${DEFS}#internalNoteActivity` },
+          internalNote: 'Ghost report',
         }),
       ).rejects.toMatchObject({ error: 'ReportNotFound' })
     })
@@ -495,71 +455,66 @@ describe('report-activity', () => {
 
       await createActivity({
         reportId: report.id,
-        action: 'note',
-        note: 'First note',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'First note',
       })
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'escalated',
+        activity: { $type: `${DEFS}#escalationActivity` },
       })
       await createActivity({
         reportId: report.id,
-        action: 'note',
-        note: 'Third note',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'Third note',
       })
 
       const { data } = await listActivities({ reportId: report.id })
 
       expect(data.activities).toHaveLength(3)
-      // Most recent first — IDs should be descending
       expect(data.activities[0].id).toBeGreaterThan(data.activities[1].id)
       expect(data.activities[1].id).toBeGreaterThan(data.activities[2].id)
-      expect(data.activities[0].note).toBe('Third note')
-      expect(data.activities[2].note).toBe('First note')
+      expect(data.activities[0].internalNote).toBe('Third note')
+      expect(data.activities[2].internalNote).toBe('First note')
     })
 
     it('returns correct shape for each activity type', async () => {
       const report = await createReport(sc.dids.alice)
 
-      await createActivity({ reportId: report.id, action: 'note', note: 'n' })
       await createActivity({
         reportId: report.id,
-        action: 'status_change',
-        toState: 'closed',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'n',
+      })
+      await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#closeActivity` },
       })
 
       const { data } = await listActivities({ reportId: report.id })
-      const [statusChange, note] = data.activities // most-recent first
+      const [closeAct, noteAct] = data.activities // most-recent first
 
-      expect(statusChange.action).toBe('status_change')
-      expect(statusChange.fromState).toBe('open')
-      expect(statusChange.toState).toBe('closed')
-      expect(statusChange.note).toBeUndefined()
-      expect(statusChange.isAutomated).toBe(false)
+      expect(closeAct.activity.$type).toBe(`${DEFS}#closeActivity`)
+      expect(closeAct.activity.previousStatus).toBe('open')
+      expect(closeAct.internalNote).toBeUndefined()
+      expect(closeAct.isAutomated).toBe(false)
 
-      expect(note.action).toBe('note')
-      expect(note.fromState).toBeUndefined()
-      expect(note.toState).toBeUndefined()
-      expect(note.note).toBe('n')
+      expect(noteAct.activity.$type).toBe(`${DEFS}#internalNoteActivity`)
+      expect(noteAct.activity.previousStatus).toBeUndefined()
+      expect(noteAct.internalNote).toBe('n')
     })
 
     it('paginates correctly', async () => {
       const report = await createReport(sc.dids.alice)
 
-      // Create 5 activities
       for (let i = 0; i < 5; i++) {
         await createActivity({
           reportId: report.id,
-          action: 'note',
-          note: `Note ${i}`,
+          activity: { $type: `${DEFS}#internalNoteActivity` },
+          internalNote: `Note ${i}`,
         })
       }
 
-      const firstPage = await listActivities({
-        reportId: report.id,
-        limit: 2,
-      })
+      const firstPage = await listActivities({ reportId: report.id, limit: 2 })
       expect(firstPage.data.activities).toHaveLength(2)
       expect(firstPage.data.cursor).toBeDefined()
 
@@ -579,7 +534,6 @@ describe('report-activity', () => {
       expect(thirdPage.data.activities).toHaveLength(1)
       expect(thirdPage.data.cursor).toBeUndefined()
 
-      // No overlap between pages
       const allIds = [
         ...firstPage.data.activities,
         ...secondPage.data.activities,
@@ -594,13 +548,13 @@ describe('report-activity', () => {
 
       await createActivity({
         reportId: reportA.id,
-        action: 'note',
-        note: 'Note on A',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'Note on A',
       })
       await createActivity({
         reportId: reportB.id,
-        action: 'note',
-        note: 'Note on B',
+        activity: { $type: `${DEFS}#internalNoteActivity` },
+        internalNote: 'Note on B',
       })
 
       const { data } = await listActivities({ reportId: reportA.id })

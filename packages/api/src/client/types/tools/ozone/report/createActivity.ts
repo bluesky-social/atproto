@@ -21,20 +21,21 @@ export type QueryParams = {}
 export interface InputSchema {
   /** ID of the report to record activity on */
   reportId: number
-  /** Type of activity to record */
-  action: 'status_change' | 'note' | (string & {})
-  /** Target status. Required when action is status_change. */
-  toState?:
-    | 'open'
-    | 'closed'
-    | 'escalated'
-    | 'queued'
-    | 'assigned'
-    | (string & {})
-  /** Optional free-text note. Can accompany any action type. */
-  note?: string
-  /** When action is status_change, also update report.status to toState. Defaults to true. */
-  updateStatus?: boolean
+  activity:
+    | $Typed<ToolsOzoneReportDefs.QueueActivity>
+    | $Typed<ToolsOzoneReportDefs.AssignmentActivity>
+    | $Typed<ToolsOzoneReportDefs.EscalationActivity>
+    | $Typed<ToolsOzoneReportDefs.CloseActivity>
+    | $Typed<ToolsOzoneReportDefs.ReopenActivity>
+    | $Typed<ToolsOzoneReportDefs.InternalNoteActivity>
+    | $Typed<ToolsOzoneReportDefs.PublicNoteActivity>
+    | { $type: string }
+  /** Optional moderator-only note. Not visible to reporters. */
+  internalNote?: string
+  /** Optional public-facing note, potentially visible to the reporter. */
+  publicNote?: string
+  /** Set true when this activity is triggered by an automated process. Defaults to false. */
+  isAutomated?: boolean
 }
 
 export interface OutputSchema {
@@ -60,12 +61,6 @@ export class ReportNotFoundError extends XRPCError {
   }
 }
 
-export class MissingTargetStateError extends XRPCError {
-  constructor(src: XRPCError) {
-    super(src.status, src.error, src.message, src.headers, { cause: src })
-  }
-}
-
 export class InvalidStateTransitionError extends XRPCError {
   constructor(src: XRPCError) {
     super(src.status, src.error, src.message, src.headers, { cause: src })
@@ -81,7 +76,6 @@ export class AlreadyInTargetStateError extends XRPCError {
 export function toKnownErr(e: any) {
   if (e instanceof XRPCError) {
     if (e.error === 'ReportNotFound') return new ReportNotFoundError(e)
-    if (e.error === 'MissingTargetState') return new MissingTargetStateError(e)
     if (e.error === 'InvalidStateTransition')
       return new InvalidStateTransitionError(e)
     if (e.error === 'AlreadyInTargetState')

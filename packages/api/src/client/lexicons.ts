@@ -19308,44 +19308,45 @@ export const schemaDict = {
       main: {
         type: 'procedure',
         description:
-          'Register an activity on a report. For status_change actions, validates the transition and optionally updates report.status atomically.',
+          'Register an activity on a report. For state-change activity types, validates the transition and updates report.status atomically.',
         input: {
           encoding: 'application/json',
           schema: {
             type: 'object',
-            required: ['reportId', 'action'],
+            required: ['reportId', 'activity'],
             properties: {
               reportId: {
                 type: 'integer',
                 description: 'ID of the report to record activity on',
               },
-              action: {
-                type: 'string',
-                knownValues: ['status_change', 'note'],
-                description: 'Type of activity to record',
-              },
-              toState: {
-                type: 'string',
-                knownValues: [
-                  'open',
-                  'closed',
-                  'escalated',
-                  'queued',
-                  'assigned',
+              activity: {
+                type: 'union',
+                refs: [
+                  'lex:tools.ozone.report.defs#queueActivity',
+                  'lex:tools.ozone.report.defs#assignmentActivity',
+                  'lex:tools.ozone.report.defs#escalationActivity',
+                  'lex:tools.ozone.report.defs#closeActivity',
+                  'lex:tools.ozone.report.defs#reopenActivity',
+                  'lex:tools.ozone.report.defs#internalNoteActivity',
+                  'lex:tools.ozone.report.defs#publicNoteActivity',
                 ],
-                description:
-                  'Target status. Required when action is status_change.',
+                description: 'The type of activity to record.',
               },
-              note: {
+              internalNote: {
                 type: 'string',
                 description:
-                  'Optional free-text note. Can accompany any action type.',
+                  'Optional moderator-only note. Not visible to reporters.',
               },
-              updateStatus: {
+              publicNote: {
+                type: 'string',
+                description:
+                  'Optional public-facing note, potentially visible to the reporter.',
+              },
+              isAutomated: {
                 type: 'boolean',
                 description:
-                  'When action is status_change, also update report.status to toState. Defaults to true.',
-                default: true,
+                  'Set true when this activity is triggered by an automated process. Defaults to false.',
+                default: false,
               },
             },
           },
@@ -19369,17 +19370,14 @@ export const schemaDict = {
             description: 'No report exists with the given reportId',
           },
           {
-            name: 'MissingTargetState',
-            description: 'toState is required when action is status_change',
-          },
-          {
             name: 'InvalidStateTransition',
             description:
               "The requested state transition is not permitted from the report's current status",
           },
           {
             name: 'AlreadyInTargetState',
-            description: 'The report is already in the requested status',
+            description:
+              'The report is already in the status implied by this activity type',
           },
         ],
       },
@@ -19728,14 +19726,80 @@ export const schemaDict = {
           },
         },
       },
-      reportActivityView: {
+      queueActivity: {
+        type: 'object',
+        description: 'Activity recording a report being routed to a queue.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      assignmentActivity: {
         type: 'object',
         description:
-          'A single activity entry on a report, capturing state transitions or internal notes.',
+          'Activity recording a moderator being assigned to a report.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      escalationActivity: {
+        type: 'object',
+        description: 'Activity recording a report being escalated.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      closeActivity: {
+        type: 'object',
+        description: 'Activity recording a report being closed.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      reopenActivity: {
+        type: 'object',
+        description:
+          "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
+        properties: {},
+      },
+      internalNoteActivity: {
+        type: 'object',
+        description:
+          'Activity recording an internal moderator-only note on a report.',
+        properties: {},
+      },
+      publicNoteActivity: {
+        type: 'object',
+        description:
+          'Activity recording a public-facing note on a report, potentially visible to the reporter.',
+        properties: {},
+      },
+      reportActivityView: {
+        type: 'object',
+        description: 'A single activity entry on a report.',
         required: [
           'id',
           'reportId',
-          'action',
+          'activity',
           'isAutomated',
           'createdBy',
           'createdAt',
@@ -19749,32 +19813,33 @@ export const schemaDict = {
             type: 'integer',
             description: 'ID of the report this activity belongs to',
           },
-          action: {
-            type: 'string',
-            knownValues: ['status_change', 'note'],
-            description: 'Type of activity',
+          activity: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.report.defs#queueActivity',
+              'lex:tools.ozone.report.defs#assignmentActivity',
+              'lex:tools.ozone.report.defs#escalationActivity',
+              'lex:tools.ozone.report.defs#closeActivity',
+              'lex:tools.ozone.report.defs#reopenActivity',
+              'lex:tools.ozone.report.defs#internalNoteActivity',
+              'lex:tools.ozone.report.defs#publicNoteActivity',
+            ],
+            description: 'The typed activity object describing what occurred.',
           },
-          fromState: {
-            type: 'string',
-            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
-            description:
-              'Status before the transition. Only set for status_change actions.',
-          },
-          toState: {
-            type: 'string',
-            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
-            description:
-              'Status after the transition. Only set for status_change actions.',
-          },
-          note: {
+          internalNote: {
             type: 'string',
             description:
-              'Optional free-text note. Can accompany any action type.',
+              'Optional moderator-only note. Not visible to reporters.',
+          },
+          publicNote: {
+            type: 'string',
+            description:
+              'Optional public note, potentially visible to the reporter.',
           },
           meta: {
             type: 'unknown',
             description:
-              'Extensible JSON payload for future action-specific metadata.',
+              'Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId).',
           },
           isAutomated: {
             type: 'boolean',

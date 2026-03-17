@@ -376,10 +376,10 @@ export class QueueService {
           .values(
             allMatched.map((r) => ({
               reportId: r.id,
-              action: 'status_change',
-              fromState: r.fromStatus,
-              toState: 'queued',
-              note: null,
+              activityType: 'queueActivity',
+              previousStatus: r.fromStatus,
+              internalNote: null,
+              publicNote: null,
               meta: null,
               isAutomated: true,
               createdBy: opts.serviceDid!,

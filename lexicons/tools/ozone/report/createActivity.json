@@ -4,41 +4,42 @@
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Register an activity on a report. For status_change actions, validates the transition and optionally updates report.status atomically.",
+      "description": "Register an activity on a report. For state-change activity types, validates the transition and updates report.status atomically.",
       "input": {
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["reportId", "action"],
+          "required": ["reportId", "activity"],
           "properties": {
             "reportId": {
               "type": "integer",
               "description": "ID of the report to record activity on"
             },
-            "action": {
-              "type": "string",
-              "knownValues": ["status_change", "note"],
-              "description": "Type of activity to record"
-            },
-            "toState": {
-              "type": "string",
-              "knownValues": [
-                "open",
-                "closed",
-                "escalated",
-                "queued",
-                "assigned"
+            "activity": {
+              "type": "union",
+              "refs": [
+                "tools.ozone.report.defs#queueActivity",
+                "tools.ozone.report.defs#assignmentActivity",
+                "tools.ozone.report.defs#escalationActivity",
+                "tools.ozone.report.defs#closeActivity",
+                "tools.ozone.report.defs#reopenActivity",
+                "tools.ozone.report.defs#internalNoteActivity",
+                "tools.ozone.report.defs#publicNoteActivity"
               ],
-              "description": "Target status. Required when action is status_change."
+              "description": "The type of activity to record."
             },
-            "note": {
+            "internalNote": {
               "type": "string",
-              "description": "Optional free-text note. Can accompany any action type."
+              "description": "Optional moderator-only note. Not visible to reporters."
             },
-            "updateStatus": {
+            "publicNote": {
+              "type": "string",
+              "description": "Optional public-facing note, potentially visible to the reporter."
+            },
+            "isAutomated": {
               "type": "boolean",
-              "description": "When action is status_change, also update report.status to toState. Defaults to true.",
-              "default": true
+              "description": "Set true when this activity is triggered by an automated process. Defaults to false.",
+              "default": false
             }
           }
         }
@@ -62,16 +63,12 @@
           "description": "No report exists with the given reportId"
         },
         {
-          "name": "MissingTargetState",
-          "description": "toState is required when action is status_change"
-        },
-        {
           "name": "InvalidStateTransition",
           "description": "The requested state transition is not permitted from the report's current status"
         },
         {
           "name": "AlreadyInTargetState",
-          "description": "The report is already in the requested status"
+          "description": "The report is already in the status implied by this activity type"
         }
       ]
     }

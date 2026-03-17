@@ -2,6 +2,29 @@ import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 
+export type ActivityType =
+  | 'queueActivity'
+  | 'assignmentActivity'
+  | 'escalationActivity'
+  | 'closeActivity'
+  | 'reopenActivity'
+  | 'internalNoteActivity'
+  | 'publicNoteActivity'
+
+// State-change activity types and the status they transition the report to
+const ACTIVITY_TO_STATE: Record<string, string> = {
+  queueActivity: 'queued',
+  assignmentActivity: 'assigned',
+  escalationActivity: 'escalated',
+  closeActivity: 'closed',
+  reopenActivity: 'open',
+}
+
+// For activity types that are only valid from specific source states
+const ACTIVITY_VALID_FROM_STATES: Record<string, string[]> = {
+  reopenActivity: ['closed'],
+}
+
 // Valid state transitions: key = fromState, value = allowed toStates
 const VALID_TRANSITIONS: Record<string, string[]> = {
   open: ['closed', 'escalated', 'queued', 'assigned'],
@@ -13,12 +36,11 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 export type CreateActivityParams = {
   reportId: number
-  action: string
-  toState?: string
-  note?: string
-  /** Whether to also update report.status when action is status_change. Defaults to true. */
-  updateStatus?: boolean
-  /** Set true for activities created by automated processes (e.g. queue router, assignment handler). */
+  activityType: ActivityType
+  internalNote?: string
+  publicNote?: string
+  meta?: Record<string, unknown>
+  /** Set true for activities created by automated processes (e.g. queue router). */
   isAutomated?: boolean
   createdBy: string
 }
@@ -29,21 +51,15 @@ export async function createReportActivity(
 ) {
   const {
     reportId,
-    action,
-    toState,
-    note,
-    updateStatus = true,
+    activityType,
+    internalNote,
+    publicNote,
+    meta,
     isAutomated = false,
     createdBy,
   } = params
 
-  // Validate inputs that don't require DB access before opening the transaction
-  if (action === 'status_change' && !toState) {
-    throw new InvalidRequestError(
-      'toState is required when action is status_change',
-      'MissingTargetState',
-    )
-  }
+  const toState = ACTIVITY_TO_STATE[activityType] ?? null
 
   return db.transaction(async (dbTxn) => {
     // Lock the report row for the duration of the transaction to prevent
@@ -63,41 +79,46 @@ export async function createReportActivity(
       )
     }
 
-    const fromState = report.status
+    const previousStatus = report.status
     const now = new Date().toISOString()
 
-    if (action === 'status_change') {
-      if (fromState === toState) {
+    if (toState !== null) {
+      const validFromStates = ACTIVITY_VALID_FROM_STATES[activityType]
+      if (validFromStates && !validFromStates.includes(previousStatus)) {
+        throw new InvalidRequestError(
+          `Cannot transition report from '${previousStatus}' to '${toState}'`,
+          'InvalidStateTransition',
+        )
+      }
+      if (previousStatus === toState) {
         throw new InvalidRequestError(
           `Report is already in '${toState}' status`,
           'AlreadyInTargetState',
         )
       }
-      const allowed = VALID_TRANSITIONS[fromState] ?? []
-      if (!allowed.includes(toState!)) {
+      const allowed = VALID_TRANSITIONS[previousStatus] ?? []
+      if (!allowed.includes(toState)) {
         throw new InvalidRequestError(
-          `Cannot transition report from '${fromState}' to '${toState}'`,
+          `Cannot transition report from '${previousStatus}' to '${toState}'`,
           'InvalidStateTransition',
         )
       }
-      if (updateStatus) {
-        await dbTxn.db
-          .updateTable('report')
-          .set({ status: toState!, updatedAt: now })
-          .where('id', '=', reportId)
-          .execute()
-      }
+      await dbTxn.db
+        .updateTable('report')
+        .set({ status: toState, updatedAt: now })
+        .where('id', '=', reportId)
+        .execute()
     }
 
     const [activity] = await dbTxn.db
       .insertInto('report_activity')
       .values({
         reportId,
-        action,
-        fromState: action === 'status_change' ? fromState : null,
-        toState: action === 'status_change' ? toState ?? null : null,
-        note: note ?? null,
-        meta: null,
+        activityType,
+        previousStatus: toState !== null ? previousStatus : null,
+        internalNote: internalNote ?? null,
+        publicNote: publicNote ?? null,
+        meta: meta ?? null,
         isAutomated,
         createdBy,
         createdAt: now,
@@ -111,10 +132,11 @@ export async function createReportActivity(
 
 export type BulkActivityInsert = {
   reportId: number
-  action: string
-  fromState: string | null
-  toState: string | null
-  note?: string
+  activityType: string
+  previousStatus: string | null
+  internalNote?: string
+  publicNote?: string
+  meta?: unknown
   isAutomated: boolean
   createdBy: string
   createdAt: string
@@ -134,11 +156,11 @@ export async function bulkInsertReportActivities(
     .values(
       activities.map((a) => ({
         reportId: a.reportId,
-        action: a.action,
-        fromState: a.fromState,
-        toState: a.toState,
-        note: a.note ?? null,
-        meta: null,
+        activityType: a.activityType,
+        previousStatus: a.previousStatus,
+        internalNote: a.internalNote ?? null,
+        publicNote: a.publicNote ?? null,
+        meta: a.meta ?? null,
         isAutomated: a.isAutomated,
         createdBy: a.createdBy,
         createdAt: a.createdAt,
@@ -186,13 +208,24 @@ export async function listReportActivities(
   return { activities, cursor: nextCursor }
 }
 
+function buildActivityObject(
+  activityType: string,
+  previousStatus: string | null,
+): { $type: string; [k: string]: unknown } {
+  const $type = `tools.ozone.report.defs#${activityType}`
+  if (previousStatus !== null) {
+    return { $type, previousStatus }
+  }
+  return { $type }
+}
+
 export function formatActivityView(activity: {
   id: number
   reportId: number
-  action: string
-  fromState: string | null
-  toState: string | null
-  note: string | null
+  activityType: string
+  previousStatus: string | null
+  internalNote: string | null
+  publicNote: string | null
   meta: unknown
   isAutomated: boolean
   createdBy: string
@@ -201,10 +234,12 @@ export function formatActivityView(activity: {
   return {
     id: activity.id,
     reportId: activity.reportId,
-    action: activity.action,
-    fromState: activity.fromState ?? undefined,
-    toState: activity.toState ?? undefined,
-    note: activity.note ?? undefined,
+    activity: buildActivityObject(
+      activity.activityType,
+      activity.previousStatus,
+    ),
+    internalNote: activity.internalNote ?? undefined,
+    publicNote: activity.publicNote ?? undefined,
     meta: (activity.meta as Record<string, unknown>) ?? undefined,
     isAutomated: activity.isAutomated,
     createdBy: activity.createdBy,

@@ -5,11 +5,13 @@ export const reportActivityTableName = 'report_activity'
 export interface ReportActivity {
   id: Generated<number>
   reportId: number
-  action: string // 'status_change' | 'note'
-  fromState: string | null // previous status, only set for status_change actions
-  toState: string | null // new status, only set for status_change actions
-  note: string | null
-  meta: unknown | null
+  // One of: queueActivity | assignmentActivity | escalationActivity
+  //         | closeActivity | internalNoteActivity | publicNoteActivity
+  activityType: string
+  previousStatus: string | null // report status before this activity; null for note-only types
+  internalNote: string | null // moderator-only note
+  publicNote: string | null // potentially reporter-visible note
+  meta: unknown | null // loose activity-specific metadata (e.g. { assignmentId: 42 })
   isAutomated: boolean
   createdBy: string // DID of actor (or service DID for automated activities)
   createdAt: string // ISO string
