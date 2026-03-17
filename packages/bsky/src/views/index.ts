@@ -5,7 +5,7 @@ import { FeedItem, Like, Post, Repost } from '../hydration/feed'
 import { Follow, Verification } from '../hydration/graph'
 import { HydrationState } from '../hydration/hydrator'
 import { Label } from '../hydration/label'
-import { RecordInfo, parseDate } from '../hydration/util'
+import { RecordInfo } from '../hydration/util'
 import { ImageUriBuilder } from '../image/uri'
 import { ids } from '../lexicon/lexicons'
 import {
@@ -318,16 +318,14 @@ export class Views {
     if (!actor) return
     const basicView = this.profileBasic(did, state)
     if (!basicView) return
-    const indexedAt = parseDate(actor.indexedAt)
-    const sortedAt = parseDate(actor.sortedAt)
     return {
       ...basicView,
       description: actor.profile?.description || undefined,
       indexedAt:
-        indexedAt && sortedAt
+        actor.indexedAt && actor.sortedAt
           ? this.indexedAt({
-              sortedAt,
-              indexedAt,
+              sortedAt: actor.sortedAt,
+              indexedAt: actor.indexedAt,
             }).toISOString()
           : undefined,
     }
@@ -384,7 +382,7 @@ export class Views {
       },
       viewer: this.profileViewer(did, state),
       labels,
-      createdAt: parseDate(actor.createdAt)?.toISOString(),
+      createdAt: actor.createdAt?.toISOString(),
       verification: this.verification(did, state),
       status: this.status(did, state),
       debug: state.ctx?.includeDebugField ? actor.debug : undefined,
@@ -565,8 +563,7 @@ export class Views {
 
     const isViewerStatusOwner = did === state.ctx?.viewer
     const { status } = actor
-    const { record, cid, takedownRef } = status
-    const sortedAt = parseDate(status.sortedAt)
+    const { record, sortedAt, cid, takedownRef } = status
     const isTakenDown = !!takedownRef
 
     /*
@@ -583,14 +580,13 @@ export class Views {
     const minDuration = 5 * MINUTE
     const maxDuration = 4 * HOUR
 
-    const expiresAtMs =
-      record.durationMinutes && sortedAt != null
-        ? sortedAt.getTime() +
-          Math.max(
-            Math.min(record.durationMinutes * MINUTE, maxDuration),
-            minDuration,
-          )
-        : undefined
+    const expiresAtMs = record.durationMinutes
+      ? sortedAt.getTime() +
+        Math.max(
+          Math.min(record.durationMinutes * MINUTE, maxDuration),
+          minDuration,
+        )
+      : undefined
     const expiresAt = expiresAtMs
       ? new Date(expiresAtMs).toISOString()
       : undefined
@@ -1142,7 +1138,7 @@ export class Views {
 
     const item = this.maybePost(bookmark.subjectUri, state)
     return {
-      createdAt: parseDate(bookmark.indexedAt?.toDate())?.toISOString(),
+      createdAt: bookmark.indexedAt?.toISOString(),
       subject: {
         uri: bookmark.subjectUri,
         cid: bookmark.subjectCid,

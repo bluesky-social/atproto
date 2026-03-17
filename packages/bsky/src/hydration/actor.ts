@@ -216,7 +216,9 @@ export class ActorHydrator {
               uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
               handle: verificationMeta.handle,
               displayName: verificationMeta.displayName,
-              createdAt: verificationMeta.sortedAt.toDate().toISOString(),
+              createdAt:
+                parseDate(verificationMeta.sortedAt.toDate())?.toISOString() ??
+                new Date(0).toISOString(),
             }
           }
           // Filter out the verification meta that doesn't contain all info.
@@ -250,8 +252,8 @@ export class ActorHydrator {
         profile: profile?.record,
         profileCid: profile?.cid,
         profileTakedownRef: profile?.takedownRef,
-        sortedAt: profile?.sortedAt,
-        indexedAt: profile?.indexedAt,
+        sortedAt: parseDate(profile?.sortedAt),
+        indexedAt: parseDate(profile?.indexedAt),
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
