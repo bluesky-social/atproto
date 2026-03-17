@@ -297,7 +297,7 @@ type Result<V> = FailureResult | SuccessResult<V>
  * ```
  */
 const DATETIME_REGEX =
-  /^(?<full_year>[0-9]{4})-(?<date_month>0[1-9]|1[012])-(?<date_mday>[0-2][0-9]|3[01])T(?<time_hour>[0-1][0-9]|2[0-3]):(?<time_minute>[0-5][0-9]):(?<time_second>[0-5][0-9]|60)(?<time_secfrac>\.[0-9]+)?(?<time_offset>Z|(?<time_numoffset>[+-](?:[0-1][0-9]|2[0-3]):[0-5][0-9]))$/
+  /^(?<full_year>[0-9]{4})-(?!00)(?<date_month>0[1-9]|1[012])-(?!00)(?<date_mday>[0-2][0-9]|3[01])T(?<time_hour>[0-1][0-9]|2[0-3]):(?<time_minute>[0-5][0-9]):(?<time_second>[0-5][0-9]|60)(?<time_secfrac>\.[0-9]+)?(?<time_offset>Z|(?<time_numoffset>[+-](?:[0-1][0-9]|2[0-3]):[0-5][0-9]))$/
 
 /**
  * Validates that the input is a datetime string according to atproto Lexicon
@@ -314,26 +314,46 @@ function parseDatetimeString(input: unknown): Result<DatetimeString> {
   if (input.endsWith('-00:00')) {
     return failure('datetime can not use "-00:00" for UTC timezone')
   }
-  if (!DATETIME_REGEX.test(input)) {
+  const matches = input.match(DATETIME_REGEX)
+  if (!matches) {
     return failure(
       "datetime is not in a valid format (must match RFC 3339 & ISO 8601 with 'Z' or ±hh:mm timezone)",
     )
   }
 
-  // must parse as ISO 8601; this also verifies semantics like leap seconds and
-  // correct number of days in month, which the regex does not check for
-  const date = new Date(input)
-  if (Number.isNaN(date.getTime())) {
-    return failure('datetime did not parse as ISO 8601')
+  const { full_year, date_month, date_mday, time_second } = matches.groups!
+
+  // @NOTE JS will allow parsing of some invalid calendar dates (e.g. new
+  // Date("2024-02-30T00:00:00Z") will parse as "2024-03-01T00:00:00Z"), but RFC
+  // 3339 requires that the calendar date is valid, so we need to check this
+  // here.
+  if (date_mday > '28' && date_mday > getMaxMonthDay(full_year, date_month)) {
+    return failure(
+      `datetime has invalid calendar date ${full_year}-${date_month}-${date_mday}`,
+    )
   }
 
-  // @NOTE we are *not* checking the getUTCFullYear() value here, only that the
-  // datetime syntax is valid (the regexp enforces 4 years digits). This means
-  // that dates at the boundary of 4 digits years might have a normalized value
-  // that is not a valid datetime (e.g. "0000-01-01T00:00:00+23:59",
-  // "9999-12-31T23:59:59.999-23:59").
+  // While technically valid according to RFC 3339, leap seconds are not
+  // supported by the JS Date parser, and thus we reject them here to avoid
+  // confusion and potential downstream issues.
+  if (time_second === '60') {
+    return failure('datetime does not support leap seconds')
+  }
 
   return success(input as DatetimeString)
+}
+
+function getMaxMonthDay(year: string, month: string): string {
+  if (month === '02') {
+    const y = Number(year)
+    // https://www.rfc-editor.org/rfc/rfc3339#appendix-C
+    const isLeapYear = y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)
+    return isLeapYear ? '29' : '28'
+  }
+  if (month === '04' || month === '06' || month === '09' || month === '11') {
+    return '30'
+  }
+  return '31'
 }
 
 /**
