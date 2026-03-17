@@ -36,7 +36,8 @@ export const nullDiff = async (
     return diff
   }
   const diff = new DataDiff({ trackPreorder: true })
-  const walker = new MstWalker(tree)
+  const treeLayer = await tree.getLayer()
+  const walker = new MstWalker(tree, treeLayer)
   while (!walker.status.done) {
     const curr = walker.status.curr
     const layer = walker.layer() - 1
@@ -67,8 +68,10 @@ export const mstDiff = async (
   await prev.getPointer()
   const diff = new DataDiff({ trackPreorder })
 
-  const leftWalker = new MstWalker(prev)
-  const rightWalker = new MstWalker(curr)
+  const currLayer = await curr.getLayer()
+  const prevLayer = await prev.getLayer()
+  const leftWalker = new MstWalker(prev, prevLayer)
+  const rightWalker = new MstWalker(curr, currLayer)
   while (!leftWalker.status.done || !rightWalker.status.done) {
     // if one walker is finished, continue walking the other & logging all nodes
     if (leftWalker.status.done && !rightWalker.status.done) {
@@ -166,7 +169,7 @@ export const mstDiff = async (
     if (left.isTree() && right.isTree()) {
       if (left.pointer.equals(right.pointer)) {
         if (diff.trackPreorder) {
-          // Unchanged subtree — but lpath may have changed
+          // Unchanged subtree - but lpath may have changed
           if (leftWalker.lastLeafKey !== rightWalker.lastLeafKey) {
             await emitLpathFixups(
               diff,
