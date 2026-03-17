@@ -217,7 +217,7 @@ export class ActorHydrator {
               handle: verificationMeta.handle,
               displayName: verificationMeta.displayName,
               createdAt:
-                parseDate(verificationMeta.sortedAt.toDate())?.toISOString() ??
+                parseDate(verificationMeta.sortedAt)?.toISOString() ??
                 new Date(0).toISOString(),
             }
           }
@@ -252,13 +252,13 @@ export class ActorHydrator {
         profile: profile?.record,
         profileCid: profile?.cid,
         profileTakedownRef: profile?.takedownRef,
-        sortedAt: parseDate(profile?.sortedAt),
-        indexedAt: parseDate(profile?.indexedAt),
+        sortedAt: profile?.sortedAt,
+        indexedAt: profile?.indexedAt,
         takedownRef: safeTakedownRef(actor),
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
-        createdAt: parseDate(actor.createdAt?.toDate()),
+        createdAt: parseDate(actor.createdAt),
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
