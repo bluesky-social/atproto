@@ -1,8 +1,10 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import {
   HydrationMap,
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
+  parseDate,
 } from '../../src/hydration/util'
 
 const mapToObj = (map: HydrationMap<any>) => {
@@ -78,5 +80,43 @@ describe('hydration util', () => {
     const merged = mergeNestedMaps(a, b)
 
     expect(mapToObj(merged!)).toEqual(mapToObj(compare))
+  })
+
+  describe('parseDate', () => {
+    it('returns undefined for undefined input', () => {
+      expect(parseDate(undefined)).toBeUndefined()
+    })
+
+    it('returns undefined for Go zero-value date (year 0001)', () => {
+      // Go zero-value for time.Time is 0001-01-01 00:00:00 UTC
+      // which is -62135596800000ms from epoch
+      const goZeroDate = new Date(-62135596800000)
+      const goZeroTimestamp = Timestamp.fromDate(goZeroDate)
+      expect(parseDate(goZeroTimestamp)).toBeUndefined()
+    })
+
+    it('returns the date for valid dates', () => {
+      const validDate = new Date('2024-01-01T00:00:00Z')
+      const validTimestamp = Timestamp.fromDate(validDate)
+      expect(parseDate(validTimestamp)).toEqual(validDate)
+    })
+
+    it('returns the date for dates close to but not equal to Go zero-value', () => {
+      const nearZeroDate = new Date(-62135596800000 + 1000) // 1 second after
+      const nearZeroTimestamp = Timestamp.fromDate(nearZeroDate)
+      expect(parseDate(nearZeroTimestamp)).toEqual(nearZeroDate)
+    })
+
+    it('returns the date for epoch (1970-01-01)', () => {
+      const epochDate = new Date(0)
+      const epochTimestamp = Timestamp.fromDate(epochDate)
+      expect(parseDate(epochTimestamp)).toEqual(epochDate)
+    })
+
+    it('returns the date for recent dates', () => {
+      const recentDate = new Date('2026-03-17T00:00:00Z')
+      const recentTimestamp = Timestamp.fromDate(recentDate)
+      expect(parseDate(recentTimestamp)).toEqual(recentDate)
+    })
   })
 })

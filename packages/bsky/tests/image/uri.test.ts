@@ -1,6 +1,5 @@
 import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
-import { FeatureGatesClient } from '../../src/feature-gates'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {
@@ -29,12 +28,12 @@ describe('image uri builder', () => {
 
   it('generates uris.', () => {
     expect(uriBuilder.getPresetUri('banner', did, cid.toString())).toEqual(
-      `https://example.com/img/banner/plain/${did}/${cid.toString()}@jpeg`,
+      `https://example.com/img/banner/plain/${did}/${cid.toString()}`,
     )
     expect(
       uriBuilder.getPresetUri('feed_thumbnail', did, cid.toString()),
     ).toEqual(
-      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`,
+      `https://example.com/img/feed_thumbnail/plain/${did}/${cid.toString()}`,
     )
   })
 
@@ -73,37 +72,12 @@ describe('image uri builder', () => {
       did: 'did:plc:xyz',
       cid: cid.toString(),
       fit: 'inside',
-      format: 'jpeg',
+      format: 'webp',
       height: 2000,
       min: true,
       preset: 'feed_thumbnail',
       width: 2000,
     })
-  })
-
-  it('includes format based on feature gate', () => {
-    const testDid = 'did:example:alice'
-    const testCid = 'bafkabc'
-    const base = `https://example.com/img/avatar/plain/${testDid}`
-
-    const mockFeatureGates = {
-      checkGates: jest.fn(),
-    } as unknown as FeatureGatesClient
-    const mockCheckGates = mockFeatureGates.checkGates as jest.Mock
-
-    mockCheckGates.mockImplementation(() => {
-      return new Map([['image:remove_format_from_url', false]])
-    })
-    expect(
-      uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
-    ).toBe(`${base}/${testCid}@jpeg`)
-
-    mockCheckGates.mockReturnValue(
-      new Map([['image:remove_format_from_url', true]]),
-    )
-    expect(
-      uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
-    ).toBe(`${base}/${testCid}`)
   })
 
   it('errors on bad url pattern.', () => {

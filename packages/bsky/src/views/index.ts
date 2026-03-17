@@ -281,7 +281,6 @@ export class Views {
             'banner',
             did,
             cidFromBlobJson(actor.profile.banner),
-            state.ctx?.featureGatesClient,
           )
         : undefined,
       followersCount: profileAggs?.followers ?? 0,
@@ -361,7 +360,6 @@ export class Views {
             'avatar',
             did,
             cidFromBlobJson(actor.profile.avatar),
-            state.ctx?.featureGatesClient,
           )
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
@@ -599,7 +597,7 @@ export class Views {
       record: record,
       status: record.status,
       embed: isExternalEmbed(record.embed)
-        ? this.externalEmbed(did, record.embed, state)
+        ? this.externalEmbed(did, record.embed)
         : undefined,
       expiresAt,
       isActive,
@@ -669,7 +667,6 @@ export class Views {
             'avatar',
             creator,
             cidFromBlobJson(list.record.avatar),
-            state.ctx?.featureGatesClient,
           )
         : undefined,
       listItemCount: listAgg?.listItems ?? 0,
@@ -906,7 +903,6 @@ export class Views {
             'avatar',
             creatorDid,
             cidFromBlobJson(feedgen.record.avatar),
-            state.ctx?.featureGatesClient,
           )
         : undefined,
       likeCount: aggs?.likes ?? 0,
@@ -1138,7 +1134,7 @@ export class Views {
 
     const item = this.maybePost(bookmark.subjectUri, state)
     return {
-      createdAt: bookmark.indexedAt?.toDate().toISOString(),
+      createdAt: bookmark.indexedAt?.toISOString(),
       subject: {
         uri: bookmark.subjectUri,
         cid: bookmark.subjectCid,
@@ -2052,11 +2048,11 @@ export class Views {
     depth: number,
   ): $Typed<EmbedView> | undefined {
     if (isImagesEmbed(embed)) {
-      return this.imagesEmbed(creatorFromUri(postUri), embed, state)
+      return this.imagesEmbed(creatorFromUri(postUri), embed)
     } else if (isVideoEmbed(embed)) {
       return this.videoEmbed(creatorFromUri(postUri), embed)
     } else if (isExternalEmbed(embed)) {
-      return this.externalEmbed(creatorFromUri(postUri), embed, state)
+      return this.externalEmbed(creatorFromUri(postUri), embed)
     } else if (isRecordEmbed(embed)) {
       return this.recordEmbed(postUri, embed, state, depth)
     } else if (isRecordWithMedia(embed)) {
@@ -2066,23 +2062,17 @@ export class Views {
     }
   }
 
-  imagesEmbed(
-    did: string,
-    embed: ImagesEmbed,
-    state: HydrationState,
-  ): $Typed<ImagesEmbedView> {
+  imagesEmbed(did: string, embed: ImagesEmbed): $Typed<ImagesEmbedView> {
     const imgViews = embed.images.map((img) => ({
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
         did,
         cidFromBlobJson(img.image),
-        state.ctx?.featureGatesClient,
       ),
       fullsize: this.imgUriBuilder.getPresetUri(
         'feed_fullsize',
         did,
         cidFromBlobJson(img.image),
-        state.ctx?.featureGatesClient,
       ),
       alt: img.alt,
       aspectRatio: img.aspectRatio,
@@ -2106,11 +2096,7 @@ export class Views {
     }
   }
 
-  externalEmbed(
-    did: string,
-    embed: ExternalEmbed,
-    state: HydrationState,
-  ): $Typed<ExternalEmbedView> {
+  externalEmbed(did: string, embed: ExternalEmbed): $Typed<ExternalEmbedView> {
     const { uri, title, description, thumb } = embed.external
     return {
       $type: 'app.bsky.embed.external#view',
@@ -2123,7 +2109,6 @@ export class Views {
               'feed_thumbnail',
               did,
               cidFromBlobJson(thumb),
-              state.ctx?.featureGatesClient,
             )
           : undefined,
       },
@@ -2301,11 +2286,11 @@ export class Views {
       | $Typed<VideoEmbedView>
       | $Typed<ExternalEmbedView>
     if (isImagesEmbed(embed.media)) {
-      mediaEmbed = this.imagesEmbed(creator, embed.media, state)
+      mediaEmbed = this.imagesEmbed(creator, embed.media)
     } else if (isVideoEmbed(embed.media)) {
       mediaEmbed = this.videoEmbed(creator, embed.media)
     } else if (isExternalEmbed(embed.media)) {
-      mediaEmbed = this.externalEmbed(creator, embed.media, state)
+      mediaEmbed = this.externalEmbed(creator, embed.media)
     } else {
       return
     }
