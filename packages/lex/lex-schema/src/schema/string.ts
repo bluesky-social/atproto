@@ -119,7 +119,7 @@ export class StringSchema<
     }
 
     const format = this.options.format
-    if (format != null && !isStringFormat(str, format, ctx.options)) {
+    if (format != null && !isStringFormat(str, format)) {
       return ctx.issueInvalidFormat(str, format)
     }
 

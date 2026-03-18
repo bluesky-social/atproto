@@ -38,7 +38,6 @@
     "@atproto/syntax": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@standard-schema/spec": "^1.1.0",
-    "iso-datestring-validator": "^2.2.2",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
