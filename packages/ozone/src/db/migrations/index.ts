@@ -37,3 +37,4 @@ export * as _20260210T154806448Z from './20260210T154806448Z-mod-event-created-b
 export * as _20260209T164523000Z from './20260219T164523000Z-create-report-table'
 export * as _20260219T165302248Z from './20260219T165302248Z-moderator-assignment'
 export * as _20260225T000000000Z from './20260225T000000000Z-add-report-queue-table'
+export * as _20260318T152058935Z from './20260318T152058935Z-add-report-stat'
