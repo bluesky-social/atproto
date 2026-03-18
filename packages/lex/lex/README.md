@@ -347,7 +347,7 @@ if (result.success) {
 }
 ```
 
-All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: string format checks are relaxed (e.g. datetimes without timezones are accepted), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `allowInvalidLexData` is enabled, but can also be used directly:
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `allowInvalidLexData` is enabled, but can also be used directly:
 
 ```typescript
 // Strict mode (default) - rejects datetime without timezone
@@ -606,7 +606,7 @@ const client = new Client(session, {
 
 - **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
-- **`allowInvalidLexData`** — When `true`, the client will accept responses containing data that doesn't conform to the Lex encoding (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). Invalid values are returned as-is rather than being rejected or converted. This also relaxes schema validation: string format checks become more lenient (e.g. datetimes without timezones are accepted), blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `false`.
+- **`allowInvalidLexData`** — When `true`, the client will accept responses containing data that doesn't conform to the Lex encoding (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). Invalid values are returned as-is rather than being rejected or converted. This also relaxes schema validation: `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `false`.
 
 ### Core Methods
 

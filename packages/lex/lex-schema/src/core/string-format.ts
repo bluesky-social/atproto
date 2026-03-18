@@ -272,7 +272,7 @@ export type StringFormatValidationOptions = {
    * inputs, including values that are not compliant with the AT Protocol
    * specification.
    *
-   * @default false
+   * @default true
    */
   strict?: boolean
 }

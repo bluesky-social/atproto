@@ -71,8 +71,8 @@ export class BlobSchema<
       return ctx.issueUnexpectedType(input, 'blob')
     }
 
-    // In non-strict mode, we allow legacy blob refs to pass through without
-    // MIME type or size checks.
+    // In non-strict mode, we allow blob refs to pass through without MIME
+    // type or size checks.
     if (ctx.options.strict) {
       const accept = this.options?.accept
       if (accept && !matchesMime(blob.mimeType, accept)) {
