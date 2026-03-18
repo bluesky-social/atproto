@@ -326,7 +326,7 @@ const result = app.bsky.feed.post.$validate(value)
 value === result // true
 ```
 
-#### `$safeParse(data)` - Parse a value against a schema and get the resulting value
+#### `$safeParse(data, options?)` - Parse a value against a schema and get the resulting value
 
 Returns a detailed validation result object without throwing:
 
@@ -345,6 +345,16 @@ if (result.success) {
 } else {
   console.error('Validation failed:', result.error)
 }
+```
+
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: string format checks are relaxed (e.g. datetimes without timezones are accepted), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `allowInvalidLexData` is enabled, but can also be used directly:
+
+```typescript
+// Strict mode (default) - rejects datetime without timezone
+app.bsky.feed.post.$safeParse(data) // { strict: true } is the default
+
+// Non-strict mode - accepts more lenient data
+app.bsky.feed.post.$safeParse(data, { strict: false })
 ```
 
 #### `$build(data)` - Build with Defaults
@@ -596,7 +606,7 @@ const client = new Client(session, {
 
 - **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
-- **`allowInvalidLexData`** — When `true`, the client will accept responses containing data that doesn't conform to the Lex encoding (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). Invalid values are returned as-is rather than being rejected or converted. Default: `false`.
+- **`allowInvalidLexData`** — When `true`, the client will accept responses containing data that doesn't conform to the Lex encoding (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). Invalid values are returned as-is rather than being rejected or converted. This also relaxes schema validation: string format checks become more lenient (e.g. datetimes without timezones are accepted), blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `false`.
 
 ### Core Methods
 
@@ -1034,12 +1044,14 @@ if (isBlobRef(blobRef)) {
 >
 > ```typescript
 > type LegacyBlobRef = {
->   ref: string
+>   cid: string
 >   mimeType: string
 > }
 > ```
 >
 > These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
+>
+> When using non-strict validation (e.g. `$safeParse(data, { strict: false })`), legacy blob references are automatically coerced into standard `BlobRef` objects with `size: -1`, even without `--allowLegacyBlobs`.
 
 ### Actions
 
