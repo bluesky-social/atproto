@@ -296,6 +296,7 @@ import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQue
 import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+import * as ToolsOzoneQueueGetLiveStats from './types/tools/ozone/queue/getLiveStats.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
@@ -626,6 +627,7 @@ export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQue
 export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+export * as ToolsOzoneQueueGetLiveStats from './types/tools/ozone/queue/getLiveStats.js'
 export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 export * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
@@ -5535,6 +5537,18 @@ export class ToolsOzoneQueueNS {
   ): Promise<ToolsOzoneQueueGetAssignments.Response> {
     return this._client.call(
       'tools.ozone.queue.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getLiveStats(
+    params?: ToolsOzoneQueueGetLiveStats.QueryParams,
+    opts?: ToolsOzoneQueueGetLiveStats.CallOptions,
+  ): Promise<ToolsOzoneQueueGetLiveStats.Response> {
+    return this._client.call(
+      'tools.ozone.queue.getLiveStats',
       params,
       undefined,
       opts,

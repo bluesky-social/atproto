@@ -112,6 +112,14 @@
           "type": "integer",
           "description": "Number of distinct subject DID+URI combinations in this queue"
         },
+        "inboundCount": {
+          "type": "integer",
+          "description": "Reports received in this queue in the last 24 hours."
+        },
+        "actionRate": {
+          "type": "integer",
+          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0."
+        },
         "lastUpdated": {
           "type": "string",
           "format": "datetime",

@@ -18862,6 +18862,15 @@ export const schemaDict = {
             description:
               'Number of distinct subject DID+URI combinations in this queue',
           },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received in this queue in the last 24 hours.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
+          },
           lastUpdated: {
             type: 'string',
             format: 'datetime',
@@ -19006,6 +19015,41 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:tools.ozone.queue.defs#assignmentView',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueGetLiveStats: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getLiveStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get statistics from the past 24 hours by queue or across all queues.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Queue ID to get stats for. When omitted, returns aggregate stats.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.queue.defs#queueStats',
+                description: 'Statistics for the requested queue or aggregate.',
               },
             },
           },
@@ -22084,6 +22128,7 @@ export const ids = {
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
+  ToolsOzoneQueueGetLiveStats: 'tools.ozone.queue.getLiveStats',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
