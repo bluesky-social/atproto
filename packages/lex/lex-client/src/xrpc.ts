@@ -49,11 +49,13 @@ type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
 /**
  * Options for making an XRPC request.
  *
- * Combines {@link CallOptions} with method-specific params and body requirements.
- * The type system ensures required params/body are provided based on the method schema.
+ * Combines {@link XrpcResponseOptions} and {@link XrpcRequestOptions} with
+ * method-specific params and body requirements. The type system ensures
+ * required params/body are provided based on the method schema.
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
- * @see {@link CallOptions} for general request options like signal and validateRequest
+ * @see {@link XrpcResponseOptions} for response-related options like validateResponse
+ * @see {@link XrpcRequestOptions} for request-related options like signal and validateRequest
  * @see {@link XrpcParamsOptions} for method-specific query parameters
  * @see {@link XrpcInputOptions} for method-specific body and encoding requirements
  *
