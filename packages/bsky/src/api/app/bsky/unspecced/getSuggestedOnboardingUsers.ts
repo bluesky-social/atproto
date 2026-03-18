@@ -164,6 +164,7 @@ const presentation = (
   const { ctx, skeleton, hydration } = input
   return {
     recId: skeleton.recId,
+    recIdStr: skeleton.recIdStr,
     actors: mapDefined(skeleton.dids, (did) =>
       ctx.views.profile(did, hydration),
     ),
@@ -186,4 +187,5 @@ type Params = app.bsky.unspecced.getSuggestedOnboardingUsers.$Params & {
 type SkeletonState = {
   dids: DidString[]
   recId?: string
+  recIdStr?: string
 }

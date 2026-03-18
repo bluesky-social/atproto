@@ -29,8 +29,15 @@ import {
  * console.log(error.toJSON())
  * // { error: 'InvalidRequest', message: '...', issues: [...] }
  * ```
+ *
+ * @note this class implements {@link ResultFailure} to allow it to be used
+ * directly as a failure reason in validation results, avoiding the need for
+ * wrapping it in an additional object.
  */
-export class LexValidationError extends LexError<'InvalidRequest'> {
+export class LexValidationError
+  extends LexError<'InvalidRequest'>
+  implements ResultFailure<LexValidationError>
+{
   name = 'LexValidationError'
 
   /**
@@ -54,6 +61,14 @@ export class LexValidationError extends LexError<'InvalidRequest'> {
     const issuesAgg = aggregateIssues(issues)
     super('InvalidRequest', issuesAgg.join(', '), options)
     this.issues = issuesAgg
+  }
+
+  /** @see {ResultFailure.success} */
+  readonly success = false as const
+
+  /** @see {ResultFailure.reason} */
+  get reason() {
+    return this
   }
 
   /**

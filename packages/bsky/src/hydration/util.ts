@@ -1,3 +1,4 @@
+import { Timestamp } from '@bufbuild/protobuf'
 import * as ui8 from 'uint8arrays'
 import {
   AtUriString,
@@ -81,8 +82,8 @@ export const parseRecord = <T extends { $type: string }>(
   return {
     record,
     cid,
-    sortedAt: entry.sortedAt?.toDate() ?? new Date(0),
-    indexedAt: entry.indexedAt?.toDate() ?? new Date(0),
+    sortedAt: parseDate(entry.sortedAt) ?? new Date(0),
+    indexedAt: parseDate(entry.indexedAt) ?? new Date(0),
     takedownRef: safeTakedownRef(entry),
   }
 }
@@ -142,6 +143,17 @@ export const parseString = <T extends string | undefined>(
 export const parseCid = (cidStr: string | undefined): Cid | null => {
   if (!cidStr) return null
   return parseCidSafe(cidStr)
+}
+
+export const parseDate = (
+  timestamp: Timestamp | undefined,
+): Date | undefined => {
+  if (!timestamp) return undefined
+  const date = timestamp.toDate()
+  // Check for year 1 (0001-01-01 00:00:00 UTC) which is -62135596800000ms from epoch.
+  // The Go dataplane gives us those values as they come from the Go zero-value for dates.
+  if (date.getTime() === -62135596800000) return undefined
+  return date
 }
 
 export const urisByCollection = <T extends string>(

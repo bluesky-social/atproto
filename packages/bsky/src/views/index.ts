@@ -1140,7 +1140,7 @@ export class Views {
     const item = this.maybePost(atUri.href, state)
     return {
       createdAt: bookmark.indexedAt
-        ? toDatetimeString(bookmark.indexedAt.toDate())
+        ? toDatetimeString(bookmark.indexedAt)
         : undefined,
       subject: {
         uri: atUri.href,

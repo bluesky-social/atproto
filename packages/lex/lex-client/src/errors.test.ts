@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { IssueInvalidType, LexValidationError, l } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
+  XrpcFetchError,
   XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
@@ -13,14 +14,14 @@ import {
 const testQuery = l.query(
   'io.example.test',
   l.params(),
-  l.payload('application/json', l.object({ value: l.string() })),
+  l.jsonPayload({ value: l.string() }),
   ['TestError', 'AnotherError'],
 )
 
 const testQueryNoErrors = l.query(
   'io.example.noErrors',
   l.params(),
-  l.payload('application/json', l.object({ value: l.string() })),
+  l.jsonPayload({ value: l.string() }),
 )
 
 // ============================================================================
@@ -42,6 +43,7 @@ describe(XrpcResponseError, () => {
 
   it('exposes status from the response', () => {
     const err = createResponseError(404, 'NotFound')
+    expect(err.reason).toBe(err)
     expect(err.status).toBe(404)
   })
 
@@ -54,6 +56,7 @@ describe(XrpcResponseError, () => {
       encoding: 'application/json',
       body: { error: 'TestError' },
     })
+    expect(err.reason).toBe(err)
     expect(err.headers.get('X-Test')).toBe('value')
   })
 
@@ -63,7 +66,7 @@ describe(XrpcResponseError, () => {
   })
 
   describe('toDownstreamError', () => {
-    it('returns 502 for 5xx upstream errors', () => {
+    it('returns 502 for upstream 500 errors', () => {
       const err = createResponseError(
         500,
         'InternalServerError',
@@ -75,6 +78,17 @@ describe(XrpcResponseError, () => {
       expect(downstream.body).toEqual({
         error: 'InternalServerError',
         message: 'Upstream crashed',
+      })
+    })
+
+    it('preserves original status for non-500 5xx errors', () => {
+      const err = createResponseError(503, 'ServiceUnavailable', 'Try later')
+      const downstream = err.toDownstreamError()
+
+      expect(downstream.status).toBe(503)
+      expect(downstream.body).toEqual({
+        error: 'ServiceUnavailable',
+        message: 'Try later',
       })
     })
 
@@ -159,6 +173,7 @@ describe(XrpcAuthenticationError, () => {
       encoding: 'application/json',
       body: { error: 'AuthenticationRequired' },
     })
+    expect(err.reason).toBe(err)
     expect(err.wwwAuthenticate).toHaveProperty('Bearer')
   })
 
@@ -195,6 +210,7 @@ describe(XrpcUpstreamError, () => {
   it('has error code UpstreamFailure', () => {
     const response = new Response(null, { status: 200 })
     const err = new XrpcUpstreamError(testQuery, response)
+    expect(err.reason).toBe(err)
     expect(err.error).toBe('UpstreamFailure')
   })
 
@@ -236,6 +252,7 @@ describe(XrpcInvalidResponseError, () => {
     )
 
     expect(err).toBeInstanceOf(XrpcUpstreamError)
+    expect(err.reason).toBe(err)
     expect(err.error).toBe('UpstreamFailure')
     expect(err.cause).toBe(validationError)
   })
@@ -277,12 +294,8 @@ describe(XrpcInvalidResponseError, () => {
 describe(XrpcInternalError, () => {
   it('has error code InternalServerError', () => {
     const err = new XrpcInternalError(testQuery)
+    expect(err.reason).toBe(err)
     expect(err.error).toBe('InternalServerError')
-  })
-
-  it('is always retryable', () => {
-    const err = new XrpcInternalError(testQuery)
-    expect(err.shouldRetry()).toBe(true)
   })
 
   it('toJSON does not expose internal details', () => {
@@ -304,6 +317,62 @@ describe(XrpcInternalError, () => {
     expect(downstream.status).toBe(500)
     expect(downstream.body.error).toBe('InternalServerError')
     expect(downstream.body.message).toBe('Internal Server Error')
+  })
+
+  it('is not retryable', () => {
+    const err = new XrpcInternalError(testQuery, 'something broke')
+    expect(err.shouldRetry()).toBe(false)
+  })
+})
+
+// ============================================================================
+// XrpcFetchError
+// ============================================================================
+
+describe(XrpcFetchError, () => {
+  it('extends XrpcInternalError', () => {
+    const err = new XrpcFetchError(testQuery, new TypeError('fetch failed'))
+    expect(err).toBeInstanceOf(XrpcInternalError)
+    expect(err.error).toBe('InternalServerError')
+  })
+
+  it('uses cause message when cause is an Error', () => {
+    const cause = new TypeError('Failed to fetch')
+    const err = new XrpcFetchError(testQuery, cause)
+    expect(err.message).toBe('Unexpected fetchHandler() error: Failed to fetch')
+    expect(err.cause).toBe(cause)
+  })
+
+  it('uses fallback message when cause is not an Error', () => {
+    const err = new XrpcFetchError(testQuery, 'string cause')
+    expect(err.message).toBe('Unexpected fetchHandler() error: string cause')
+    expect(err.cause).toBe('string cause')
+  })
+
+  it('is retryable', () => {
+    const err = new XrpcFetchError(testQuery, new Error('network timeout'))
+    expect(err.shouldRetry()).toBe(true)
+  })
+
+  it('toJSON does not expose internal details', () => {
+    const err = new XrpcFetchError(
+      testQuery,
+      new Error('ECONNREFUSED 10.0.0.1:443'),
+    )
+    const json = err.toJSON()
+
+    expect(json.error).toBe('InternalServerError')
+    expect(json.message).toBe('Failed to perform upstream request')
+    expect(json.message).not.toContain('ECONNREFUSED')
+  })
+
+  it('toDownstreamError returns 502', () => {
+    const err = new XrpcFetchError(testQuery, new Error('DNS lookup failed'))
+    const downstream = err.toDownstreamError()
+
+    expect(downstream.status).toBe(502)
+    expect(downstream.body.error).toBe('InternalServerError')
+    expect(downstream.body.message).toBe('Failed to perform upstream request')
   })
 })
 

@@ -24,6 +24,7 @@ import {
   HydrationMap,
   RecordInfo,
   isActivitySubscriptionEnabled,
+  parseDate,
   parseRecord,
   parseString,
   safeTakedownRef,
@@ -57,7 +58,7 @@ export type Actor = {
    * Debug information for internal development
    */
   debug?: {
-    pagerank?: number
+    pagerank?: string
     accountTags?: string[]
     profileTags?: string[]
   }
@@ -248,7 +249,9 @@ export class ActorHydrator {
               uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
               handle: verificationMeta.handle as HandleString,
               displayName: verificationMeta.displayName,
-              createdAt: toDatetimeString(verificationMeta.sortedAt.toDate()),
+              createdAt: toDatetimeString(
+                parseDate(verificationMeta.sortedAt) ?? new Date(0),
+              ),
             }
           }
           // Filter out the verification meta that doesn't contain all info.
@@ -271,7 +274,7 @@ export class ActorHydrator {
       }
 
       const debug = {
-        pagerank: actor.pagerank,
+        pagerank: actor.pagerank ? actor.pagerank.toString() : undefined,
         accountTags: actor.tags,
         profileTags: actor.profileTags,
       }
@@ -288,7 +291,7 @@ export class ActorHydrator {
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
-        createdAt: actor.createdAt?.toDate(),
+        createdAt: parseDate(actor.createdAt),
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,
