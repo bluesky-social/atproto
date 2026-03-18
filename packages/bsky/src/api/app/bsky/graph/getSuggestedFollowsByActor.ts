@@ -28,7 +28,17 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
-      const hydrateCtx = await ctx.hydrator.createContext({ labelers, viewer })
+      const hydrateCtx = await ctx.hydrator.createContext({
+        labelers,
+        viewer,
+        featureGatesMap: ctx.featureGatesClient.checkGates(
+          ['suggested_users:social_proof:enable'],
+          {
+            viewer,
+            req,
+          },
+        ),
+      })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
         'x-bsky-topics': Array.isArray(req.headers['x-bsky-topics'])
@@ -95,7 +105,16 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const { suggestedDids } = skeleton
-  return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
+  if (
+    params.hydrateCtx.featureGatesMap.get('suggested_users:social_proof:enable')
+  ) {
+    return ctx.hydrator.hydrateProfilesDetailed(
+      suggestedDids,
+      params.hydrateCtx,
+    )
+  } else {
+    return ctx.hydrator.hydrateProfiles(suggestedDids, params.hydrateCtx)
+  }
 }
 
 const noBlocksOrMutes = (
@@ -116,7 +135,7 @@ const presentation = (
   const { ctx, hydration, skeleton } = input
   const { suggestedDids, headers } = skeleton
   const suggestions = mapDefined(suggestedDids, (did) =>
-    ctx.views.profile(did, hydration),
+    ctx.views.profileKnownFollowers(did, hydration),
   )
   return {
     isFallback: skeleton.isFallback,
