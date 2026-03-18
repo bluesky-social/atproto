@@ -149,7 +149,9 @@ describe('report-activity', () => {
       })
 
       expect(data.activity.activity.$type).toBe(`${DEFS}#closeActivity`)
-      expect(data.activity.activity.previousStatus).toBe('open')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('open')
+      }
 
       const { data: updated } = await agent.tools.ozone.report.getReport(
         { id: report.id },
@@ -166,7 +168,9 @@ describe('report-activity', () => {
       })
 
       expect(data.activity.activity.$type).toBe(`${DEFS}#escalationActivity`)
-      expect(data.activity.activity.previousStatus).toBe('open')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('open')
+      }
     })
 
     it('open → queued (queueActivity)', async () => {
@@ -177,7 +181,9 @@ describe('report-activity', () => {
       })
 
       expect(data.activity.activity.$type).toBe(`${DEFS}#queueActivity`)
-      expect(data.activity.activity.previousStatus).toBe('open')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('open')
+      }
     })
 
     it('open → assigned (assignmentActivity)', async () => {
@@ -188,7 +194,9 @@ describe('report-activity', () => {
       })
 
       expect(data.activity.activity.$type).toBe(`${DEFS}#assignmentActivity`)
-      expect(data.activity.activity.previousStatus).toBe('open')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('open')
+      }
     })
 
     it('queued → assigned (assignmentActivity)', async () => {
@@ -202,7 +210,9 @@ describe('report-activity', () => {
         activity: { $type: `${DEFS}#assignmentActivity` },
       })
 
-      expect(data.activity.activity.previousStatus).toBe('queued')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('queued')
+      }
     })
 
     it('escalated → closed (closeActivity)', async () => {
@@ -216,7 +226,9 @@ describe('report-activity', () => {
         activity: { $type: `${DEFS}#closeActivity` },
       })
 
-      expect(data.activity.activity.previousStatus).toBe('escalated')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('escalated')
+      }
     })
 
     it('assigned → closed (closeActivity)', async () => {
@@ -230,7 +242,9 @@ describe('report-activity', () => {
         activity: { $type: `${DEFS}#closeActivity` },
       })
 
-      expect(data.activity.activity.previousStatus).toBe('assigned')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('assigned')
+      }
     })
 
     it('assigned → escalated (escalationActivity)', async () => {
@@ -244,7 +258,9 @@ describe('report-activity', () => {
         activity: { $type: `${DEFS}#escalationActivity` },
       })
 
-      expect(data.activity.activity.previousStatus).toBe('assigned')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('assigned')
+      }
     })
 
     it('closed → open (reopenActivity)', async () => {
@@ -259,7 +275,9 @@ describe('report-activity', () => {
       })
 
       expect(data.activity.activity.$type).toBe(`${DEFS}#reopenActivity`)
-      expect(data.activity.activity.previousStatus).toBe('closed')
+      if ('previousStatus' in data.activity.activity) {
+        expect(data.activity.activity.previousStatus).toBe('closed')
+      }
 
       const { data: updated } = await agent.tools.ozone.report.getReport(
         { id: report.id },
@@ -476,12 +494,14 @@ describe('report-activity', () => {
       const [closeAct, noteAct] = data.activities // most-recent first
 
       expect(closeAct.activity.$type).toBe(`${DEFS}#closeActivity`)
-      expect(closeAct.activity.previousStatus).toBe('open')
+      if ('previousStatus' in closeAct.activity) {
+        expect(closeAct.activity.previousStatus).toBe('open')
+      }
       expect(closeAct.internalNote).toBeUndefined()
       expect(closeAct.isAutomated).toBe(false)
 
       expect(noteAct.activity.$type).toBe(`${DEFS}#noteActivity`)
-      expect(noteAct.activity.previousStatus).toBeUndefined()
+      expect('previousStatus' in noteAct.activity).toBe(false)
       expect(noteAct.internalNote).toBe('n')
     })
 

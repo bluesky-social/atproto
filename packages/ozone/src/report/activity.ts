@@ -1,5 +1,6 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
+import { Member } from '../lexicon/types/tools/ozone/team/defs'
 
 export type ActivityType =
   | 'queueActivity'
@@ -216,18 +217,21 @@ function buildActivityObject(
   return { $type }
 }
 
-export function formatActivityView(activity: {
-  id: number
-  reportId: number
-  activityType: string
-  previousStatus: string | null
-  internalNote: string | null
-  publicNote: string | null
-  meta: unknown
-  isAutomated: boolean
-  createdBy: string
-  createdAt: string
-}) {
+export function formatActivityView(
+  activity: {
+    id: number
+    reportId: number
+    activityType: string
+    previousStatus: string | null
+    internalNote: string | null
+    publicNote: string | null
+    meta: unknown
+    isAutomated: boolean
+    createdBy: string
+    createdAt: string
+  },
+  memberViews?: Map<string, Member>,
+) {
   return {
     id: activity.id,
     reportId: activity.reportId,
@@ -240,6 +244,7 @@ export function formatActivityView(activity: {
     meta: (activity.meta as Record<string, unknown>) ?? undefined,
     isAutomated: activity.isAutomated,
     createdBy: activity.createdBy,
+    moderator: memberViews?.get(activity.createdBy),
     createdAt: activity.createdAt,
   }
 }

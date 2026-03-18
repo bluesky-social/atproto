@@ -13,10 +13,19 @@ export default function (server: Server, ctx: AppContext) {
         { reportId, limit, cursor },
       )
 
+      // Fetch team members for all createdBy DIDs
+      const createdByDids = Array.from(
+        new Set(activities.map((a) => a.createdBy)),
+      )
+      const teamService = ctx.teamService(ctx.db)
+      const memberViews = await teamService.viewByDids(createdByDids)
+
       return {
         encoding: 'application/json',
         body: {
-          activities: activities.map(formatActivityView),
+          activities: activities.map((activity) =>
+            formatActivityView(activity, memberViews),
+          ),
           cursor: nextCursor,
         },
       }

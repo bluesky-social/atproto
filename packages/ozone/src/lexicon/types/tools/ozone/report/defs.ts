@@ -307,6 +307,14 @@ export function validateCloseActivity<V>(v: V) {
 /** Activity recording a closed report being reopened. Only valid when the report is in 'closed' status. */
 export interface ReopenActivity {
   $type?: 'tools.ozone.report.defs#reopenActivity'
+  /** The report's status before this activity. Populated automatically from the report row; not required in input. */
+  previousStatus?:
+    | 'open'
+    | 'closed'
+    | 'escalated'
+    | 'queued'
+    | 'assigned'
+    | (string & {})
 }
 
 const hashReopenActivity = 'reopenActivity'
@@ -359,6 +367,7 @@ export interface ReportActivityView {
   isAutomated: boolean
   /** DID of the actor who created this activity, or the service DID for automated activities. */
   createdBy: string
+  moderator?: ToolsOzoneTeamDefs.Member
   /** When this activity was created */
   createdAt: string
 }

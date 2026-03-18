@@ -19709,7 +19709,14 @@ export const schemaDict = {
         type: 'object',
         description:
           "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
-        properties: {},
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
       },
       noteActivity: {
         type: 'object',
@@ -19774,6 +19781,12 @@ export const schemaDict = {
             format: 'did',
             description:
               'DID of the actor who created this activity, or the service DID for automated activities.',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description:
+              'Full member record of the moderator who created this activity',
           },
           createdAt: {
             type: 'string',
