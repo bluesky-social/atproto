@@ -8,6 +8,8 @@ import {
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
 import { ActiveReportAssignment, ReportWithEvent } from '../mod-service/report'
 import { ParsedLabelers } from '../util'
+import { ReportStat } from '../db/schema/report_stat'
+import { Selectable } from 'kysely'
 
 type ReportViews = {
   repoDetails(
@@ -193,5 +195,21 @@ export function buildReportView(
       report.queueId && report.queueId > 0
         ? queues.get(report.queueId)
         : undefined,
+  }
+}
+
+export function viewQueueStats(
+  row?: Selectable<ReportStat>,
+): ToolsOzoneQueueDefs.QueueStats {
+  return {
+    pendingCount: row?.pendingCount ?? 0,
+    actionedCount: row?.actionedCount ?? 0,
+    escalatedPendingCount: row?.escalatedCount ?? 0,
+    uniqueReportersCount: 0,
+    uniqueSubjectsDidCount: 0,
+    uniqueSubjectsFullCount: 0,
+    inboundCount: row?.inboundCount ?? 0,
+    actionRate: row?.actionRate ?? 0,
+    lastUpdated: row?.computedAt ?? new Date().toISOString(),
   }
 }

@@ -9,6 +9,7 @@ import { Database } from '../db'
 import { ModerationService } from '../mod-service'
 import { StrikeService } from '../mod-service/strike'
 import { QueueService } from '../queue/service'
+import { ReportStatsService } from '../report/stats'
 import { ScheduledActionService } from '../scheduled-action/service'
 import { SettingService } from '../setting/service'
 import { TeamService } from '../team'
@@ -115,7 +116,8 @@ export class DaemonContext {
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
     const queueService = QueueService.creator()
-    const queueRouter = new QueueRouter(db, queueService)
+    const reportStatsService = ReportStatsService.creator()
+    const queueRouter = new QueueRouter(db, queueService, reportStatsService)
 
     // Only spawn the listener if verifier config exists and a jetstream URL is provided
     const verificationListener =

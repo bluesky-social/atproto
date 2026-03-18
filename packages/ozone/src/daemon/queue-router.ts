@@ -2,6 +2,7 @@ import { MINUTE } from '@atproto/common'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { QueueServiceCreator } from '../queue/service'
+import { ReportStatsServiceCreator } from '../report/stats'
 import { getJobCursor, initJobCursor, updateJobCursor } from './job-cursor'
 
 const JOB_NAME = 'queue_router'
@@ -15,6 +16,7 @@ export class QueueRouter {
   constructor(
     private db: Database,
     private queueServiceCreator: QueueServiceCreator,
+    private reportStatsServiceCreator: ReportStatsServiceCreator,
   ) {}
 
   start() {
@@ -25,9 +27,16 @@ export class QueueRouter {
     if (this.destroyed) return
     this.processingPromise = this.routeReports()
       .catch((err) => dbLogger.error({ err }, 'queue routing errored'))
+      .then(() => this.computeStats())
+      .catch((err) => dbLogger.error({ err }, 'stats computation errored'))
       .finally(() => {
         this.timer = setTimeout(() => this.poll(), getInterval())
       })
+  }
+
+  private async computeStats() {
+    const statsService = this.reportStatsServiceCreator(this.db)
+    await statsService.computeAll()
   }
 
   async destroy() {
