@@ -195,21 +195,24 @@ async function prepareWrite(opts: {
     // @NOTE we validate before enumerating blobs, so that we can provide more
     // accurate validations error (esp. in case of legacy blobs).
     validationStatus: validateRecord(record, rkey, opts),
-    blobs: Array.from(enumBlobRefs(record, { allowLegacy: true }), (blob) => {
-      // @NOTE as we migrated from legacy blobs to non legacy blobs, we wanted
-      // to prevent the creation of legacy blobs. Note that this prevents the
-      // creation of (legitimate) records that have the same shape as legacy
-      // blob refs ({ cid: "<cid>", mimeType: "<mime-type>" }), but this was
-      // deemed an acceptable tradeoff to prevent the creation of new legacy
-      // blobs. Since that migration happened a while ago, we can probably
-      // remove this check in the future, by removing the "allowLegacy" option.
-      if (isLegacyBlobRef(blob)) {
-        throw new InvalidRecordError(
-          `Legacy blobs are not allowed (${blob.cid})`,
-        )
-      }
-      return blob
-    }),
+    blobs: Array.from(
+      enumBlobRefs(record, { strict: false, allowLegacy: true }),
+      (blob) => {
+        // @NOTE as we migrated from legacy blobs to non legacy blobs, we wanted
+        // to prevent the creation of legacy blobs. Note that this prevents the
+        // creation of (legitimate) records that have the same shape as legacy
+        // blob refs ({ cid: "<cid>", mimeType: "<mime-type>" }), but this was
+        // deemed an acceptable tradeoff to prevent the creation of new legacy
+        // blobs. Since that migration happened a while ago, we can probably
+        // remove this check in the future, by removing the "allowLegacy" option.
+        if (isLegacyBlobRef(blob)) {
+          throw new InvalidRecordError(
+            `Legacy blobs are not allowed (${blob.cid})`,
+          )
+        }
+        return blob
+      },
+    ),
     uri: AtUri.make(opts.did, opts.collection, rkey),
     cid: await cidForCbor(encode(record)),
   }

@@ -42,7 +42,7 @@ export class BlobTransactor extends BlobReader {
   ) {
     const values = Array.from(blobs, (blob) => ({
       recordUri,
-      blobCid: '$type' in blob ? blob.ref.toString() : blob.cid,
+      blobCid: blobCid(blob).toString(),
     }))
 
     if (values.length) {
@@ -380,4 +380,8 @@ function isUpdate(write: PreparedWrite) {
 }
 function isDelete(write: PreparedWrite) {
   return write.action === WriteOpAction.Delete
+}
+
+function blobCid(blob: BlobRef | LegacyBlobRef): Cid {
+  return '$type' in blob ? blob.ref : parseCid(blob.cid)
 }
