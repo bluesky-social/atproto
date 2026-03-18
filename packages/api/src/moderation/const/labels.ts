@@ -117,6 +117,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
@@ -139,6 +140,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
@@ -161,6 +163,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
@@ -183,6 +186,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
@@ -206,6 +210,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
