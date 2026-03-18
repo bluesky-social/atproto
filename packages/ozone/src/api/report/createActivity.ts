@@ -14,8 +14,7 @@ const VALID_ACTIVITY_TYPES = new Set<ActivityType>([
   'escalationActivity',
   'closeActivity',
   'reopenActivity',
-  'internalNoteActivity',
-  'publicNoteActivity',
+  'noteActivity',
 ])
 
 const DEFS_PREFIX = 'tools.ozone.report.defs#'

@@ -395,14 +395,9 @@
       "description": "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
       "properties": {}
     },
-    "internalNoteActivity": {
+    "noteActivity": {
       "type": "object",
-      "description": "Activity recording an internal moderator-only note on a report.",
-      "properties": {}
-    },
-    "publicNoteActivity": {
-      "type": "object",
-      "description": "Activity recording a public-facing note on a report, potentially visible to the reporter.",
+      "description": "Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both).",
       "properties": {}
     },
     "reportActivityView": {
@@ -433,8 +428,7 @@
             "#escalationActivity",
             "#closeActivity",
             "#reopenActivity",
-            "#internalNoteActivity",
-            "#publicNoteActivity"
+            "#noteActivity"
           ],
           "description": "The typed activity object describing what occurred."
         },

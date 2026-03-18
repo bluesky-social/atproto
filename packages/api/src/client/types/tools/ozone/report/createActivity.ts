@@ -27,8 +27,7 @@ export interface InputSchema {
     | $Typed<ToolsOzoneReportDefs.EscalationActivity>
     | $Typed<ToolsOzoneReportDefs.CloseActivity>
     | $Typed<ToolsOzoneReportDefs.ReopenActivity>
-    | $Typed<ToolsOzoneReportDefs.InternalNoteActivity>
-    | $Typed<ToolsOzoneReportDefs.PublicNoteActivity>
+    | $Typed<ToolsOzoneReportDefs.NoteActivity>
     | { $type: string }
   /** Optional moderator-only note. Not visible to reporters. */
   internalNote?: string

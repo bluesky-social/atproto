@@ -319,34 +319,19 @@ export function validateReopenActivity<V>(v: V) {
   return validate<ReopenActivity & V>(v, id, hashReopenActivity)
 }
 
-/** Activity recording an internal moderator-only note on a report. */
-export interface InternalNoteActivity {
-  $type?: 'tools.ozone.report.defs#internalNoteActivity'
+/** Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both). */
+export interface NoteActivity {
+  $type?: 'tools.ozone.report.defs#noteActivity'
 }
 
-const hashInternalNoteActivity = 'internalNoteActivity'
+const hashNoteActivity = 'noteActivity'
 
-export function isInternalNoteActivity<V>(v: V) {
-  return is$typed(v, id, hashInternalNoteActivity)
+export function isNoteActivity<V>(v: V) {
+  return is$typed(v, id, hashNoteActivity)
 }
 
-export function validateInternalNoteActivity<V>(v: V) {
-  return validate<InternalNoteActivity & V>(v, id, hashInternalNoteActivity)
-}
-
-/** Activity recording a public-facing note on a report, potentially visible to the reporter. */
-export interface PublicNoteActivity {
-  $type?: 'tools.ozone.report.defs#publicNoteActivity'
-}
-
-const hashPublicNoteActivity = 'publicNoteActivity'
-
-export function isPublicNoteActivity<V>(v: V) {
-  return is$typed(v, id, hashPublicNoteActivity)
-}
-
-export function validatePublicNoteActivity<V>(v: V) {
-  return validate<PublicNoteActivity & V>(v, id, hashPublicNoteActivity)
+export function validateNoteActivity<V>(v: V) {
+  return validate<NoteActivity & V>(v, id, hashNoteActivity)
 }
 
 /** A single activity entry on a report. */
@@ -362,8 +347,7 @@ export interface ReportActivityView {
     | $Typed<EscalationActivity>
     | $Typed<CloseActivity>
     | $Typed<ReopenActivity>
-    | $Typed<InternalNoteActivity>
-    | $Typed<PublicNoteActivity>
+    | $Typed<NoteActivity>
     | { $type: string }
   /** Optional moderator-only note. Not visible to reporters. */
   internalNote?: string

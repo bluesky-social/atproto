@@ -19258,8 +19258,7 @@ export const schemaDict = {
                   'lex:tools.ozone.report.defs#escalationActivity',
                   'lex:tools.ozone.report.defs#closeActivity',
                   'lex:tools.ozone.report.defs#reopenActivity',
-                  'lex:tools.ozone.report.defs#internalNoteActivity',
-                  'lex:tools.ozone.report.defs#publicNoteActivity',
+                  'lex:tools.ozone.report.defs#noteActivity',
                 ],
                 description: 'The type of activity to record.',
               },
@@ -19712,16 +19711,10 @@ export const schemaDict = {
           "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
         properties: {},
       },
-      internalNoteActivity: {
+      noteActivity: {
         type: 'object',
         description:
-          'Activity recording an internal moderator-only note on a report.',
-        properties: {},
-      },
-      publicNoteActivity: {
-        type: 'object',
-        description:
-          'Activity recording a public-facing note on a report, potentially visible to the reporter.',
+          'Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both).',
         properties: {},
       },
       reportActivityView: {
@@ -19752,8 +19745,7 @@ export const schemaDict = {
               'lex:tools.ozone.report.defs#escalationActivity',
               'lex:tools.ozone.report.defs#closeActivity',
               'lex:tools.ozone.report.defs#reopenActivity',
-              'lex:tools.ozone.report.defs#internalNoteActivity',
-              'lex:tools.ozone.report.defs#publicNoteActivity',
+              'lex:tools.ozone.report.defs#noteActivity',
             ],
             description: 'The typed activity object describing what occurred.',
           },

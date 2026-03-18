@@ -23,8 +23,7 @@
                 "tools.ozone.report.defs#escalationActivity",
                 "tools.ozone.report.defs#closeActivity",
                 "tools.ozone.report.defs#reopenActivity",
-                "tools.ozone.report.defs#internalNoteActivity",
-                "tools.ozone.report.defs#publicNoteActivity"
+                "tools.ozone.report.defs#noteActivity"
               ],
               "description": "The type of activity to record."
             },

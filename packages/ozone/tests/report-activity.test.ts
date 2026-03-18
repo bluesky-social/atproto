@@ -78,17 +78,17 @@ describe('report-activity', () => {
     await network.close()
   })
 
-  describe('createActivity — internalNoteActivity', () => {
-    it('creates an internal note with text', async () => {
+  describe('createActivity — noteActivity', () => {
+    it('creates an internal note', async () => {
       const report = await createReport(sc.dids.alice)
       const { data } = await createActivity({
         reportId: report.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         internalNote: 'Looks like this may be a bot account.',
       })
 
       expect(data.activity.reportId).toBe(report.id)
-      expect(data.activity.activity.$type).toBe(`${DEFS}#internalNoteActivity`)
+      expect(data.activity.activity.$type).toBe(`${DEFS}#noteActivity`)
       expect(data.activity.internalNote).toBe(
         'Looks like this may be a bot account.',
       )
@@ -99,55 +99,37 @@ describe('report-activity', () => {
       expect(data.activity.id).toBeDefined()
     })
 
-    it('creates an internal note without text', async () => {
+    it('creates a public note', async () => {
       const report = await createReport(sc.dids.alice)
       const { data } = await createActivity({
         reportId: report.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
-      })
-
-      expect(data.activity.activity.$type).toBe(`${DEFS}#internalNoteActivity`)
-      expect(data.activity.internalNote).toBeUndefined()
-    })
-
-    it('does not change report status', async () => {
-      const report = await createReport(sc.dids.alice)
-      expect(report.status).toBe('open')
-
-      await createActivity({
-        reportId: report.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
-        internalNote: 'Just noting this.',
-      })
-
-      const { data: updated } = await agent.tools.ozone.report.getReport(
-        { id: report.id },
-        { headers: await modHeaders(ids.ToolsOzoneReportGetReport) },
-      )
-      expect(updated.status).toBe('open')
-    })
-  })
-
-  describe('createActivity — publicNoteActivity', () => {
-    it('creates a public note with text', async () => {
-      const report = await createReport(sc.dids.alice)
-      const { data } = await createActivity({
-        reportId: report.id,
-        activity: { $type: `${DEFS}#publicNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         publicNote: 'We have reviewed your report.',
       })
 
-      expect(data.activity.activity.$type).toBe(`${DEFS}#publicNoteActivity`)
+      expect(data.activity.activity.$type).toBe(`${DEFS}#noteActivity`)
       expect(data.activity.publicNote).toBe('We have reviewed your report.')
       expect(data.activity.internalNote).toBeUndefined()
     })
 
+    it('creates a note without text', async () => {
+      const report = await createReport(sc.dids.alice)
+      const { data } = await createActivity({
+        reportId: report.id,
+        activity: { $type: `${DEFS}#noteActivity` },
+      })
+
+      expect(data.activity.activity.$type).toBe(`${DEFS}#noteActivity`)
+      expect(data.activity.internalNote).toBeUndefined()
+      expect(data.activity.publicNote).toBeUndefined()
+    })
+
     it('does not change report status', async () => {
       const report = await createReport(sc.dids.alice)
       await createActivity({
         reportId: report.id,
-        activity: { $type: `${DEFS}#publicNoteActivity` },
-        publicNote: 'Thank you for your report.',
+        activity: { $type: `${DEFS}#noteActivity` },
+        internalNote: 'Just noting this.',
       })
 
       const { data: updated } = await agent.tools.ozone.report.getReport(
@@ -434,7 +416,7 @@ describe('report-activity', () => {
       await expect(
         createActivity({
           reportId: 999999,
-          activity: { $type: `${DEFS}#internalNoteActivity` },
+          activity: { $type: `${DEFS}#noteActivity` },
           internalNote: 'Ghost report',
         }),
       ).rejects.toMatchObject({ error: 'ReportNotFound' })
@@ -455,7 +437,7 @@ describe('report-activity', () => {
 
       await createActivity({
         reportId: report.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         internalNote: 'First note',
       })
       await createActivity({
@@ -464,7 +446,7 @@ describe('report-activity', () => {
       })
       await createActivity({
         reportId: report.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         internalNote: 'Third note',
       })
 
@@ -482,7 +464,7 @@ describe('report-activity', () => {
 
       await createActivity({
         reportId: report.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         internalNote: 'n',
       })
       await createActivity({
@@ -498,7 +480,7 @@ describe('report-activity', () => {
       expect(closeAct.internalNote).toBeUndefined()
       expect(closeAct.isAutomated).toBe(false)
 
-      expect(noteAct.activity.$type).toBe(`${DEFS}#internalNoteActivity`)
+      expect(noteAct.activity.$type).toBe(`${DEFS}#noteActivity`)
       expect(noteAct.activity.previousStatus).toBeUndefined()
       expect(noteAct.internalNote).toBe('n')
     })
@@ -509,7 +491,7 @@ describe('report-activity', () => {
       for (let i = 0; i < 5; i++) {
         await createActivity({
           reportId: report.id,
-          activity: { $type: `${DEFS}#internalNoteActivity` },
+          activity: { $type: `${DEFS}#noteActivity` },
           internalNote: `Note ${i}`,
         })
       }
@@ -548,12 +530,12 @@ describe('report-activity', () => {
 
       await createActivity({
         reportId: reportA.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         internalNote: 'Note on A',
       })
       await createActivity({
         reportId: reportB.id,
-        activity: { $type: `${DEFS}#internalNoteActivity` },
+        activity: { $type: `${DEFS}#noteActivity` },
         internalNote: 'Note on B',
       })
 

@@ -1,4 +1,3 @@
-import { sql } from 'kysely'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 
@@ -8,8 +7,7 @@ export type ActivityType =
   | 'escalationActivity'
   | 'closeActivity'
   | 'reopenActivity'
-  | 'internalNoteActivity'
-  | 'publicNoteActivity'
+  | 'noteActivity'
 
 // State-change activity types and the status they transition the report to
 const ACTIVITY_TO_STATE: Record<string, string> = {
@@ -64,13 +62,12 @@ export async function createReportActivity(
   return db.transaction(async (dbTxn) => {
     // Lock the report row for the duration of the transaction to prevent
     // concurrent writes from racing on status validation + update.
-    const rows = await sql<{
-      id: number
-      status: string
-    }>`SELECT id, status FROM report WHERE id = ${reportId} FOR UPDATE`.execute(
-      dbTxn.db,
-    )
-    const report = rows.rows[0]
+    const report = await dbTxn.db
+      .selectFrom('report')
+      .select(['id', 'status'])
+      .where('id', '=', reportId)
+      .forUpdate()
+      .executeTakeFirst()
 
     if (!report) {
       throw new InvalidRequestError(
