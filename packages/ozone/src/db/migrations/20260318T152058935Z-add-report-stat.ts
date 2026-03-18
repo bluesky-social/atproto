@@ -14,9 +14,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('computedAt', 'varchar', (col) => col.notNull())
     .execute()
 
-  // Unique constraint for upserts: one row per (queue, periodType).
-  // COALESCE handles NULL queueId (aggregate row) by mapping it to -1.
-  await sql`CREATE UNIQUE INDEX idx_report_stat_queue_period ON report_stat (COALESCE("queueId", -1), "periodType")`.execute(
+  // Only one row with live stats per queue.
+  // Only one row with live aggregate stats.
+  await sql`CREATE UNIQUE INDEX idx_report_stat_live ON report_stat (COALESCE("queueId", -1)) WHERE "periodType" = 'live'`.execute(
     db,
   )
 
