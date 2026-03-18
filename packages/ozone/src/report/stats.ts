@@ -1,6 +1,7 @@
-import { sql } from 'kysely'
+import { Selectable, sql } from 'kysely'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
+import { ReportStat } from '../db/schema/report_stat'
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
@@ -229,34 +230,18 @@ export class ReportStatsService {
     return counts
   }
 
-  async getStats(
-    periodType?: string,
+  async getLiveStats(
     queueId?: number,
-  ): Promise<
-    {
-      queueId: number | null
-      periodType: string
-      inboundCount: number
-      pendingCount: number
-      actionedCount: number
-      escalatedCount: number
-      actionRate: number | null
-      computedAt: string
-    }[]
-  > {
-    let qb = this.db.db.selectFrom('report_stat').selectAll()
-
-    if (periodType) {
-      qb = qb.where('periodType', '=', periodType)
-    }
+  ): Promise<Selectable<ReportStat> | undefined> {
+    let qb = this.db.db
+      .selectFrom('report_stat')
+      .selectAll()
+      .where('periodType', '=', 'live')
 
     if (queueId !== undefined) {
-      // Return the specific queue's stats plus the aggregate row
-      qb = qb.where((qb) =>
-        qb.where('queueId', '=', queueId).orWhere('queueId', 'is', null),
-      )
+      qb = qb.where('queueId', '=', queueId)
     }
 
-    return await qb.orderBy('queueId', 'asc').execute()
+    return qb.executeTakeFirst()
   }
 }
