@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
 import { blob } from './blob.js'
 
@@ -214,37 +214,62 @@ describe('BlobSchema', () => {
   })
 
   describe('strict validation', () => {
-    const strictSchema = blob({ strict: true })
+    const schema = blob()
 
     it('accepts valid raw CID in strict mode', () => {
-      const result = strictSchema.safeParse({
-        $type: 'blob',
-        ref: blobCid,
-        mimeType: 'image/jpeg',
-        size: 10000,
-      })
+      const result = schema.safeParse(
+        {
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        },
+        { strict: true },
+      )
       expect(result.success).toBe(true)
     })
 
     it('rejects non-raw CID in strict mode', () => {
-      const result = strictSchema.safeParse({
-        $type: 'blob',
-        ref: lexCid,
-        mimeType: 'image/jpeg',
-        size: 10000,
-      })
+      const result = schema.safeParse(
+        {
+          $type: 'blob',
+          ref: lexCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        },
+        { strict: true },
+      )
       expect(result.success).toBe(false)
     })
 
     it('accepts non-raw CID in non-strict mode', () => {
-      const nonStrictSchema = blob({ strict: false })
-      const result = nonStrictSchema.safeParse({
+      const result = schema.safeParse(
+        {
+          $type: 'blob',
+          ref: lexCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        },
+        { strict: false },
+      )
+      expect(result.success).toBe(true)
+    })
+
+    it('coerces legacy blob format in non-strict parse mode', () => {
+      const result = schema.safeParse(
+        {
+          cid: lexCid.toString(),
+          mimeType: 'image/jpeg',
+        },
+        { strict: false },
+      )
+      assert(result.success)
+      expect(result.value).toEqual({
         $type: 'blob',
         ref: lexCid,
         mimeType: 'image/jpeg',
-        size: 10000,
+        size: -1,
       })
-      expect(result.success).toBe(true)
     })
   })
 
@@ -455,51 +480,294 @@ describe('BlobSchema', () => {
     })
   })
 
-  describe('combined options', () => {
-    it('validates with strict and allowLegacy both true', () => {
-      const schema = blob({ strict: true, allowLegacy: true })
+  describe('legacy blob format with strict mode combinations', () => {
+    describe('allowLegacy: false (default)', () => {
+      const schema = blob()
 
-      // Should accept strict BlobRef
-      const blobRefResult = schema.safeParse({
-        $type: 'blob',
-        ref: blobCid,
-        mimeType: 'image/jpeg',
-        size: 10000,
-      })
-      expect(blobRefResult.success).toBe(true)
+      describe('strict: true (default)', () => {
+        it('rejects legacy blob format', () => {
+          const result = schema.safeParse({
+            cid: blobCid.toString(),
+            mimeType: 'image/jpeg',
+          })
+          expect(result.success).toBe(false)
+        })
 
-      // Should accept LegacyBlobRef
-      const legacyResult = schema.safeParse({
-        cid: blobCid.toString(),
-        mimeType: 'image/jpeg',
+        it('accepts standard BlobRef', () => {
+          const result = schema.safeParse({
+            $type: 'blob',
+            ref: blobCid,
+            mimeType: 'image/jpeg',
+            size: 10000,
+          })
+          expect(result.success).toBe(true)
+        })
       })
-      expect(legacyResult.success).toBe(true)
 
-      // Should reject non-raw CID in BlobRef format
-      const nonRawResult = schema.safeParse({
-        $type: 'blob',
-        ref: lexCid,
-        mimeType: 'image/jpeg',
-        size: 10000,
+      describe('strict: false', () => {
+        it('coerces legacy blob format into BlobRef', () => {
+          const result = schema.safeParse(
+            {
+              cid: blobCid.toString(),
+              mimeType: 'image/jpeg',
+            },
+            { strict: false },
+          )
+          assert(result.success)
+          expect(result.value).toEqual({
+            $type: 'blob',
+            ref: blobCid,
+            mimeType: 'image/jpeg',
+            size: -1,
+          })
+        })
+
+        it('coerces legacy blob format with lexCid', () => {
+          const result = schema.safeParse(
+            {
+              cid: lexCid.toString(),
+              mimeType: 'image/png',
+            },
+            { strict: false },
+          )
+          assert(result.success)
+          expect(result.value).toEqual({
+            $type: 'blob',
+            ref: lexCid,
+            mimeType: 'image/png',
+            size: -1,
+          })
+        })
+
+        it('rejects legacy blob format with invalid cid', () => {
+          const result = schema.safeParse(
+            {
+              cid: 'invalid-cid',
+              mimeType: 'image/jpeg',
+            },
+            { strict: false },
+          )
+          expect(result.success).toBe(false)
+        })
+
+        it('accepts standard BlobRef with non-raw CID', () => {
+          const result = schema.safeParse(
+            {
+              $type: 'blob',
+              ref: lexCid,
+              mimeType: 'image/jpeg',
+              size: 10000,
+            },
+            { strict: false },
+          )
+          expect(result.success).toBe(true)
+        })
       })
-      expect(nonRawResult.success).toBe(false)
     })
 
-    it('validates with all options combined', () => {
+    describe('allowLegacy: true', () => {
+      const schema = blob({ allowLegacy: true })
+
+      describe('strict: true (default)', () => {
+        it('accepts legacy blob format as LegacyBlobRef', () => {
+          const result = schema.safeParse({
+            cid: blobCid.toString(),
+            mimeType: 'image/jpeg',
+          })
+          assert(result.success)
+          expect('cid' in result.value && result.value.cid).toBe(
+            blobCid.toString(),
+          )
+        })
+
+        it('accepts standard BlobRef', () => {
+          const result = schema.safeParse({
+            $type: 'blob',
+            ref: blobCid,
+            mimeType: 'image/jpeg',
+            size: 10000,
+          })
+          expect(result.success).toBe(true)
+        })
+
+        it('rejects non-raw CID in BlobRef format (strict)', () => {
+          const result = schema.safeParse({
+            $type: 'blob',
+            ref: lexCid,
+            mimeType: 'image/jpeg',
+            size: 10000,
+          })
+          expect(result.success).toBe(false)
+        })
+      })
+
+      describe('strict: false', () => {
+        it('accepts legacy blob format as LegacyBlobRef', () => {
+          const result = schema.safeParse(
+            {
+              cid: blobCid.toString(),
+              mimeType: 'image/jpeg',
+            },
+            { strict: false },
+          )
+          assert(result.success)
+          expect('cid' in result.value && result.value.cid).toBe(
+            blobCid.toString(),
+          )
+        })
+
+        it('accepts standard BlobRef with non-raw CID (non-strict)', () => {
+          const result = schema.safeParse(
+            {
+              $type: 'blob',
+              ref: lexCid,
+              mimeType: 'image/jpeg',
+              size: 10000,
+            },
+            { strict: false },
+          )
+          expect(result.success).toBe(true)
+        })
+
+        it('accepts standard BlobRef with raw CID', () => {
+          const result = schema.safeParse(
+            {
+              $type: 'blob',
+              ref: blobCid,
+              mimeType: 'image/jpeg',
+              size: 10000,
+            },
+            { strict: false },
+          )
+          expect(result.success).toBe(true)
+        })
+      })
+    })
+  })
+
+  describe('mime and size checks depend on strict mode', () => {
+    describe('accept constraint', () => {
+      const schema = blob({ accept: ['image/jpeg', 'image/png'] })
+
+      it('rejects non-matching mime type in strict mode (default)', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/gif',
+          size: 10000,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts non-matching mime type in non-strict mode', () => {
+        const result = schema.safeParse(
+          {
+            $type: 'blob',
+            ref: blobCid,
+            mimeType: 'image/gif',
+            size: 10000,
+          },
+          { strict: false },
+        )
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts matching mime type in strict mode', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        })
+        expect(result.success).toBe(true)
+      })
+    })
+
+    describe('maxSize constraint', () => {
+      const schema = blob({ maxSize: 1000 })
+
+      it('rejects oversized blob in strict mode (default)', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 5000,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts oversized blob in non-strict mode', () => {
+        const result = schema.safeParse(
+          {
+            $type: 'blob',
+            ref: blobCid,
+            mimeType: 'image/jpeg',
+            size: 5000,
+          },
+          { strict: false },
+        )
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts correctly sized blob in strict mode', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 500,
+        })
+        expect(result.success).toBe(true)
+      })
+    })
+
+    describe('combined accept and maxSize constraints', () => {
       const schema = blob({
-        strict: true,
-        allowLegacy: true,
         accept: ['image/jpeg'],
         maxSize: 20000,
       })
 
-      const result = schema.safeParse({
-        $type: 'blob',
-        ref: blobCid,
-        mimeType: 'image/jpeg',
-        size: 10000,
+      it('accepts valid blob in strict mode', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 10000,
+        })
+        expect(result.success).toBe(true)
       })
-      expect(result.success).toBe(true)
+
+      it('rejects wrong mime in strict mode', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/png',
+          size: 10000,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects oversized in strict mode', () => {
+        const result = schema.safeParse({
+          $type: 'blob',
+          ref: blobCid,
+          mimeType: 'image/jpeg',
+          size: 30000,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts wrong mime and oversized in non-strict mode', () => {
+        const result = schema.safeParse(
+          {
+            $type: 'blob',
+            ref: blobCid,
+            mimeType: 'video/mp4',
+            size: 99999,
+          },
+          { strict: false },
+        )
+        expect(result.success).toBe(true)
+      })
     })
   })
 })
