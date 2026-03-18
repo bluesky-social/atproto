@@ -209,17 +209,37 @@ export class QueueService {
     }
   }
 
-  // @TODO: implement later
-  emptyStats(): ToolsOzoneQueueDefs.QueueStats {
+  async getStatsForQueue(
+    queueId: number,
+  ): Promise<ToolsOzoneQueueDefs.QueueStats> {
+    const row = await this.db.db
+      .selectFrom('report_stat')
+      .selectAll()
+      .where('queueId', '=', queueId)
+      .where('periodType', '=', 'live')
+      .executeTakeFirst()
+
+    if (!row) {
+      return {
+        pendingCount: 0,
+        actionedCount: 0,
+        escalatedPendingCount: 0,
+        lastUpdated: new Date().toISOString(),
+      }
+    }
+
     return {
-      pendingCount: 0,
-      actionedCount: 0,
-      escalatedPendingCount: 0,
-      lastUpdated: new Date().toISOString(),
+      inboundCount: row.inboundCount,
+      pendingCount: row.pendingCount,
+      actionedCount: row.actionedCount,
+      escalatedPendingCount: row.escalatedCount,
+      actionRate: row.actionRate ?? undefined,
+      lastUpdated: row.computedAt,
     }
   }
 
   view(queue: Selectable<ReportQueue>): ToolsOzoneQueueDefs.QueueView {
+    // Synchronous view — stats will be populated via viewAsync when needed
     return {
       id: queue.id,
       name: queue.name,
@@ -232,8 +252,21 @@ export class QueueService {
       updatedAt: queue.updatedAt,
       enabled: queue.enabled,
       deletedAt: queue.deletedAt ?? undefined,
-      stats: this.emptyStats(),
+      stats: {
+        pendingCount: 0,
+        actionedCount: 0,
+        escalatedPendingCount: 0,
+        lastUpdated: new Date().toISOString(),
+      },
     }
+  }
+
+  async viewWithStats(
+    queue: Selectable<ReportQueue>,
+  ): Promise<ToolsOzoneQueueDefs.QueueView> {
+    const view = this.view(queue)
+    view.stats = await this.getStatsForQueue(queue.id)
+    return view
   }
 
   /**
