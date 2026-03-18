@@ -2,6 +2,7 @@ import { Selectable, sql } from 'kysely'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { ReportStat } from '../db/schema/report_stat'
+import { DAY } from '@atproto/common'
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
@@ -42,21 +43,16 @@ export class ReportStatsService {
   }
 
   async computeDailyStats(): Promise<void> {
-    // Check if daily stats were computed in the last 24 hours
+    // Check if up to date
     const existing = await this.db.db
       .selectFrom('report_stat')
       .select('computedAt')
       .where('periodType', '=', 'daily')
-      .limit(1)
+      .orderBy('computedAt', 'desc')
       .executeTakeFirst()
-
-    if (existing) {
-      const lastComputed = new Date(existing.computedAt).getTime()
-      const twentyFourHoursAgo = Date.now() - 24 * 60 * 60 * 1000
-      if (lastComputed > twentyFourHoursAgo) {
-        return // Skip — daily stats are fresh
-      }
-    }
+    const lastComputed = new Date(existing?.computedAt || 0).getTime()
+    const isUpToDate = lastComputed > Date.now() - DAY
+    if (isUpToDate) return
 
     await this.computeAndUpsert('daily')
     dbLogger.info('daily report stats refreshed')
@@ -97,7 +93,7 @@ export class ReportStatsService {
    * Returns a Map of queueId → counts, plus a null key for aggregate.
    */
   private async queryReportCounts(): Promise<QueueCounts> {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const cutoff = new Date(Date.now() - DAY).toISOString()
 
     // Pending counts (all time) per queue
     const pendingRows = await this.db.db
