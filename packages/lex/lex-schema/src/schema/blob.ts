@@ -1,32 +1,36 @@
 import {
   BlobRef,
-  BlobRefCheckOptions,
   LegacyBlobRef,
   isBlobRef,
   isLegacyBlobRef,
+  parseCidSafe,
 } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
 
 /**
  * Configuration options for blob schema validation.
- *
- * @property allowLegacy - Whether to allow legacy blob references format
- * @property accept - List of accepted MIME types (supports wildcards like 'image/*' or '*\/*')
- * @property maxSize - Maximum blob size in bytes
  */
-export type BlobSchemaOptions = BlobRefCheckOptions & {
+export type BlobSchemaOptions = {
   /**
    * Whether to allow legacy blob references format
+   *
+   * @default false
    * @see {@link LegacyBlobRef}
    */
   allowLegacy?: boolean
+
   /**
-   * List of accepted mime types
+   * List of accepted MIME types (supports wildcards like 'image/*' or '*\/*')
+   *
+   * @default undefined // accepts all MIME types
    */
   accept?: string[]
+
   /**
-   * Maximum size in bytes
+   * Maximum blob size in bytes
+   *
+   * @default undefined // no size limit
    */
   maxSize?: number
 }
@@ -61,27 +65,24 @@ export class BlobSchema<
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    const blob: null | BlobRef | LegacyBlobRef =
-      (input as any)?.$type !== undefined
-        ? isBlobRef(input, this.options)
-          ? input
-          : null
-        : this.options?.allowLegacy === true && isLegacyBlobRef(input)
-          ? input
-          : null
+    const blob = parseValue.call(ctx, input, this.options)
 
     if (!blob) {
       return ctx.issueUnexpectedType(input, 'blob')
     }
 
-    const accept = this.options?.accept
-    if (accept && !matchesMime(blob.mimeType, accept)) {
-      return ctx.issueInvalidPropertyValue(blob, 'mimeType', accept)
-    }
+    // In non-strict mode, we allow legacy blob refs to pass through without
+    // MIME type or size checks.
+    if (ctx.options.strict) {
+      const accept = this.options?.accept
+      if (accept && !matchesMime(blob.mimeType, accept)) {
+        return ctx.issueInvalidPropertyValue(blob, 'mimeType', accept)
+      }
 
-    const maxSize = this.options?.maxSize
-    if (maxSize != null && 'size' in blob && blob.size > maxSize) {
-      return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
+      const maxSize = this.options?.maxSize
+      if (maxSize != null && 'size' in blob && blob.size > maxSize) {
+        return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
+      }
     }
 
     return ctx.success(blob)
@@ -92,6 +93,34 @@ export class BlobSchema<
     if (!accept) return true
     return matchesMime(mime, accept)
   }
+}
+
+function parseValue(
+  this: ValidationContext,
+  input: unknown,
+  options?: BlobSchemaOptions,
+): BlobRef | LegacyBlobRef | null {
+  if ((input as any)?.$type !== undefined) {
+    // Use the context's option for the "strict" check
+    return isBlobRef(input, this.options) ? input : null
+  }
+
+  if (options?.allowLegacy) {
+    if (isLegacyBlobRef(input)) {
+      return input
+    }
+  } else if (!this.options.strict && this.options.mode === 'parse') {
+    // When legacy values are not allowed, but we are in non-strict "parse
+    // mode", coerce legacy blob refs into standard BlobRef without size
+    // information.
+    if (isLegacyBlobRef(input)) {
+      const { cid, mimeType } = input
+      const ref = parseCidSafe(cid)
+      if (ref) return { $type: 'blob', ref, mimeType, size: -1 }
+    }
+  }
+
+  return null
 }
 
 function matchesMime(mime: string, accepted: string[]): boolean {
