@@ -177,7 +177,8 @@ export function normalizeDatetime(dtStr: string): ISODatetimeString {
     /[+-]\d\d:?\d\d/.test(dtStr) ||
     // 'Z' timezone designator
     /\dZ\b/.test(dtStr) ||
-    // Timezone abbreviation (eg. "EST", "PST", "UTC", "GMT", etc)
+    // Timezone abbreviation (eg. "EST", "PST", "UTC", "GMT", etc), as in:
+    // > Tue Mar 17 2026 16:38:44 PST (Pacific Standard Time)
     /\b[A-Z]{3,4}\b/.test(dtStr)
   ) {
     // Since we do have a timezone designator, we can try parsing "as is" and
