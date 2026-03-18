@@ -20,7 +20,8 @@ export function parseRawUserContext(
   const did = userContext.viewer
 
   // prioritize passthrough header
-  let deviceId = userContext.req.header(ANALYTICS_HEADER_DEVICE_ID)
+  // TODO: remove optional after image rollout.
+  let deviceId = userContext.req?.header(ANALYTICS_HEADER_DEVICE_ID)
   if (!deviceId) {
     if (did) {
       /*
@@ -40,7 +41,8 @@ export function parseRawUserContext(
   }
 
   // prioritize passthrough header
-  let sessionId = userContext.req.header(ANALYTICS_HEADER_SESSION_ID)
+  // TODO: remove optional after image rollout.
+  let sessionId = userContext.req?.header(ANALYTICS_HEADER_SESSION_ID)
   if (!sessionId) {
     /*
      * Without any better option for identifying the user, we generate a

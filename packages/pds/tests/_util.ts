@@ -57,26 +57,28 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+(?:__|::)did:plc/)) {
       return constantDidCursor
     }
-    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls (pds)
+    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls (pds), stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, sig, did, cid] = match
       return str
         .replace(sig, 'sig()')
         .replace(did, take(users, did))
-        .replace(cid, take(cids, cid))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls (bsky w/ presets)
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls (bsky w/ presets), stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, did, cid] = match
-      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+      return str
+        .replace(did, take(users, did))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
     if (str.startsWith('localhost-')) {
       return 'invite-code'

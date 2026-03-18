@@ -101,7 +101,7 @@ export type AgentConfig = {
  *
  * Can be a full {@link AgentConfig} object, or a simple service URL string/{@link URL}.
  */
-export type AgentOptions = AgentConfig | string | URL
+export type AgentOptions = AgentConfig | FetchHandler | string | URL
 
 /**
  * Creates an {@link Agent} from various input types.
@@ -132,12 +132,14 @@ export function buildAgent<O extends Agent | AgentOptions>(
   options: O,
 ): O extends Agent ? O : Agent
 export function buildAgent(options: Agent | AgentOptions): Agent {
-  if (isAgent(options)) return options
-
   const config: Agent | AgentConfig =
-    typeof options === 'string' || options instanceof URL
-      ? { did: undefined, service: options }
-      : options
+    typeof options === 'function'
+      ? { did: undefined, fetchHandler: options }
+      : typeof options === 'string' || options instanceof URL
+        ? { did: undefined, service: options }
+        : options
+
+  if (isAgent(config)) return config
 
   const { service, fetch = globalThis.fetch } = config
 

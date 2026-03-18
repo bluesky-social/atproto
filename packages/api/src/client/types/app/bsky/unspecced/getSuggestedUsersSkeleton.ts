@@ -26,8 +26,10 @@ export type InputSchema = undefined
 
 export interface OutputSchema {
   dids: string[]
-  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  /** DEPRECATED: use recIdStr instead. */
   recId?: string
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recIdStr?: string
 }
 
 export interface CallOptions {

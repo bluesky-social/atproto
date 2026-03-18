@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { FeatureGatesClient } from '../feature-gates'
 import { type CheckedFeatureGatesMap } from '../feature-gates/types'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -10,7 +11,7 @@ import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embe
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
 import {
-  Bookmark,
+  Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
   RecordRef,
@@ -73,6 +74,7 @@ import {
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
+  parseDate,
   urisByCollection,
 } from './util'
 
@@ -83,6 +85,9 @@ export class HydrateCtx {
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
+
+  featureGatesClient = this.vals.featureGatesClient
+
   /**
    * Cache of evaluated feature gates to be used in a given request lifecycle.
    * The actual evaluations happen at the top of the route handler and the
@@ -109,6 +114,8 @@ export type HydrateCtxVals = {
   include3pBlocks?: boolean
   includeDebugField?: boolean
   featureGatesMap?: CheckedFeatureGatesMap
+  // TODO: remove after image format rollout.
+  featureGatesClient?: FeatureGatesClient
 }
 
 export type HydrationState = {
@@ -165,6 +172,13 @@ export type FollowBlocks = HydrationMap<FollowBlock>
 
 export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
 
+export type Bookmark = {
+  ref?: { key: string }
+  subjectUri: string
+  subjectCid: string
+  indexedAt?: Date
+}
+
 // actor DID -> stash key -> bookmark
 export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
 
@@ -184,10 +198,14 @@ export class Hydrator {
   serviceLabelers: Set<string>
   config: HydratorConfig
 
+  // TODO: remove after image format rollout.
+  featureGatesClient: FeatureGatesClient
+
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
     config: HydratorConfig,
+    featureGatesClient: FeatureGatesClient,
   ) {
     this.config = config
     this.actor = new ActorHydrator(dataplane)
@@ -195,6 +213,7 @@ export class Hydrator {
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
     this.serviceLabelers = new Set(serviceLabelers)
+    this.featureGatesClient = featureGatesClient
   }
 
   // app.bsky.actor.defs#profileView
@@ -1049,7 +1068,7 @@ export class Hydrator {
       uris: bookmarkInfos.map((b) => b.subject),
     })
 
-    type BookmarkWithRef = Bookmark & { ref: RecordRef }
+    type BookmarkWithRef = BookmarkLex & { ref: RecordRef }
     const bookmarks: BookmarkWithRef[] = bookmarksRes.bookmarks.filter(
       (bookmark): bookmark is BookmarkWithRef => !!bookmark.ref?.key,
     )
@@ -1062,7 +1081,13 @@ export class Hydrator {
             const {
               ref: { key },
             } = bookmark
-            return [key, bookmark]
+            const processed: Bookmark = {
+              ref: bookmark.ref,
+              subjectUri: bookmark.subjectUri,
+              subjectCid: bookmark.subjectCid,
+              indexedAt: parseDate(bookmark.indexedAt),
+            }
+            return [key, processed]
           }),
         ),
       ],
@@ -1338,6 +1363,7 @@ export class Hydrator {
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,
       featureGatesMap: vals.featureGatesMap,
+      featureGatesClient: this.featureGatesClient,
     })
   }
 
