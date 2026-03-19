@@ -194,7 +194,9 @@ export class XrpcResponse<M extends Procedure | Query>
 
       // Assert valid response body.
       if (method.output.schema && options?.validateResponse !== false) {
-        const result = method.output.schema.safeParse(payload.body)
+        const result = method.output.schema.safeParse(payload.body, {
+          strict: !options?.allowInvalidLexData,
+        })
 
         if (!result.success) {
           throw new XrpcInvalidResponseError(
@@ -204,6 +206,18 @@ export class XrpcResponse<M extends Procedure | Query>
             result.reason,
           )
         }
+
+        const parsedPayload = {
+          body: result.value,
+          encoding: payload.encoding,
+        } as XrpcResponsePayload<M>
+
+        return new XrpcResponse<M>(
+          method,
+          response.status,
+          response.headers,
+          parsedPayload,
+        )
       }
     }
 

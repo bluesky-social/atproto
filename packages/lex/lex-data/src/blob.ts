@@ -114,7 +114,10 @@ export function isBlobRef(
     return false
   }
 
-  if (typeof size !== 'number' || size < 0 || !Number.isSafeInteger(size)) {
+  if (size === -1 && options?.strict === false) {
+    // In non-strict mode, allow size to be -1 to accommodate legacy blob refs
+    // that don't include size information.
+  } else if (!Number.isSafeInteger(size) || !((size as number) >= 0)) {
     return false
   }
 
