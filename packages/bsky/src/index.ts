@@ -88,27 +88,48 @@ export class BskyAppView {
     })
 
     const searchClient = config.searchUrl
-      ? new Client({
-          service: config.searchUrl,
-        })
+      ? new Client(
+          {
+            service: config.searchUrl,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: false,
+          },
+        )
       : undefined
 
     const suggestionsClient = config.suggestionsUrl
-      ? new Client({
-          service: config.suggestionsUrl,
-          headers: config.suggestionsApiKey
-            ? { authorization: `Bearer ${config.suggestionsApiKey}` }
-            : undefined,
-        })
+      ? new Client(
+          {
+            service: config.suggestionsUrl,
+            headers: config.suggestionsApiKey
+              ? { authorization: `Bearer ${config.suggestionsApiKey}` }
+              : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: false,
+          },
+        )
       : undefined
 
     const topicsClient = config.topicsUrl
-      ? new Client({
-          service: config.topicsUrl,
-          headers: config.topicsApiKey
-            ? { authorization: `Bearer ${config.topicsApiKey}` }
-            : undefined,
-        })
+      ? new Client(
+          {
+            service: config.topicsUrl,
+            headers: config.topicsApiKey
+              ? { authorization: `Bearer ${config.topicsApiKey}` }
+              : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: false,
+          },
+        )
       : undefined
 
     const etcd = config.etcdHosts.length

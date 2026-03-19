@@ -202,13 +202,34 @@ export class AppContext {
       : undefined
 
     const moderationClient = cfg.modService
-      ? new Client({ service: cfg.modService.url })
+      ? new Client(
+          { service: cfg.modService.url },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: false,
+          },
+        )
       : undefined
     const reportingClient = cfg.reportService
-      ? new Client({ service: cfg.reportService.url })
+      ? new Client(
+          { service: cfg.reportService.url },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: false,
+          },
+        )
       : undefined
     const entrywayClient = cfg.entryway
-      ? new Client({ service: cfg.entryway.url })
+      ? new Client(
+          { service: cfg.entryway.url },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: false,
+          },
+        )
       : undefined
     const entrywayAdminClient =
       cfg.entryway && secrets.entrywayAdminToken
@@ -221,6 +242,9 @@ export class AppContext {
                   secrets.entrywayAdminToken,
                 ),
               },
+              // Trust internal services to send us well-formed responses
+              strictResponseProcessing: false,
+              validateResponse: false,
             },
           )
         : undefined
