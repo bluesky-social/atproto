@@ -10,7 +10,7 @@ import { isMain as isEmbedRecordWithMedia } from '../lexicon/types/app/bsky/embe
 import { isListRule as isThreadgateListRule } from '../lexicon/types/app/bsky/feed/threadgate'
 import { hydrationLogger } from '../logger'
 import {
-  Bookmark,
+  Bookmark as BookmarkLex,
   BookmarkInfo,
   Notification,
   RecordRef,
@@ -73,6 +73,7 @@ import {
   mergeManyMaps,
   mergeMaps,
   mergeNestedMaps,
+  parseDate,
   urisByCollection,
 } from './util'
 
@@ -158,6 +159,13 @@ export type FollowBlock = boolean
 export type FollowBlocks = HydrationMap<FollowBlock>
 
 export type BidirectionalBlocks = HydrationMap<HydrationMap<boolean>>
+
+export type Bookmark = {
+  ref?: { key: string }
+  subjectUri: string
+  subjectCid: string
+  indexedAt?: Date
+}
 
 // actor DID -> stash key -> bookmark
 export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
@@ -1044,7 +1052,7 @@ export class Hydrator {
       uris: bookmarkInfos.map((b) => b.subject),
     })
 
-    type BookmarkWithRef = Bookmark & { ref: RecordRef }
+    type BookmarkWithRef = BookmarkLex & { ref: RecordRef }
     const bookmarks: BookmarkWithRef[] = bookmarksRes.bookmarks.filter(
       (bookmark): bookmark is BookmarkWithRef => !!bookmark.ref?.key,
     )
@@ -1057,7 +1065,13 @@ export class Hydrator {
             const {
               ref: { key },
             } = bookmark
-            return [key, bookmark]
+            const processed: Bookmark = {
+              ref: bookmark.ref,
+              subjectUri: bookmark.subjectUri,
+              subjectCid: bookmark.subjectCid,
+              indexedAt: parseDate(bookmark.indexedAt),
+            }
+            return [key, processed]
           }),
         ),
       ],

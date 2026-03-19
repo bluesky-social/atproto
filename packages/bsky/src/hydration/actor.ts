@@ -11,6 +11,7 @@ import {
   HydrationMap,
   RecordInfo,
   isActivitySubscriptionEnabled,
+  parseDate,
   parseRecord,
   parseString,
   safeTakedownRef,
@@ -215,7 +216,9 @@ export class ActorHydrator {
               uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
               handle: verificationMeta.handle,
               displayName: verificationMeta.displayName,
-              createdAt: verificationMeta.sortedAt.toDate().toISOString(),
+              createdAt:
+                parseDate(verificationMeta.sortedAt)?.toISOString() ??
+                new Date(0).toISOString(),
             }
           }
           // Filter out the verification meta that doesn't contain all info.
@@ -255,7 +258,7 @@ export class ActorHydrator {
         isLabeler: actor.labeler ?? false,
         allowIncomingChatsFrom: actor.allowIncomingChatsFrom || undefined,
         upstreamStatus: actor.upstreamStatus || undefined,
-        createdAt: actor.createdAt?.toDate(),
+        createdAt: parseDate(actor.createdAt),
         priorityNotifications: actor.priorityNotifications,
         trustedVerifier: actor.trustedVerifier,
         verifications,

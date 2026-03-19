@@ -326,7 +326,7 @@ const result = app.bsky.feed.post.$validate(value)
 value === result // true
 ```
 
-#### `$safeParse(data)` - Parse a value against a schema and get the resulting value
+#### `$safeParse(data, options?)` - Parse a value against a schema and get the resulting value
 
 Returns a detailed validation result object without throwing:
 
@@ -345,6 +345,16 @@ if (result.success) {
 } else {
   console.error('Validation failed:', result.error)
 }
+```
+
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
+
+```typescript
+// Strict mode (default) - rejects datetime without timezone
+app.bsky.feed.post.$safeParse(data) // { strict: true } is the default
+
+// Non-strict mode - accepts more lenient data
+app.bsky.feed.post.$safeParse(data, { strict: false })
 ```
 
 #### `$build(data)` - Build with Defaults
@@ -506,6 +516,8 @@ if (result.success) {
 }
 ```
 
+Both `xrpc()` and `xrpcSafe()` accept `validateRequest`, `validateResponse`, and `strictResponseProcessing` options to control validation and strictness per-call. See [Validation and Strictness Options](#validation-and-strictness-options) for details.
+
 ## Client API
 
 The `Client` class provides high-level helpers for common AT Protocol "repo" operations: `create()`, `get()`, `put()`, `delete()`, `list()`, `uploadBlob()`, and more. A `Client` instance is typically useful for making requests in the context of an authenticated user session, as it automatically handles headers and provides default values based on the authenticated user's DID.
@@ -574,6 +586,29 @@ const client = new Client(session, {
 })
 ```
 
+#### Validation and Strictness Options
+
+The `Client` constructor accepts options to control request/response validation and how invalid Lex data is handled. These defaults apply to all XRPC calls made through the client, and can be overridden per-call via `client.call()`, `client.xrpc()` or `client.xrpcSafe()`.
+
+```typescript
+const client = new Client(session, {
+  // Validate requests against the method's input schema (default: false)
+  validateRequest: true,
+
+  // Validate responses against the method's output schema (default: true)
+  validateResponse: true,
+
+  // Strictly process responses according to Lex encoding rules. When set to
+  // false, accepts responses containing invalid Lex data such as floats or
+  // malformed $bytes/$link objects (default: true)
+  strictResponseProcessing: false,
+})
+```
+
+- **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
+- **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
+- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `true`.
+
 ### Core Methods
 
 #### `client.call()`
@@ -603,7 +638,6 @@ const timeline = await client.call(
   },
   {
     signal: abortSignal,
-    headers: { 'custom-header': 'value' },
   },
 )
 ```
@@ -857,6 +891,16 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
+Validation and strictness options (`validateRequest`, `validateResponse`, `strictResponseProcessing`) can also be passed per-call to override the client defaults:
+
+```typescript
+const response = await client.xrpc(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+  strictResponseProcessing: false, // Accept non-strict Lex data for this call
+  validateResponse: false, // Skip schema validation for this call
+})
+```
+
 ## Utilities
 
 Various utilities for working with CIDs, datetime strings, string lengths, language tags, and low-level JSON encoding are exported from the package:
@@ -1001,12 +1045,14 @@ if (isBlobRef(blobRef)) {
 >
 > ```typescript
 > type LegacyBlobRef = {
->   ref: string
+>   cid: string
 >   mimeType: string
 > }
 > ```
 >
 > These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
+>
+> When using non-strict validation (e.g. `$safeParse(data, { strict: false })`), legacy blob references are automatically coerced into standard `BlobRef` objects with `size: -1`, even without `--allowLegacyBlobs`.
 
 ### Actions
 
@@ -1028,7 +1074,7 @@ Actions receive:
 
 - `client` - The Client instance (to make XRPC calls)
 - `input` - The input data for the action
-- `options` - Call options (signal, headers)
+- `options` - Call options (signal)
 
 #### Using Actions
 

@@ -1,5 +1,31 @@
 # @atproto/pds
 
+## 0.4.216
+
+### Patch Changes
+
+- Updated dependencies [[`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786)]:
+  - @atproto/lex-data@0.0.14
+  - @atproto/xrpc-server@0.10.17
+  - @atproto/common@0.5.15
+  - @atproto/lex-cbor@0.0.15
+  - @atproto/oauth-provider@0.15.14
+
+## 0.4.215
+
+### Patch Changes
+
+- [#4712](https://github.com/bluesky-social/atproto/pull/4712) [`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33) Thanks [@devinivy](https://github.com/devinivy)! - remove format from img urls by default
+
+- [#4709](https://github.com/bluesky-social/atproto/pull/4709) [`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a purge event to remove ozone's data on age assurance
+
+- Updated dependencies [[`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa), [`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f), [`192685f`](https://github.com/bluesky-social/atproto/commit/192685fca75a68c9c50a94817d3f27da7fc02f56)]:
+  - @atproto/api@0.19.4
+  - @atproto/syntax@0.5.1
+  - @atproto/repo@0.8.13
+  - @atproto/xrpc-server@0.10.16
+  - @atproto/oauth-provider@0.15.13
+
 ## 0.4.214
 
 ### Patch Changes

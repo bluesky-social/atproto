@@ -2,7 +2,6 @@ import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { AtUri } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
-import * as seedThreadV2 from '../seed/thread-v2'
 import { postTexts, replyTexts } from './data'
 import blurHashB64 from './img/blur-hash-avatar-b64'
 import labeledImgB64 from './img/labeled-img-b64'
@@ -31,63 +30,84 @@ export async function generateMockSetup(env: TestNetwork) {
     throw new Error('Not found')
   }
 
-  const loggedOut = env.pds.getClient()
-
   const users = [
     {
       email: 'alice@test.com',
       handle: `alice.test`,
       password: 'hunter2',
+      displayName: 'Alice',
+      description: 'Test user 0',
     },
     {
       email: 'bob@test.com',
       handle: `bob.test`,
       password: 'hunter2',
+      displayName: 'Bob',
+      description: 'Test user 1',
     },
     {
       email: 'carla@test.com',
       handle: `carla.test`,
       password: 'hunter2',
+      displayName: 'Carla',
+      description: 'Test user 2',
+    },
+    {
+      email: 'triage@test.com',
+      handle: 'triage.test',
+      password: 'triage-pass',
+    },
+    {
+      email: 'mod@test.com',
+      handle: 'mod.test',
+      password: 'mod-pass',
+    },
+    {
+      email: 'admin-mod@test.com',
+      handle: 'admin-mod.test',
+      password: 'admin-mod-pass',
+    },
+    {
+      email: 'labeler@test.com',
+      handle: 'labeler.test',
+      password: 'hunter2',
+      displayName: 'Test Labeler',
+      description: 'Labeling things across the atmosphere',
     },
   ]
 
   const userAgents = await Promise.all(
-    users.map(async (user, i) => {
+    users.map(async (user) => {
       const client: AtpAgent = env.pds.getClient()
       await client.createAccount(user)
       client.assertAuthenticated()
-      await client.app.bsky.actor.profile.create(
-        { repo: client.did },
-        {
-          displayName: ucfirst(user.handle).slice(0, -5),
-          description: `Test user ${i}`,
-        },
-      )
+      if (user.displayName || user.description) {
+        await client.app.bsky.actor.profile.create(
+          { repo: client.did },
+          {
+            displayName: user.displayName,
+            description: user.description,
+          },
+        )
+      }
       return client
     }),
   )
 
-  const [alice, bob, carla] = userAgents
+  const [alice, bob, carla, triage, mod, adminMod, labeler] = userAgents
 
-  // Create moderator accounts
-  const triageRes = await loggedOut.com.atproto.server.createAccount({
-    email: 'triage@test.com',
-    handle: 'triage.test',
-    password: 'triage-pass',
-  })
-  await env.ozone.addTriageDid(triageRes.data.did)
-  const modRes = await loggedOut.com.atproto.server.createAccount({
-    email: 'mod@test.com',
-    handle: 'mod.test',
-    password: 'mod-pass',
-  })
-  await env.ozone.addModeratorDid(modRes.data.did)
-  const adminRes = await loggedOut.com.atproto.server.createAccount({
-    email: 'admin-mod@test.com',
-    handle: 'admin-mod.test',
-    password: 'admin-mod-pass',
-  })
-  await env.ozone.addAdminDid(adminRes.data.did)
+  // Create chat declarations for all users
+  for (const user of userAgents) {
+    await user.chat.bsky.actor.declaration.create(
+      { repo: user.did },
+      { allowIncoming: 'all' },
+    )
+  }
+
+  // Add moderator roles
+  await env.ozone.addTriageDid(triage.did)
+  await env.ozone.addModeratorDid(mod.did)
+  await env.ozone.addAdminDid(adminMod.did)
 
   // Report one user
   const reporter = picka(userAgents)
@@ -106,9 +126,9 @@ export async function generateMockSetup(env: TestNetwork) {
   // everybody follows everybody
   const follow = async (author: AtpAgent, subject: AtpAgent) => {
     await author.app.bsky.graph.follow.create(
-      { repo: author.accountDid },
+      { repo: author.assertDid },
       {
-        subject: subject.accountDid,
+        subject: subject.assertDid,
         createdAt: date.next().value,
       },
     )
@@ -165,7 +185,7 @@ export async function generateMockSetup(env: TestNetwork) {
     encoding: 'image/png',
   })
   const labeledPost = await bob.app.bsky.feed.post.create(
-    { repo: bob.accountDid },
+    { repo: bob.assertDid },
     {
       text: 'naughty post',
       embed: {
@@ -182,7 +202,7 @@ export async function generateMockSetup(env: TestNetwork) {
   )
 
   const filteredPost = await bob.app.bsky.feed.post.create(
-    { repo: bob.accountDid },
+    { repo: bob.assertDid },
     {
       text: 'really bad post should be deleted',
       createdAt: date.next().value,
@@ -241,7 +261,7 @@ export async function generateMockSetup(env: TestNetwork) {
 
   // a couple feed generators that returns some posts
   const fg1Uri = AtUri.make(
-    alice.accountDid,
+    alice.assertDid,
     'app.bsky.feed.generator',
     'alice-favs',
   )
@@ -263,7 +283,7 @@ export async function generateMockSetup(env: TestNetwork) {
     encoding: 'image/png',
   })
   const fgAliceRes = await alice.app.bsky.feed.generator.create(
-    { repo: alice.accountDid, rkey: fg1Uri.rkey },
+    { repo: alice.assertDid, rkey: fg1Uri.rkey },
     {
       did: fg1.did,
       displayName: 'alices feed',
@@ -274,7 +294,7 @@ export async function generateMockSetup(env: TestNetwork) {
   )
 
   await alice.app.bsky.feed.post.create(
-    { repo: alice.accountDid },
+    { repo: alice.assertDid },
     {
       text: 'check out my algorithm!',
       embed: {
@@ -295,7 +315,7 @@ export async function generateMockSetup(env: TestNetwork) {
   }
 
   const fg2Uri = AtUri.make(
-    bob.accountDid,
+    bob.assertDid,
     'app.bsky.feed.generator',
     'bob-redux',
   )
@@ -313,7 +333,7 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   })
   const fgBobRes = await bob.app.bsky.feed.generator.create(
-    { repo: bob.accountDid, rkey: fg2Uri.rkey },
+    { repo: bob.assertDid, rkey: fg2Uri.rkey },
     {
       did: fg2.did,
       displayName: 'Bobby boy hot new algo',
@@ -322,7 +342,7 @@ export async function generateMockSetup(env: TestNetwork) {
   )
 
   await alice.app.bsky.feed.post.create(
-    { repo: alice.accountDid },
+    { repo: alice.assertDid },
     {
       text: `bobs feed is neat too`,
       embed: {
@@ -334,7 +354,7 @@ export async function generateMockSetup(env: TestNetwork) {
   )
 
   const fg3Uri = AtUri.make(
-    carla.accountDid,
+    carla.assertDid,
     'app.bsky.feed.generator',
     'carla-intr-algo',
   )
@@ -352,7 +372,7 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   })
   const fgCarlaRes = await carla.app.bsky.feed.generator.create(
-    { repo: carla.accountDid, rkey: fg3Uri.rkey },
+    { repo: carla.assertDid, rkey: fg3Uri.rkey },
     {
       did: fg3.did,
       displayName: `Acceptin' Generator`,
@@ -362,7 +382,7 @@ export async function generateMockSetup(env: TestNetwork) {
   )
 
   await alice.app.bsky.feed.post.create(
-    { repo: alice.accountDid },
+    { repo: alice.assertDid },
     {
       text: `carla accepts interactions on her feed`,
       embed: {
@@ -373,24 +393,10 @@ export async function generateMockSetup(env: TestNetwork) {
     },
   )
 
-  // create a labeler account
+  // create labeler service
   {
-    const labeler = env.pds.getClient()
-    const res = await labeler.createAccount({
-      email: 'labeler@test.com',
-      handle: 'labeler.test',
-      password: 'hunter2',
-    })
-    await labeler.app.bsky.actor.profile.create(
-      { repo: res.data.did },
-      {
-        displayName: 'Test Labeler',
-        description: `Labeling things across the atmosphere`,
-      },
-    )
-
     await labeler.app.bsky.labeler.service.create(
-      { repo: res.data.did, rkey: 'self' },
+      { repo: labeler.did, rkey: 'self' },
       {
         policies: {
           labelValues: [
@@ -477,35 +483,35 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
     await createLabel(env.bsky.db, {
-      uri: alice.accountDid,
+      uri: alice.assertDid,
       cid: '',
       val: 'rude',
-      src: res.data.did,
+      src: labeler.did,
     })
     await createLabel(env.bsky.db, {
-      uri: `at://${alice.accountDid}/app.bsky.feed.generator/alice-favs`,
+      uri: `at://${alice.assertDid}/app.bsky.feed.generator/alice-favs`,
       cid: '',
       val: 'cool',
-      src: res.data.did,
+      src: labeler.did,
     })
     await createLabel(env.bsky.db, {
-      uri: bob.accountDid,
+      uri: bob.assertDid,
       cid: '',
       val: 'cool',
-      src: res.data.did,
+      src: labeler.did,
     })
     await createLabel(env.bsky.db, {
-      uri: carla.accountDid,
+      uri: carla.assertDid,
       cid: '',
       val: 'spam',
-      src: res.data.did,
+      src: labeler.did,
     })
   }
 
   // Create lists and add people to the lists
   {
     const flowerLovers = await alice.app.bsky.graph.list.create(
-      { repo: alice.accountDid },
+      { repo: alice.assertDid },
       {
         name: 'Flower Lovers',
         purpose: 'app.bsky.graph.defs#curatelist',
@@ -514,7 +520,7 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
     const labelHaters = await bob.app.bsky.graph.list.create(
-      { repo: bob.accountDid },
+      { repo: bob.assertDid },
       {
         name: 'Label Haters',
         purpose: 'app.bsky.graph.defs#modlist',
@@ -523,45 +529,42 @@ export async function generateMockSetup(env: TestNetwork) {
       },
     )
     await alice.app.bsky.graph.listitem.create(
-      { repo: alice.accountDid },
+      { repo: alice.assertDid },
       {
-        subject: bob.accountDid,
+        subject: bob.assertDid,
         createdAt: new Date().toISOString(),
         list: new RecordRef(flowerLovers.uri, flowerLovers.cid).uriStr,
       },
     )
     await bob.app.bsky.graph.listitem.create(
-      { repo: bob.accountDid },
+      { repo: bob.assertDid },
       {
-        subject: alice.accountDid,
+        subject: alice.assertDid,
         createdAt: new Date().toISOString(),
         list: new RecordRef(labelHaters.uri, labelHaters.cid).uriStr,
       },
     )
   }
 
-  await setVerifier(env.bsky.db, alice.accountDid)
+  await setVerifier(env.bsky.db, alice.assertDid)
 
-  // @TODO the following should be optimized as it makes dev-env start very slow (>10 sec)
-  const sc = env.getSeedClient()
-  await seedThreadV2.simple(sc)
-  await seedThreadV2.long(sc)
-  await seedThreadV2.deep(sc)
-  await seedThreadV2.branchingFactor(sc)
-  await seedThreadV2.annotateMoreReplies(sc)
-  await seedThreadV2.annotateOP(sc)
-  await seedThreadV2.sort(sc)
-  await seedThreadV2.bumpOpAndViewer(sc)
-  await seedThreadV2.bumpGroupSorting(sc)
-  await seedThreadV2.bumpFollows(sc)
-  await seedThreadV2.blockDeletionAuth(sc, env.bsky.ctx.cfg.modServiceDid)
-  await seedThreadV2.mutes(sc)
-  await seedThreadV2.threadgated(sc)
-  await seedThreadV2.tags(sc)
-}
-
-function ucfirst(str: string): string {
-  return str.at(0)?.toUpperCase() + str.slice(1)
+  // @TODO These are useful when testing complex threads, but don't need to be enabled all the time. We could make it configurable.
+  // import * as seedThreadV2 from '../seed/thread-v2'
+  // const sc = env.getSeedClient()
+  // await seedThreadV2.simple(sc)
+  // await seedThreadV2.long(sc)
+  // await seedThreadV2.deep(sc)
+  // await seedThreadV2.branchingFactor(sc)
+  // await seedThreadV2.annotateMoreReplies(sc)
+  // await seedThreadV2.annotateOP(sc)
+  // await seedThreadV2.sort(sc)
+  // await seedThreadV2.bumpOpAndViewer(sc)
+  // await seedThreadV2.bumpGroupSorting(sc)
+  // await seedThreadV2.bumpFollows(sc)
+  // await seedThreadV2.blockDeletionAuth(sc, env.bsky.ctx.cfg.modServiceDid)
+  // await seedThreadV2.mutes(sc)
+  // await seedThreadV2.threadgated(sc)
+  // await seedThreadV2.tags(sc)
 }
 
 const createLabel = async (

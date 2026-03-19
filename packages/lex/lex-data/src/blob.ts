@@ -2,6 +2,10 @@ import { Cid, RawCid, ifCid, validateCidString } from './cid.js'
 import { LexValue } from './lex.js'
 import { isPlainObject, isPlainProto } from './object.js'
 
+// Number.isSafeInteger is actually safe to use with non-number values, so we
+// can use it as a type guard.
+const isSafeInteger = Number.isSafeInteger as (v: unknown) => v is number
+
 /**
  * Reference to binary data (like images, videos, etc.) in the AT Protocol data model.
  *
@@ -114,7 +118,10 @@ export function isBlobRef(
     return false
   }
 
-  if (typeof size !== 'number' || size < 0 || !Number.isSafeInteger(size)) {
+  if (size === -1 && options?.strict === false) {
+    // In non-strict mode, allow size to be -1 to accommodate legacy blob refs
+    // that don't include size information.
+  } else if (!isSafeInteger(size) || size < 0) {
     return false
   }
 

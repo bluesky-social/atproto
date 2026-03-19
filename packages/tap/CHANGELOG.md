@@ -1,5 +1,21 @@
 # @atproto/tap
 
+## 0.2.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.22
+  - @atproto/common@0.5.15
+
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+  - @atproto/lex@0.0.21
+
 ## 0.2.8
 
 ### Patch Changes

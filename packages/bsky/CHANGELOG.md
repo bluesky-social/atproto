@@ -1,5 +1,39 @@
 # @atproto/bsky
 
+## 0.0.221
+
+### Patch Changes
+
+- [#4747](https://github.com/bluesky-social/atproto/pull/4747) [`3b41b81`](https://github.com/bluesky-social/atproto/commit/3b41b81e27e0aba55406642c07da01c290281647) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove deprecated handling from `getSuggestedFollowsByActor`
+
+- [#4767](https://github.com/bluesky-social/atproto/pull/4767) [`4ecde48`](https://github.com/bluesky-social/atproto/commit/4ecde4879ffd769fe2c7a0f1d4e3275c776114f4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add feature gate to enable social proof on `getSuggestedFollowsByActor`
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.10.17
+  - @atproto/common@0.5.15
+
+## 0.0.220
+
+### Patch Changes
+
+- [#4712](https://github.com/bluesky-social/atproto/pull/4712) [`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33) Thanks [@devinivy](https://github.com/devinivy)! - remove format from img urls by default
+
+- [#4723](https://github.com/bluesky-social/atproto/pull/4723) [`7ed5704`](https://github.com/bluesky-social/atproto/commit/7ed57043c12aedb0faf6b7dc947adfcfff570b6d) Thanks [@devinivy](https://github.com/devinivy)! - switch default image format to jpeg temporarily
+
+- [#4746](https://github.com/bluesky-social/atproto/pull/4746) [`eaee3d4`](https://github.com/bluesky-social/atproto/commit/eaee3d430554436964d45f38bbeb1132ae9b8862) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Serialize `pagerank` float values in `debug` field on profiles.
+
+- [#4753](https://github.com/bluesky-social/atproto/pull/4753) [`ff42a3a`](https://github.com/bluesky-social/atproto/commit/ff42a3afc3a0d4146a6618a910fa612c7e878ea7) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Prefer returning `undefined` over year 0001 dates on bsky views
+
+- [#4762](https://github.com/bluesky-social/atproto/pull/4762) [`bc69b03`](https://github.com/bluesky-social/atproto/commit/bc69b03f53da3ec52bc3eed0738308f320386e75) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Improve zero-date handling
+
+- [#4755](https://github.com/bluesky-social/atproto/pull/4755) [`139b294`](https://github.com/bluesky-social/atproto/commit/139b2941d640bafa1e7d3a56e0608dc42bb0006c) Thanks [@devinivy](https://github.com/devinivy)! - Remove feature gate for including format in image URLs.
+
+- Updated dependencies [[`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa), [`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f), [`192685f`](https://github.com/bluesky-social/atproto/commit/192685fca75a68c9c50a94817d3f27da7fc02f56)]:
+  - @atproto/api@0.19.4
+  - @atproto/syntax@0.5.1
+  - @atproto/repo@0.8.13
+  - @atproto/xrpc-server@0.10.16
+
 ## 0.0.219
 
 ### Patch Changes
