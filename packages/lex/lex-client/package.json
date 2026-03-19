@@ -36,6 +36,7 @@
     }
   },
   "dependencies": {
+    "@atproto/lex-cbor": "workspace:^",
     "@atproto/lex-data": "workspace:^",
     "@atproto/lex-json": "workspace:^",
     "@atproto/lex-schema": "workspace:^",
