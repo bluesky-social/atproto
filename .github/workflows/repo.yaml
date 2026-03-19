@@ -39,6 +39,7 @@ jobs:
             packages/api/src/moderation/const/labels.ts
             packages/bsky/src/lexicons
             packages/pds/src/lexicons
+            packages/sync/src/lexicons
 
   changeset:
     name: Changeset

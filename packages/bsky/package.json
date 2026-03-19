@@ -16,7 +16,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prebuild": "lex build --lexicons ../../lexicons --clear --indexFile",
+    "codegen": "lex build --lexicons ../../lexicons --clear --indexFile",
+    "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh jest",

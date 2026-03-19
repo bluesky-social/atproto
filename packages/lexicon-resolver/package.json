@@ -12,7 +12,7 @@
     "test": "jest",
     "build": "tsc --build tsconfig.build.json",
     "prebuild": "pnpm run codegen",
-    "codegen": "lex build --indexFile --lexicons ../../lexicons --clear --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
+    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons --include com.atproto.sync.getRecord --include com.atproto.lexicon.schema"
   },
   "homepage": "https://atproto.com",
   "repository": {
