@@ -68,14 +68,15 @@ export type {
  * }
  * ```
  */
-export type ClientOptions = XrpcResponseOptions & {
-  /** Labeler DIDs to include in requests for content moderation. */
-  labelers?: Iterable<DidString>
-  /** Custom headers to include in all requests made by this client. */
-  headers?: HeadersInit
-  /** Service proxy identifier for routing requests through a specific service. */
-  service?: Service
-}
+export type ClientOptions = XrpcResponseOptions &
+  XrpcRequestOptions & {
+    /** Labeler DIDs to include in requests for content moderation. */
+    labelers?: Iterable<DidString>
+    /** Custom headers to include in all requests made by this client. */
+    headers?: HeadersInit
+    /** Service proxy identifier for routing requests through a specific service. */
+    service?: Service
+  }
 
 export type CallOptions = {
   /** AbortSignal to cancel the request. */
