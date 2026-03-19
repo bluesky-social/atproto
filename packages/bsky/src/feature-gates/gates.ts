@@ -17,3 +17,8 @@ export enum Gate {
  * overly noisy.
  */
 export const IGNORE_METRICS_FOR_GATES: Set<Gate> = new Set([])
+export type FeatureGate =
+  | 'suggested_users:discover_agent:enable'
+  | 'suggested_users:social_proof:enable'
+  | 'threads:reply_ranking_exploration:enable'
+  | 'search:filtering_exploration:enable'
