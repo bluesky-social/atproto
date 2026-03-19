@@ -106,52 +106,34 @@ export class ReportStatsService {
 
     const computedAt = new Date().toISOString()
 
-    if (group.mode === 'live') {
-      return this.db.db
-        .insertInto('report_stat')
-        .values({
-          queueId,
-          mode,
-          timeframe,
-          inboundCount,
-          pendingCount,
-          actionedCount,
-          escalatedCount,
-          actionRate,
-          computedAt,
-        })
-        .onConflict((oc) =>
-          oc
-            .columns(['queueId', 'timeframe'])
-            .where('mode', '=', 'live')
-            .doUpdateSet({
-              inboundCount,
-              pendingCount,
-              actionedCount,
-              escalatedCount,
-              actionRate,
-              computedAt,
-            }),
-        )
-        .returningAll()
-        .executeTakeFirstOrThrow()
-    } else {
-      return this.db.db
-        .insertInto('report_stat')
-        .values({
-          queueId,
-          mode,
-          timeframe,
-          inboundCount,
-          pendingCount,
-          actionedCount,
-          escalatedCount,
-          actionRate,
-          computedAt,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow()
-    }
+    return this.db.db
+      .insertInto('report_stat')
+      .values({
+        queueId,
+        mode,
+        timeframe,
+        inboundCount,
+        pendingCount,
+        actionedCount,
+        escalatedCount,
+        actionRate,
+        computedAt,
+      })
+      .onConflict((oc) =>
+        oc
+          .columns(['queueId', 'timeframe'])
+          .where('mode', '=', 'live')
+          .doUpdateSet({
+            inboundCount,
+            pendingCount,
+            actionedCount,
+            escalatedCount,
+            actionRate,
+            computedAt,
+          }),
+      )
+      .returningAll()
+      .executeTakeFirstOrThrow()
   }
 
   /** Calculate statistics for a group. */
