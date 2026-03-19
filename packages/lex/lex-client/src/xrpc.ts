@@ -26,7 +26,7 @@ import {
 } from './util.js'
 
 // If all params are optional, allow omitting the params object
-type XrpcParamsOptions<P extends Params> =
+type XrpcRequestParamsOptions<P extends Params> =
   NonNullable<unknown> extends P ? { params?: P } : { params: P }
 
 /**
@@ -41,23 +41,31 @@ type XrpcRequestPayload<M extends Procedure | Query> = M extends Procedure
   ? InferPayload<M['input'], BinaryBodyInit>
   : undefined
 
-type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
-  ? // encoding will be inferred from the schema at runtime if not provided
-    { body: B; encoding?: E }
+type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
+  body: infer B
+  encoding: infer E
+}
+  ? {
+      body: B
+
+      /**
+       * mime type hint for binary bodies
+       *
+       * Only needed for endpoints that accept binary input (e.g. file uploads)
+       * when the body is a Blob-like object without a type (e.g. fetch-blob's
+       * Blob). If the body is a Blob-like object with a type, that type will be
+       * used as the content-type header instead of this option.
+       *
+       * @default "application/octet-stream"
+       */
+      encoding?: E
+    }
   : { body?: undefined; encoding?: undefined }
 
 /**
- * Options for making an XRPC request.
- *
- * Combines {@link XrpcResponseOptions} and {@link XrpcRequestOptions} with
- * method-specific params and body requirements. The type system ensures
- * required params/body are provided based on the method schema.
+ * Options for making an XRPC request, based on the method schema.
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
- * @see {@link XrpcResponseOptions} for response-related options like validateResponse
- * @see {@link XrpcRequestOptions} for request-related options like signal and validateRequest
- * @see {@link XrpcParamsOptions} for method-specific query parameters
- * @see {@link XrpcInputOptions} for method-specific body and encoding requirements
  *
  * @example Query with params
  * ```typescript
@@ -74,10 +82,31 @@ type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
  * ```
  */
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  XrpcResponseOptions &
-    XrpcRequestOptions &
-    XrpcInputOptions<XrpcRequestPayload<M>> &
-    XrpcParamsOptions<XrpcRequestParams<M>>
+  XrpcRequestOptions<M> & XrpcResponseOptions
+
+export type XrpcRequestOptions<
+  M extends Procedure | Query = Procedure | Query,
+> = XrpcRequestProcessingOptions &
+  XrpcRequestHeadersOptions &
+  XrpcRequestPayloadOptions<XrpcRequestPayload<M>> &
+  XrpcRequestParamsOptions<XrpcRequestParams<M>>
+
+export type XrpcRequestProcessingOptions = {
+  /**
+   * AbortSignal to cancel the request.
+   */
+  signal?: AbortSignal
+
+  /**
+   * Whether to validate the request against the method's input schema. Enabling
+   * this can help catch errors early but may have a performance cost. This
+   * would typically only be set to `true` in development or debugging
+   * scenarios.
+   *
+   * @default false
+   */
+  validateRequest?: boolean
+}
 
 /**
  * Makes an XRPC request and throws on failure.
@@ -200,6 +229,9 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
 ): `/xrpc/${NsidString}${'' | `?${string}`}` {
   const path = `/xrpc/${method.nsid}` as const
 
+  // @NOTE param.toURLSearchParams() will always validate the params in order to
+  // apply default values, so we can't disable it with options.validateRequest
+
   const queryString = method.parameters
     ?.toURLSearchParams(options.params ?? {})
     .toString()
@@ -207,29 +239,13 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   return queryString ? (`${path}?${queryString}` as const) : path
 }
 
-export type XrpcRequestOptions = XrpcProcedureInputOptions &
-  XrpcRequestHeadersOptions & {
-    /**
-     * AbortSignal to cancel the request.
-     */
-    signal?: AbortSignal
-
-    /**
-     * mime type of binary body
-     *
-     * Only needed for endpoints that accept binary input (e.g. file uploads)
-     * when the body is a Blob-like object without a type (e.g. fetch-blob's
-     * Blob). If the body is a Blob-like object with a type, that type will be
-     * used as the content-type header instead of this option.
-     *
-     * @default "application/octet-stream"
-     */
-    encoding?: string
-  }
-
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
-  options: XrpcRequestOptions,
+  options: XrpcRequestProcessingOptions &
+    XrpcRequestHeadersOptions &
+    XrpcProcedureInputOptions & {
+      encoding?: string
+    },
 ): RequestInit & { duplex?: 'half' } {
   const headers = buildXrpcRequestHeaders(options)
 
@@ -281,15 +297,6 @@ function xrpcRequestInit<T extends Procedure | Query>(
 
 type XrpcProcedureInputOptions = {
   body?: LexValue | BinaryBodyInit
-
-  /**
-   * Whether to validate the request against the method's input schema. Enabling
-   * this can help catch errors early but may have a performance cost. This
-   * would typically only be set to `true` in development or debugging
-   * scenarios.
-   *
-   * @default false
-   */
   validateRequest?: boolean
 }
 
@@ -328,6 +335,7 @@ function xrpcProcedureInput(
         body instanceof ArrayBuffer ||
         body instanceof ReadableStream
       ) {
+        // @ts-expect-error I don't know why TypeScript fails to assign Uint8Array to BodyInit...
         return buildPayload(input, body, encodingHint)
       } else if (isAsyncIterable(body)) {
         return buildPayload(input, toReadableStream(body), encodingHint)
