@@ -27,16 +27,16 @@ export class QueueRouter {
     if (this.destroyed) return
     this.processingPromise = this.routeReports()
       .catch((err) => dbLogger.error({ err }, 'queue routing errored'))
-      .then(() => this.computeStats())
-      .catch((err) => dbLogger.error({ err }, 'stats computation errored'))
+      .then(() => this.materializeStats())
+      .catch((err) => dbLogger.error({ err }, 'stats materialization errored'))
       .finally(() => {
         this.timer = setTimeout(() => this.poll(), getInterval())
       })
   }
 
-  private async computeStats() {
+  private async materializeStats() {
     const statsService = this.reportStatsServiceCreator(this.db)
-    await statsService.computeAll()
+    await statsService.materializeAll()
   }
 
   async destroy() {
