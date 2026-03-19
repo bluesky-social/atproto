@@ -58,12 +58,6 @@ export interface QueueStats {
   actionedCount: number
   /** Number of reports in 'escalated' status */
   escalatedPendingCount: number
-  /** Number of distinct reporters with reports in this queue */
-  uniqueReportersCount?: number
-  /** Number of distinct subject DIDs with reports in this queue */
-  uniqueSubjectsDidCount?: number
-  /** Number of distinct subject DID+URI combinations in this queue */
-  uniqueSubjectsFullCount?: number
   /** Reports received in this queue in the last 24 hours. */
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0. */

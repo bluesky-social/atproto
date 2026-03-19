@@ -100,18 +100,6 @@
           "type": "integer",
           "description": "Number of reports in 'escalated' status"
         },
-        "uniqueReportersCount": {
-          "type": "integer",
-          "description": "Number of distinct reporters with reports in this queue"
-        },
-        "uniqueSubjectsDidCount": {
-          "type": "integer",
-          "description": "Number of distinct subject DIDs with reports in this queue"
-        },
-        "uniqueSubjectsFullCount": {
-          "type": "integer",
-          "description": "Number of distinct subject DID+URI combinations in this queue"
-        },
         "inboundCount": {
           "type": "integer",
           "description": "Reports received in this queue in the last 24 hours."
