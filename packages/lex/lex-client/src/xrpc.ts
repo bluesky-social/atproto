@@ -65,6 +65,10 @@ type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
 /**
  * Options for making an XRPC request, based on the method schema.
  *
+ * Combines {@link XrpcRequestOptions} and {@link XrpcResponseOptions} with
+ * method-specific params and body requirements. The type system ensures
+ * required params/body are provided based on the method schema.
+ *
  * @typeParam M - The XRPC method type (Procedure or Query)
  *
  * @example Query with params
