@@ -65,7 +65,7 @@ export function isAsyncIterable<T>(
   )
 }
 
-export type AtprotoHeadersOptions = {
+export type XrpcRequestHeadersOptions = {
   /** Additional HTTP headers to include in the request. */
   headers?: HeadersInit
 
@@ -83,10 +83,12 @@ export type AtprotoHeadersOptions = {
  * - `atproto-proxy`: Service routing header (if service is specified)
  * - `atproto-accept-labelers`: Comma-separated list of labeler DIDs
  *
- * @see {@link AtprotoHeadersOptions}
+ * @see {@link XrpcRequestHeadersOptions}
  * @returns A new Headers object with AT Protocol headers added
  */
-export function buildAtprotoHeaders(options: AtprotoHeadersOptions): Headers {
+export function buildXrpcRequestHeaders(
+  options: XrpcRequestHeadersOptions,
+): Headers {
   const headers = new Headers(options?.headers)
 
   if (options.service && !headers.has('atproto-proxy')) {

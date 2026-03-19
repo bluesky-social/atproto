@@ -18,8 +18,8 @@ import { XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.js'
 import { XrpcResponse, XrpcResponseOptions } from './response.js'
 import { BinaryBodyInit } from './types.js'
 import {
-  AtprotoHeadersOptions,
-  buildAtprotoHeaders,
+  XrpcRequestHeadersOptions,
+  buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
   toReadableStream,
@@ -208,7 +208,7 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
 }
 
 export type XrpcRequestOptions = XrpcProcedureInputOptions &
-  AtprotoHeadersOptions & {
+  XrpcRequestHeadersOptions & {
     /**
      * AbortSignal to cancel the request.
      */
@@ -231,7 +231,7 @@ function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
   options: XrpcRequestOptions,
 ): RequestInit & { duplex?: 'half' } {
-  const headers = buildAtprotoHeaders(options)
+  const headers = buildXrpcRequestHeaders(options)
 
   // Tell the server what type of response we're expecting
   if (schema.output.encoding) {

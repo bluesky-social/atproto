@@ -26,7 +26,7 @@ import {
   XrpcResponseOptions,
 } from './response.js'
 import { BinaryBodyInit, Service } from './types.js'
-import { buildAtprotoHeaders } from './util.js'
+import { XrpcRequestHeadersOptions, buildXrpcRequestHeaders } from './util.js'
 import {
   XrpcOptions,
   XrpcRequestOptions,
@@ -69,14 +69,8 @@ export type {
  * ```
  */
 export type ClientOptions = XrpcResponseOptions &
-  XrpcRequestOptions & {
-    /** Labeler DIDs to include in requests for content moderation. */
-    labelers?: Iterable<DidString>
-    /** Custom headers to include in all requests made by this client. */
-    headers?: HeadersInit
-    /** Service proxy identifier for routing requests through a specific service. */
-    service?: Service
-  }
+  XrpcRequestHeadersOptions &
+  Pick<XrpcRequestOptions, 'validateRequest'>
 
 export type CallOptions = {
   /** AbortSignal to cancel the request. */
@@ -419,7 +413,7 @@ export class Client implements Agent {
     path: `/${string}`,
     init: RequestInit,
   ): Promise<Response> {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       headers: init.headers,
       service: this.service,
       labelers: [
