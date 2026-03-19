@@ -753,7 +753,7 @@ export class Client implements Agent {
       : T extends Procedure
         ? Omit<XrpcOptions<T>, 'body'>
         : T extends Query
-          ? Omit<XrpcOptions<T>, 'param'>
+          ? Omit<XrpcOptions<T>, 'params'>
           : never,
   ): Promise<
     T extends Action
