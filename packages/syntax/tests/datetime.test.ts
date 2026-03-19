@@ -128,15 +128,37 @@ describe(normalizeDatetime, () => {
     expect(normalizeDatetime('1985-04-12T10:20:50.1+01:00')).toEqual(
       '1985-04-12T09:20:50.100Z',
     )
+    expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56+1212')).toEqual(
+      '1999-01-02T00:22:56.000Z',
+    )
+    expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56Z')).toEqual(
+      '1999-01-02T12:34:56.000Z',
+    )
     expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56 GMT')).toEqual(
       '1999-01-02T12:34:56.000Z',
     )
+    expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56 PST')).toEqual(
+      '1999-01-02T20:34:56.000Z',
+    )
+    expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56 EST')).toEqual(
+      '1999-01-02T17:34:56.000Z',
+    )
+    // @NOTE "(Central European Standard Time)" is not used by "Date" to infer
+    // the right timezone offset, so these will be parsed as UTC
+    expect(
+      normalizeDatetime(
+        'Fri, 02 Jan 1999 12:34:56 (Central European Standard Time)',
+      ),
+    ).toEqual('1999-01-02T12:34:56.000Z')
   })
 
   it('throws on invalid input', () => {
     expect(() => normalizeDatetime('')).toThrow(InvalidDatetimeError)
     expect(() => normalizeDatetime('blah')).toThrow(InvalidDatetimeError)
     expect(() => normalizeDatetime('1999-19-39T23:20:50.123Z')).toThrow(
+      InvalidDatetimeError,
+    )
+    expect(() => normalizeDatetime('Fri, 02 Jan 1999 12:34:56 AFT')).toThrow(
       InvalidDatetimeError,
     )
     expect(() => normalizeDatetime('-000001-12-31T23:00:00.000Z')).toThrow(
