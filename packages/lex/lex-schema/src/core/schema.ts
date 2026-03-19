@@ -47,7 +47,7 @@ export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
  * - **Assertion methods**: `assert()`, `check()` - throw on invalid input
  * - **Type guard methods**: `matches()`, `ifMatches()` - return boolean or optional value
  * - **Parse methods**: `parse()`, `safeParse()` - allow value transformation/coercion
- * - **Validate methods**: `validate()`, `safeValidate()` - strict validation without coercion
+ * - **Validate methods**: `validate()`, `safeValidate()` - validation without coercion
  *
  * All methods are also available with a `$` prefix (e.g., `$parse()`, `$validate()`)
  * for consistent access in generated lexicon namespaces.

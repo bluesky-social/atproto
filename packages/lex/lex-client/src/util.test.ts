@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  buildAtprotoHeaders,
+  buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
   toReadableStream,
@@ -111,24 +111,24 @@ describe(isAsyncIterable, () => {
 })
 
 // ============================================================================
-// buildAtprotoHeaders
+// buildXrpcRequestHeaders
 // ============================================================================
 
-describe(buildAtprotoHeaders, () => {
+describe(buildXrpcRequestHeaders, () => {
   it('returns empty headers when no options are set', () => {
-    const headers = buildAtprotoHeaders({})
+    const headers = buildXrpcRequestHeaders({})
     expect([...headers.entries()]).toEqual([])
   })
 
   it('sets atproto-proxy header from service option', () => {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       service: 'did:plc:1234#atproto_labeler',
     })
     expect(headers.get('atproto-proxy')).toBe('did:plc:1234#atproto_labeler')
   })
 
   it('does not override existing atproto-proxy header', () => {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       headers: { 'atproto-proxy': 'did:plc:existing#service' },
       service: 'did:plc:new#service',
     })
@@ -136,7 +136,7 @@ describe(buildAtprotoHeaders, () => {
   })
 
   it('sets atproto-accept-labelers from labelers option', () => {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       labelers: ['did:plc:labeler1', 'did:plc:labeler2'] as const,
     })
     expect(headers.get('atproto-accept-labelers')).toBe(
@@ -145,7 +145,7 @@ describe(buildAtprotoHeaders, () => {
   })
 
   it('appends to existing atproto-accept-labelers header', () => {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       headers: { 'atproto-accept-labelers': 'did:plc:existing' },
       labelers: ['did:plc:new'] as const,
     })
@@ -155,7 +155,7 @@ describe(buildAtprotoHeaders, () => {
   })
 
   it('passes through base headers', () => {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       headers: { Authorization: 'Bearer token123' },
     })
     expect(headers.get('Authorization')).toBe('Bearer token123')
@@ -163,12 +163,12 @@ describe(buildAtprotoHeaders, () => {
 
   it('accepts Headers instance as base headers', () => {
     const base = new Headers({ 'X-Custom': 'value' })
-    const headers = buildAtprotoHeaders({ headers: base })
+    const headers = buildXrpcRequestHeaders({ headers: base })
     expect(headers.get('X-Custom')).toBe('value')
   })
 
   it('sets empty header for empty labelers iterable', () => {
-    const headers = buildAtprotoHeaders({ labelers: [] })
+    const headers = buildXrpcRequestHeaders({ labelers: [] })
     // An empty array still sets the header (to empty string), distinguishing
     // "no labelers requested" from "labelers option not provided"
     expect(headers.has('atproto-accept-labelers')).toBe(true)
