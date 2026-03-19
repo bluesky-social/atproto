@@ -34,35 +34,33 @@ export type XrpcRequestParams<M extends Procedure | Query | Subscription> =
   InferInput<M['parameters']>
 
 // If all params are optional, allow omitting the params object
-type XrpcRequestParamsOptions<M extends Procedure | Query> =
-  XrpcRequestParams<M> extends infer P
-    ? NonNullable<unknown> extends P
-      ? { params?: P }
-      : { params: P }
-    : { params?: undefined }
+type XrpcRequestParamsOptions<P extends Params> =
+  NonNullable<unknown> extends P ? { params?: P } : { params: P }
 
 type XrpcRequestPayload<M extends Procedure | Query> = M extends Procedure
   ? InferPayload<M['input'], BinaryBodyInit>
   : undefined
 
-type XrpcRequestPayloadOptions<M extends Procedure | Query> =
-  XrpcRequestPayload<M> extends { body: infer B; encoding: infer E }
-    ? {
-        body: B
+type XrpcRequestPayloadOptions<TPayload> = TPayload extends {
+  body: infer B
+  encoding: infer E
+}
+  ? {
+      body: B
 
-        /**
-         * mime type hint for binary bodies
-         *
-         * Only needed for endpoints that accept binary input (e.g. file uploads)
-         * when the body is a Blob-like object without a type (e.g. fetch-blob's
-         * Blob). If the body is a Blob-like object with a type, that type will be
-         * used as the content-type header instead of this option.
-         *
-         * @default "application/octet-stream"
-         */
-        encoding?: E
-      }
-    : { body?: undefined; encoding?: undefined }
+      /**
+       * mime type hint for binary bodies
+       *
+       * Only needed for endpoints that accept binary input (e.g. file uploads)
+       * when the body is a Blob-like object without a type (e.g. fetch-blob's
+       * Blob). If the body is a Blob-like object with a type, that type will be
+       * used as the content-type header instead of this option.
+       *
+       * @default "application/octet-stream"
+       */
+      encoding?: E
+    }
+  : { body?: undefined; encoding?: undefined }
 
 /**
  * Options for making an XRPC request, based on the method schema.
@@ -94,8 +92,8 @@ export type XrpcRequestOptions<
   M extends Procedure | Query = Procedure | Query,
 > = XrpcRequestProcessingOptions &
   XrpcRequestHeadersOptions &
-  XrpcRequestPayloadOptions<M> &
-  XrpcRequestParamsOptions<M>
+  XrpcRequestPayloadOptions<XrpcRequestPayload<M>> &
+  XrpcRequestParamsOptions<XrpcRequestParams<M>>
 
 export type XrpcRequestProcessingOptions = {
   /**
