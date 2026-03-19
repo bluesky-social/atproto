@@ -28,6 +28,7 @@ export class ReportStatsService {
     return (db: Database) => new ReportStatsService(db)
   }
 
+  /** Materialize each group, refreshing stats if needed. */
   async materializeAll(opts?: { force?: boolean }): Promise<void> {
     try {
       const start = Date.now()
@@ -73,23 +74,17 @@ export class ReportStatsService {
     opts?: { force?: boolean },
   ): Promise<Selectable<ReportStat>> {
     if (!opts?.force) {
-      const cached = await this.getLatestStats(group)
-
       // check if up to date
-      /// live stats TTL: 15 minutes
-      /// fixed stats TTL: whatever their timeframe is
+      const cached = await this.getLatestStats(group)
       const ttl =
         group.mode === 'live'
           ? 15 * MINUTE
           : group.timeframe === 'day'
             ? 24 * HOUR
             : 7 * 24 * HOUR
-      const isUpToDate =
-        cached && new Date(cached.computedAt).getTime() > Date.now() - ttl
-
-      if (isUpToDate) {
-        return cached
-      }
+      const expiresAt = Date.now() - ttl
+      const computedAt = new Date(cached?.computedAt || 0).getTime()
+      if (cached && computedAt > expiresAt) return cached
     }
 
     const stats = await this.computeGroup(group)
@@ -204,7 +199,7 @@ export class ReportStatsService {
 
     // action rate
     const actionRate =
-      inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : null
+      inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
 
     return {
       inboundCount,
