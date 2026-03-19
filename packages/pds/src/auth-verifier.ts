@@ -464,8 +464,8 @@ export class AuthVerifier {
       throw new AuthRequiredError(undefined, 'AuthMissing')
     }
 
-    const { payload, protectedHeader } = await jose
-      .jwtVerify(token, this._jwtKey, { ...options, typ: undefined })
+    const { payload } = await jose
+      .jwtVerify(token, this._jwtKey, options)
       .catch((cause) => {
         if (cause instanceof jose.errors.JWTExpired) {
           throw new InvalidRequestError('Token has expired', 'ExpiredToken', {
@@ -479,14 +479,6 @@ export class AuthVerifier {
           )
         }
       })
-
-    // @NOTE: the "typ" is now set in production environments, so we should be
-    // able to safely check it through jose.jwtVerify(). However, tests depend
-    // on @atproto/pds-entryway which does not set "typ" in the access tokens.
-    // For that reason, we still allow it to be missing.
-    if (protectedHeader.typ && options.typ !== protectedHeader.typ) {
-      throw new InvalidRequestError('Invalid token type', 'InvalidToken')
-    }
 
     const { sub, aud, scope, lxm, cnf, jti } = payload
 
@@ -632,7 +624,7 @@ const extractAuthType = (req: IncomingMessage): AuthType | null => {
   return type
 }
 
-const bearerTokenFromReq = (req: IncomingMessage) => {
+export const bearerTokenFromReq = (req: IncomingMessage) => {
   const [type, token] = parseAuthorizationHeader(req)
   return type === AuthType.BEARER ? token : null
 }
