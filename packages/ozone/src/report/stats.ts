@@ -108,8 +108,11 @@ export class ReportStatsService {
 
     if (group.mode === 'live') {
       return this.db.db
-        .updateTable('report_stat')
-        .set({
+        .insertInto('report_stat')
+        .values({
+          queueId,
+          mode,
+          timeframe,
           inboundCount,
           pendingCount,
           actionedCount,
@@ -117,9 +120,19 @@ export class ReportStatsService {
           actionRate,
           computedAt,
         })
-        .where('mode', '=', mode)
-        .where('timeframe', '=', timeframe)
-        .where('queueId', '=', queueId)
+        .onConflict((oc) =>
+          oc
+            .columns(['queueId', 'timeframe'])
+            .where('mode', '=', 'live')
+            .doUpdateSet({
+              inboundCount,
+              pendingCount,
+              actionedCount,
+              escalatedCount,
+              actionRate,
+              computedAt,
+            }),
+        )
         .returningAll()
         .executeTakeFirstOrThrow()
     } else {

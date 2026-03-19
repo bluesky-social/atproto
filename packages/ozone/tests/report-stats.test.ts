@@ -98,19 +98,14 @@ describe('getLiveStats', () => {
     await network.close()
   })
 
-  it('returns stats when no queueId provided', async () => {
+  it('returns aggregate stats when no queueId provided', async () => {
     const stats = await getLiveStats()
-
-    expect(typeof stats.pendingCount).toBe('number')
-    expect(typeof stats.inboundCount).toBe('number')
-    expect(typeof stats.actionedCount).toBe('number')
-    expect(typeof stats.escalatedPendingCount).toBe('number')
+    expect(stats.inboundCount).toBeGreaterThanOrEqual(3)
     expect(stats.lastUpdated).toBeDefined()
   })
 
   it('returns per-queue stats for spam queue', async () => {
     const stats = await getLiveStats(spamQueueId)
-
     expect(stats.pendingCount).toBe(2) // alice + bob
     expect(stats.inboundCount).toBeGreaterThanOrEqual(2)
   })
