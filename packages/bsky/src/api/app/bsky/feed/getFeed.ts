@@ -10,6 +10,7 @@ import {
   Server,
   ServerTimer,
   UpstreamFailureError,
+  XRPCError,
   serverTimingHeader,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -220,18 +221,11 @@ const skeletonFromFeedGen = async (
   if (!result.success) {
     const cause = result.reason
 
-    // Forward valid schema errors as-is
-    if (cause.matchesSchemaErrors()) {
-      throw new InvalidRequestError(cause.message, cause.error, { cause })
-    }
-
-    // Structurally valid XRPC error response (4xx/5xx) that does not match the schema
+    // Pass through structurally valid XRPC error response (4xx/5xx), such as
+    // auth errors
     if (cause instanceof XrpcResponseError) {
-      throw new UpstreamFailureError(
-        `feed unavailable: ${cause.message || cause.error}`,
-        undefined,
-        { cause },
-      )
+      const { status, body } = cause.toDownstreamError()
+      throw new XRPCError(status, body.message, body.error, { cause })
     }
 
     // The response does not match the schema
