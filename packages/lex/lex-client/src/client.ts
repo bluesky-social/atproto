@@ -20,10 +20,24 @@ import {
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import { XrpcFailure } from './errors.js'
 import { com } from './lexicons/index.js'
-import { XrpcResponse, XrpcResponseBody } from './response.js'
-import { BinaryBodyInit, CallOptions, Service } from './types.js'
-import { buildAtprotoHeaders } from './util.js'
-import { XrpcOptions, XrpcRequestParams, xrpc, xrpcSafe } from './xrpc.js'
+import {
+  XrpcResponse,
+  XrpcResponseBody,
+  XrpcResponseOptions,
+} from './response.js'
+import { BinaryBodyInit, Service } from './types.js'
+import {
+  XrpcRequestHeadersOptions,
+  applyDefaults,
+  buildXrpcRequestHeaders,
+} from './util.js'
+import {
+  XrpcOptions,
+  XrpcRequestOptions,
+  XrpcRequestParams,
+  xrpc,
+  xrpcSafe,
+} from './xrpc.js'
 
 export type {
   AtIdentifierString,
@@ -58,13 +72,13 @@ export type {
  * }
  * ```
  */
-export type ClientOptions = {
-  /** Labeler DIDs to include in requests for content moderation. */
-  labelers?: Iterable<DidString>
-  /** Custom headers to include in all requests made by this client. */
-  headers?: HeadersInit
-  /** Service proxy identifier for routing requests through a specific service. */
-  service?: Service
+export type ClientOptions = XrpcResponseOptions &
+  XrpcRequestHeadersOptions &
+  Pick<XrpcRequestOptions, 'validateRequest'>
+
+export type CallOptions = {
+  /** AbortSignal to cancel the request. */
+  signal?: AbortSignal
 }
 
 /**
@@ -315,11 +329,22 @@ export class Client implements Agent {
   /** Set of labeler DIDs specific to this client instance. */
   public readonly labelers: Set<DidString>
 
+  public readonly xrpcDefaults: {
+    readonly validateRequest: boolean
+    readonly validateResponse: boolean
+    readonly strictResponseProcessing: boolean
+  }
+
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent = buildAgent(agent)
     this.service = options.service
     this.labelers = new Set(options.labelers)
     this.headers = new Headers(options.headers)
+    this.xrpcDefaults = Object.freeze({
+      validateRequest: options.validateRequest ?? false,
+      validateResponse: options.validateResponse ?? true,
+      strictResponseProcessing: options.strictResponseProcessing ?? true,
+    })
   }
 
   /**
@@ -392,7 +417,7 @@ export class Client implements Agent {
     path: `/${string}`,
     init: RequestInit,
   ): Promise<Response> {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       headers: init.headers,
       service: this.service,
       labelers: [
@@ -454,7 +479,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M>> {
-    return xrpc(this, ns, options)
+    return xrpc(this, ns, applyDefaults(options, this.xrpcDefaults))
   }
 
   /**
@@ -493,7 +518,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
-    return xrpcSafe(this, ns, options)
+    return xrpcSafe(this, ns, applyDefaults(options, this.xrpcDefaults))
   }
 
   /**
@@ -723,7 +748,13 @@ export class Client implements Agent {
         : T extends Query
           ? XrpcRequestParams<T>
           : never,
-    options?: CallOptions,
+    options?: T extends Action
+      ? CallOptions
+      : T extends Procedure
+        ? Omit<XrpcOptions<T>, 'body'>
+        : T extends Query
+          ? Omit<XrpcOptions<T>, 'param'>
+          : never,
   ): Promise<
     T extends Action
       ? InferActionOutput<T>

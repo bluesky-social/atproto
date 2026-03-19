@@ -1,5 +1,14 @@
 # @atproto/bsync
 
+## 0.0.25
+
+### Patch Changes
+
+- [#4745](https://github.com/bluesky-social/atproto/pull/4745) [`efb2b58`](https://github.com/bluesky-social/atproto/commit/efb2b58fb27a242d5308bf15916ee222daa2019b) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `delete-operations` file and new `deleteOperationsByActorAndNamespace` handler
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+
 ## 0.0.24
 
 ### Patch Changes

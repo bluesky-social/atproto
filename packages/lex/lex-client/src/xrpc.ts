@@ -15,10 +15,11 @@ import {
 } from '@atproto/lex-schema'
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import { XrpcFailure, XrpcFetchError, asXrpcFailure } from './errors.js'
-import { XrpcResponse } from './response.js'
-import { BinaryBodyInit, CallOptions } from './types.js'
+import { XrpcResponse, XrpcResponseOptions } from './response.js'
+import { BinaryBodyInit } from './types.js'
 import {
-  buildAtprotoHeaders,
+  XrpcRequestHeadersOptions,
+  buildXrpcRequestHeaders,
   isAsyncIterable,
   isBlobLike,
   toReadableStream,
@@ -48,11 +49,13 @@ type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
 /**
  * Options for making an XRPC request.
  *
- * Combines {@link CallOptions} with method-specific params and body requirements.
- * The type system ensures required params/body are provided based on the method schema.
+ * Combines {@link XrpcResponseOptions} and {@link XrpcRequestOptions} with
+ * method-specific params and body requirements. The type system ensures
+ * required params/body are provided based on the method schema.
  *
  * @typeParam M - The XRPC method type (Procedure or Query)
- * @see {@link CallOptions} for general request options like signal and validateRequest
+ * @see {@link XrpcResponseOptions} for response-related options like validateResponse
+ * @see {@link XrpcRequestOptions} for request-related options like signal and validateRequest
  * @see {@link XrpcParamsOptions} for method-specific query parameters
  * @see {@link XrpcInputOptions} for method-specific body and encoding requirements
  *
@@ -71,7 +74,8 @@ type XrpcInputOptions<In> = In extends { body: infer B; encoding: infer E }
  * ```
  */
 export type XrpcOptions<M extends Procedure | Query = Procedure | Query> =
-  CallOptions &
+  XrpcResponseOptions &
+    XrpcRequestOptions &
     XrpcInputOptions<XrpcRequestPayload<M>> &
     XrpcParamsOptions<XrpcRequestParams<M>>
 
@@ -192,7 +196,7 @@ export async function xrpcSafe<const M extends Query | Procedure>(
 
 function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   method: M,
-  options: CallOptions & { params?: Params },
+  options: { params?: Params },
 ): `/xrpc/${NsidString}${'' | `?${string}`}` {
   const path = `/xrpc/${method.nsid}` as const
 
@@ -203,14 +207,31 @@ function xrpcRequestUrl<M extends Procedure | Query | Subscription>(
   return queryString ? (`${path}?${queryString}` as const) : path
 }
 
+export type XrpcRequestOptions = XrpcProcedureInputOptions &
+  XrpcRequestHeadersOptions & {
+    /**
+     * AbortSignal to cancel the request.
+     */
+    signal?: AbortSignal
+
+    /**
+     * mime type of binary body
+     *
+     * Only needed for endpoints that accept binary input (e.g. file uploads)
+     * when the body is a Blob-like object without a type (e.g. fetch-blob's
+     * Blob). If the body is a Blob-like object with a type, that type will be
+     * used as the content-type header instead of this option.
+     *
+     * @default "application/octet-stream"
+     */
+    encoding?: string
+  }
+
 function xrpcRequestInit<T extends Procedure | Query>(
   schema: T,
-  options: CallOptions & {
-    body?: LexValue | BinaryBodyInit
-    encoding?: string
-  },
+  options: XrpcRequestOptions,
 ): RequestInit & { duplex?: 'half' } {
-  const headers = buildAtprotoHeaders(options)
+  const headers = buildXrpcRequestHeaders(options)
 
   // Tell the server what type of response we're expecting
   if (schema.output.encoding) {
@@ -258,9 +279,23 @@ function xrpcRequestInit<T extends Procedure | Query>(
   }
 }
 
+type XrpcProcedureInputOptions = {
+  body?: LexValue | BinaryBodyInit
+
+  /**
+   * Whether to validate the request against the method's input schema. Enabling
+   * this can help catch errors early but may have a performance cost. This
+   * would typically only be set to `true` in development or debugging
+   * scenarios.
+   *
+   * @default false
+   */
+  validateRequest?: boolean
+}
+
 function xrpcProcedureInput(
   method: Procedure,
-  options: CallOptions & { body?: LexValue | BinaryBodyInit },
+  options: XrpcProcedureInputOptions,
   encodingHint?: string,
 ): null | { body: BodyInit; encoding: string } {
   const { input } = method
