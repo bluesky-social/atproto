@@ -291,7 +291,22 @@ import * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 import * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 import * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 import * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
+import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
+import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
+import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
+import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
+import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
+import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
+import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -606,7 +621,22 @@ export * as ToolsOzoneModerationQueryEvents from './types/tools/ozone/moderation
 export * as ToolsOzoneModerationQueryStatuses from './types/tools/ozone/moderation/queryStatuses.js'
 export * as ToolsOzoneModerationScheduleAction from './types/tools/ozone/moderation/scheduleAction.js'
 export * as ToolsOzoneModerationSearchRepos from './types/tools/ozone/moderation/searchRepos.js'
+export * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assignModerator.js'
+export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
+export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
+export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
+export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
+export * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
+export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
+export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
+export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+export * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
+export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+export * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
 export * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -5168,6 +5198,8 @@ export class ToolsOzoneNS {
   communication: ToolsOzoneCommunicationNS
   hosting: ToolsOzoneHostingNS
   moderation: ToolsOzoneModerationNS
+  queue: ToolsOzoneQueueNS
+  report: ToolsOzoneReportNS
   safelink: ToolsOzoneSafelinkNS
   server: ToolsOzoneServerNS
   set: ToolsOzoneSetNS
@@ -5181,6 +5213,8 @@ export class ToolsOzoneNS {
     this.communication = new ToolsOzoneCommunicationNS(client)
     this.hosting = new ToolsOzoneHostingNS(client)
     this.moderation = new ToolsOzoneModerationNS(client)
+    this.queue = new ToolsOzoneQueueNS(client)
+    this.report = new ToolsOzoneReportNS(client)
     this.safelink = new ToolsOzoneSafelinkNS(client)
     this.server = new ToolsOzoneServerNS(client)
     this.set = new ToolsOzoneSetNS(client)
@@ -5451,6 +5485,183 @@ export class ToolsOzoneModerationNS {
       undefined,
       opts,
     )
+  }
+}
+
+export class ToolsOzoneQueueNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  assignModerator(
+    data?: ToolsOzoneQueueAssignModerator.InputSchema,
+    opts?: ToolsOzoneQueueAssignModerator.CallOptions,
+  ): Promise<ToolsOzoneQueueAssignModerator.Response> {
+    return this._client
+      .call('tools.ozone.queue.assignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueAssignModerator.toKnownErr(e)
+      })
+  }
+
+  createQueue(
+    data?: ToolsOzoneQueueCreateQueue.InputSchema,
+    opts?: ToolsOzoneQueueCreateQueue.CallOptions,
+  ): Promise<ToolsOzoneQueueCreateQueue.Response> {
+    return this._client
+      .call('tools.ozone.queue.createQueue', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueCreateQueue.toKnownErr(e)
+      })
+  }
+
+  deleteQueue(
+    data?: ToolsOzoneQueueDeleteQueue.InputSchema,
+    opts?: ToolsOzoneQueueDeleteQueue.CallOptions,
+  ): Promise<ToolsOzoneQueueDeleteQueue.Response> {
+    return this._client.call(
+      'tools.ozone.queue.deleteQueue',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  getAssignments(
+    params?: ToolsOzoneQueueGetAssignments.QueryParams,
+    opts?: ToolsOzoneQueueGetAssignments.CallOptions,
+  ): Promise<ToolsOzoneQueueGetAssignments.Response> {
+    return this._client.call(
+      'tools.ozone.queue.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  listQueues(
+    params?: ToolsOzoneQueueListQueues.QueryParams,
+    opts?: ToolsOzoneQueueListQueues.CallOptions,
+  ): Promise<ToolsOzoneQueueListQueues.Response> {
+    return this._client.call(
+      'tools.ozone.queue.listQueues',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  routeReports(
+    data?: ToolsOzoneQueueRouteReports.InputSchema,
+    opts?: ToolsOzoneQueueRouteReports.CallOptions,
+  ): Promise<ToolsOzoneQueueRouteReports.Response> {
+    return this._client
+      .call('tools.ozone.queue.routeReports', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneQueueRouteReports.toKnownErr(e)
+      })
+  }
+
+  updateQueue(
+    data?: ToolsOzoneQueueUpdateQueue.InputSchema,
+    opts?: ToolsOzoneQueueUpdateQueue.CallOptions,
+  ): Promise<ToolsOzoneQueueUpdateQueue.Response> {
+    return this._client.call(
+      'tools.ozone.queue.updateQueue',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+}
+
+export class ToolsOzoneReportNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  assignModerator(
+    data?: ToolsOzoneReportAssignModerator.InputSchema,
+    opts?: ToolsOzoneReportAssignModerator.CallOptions,
+  ): Promise<ToolsOzoneReportAssignModerator.Response> {
+    return this._client
+      .call('tools.ozone.report.assignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportAssignModerator.toKnownErr(e)
+      })
+  }
+
+  getAssignments(
+    params?: ToolsOzoneReportGetAssignments.QueryParams,
+    opts?: ToolsOzoneReportGetAssignments.CallOptions,
+  ): Promise<ToolsOzoneReportGetAssignments.Response> {
+    return this._client.call(
+      'tools.ozone.report.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getLatestReport(
+    params?: ToolsOzoneReportGetLatestReport.QueryParams,
+    opts?: ToolsOzoneReportGetLatestReport.CallOptions,
+  ): Promise<ToolsOzoneReportGetLatestReport.Response> {
+    return this._client
+      .call('tools.ozone.report.getLatestReport', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportGetLatestReport.toKnownErr(e)
+      })
+  }
+
+  getReport(
+    params?: ToolsOzoneReportGetReport.QueryParams,
+    opts?: ToolsOzoneReportGetReport.CallOptions,
+  ): Promise<ToolsOzoneReportGetReport.Response> {
+    return this._client
+      .call('tools.ozone.report.getReport', params, undefined, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportGetReport.toKnownErr(e)
+      })
+  }
+
+  queryReports(
+    params?: ToolsOzoneReportQueryReports.QueryParams,
+    opts?: ToolsOzoneReportQueryReports.CallOptions,
+  ): Promise<ToolsOzoneReportQueryReports.Response> {
+    return this._client.call(
+      'tools.ozone.report.queryReports',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  reassignQueue(
+    data?: ToolsOzoneReportReassignQueue.InputSchema,
+    opts?: ToolsOzoneReportReassignQueue.CallOptions,
+  ): Promise<ToolsOzoneReportReassignQueue.Response> {
+    return this._client.call(
+      'tools.ozone.report.reassignQueue',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  unassignModerator(
+    data?: ToolsOzoneReportUnassignModerator.InputSchema,
+    opts?: ToolsOzoneReportUnassignModerator.CallOptions,
+  ): Promise<ToolsOzoneReportUnassignModerator.Response> {
+    return this._client
+      .call('tools.ozone.report.unassignModerator', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportUnassignModerator.toKnownErr(e)
+      })
   }
 }
 

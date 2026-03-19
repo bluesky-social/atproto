@@ -24,7 +24,20 @@ import queryStatuses from './moderation/queryStatuses'
 import scheduleAction from './moderation/scheduleAction'
 import searchRepos from './moderation/searchRepos'
 import proxied from './proxied'
+import assignQueueModerator from './queue/assignModerator'
+import createQueue from './queue/createQueue'
+import deleteQueue from './queue/deleteQueue'
+import getQueueAssignments from './queue/getAssignments'
+import listQueues from './queue/listQueues'
+import routeReports from './queue/routeReports'
+import updateQueue from './queue/updateQueue'
+import assignReportModerator from './report/assignModerator'
 import createReport from './report/createReport'
+import getReportAssignments from './report/getAssignments'
+import getLatestReport from './report/getLatestReport'
+import getReport from './report/getReport'
+import queryReports from './report/queryReports'
+import unassignReportModerator from './report/unassignModerator'
 import addSafelinkRule from './safelink/addRule'
 import querySafelinkEvents from './safelink/queryEvents'
 import querySafelinkRules from './safelink/queryRules'
@@ -62,6 +75,8 @@ export default function (server: Server, ctx: AppContext) {
   getRepos(server, ctx)
   getEvent(server, ctx)
   queryEvents(server, ctx)
+  getReport(server, ctx)
+  queryReports(server, ctx)
   queryStatuses(server, ctx)
   queryLabels(server, ctx)
   subscribeLabels(server, ctx)
@@ -77,6 +92,10 @@ export default function (server: Server, ctx: AppContext) {
   chat(server, ctx)
   proxied(server, ctx)
   getConfig(server, ctx)
+  createQueue(server, ctx)
+  listQueues(server, ctx)
+  updateQueue(server, ctx)
+  deleteQueue(server, ctx)
   setAddValues(server, ctx)
   setGetValues(server, ctx)
   querySets(server, ctx)
@@ -100,5 +119,12 @@ export default function (server: Server, ctx: AppContext) {
   scheduleAction(server, ctx)
   listScheduledActions(server, ctx)
   cancelScheduledActions(server, ctx)
+  routeReports(server, ctx)
+  assignQueueModerator(server, ctx)
+  getQueueAssignments(server, ctx)
+  getLatestReport(server, ctx)
+  assignReportModerator(server, ctx)
+  unassignReportModerator(server, ctx)
+  getReportAssignments(server, ctx)
   return server
 }

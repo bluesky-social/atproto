@@ -1,4 +1,8 @@
-import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
+import {
+  AtpAgent,
+  COM_ATPROTO_MODERATION,
+  ToolsOzoneQueueDefs,
+} from '@atproto/api'
 import { Database } from '@atproto/bsky'
 import { AtUri } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
@@ -109,7 +113,44 @@ export async function generateMockSetup(env: TestNetwork) {
   await env.ozone.addModeratorDid(mod.did)
   await env.ozone.addAdminDid(adminMod.did)
 
-  // Report one user
+  // Create report queues
+  const ozoneAgent = env.ozone.getClient()
+  const adminHeaders = async (nsid: string) =>
+    env.ozone.modHeaders(nsid, 'admin')
+
+  const createQueue = async (input: {
+    name: string
+    subjectTypes: string[]
+    reportTypes: string[]
+    collection?: string
+  }): Promise<ToolsOzoneQueueDefs.QueueView> => {
+    const { data } = await ozoneAgent.tools.ozone.queue.createQueue(input, {
+      encoding: 'application/json',
+      headers: await adminHeaders('tools.ozone.queue.createQueue'),
+    })
+    return data.queue
+  }
+
+  await Promise.all([
+    createQueue({
+      name: 'Spam Accounts',
+      subjectTypes: ['account'],
+      reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
+    }),
+    createQueue({
+      name: 'Harassment Accounts',
+      subjectTypes: ['account'],
+      reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+    }),
+    createQueue({
+      name: 'Spam Posts',
+      subjectTypes: ['record'],
+      reportTypes: [COM_ATPROTO_MODERATION.DefsReasonSpam],
+      collection: 'app.bsky.feed.post',
+    }),
+  ])
+
+  // Report one user (random)
   const reporter = picka(userAgents)
   await reporter.com.atproto.moderation.createReport({
     reasonType: picka([
@@ -120,6 +161,21 @@ export async function generateMockSetup(env: TestNetwork) {
     subject: {
       $type: 'com.atproto.admin.defs#repoRef',
       did: picka(userAgents).did,
+    },
+  })
+
+  // Reports that target queues
+  await alice.com.atproto.moderation.createReport({
+    reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
+    reason: 'This account is spamming',
+    subject: { $type: 'com.atproto.admin.defs#repoRef', did: bob.did },
+  })
+  await bob.com.atproto.moderation.createReport({
+    reasonType: 'com.atproto.moderation.defs#reasonHarassment',
+    reason: 'Harassing behavior',
+    subject: {
+      $type: 'com.atproto.admin.defs#repoRef',
+      did: carla.did,
     },
   })
 
@@ -178,6 +234,22 @@ export async function generateMockSetup(env: TestNetwork) {
       })
     }
   }
+
+  // Spam post report
+  if (posts.length > 0) {
+    await carla.com.atproto.moderation.createReport({
+      reasonType: COM_ATPROTO_MODERATION.DefsReasonSpam,
+      reason: 'This post is spam',
+      subject: {
+        $type: 'com.atproto.repo.strongRef',
+        uri: posts[0].uri,
+        cid: posts[0].cid,
+      },
+    })
+  }
+
+  // Route all reports to queues
+  await env.ozone.daemon.ctx.queueRouter.routeReports()
 
   // make some naughty posts & label them
   const file = Buffer.from(labeledImgB64, 'base64')

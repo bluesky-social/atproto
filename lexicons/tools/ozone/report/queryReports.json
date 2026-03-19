@@ -1,0 +1,103 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.queryReports",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "View moderation reports. Reports are individual instances of content being reported, as opposed to subject statuses which aggregate reports at the subject level.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "queueId": {
+            "type": "integer",
+            "description": "Filter by queue ID. Use -1 for unassigned reports."
+          },
+          "reportTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Filter by report types (fully qualified string in the format of com.atproto.moderation.defs#reason<name>)."
+          },
+          "status": {
+            "type": "string",
+            "knownValues": ["open", "closed", "escalated"],
+            "description": "Filter by report status."
+          },
+          "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "Filter by subject DID or AT-URI."
+          },
+          "subjectType": {
+            "type": "string",
+            "description": "If specified, reports of the given type (account or record) will be returned.",
+            "knownValues": ["account", "record"]
+          },
+          "collections": {
+            "type": "array",
+            "maxLength": 20,
+            "description": "If specified, reports where the subject belongs to the given collections will be returned. When subjectType is set to 'account', this will be ignored.",
+            "items": {
+              "type": "string",
+              "format": "nsid"
+            }
+          },
+          "reportedAfter": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Retrieve reports created after a given timestamp"
+          },
+          "reportedBefore": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Retrieve reports created before a given timestamp"
+          },
+          "reviewedBy": {
+            "type": "string",
+            "format": "did",
+            "description": "Filter by moderator who reviewed/actioned the report"
+          },
+          "sortField": {
+            "type": "string",
+            "default": "createdAt",
+            "enum": ["createdAt", "updatedAt"]
+          },
+          "sortDirection": {
+            "type": "string",
+            "default": "desc",
+            "enum": ["asc", "desc"]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reports"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "reports": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.report.defs#reportView"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

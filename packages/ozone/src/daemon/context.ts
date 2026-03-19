@@ -8,6 +8,7 @@ import { OzoneConfig, OzoneSecrets } from '../config'
 import { Database } from '../db'
 import { ModerationService } from '../mod-service'
 import { StrikeService } from '../mod-service/strike'
+import { QueueService } from '../queue/service'
 import { ScheduledActionService } from '../scheduled-action/service'
 import { SettingService } from '../setting/service'
 import { TeamService } from '../team'
@@ -15,6 +16,7 @@ import { getSigningKeyId } from '../util'
 import { EventPusher } from './event-pusher'
 import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
+import { QueueRouter } from './queue-router'
 import { ScheduledActionProcessor } from './scheduled-action-processor'
 import { StrikeExpiryProcessor } from './strike-expiry-processor'
 import { TeamProfileSynchronizer } from './team-profile-synchronizer'
@@ -31,6 +33,7 @@ export type DaemonContextOptions = {
   teamProfileSynchronizer: TeamProfileSynchronizer
   scheduledActionProcessor: ScheduledActionProcessor
   strikeExpiryProcessor: StrikeExpiryProcessor
+  queueRouter: QueueRouter
   verificationListener?: VerificationListener
 }
 
@@ -111,6 +114,9 @@ export class DaemonContext {
 
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
+    const queueService = QueueService.creator()
+    const queueRouter = new QueueRouter(db, queueService)
+
     // Only spawn the listener if verifier config exists and a jetstream URL is provided
     const verificationListener =
       cfg.verifier && cfg.jetstreamUrl
@@ -132,6 +138,7 @@ export class DaemonContext {
       teamProfileSynchronizer,
       scheduledActionProcessor,
       strikeExpiryProcessor,
+      queueRouter,
       verificationListener,
       ...(overrides ?? {}),
     })
@@ -173,6 +180,10 @@ export class DaemonContext {
     return this.opts.strikeExpiryProcessor
   }
 
+  get queueRouter(): QueueRouter {
+    return this.opts.queueRouter
+  }
+
   get verificationListener(): VerificationListener | undefined {
     return this.opts.verificationListener
   }
@@ -184,6 +195,7 @@ export class DaemonContext {
     this.teamProfileSynchronizer.start()
     this.scheduledActionProcessor.start()
     this.strikeExpiryProcessor.start()
+    this.queueRouter.start()
     this.verificationListener?.start()
   }
 
@@ -203,6 +215,7 @@ export class DaemonContext {
         this.teamProfileSynchronizer.destroy(),
         this.scheduledActionProcessor.destroy(),
         this.strikeExpiryProcessor.destroy(),
+        this.queueRouter.destroy(),
         this.verificationListener?.stop(),
       ])
     } finally {
