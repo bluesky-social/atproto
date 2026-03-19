@@ -5,7 +5,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('report_stat')
     .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('queueId', 'integer') // NULL = aggregate across all queues
-    .addColumn('periodType', 'varchar', (col) => col.notNull()) // 'live' or 'daily'
+    .addColumn('mode', 'varchar', (col) => col.notNull()) // 'live' or 'fixed'
+    .addColumn('timeframe', 'varchar', (col) => col.notNull()) // 'day' or 'week'
     .addColumn('inboundCount', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('pendingCount', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('actionedCount', 'integer', (col) => col.notNull().defaultTo(0))
@@ -16,7 +17,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
   // Only one row with live stats per queue.
   // Only one row with live aggregate stats.
-  await sql`CREATE UNIQUE INDEX idx_report_stat_live ON report_stat (COALESCE("queueId", -1)) WHERE "periodType" = 'live'`.execute(
+  await sql`CREATE UNIQUE INDEX idx_report_stat_live ON report_stat (COALESCE("queueId", -1), "timeframe") WHERE "mode" = 'live'`.execute(
     db,
   )
 

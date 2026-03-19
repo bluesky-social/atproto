@@ -1,7 +1,11 @@
 import { Selectable, sql } from 'kysely'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
-import { ReportStat } from '../db/schema/report_stat'
+import {
+  ReportStat,
+  ReportStatMode,
+  ReportStatTimeframe,
+} from '../db/schema/report_stat'
 import { DAY } from '@atproto/common'
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
@@ -39,7 +43,7 @@ export class ReportStatsService {
   }
 
   async computeLiveStats(): Promise<void> {
-    await this.computeAndUpsert('live')
+    await this.computeAndUpsert('live', 'day')
   }
 
   async computeDailyStats(): Promise<void> {
@@ -47,14 +51,15 @@ export class ReportStatsService {
     const existing = await this.db.db
       .selectFrom('report_stat')
       .select('computedAt')
-      .where('periodType', '=', 'daily')
+      .where('mode', '=', 'fixed')
+      .where('timeframe', '=', 'day')
       .orderBy('computedAt', 'desc')
       .executeTakeFirst()
     const lastComputed = new Date(existing?.computedAt || 0).getTime()
     const isUpToDate = lastComputed > Date.now() - DAY
     if (isUpToDate) return
 
-    await this.computeAndUpsert('daily')
+    await this.computeAndUpsert('fixed', 'day')
     dbLogger.info('daily report stats refreshed')
   }
 
@@ -63,7 +68,10 @@ export class ReportStatsService {
    * Queries the report table, aggregates counts per queue + overall,
    * and upserts into report_stat.
    */
-  private async computeAndUpsert(periodType: string): Promise<void> {
+  private async computeAndUpsert(
+    mode: ReportStatMode,
+    timeframe: ReportStatTimeframe,
+  ): Promise<void> {
     const counts = await this.queryReportCounts()
     const now = new Date().toISOString()
 
@@ -74,9 +82,9 @@ export class ReportStatsService {
           : null
 
       await sql`
-        INSERT INTO report_stat ("queueId", "periodType", "inboundCount", "pendingCount", "actionedCount", "escalatedCount", "actionRate", "computedAt")
-        VALUES (${queueId}, ${periodType}, ${stats.inboundCount}, ${stats.pendingCount}, ${stats.actionedCount}, ${stats.escalatedCount}, ${actionRate}, ${now})
-        ON CONFLICT (COALESCE("queueId", -1), "periodType")
+        INSERT INTO report_stat ("queueId", "mode", "timeframe", "inboundCount", "pendingCount", "actionedCount", "escalatedCount", "actionRate", "computedAt")
+        VALUES (${queueId}, ${mode}, ${timeframe}, ${stats.inboundCount}, ${stats.pendingCount}, ${stats.actionedCount}, ${stats.escalatedCount}, ${actionRate}, ${now})
+        ON CONFLICT (COALESCE("queueId", -1), "timeframe") WHERE "mode" = 'live'
         DO UPDATE SET
           "inboundCount" = EXCLUDED."inboundCount",
           "pendingCount" = EXCLUDED."pendingCount",
@@ -232,7 +240,8 @@ export class ReportStatsService {
     let qb = this.db.db
       .selectFrom('report_stat')
       .selectAll()
-      .where('periodType', '=', 'live')
+      .where('mode', '=', 'live')
+      .where('timeframe', '=', 'day')
 
     if (queueId !== undefined) {
       qb = qb.where('queueId', '=', queueId)

@@ -216,7 +216,8 @@ export class QueueService {
       .selectFrom('report_stat')
       .selectAll()
       .where('queueId', '=', queueId)
-      .where('periodType', '=', 'live')
+      .where('mode', '=', 'live')
+      .where('timeframe', '=', 'day')
       .executeTakeFirst()
 
     if (!row) {
