@@ -63,7 +63,7 @@ describe('private data', () => {
         actorDid,
         namespace: namespace.$type,
         key,
-        payload: lexStringify({ $type: namespace.$type, ...validPayload0 }),
+        payload: lexStringify({ ...validPayload0, $type: namespace.$type }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })
@@ -114,7 +114,7 @@ describe('private data', () => {
         actorDid,
         namespace: namespace.$type,
         key,
-        payload: lexStringify({ $type: namespace.$type, ...validPayload1 }),
+        payload: lexStringify({ ...validPayload1, $type: namespace.$type }),
         indexedAt: expect.any(String),
         updatedAt: expect.any(String),
       })

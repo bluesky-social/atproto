@@ -153,12 +153,12 @@ describe('moderation', () => {
       const res = await fetch(imageUri)
       await res.arrayBuffer() // flush response
       assert(res.ok)
-      expect(res.headers.get('content-type')).toEqual('image/jpeg')
+      expect(res.headers.get('content-type')).toEqual('image/webp')
       const cached = await fetch(imageUri)
       await cached.arrayBuffer() // flush response
       assert(cached.ok)
       expect(cached.headers.get('x-cache')).toEqual('hit')
-      expect(cached.headers.get('content-type')).toEqual('image/jpeg')
+      expect(cached.headers.get('content-type')).toEqual('image/webp')
     })
 
     it('takes down blobs', async () => {
