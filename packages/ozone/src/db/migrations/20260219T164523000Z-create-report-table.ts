@@ -92,6 +92,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`CREATE INDEX idx_report_unassigned_id ON report (id) WHERE "queueId" IS NULL`.execute(
     db,
   )
+
+  // Index for inbound report statistics
+  await db.schema
+    .createIndex('idx_report_queue_created_id')
+    .on('report')
+    .columns(['queueId', 'createdAt', 'id'])
+    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
