@@ -100,19 +100,23 @@ function parseValue(
   input: unknown,
   options?: BlobSchemaOptions,
 ): BlobRef | LegacyBlobRef | null {
+  // If there is a $type property, we treat if as a potential BlobRef and
+  // validate accordingly.
   if ((input as any)?.$type !== undefined) {
     // Use the context's option for the "strict" check
     return isBlobRef(input, this.options) ? input : null
   }
 
+  // If there is no $type property, we may be dealing with a legacy blob ref. If
+  // legacy refs are allowed, validate against the legacy format. If not
+  // allowed, but we are in non-strict "parse" mode, coerce legacy refs into
+  // standard BlobRef format for backward compatibility. Otherwise, reject the
+  // value.
   if (options?.allowLegacy) {
     if (isLegacyBlobRef(input)) {
       return input
     }
   } else if (!this.options.strict && this.options.mode === 'parse') {
-    // When legacy values are not allowed, but we are in non-strict "parse
-    // mode", coerce legacy blob refs into standard BlobRef without size
-    // information.
     if (isLegacyBlobRef(input)) {
       const { cid, mimeType } = input
       const ref = parseCidSafe(cid)
