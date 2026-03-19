@@ -673,6 +673,62 @@ describe(xrpc, () => {
       })
     })
 
+    it('with allowInvalidLexData: true and validateResponse: true, schema validation still runs', async () => {
+      // { value: 1.5 }: float passes lenient parsing but fails schema validation (expects string)
+      const fetchHandler: FetchHandler = async () =>
+        new Response(JSON.stringify({ value: 1.5 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+
+      await expect(
+        xrpc(fetchHandler, testQuery, {
+          params: { limit: 10 },
+          allowInvalidLexData: true,
+          validateResponse: true,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcInvalidResponseError)
+        expect(err).toBeInstanceOf(XrpcUpstreamError)
+        return true
+      })
+    })
+
+    it('with allowInvalidLexData: true and validateResponse: false, schema validation is skipped', async () => {
+      // { value: 1.5 }: float passes lenient parsing and schema validation is skipped
+      const fetchHandler: FetchHandler = async () =>
+        new Response(JSON.stringify({ value: 1.5 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+
+      const response = await xrpc(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: true,
+        validateResponse: false,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({ value: 1.5 })
+    })
+
+    it('with allowInvalidLexData: false and validateResponse: false, strict parsing still applies', async () => {
+      // Float in JSON still fails strict parsing even when validateResponse is false
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      await expect(
+        xrpc(fetchHandler, testQuery, {
+          params: { limit: 10 },
+          allowInvalidLexData: false,
+          validateResponse: false,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toBe('Unable to parse response payload')
+        return true
+      })
+    })
+
     it('does not affect binary responses', async () => {
       const bytes = new Uint8Array([1, 2, 3])
       const fetchHandler: FetchHandler = async () =>
@@ -1085,6 +1141,58 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       assert(result instanceof XrpcResponseError)
       expect(result.status).toBe(400)
+    })
+
+    it('with allowInvalidLexData: true and validateResponse: true, schema validation still runs', async () => {
+      // { value: 1.5 }: float passes lenient parsing but fails schema validation (expects string)
+      const fetchHandler: FetchHandler = async () =>
+        new Response(JSON.stringify({ value: 1.5 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: true,
+        validateResponse: true,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+    })
+
+    it('with allowInvalidLexData: true and validateResponse: false, schema validation is skipped', async () => {
+      // { value: 1.5 }: float passes lenient parsing and schema validation is skipped
+      const fetchHandler: FetchHandler = async () =>
+        new Response(JSON.stringify({ value: 1.5 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: true,
+        validateResponse: false,
+      })
+
+      assert(result.success)
+      expect(result.body).toEqual({ value: 1.5 })
+    })
+
+    it('with allowInvalidLexData: false and validateResponse: false, strict parsing still applies', async () => {
+      // Float in JSON still fails strict parsing even when validateResponse is false
+      const fetchHandler: FetchHandler = async () => jsonResponseWithFloat()
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        allowInvalidLexData: false,
+        validateResponse: false,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toBe('Unable to parse response payload')
     })
   })
 })
