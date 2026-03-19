@@ -588,7 +588,7 @@ const client = new Client(session, {
 
 #### Validation and Strictness Options
 
-The `Client` constructor accepts options to control request/response validation and how invalid Lex data is handled. These defaults apply to all XRPC calls made through the client, and can be overridden per-call via `client.xrpc()` or `client.xrpcSafe()`.
+The `Client` constructor accepts options to control request/response validation and how invalid Lex data is handled. These defaults apply to all XRPC calls made through the client, and can be overridden per-call via `client.call()`, `client.xrpc()` or `client.xrpcSafe()`.
 
 ```typescript
 const client = new Client(session, {
