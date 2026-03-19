@@ -1,5 +1,13 @@
 # @atproto/tap
 
+## 0.2.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex@0.0.22
+  - @atproto/common@0.5.15
+
 ## 0.2.9
 
 ### Patch Changes
