@@ -339,7 +339,6 @@ function xrpcProcedureInput(
         body instanceof ArrayBuffer ||
         body instanceof ReadableStream
       ) {
-        // @ts-expect-error I don't know why TypeScript fails to assign Uint8Array to BodyInit...
         return buildPayload(input, body, encodingHint)
       } else if (isAsyncIterable(body)) {
         return buildPayload(input, toReadableStream(body), encodingHint)
