@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.5.1
+
+### Patch Changes
+
+- [`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve efficiency of `AtUri` `did` getter and typing of `hostname` property
+
 ## 0.5.0
 
 ### Minor Changes

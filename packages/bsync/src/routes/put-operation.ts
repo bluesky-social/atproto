@@ -1,6 +1,6 @@
 import { Code, ConnectError, ServiceImpl } from '@connectrpc/connect'
 import { sql } from 'kysely'
-import { ensureValidNsid, ensureValidRecordKey } from '@atproto/syntax'
+import { ensureValidRecordKey } from '@atproto/syntax'
 import { AppContext } from '../context'
 import { Database } from '../db'
 import { OperationMethod, createOperationChannel } from '../db/schema/operation'
@@ -11,7 +11,7 @@ import {
   PutOperationResponse,
 } from '../proto/bsync_pb'
 import { authWithApiKey } from './auth'
-import { isValidDid } from './util'
+import { isValidDid, validateNamespace } from './util'
 
 export default (ctx: AppContext): Partial<ServiceImpl<typeof Service>> => ({
   async putOperation(req, handlerCtx) {
@@ -101,21 +101,6 @@ const validateOp = (req: PutOperationRequest): Operation => {
   }
 
   return req as Operation
-}
-
-const validateNamespace = (namespace: string): void => {
-  const parts = namespace.split('#')
-
-  if (parts.length !== 1 && parts.length !== 2) {
-    throw new Error('namespace must be in the format "nsid[#fragment]"')
-  }
-
-  const [nsid, fragment] = parts
-
-  ensureValidNsid(nsid)
-  if (fragment && !/^[a-zA-Z][a-zA-Z0-9]*$/.test(fragment)) {
-    throw new Error('namespace fragment must be a valid identifier')
-  }
 }
 
 type Operation = {

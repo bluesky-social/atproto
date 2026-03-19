@@ -1,4 +1,6 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { parseCid } from '@atproto/lex-data'
+import { lexToJson } from '@atproto/lex-json'
 import { l } from '@atproto/lex-schema'
 import { FetchHandler } from './agent.js'
 import {
@@ -13,6 +15,16 @@ import { XrpcResponse } from './response.js'
 import { xrpc, xrpcSafe } from './xrpc.js'
 
 // Fixtures
+
+const rawCid = parseCid(
+  'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4',
+  { flavor: 'raw' },
+)
+
+const cborCid = parseCid(
+  'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+  { flavor: 'cbor' },
+)
 
 const testQuery = l.query(
   'io.example.testQuery',
@@ -48,11 +60,33 @@ const testNoOutputQuery = l.query(
   l.payload(),
 )
 
+const testQueryWithDefaults = l.query(
+  'io.example.testQueryWithDefaults',
+  l.params({ foo: l.optional(l.withDefault(l.string(), 'foo-default')) }),
+  l.jsonPayload({
+    foo: l.string(),
+    bar: l.optional(l.withDefault(l.string(), 'bar-default')),
+  }),
+)
+
+const testQueryGetBlobRef = l.query(
+  'io.example.testQueryGetBlobRef',
+  l.params(),
+  l.jsonPayload({
+    blobRef: l.blob({
+      allowLegacy: false,
+      accept: ['image/png'],
+      maxSize: 10,
+    }),
+  }),
+)
+
 describe(xrpc, () => {
   describe('success paths', () => {
     it('returns parsed JSON body for a query', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'hello' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'hello' })
+      })
 
       const response = await xrpc(fetchHandler, testQuery, {
         params: { limit: 10 },
@@ -68,8 +102,9 @@ describe(xrpc, () => {
     })
 
     it('returns parsed JSON body for a procedure', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ id: 'abc123' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'abc123' })
+      })
 
       const response = await xrpc(fetchHandler, testProcedure, {
         body: { text: 'hello world' },
@@ -83,10 +118,11 @@ describe(xrpc, () => {
 
     it('returns binary body for a binary query', async () => {
       const bytes = new Uint8Array([1, 2, 3, 4])
-      const fetchHandler: FetchHandler = async () =>
-        new Response(bytes, {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(bytes, {
           headers: { 'content-type': 'application/octet-stream' },
         })
+      })
 
       const response = await xrpc(fetchHandler, testBinaryQuery)
 
@@ -99,10 +135,11 @@ describe(xrpc, () => {
 
     it('returns binary body for a binary procedure', async () => {
       const bytes = new Uint8Array([10, 20, 30])
-      const fetchHandler: FetchHandler = async () =>
-        new Response(bytes, {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(bytes, {
           headers: { 'content-type': 'application/octet-stream' },
         })
+      })
 
       const response = await xrpc(fetchHandler, testBinaryProcedure, {
         body: new Uint8Array([99]),
@@ -115,8 +152,9 @@ describe(xrpc, () => {
     })
 
     it('returns no body for a no-output query', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        new Response(null, { status: 200 })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(null, { status: 200 })
+      })
 
       const response = await xrpc(fetchHandler, testNoOutputQuery)
 
@@ -127,9 +165,9 @@ describe(xrpc, () => {
     })
 
     it('passes query params as URL search params', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async () =>
-        Response.json({ value: 'ok' }),
-      )
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
 
       await xrpc(fetchHandler, testQuery, { params: { limit: 25 } })
 
@@ -140,9 +178,9 @@ describe(xrpc, () => {
     })
 
     it('sends POST with JSON body for procedures', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async () =>
-        Response.json({ id: 'new-id' }),
-      )
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'new-id' })
+      })
 
       await xrpc(fetchHandler, testProcedure, {
         body: { text: 'test content' },
@@ -157,9 +195,9 @@ describe(xrpc, () => {
     })
 
     it('forwards custom headers', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async () =>
-        Response.json({ value: 'ok' }),
-      )
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
 
       await xrpc(fetchHandler, testQuery, {
         params: { limit: 1 },
@@ -174,8 +212,9 @@ describe(xrpc, () => {
     })
 
     it('accepts optional params as omitted', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'ok' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
 
       const response = await xrpc(fetchHandler, testQuery)
 
@@ -187,9 +226,9 @@ describe(xrpc, () => {
   describe('error handling', () => {
     describe('fetch errors', () => {
       it('throws XrpcFetchError when fetchHandler throws', async () => {
-        const fetchHandler: FetchHandler = async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
           throw new TypeError('fetch failed')
-        }
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -203,9 +242,9 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcFetchError when fetchHandler rejects', async () => {
-        const fetchHandler: FetchHandler = async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
           throw new Error('network timeout')
-        }
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -220,11 +259,12 @@ describe(xrpc, () => {
 
     describe('response errors', () => {
       it('throws XrpcResponseError for 400 with valid error payload', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          Response.json(
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json(
             { error: 'TestError', message: 'bad request' },
             { status: 400 },
           )
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -240,11 +280,12 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcAuthenticationError for 401', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          Response.json(
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json(
             { error: 'AuthenticationRequired', message: 'Token expired' },
             { status: 401 },
           )
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -257,11 +298,12 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcUpstreamError for non-XRPC error response', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response('Not Found', {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response('Not Found', {
             status: 404,
             headers: { 'content-type': 'text/plain' },
           })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -273,11 +315,12 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcUpstreamError for 500 without valid error payload', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response('Internal Server Error', {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response('Internal Server Error', {
             status: 500,
             headers: { 'content-type': 'text/html' },
           })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -289,11 +332,12 @@ describe(xrpc, () => {
       })
 
       it('Reflects upstream 5xx errors with valid XRPC payload', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          Response.json(
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json(
             { error: 'ServerError', message: 'Something went wrong' },
             { status: 502 },
           )
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -312,8 +356,9 @@ describe(xrpc, () => {
     describe('invalid response errors', () => {
       it('throws XrpcInvalidResponseError when response body fails validation', async () => {
         // Schema expects { value: string } but we return { value: 123 }
-        const fetchHandler: FetchHandler = async () =>
-          Response.json({ value: 123 })
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({ value: 123 })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -326,11 +371,12 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcUpstreamError when response has wrong content-type', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response('binary data', {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response('binary data', {
             status: 200,
             headers: { 'content-type': 'text/plain' },
           })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -344,8 +390,9 @@ describe(xrpc, () => {
 
     describe('content-type header errors', () => {
       it('throws XrpcInternalError when content-type header is set', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          Response.json({ value: 'ok' })
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({ value: 'ok' })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, {
@@ -362,17 +409,18 @@ describe(xrpc, () => {
 
     describe('response payload parsing', () => {
       it('throws XrpcUpstreamError when error response body cannot be parsed', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response('not valid json', {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response('not valid json', {
             status: 400,
             headers: { 'content-type': 'application/json' },
           })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Unable to parse response payload')
+          expect(err.message).toMatch('Unable to parse response payload')
           assert(err.cause instanceof Error)
           expect(err.cause.message).toContain('Unexpected token')
           return true
@@ -380,17 +428,18 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcUpstreamError when success response body cannot be parsed', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response('not valid json', {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response('not valid json', {
             status: 200,
             headers: { 'content-type': 'application/json' },
           })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Unable to parse response payload')
+          expect(err.message).toMatch('Unable to parse response payload')
           assert(err.cause instanceof Error)
           expect(err.cause.message).toContain('Unexpected token')
           return true
@@ -398,8 +447,9 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcUpstreamError when schema expects no payload but got one', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          Response.json({ unexpected: 'data' })
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({ unexpected: 'data' })
+        })
 
         await expect(xrpc(fetchHandler, testNoOutputQuery)).rejects.toSatisfy(
           (err) => {
@@ -411,8 +461,9 @@ describe(xrpc, () => {
       })
 
       it('throws XrpcUpstreamError when schema expects payload but response is empty', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response(null, { status: 200 })
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response(null, { status: 200 })
+        })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -426,11 +477,12 @@ describe(xrpc, () => {
 
     describe('content-type handling', () => {
       it('parses content-type with charset parameter', async () => {
-        const fetchHandler: FetchHandler = async () =>
-          new Response(JSON.stringify({ value: 'hello' }), {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return new Response(JSON.stringify({ value: 'hello' }), {
             status: 200,
             headers: { 'content-type': 'application/json; charset=utf-8' },
           })
+        })
 
         const response = await xrpc(fetchHandler, testQuery, {
           params: { limit: 10 },
@@ -481,8 +533,9 @@ describe(xrpc, () => {
 
   describe('validateRequest', () => {
     it('rejects invalid query params when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'ok' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
 
       await expect(
         xrpc(fetchHandler, testQuery, {
@@ -498,8 +551,9 @@ describe(xrpc, () => {
     })
 
     it('rejects invalid procedure body when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ id: 'abc' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'abc' })
+      })
 
       await expect(
         xrpc(fetchHandler, testProcedure, {
@@ -528,8 +582,9 @@ describe(xrpc, () => {
     })
 
     it('succeeds with valid body when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ id: 'valid' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'valid' })
+      })
 
       const response = await xrpc(fetchHandler, testProcedure, {
         body: { text: 'hello' },
@@ -544,8 +599,9 @@ describe(xrpc, () => {
   describe('validateResponse', () => {
     it('rejects invalid response body by default', async () => {
       // Schema expects { value: string } but server returns { value: 123 }
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 123 })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 123 })
+      })
 
       await expect(
         xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
@@ -558,8 +614,9 @@ describe(xrpc, () => {
 
     it('accepts invalid response body when disabled', async () => {
       // Schema expects { value: string } but server returns { value: 123 }
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 123 })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 123 })
+      })
 
       const response = await xrpc(fetchHandler, testQuery, {
         params: { limit: 10 },
@@ -571,8 +628,9 @@ describe(xrpc, () => {
     })
 
     it('succeeds with valid response body when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'hello' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'hello' })
+      })
 
       const response = await xrpc(fetchHandler, testQuery, {
         params: { limit: 10 },
@@ -583,13 +641,174 @@ describe(xrpc, () => {
       expect(response.body).toEqual({ value: 'hello' })
     })
   })
+
+  describe('strictResponseProcessing', () => {
+    // Helper: returns a JSON response containing a float (invalid lex data)
+    const validWithFloatHandler: FetchHandler = async () => {
+      return Response.json({ value: 'hello', extra: 1.5 }, { status: 200 })
+    }
+
+    // Helper: returns a JSON error response containing a float
+    const errorWithFloatHandler: FetchHandler = async () => {
+      return Response.json(
+        { error: 'TestError', message: 'test-error-description', extra: 1.5 },
+        { status: 400 },
+      )
+    }
+
+    it('rejects response with invalid lex data by default (strict parsing)', async () => {
+      await expect(
+        xrpc(validWithFloatHandler, testQuery, { params: { limit: 10 } }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch('Unable to parse response payload')
+        expect(err.cause).toBeInstanceOf(TypeError)
+        return true
+      })
+    })
+
+    it('accepts response with invalid lex data when strict processing is disabled', async () => {
+      const response = await xrpc(validWithFloatHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: false,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({ value: 'hello', extra: 1.5 })
+    })
+
+    it('rejects response with invalid lex data when strict processing is explicitly enabled', async () => {
+      await expect(
+        xrpc(validWithFloatHandler, testQuery, {
+          strictResponseProcessing: true,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch('Unable to parse response payload')
+        expect(err.cause).toBeInstanceOf(TypeError)
+        return true
+      })
+    })
+
+    it('rejects error response with invalid lex data by default', async () => {
+      await expect(xrpc(errorWithFloatHandler, testQuery)).rejects.toSatisfy(
+        (err) => {
+          assert(err instanceof XrpcUpstreamError)
+          expect(err.message).toMatch('Unable to parse response payload')
+          return true
+        },
+      )
+    })
+
+    it('parses error response with invalid lex data when strict processing is disabled', async () => {
+      await expect(
+        xrpc(errorWithFloatHandler, testQuery, {
+          params: { limit: 10 },
+          strictResponseProcessing: false,
+        }),
+      ).rejects.toSatisfy((err) => {
+        // Error response is still an error, but it should be parsed successfully
+        assert(err instanceof XrpcResponseError)
+        expect(err.status).toBe(400)
+        expect(err.payload.body).toEqual({
+          error: 'TestError',
+          message: 'test-error-description',
+          extra: 1.5,
+        })
+        return true
+      })
+    })
+
+    it('with strictResponseProcessing: false and validateResponse: true, schema validation still runs', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 3, unknownValue: 1.5 }, { status: 200 })
+      })
+
+      await expect(
+        xrpc(fetchHandler, testQuery, {
+          params: { limit: 10 },
+          strictResponseProcessing: false,
+          validateResponse: true,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcInvalidResponseError)
+        expect(err).toBeInstanceOf(XrpcUpstreamError)
+        return true
+      })
+    })
+
+    it('with strictResponseProcessing: false and validateResponse: false, schema validation is skipped', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          {
+            // Invalid value
+            value: 3,
+            // Non-strict Lex Data values:
+            unknownValue: 1.2,
+            foo: { $bytes: 3 },
+          },
+          { status: 200 },
+        )
+      })
+
+      const response = await xrpc(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: false,
+        validateResponse: false,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual({
+        value: 3,
+        unknownValue: 1.2,
+        foo: { $bytes: 3 },
+      })
+
+      // @NOTE "validateResponse: false" basically acts as type casting
+      expectTypeOf(response.body).toMatchObjectType<{
+        value: string
+      }>()
+    })
+
+    it('with strictResponseProcessing: true and validateResponse: false, strict parsing still applies', async () => {
+      await expect(
+        xrpc(validWithFloatHandler, testQuery, {
+          params: { limit: 10 },
+          strictResponseProcessing: true,
+          validateResponse: false,
+        }),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch('Unable to parse response payload')
+        return true
+      })
+    })
+
+    it('does not affect binary responses', async () => {
+      const bytes = new Uint8Array([1, 2, 3])
+
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(bytes, {
+          headers: { 'content-type': 'application/octet-stream' },
+        })
+      })
+
+      const response = await xrpc(fetchHandler, testBinaryQuery, {
+        strictResponseProcessing: false,
+      })
+
+      expect(response.success).toBe(true)
+      expect(response.body).toEqual(bytes)
+    })
+  })
 })
 
 describe(xrpcSafe, () => {
   describe('success paths', () => {
     it('returns successful result for a JSON query', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'hello' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'hello' })
+      })
 
       const result = await xrpcSafe(fetchHandler, testQuery, {
         params: { limit: 5 },
@@ -603,8 +822,9 @@ describe(xrpcSafe, () => {
     })
 
     it('returns successful result for a JSON procedure', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ id: 'new-id' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'new-id' })
+      })
 
       const result = await xrpcSafe(fetchHandler, testProcedure, {
         body: { text: 'hello' },
@@ -616,10 +836,11 @@ describe(xrpcSafe, () => {
 
     it('returns successful result for a binary query', async () => {
       const bytes = new Uint8Array([5, 6, 7])
-      const fetchHandler: FetchHandler = async () =>
-        new Response(bytes, {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(bytes, {
           headers: { 'content-type': 'application/octet-stream' },
         })
+      })
 
       const result = await xrpcSafe(fetchHandler, testBinaryQuery)
 
@@ -631,10 +852,11 @@ describe(xrpcSafe, () => {
 
     it('returns successful result for a binary procedure', async () => {
       const bytes = new Uint8Array([42])
-      const fetchHandler: FetchHandler = async () =>
-        new Response(bytes, {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(bytes, {
           headers: { 'content-type': 'application/octet-stream' },
         })
+      })
 
       const result = await xrpcSafe(fetchHandler, testBinaryProcedure, {
         body: new Uint8Array([1, 2]),
@@ -646,8 +868,9 @@ describe(xrpcSafe, () => {
     })
 
     it('returns successful result for a no-output query', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        new Response(null, { status: 200 })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(null, { status: 200 })
+      })
 
       const result = await xrpcSafe(fetchHandler, testNoOutputQuery)
 
@@ -660,9 +883,9 @@ describe(xrpcSafe, () => {
   describe('error handling', () => {
     describe('fetch errors', () => {
       it('returns XrpcFetchError when fetchHandler throws', async () => {
-        const fetchHandler: FetchHandler = async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
           throw new TypeError('fetch failed')
-        }
+        })
 
         const result = await xrpcSafe(fetchHandler, testQuery, {
           params: { limit: 10 },
@@ -674,9 +897,9 @@ describe(xrpcSafe, () => {
       })
 
       it('returns XrpcFetchError when fetchHandler rejects', async () => {
-        const fetchHandler: FetchHandler = async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
           throw new Error('network timeout')
-        }
+        })
 
         const result = await xrpcSafe(fetchHandler, testQuery, {
           params: { limit: 10 },
@@ -806,8 +1029,9 @@ describe(xrpcSafe, () => {
 
   describe('validateRequest', () => {
     it('returns XrpcInternalError for invalid query params when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'ok' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'ok' })
+      })
 
       const result = await xrpcSafe(fetchHandler, testQuery, {
         // @ts-expect-error intentionally passing invalid params
@@ -821,8 +1045,9 @@ describe(xrpcSafe, () => {
     })
 
     it('returns XrpcInternalError for invalid body when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ id: 'abc' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'abc' })
+      })
 
       const result = await xrpcSafe(fetchHandler, testProcedure, {
         // @ts-expect-error intentionally passing invalid body
@@ -848,8 +1073,9 @@ describe(xrpcSafe, () => {
     })
 
     it('succeeds with valid body when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ id: 'valid' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ id: 'valid' })
+      })
 
       const result = await xrpcSafe(fetchHandler, testProcedure, {
         body: { text: 'hello' },
@@ -863,8 +1089,9 @@ describe(xrpcSafe, () => {
 
   describe('validateResponse', () => {
     it('returns XrpcInvalidResponseError for invalid body by default', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 123 })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 123 })
+      })
 
       const result = await xrpcSafe(fetchHandler, testQuery, {
         params: { limit: 10 },
@@ -876,8 +1103,9 @@ describe(xrpcSafe, () => {
     })
 
     it('accepts invalid response body when disabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 123 })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 123 })
+      })
 
       const result = await xrpcSafe(fetchHandler, testQuery, {
         params: { limit: 10 },
@@ -889,8 +1117,9 @@ describe(xrpcSafe, () => {
     })
 
     it('succeeds with valid response body when enabled', async () => {
-      const fetchHandler: FetchHandler = async () =>
-        Response.json({ value: 'hello' })
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 'hello' })
+      })
 
       const result = await xrpcSafe(fetchHandler, testQuery, {
         params: { limit: 10 },
@@ -899,6 +1128,326 @@ describe(xrpcSafe, () => {
 
       assert(result.success)
       expect(result.body).toEqual({ value: 'hello' })
+    })
+
+    it('applies defaults', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async (path) => {
+        const url = new URL(path, 'http://localhost')
+        const foo = url.searchParams.get('foo')
+
+        // default applied while building the request
+        expect(foo).toBe('foo-default')
+
+        return Response.json({ foo: 'foo-value' })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryWithDefaults, {
+        params: {},
+        validateResponse: true,
+      })
+
+      expect(fetchHandler).toHaveBeenCalled()
+      assert(result.success)
+      expect(result.body).toEqual({
+        bar: 'bar-default', // default applied while parsing the response
+        foo: 'foo-value',
+      })
+    })
+  })
+
+  describe('blob constraints', () => {
+    it('rejects invalid blob refs', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        // missing properties jere
+        return Response.json({ blobRef: { $type: 'blob' } })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toMatch('Unable to parse response payload')
+      assert(result.cause instanceof TypeError)
+      expect(result.cause.message).toBe('Invalid blob object')
+    })
+
+    it('rejects blob-refs with cbor data CIDs', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          lexToJson({
+            blobRef: {
+              $type: 'blob',
+              // ref should be a "raw" CID to be strictly valid
+              ref: cborCid,
+              mimeType: 'image/png',
+              size: 1,
+            },
+          }),
+        )
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toMatch('Unable to parse response payload')
+      assert(result.cause instanceof TypeError)
+      expect(result.cause.message).toBe('Invalid blob object')
+    })
+
+    it('enforces blob mime-type constraint by default', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          lexToJson({
+            blobRef: {
+              $type: 'blob',
+              ref: rawCid,
+              mimeType: 'invalid/mime',
+              size: 10,
+            },
+          }),
+        )
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toBe(
+        'Invalid response: Expected "image/png" (got "invalid/mime") at $.blobRef.mimeType',
+      )
+    })
+
+    it('enforces blob size constraint by default', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          lexToJson({
+            blobRef: {
+              $type: 'blob',
+              ref: rawCid,
+              mimeType: 'image/png',
+              size: 100,
+            },
+          }),
+        )
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toBe(
+        'Invalid response: blob too big (maximum 10, got 100) at $.blobRef',
+      )
+    })
+
+    it('ignores blob constraints in non-strict mode', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          lexToJson({
+            blobRef: {
+              $type: 'blob',
+              ref: rawCid,
+              mimeType: 'invalid/mime',
+              size: 100,
+            },
+          }),
+        )
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef, {
+        strictResponseProcessing: false,
+      })
+
+      assert(result.success)
+      expectTypeOf(result.body).toMatchObjectType<{ blobRef: l.BlobRef }>()
+      expect(result.body).toEqual({
+        blobRef: {
+          $type: 'blob',
+          ref: rawCid,
+          mimeType: 'invalid/mime',
+          size: 100,
+        },
+      })
+    })
+
+    it('transforms legacy blobs in non-strict mode', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({
+          blobRef: {
+            cid: rawCid.toString(),
+            mimeType: 'invalid/mime',
+          },
+        })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef, {
+        strictResponseProcessing: false,
+      })
+
+      assert(result.success)
+      expectTypeOf(result.body).toMatchObjectType<{ blobRef: l.BlobRef }>()
+      expect(result.body).toEqual({
+        blobRef: {
+          $type: 'blob',
+          ref: rawCid,
+          mimeType: 'invalid/mime',
+          size: -1,
+        },
+      })
+    })
+
+    it('allows blob-refs with negative size in non-strict mode', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({
+          blobRef: {
+            $type: 'blob',
+            ref: { $link: rawCid.toString() },
+            mimeType: 'invalid/mime',
+            size: -1,
+          },
+        })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef, {
+        strictResponseProcessing: false,
+      })
+
+      assert(result.success)
+      expectTypeOf(result.body).toMatchObjectType<{ blobRef: l.BlobRef }>()
+      expect(result.body).toEqual({
+        blobRef: {
+          $type: 'blob',
+          ref: rawCid,
+          mimeType: 'invalid/mime',
+          size: -1,
+        },
+      })
+    })
+  })
+
+  describe('strictResponseProcessing', () => {
+    const jsonResponseWithFloat: FetchHandler = async () => {
+      return Response.json({ value: 'hello', extra: 1.5 }, { status: 200 })
+    }
+
+    const jsonErrorResponseWithFloat: FetchHandler = async () => {
+      return Response.json(
+        { error: 'TestError', message: 'test-error-description', extra: 1.5 },
+        { status: 400 },
+      )
+    }
+
+    it('returns error for invalid lex data by default (strict parsing)', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonResponseWithFloat)
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toMatch('Unable to parse response payload')
+      assert(result.cause instanceof TypeError)
+      expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
+    })
+
+    it('accepts response with invalid lex data when strict processing is disabled', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonResponseWithFloat)
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: false,
+      })
+
+      assert(result.success)
+      expect(result.body).toEqual({ value: 'hello', extra: 1.5 })
+    })
+
+    it('returns error for invalid lex data when strict processing is explicitly enabled', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonResponseWithFloat)
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: true,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toMatch('Unable to parse response payload')
+      assert(result.cause instanceof TypeError)
+      expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
+    })
+
+    it('returns error for error response with invalid lex data by default', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonErrorResponseWithFloat)
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toMatch('Unable to parse response payload')
+      assert(result.cause instanceof TypeError)
+      expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
+    })
+
+    it('parses error response with invalid lex data when strict processing is disabled', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonErrorResponseWithFloat)
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: false,
+      })
+
+      assert(!result.success)
+      assert(result instanceof XrpcResponseError)
+      expect(result.status).toBe(400)
+      expect(result.message).toBe('test-error-description')
+    })
+
+    it('with strictResponseProcessing: false and validateResponse: true, schema validation still runs', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 1.5 }, { status: 200 })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: false,
+        validateResponse: true,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+    })
+
+    it('with strictResponseProcessing: false and validateResponse: false, schema validation is skipped', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ value: 1.5 }, { status: 200 })
+      })
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: false,
+        validateResponse: false,
+      })
+
+      assert(result.success)
+      expect(result.body).toEqual({ value: 1.5 })
+    })
+
+    it('with strictResponseProcessing: true and validateResponse: false, strict parsing still applies', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(jsonResponseWithFloat)
+
+      const result = await xrpcSafe(fetchHandler, testQuery, {
+        params: { limit: 10 },
+        strictResponseProcessing: true,
+        validateResponse: false,
+      })
+
+      assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result.message).toMatch('Unable to parse response payload')
+      assert(result.cause instanceof TypeError)
+      expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
     })
   })
 })
