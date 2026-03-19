@@ -33,12 +33,11 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['suggested_onboarding_users:discover_agent:enable'],
-          {
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const headers = noUndefinedVals({
@@ -109,8 +108,9 @@ const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
 }
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useDiscover = input.params.hydrateCtx.featureGatesMap.get(
-    'suggested_onboarding_users:discover_agent:enable',
+  const useDiscover = input.params.hydrateCtx.features.checkGate(
+    input.params.hydrateCtx.features.Gate
+      .SuggestedOnboardingUsersDiscoverEnable,
   )
   const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
   return skeletonFn(input)
