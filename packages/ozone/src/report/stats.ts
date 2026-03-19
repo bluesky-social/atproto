@@ -33,9 +33,9 @@ export class ReportStatsService {
     try {
       const start = Date.now()
       const groups = await this.enumerateGroups()
-      await Promise.allSettled(
-        groups.map((group) => this.materializeGroup(group, opts)),
-      )
+      for (const group of groups) {
+        await this.materializeGroup(group, opts)
+      }
       const duration = Date.now() - start
       dbLogger.info({ duration }, 'report stats materialization completed')
     } catch (err) {
