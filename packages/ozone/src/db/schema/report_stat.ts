@@ -5,7 +5,7 @@ export const reportStatTableName = 'report_stat'
 export interface ReportStat {
   id: Generated<number>
   // group
-  queueId: number | null // NULL = aggregate across all queues
+  queueId: number // -1 = aggregate across all queues
   mode: string // 'live' or 'fixed'
   timeframe: string // 'day' or 'week'
   // output

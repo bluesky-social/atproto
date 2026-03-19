@@ -9,7 +9,7 @@ export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 export type ReportStatMode = 'live' | 'fixed'
 export type ReportStatTimeframe = 'day' | 'week'
 export type ReportStatGroup = {
-  queueId?: number
+  queueId: number
   mode: ReportStatMode
   timeframe: ReportStatTimeframe
 }
@@ -60,7 +60,7 @@ export class ReportStatsService {
     }
 
     // global
-    groups.push({ queueId: undefined, mode: 'live', timeframe: 'day' })
+    groups.push({ queueId: -1, mode: 'live', timeframe: 'day' })
 
     return groups
   }
@@ -110,31 +110,40 @@ export class ReportStatsService {
     } = stats
 
     const computedAt = new Date().toISOString()
-    return this.db.db
-      .insertInto('report_stat')
-      .values({
-        queueId,
-        mode,
-        timeframe,
-        inboundCount,
-        pendingCount,
-        actionedCount,
-        escalatedCount,
-        actionRate,
-        computedAt,
-      })
-      .onConflict((oc) =>
-        oc.columns(['queueId', 'mode', 'timeframe']).doUpdateSet({
+
+    if (group.mode === 'live') {
+      return this.db.db
+        .updateTable('report_stat')
+        .set({
           inboundCount,
           pendingCount,
           actionedCount,
           escalatedCount,
           actionRate,
           computedAt,
-        }),
-      )
-      .returningAll()
-      .executeTakeFirstOrThrow()
+        })
+        .where('mode', '=', mode)
+        .where('timeframe', '=', timeframe)
+        .where('queueId', '=', queueId)
+        .returningAll()
+        .executeTakeFirstOrThrow()
+    } else {
+      return this.db.db
+        .insertInto('report_stat')
+        .values({
+          queueId,
+          mode,
+          timeframe,
+          inboundCount,
+          pendingCount,
+          actionedCount,
+          escalatedCount,
+          actionRate,
+          computedAt,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow()
+    }
   }
 
   /** Calculate statistics for a group. */
@@ -156,7 +165,7 @@ export class ReportStatsService {
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('cnt'))
       .where('status', '=', 'open')
-    if (queueId !== undefined) {
+    if (queueId !== -1) {
       pendingQb = pendingQb.where('queueId', '=', queueId)
     }
     const pendingCount = (await pendingQb.executeTakeFirst())?.cnt ?? 0
@@ -166,7 +175,7 @@ export class ReportStatsService {
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('cnt'))
       .where('createdAt', '>', cutoff)
-    if (queueId !== undefined) {
+    if (queueId !== -1) {
       inboundQb = inboundQb.where('queueId', '=', queueId)
     }
     const inboundCount = (await inboundQb.executeTakeFirst())?.cnt ?? 0
@@ -177,7 +186,7 @@ export class ReportStatsService {
       .select(sql<number>`count(*)`.as('cnt'))
       .where('status', '=', 'closed')
       .where('updatedAt', '>', cutoff)
-    if (queueId !== undefined) {
+    if (queueId !== -1) {
       actionedQb = actionedQb.where('queueId', '=', queueId)
     }
     const actionedCount = (await actionedQb.executeTakeFirst())?.cnt ?? 0
@@ -188,7 +197,7 @@ export class ReportStatsService {
       .select(sql<number>`count(*)`.as('cnt'))
       .where('status', '=', 'escalated')
       .where('updatedAt', '>', cutoff)
-    if (queueId !== undefined) {
+    if (queueId !== -1) {
       escalatedQb = escalatedQb.where('queueId', '=', queueId)
     }
     const escalatedCount = (await escalatedQb.executeTakeFirst())?.cnt ?? 0
@@ -215,11 +224,7 @@ export class ReportStatsService {
       .selectAll()
       .where('mode', '=', group.mode)
       .where('timeframe', '=', group.timeframe)
-    if (group.queueId !== undefined) {
-      qb = qb.where('queueId', '=', group.queueId)
-    } else {
-      qb = qb.where('queueId', 'is', null)
-    }
+    qb = qb.where('queueId', '=', group.queueId)
 
     return qb.executeTakeFirst()
   }
@@ -229,7 +234,7 @@ export class ReportStatsService {
     queueId?: number,
   ): Promise<Selectable<ReportStat> | undefined> {
     return this.getLatestStats({
-      queueId,
+      queueId: queueId ?? -1,
       mode: 'live',
       timeframe: 'day',
     })
