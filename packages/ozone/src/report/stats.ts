@@ -156,11 +156,12 @@ export class ReportStatsService {
           : 0
     const cutoff = new Date(timestamp).toISOString()
 
-    // pending (all time)
+    // pending
     let pendingQb = this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('count'))
       .where('status', '=', 'open')
+      .where('createdAt', '>', cutoff)
     if (queueId !== -1) {
       pendingQb = pendingQb.where('queueId', '=', queueId)
     }
