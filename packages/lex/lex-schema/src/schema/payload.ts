@@ -106,9 +106,7 @@ export class Payload<
    * Checks whether the given content-type matches the expected payload schema's
    * encoding.
    */
-  matchesEncoding(
-    contentType: string | undefined,
-  ): contentType is InferPayloadEncoding<this> {
+  matchesEncoding(contentType: string | undefined): boolean {
     const { encoding } = this
 
     // Handle undefined cases
