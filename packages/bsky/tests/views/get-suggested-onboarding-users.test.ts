@@ -5,7 +5,7 @@ import express, { Application } from 'express'
 import AtpAgent from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
 import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getSuggestedUsersSkeleton'
+import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getOnboardingSuggestedUsersSkeleton'
 
 type User = {
   id: string
@@ -71,8 +71,8 @@ describe('getSuggestedOnboardingUsers', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_get_suggested_onboarding_users',
       bsky: {
-        topicsUrl: mockServer.url,
-        topicsApiKey: 'test',
+        suggestionsUrl: mockServer.url,
+        suggestionsApiKey: 'test',
       },
     })
     agent = network.bsky.getClient()
@@ -173,7 +173,7 @@ class MockServer {
   private createApp() {
     const app = express()
     app.get(
-      '/xrpc/app.bsky.unspecced.getSuggestedUsersSkeleton',
+      '/xrpc/app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
       (req, res) => {
         const skeleton: OutputSchema = {
           dids: Array.from(this.mockedDids.values()),
