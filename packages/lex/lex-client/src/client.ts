@@ -76,7 +76,7 @@ export type ClientOptions = XrpcRequestHeadersOptions &
   Pick<XrpcRequestProcessingOptions, 'validateRequest'> &
   XrpcResponseOptions
 
-export type CallOptions = {
+export type ActionOptions = {
   /** AbortSignal to cancel the request. */
   signal?: AbortSignal
 }
@@ -101,7 +101,7 @@ export type CallOptions = {
 export type Action<I = any, O = any> = (
   client: Client,
   input: I,
-  options: CallOptions,
+  options: ActionOptions,
 ) => O | Promise<O>
 
 /**
@@ -123,7 +123,10 @@ export type InferActionOutput<A extends Action> =
  *
  * @see {@link Client.createRecord}
  */
-export type CreateRecordOptions = CallOptions & {
+export type CreateRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.createRecord.main>,
+  'body'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
@@ -137,7 +140,10 @@ export type CreateRecordOptions = CallOptions & {
  *
  * @see {@link Client.deleteRecord}
  */
-export type DeleteRecordOptions = CallOptions & {
+export type DeleteRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.deleteRecord.main>,
+  'params'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
@@ -151,7 +157,10 @@ export type DeleteRecordOptions = CallOptions & {
  *
  * @see {@link Client.getRecord}
  */
-export type GetRecordOptions = CallOptions & {
+export type GetRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.getRecord.main>,
+  'params'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
 }
@@ -161,7 +170,10 @@ export type GetRecordOptions = CallOptions & {
  *
  * @see {@link Client.putRecord}
  */
-export type PutRecordOptions = CallOptions & {
+export type PutRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.putRecord.main>,
+  'body'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
@@ -177,7 +189,10 @@ export type PutRecordOptions = CallOptions & {
  *
  * @see {@link Client.listRecords}
  */
-export type ListRecordsOptions = CallOptions & {
+export type ListRecordsOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.listRecords.main>,
+  'params'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Maximum number of records to return. */
@@ -187,6 +202,16 @@ export type ListRecordsOptions = CallOptions & {
   /** If true, returns records in reverse chronological order. */
   reverse?: boolean
 }
+
+export type UploadBlobOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.uploadBlob.main>,
+  'body'
+>
+
+export type GetBlobOptions = Omit<
+  XrpcOptions<typeof com.atproto.sync.getBlob.main>,
+  'params'
+>
 
 export type RecordKeyOptions<
   T extends RecordSchema,
@@ -674,14 +699,8 @@ export class Client implements Agent {
    * console.log(response.body.blob) // Use this ref in records
    * ```
    */
-  async uploadBlob(
-    body: BinaryBodyInit,
-    options?: CallOptions & { encoding?: `${string}/${string}` },
-  ) {
-    return this.xrpc(com.atproto.repo.uploadBlob.main, {
-      ...options,
-      body,
-    })
+  async uploadBlob(body: BinaryBodyInit, options?: UploadBlobOptions) {
+    return this.xrpc(com.atproto.repo.uploadBlob.main, { ...options, body })
   }
 
   /**
@@ -691,7 +710,7 @@ export class Client implements Agent {
    * @param cid - The CID of the blob
    * @param options - Call options
    */
-  async getBlob(did: DidString, cid: CidString, options?: CallOptions) {
+  async getBlob(did: DidString, cid: CidString, options?: GetBlobOptions) {
     return this.xrpc(com.atproto.sync.getBlob.main, {
       ...options,
       params: { did, cid },
@@ -749,7 +768,7 @@ export class Client implements Agent {
           ? XrpcRequestParams<T>
           : never,
     options?: T extends Action
-      ? CallOptions
+      ? ActionOptions
       : T extends Procedure
         ? Omit<XrpcOptions<T>, 'body'>
         : T extends Query
@@ -767,7 +786,7 @@ export class Client implements Agent {
   public async call(
     ns: Main<Action> | Main<Procedure> | Main<Query>,
     arg?: LexValue | Params,
-    options: CallOptions = {},
+    options: ActionOptions = {},
   ): Promise<unknown> {
     const method = getMain(ns)
 
