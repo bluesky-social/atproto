@@ -33,8 +33,8 @@ import {
 } from './util.js'
 import {
   XrpcOptions,
-  XrpcRequestOptions,
   XrpcRequestParams,
+  XrpcRequestProcessingOptions,
   xrpc,
   xrpcSafe,
 } from './xrpc.js'
@@ -72,9 +72,9 @@ export type {
  * }
  * ```
  */
-export type ClientOptions = XrpcResponseOptions &
-  XrpcRequestHeadersOptions &
-  Pick<XrpcRequestOptions, 'validateRequest'>
+export type ClientOptions = XrpcRequestHeadersOptions &
+  Pick<XrpcRequestProcessingOptions, 'validateRequest'> &
+  XrpcResponseOptions
 
 export type CallOptions = {
   /** AbortSignal to cancel the request. */
