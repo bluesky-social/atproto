@@ -48,7 +48,7 @@ export type Service = `${DidString}#${DidServiceIdentifier}`
  * ```
  */
 export type BinaryBodyInit =
-  | (Uint8Array & ArrayBufferView<ArrayBufferLike>)
+  | Uint8Array
   | ArrayBuffer
   | Blob
   | ReadableStream<Uint8Array>
