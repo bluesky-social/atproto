@@ -1,5 +1,11 @@
 # @atproto/repo
 
+## 0.8.13
+
+### Patch Changes
+
+- [#4729](https://github.com/bluesky-social/atproto/pull/4729) [`192685f`](https://github.com/bluesky-social/atproto/commit/192685fca75a68c9c50a94817d3f27da7fc02f56) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Optimize BufferedReader implementation
+
 ## 0.8.12
 
 ### Patch Changes
