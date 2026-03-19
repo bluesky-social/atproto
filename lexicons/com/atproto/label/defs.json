@@ -149,7 +149,8 @@
         "sexual",
         "nudity",
         "nsfl",
-        "gore"
+        "gore",
+        "bot"
       ]
     }
   }
