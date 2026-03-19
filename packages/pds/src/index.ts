@@ -181,6 +181,7 @@ export class PDS {
   }
 
   async destroy(): Promise<void> {
+    await this.ctx.actorStoreMigrator?.destroy()
     await this.ctx.sequencer.destroy()
     await this.terminator?.terminate()
     await this.ctx.backgroundQueue.destroy()
