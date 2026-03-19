@@ -1,6 +1,6 @@
-import { DidString, UnknownString } from '@atproto/lex-schema'
+import { DidString, LexValue, UnknownString } from '@atproto/lex-schema'
 
-export type { DidString, UnknownString }
+export type { DidString, LexValue, UnknownString }
 
 /**
  * Service identifier fragment for DID service endpoints.
@@ -54,3 +54,18 @@ export type BinaryBodyInit =
   | ReadableStream<Uint8Array>
   | AsyncIterable<Uint8Array>
   | string
+
+export type EncodingString = `${string}/${string}`
+
+export function isEncodingString(
+  contentType: string,
+): contentType is EncodingString {
+  return contentType.includes('/')
+}
+
+export type XrpcUnknownResponsePayload<
+  TBinary extends BinaryBodyInit = Uint8Array,
+> = {
+  encoding: EncodingString
+  body: LexValue | TBinary
+}

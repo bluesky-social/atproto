@@ -9,11 +9,13 @@ import {
 } from '@atproto/lex-schema'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Agent } from './agent.js'
-import { XrpcResponsePayload } from './util.js'
+import { XrpcUnknownResponsePayload } from './types.js'
 import {
   WWWAuthenticate,
   parseWWWAuthenticateHeader,
 } from './www-authenticate.js'
+
+export type { XrpcUnknownResponsePayload }
 
 export type DownstreamError<N extends LexErrorCode = LexErrorCode> = {
   status: number
@@ -68,7 +70,7 @@ export type XrpcErrorPayload<N extends LexErrorCode = LexErrorCode> = {
  * This function checks whether a given payload matches this schema.
  */
 export function isXrpcErrorPayload(
-  payload: XrpcResponsePayload | null | undefined,
+  payload: XrpcUnknownResponsePayload | null | undefined,
 ): payload is XrpcErrorPayload {
   return (
     payload != null &&
@@ -292,7 +294,7 @@ export class XrpcUpstreamError<
   constructor(
     method: M,
     readonly response: Response,
-    readonly payload: XrpcResponsePayload | null = null,
+    readonly payload: XrpcUnknownResponsePayload | null = null,
     message: string = `Unexpected upstream XRPC response`,
     options?: ErrorOptions,
   ) {
@@ -331,7 +333,7 @@ export class XrpcInvalidResponseError<
   constructor(
     method: M,
     response: Response,
-    payload: XrpcResponsePayload,
+    payload: XrpcUnknownResponsePayload,
     readonly cause: LexValidationError,
   ) {
     super(method, response, payload, `Invalid response: ${cause.message}`, {

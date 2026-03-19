@@ -1,5 +1,5 @@
 import { LexValue } from '@atproto/lex-data'
-import { Infer, Schema, Validator } from '../core.js'
+import { InferInput, Schema, Validator } from '../core.js'
 import { ObjectSchema, object } from './object.js'
 
 export type { LexValue }
@@ -15,7 +15,7 @@ type ToBodyType<
   TSchema,
   TBinary,
 > = TSchema extends Schema
-  ? Infer<TSchema>
+  ? InferInput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
     : TBinary
@@ -106,7 +106,9 @@ export class Payload<
    * Checks whether the given content-type matches the expected payload schema's
    * encoding.
    */
-  matchesEncoding(contentType: string | undefined): boolean {
+  matchesEncoding(
+    contentType: string | undefined,
+  ): contentType is InferPayloadEncoding<this> {
     const { encoding } = this
 
     // Handle undefined cases

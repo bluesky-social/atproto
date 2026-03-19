@@ -1,33 +1,23 @@
-import {
-  DidString,
-  InferMethodOutput,
-  InferMethodOutputBody,
-  Procedure,
-  Query,
-} from '@atproto/lex-schema'
-import type { Service } from './types.js'
+import type { DidString, Service } from './types.js'
 
-/**
- * The body type of an XRPC response, inferred from the method's output schema.
- *
- * For JSON responses, this is the parsed LexValue. For binary responses,
- * this is a Uint8Array.
- *
- * @typeParam M - The XRPC method type (Procedure or Query)
- */
-export type XrpcResponseBody<M extends Procedure | Query = Procedure | Query> =
-  InferMethodOutputBody<M, Uint8Array>
+export function applyDefaults<
+  TDefaults extends Record<string, unknown>,
+  TOptions extends {
+    [K in keyof TDefaults]?: TDefaults[K]
+  },
+>(options: TOptions, defaults: TDefaults): TOptions & TDefaults {
+  const combined: Partial<TDefaults> = { ...options }
 
-/**
- * The full payload type of an XRPC response, including body and encoding.
- *
- * Returns `null` for methods that have no output.
- *
- * @typeParam M - The XRPC method type (Procedure or Query)
- */
-export type XrpcResponsePayload<
-  M extends Procedure | Query = Procedure | Query,
-> = InferMethodOutput<M, Uint8Array>
+  // @NOTE We make sure that options with an explicit `undefined` value get the
+  // default, since spreading doesn't override with `undefined`.
+  for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
+    if (options[key] === undefined) {
+      combined[key] = defaults[key]
+    }
+  }
+
+  return combined as TOptions & TDefaults
+}
 
 /**
  * Type guard to check if a value is {@link Blob}-like.

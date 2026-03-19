@@ -347,7 +347,7 @@ if (result.success) {
 }
 ```
 
-All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `allowInvalidLexData` is enabled, but can also be used directly:
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
 
 ```typescript
 // Strict mode (default) - rejects datetime without timezone
@@ -516,7 +516,7 @@ if (result.success) {
 }
 ```
 
-Both `xrpc()` and `xrpcSafe()` accept `validateRequest`, `validateResponse`, and `allowInvalidLexData` options to control validation and strictness per-call. See [Validation and Strictness Options](#validation-and-strictness-options) for details.
+Both `xrpc()` and `xrpcSafe()` accept `validateRequest`, `validateResponse`, and `strictResponseProcessing` options to control validation and strictness per-call. See [Validation and Strictness Options](#validation-and-strictness-options) for details.
 
 ## Client API
 
@@ -598,15 +598,16 @@ const client = new Client(session, {
   // Validate responses against the method's output schema (default: true)
   validateResponse: true,
 
-  // Accept responses containing invalid Lex data such as floats or
-  // malformed $bytes/$link objects (default: false)
-  allowInvalidLexData: true,
+  // Strictly process responses according to Lex encoding rules. When set to
+  // false, accepts responses containing invalid Lex data such as floats or
+  // malformed $bytes/$link objects (default: true)
+  strictResponseProcessing: false,
 })
 ```
 
 - **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
-- **`allowInvalidLexData`** — When `true`, the client will accept responses containing data that doesn't conform to the Lex encoding (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). Invalid values are returned as-is rather than being rejected or converted. This also relaxes schema validation: `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `false`.
+- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `true`.
 
 ### Core Methods
 
@@ -890,12 +891,12 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
-Validation and strictness options (`validateRequest`, `validateResponse`, `allowInvalidLexData`) can also be passed per-call to override the client defaults:
+Validation and strictness options (`validateRequest`, `validateResponse`, `strictResponseProcessing`) can also be passed per-call to override the client defaults:
 
 ```typescript
 const response = await client.xrpc(app.bsky.feed.getTimeline, {
   params: { limit: 50 },
-  allowInvalidLexData: true, // Accept non-strict Lex data for this call
+  strictResponseProcessing: false, // Accept non-strict Lex data for this call
   validateResponse: false, // Skip schema validation for this call
 })
 ```

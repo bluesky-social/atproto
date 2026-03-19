@@ -26,7 +26,11 @@ import {
   XrpcResponseOptions,
 } from './response.js'
 import { BinaryBodyInit, Service } from './types.js'
-import { XrpcRequestHeadersOptions, buildXrpcRequestHeaders } from './util.js'
+import {
+  XrpcRequestHeadersOptions,
+  applyDefaults,
+  buildXrpcRequestHeaders,
+} from './util.js'
 import {
   XrpcOptions,
   XrpcRequestOptions,
@@ -328,7 +332,7 @@ export class Client implements Agent {
   public readonly xrpcDefaults: {
     readonly validateRequest: boolean
     readonly validateResponse: boolean
-    readonly allowInvalidLexData: boolean
+    readonly strictResponseProcessing: boolean
   }
 
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
@@ -339,7 +343,7 @@ export class Client implements Agent {
     this.xrpcDefaults = Object.freeze({
       validateRequest: options.validateRequest ?? false,
       validateResponse: options.validateResponse ?? true,
-      allowInvalidLexData: options.allowInvalidLexData ?? false,
+      strictResponseProcessing: options.strictResponseProcessing ?? true,
     })
   }
 
@@ -475,15 +479,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M>> {
-    return xrpc(this, ns, {
-      ...options,
-      validateRequest:
-        options?.validateRequest ?? this.xrpcDefaults.validateRequest,
-      validateResponse:
-        options?.validateResponse ?? this.xrpcDefaults.validateResponse,
-      allowInvalidLexData:
-        options?.allowInvalidLexData ?? this.xrpcDefaults.allowInvalidLexData,
-    })
+    return xrpc(this, ns, applyDefaults(options, this.xrpcDefaults))
   }
 
   /**
@@ -522,15 +518,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
-    return xrpcSafe(this, ns, {
-      ...options,
-      validateRequest:
-        options?.validateRequest ?? this.xrpcDefaults.validateRequest,
-      validateResponse:
-        options?.validateResponse ?? this.xrpcDefaults.validateResponse,
-      allowInvalidLexData:
-        options?.allowInvalidLexData ?? this.xrpcDefaults.allowInvalidLexData,
-    })
+    return xrpcSafe(this, ns, applyDefaults(options, this.xrpcDefaults))
   }
 
   /**

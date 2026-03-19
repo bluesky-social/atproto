@@ -1,9 +1,13 @@
 import { LexParseOptions, lexParse } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
+  InferOutput,
+  LexValue,
+  Payload,
   Procedure,
   Query,
   ResultSuccess,
+  Validator,
 } from '@atproto/lex-schema'
 import {
   XrpcAuthenticationError,
@@ -12,12 +16,67 @@ import {
   XrpcUpstreamError,
   isXrpcErrorPayload,
 } from './errors.js'
-import { XrpcResponseBody, XrpcResponsePayload } from './util.js'
+import {
+  EncodingString,
+  XrpcUnknownResponsePayload,
+  isEncodingString,
+} from './types.js'
 
 const CONTENT_TYPE_BINARY = 'application/octet-stream'
 const CONTENT_TYPE_JSON = 'application/json'
 
-export type { XrpcResponseBody, XrpcResponsePayload }
+// @NOTE the output schema is used in "parse" mode (safeParse), which means that
+// defaults will be applied and coercions will be performed, so we need to use
+// InferOutput here to get the final parsed type, not Infer/InferInput. For this
+// reason, we cannot use InferMethodOutputBody and InferMethodOutput from
+// lex-schema here.
+
+type InferEncodingType<TEncoding extends string> = TEncoding extends '*/*'
+  ? EncodingString
+  : TEncoding extends `${infer T extends string}/*`
+    ? `${T}/${string}`
+    : TEncoding
+
+type InferBodyType<
+  TEncoding extends string,
+  TSchema,
+> = TSchema extends Validator
+  ? InferOutput<TSchema>
+  : TEncoding extends `application/json`
+    ? LexValue
+    : Uint8Array
+
+/**
+ * The body type of an XRPC response, inferred from the method's output schema.
+ *
+ * For JSON responses, this is the parsed LexValue. For binary responses,
+ * this is a Uint8Array.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ */
+export type XrpcResponseBody<M extends Procedure | Query> =
+  M['output'] extends Payload<infer TEncoding, infer TSchema>
+    ? TEncoding extends string
+      ? InferBodyType<TEncoding, TSchema>
+      : undefined
+    : never
+
+/**
+ * The full payload type of an XRPC response, including body and encoding.
+ *
+ * Returns `null` for methods that have no output.
+ *
+ * @typeParam M - The XRPC method type (Procedure or Query)
+ */
+export type XrpcResponsePayload<M extends Procedure | Query> =
+  M['output'] extends Payload<infer TEncoding, infer TSchema>
+    ? TEncoding extends string
+      ? {
+          encoding: InferEncodingType<TEncoding>
+          body: InferBodyType<TEncoding, TSchema>
+        }
+      : undefined
+    : never
 
 export type XrpcResponseOptions = {
   /**
@@ -32,23 +91,28 @@ export type XrpcResponseOptions = {
   validateResponse?: boolean
 
   /**
-   * Whether to allow invalid Lex data in the response payload. By default, the
-   * client will reject responses with invalid Lex data (floats and invalid
-   * $bytes / $link objects).
+   * Whether to strictly process response payloads according to Lex encoding
+   * rules. By default, the client will reject responses with invalid Lex data
+   * (floats and invalid $bytes / $link objects).
    *
-   * Setting this option to `true` will allow the client to accept such
-   * responses, but the invalid Lex data will be returned as-is (e.g., floats
-   * will not be rejected, and invalid $bytes / $link objects will not be
-   * converted to Uint8Array / Cid).
+   * Setting this option to `false` will allow the client to accept such
+   * responses in a non-strict mode, where invalid Lex data will be returned
+   * as-is (e.g., floats will not be rejected, and invalid $bytes / $link
+   * objects will not be converted to Uint8Array / Cid). When in non-strict
+   * mode, the validation will also be relaxed when validating the response
+   * against the method's output schema, allowing values that do not strictly
+   * conform to the schema (e.g. datetime strings that are not valid RFC3339
+   * format, blobs that are not of the right size/mime-type, etc.) to be
+   * accepted as long as their basic structure is correct.
    *
    * When validation is enabled (the default), the values defined through the
    * method schema will be enforced, ensuring that the client can still process
    * the response even if the server returns invalid Lex data.
    *
-   * @default false
+   * @default true
    * @see {@link LexParseOptions.strict}
    */
-  allowInvalidLexData?: boolean
+  strictResponseProcessing?: boolean
 }
 
 /**
@@ -121,16 +185,8 @@ export class XrpcResponse<M extends Procedure | Query>
     // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
     if (response.status < 200 || response.status >= 300) {
       // Always parse json for error responses
-      const payload = await readPayload(response, {
-        parse: { strict: !options?.allowInvalidLexData },
-      }).catch((cause) => {
-        throw new XrpcUpstreamError(
-          method,
-          response,
-          null,
-          'Unable to parse response payload',
-          { cause },
-        )
+      const payload = await readPayload(method, response, {
+        parse: { strict: options?.strictResponseProcessing ?? true },
       })
 
       // Properly formatted XRPC error response ?
@@ -153,19 +209,11 @@ export class XrpcResponse<M extends Procedure | Query>
       )
     }
 
-    const payload = await readPayload(response, {
+    const payload = await readPayload(method, response, {
       // Only parse json if the schema expects it
       parse: method.output.encoding === CONTENT_TYPE_JSON && {
-        strict: !options?.allowInvalidLexData,
+        strict: options?.strictResponseProcessing ?? true,
       },
-    }).catch((cause) => {
-      throw new XrpcUpstreamError(
-        method,
-        response,
-        null,
-        'Unable to parse response payload',
-        { cause },
-      )
     })
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
@@ -195,7 +243,7 @@ export class XrpcResponse<M extends Procedure | Query>
       // Assert valid response body.
       if (method.output.schema && options?.validateResponse !== false) {
         const result = method.output.schema.safeParse(payload.body, {
-          strict: !options?.allowInvalidLexData,
+          strict: options?.strictResponseProcessing ?? true,
         })
 
         if (!result.success) {
@@ -243,46 +291,64 @@ type ReadPayloadOptions = {
  * @note this function always consumes the response body
  */
 async function readPayload(
+  method: Query | Procedure,
   response: Response,
   options?: ReadPayloadOptions,
-): Promise<XrpcResponsePayload> {
-  // @TODO Should we limit the maximum response size here (this could also be
-  // done by the FetchHandler)?
+): Promise<undefined | XrpcUnknownResponsePayload> {
+  try {
+    // @TODO Should we limit the maximum response size here (this could also be
+    // done by the FetchHandler)?
 
-  const encoding = response.headers
-    .get('content-type')
-    ?.split(';')[0]
-    .trim()
-    .toLowerCase()
+    const encoding = response.headers
+      .get('content-type')
+      ?.split(';')[0]
+      .trim()
+      .toLowerCase()
 
-  // Response content-type is undefined
-  if (!encoding) {
-    // If the body is empty, return undefined (= no payload)
-    const body = await response.arrayBuffer()
-    if (body.byteLength === 0) return undefined
+    // Response content-type is undefined
+    if (!encoding) {
+      // If the body is empty, return undefined (= no payload)
+      const arrayBuffer = await response.arrayBuffer()
+      if (arrayBuffer.byteLength === 0) return undefined
 
-    // If we got data despite no content-type, treat it as binary
-    return {
-      encoding: CONTENT_TYPE_BINARY,
-      body: new Uint8Array(body),
+      // If we got data despite no content-type, treat it as binary
+      return {
+        encoding: CONTENT_TYPE_BINARY,
+        body: new Uint8Array(arrayBuffer),
+      }
     }
+
+    if (!isEncodingString(encoding)) {
+      throw new TypeError(`Invalid content-type "${encoding}" in response`)
+    }
+
+    if (options?.parse && encoding === CONTENT_TYPE_JSON) {
+      // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
+      // perform the lex parsing using cborg/json, allowing to do
+      // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
+      // This would require adding encode/decode utilities to lex-json (similar
+      // to @ipld/dag-json)
+      const text = await response.text()
+
+      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
+      // using a reviver function during JSON.parse should be faster than
+      // parsing to JSON then converting to Lex (?)
+
+      // @TODO verify statement above
+      return { encoding, body: lexParse(text, options.parse) }
+    }
+
+    const arrayBuffer = await response.arrayBuffer()
+    return { encoding, body: new Uint8Array(arrayBuffer) }
+  } catch (cause) {
+    const message = 'Unable to parse response payload'
+    const messageDetail = cause instanceof TypeError ? cause.message : undefined
+    throw new XrpcUpstreamError(
+      method,
+      response,
+      null,
+      messageDetail ? `${message}: ${messageDetail}` : message,
+      { cause },
+    )
   }
-
-  if (options?.parse && encoding === CONTENT_TYPE_JSON) {
-    // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
-    // perform the lex parsing using cborg/json, allowing to do
-    // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
-    // This would require adding encode/decode utilities to lex-json (similar
-    // to @ipld/dag-json)
-    const text = await response.text()
-
-    // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
-    // using a reviver function during JSON.parse should be faster than
-    // parsing to JSON then converting to Lex (?)
-
-    // @TODO verify statement above
-    return { encoding, body: lexParse(text, options.parse) }
-  }
-
-  return { encoding, body: new Uint8Array(await response.arrayBuffer()) }
 }
