@@ -57,7 +57,7 @@ describe('getLiveStats', () => {
   const computeStats = async () => {
     const db = network.ozone.ctx.db
     const statsService = network.ozone.ctx.reportStatsService(db)
-    await statsService.computeLiveStats()
+    await statsService.materializeAll({ force: true })
   }
 
   beforeAll(async () => {

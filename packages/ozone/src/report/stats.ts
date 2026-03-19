@@ -28,12 +28,12 @@ export class ReportStatsService {
     return (db: Database) => new ReportStatsService(db)
   }
 
-  async materializeAll(): Promise<void> {
+  async materializeAll(opts?: { force?: boolean }): Promise<void> {
     try {
       const start = Date.now()
       const groups = await this.enumerateGroups()
       await Promise.allSettled(
-        groups.map((group) => this.materializeGroup(group)),
+        groups.map((group) => this.materializeGroup(group, opts)),
       )
       const duration = Date.now() - start
       dbLogger.info({ duration }, 'report stats materialization completed')
@@ -70,27 +70,30 @@ export class ReportStatsService {
    */
   private async materializeGroup(
     group: ReportStatGroup,
+    opts?: { force?: boolean },
   ): Promise<Selectable<ReportStat>> {
-    const cached = await this.getLatestStats(group)
+    if (!opts?.force) {
+      const cached = await this.getLatestStats(group)
 
-    // check if up to date
-    /// live stats TTL: 15 minutes
-    /// fixed stats TTL: whatever their timeframe is
-    const ttl =
-      group.mode === 'live'
-        ? 15 * MINUTE
-        : group.timeframe === 'day'
-          ? 24 * HOUR
-          : 7 * 24 * HOUR
-    const isUpToDate =
-      cached && new Date(cached.computedAt).getTime() > Date.now() - ttl
+      // check if up to date
+      /// live stats TTL: 15 minutes
+      /// fixed stats TTL: whatever their timeframe is
+      const ttl =
+        group.mode === 'live'
+          ? 15 * MINUTE
+          : group.timeframe === 'day'
+            ? 24 * HOUR
+            : 7 * 24 * HOUR
+      const isUpToDate =
+        cached && new Date(cached.computedAt).getTime() > Date.now() - ttl
 
-    if (isUpToDate) {
-      return cached
-    } else {
-      const stats = await this.computeGroup(group)
-      return await this.updateGroup(group, stats)
+      if (isUpToDate) {
+        return cached
+      }
     }
+
+    const stats = await this.computeGroup(group)
+    return await this.updateGroup(group, stats)
   }
 
   private async updateGroup(
@@ -138,7 +141,7 @@ export class ReportStatsService {
   private async computeGroup(
     group: ReportStatGroup,
   ): Promise<ReportStatistics> {
-    const { queueId, mode, timeframe } = group
+    const { queueId, timeframe } = group
 
     const timestamp =
       timeframe === 'day'
@@ -149,46 +152,46 @@ export class ReportStatsService {
     const cutoff = new Date(timestamp).toISOString()
 
     // pending (all time)
-    const pendingQuery = await this.db.db
+    let pendingQb = this.db.db
       .selectFrom('report')
-      .select(['queueId', sql<number>`count(*)`.as('cnt')])
+      .select(sql<number>`count(*)`.as('cnt'))
       .where('status', '=', 'open')
     if (queueId !== undefined) {
-      pendingQuery.where('queueId', '=', queueId)
+      pendingQb = pendingQb.where('queueId', '=', queueId)
     }
-    const pendingCount = (await pendingQuery.executeTakeFirst())?.cnt ?? 0
+    const pendingCount = (await pendingQb.executeTakeFirst())?.cnt ?? 0
 
     // inbound
-    const inboundQuery = await this.db.db
+    let inboundQb = this.db.db
       .selectFrom('report')
-      .select(['queueId', sql<number>`count(*)`.as('cnt')])
+      .select(sql<number>`count(*)`.as('cnt'))
       .where('createdAt', '>', cutoff)
     if (queueId !== undefined) {
-      inboundQuery.where('queueId', '=', queueId)
+      inboundQb = inboundQb.where('queueId', '=', queueId)
     }
-    const inboundCount = (await inboundQuery.executeTakeFirst())?.cnt ?? 0
+    const inboundCount = (await inboundQb.executeTakeFirst())?.cnt ?? 0
 
     // actioned
-    const actionedQuery = await this.db.db
+    let actionedQb = this.db.db
       .selectFrom('report')
-      .select(['queueId', sql<number>`count(*)`.as('cnt')])
+      .select(sql<number>`count(*)`.as('cnt'))
       .where('status', '=', 'closed')
       .where('updatedAt', '>', cutoff)
     if (queueId !== undefined) {
-      actionedQuery.where('queueId', '=', queueId)
+      actionedQb = actionedQb.where('queueId', '=', queueId)
     }
-    const actionedCount = (await actionedQuery.executeTakeFirst())?.cnt ?? 0
+    const actionedCount = (await actionedQb.executeTakeFirst())?.cnt ?? 0
 
     // escalated
-    const escalatedQuery = await this.db.db
+    let escalatedQb = this.db.db
       .selectFrom('report')
-      .select(['queueId', sql<number>`count(*)`.as('cnt')])
+      .select(sql<number>`count(*)`.as('cnt'))
       .where('status', '=', 'escalated')
       .where('updatedAt', '>', cutoff)
     if (queueId !== undefined) {
-      escalatedQuery.where('queueId', '=', queueId)
+      escalatedQb = escalatedQb.where('queueId', '=', queueId)
     }
-    const escalatedCount = (await escalatedQuery.executeTakeFirst())?.cnt ?? 0
+    const escalatedCount = (await escalatedQb.executeTakeFirst())?.cnt ?? 0
 
     // action rate
     const actionRate =
@@ -214,6 +217,8 @@ export class ReportStatsService {
       .where('timeframe', '=', group.timeframe)
     if (group.queueId !== undefined) {
       qb = qb.where('queueId', '=', group.queueId)
+    } else {
+      qb = qb.where('queueId', 'is', null)
     }
 
     return qb.executeTakeFirst()
