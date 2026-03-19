@@ -1,5 +1,11 @@
 # @atproto/lex-data
 
+## 0.0.14
+
+### Patch Changes
+
+- [#4761](https://github.com/bluesky-social/atproto/pull/4761) [`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `-1` BlobRef size in non-strict mode
+
 ## 0.0.13
 
 ### Patch Changes
