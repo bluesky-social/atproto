@@ -29,5 +29,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('report_stat').execute()
+  await db.schema.dropIndex('idx_report_stat_computed_at').ifExists().execute()
+  await db.schema.dropIndex('idx_report_stat_live').ifExists().execute()
+  await db.schema.dropTable('report_stat').ifExists().execute()
 }

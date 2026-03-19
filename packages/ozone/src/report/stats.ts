@@ -103,7 +103,6 @@ export class ReportStatsService {
       escalatedCount,
       actionRate,
     } = stats
-
     const computedAt = new Date().toISOString()
 
     return this.db.db
@@ -153,44 +152,44 @@ export class ReportStatsService {
     // pending (all time)
     let pendingQb = this.db.db
       .selectFrom('report')
-      .select(sql<number>`count(*)`.as('cnt'))
+      .select(sql<number>`count(*)`.as('count'))
       .where('status', '=', 'open')
     if (queueId !== -1) {
       pendingQb = pendingQb.where('queueId', '=', queueId)
     }
-    const pendingCount = (await pendingQb.executeTakeFirst())?.cnt ?? 0
+    const pendingCount = (await pendingQb.executeTakeFirst())?.count ?? 0
 
     // inbound
     let inboundQb = this.db.db
       .selectFrom('report')
-      .select(sql<number>`count(*)`.as('cnt'))
+      .select(sql<number>`count(*)`.as('count'))
       .where('createdAt', '>', cutoff)
     if (queueId !== -1) {
       inboundQb = inboundQb.where('queueId', '=', queueId)
     }
-    const inboundCount = (await inboundQb.executeTakeFirst())?.cnt ?? 0
+    const inboundCount = (await inboundQb.executeTakeFirst())?.count ?? 0
 
     // actioned
     let actionedQb = this.db.db
       .selectFrom('report')
-      .select(sql<number>`count(*)`.as('cnt'))
+      .select(sql<number>`count(*)`.as('count'))
       .where('status', '=', 'closed')
       .where('updatedAt', '>', cutoff)
     if (queueId !== -1) {
       actionedQb = actionedQb.where('queueId', '=', queueId)
     }
-    const actionedCount = (await actionedQb.executeTakeFirst())?.cnt ?? 0
+    const actionedCount = (await actionedQb.executeTakeFirst())?.count ?? 0
 
     // escalated
     let escalatedQb = this.db.db
       .selectFrom('report')
-      .select(sql<number>`count(*)`.as('cnt'))
+      .select(sql<number>`count(*)`.as('count'))
       .where('status', '=', 'escalated')
       .where('updatedAt', '>', cutoff)
     if (queueId !== -1) {
       escalatedQb = escalatedQb.where('queueId', '=', queueId)
     }
-    const escalatedCount = (await escalatedQb.executeTakeFirst())?.cnt ?? 0
+    const escalatedCount = (await escalatedQb.executeTakeFirst())?.count ?? 0
 
     // action rate
     const actionRate =
@@ -214,6 +213,7 @@ export class ReportStatsService {
       .selectAll()
       .where('mode', '=', group.mode)
       .where('timeframe', '=', group.timeframe)
+      .orderBy('computedAt', 'desc')
     qb = qb.where('queueId', '=', group.queueId)
 
     return qb.executeTakeFirst()
