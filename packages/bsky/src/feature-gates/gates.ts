@@ -5,7 +5,6 @@
  */
 export enum Gate {
   SuggestedUsersDiscoverEnable = 'suggested_users:discover_agent:enable',
-  SuggestedOnboardingUsersDiscoverEnable = 'suggested_onboarding_users:discover_agent:enable',
   SuggestedUsersSocialProofEnable = 'suggested_users:social_proof:enable',
   ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
