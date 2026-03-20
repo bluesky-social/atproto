@@ -1,10 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import {
-  AtUriString,
-  DatetimeString,
-  DidString,
-  toDatetimeString,
-} from '@atproto/syntax'
+import { AtUriString, DatetimeString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
@@ -155,7 +150,9 @@ const skeleton = async (
     notifs: res.notifications,
     cursor: res.cursor || undefined,
     priority,
-    lastSeenNotifs: lastSeenDate ? toDatetimeString(lastSeenDate) : undefined,
+    lastSeenNotifs: lastSeenDate
+      ? (lastSeenDate.toISOString() as DatetimeString)
+      : undefined,
   }
 }
 

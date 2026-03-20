@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { INVALID_HANDLE, toDatetimeString } from '@atproto/syntax'
+import { INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
@@ -31,7 +31,9 @@ export default function (server: Server, ctx: AppContext) {
             did,
             handle: info.handle ?? INVALID_HANDLE,
             relatedRecords: profileRecord ? [profileRecord] : undefined,
-            indexedAt: toDatetimeString(info.sortedAt ?? new Date(0)),
+            indexedAt: (
+              info.sortedAt ?? new Date(0)
+            ).toISOString() as DatetimeString,
           }
         },
       )

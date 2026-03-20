@@ -1,4 +1,4 @@
-import { toDatetimeString } from '@atproto/syntax'
+import { DatetimeString } from '@atproto/syntax'
 import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
@@ -17,7 +17,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/json',
         body: {
           lastInitiatedAt: lastInitiatedAt
-            ? toDatetimeString(lastInitiatedAt.toDate())
+            ? (lastInitiatedAt.toDate().toISOString() as DatetimeString)
             : undefined,
           status: actorInfo.ageAssuranceStatus?.status ?? 'unknown',
         },

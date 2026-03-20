@@ -92,6 +92,8 @@ const skeleton = async (
   const res = await ctx.suggestionsClient.xrpc(
     app.bsky.unspecced.getSuggestionsSkeleton,
     {
+      strictResponseProcessing: false,
+      validateResponse: false,
       params: {
         viewer: params.hydrateCtx.viewer ?? undefined,
         relativeToDid,

@@ -1,9 +1,9 @@
 import { mapDefined } from '@atproto/common'
 import {
   AtUriString,
+  DatetimeString,
   DidString,
   normalizeDatetimeAlways,
-  toDatetimeString,
 } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
@@ -118,7 +118,7 @@ const presentation = (inputs: {
     return {
       actor,
       createdAt: normalizeDatetimeAlways(like.record.createdAt),
-      indexedAt: toDatetimeString(like.sortedAt),
+      indexedAt: like.sortedAt.toISOString() as DatetimeString,
     }
   })
   return {

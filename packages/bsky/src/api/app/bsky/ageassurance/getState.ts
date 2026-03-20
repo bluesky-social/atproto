@@ -1,4 +1,4 @@
-import { toDatetimeString } from '@atproto/syntax'
+import { DatetimeString } from '@atproto/syntax'
 import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
@@ -20,14 +20,14 @@ export default function (server: Server, ctx: AppContext) {
         body: {
           state: {
             lastInitiatedAt: lastInitiatedAt
-              ? toDatetimeString(lastInitiatedAt.toDate())
+              ? (lastInitiatedAt.toDate().toISOString() as DatetimeString)
               : undefined,
             status: actor.ageAssuranceStatus?.status || 'unknown',
             access: actor.ageAssuranceStatus?.access || 'unknown',
           },
           metadata: {
             accountCreatedAt: actor.createdAt
-              ? toDatetimeString(actor.createdAt.toDate())
+              ? (actor.createdAt.toDate().toISOString() as DatetimeString)
               : undefined,
           },
         },

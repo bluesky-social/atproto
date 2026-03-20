@@ -3,10 +3,10 @@ import { $Typed, Un$Typed, UriString } from '@atproto/lex'
 import {
   AtUri,
   AtUriString,
+  DatetimeString,
   DidString,
   INVALID_HANDLE,
   normalizeDatetimeAlways,
-  toDatetimeString,
 } from '@atproto/syntax'
 import { Actor, ProfileViewerState } from '../hydration/actor'
 import { FeedItem, Like, Post, Repost } from '../hydration/feed'
@@ -319,12 +319,10 @@ export class Views {
       description: actor.profile?.description || undefined,
       indexedAt:
         actor.indexedAt && actor.sortedAt
-          ? toDatetimeString(
-              this.indexedAt({
-                sortedAt: actor.sortedAt,
-                indexedAt: actor.indexedAt,
-              }),
-            )
+          ? (this.indexedAt({
+              sortedAt: actor.sortedAt,
+              indexedAt: actor.indexedAt,
+            }).toISOString() as DatetimeString)
           : undefined,
     }
   }
@@ -380,7 +378,7 @@ export class Views {
       viewer: this.profileViewer(did, state),
       labels,
       createdAt: actor.createdAt
-        ? toDatetimeString(actor.createdAt)
+        ? (actor.createdAt.toISOString() as DatetimeString)
         : undefined,
       verification: this.verification(did, state),
       status: this.status(did, state),
@@ -590,7 +588,7 @@ export class Views {
         )
       : undefined
     const expiresAt = expiresAtMs
-      ? toDatetimeString(new Date(expiresAtMs))
+      ? (new Date(expiresAtMs).toISOString() as DatetimeString)
       : undefined
 
     const isActive = expiresAtMs ? expiresAtMs > Date.now() : undefined
@@ -648,7 +646,7 @@ export class Views {
       creator,
       description: list.record.description,
       descriptionFacets: list.record.descriptionFacets,
-      indexedAt: toDatetimeString(this.indexedAt(list)),
+      indexedAt: this.indexedAt(list).toISOString() as DatetimeString,
     }
   }
 
@@ -677,7 +675,7 @@ export class Views {
           )
         : undefined,
       listItemCount: listAgg?.listItems ?? 0,
-      indexedAt: toDatetimeString(this.indexedAt(list)),
+      indexedAt: this.indexedAt(list).toISOString() as DatetimeString,
       labels,
       viewer: listViewer
         ? {
@@ -717,7 +715,7 @@ export class Views {
       joinedAllTimeCount: agg?.joinedAllTime ?? 0,
       joinedWeekCount: agg?.joinedWeek ?? 0,
       labels,
-      indexedAt: toDatetimeString(this.indexedAt(sp)),
+      indexedAt: this.indexedAt(sp).toISOString() as DatetimeString,
     }
   }
 
@@ -788,7 +786,7 @@ export class Views {
     const cts =
       typeof record.createdAt === 'string'
         ? normalizeDatetimeAlways(record.createdAt)
-        : toDatetimeString(new Date(0))
+        : (new Date(0).toISOString() as DatetimeString)
     return record.labels.values.map(({ val }) => {
       return { src, uri, cid, val, cts }
     })
@@ -829,7 +827,7 @@ export class Views {
             like: viewer.like,
           }
         : undefined,
-      indexedAt: toDatetimeString(this.indexedAt(labeler)),
+      indexedAt: this.indexedAt(labeler).toISOString() as DatetimeString,
       labels,
     }
   }
@@ -925,7 +923,7 @@ export class Views {
           }
         : undefined,
       contentMode: feedgen.record.contentMode,
-      indexedAt: toDatetimeString(this.indexedAt(feedgen)),
+      indexedAt: this.indexedAt(feedgen).toISOString() as DatetimeString,
     }
   }
 
@@ -982,7 +980,7 @@ export class Views {
       repostCount: aggs?.reposts ?? 0,
       likeCount: aggs?.likes ?? 0,
       quoteCount: aggs?.quotes ?? 0,
-      indexedAt: toDatetimeString(this.indexedAt(post)),
+      indexedAt: this.indexedAt(post).toISOString() as DatetimeString,
       viewer: viewer
         ? {
             repost: viewer.repost,
@@ -1114,7 +1112,7 @@ export class Views {
       by: creator,
       uri,
       cid: repost.cid,
-      indexedAt: toDatetimeString(this.indexedAt(repost)),
+      indexedAt: this.indexedAt(repost).toISOString() as DatetimeString,
     })
   }
 
@@ -1140,7 +1138,7 @@ export class Views {
     const item = this.maybePost(atUri.href, state)
     return {
       createdAt: bookmark.indexedAt
-        ? toDatetimeString(bookmark.indexedAt)
+        ? (bookmark.indexedAt.toISOString() as DatetimeString)
         : undefined,
       subject: {
         uri: atUri.href,
@@ -2427,7 +2425,7 @@ export class Views {
       // the user's first notification is marked unread, and all previous read. in this case,
       // the last seen time will be equal to the first notification's indexed time.
       isRead: lastSeenAt ? lastSeenAt > indexedAt : true,
-      indexedAt: toDatetimeString(notif.timestamp.toDate()),
+      indexedAt: notif.timestamp.toDate().toISOString() as DatetimeString,
       labels: [...labels, ...selfLabels],
     }
   }

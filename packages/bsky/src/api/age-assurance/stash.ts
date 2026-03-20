@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { toDatetimeString } from '@atproto/syntax'
+import { DatetimeString } from '@atproto/syntax'
 import { AppContext } from '../../context'
 import { app } from '../../lexicons/index.js'
 import { Namespaces } from '../../stash'
@@ -10,7 +10,7 @@ export async function createEvent(
   event: Omit<app.bsky.ageassurance.defs.Event, 'createdAt'>,
 ) {
   const payload: app.bsky.ageassurance.defs.Event = {
-    createdAt: toDatetimeString(new Date()),
+    createdAt: new Date().toISOString() as DatetimeString,
     ...event,
   }
   await ctx.stashClient.create({

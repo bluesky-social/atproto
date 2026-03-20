@@ -8,7 +8,6 @@ import {
   isDidIdentifier,
   isHandleIdentifier,
   normalizeHandle,
-  toDatetimeString,
 } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
 import { app } from '../lexicons'
@@ -249,9 +248,9 @@ export class ActorHydrator {
               uri: `at://${actorDid}/app.bsky.graph.verification/${verificationMeta.rkey}`,
               handle: verificationMeta.handle as HandleString,
               displayName: verificationMeta.displayName,
-              createdAt: toDatetimeString(
-                parseDate(verificationMeta.sortedAt) ?? new Date(0),
-              ),
+              createdAt: (
+                parseDate(verificationMeta.sortedAt) ?? new Date(0)
+              ).toISOString() as DatetimeString,
             }
           }
           // Filter out the verification meta that doesn't contain all info.

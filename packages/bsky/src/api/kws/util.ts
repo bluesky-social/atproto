@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import express from 'express'
 import { TID } from '@atproto/common'
-import { toDatetimeString } from '@atproto/syntax'
+import { DatetimeString } from '@atproto/syntax'
 import { AppContext } from '../../context'
 import { app } from '../../lexicons/index.js'
 import { Namespaces } from '../../stash'
@@ -35,7 +35,7 @@ export const createStashEvent = async (
   },
 ) => {
   const stashPayload: app.bsky.unspecced.defs.AgeAssuranceEvent = {
-    createdAt: toDatetimeString(new Date()),
+    createdAt: new Date().toISOString() as DatetimeString,
     email,
     status,
     attemptId,

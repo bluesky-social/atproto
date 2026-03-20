@@ -1,4 +1,4 @@
-import { toDatetimeString } from '@atproto/syntax'
+import { DatetimeString } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
@@ -21,7 +21,9 @@ export default function (server: Server, ctx: AppContext) {
         res.status && res.status.syncedAt
           ? {
               matchesCount: res.status.matchesCount,
-              syncedAt: toDatetimeString(res.status.syncedAt.toDate()),
+              syncedAt: res.status.syncedAt
+                .toDate()
+                .toISOString() as DatetimeString,
             }
           : undefined
 

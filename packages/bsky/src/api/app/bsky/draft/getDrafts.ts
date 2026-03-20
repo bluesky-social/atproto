@@ -1,4 +1,4 @@
-import { lexParse, toDatetimeString } from '@atproto/lex'
+import { DatetimeString, lexParse } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
@@ -23,8 +23,12 @@ export default function (server: Server, ctx: AppContext) {
           draft: draftWithId.draft,
           // The date should always be present, but we avoid required fields on protobuf by convention,
           // so requires a fallback value to please TS.
-          createdAt: toDatetimeString(d.createdAt?.toDate() ?? new Date(0)),
-          updatedAt: toDatetimeString(d.updatedAt?.toDate() ?? new Date(0)),
+          createdAt: (
+            d.createdAt?.toDate() ?? new Date(0)
+          ).toISOString() as DatetimeString,
+          updatedAt: (
+            d.updatedAt?.toDate() ?? new Date(0)
+          ).toISOString() as DatetimeString,
         }
       })
 
