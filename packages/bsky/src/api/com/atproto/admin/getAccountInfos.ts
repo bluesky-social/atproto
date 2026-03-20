@@ -1,5 +1,5 @@
 import { mapDefined } from '@atproto/common'
-import { INVALID_HANDLE } from '@atproto/syntax'
+import { DatetimeString, INVALID_HANDLE } from '@atproto/syntax'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
