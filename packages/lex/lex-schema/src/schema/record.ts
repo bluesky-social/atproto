@@ -7,7 +7,6 @@ import {
   LexiconRecordKey,
   NsidString,
   Schema,
-  Simplify,
   TidString,
   Unknown$TypedObject,
   ValidationContext,
@@ -55,7 +54,7 @@ export type TypedRecord<
 export class RecordSchema<
   const TKey extends LexiconRecordKey = LexiconRecordKey,
   const TType extends NsidString = NsidString,
-  const TShape extends Validator<{ [k: string]: unknown }> = any,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
 > extends Schema<
   $Typed<InferInput<TShape>, TType>,
   $Typed<InferOutput<TShape>, TType>
@@ -87,14 +86,14 @@ export class RecordSchema<
     return result
   }
 
-  build<I extends LexMap>(
-    input: Omit<InferInput<TShape>, '$type'> extends I
-      ? I
-      : Omit<InferInput<TShape>, '$type'>,
-  ) {
-    return $typed(input, this.$type) as Simplify<
-      Omit<I, '$type'> & { $type: TType }
-    >
+  build(
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
   }
 
   isTypeOf<TValue extends { $type?: unknown }>(
@@ -205,11 +204,11 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
-  const V extends { $type: NsidString },
+  const V extends LexMap & { $type: NsidString },
 >(
   key: K,
   type: AsNsid<V['$type']>,
@@ -219,7 +218,7 @@ export function record<
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(key: K, type: T, validator: S) {
   return new RecordSchema<K, T, S>(key, type, validator)
 }

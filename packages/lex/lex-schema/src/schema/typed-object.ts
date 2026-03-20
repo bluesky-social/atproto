@@ -2,6 +2,7 @@ import { LexMap, isPlainObject } from '@atproto/lex-data'
 import {
   $Type,
   $TypeOf,
+  $Typed,
   $TypedMaybe,
   $type,
   $typed,
@@ -9,7 +10,6 @@ import {
   InferOutput,
   NsidString,
   Schema,
-  Simplify,
   Unknown$TypedObject,
   ValidationContext,
   Validator,
@@ -43,7 +43,7 @@ export type MaybeTypedObject<
  */
 export class TypedObjectSchema<
   const TType extends $Type = $Type,
-  const TShape extends Validator<{ [k: string]: unknown }> = any,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
 > extends Schema<
   $TypedMaybe<InferInput<TShape>, TType>,
   $TypedMaybe<InferOutput<TShape>, TType>
@@ -73,14 +73,14 @@ export class TypedObjectSchema<
     return ctx.validate(input, this.schema)
   }
 
-  build<I extends LexMap>(
-    input: Omit<InferInput<TShape>, '$type'> extends I
-      ? I
-      : Omit<InferInput<TShape>, '$type'>,
-  ) {
-    return $typed(input, this.$type) as Simplify<
-      Omit<I, '$type'> & { $type: TType }
-    >
+  build(
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
   }
 
   isTypeOf<TValue extends Record<string, unknown>>(
@@ -156,7 +156,7 @@ export class TypedObjectSchema<
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(nsid: N, hash: H, validator: S): TypedObjectSchema<$Type<N, H>, S>
 export function typedObject<V extends { $type?: $Type }>(
   nsid: V extends { $type?: infer T extends string }
@@ -175,7 +175,7 @@ export function typedObject<V extends { $type?: $Type }>(
 export function typedObject<
   const N extends NsidString,
   const H extends string,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(nsid: N, hash: H, validator: S) {
   return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), validator)
 }

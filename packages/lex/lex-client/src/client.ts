@@ -578,7 +578,7 @@ export class Client implements Agent {
         collection: record.$type,
         record,
         rkey,
-        validate: options?.validate,
+        validate: options?.validate ?? options?.validateRequest,
         swapCommit: options?.swapCommit,
       },
     })
@@ -655,7 +655,7 @@ export class Client implements Agent {
         collection: record.$type,
         rkey,
         record,
-        validate: options?.validate,
+        validate: options?.validate ?? options?.validateRequest,
         swapCommit: options?.swapCommit,
         swapRecord: options?.swapRecord,
       },
@@ -846,7 +846,11 @@ export class Client implements Agent {
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
     const schema: T = getMain(ns)
-    const record = schema.build(input)
+    const record = (
+      options?.validateRequest
+        ? schema.parse(schema.build(input))
+        : schema.build(input)
+    ) as TypedLexMap<NsidString>
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
@@ -942,7 +946,11 @@ export class Client implements Agent {
     options: PutOptions<T> = {} as PutOptions<T>,
   ): Promise<PutOutput> {
     const schema: T = getMain(ns)
-    const record = schema.build(input)
+    const record = (
+      options?.validateRequest
+        ? schema.parse(schema.build(input))
+        : schema.build(input)
+    ) as TypedLexMap<NsidString>
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
     return response.body
