@@ -209,6 +209,7 @@ const skeletonFromFeedGen = async (
 
   // @TODO currently passthrough auth headers from pds
   const result = await xrpcSafe(fgEndpoint, app.bsky.feed.getFeedSkeleton, {
+    strictResponseProcessing: false,
     headers,
     params: {
       feed: params.feed,

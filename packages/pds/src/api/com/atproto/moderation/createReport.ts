@@ -29,6 +29,7 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return xrpc(url, com.atproto.moderation.createReport, {
+        strictResponseProcessing: false,
         validateResponse: false,
         validateRequest: false,
         headers,
