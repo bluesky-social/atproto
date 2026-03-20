@@ -190,17 +190,12 @@ export class FeatureGatesClient {
         gates: Gate[],
         userContextOverrides?: Pick<UserContext, 'did'>,
       ) => {
-        /*
-         * Merge the base user context with any overrides provided at check time. This
-         * allows us to set a base context for the request, but also override or add
-         * properties for specific gate checks if needed.
-         */
         const userContext = mergeUserContexts(base, userContextOverrides)
         return this.checkGates(gates, userContext)
       },
       checkGate: (gate: Gate, userContextOverrides?: UserContext) => {
-        const gatesMap = this.checkGates([gate], userContextOverrides || {})
-        return gatesMap.get(gate) || false
+        const userContext = mergeUserContexts(base, userContextOverrides)
+        return this.checkGates([gate], userContext).get(gate) || false
       },
     }
   }
