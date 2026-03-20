@@ -295,7 +295,7 @@ export class XrpcUpstreamError<
     method: M,
     readonly response: Response,
     readonly payload: XrpcUnknownResponsePayload | null = null,
-    message: string = `Unexpected upstream XRPC response`,
+    message: string = buildUpstreamErrorMessage(response, payload),
     options?: ErrorOptions,
   ) {
     super(method, 'UpstreamFailure', message, options)
@@ -312,6 +312,48 @@ export class XrpcUpstreamError<
   override toDownstreamError(): DownstreamError {
     return { status: 502, body: this.toJSON() }
   }
+}
+
+function buildUpstreamErrorMessage(
+  response: Response,
+  payload: XrpcUnknownResponsePayload | null,
+): string {
+  if (response.status < 400) {
+    return `Upstream server responded with an invalid status code (${response.status})`
+  }
+
+  const payloadStr = payload ? extractPayloadOverview(payload) : '<no payload>'
+
+  return `Upstream server responded with a ${response.status} error: ${payloadStr}`
+}
+
+function extractPayloadOverview(
+  payload: XrpcUnknownResponsePayload,
+): string | undefined {
+  try {
+    if (
+      typeof payload.body === 'string' ||
+      payload.encoding.startsWith('text/')
+    ) {
+      const body =
+        payload.body instanceof Uint8Array
+          ? new TextDecoder().decode(payload.body)
+          : payload.body
+
+      if (typeof body === 'string') {
+        return JSON.stringify(trimString(body, 200))
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  return `${payload.encoding} data`
+}
+
+function trimString(str: string, maxLength: number): string {
+  if (str.length <= maxLength) return str
+  return `${str.slice(0, maxLength - 1)}…`
 }
 
 /**

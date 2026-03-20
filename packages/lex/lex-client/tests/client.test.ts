@@ -1,13 +1,14 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
-import { toDatetimeString } from '@atproto/lex-schema'
+import { $Typed, toDatetimeString } from '@atproto/lex-schema'
 import {
   Action,
   Client,
   FetchHandler,
   XrpcAuthenticationError,
+  XrpcUpstreamError,
 } from '../src/index.js'
 import { app, com } from './lexicons/index.js'
 
@@ -15,13 +16,34 @@ type Preference = app.bsky.actor.defs.Preferences[number]
 
 describe('utils', () => {
   describe('TypedObjectSchema', () => {
-    it('overrides $type when building an object', () => {
-      const _r = app.bsky.actor.defs.adultContentPref.build({
-        // @ts-expect-error
-        $type: 'foo',
-        enabled: true,
+    describe('build()', () => {
+      it('overrides $type when building an object', () => {
+        function expectAdultContentPref(
+          _: app.bsky.actor.defs.AdultContentPref,
+        ) {}
+        function expectTypedAdultContentPref(
+          _: $Typed<app.bsky.actor.defs.AdultContentPref>,
+        ) {}
+
+        const pref = app.bsky.actor.defs.adultContentPref.build({
+          // @ts-expect-error
+          $type: 'foo',
+          enabled: true,
+        })
+
+        expectAdultContentPref(pref)
+        expectTypedAdultContentPref(pref)
+
+        expect(pref).toStrictEqual({
+          $type: 'app.bsky.actor.defs#adultContentPref',
+          enabled: true,
+        })
+
+        expectTypeOf(pref).toEqualTypeOf<{
+          $type: 'app.bsky.actor.defs#adultContentPref'
+          enabled: boolean
+        }>()
       })
-      expect(_r.$type).toBe('app.bsky.actor.defs#adultContentPref')
     })
   })
 })
@@ -227,9 +249,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Invalid response payload',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch(
+          'Upstream server responded with a 400 error',
+        )
+        return true
       })
     })
 
@@ -248,9 +273,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Invalid response payload',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toBe(
+          'Upstream server responded with a 400 error: "Not a JSON body"',
+        )
+        return true
       })
     })
 
@@ -268,9 +296,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Invalid response status code',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch(
+          'Upstream server responded with an invalid status code (302)',
+        )
+        return true
       })
     })
 
@@ -289,9 +320,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Upstream server encountered an error',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toBe(
+          'Upstream server responded with a 500 error: "<p>Server error</p>"',
+        )
+        return true
       })
     })
 

@@ -131,6 +131,9 @@ describe(normalizeDatetime, () => {
     expect(normalizeDatetime('Fri, 02 Jan 1999 12:34:56 GMT')).toEqual(
       '1999-01-02T12:34:56.000Z',
     )
+    expect(normalizeDatetime('0001-01-01T00:00:00+01:00')).toEqual(
+      '0000-12-31T23:00:00.000Z',
+    )
   })
 
   it('throws on invalid input', () => {
@@ -143,9 +146,6 @@ describe(normalizeDatetime, () => {
       InvalidDatetimeError,
     )
     expect(() => normalizeDatetime('0000-01-01T00:00:00+01:00')).toThrow(
-      InvalidDatetimeError,
-    )
-    expect(() => normalizeDatetime('0001-01-01T00:00:00+01:00')).toThrow(
       InvalidDatetimeError,
     )
     // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to

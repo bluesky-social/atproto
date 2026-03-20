@@ -197,16 +197,7 @@ export class XrpcResponse<M extends Procedure | Query>
       }
 
       // Invalid XRPC response (we probably did not hit an XRPC implementation)
-      throw new XrpcUpstreamError(
-        method,
-        response,
-        payload,
-        response.status >= 500
-          ? 'Upstream server encountered an error'
-          : response.status >= 400
-            ? 'Invalid response payload'
-            : 'Invalid response status code',
-      )
+      throw new XrpcUpstreamError(method, response, payload)
     }
 
     const payload = await readPayload(method, response, {

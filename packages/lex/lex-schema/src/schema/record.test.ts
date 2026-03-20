@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
-import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { DidString, Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
 import { object } from './object.js'
+import { optional } from './optional.js'
 import { record } from './record.js'
 import { string } from './string.js'
 
@@ -123,41 +124,94 @@ describe('RecordSchema', () => {
     })
   })
 
-  describe('build method', () => {
+  describe('build() method', () => {
     const schema = record(
       'any',
-      'app.bsky.feed.post',
+      'io.example.record',
       object({
-        $type: string(),
-        text: string(),
+        actor: string({ format: 'did' }),
+        text: optional(string()),
       }),
     )
 
     it('adds correct $type to input', () => {
-      const result = schema.build({ text: 'Hello world' })
-      expect(result.$type).toBe('app.bsky.feed.post')
-      expect(result.text).toBe('Hello world')
+      const result = schema.build({
+        actor: 'did:foo:bar',
+      })
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        text?: string
+        actor: DidString
+      }>()
+    })
+
+    it('adds correct $type to input', () => {
+      const result = schema.build({
+        actor: 'did:foo:bar',
+        text: 'Hello',
+      })
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+        text: 'Hello',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
+    })
+
+    it('rejects invalid values', () => {
+      const result = schema.build({
+        // @ts-expect-error
+        actor: 3,
+        text: 'Hello',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
     })
 
     it('preserves existing properties', () => {
       const result = schema.build({
-        text: 'Hello world',
+        actor: 'did:foo:bar',
         // @ts-expect-error
         extra: 'value',
       })
-      expect(result.$type).toBe('app.bsky.feed.post')
-      expect(result.text).toBe('Hello world')
-      // @ts-expect-error
-      expect(result.extra).toBe('value')
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+        extra: 'value',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        actor: `did:${string}:${string}`
+        text?: string | undefined
+        $type: 'io.example.record'
+      }>()
     })
 
     it('overwrites existing $type', () => {
       const result = schema.build({
         // @ts-expect-error
         $type: 'wrong.type',
-        text: 'Hello world',
+        actor: 'did:foo:bar',
       })
-      expect(result.$type).toBe('app.bsky.feed.post')
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
     })
   })
 

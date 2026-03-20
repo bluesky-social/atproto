@@ -309,7 +309,9 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Invalid response payload')
+          expect(err.message).toBe(
+            'Upstream server responded with a 404 error: "Not Found"',
+          )
           return true
         })
       })
@@ -326,7 +328,9 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Upstream server encountered an error')
+          expect(err.message).toBe(
+            'Upstream server responded with a 500 error: "Internal Server Error"',
+          )
           return true
         })
       })
@@ -524,7 +528,9 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Invalid response status code')
+          expect(err.message).toBe(
+            'Upstream server responded with an invalid status code (302)',
+          )
           return true
         })
       })
