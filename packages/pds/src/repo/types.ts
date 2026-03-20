@@ -76,3 +76,9 @@ export class BadRecordSwapError extends Error {
     super(`Record was at ${cid?.toString() ?? 'null'}`)
   }
 }
+
+export class RecordAlreadyExistsError extends Error {
+  constructor(public path: string) {
+    super(`Record already exists: ${path}`)
+  }
+}
