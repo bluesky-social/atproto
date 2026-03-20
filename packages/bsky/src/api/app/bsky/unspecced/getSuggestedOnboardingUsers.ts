@@ -33,13 +33,6 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['suggested_onboarding_users:discover_agent:enable'],
-          {
-            viewer,
-            req,
-          },
-        ),
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
@@ -63,10 +56,7 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-// TODO: rename to `skeleton` once we can fully migrate to Discover
-const skeletonFromDiscover = async (
-  input: SkeletonFnInput<Context, Params>,
-) => {
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
   if (!ctx.suggestionsAgent)
     throw new InternalServerError('Suggestions agent not available')
@@ -84,36 +74,6 @@ const skeletonFromDiscover = async (
     )
 
   return res.data
-}
-
-const skeletonFromTopics = async (input: SkeletonFnInput<Context, Params>) => {
-  const { params, ctx } = input
-  if (!ctx.topicsAgent)
-    throw new InternalServerError('Topics agent not available')
-
-  // NOTE: This is intentionally using `getSuggestedUsersSkeleton`, not `getSuggestedOnboardingUsersSkeleton`.
-  // We won't bother implementing `getSuggestedOnboardingUsersSkeleton` in topics since we're phasing out of it.
-  const res =
-    await ctx.topicsAgent.app.bsky.unspecced.getSuggestedUsersSkeleton(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        category: params.category,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-
-  return res.data
-}
-
-const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
-  const useDiscover = input.params.hydrateCtx.featureGatesMap.get(
-    'suggested_onboarding_users:discover_agent:enable',
-  )
-  const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
-  return skeletonFn(input)
 }
 
 const hydration = async (

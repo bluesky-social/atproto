@@ -2,8 +2,7 @@ import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { FeatureGatesClient } from '../feature-gates'
-import { type CheckedFeatureGatesMap } from '../feature-gates/types'
+import { FeatureGatesClient, ScopedFeatureGatesClient } from '../feature-gates'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
 import { isMain as isEmbedRecord } from '../lexicon/types/app/bsky/embed/record'
@@ -85,16 +84,7 @@ export class HydrateCtx {
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
-
-  featureGatesClient = this.vals.featureGatesClient
-
-  /**
-   * Cache of evaluated feature gates to be used in a given request lifecycle.
-   * The actual evaluations happen at the top of the route handler and the
-   * results are stored in this map.
-   */
-  featureGatesMap: CheckedFeatureGatesMap =
-    this.vals.featureGatesMap || new Map()
+  features = this.vals.features
   constructor(private vals: HydrateCtxVals) {}
   // Convenience with use with dataplane.getActors cache control
   get skipCacheForViewer() {
@@ -113,9 +103,7 @@ export type HydrateCtxVals = {
   overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
   includeDebugField?: boolean
-  featureGatesMap?: CheckedFeatureGatesMap
-  // TODO: remove after image format rollout.
-  featureGatesClient?: FeatureGatesClient
+  features: ScopedFeatureGatesClient
 }
 
 export type HydrationState = {
@@ -188,6 +176,7 @@ export type Bookmarks = HydrationMap<HydrationMap<Bookmark>>
  */
 export type HydratorConfig = {
   debugFieldAllowedDids: Set<string>
+  featureGatesClient: FeatureGatesClient
 }
 
 export class Hydrator {
@@ -198,14 +187,10 @@ export class Hydrator {
   serviceLabelers: Set<string>
   config: HydratorConfig
 
-  // TODO: remove after image format rollout.
-  featureGatesClient: FeatureGatesClient
-
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
     config: HydratorConfig,
-    featureGatesClient: FeatureGatesClient,
   ) {
     this.config = config
     this.actor = new ActorHydrator(dataplane)
@@ -213,7 +198,6 @@ export class Hydrator {
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
     this.serviceLabelers = new Set(serviceLabelers)
-    this.featureGatesClient = featureGatesClient
   }
 
   // app.bsky.actor.defs#profileView
@@ -771,8 +755,8 @@ export class Hydrator {
     ctx: HydrateCtx,
   ): Promise<HydrationState> {
     const postsState = await this.hydratePosts(refs, ctx, undefined, {
-      processDynamicTagsForView: ctx.featureGatesMap.get(
-        'threads:reply_ranking_exploration:enable',
+      processDynamicTagsForView: ctx.features.checkGate(
+        ctx.features.Gate.ThreadsReplyRankingExplorationEnable,
       )
         ? 'thread'
         : undefined,
@@ -1338,7 +1322,11 @@ export class Hydrator {
     }
   }
 
-  async createContext(vals: HydrateCtxVals) {
+  async createContext(
+    vals: Omit<HydrateCtxVals, 'features'> & {
+      features?: ScopedFeatureGatesClient
+    },
+  ) {
     // ensures we're only apply labelers that exist and are not taken down
     const labelers = vals.labelers.dids
     const nonServiceLabelers = labelers.filter(
@@ -1362,8 +1350,8 @@ export class Hydrator {
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,
-      featureGatesMap: vals.featureGatesMap,
-      featureGatesClient: this.featureGatesClient,
+      // create default anonymous scope
+      features: vals.features || this.config.featureGatesClient.scope({}),
     })
   }
 

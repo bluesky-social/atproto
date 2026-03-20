@@ -38,12 +38,11 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['search:filtering_exploration:enable'],
-          {
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const results = await searchPosts(
@@ -111,8 +110,8 @@ const hydration = async (
     params.hydrateCtx,
     undefined,
     {
-      processDynamicTagsForView: params.hydrateCtx.featureGatesMap.get(
-        'search:filtering_exploration:enable',
+      processDynamicTagsForView: params.hydrateCtx.features?.checkGate(
+        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
         ? 'search'
         : undefined,
@@ -141,8 +140,8 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     let tagged = false
     if (
-      params.hydrateCtx.featureGatesMap.get(
-        'search:filtering_exploration:enable',
+      params.hydrateCtx.features?.checkGate(
+        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
     ) {
       tagged = post.tags.has(ctx.cfg.visibilityTagHide)

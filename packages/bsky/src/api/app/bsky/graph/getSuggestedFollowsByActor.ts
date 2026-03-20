@@ -34,12 +34,11 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['suggested_users:social_proof:enable'],
-          {
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const headers = noUndefinedVals({
@@ -111,7 +110,9 @@ const hydration = async (
   const { ctx, params, skeleton } = input
   const { suggestedDids } = skeleton
   if (
-    params.hydrateCtx.featureGatesMap.get('suggested_users:social_proof:enable')
+    params.hydrateCtx.features.checkGate(
+      params.hydrateCtx.features.Gate.SuggestedUsersSocialProofEnable,
+    )
   ) {
     return ctx.hydrator.hydrateProfilesDetailed(
       suggestedDids,
