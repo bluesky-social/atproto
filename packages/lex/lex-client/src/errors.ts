@@ -325,10 +325,10 @@ function buildUpstreamErrorMessage(
   const bodyPreview = !payload
     ? `<no payload>`
     : payload.encoding.startsWith('text/')
-      ? trimString(String(payload.body))
+      ? JSON.stringify(trimString(String(payload.body)))
       : payload.body instanceof Uint8Array
         ? `[${payload.body.byteLength} bytes]`
-        : `"${payload.encoding}" payload`
+        : `${payload.encoding} payload`
 
   return `Upstream server responded with a ${response.status} "${payload?.encoding}" error (${bodyPreview})`
 }
