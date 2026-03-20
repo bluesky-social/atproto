@@ -295,7 +295,7 @@ export class XrpcUpstreamError<
     method: M,
     readonly response: Response,
     readonly payload: XrpcUnknownResponsePayload | null = null,
-    message: string = `Unexpected upstream XRPC response`,
+    message: string = buildUpstreamErrorMessage(response, payload),
     options?: ErrorOptions,
   ) {
     super(method, 'UpstreamFailure', message, options)
@@ -312,6 +312,30 @@ export class XrpcUpstreamError<
   override toDownstreamError(): DownstreamError {
     return { status: 502, body: this.toJSON() }
   }
+}
+
+function buildUpstreamErrorMessage(
+  response: Response,
+  payload: XrpcUnknownResponsePayload | null,
+): string {
+  if (response.status < 400) {
+    return `Upstream server responded with an invalid status code (${response.status})`
+  }
+
+  const bodyPreview = !payload
+    ? `<no payload>`
+    : payload.encoding.startsWith('text/')
+      ? trimString(String(payload.body))
+      : payload.body instanceof Uint8Array
+        ? `[${payload.body.byteLength} bytes]`
+        : `"${payload.encoding}" payload`
+
+  return `Upstream server responded with a ${response.status} "${payload?.encoding}" error (${bodyPreview})`
+}
+
+function trimString(str: string, maxLength: number = 100): string {
+  if (str.length <= maxLength) return str
+  return `${str.slice(0, maxLength - 3)}...`
 }
 
 /**
