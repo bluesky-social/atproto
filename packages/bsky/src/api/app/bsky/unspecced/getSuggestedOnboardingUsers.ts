@@ -1,10 +1,6 @@
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
 import { Client, DidString } from '@atproto/lex'
-import {
-  InternalServerError,
-  MethodNotImplementedError,
-  Server,
-} from '@atproto/xrpc-server'
+import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
@@ -36,13 +32,6 @@ export default function (server: Server, ctx: AppContext) {
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['suggested_onboarding_users:discover_agent:enable'],
-          {
-            viewer,
-            req,
-          },
-        ),
       })
       const headers = noUndefinedVals({
         'accept-language': req.headers['accept-language'],
@@ -66,13 +55,11 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-// TODO: rename to `skeleton` once we can fully migrate to Discover
-const skeletonFromDiscover = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
+const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (!ctx.suggestionsClient)
-    throw new InternalServerError('Suggestions agent not available')
+  if (!ctx.suggestionsClient) {
+    throw new MethodNotImplementedError('Suggestions agent not available')
+  }
 
   return ctx.suggestionsClient.call(
     app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton,
@@ -85,41 +72,6 @@ const skeletonFromDiscover = async (
       headers: params.headers,
     },
   )
-}
-
-const skeletonFromTopics = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
-  const { params, ctx } = input
-
-  if (!ctx.topicsClient) {
-    // Use 501 instead of 500 as these are not considered retry-able by clients
-    throw new MethodNotImplementedError('Topics agent not available')
-  }
-
-  // NOTE: This is intentionally using `getSuggestedUsersSkeleton`, not `getSuggestedOnboardingUsersSkeleton`.
-  // We won't bother implementing `getSuggestedOnboardingUsersSkeleton` in topics since we're phasing out of it.
-  return ctx.topicsClient.call(
-    app.bsky.unspecced.getSuggestedUsersSkeleton,
-    {
-      limit: params.limit,
-      viewer: params.hydrateCtx.viewer ?? undefined,
-      category: params.category,
-    },
-    {
-      headers: params.headers,
-    },
-  )
-}
-
-const skeleton = async (
-  input: SkeletonFnInput<Context, Params>,
-): Promise<SkeletonState> => {
-  const useDiscover = input.params.hydrateCtx.featureGatesMap.get(
-    'suggested_onboarding_users:discover_agent:enable',
-  )
-  const skeletonFn = useDiscover ? skeletonFromDiscover : skeletonFromTopics
-  return skeletonFn(input)
 }
 
 const hydration = async (

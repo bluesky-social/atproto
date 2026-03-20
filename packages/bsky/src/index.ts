@@ -155,14 +155,10 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(
-      dataplane,
-      config.labelsFromIssuerDids,
-      {
-        debugFieldAllowedDids: config.debugFieldAllowedDids,
-      },
+    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
-    )
+    })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,

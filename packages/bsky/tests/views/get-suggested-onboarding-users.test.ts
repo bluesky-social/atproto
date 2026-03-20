@@ -3,7 +3,7 @@ import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
 import {
-  AppBskyUnspeccedGetSuggestedUsersSkeleton,
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
   AtpAgent,
   ids,
 } from '@atproto/api'
@@ -73,8 +73,8 @@ describe('getSuggestedOnboardingUsers', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_tests_get_suggested_onboarding_users',
       bsky: {
-        topicsUrl: mockServer.url,
-        topicsApiKey: 'test',
+        suggestionsUrl: mockServer.url,
+        suggestionsApiKey: 'test',
       },
     })
     agent = network.bsky.getAgent()
@@ -175,9 +175,9 @@ class MockServer {
   private createApp() {
     const app = express()
     app.get(
-      '/xrpc/app.bsky.unspecced.getSuggestedUsersSkeleton',
+      '/xrpc/app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
       (req, res) => {
-        const skeleton: AppBskyUnspeccedGetSuggestedUsersSkeleton.OutputSchema =
+        const skeleton: AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.OutputSchema =
           {
             dids: Array.from(this.mockedDids.values()),
           }
