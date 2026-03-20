@@ -58,12 +58,22 @@ const skeleton = async (input: {
 }): Promise<Skeleton> => {
   const { ctx, params } = input
   const viewer = params.hydrateCtx.viewer
+
+  // @NOTE: The suggestions service no longer accepts this call without `relativeToDid`.
+  // Ideally, that value would have a DID different than the viewer, but the viewer is a good enough
+  // default case. But if we don't have the viewer, we don't have anything to pass.
+  // This seems to have been replaced by `app.bsky.graph.getSuggestedFollowsByActor`.
+  if (!viewer) {
+    return { dids: [] }
+  }
+
   if (ctx.suggestionsClient) {
     const res = await ctx.suggestionsClient.xrpc(
       app.bsky.unspecced.getSuggestionsSkeleton,
       {
         headers: params.headers,
         params: {
+          relativeToDid: viewer,
           viewer: viewer ?? undefined,
           limit: params.limit,
           cursor: params.cursor,
