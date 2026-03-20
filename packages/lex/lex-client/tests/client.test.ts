@@ -1,4 +1,4 @@
-import { assert, describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
@@ -17,12 +17,16 @@ type Preference = app.bsky.actor.defs.Preferences[number]
 describe('utils', () => {
   describe('TypedObjectSchema', () => {
     it('overrides $type when building an object', () => {
-      const _r = app.bsky.actor.defs.adultContentPref.build({
+      const pref = app.bsky.actor.defs.adultContentPref.build({
         // @ts-expect-error
         $type: 'foo',
         enabled: true,
       })
-      expect(_r.$type).toBe('app.bsky.actor.defs#adultContentPref')
+      expect(pref.$type).toBe('app.bsky.actor.defs#adultContentPref')
+      expectTypeOf(pref).toEqualTypeOf<{
+        $type: 'app.bsky.actor.defs#adultContentPref'
+        enabled: true
+      }>()
     })
   })
 })

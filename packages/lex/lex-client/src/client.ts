@@ -846,7 +846,7 @@ export class Client implements Agent {
     options: CreateOptions<T> = {} as CreateOptions<T>,
   ): Promise<CreateOutput> {
     const schema: T = getMain(ns)
-    const record = schema.build(input) as TypedLexMap<NsidString>
+    const record = schema.build(input)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
@@ -942,7 +942,7 @@ export class Client implements Agent {
     options: PutOptions<T> = {} as PutOptions<T>,
   ): Promise<PutOutput> {
     const schema: T = getMain(ns)
-    const record = schema.build(input) as TypedLexMap<NsidString>
+    const record = schema.build(input)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
     return response.body

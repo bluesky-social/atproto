@@ -1179,9 +1179,10 @@ describe('notification views', () => {
           payload: expect.anything(), // Better to compare payload parsed.
           updatedAt: expect.any(String),
         })
-        expect(JSON.parse(dbResult.payload)).toStrictEqual(
-          Namespaces.AppBskyNotificationDefsPreferences.$build(expected),
-        )
+        expect(JSON.parse(dbResult.payload)).toStrictEqual({
+          ...expected,
+          $type: Namespaces.AppBskyNotificationDefsPreferences.$type,
+        })
       }
 
       const input0 = {

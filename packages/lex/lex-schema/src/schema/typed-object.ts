@@ -1,8 +1,7 @@
-import { isPlainObject } from '@atproto/lex-data'
+import { LexMap, isPlainObject } from '@atproto/lex-data'
 import {
   $Type,
   $TypeOf,
-  $Typed,
   $TypedMaybe,
   $type,
   $typed,
@@ -10,6 +9,7 @@ import {
   InferOutput,
   NsidString,
   Schema,
+  Simplify,
   Unknown$TypedObject,
   ValidationContext,
   Validator,
@@ -73,12 +73,13 @@ export class TypedObjectSchema<
     return ctx.validate(input, this.schema)
   }
 
-  build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.parse($typed(input, this.$type)) as $Typed<
-      InferOutput<this>,
-      TType
+  build<I extends LexMap>(
+    input: Omit<InferInput<TShape>, '$type'> extends I
+      ? I
+      : Omit<InferInput<TShape>, '$type'>,
+  ) {
+    return $typed(input, this.$type) as Simplify<
+      Omit<I, '$type'> & { $type: TType }
     >
   }
 

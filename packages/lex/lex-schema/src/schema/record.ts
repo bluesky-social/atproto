@@ -1,3 +1,4 @@
+import { LexMap } from '@atproto/lex-data'
 import {
   $Typed,
   $typed,
@@ -6,6 +7,7 @@ import {
   LexiconRecordKey,
   NsidString,
   Schema,
+  Simplify,
   TidString,
   Unknown$TypedObject,
   ValidationContext,
@@ -51,8 +53,8 @@ export type TypedRecord<
  * ```
  */
 export class RecordSchema<
-  const TKey extends LexiconRecordKey = any,
-  const TType extends NsidString = any,
+  const TKey extends LexiconRecordKey = LexiconRecordKey,
+  const TType extends NsidString = NsidString,
   const TShape extends Validator<{ [k: string]: unknown }> = any,
 > extends Schema<
   $Typed<InferInput<TShape>, TType>,
@@ -85,10 +87,14 @@ export class RecordSchema<
     return result
   }
 
-  build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.parse($typed(input, this.$type))
+  build<I extends LexMap>(
+    input: Omit<InferInput<TShape>, '$type'> extends I
+      ? I
+      : Omit<InferInput<TShape>, '$type'>,
+  ) {
+    return $typed(input, this.$type) as Simplify<
+      Omit<I, '$type'> & { $type: TType }
+    >
   }
 
   isTypeOf<TValue extends { $type?: unknown }>(

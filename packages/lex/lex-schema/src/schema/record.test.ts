@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
 import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
 import { object } from './object.js'
 import { record } from './record.js'
@@ -139,6 +139,17 @@ describe('RecordSchema', () => {
       expect(result.text).toBe('Hello world')
     })
 
+    it('rejects invalid values', () => {
+      const result = schema.build({
+        // @ts-expect-error
+        text: 3,
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        text: number
+        $type: 'app.bsky.feed.post'
+      }>()
+    })
+
     it('preserves existing properties', () => {
       const result = schema.build({
         text: 'Hello world',
@@ -147,7 +158,6 @@ describe('RecordSchema', () => {
       })
       expect(result.$type).toBe('app.bsky.feed.post')
       expect(result.text).toBe('Hello world')
-      // @ts-expect-error
       expect(result.extra).toBe('value')
     })
 
