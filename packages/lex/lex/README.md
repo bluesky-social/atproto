@@ -10,7 +10,7 @@ Type-safe Lexicon tooling for AT Protocol data.
 - Tree-shaking and composition friendly
 
 ```typescript
-// Build data with generated builders and validators
+// Build and validate data with generated utilities
 
 const newPost = app.bsky.feed.post.$build({
   text: 'Hello, world!',
@@ -222,7 +222,7 @@ function renderPost(p: app.bsky.feed.post.Main) {
 
 ### Building data
 
-It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
+It is recommended to use the generated builders to create data that conforms to the schema. TypeScript ensures that all required fields are present at compile time.
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -234,6 +234,9 @@ const post = app.bsky.feed.post.$build({
   text: 'Hello, world!',
   createdAt: l.toDatetimeString(new Date()),
 })
+
+// For runtime validation, use $parse() instead
+const validatedPost = app.bsky.feed.post.$parse(post)
 ```
 
 ### Validation Helpers
@@ -359,7 +362,7 @@ app.bsky.feed.post.$safeParse(data, { strict: false })
 
 #### `$build(data)` - Build with Defaults
 
-Builds data without needing to specify the `$type` property, and properly types the result:
+Builds data by adding the `$type` property and properly types the result. Note that `$build()` does not perform validation - use `$parse()` if you need validation:
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -662,7 +665,8 @@ console.log(result.cid)
 Options:
 
 - `rkey` - Custom record key (auto-generated if not provided)
-- `validate` - Validate record against schema before creating
+- `validate` - Asks the PDS to validate the record against schema when processing the request
+- `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - CID for optimistic concurrency control
 
 #### `client.get()`
@@ -703,6 +707,8 @@ await client.put(app.bsky.actor.profile, {
 Options:
 
 - `rkey` - Record key (required for non-literal keys)
+- `validate` - Validate record against schema before updating (falls back to `validateRequest` option if not specified)
+- `validateRequest` - Alternative way to enable validation (used if `validate` is not specified)
 - `swapCommit` - Expected repo commit CID
 - `swapRecord` - Expected record CID
 
@@ -947,7 +953,7 @@ isLanguageString('en-US') // true
 
 ### Datetime Strings
 
-Many AT Protocol records (such as posts, likes, and follows) include a `createdAt` field that expects a valid `DatetimeString`. While `new Date().toISOString()` produces a string that looks like a valid datetime, it is not guaranteed to always conform to the AT Protocol's [datetime format requirements](https://atproto.com/specs/lexicon#datetime) (for example, `Date` objects representing dates before year 10 or after year 9999 will produce non-conforming strings). To ensure correctness and type safety, use the `DatetimeString` utilities exported from `@atproto/lex`:
+Many AT Protocol records (such as posts, likes, and follows) include a `createdAt` field that expects a valid `DatetimeString`. While `new Date().toISOString()` produces a string that looks like a valid datetime, it is not guaranteed to always conform to the AT Protocol's [datetime format requirements](https://atproto.com/specs/lexicon#datetime) (for example, `Date` objects representing dates before year 0 or after year 9999 will produce non-conforming strings). To ensure correctness and type safety, use the `DatetimeString` utilities exported from `@atproto/lex`:
 
 - **`toDatetimeString(date: Date)`** - Converts a `Date` object into a valid `DatetimeString`, throwing an `InvalidDatetimeError` if the date cannot be represented as a valid AT Protocol datetime.
 - **`asDatetimeString(input: string)`** - Validates and casts an arbitrary string to `DatetimeString`, throwing an `InvalidDatetimeError` if the string does not conform.

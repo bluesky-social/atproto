@@ -578,7 +578,7 @@ export class Client implements Agent {
         collection: record.$type,
         record,
         rkey,
-        validate: options?.validate ?? options?.validateRequest,
+        validate: options?.validate,
         swapCommit: options?.swapCommit,
       },
     })
@@ -655,7 +655,7 @@ export class Client implements Agent {
         collection: record.$type,
         rkey,
         record,
-        validate: options?.validate ?? options?.validateRequest,
+        validate: options?.validate,
         swapCommit: options?.swapCommit,
         swapRecord: options?.swapRecord,
       },
