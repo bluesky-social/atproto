@@ -8,6 +8,7 @@ import {
   Client,
   FetchHandler,
   XrpcAuthenticationError,
+  XrpcUpstreamError,
 } from '../src/index.js'
 import { app, com } from './lexicons/index.js'
 
@@ -227,9 +228,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Invalid response payload',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch(
+          'Upstream server responded with a 400 "application/json" error',
+        )
+        return true
       })
     })
 
@@ -248,9 +252,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Invalid response payload',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch(
+          'Upstream server responded with a 400 "text/plain" error ("Not a JSON body")',
+        )
+        return true
       })
     })
 
@@ -268,9 +275,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Invalid response status code',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch(
+          'Upstream server responded with an invalid status code (302)',
+        )
+        return true
       })
     })
 
@@ -289,9 +299,12 @@ describe('Client', () => {
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
-      ).rejects.toMatchObject({
-        error: 'UpstreamFailure',
-        message: 'Upstream server encountered an error',
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcUpstreamError)
+        expect(err.message).toMatch(
+          'Upstream server responded with a 500 "text/html" error ("<p>Server error</p>")',
+        )
+        return true
       })
     })
 

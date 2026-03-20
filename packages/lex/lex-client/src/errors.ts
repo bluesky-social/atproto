@@ -1,4 +1,5 @@
 import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
+import { lexStringify } from '@atproto/lex-json'
 import {
   InferMethodError,
   LexValidationError,
@@ -325,10 +326,14 @@ function buildUpstreamErrorMessage(
   const bodyPreview = !payload
     ? `<no payload>`
     : payload.encoding.startsWith('text/')
-      ? JSON.stringify(trimString(String(payload.body)))
+      ? typeof payload.body === 'string'
+        ? JSON.stringify(trimString(payload.body))
+        : payload.body instanceof Uint8Array
+          ? JSON.stringify(trimString(new TextDecoder().decode(payload.body)))
+          : `${payload.encoding} payload`
       : payload.body instanceof Uint8Array
         ? `[${payload.body.byteLength} bytes]`
-        : `${payload.encoding} payload`
+        : trimString(lexStringify(payload.body))
 
   return `Upstream server responded with a ${response.status} "${payload?.encoding}" error (${bodyPreview})`
 }
