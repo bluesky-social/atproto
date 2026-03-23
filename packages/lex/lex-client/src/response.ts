@@ -215,7 +215,10 @@ export class XrpcResponse<M extends Procedure | Query>
       parse:
         method.output.schema || method.output.encoding === CONTENT_TYPE_JSON
           ? { strict: options?.strictResponseProcessing ?? true }
-          : false,
+          : // If there is no declared output encoding, we'll parse the output (in loose mode)
+            method.output.encoding == null
+            ? { strict: false }
+            : false,
     })
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
