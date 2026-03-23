@@ -301,20 +301,14 @@ function stringifyType(value: unknown): string {
       if (value instanceof Map) return 'map'
       if (value instanceof Set) return 'set'
       return 'object'
+    case 'boolean':
     case 'number':
-      if (Number.isInteger(value) && Number.isSafeInteger(value)) {
-        return 'integer'
-      }
-      if (Number.isNaN(value)) {
-        return 'NaN'
-      }
-      if (value === Infinity) {
-        return 'Infinity'
-      }
-      if (value === -Infinity) {
-        return '-Infinity'
-      }
-      return 'float'
+      return String(value)
+    case 'bigint':
+      return `${value}n`
+    case 'string':
+      if (value.length < 32) return JSON.stringify(value)
+    // fallthrough
     default:
       return typeof value
   }

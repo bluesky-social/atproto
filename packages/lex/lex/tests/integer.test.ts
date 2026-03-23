@@ -53,6 +53,6 @@ describe('integer', () => {
         $type: 'com.example.integerRange',
         integer: 2.5,
       }),
-    ).toThrow('Expected integer value type (got float) at $.integer')
+    ).toThrow('Expected integer value type (got 2.5) at $.integer')
   })
 })
