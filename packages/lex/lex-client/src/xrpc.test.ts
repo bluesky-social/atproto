@@ -270,7 +270,7 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
-          expect(err.response.status).toBe(400)
+          expect(err.status).toBe(400)
           expect(err.toJSON()).toEqual({
             error: 'TestError',
             message: 'bad request',
@@ -291,7 +291,7 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcAuthenticationError)
-          expect(err.response.status).toBe(401)
+          expect(err.status).toBe(401)
           expect(err.message).toBe('Token expired')
           return true
         })
@@ -347,7 +347,7 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
-          expect(err.response.status).toBe(502)
+          expect(err.status).toBe(502)
           expect(err.toJSON()).toEqual({
             error: 'ServerError',
             message: 'Something went wrong',
@@ -713,7 +713,7 @@ describe(xrpc, () => {
       ).rejects.toSatisfy((err) => {
         // Error response is still an error, but it should be parsed successfully
         assert(err instanceof XrpcResponseError)
-        expect(err.response.status).toBe(400)
+        expect(err.status).toBe(400)
         expect(err.payload?.body).toEqual({
           error: 'TestError',
           message: 'test-error-description',

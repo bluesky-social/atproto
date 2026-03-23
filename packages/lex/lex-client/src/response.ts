@@ -181,27 +181,30 @@ export class XrpcResponse<M extends Procedure | Query>
     // Since nothing should cause an exception before "readPayload" is
     // called, we can safely not use a try/finally here.
 
-    // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
-    if (response.status < 200 || response.status >= 300) {
+    // Always turn 4xx/5xx responses into XrpcResponseError
+    if (response.status >= 400) {
       // Always parse json for error responses in non-strict mode
       const payload = await readPayload(method, response, {
         parse: { strict: false },
       })
-
-      if (response.status < 400) {
-        throw new XrpcInvalidResponseError(
-          method,
-          response,
-          payload,
-          `Unexpected status code ${response.status}`,
-        )
-      }
 
       if (response.status === 401) {
         throw new XrpcAuthenticationError<M>(method, response, payload)
       }
 
       throw new XrpcResponseError<M>(method, response, payload)
+    }
+
+    // @NOTE redirect is set to 'follow', so we shouldn't get 3xx responses here
+    if (response.status < 200 || response.status >= 300) {
+      await response.body?.cancel()
+
+      throw new XrpcInvalidResponseError(
+        method,
+        response,
+        undefined,
+        `Unexpected status code ${response.status}`,
+      )
     }
 
     const payload = await readPayload(method, response, {

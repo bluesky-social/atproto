@@ -235,8 +235,9 @@ const post = app.bsky.feed.post.$build({
   createdAt: l.toDatetimeString(new Date()),
 })
 
-// For runtime validation, use $parse() instead
-const validatedPost = app.bsky.feed.post.$parse(post)
+// For runtime validation, use $parse()/$validate() instead
+const postWithDefaults = app.bsky.feed.post.$parse(post)
+app.bsky.feed.post.$validate(post)
 ```
 
 ### Validation Helpers
@@ -822,9 +823,9 @@ if (result.success) {
 
 The `XrpcFailure<M>` type is a union of three error classes:
 
-1. **`XrpcResponseError`** - The server responded with an error status code (4xx or 5xx). This is now used for all error responses from the upstream server, regardless of whether the response body is a valid XRPC error payload. If the server returned a valid XRPC error, you can access it via `error.toJSON()`. Otherwise, the error code will be inferred from the HTTP status code (e.g., 429 → "RateLimitExceeded", 500 → "InternalServerError").
+1. **`XrpcResponseError`** - The server responded with a 4xx/5xx error status code. This is used for all error responses from the upstream server.
 
-2. **`XrpcInvalidResponseError`** - The response was truly invalid or unprocessable (3xx redirects, malformed JSON that isn't an error response, schema validation failures for success responses, incomplete responses). This is a subclass that includes `XrpcResponseValidationError` for schema validation failures specifically.
+2. **`XrpcInvalidResponseError`** - The upstream server returned a 2xx/3xx that does not comply with XRPC specifications for successful responses. A sub-class, `XrpcResponseValidationError`, is used for payload schema validation failures specifically.
 
 3. **`XrpcInternalError`** - Client-side errors (network failures, timeouts, etc.)
 
