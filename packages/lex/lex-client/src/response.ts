@@ -183,8 +183,8 @@ export class XrpcResponse<M extends Procedure | Query>
 
     // Always turn 4xx/5xx responses into XrpcResponseError
     if (response.status >= 400) {
-      // Always parse json for error responses in non-strict mode
       const payload = await readPayload(method, response, {
+        // Always parse errors in non-strict mode
         parse: { strict: false },
       })
 

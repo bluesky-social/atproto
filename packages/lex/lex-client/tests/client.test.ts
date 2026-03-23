@@ -276,9 +276,11 @@ describe('Client', () => {
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcResponseError)
-        expect(err.message).toBe(
-          'Upstream server responded with a 400 error: Custom error title',
-        )
+        expect(err.message).toBe('Upstream server responded with a 400 error')
+        expect(err.payload).toEqual({
+          encoding: 'application/json',
+          body: { title: 'Custom error title' },
+        })
         return true
       })
     })
@@ -298,9 +300,7 @@ describe('Client', () => {
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcResponseError)
         expect(err.error).toBe('InvalidRequest')
-        expect(err.message).toBe(
-          'Upstream server responded with a 400 error: Not a JSON body',
-        )
+        expect(err.message).toBe('Upstream server responded with a 400 error')
         return true
       })
     })
@@ -355,22 +355,16 @@ describe('Client', () => {
       ).rejects.toSatisfy((err) => {
         assert(err instanceof XrpcResponseError)
         expect(err.error).toBe('InternalServerError')
-        expect(err.message).toBe(
-          'Upstream server responded with a 500 error: <p>Server error</p>',
-        )
-        expect(err.toDownstreamError()).toMatchObject({
-          status: 502,
-          body: {
-            error: 'InternalServerError',
-            message:
-              'Upstream server responded with a 500 error: <p>Server error</p>',
-          },
+        expect(err.message).toBe('Upstream server responded with a 500 error')
+        expect(err.payload).toEqual({
+          encoding: 'text/html',
+          body: new Uint8Array(Buffer.from('<p>Server error</p>')),
         })
         return true
       })
     })
 
-    it('propatages server error messages', async () => {
+    it('propagates server error messages', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
         return Response.json(
           {

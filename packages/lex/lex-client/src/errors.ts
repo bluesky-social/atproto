@@ -3,7 +3,6 @@ import {
   LexErrorCode,
   LexErrorData,
   LexValue,
-  isPlainObject,
 } from '@atproto/lex-data'
 import {
   InferMethodError,
@@ -201,7 +200,7 @@ export class XrpcResponseError<
       ? payload.body
       : {
           error: StatusErrorCodes.get(response.status) ?? 'UpstreamFailure',
-          message: buildResponseOverviewMessage(response, payload),
+          message: buildResponseOverviewMessage(response),
         }
     super(method, error, message, options)
   }
@@ -227,7 +226,7 @@ export class XrpcResponseError<
 
   override toDownstreamError(): DownstreamError {
     const { status, headers } = this.response
-    // If the upstream server returned a 5xx error, we want to return a 502 Bad
+    // If the upstream server returned a 500 error, we want to return a 502 Bad
     // Gateway to downstream clients, as the issue is with the upstream server,
     // not us. We still return the original error code and message in the body
     // for transparency, but we do not want to expose internal server errors
@@ -327,7 +326,7 @@ export class XrpcInvalidResponseError<
     method: M,
     readonly response: Response,
     readonly payload?: XrpcUnknownResponsePayload,
-    message: string = buildResponseOverviewMessage(response, payload),
+    message: string = buildResponseOverviewMessage(response),
     options?: ErrorOptions,
   ) {
     super(method, 'InvalidResponse', message, options)
@@ -560,62 +559,10 @@ function stripHopByHopHeaders(headers: Headers): Headers {
   return result
 }
 
-function buildResponseOverviewMessage(
-  response: Response,
-  payload?: XrpcUnknownResponsePayload,
-): string {
+function buildResponseOverviewMessage(response: Response): string {
   if (response.status < 400) {
     return `Upstream server responded with an invalid status code (${response.status})`
   }
 
-  if (!payload) {
-    return `Upstream server responded with a ${response.status} error`
-  }
-
-  const payloadStr = trimString(stringifyUnknownErrorPayload(payload), 100)
-
-  return `Upstream server responded with a ${response.status} error: ${payloadStr}`
-}
-
-function stringifyUnknownErrorPayload(
-  payload: XrpcUnknownResponsePayload,
-): string {
-  if (typeof payload.body === 'string') {
-    return payload.body
-  }
-
-  if (
-    payload.encoding.startsWith('text/') &&
-    payload.body instanceof Uint8Array
-  ) {
-    try {
-      return new TextDecoder().decode(payload.body)
-    } catch {
-      // Continue
-    }
-  }
-
-  if (payload.encoding === 'application/json' && isPlainObject(payload.body)) {
-    for (const key of [
-      'message', // Express, Koa, HapiJS (Boom), Laravel, Spring Boot, Flask-RESTful
-      'error', // Rails, many generic APIs
-      'detail', // Django REST Framework, FastAPI (scalar)
-      'title', // RFC7807 Problem Details
-      'description', // Custom APIs
-      'Message', // .NET Web API
-    ]) {
-      const value = payload.body[key]
-      if (typeof value === 'string') {
-        const trimmed = value.trim()
-        if (trimmed.length > 0) return trimmed
-      }
-    }
-  }
-
-  return `"${payload.encoding}" payload`
-}
-
-function trimString(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str
-  return `${str.slice(0, maxLength - 1)}…`
+  return `Upstream server responded with a ${response.status} error`
 }

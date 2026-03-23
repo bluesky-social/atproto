@@ -297,7 +297,7 @@ describe(xrpc, () => {
         })
       })
 
-      it('throws XrpcInvalidResponseError for non-XRPC error response', async () => {
+      it('throws XrpcResponseError for non-XRPC error response', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('Not Found', {
             status: 404,
@@ -309,14 +309,12 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
-          expect(err.message).toBe(
-            'Upstream server responded with a 404 error: Not Found',
-          )
+          expect(err.message).toBe('Upstream server responded with a 404 error')
           return true
         })
       })
 
-      it('throws XrpcInvalidResponseError for 500 without valid error payload', async () => {
+      it('throws XrpcResponseError for 500 without valid error payload', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('Internal Server Error', {
             status: 500,
@@ -328,9 +326,7 @@ describe(xrpc, () => {
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
-          expect(err.message).toBe(
-            'Upstream server responded with a 500 error: Internal Server Error',
-          )
+          expect(err.message).toBe('Upstream server responded with a 500 error')
           return true
         })
       })
@@ -953,7 +949,7 @@ describe(xrpcSafe, () => {
         expect(result.response.status).toBe(401)
       })
 
-      it('returns XrpcInvalidResponseError for non-XRPC error response', async () => {
+      it('returns XrpcResponseError for non-XRPC error response', async () => {
         const fetchHandler: FetchHandler = async () =>
           new Response('Not Found', {
             status: 404,
@@ -968,7 +964,7 @@ describe(xrpcSafe, () => {
         expect(result).toBeInstanceOf(XrpcResponseError)
       })
 
-      it('returns XrpcInvalidResponseError for 500 without valid error payload', async () => {
+      it('returns XrpcResponseError for 500 without valid error payload', async () => {
         const fetchHandler: FetchHandler = async () =>
           new Response('Internal Server Error', {
             status: 500,
@@ -983,7 +979,7 @@ describe(xrpcSafe, () => {
         expect(result).toBeInstanceOf(XrpcResponseError)
         expect(result.error).toBe('InternalServerError')
         expect(result.message).toMatch(
-          'Upstream server responded with a 500 error: Internal Server Error',
+          'Upstream server responded with a 500 error',
         )
       })
     })
@@ -1050,6 +1046,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInternalError)
       expect(result).not.toBeInstanceOf(XrpcFetchError)
+      expect(fetchHandler).not.toHaveBeenCalled()
     })
 
     it('returns XrpcInternalError for invalid body when enabled', async () => {
