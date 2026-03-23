@@ -123,7 +123,7 @@ export class IssueInvalidType extends Issue {
   }
 
   override get message(): string {
-    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type (got ${stringifyType(this.input)})`
+    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type (got ${stringifyValue(this.input)})`
   }
 
   toJSON() {
@@ -292,11 +292,27 @@ function oneOf(arr: readonly string[]): string {
   return `one of ${arr.slice(0, -1).join(', ')} or ${arr.at(-1)}`
 }
 
-function stringifyType(value: unknown): string {
+function stringifyValue(value: unknown): string {
   switch (typeof value) {
+    case 'bigint':
+      return `${value}n`
+    case 'number':
+    case 'boolean':
+      return String(value)
+    case 'string':
+      return JSON.stringify(
+        value.length < STRING_PREVIEW_MAX_LENGTH
+          ? value
+          : `${value.slice(0, STRING_PREVIEW_MAX_LENGTH - STRING_PREVIEW_TRUNCATED_SUFFIX.length)}${STRING_PREVIEW_TRUNCATED_SUFFIX}`,
+      )
     case 'object':
       if (value === null) return 'null'
-      if (Array.isArray(value)) return 'array'
+      if (Array.isArray(value)) {
+        return `[${stringifyArray(value, stringifyValue)}]`
+      }
+      if (isPlainObject(value)) {
+        return `{${stringifyArray(Object.entries(value), stringifyObjectEntry)}}`
+      }
       if (ifCid(value)) return 'cid'
       if (isLegacyBlobRef(value)) return 'legacy-blob'
       if (value instanceof Date) return 'date'
@@ -304,41 +320,8 @@ function stringifyType(value: unknown): string {
       if (value instanceof Map) return 'map'
       if (value instanceof Set) return 'set'
       return 'object'
-    case 'boolean':
-    case 'number':
-      return String(value)
-    case 'bigint':
-      return `${value}n`
-    case 'string':
-      return JSON.stringify(
-        value.length < STRING_PREVIEW_MAX_LENGTH
-          ? value
-          : `${value.slice(0, STRING_PREVIEW_MAX_LENGTH - STRING_PREVIEW_TRUNCATED_SUFFIX.length)}${STRING_PREVIEW_TRUNCATED_SUFFIX}`,
-      )
-    // fallthrough
     default:
       return typeof value
-  }
-}
-
-function stringifyValue(value: unknown): string {
-  switch (typeof value) {
-    case 'bigint':
-      return `${value}n`
-    case 'number':
-    case 'string':
-    case 'boolean':
-      return JSON.stringify(value)
-    case 'object':
-      if (Array.isArray(value)) {
-        return `[${stringifyArray(value, stringifyValue)}]`
-      }
-      if (isPlainObject(value)) {
-        return `{${stringifyArray(Object.entries(value), stringifyObjectEntry)}}`
-      }
-    // fallthrough
-    default:
-      return stringifyType(value)
   }
 }
 
