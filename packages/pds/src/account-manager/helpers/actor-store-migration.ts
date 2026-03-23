@@ -100,6 +100,9 @@ export class ActorStoreMigrator {
         .where('storeIsMigrating', '=', 0)
         .returning('did')
       const claimed = await retrySqlite(() => claimQuery.executeTakeFirst())
+      if (claimed) {
+        logger.info({ did: claimed.did }, 'Claimed actor store for migration') // XXX: just here for debugging
+      }
       if (!claimed) {
         // There may be no work left to claim, but active tasks remaining.
         // Either the other tasks are stuck and will eventually time out, or a concurrent process is actively working on them.
@@ -115,6 +118,7 @@ export class ActorStoreMigrator {
         await getMigrator(actorDb).migrateToLatestOrThrow()
         actorDb.close()
 
+        logger.info({ did: claimed.did }, 'Actor store migration complete') // XXX: just here for debugging
         // record the success
         await this.db.executeWithRetry(
           this.db.db
