@@ -195,6 +195,10 @@ export class DaemonContext {
     return this.opts.verificationListener
   }
 
+  get statsComputer(): StatsComputer | undefined {
+    return this.opts.statsComputer
+  }
+
   async start() {
     this.eventPusher.start()
     this.eventReverser.start()
@@ -204,6 +208,7 @@ export class DaemonContext {
     this.strikeExpiryProcessor.start()
     this.queueRouter.start()
     this.verificationListener?.start()
+    this.statsComputer?.start()
   }
 
   async processAll() {
