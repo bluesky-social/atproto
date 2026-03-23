@@ -3,8 +3,6 @@ import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { ReportStatsServiceCreator } from '../report/stats'
 
-const JOB_NAME = 'stats_computer'
-
 export class StatsComputer {
   destroyed = false
   processingPromise: Promise<void> = Promise.resolve()
