@@ -126,14 +126,24 @@ export function getSearchParams(url?: string): URLSearchParams | undefined {
 
   // For backwards compatibility, we convert "foo[]=bar" syntax into
   // "foo=bar&foo=bar"
+
+  // We cannot "delete()" while iterating. SO we'll fist collect all keys that
+  // need to be changed, then apply the changes after
+  const toChange = new Map<string, string[]>()
+
   for (const key of urlSearchParams.keys()) {
     if (key.endsWith('[]')) {
-      const values = urlSearchParams.getAll(key)
-      urlSearchParams.delete(key)
-      const fixedKey = key.slice(0, -2)
-      for (const value of values) {
-        urlSearchParams.append(fixedKey, value)
+      if (!toChange.has(key)) {
+        toChange.set(key, urlSearchParams.getAll(key))
       }
+    }
+  }
+
+  for (const [key, values] of toChange.entries()) {
+    urlSearchParams.delete(key)
+    const newKey = key.slice(0, -2)
+    for (const value of values) {
+      urlSearchParams.append(newKey, value)
     }
   }
 
