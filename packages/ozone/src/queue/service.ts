@@ -6,6 +6,8 @@ import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'
 import { jsonb } from '../db/types'
+import { viewQueueStats } from '../report/views'
+import { ReportStat } from '../db/schema/report_stat'
 
 export type QueueServiceCreator = (db: Database) => QueueService
 
@@ -211,7 +213,7 @@ export class QueueService {
 
   async getStatsForQueue(
     queueId: number,
-  ): Promise<ToolsOzoneQueueDefs.QueueStats> {
+  ): Promise<Selectable<ReportStat> | undefined> {
     const row = await this.db.db
       .selectFrom('report_stat')
       .selectAll()
@@ -220,24 +222,7 @@ export class QueueService {
       .where('timeframe', '=', 'day')
       .executeTakeFirst()
 
-    if (!row) {
-      return {
-        pendingCount: 0,
-        actionedCount: 0,
-        escalatedPendingCount: 0,
-        inboundCount: 0,
-        actionRate: 0,
-      }
-    }
-
-    return {
-      inboundCount: row.inboundCount,
-      pendingCount: row.pendingCount,
-      actionedCount: row.actionedCount,
-      escalatedPendingCount: row.escalatedCount,
-      actionRate: row.actionRate,
-      lastUpdated: row.computedAt,
-    }
+    return row
   }
 
   view(queue: Selectable<ReportQueue>): ToolsOzoneQueueDefs.QueueView {
@@ -268,7 +253,8 @@ export class QueueService {
     queue: Selectable<ReportQueue>,
   ): Promise<ToolsOzoneQueueDefs.QueueView> {
     const view = this.view(queue)
-    view.stats = await this.getStatsForQueue(queue.id)
+    const stats = await this.getStatsForQueue(queue.id)
+    view.stats = viewQueueStats(stats)
     return view
   }
 
