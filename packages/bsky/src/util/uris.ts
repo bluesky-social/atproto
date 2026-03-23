@@ -1,6 +1,6 @@
 import { AtUri, DidString } from '@atproto/syntax'
 import { app } from '../lexicons/index.js'
-import { StrongRef, parseStrongRef } from '../views/types.js'
+import { StrongRef, validateStrongRef } from '../views/types.js'
 
 /**
  * Convert a post URI to a threadgate URI. If the URI is not a valid
@@ -32,13 +32,7 @@ export function uriToDid(uri: string): DidString {
 }
 
 // @TODO temp fix for proliferation of invalid pinned post values
-export function safePinnedPost(value: unknown) {
-  if (!value || typeof value !== 'object') {
-    return
-  }
-  const validated = parseStrongRef(value)
-  if (!validated.success) {
-    return
-  }
-  return validated.value as StrongRef
+export function safePinnedPost(value: unknown): StrongRef | undefined {
+  const validated = validateStrongRef(value)
+  return validated.success ? validated.value : undefined
 }

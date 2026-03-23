@@ -15,9 +15,9 @@ import { ParsedLabelers } from '../util'
 import { uriToDid, uriToDid as didFromUri } from '../util/uris'
 import {
   ProfileRecord,
-  isListRule,
-  isRecordEmbed,
-  isRecordWithMedia,
+  isListRuleType,
+  isRecordEmbedType,
+  isRecordWithMediaType,
 } from '../views/types.js'
 import {
   ActivitySubscriptionStates,
@@ -1461,9 +1461,9 @@ const nestedRecordUrisFromPosts = (
 const nestedRecordUris = (post: Post['record']): AtUriString[] => {
   const uris: AtUriString[] = []
   if (!post?.embed) return uris
-  if (isRecordEmbed(post.embed)) {
+  if (isRecordEmbedType(post.embed)) {
     uris.push(post.embed.record.uri)
-  } else if (isRecordWithMedia(post.embed)) {
+  } else if (isRecordWithMediaType(post.embed)) {
     uris.push(post.embed.record.record.uri)
   }
   return uris
@@ -1472,7 +1472,7 @@ const nestedRecordUris = (post: Post['record']): AtUriString[] => {
 const getListUrisFromThreadgates = (gates: Threadgates): AtUriString[] => {
   const uris: AtUriString[] = []
   for (const gate of gates.values()) {
-    const listRules = gate?.record.allow?.filter(isListRule) ?? []
+    const listRules = gate?.record.allow?.filter(isListRuleType) ?? []
     for (const rule of listRules) {
       uris.push(rule.list)
     }

@@ -15,7 +15,7 @@ import {
 import { Notification } from '../../../../proto/bsky_pb'
 import { uriToDid as didFromUri } from '../../../../util/uris'
 import { Views } from '../../../../views'
-import { isPostRecord } from '../../../../views/types'
+import { isPostRecordType } from '../../../../views/types'
 import { resHeaders } from '../../../util'
 
 export default function (server: Server, ctx: AppContext) {
@@ -181,7 +181,7 @@ const noBlockOrMutesOrNeedsFiltering = (
     if (item.reason === 'reply') {
       const post = hydration.posts?.get(uri)
       if (post) {
-        const rootPostUri = isPostRecord(post.record)
+        const rootPostUri = isPostRecordType(post.record)
           ? post.record.reply?.root.uri
           : undefined
         const isRootPostByViewer =

@@ -1,5 +1,5 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
-import { $Typed, Un$Typed, UriString } from '@atproto/lex'
+import { $Typed, Un$Typed, Unknown$TypedObject, UriString } from '@atproto/lex'
 import {
   AtUri,
   AtUriString,
@@ -92,17 +92,17 @@ import {
   VerificationView,
   VideoEmbed,
   VideoEmbedView,
-  isExternalEmbed,
-  isImagesEmbed,
-  isLabelerRecord,
-  isListRule,
-  isPostRecord,
-  isPostView,
-  isProfileRecord,
-  isRecordEmbed,
-  isRecordWithMedia,
-  isSelfLabels,
-  isVideoEmbed,
+  isExternalEmbedType,
+  isImagesEmbedType,
+  isLabelerRecordType,
+  isListRuleType,
+  isPostRecordType,
+  isPostViewType,
+  isProfileRecordType,
+  isRecordEmbedType,
+  isRecordWithMediaType,
+  isSelfLabelsType,
+  isVideoEmbedType,
 } from './types.js'
 import {
   VideoUriBuilder,
@@ -598,9 +598,10 @@ export class Views {
       cid,
       record: record,
       status: record.status,
-      embed: isExternalEmbed(record.embed)
-        ? this.externalEmbed(did, record.embed)
-        : undefined,
+      embed:
+        record.embed && isExternalEmbedType(record.embed)
+          ? this.externalEmbed(did, record.embed)
+          : undefined,
       expiresAt,
       isActive,
     }
@@ -770,15 +771,19 @@ export class Views {
 
     // Only these have a "labels" property:
     if (
-      !isPostRecord(record) &&
-      !isProfileRecord(record) &&
-      !isLabelerRecord(record)
+      !isPostRecordType(record) &&
+      !isProfileRecordType(record) &&
+      !isLabelerRecordType(record)
     ) {
       return []
     }
 
     // Ignore if no labels defines
-    if (!isSelfLabels(record.labels) || !record.labels.values.length) {
+    if (
+      !record.labels ||
+      !isSelfLabelsType(record.labels) ||
+      !record.labels.values.length
+    ) {
       return []
     }
 
@@ -938,7 +943,7 @@ export class Views {
       cid: gate.cid,
       record: gate.record,
       lists: mapDefined(gate.record.allow ?? [], (rule) => {
-        if (!isListRule(rule)) return
+        if (!isListRuleType(rule)) return
         return this.listBasic(rule.list, state)
       }),
     }
@@ -1041,24 +1046,31 @@ export class Views {
       const childBlocks = state.postBlocks?.get(uri)
       const parentBlocks = state.postBlocks?.get(parent.uri)
       // if child blocks parent, block parent
-      if (isPostView(parent) && childBlocks?.parent) {
+      if (isPostViewType(parent) && childBlocks?.parent) {
         parent = this.blockedPost(parent.uri, parent.author.did, state)
       }
       // if child or parent blocks root, block root
-      if (isPostView(root) && (childBlocks?.root || parentBlocks?.root)) {
+      if (isPostViewType(root) && (childBlocks?.root || parentBlocks?.root)) {
         root = this.blockedPost(root.uri, root.author.did, state)
       }
     }
     let grandparentAuthor: ProfileViewBasic | undefined
-    if (
-      isPostView(parent) &&
-      isPostRecord(parent.record) &&
-      parent.record.reply
-    ) {
-      grandparentAuthor = this.profileBasic(
-        creatorFromUri(parent.record.reply.parent.uri),
-        state,
-      )
+    if (isPostViewType(parent)) {
+      // @NOTE The "parent.record" property is of type "unknown" in the lexicon
+      // schema, which means that it is typed as LexMap here. In order to avoid
+      // (expensive) validation using "isPostRecord(parent.record)", we only
+      // check that the "$type" property is a post record type, then use a
+      // try/catch to "validate" the post uri.
+      if (isPostRecordType(parent.record) && parent.record.reply != null) {
+        const uri = (parent.record.reply as any).parent?.uri
+        if (typeof uri === 'string') {
+          try {
+            grandparentAuthor = this.profileBasic(creatorFromUri(uri), state)
+          } catch {
+            // ignore (just as if validation had failed)
+          }
+        }
+      }
     }
     return {
       root,
@@ -2005,7 +2017,7 @@ export class Views {
 
     const mutedByViewer = this.viewerMuteExists(authorDid, state)
     const isPushPin =
-      isPostRecord(post.record) && post.record.text.trim() === '📌'
+      isPostRecordType(post.record) && post.record.text.trim() === '📌'
 
     return {
       isOther: hiddenByTag || hiddenByThreadgate || mutedByViewer || isPushPin,
@@ -2040,19 +2052,19 @@ export class Views {
 
   embed(
     postUri: AtUriString,
-    embed: Embed | { $type: string },
+    embed: $Typed<Embed> | Unknown$TypedObject,
     state: HydrationState,
     depth: number,
   ): $Typed<EmbedView> | undefined {
-    if (isImagesEmbed(embed)) {
+    if (isImagesEmbedType(embed)) {
       return this.imagesEmbed(creatorFromUri(postUri), embed)
-    } else if (isVideoEmbed(embed)) {
+    } else if (isVideoEmbedType(embed)) {
       return this.videoEmbed(creatorFromUri(postUri), embed)
-    } else if (isExternalEmbed(embed)) {
+    } else if (isExternalEmbedType(embed)) {
       return this.externalEmbed(creatorFromUri(postUri), embed)
-    } else if (isRecordEmbed(embed)) {
+    } else if (isRecordEmbedType(embed)) {
       return this.recordEmbed(postUri, embed, state, depth)
-    } else if (isRecordWithMedia(embed)) {
+    } else if (isRecordWithMediaType(embed)) {
       return this.recordWithMediaEmbed(postUri, embed, state, depth)
     } else {
       return undefined
@@ -2265,11 +2277,11 @@ export class Views {
       | $Typed<ImagesEmbedView>
       | $Typed<VideoEmbedView>
       | $Typed<ExternalEmbedView>
-    if (isImagesEmbed(embed.media)) {
+    if (isImagesEmbedType(embed.media)) {
       mediaEmbed = this.imagesEmbed(creator, embed.media)
-    } else if (isVideoEmbed(embed.media)) {
+    } else if (isVideoEmbedType(embed.media)) {
       mediaEmbed = this.videoEmbed(creator, embed.media)
-    } else if (isExternalEmbed(embed.media)) {
+    } else if (isExternalEmbedType(embed.media)) {
       mediaEmbed = this.externalEmbed(creator, embed.media)
     } else {
       return

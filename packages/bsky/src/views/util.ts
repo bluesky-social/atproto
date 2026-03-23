@@ -4,12 +4,12 @@ import {
   GateRecord,
   PostRecord,
   PostgateRecord,
-  isFollowerRule,
-  isFollowingRule,
-  isListRule,
-  isMentionFacet,
-  isMentionRule,
-  isPostgateDisableRule,
+  isFollowerRuleType,
+  isFollowingRuleType,
+  isListRuleType,
+  isMentionFacetType,
+  isMentionRuleType,
+  isPostgateDisableRuleType,
 } from './types.js'
 
 export const parseThreadGate = (
@@ -26,16 +26,16 @@ export const parseThreadGate = (
     return { canReply: true }
   }
 
-  const allowMentions = gate.allow.some(isMentionRule)
-  const allowFollower = gate.allow.some(isFollowerRule)
-  const allowFollowing = gate.allow.some(isFollowingRule)
-  const allowListUris = gate.allow.filter(isListRule).map((item) => item.list)
+  const allowMentions = gate.allow.some(isMentionRuleType)
+  const allowFollower = gate.allow.some(isFollowerRuleType)
+  const allowFollowing = gate.allow.some(isFollowingRuleType)
+  const allowListUris = gate.allow.filter(isListRuleType).map((i) => i.list)
 
   // check mentions first since it's quick and synchronous
   if (allowMentions) {
     const isMentioned = rootPost?.facets?.some((facet) => {
       return facet.features.some(
-        (item) => isMentionFacet(item) && item.did === replierDid,
+        (item) => isMentionFacetType(item) && item.did === replierDid,
       )
     })
     if (isMentioned) {
@@ -80,7 +80,7 @@ export const parsePostgate = ({
     return { embeddingRules: { canEmbed: true } }
   }
 
-  const disabled = gate.embeddingRules.some(isPostgateDisableRule)
+  const disabled = gate.embeddingRules.some(isPostgateDisableRuleType)
   if (disabled) {
     return { embeddingRules: { canEmbed: false } }
   }
