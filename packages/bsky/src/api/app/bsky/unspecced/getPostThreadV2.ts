@@ -29,17 +29,20 @@ export default function (server: Server, ctx: AppContext) {
       const { viewer, includeTakedowns, include3pBlocks } =
         ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
+      const features = ctx.featureGatesClient.scope(
+        ctx.featureGatesClient.parseUserContextFromHandler({
+          viewer,
+          req,
+        }),
+      )
+      // temp
+      void features.checkGate(features.Gate.AATest)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
         includeTakedowns,
         include3pBlocks,
-        features: ctx.featureGatesClient.scope(
-          ctx.featureGatesClient.parseUserContextFromHandler({
-            viewer,
-            req,
-          }),
-        ),
+        features,
       })
 
       return {
