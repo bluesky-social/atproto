@@ -1,5 +1,14 @@
 # @atproto/lex-document
 
+## 0.0.15
+
+### Patch Changes
+
+- [#4691](https://github.com/bluesky-social/atproto/pull/4691) [`e8969b6`](https://github.com/bluesky-social/atproto/commit/e8969b6b3d3fed8912be53fd72b4d5288ca34766) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `LexiconSchemaBuilder` async disposable
+
+- Updated dependencies [[`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7)]:
+  - @atproto/lex-schema@0.0.14
+
 ## 0.0.14
 
 ### Patch Changes

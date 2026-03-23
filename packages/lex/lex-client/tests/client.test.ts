@@ -2,6 +2,7 @@ import { assert, describe, expect, it, vi } from 'vitest'
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
 import { cidForRawBytes } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
+import { toDatetimeString } from '@atproto/lex-schema'
 import {
   Action,
   Client,
@@ -414,7 +415,7 @@ describe('Client', () => {
             validateRequest: true,
           },
         )
-      }).rejects.toThrow('Invalid DID at $.did')
+      }).rejects.toThrow('Invalid DID (got "not-a-did") at $.did')
 
       // validate performs schema validation before making the request
       expect(fetchHandler).toHaveBeenCalledTimes(0)
@@ -440,7 +441,7 @@ describe('Client', () => {
       const aliceGenerator = await client.create(app.bsky.feed.generator, {
         did,
         displayName: 'Alice Generator',
-        createdAt: new Date().toISOString(),
+        createdAt: toDatetimeString(new Date()),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(1)
@@ -460,7 +461,7 @@ describe('Client', () => {
 
       const newPost = await client.create(app.bsky.feed.post, {
         text: 'Hello, world!',
-        createdAt: new Date().toISOString(),
+        createdAt: toDatetimeString(new Date()),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(2)

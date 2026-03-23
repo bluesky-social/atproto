@@ -80,14 +80,16 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+__bafy/)) {
       return constantKeysetCursor
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls, stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, did, cid] = match
-      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+      return str
+        .replace(did, take(users, did))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
     if (str.match(/\/vid\/did%3Aplc%3A[^/]+\/[^/]+\/[^/]+$/)) {
       // Match video urls

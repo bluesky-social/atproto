@@ -1,16 +1,26 @@
 import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
 import {
   InferMethodError,
+  LexValidationError,
   Procedure,
   Query,
   ResultFailure,
   lexErrorDataSchema,
 } from '@atproto/lex-schema'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Agent } from './agent.js'
 import { XrpcResponsePayload } from './util.js'
 import {
   WWWAuthenticate,
   parseWWWAuthenticateHeader,
 } from './www-authenticate.js'
+
+export type DownstreamError<N extends LexErrorCode = LexErrorCode> = {
+  status: number
+  headers?: Headers
+  encoding?: 'application/json'
+  body: LexErrorData<N>
+}
 
 /**
  * HTTP status codes that indicate a transient error that may succeed on retry.
@@ -115,7 +125,9 @@ export abstract class XrpcError<
    */
   abstract shouldRetry(): boolean
 
-  matchesSchema(): this is XrpcError<M, InferMethodError<M>> {
+  abstract toDownstreamError(): DownstreamError
+
+  matchesSchemaErrors(): this is XrpcError<M, InferMethodError<M>> {
     return this.method.errors?.includes(this.error) ?? false
   }
 }
@@ -127,7 +139,7 @@ export abstract class XrpcError<
  * a non-2xx status with a valid JSON error payload containing `error` and
  * optional `message` fields.
  *
- * Use {@link matchesSchema} to check if the error matches the method's declared
+ * Use {@link matchesSchemaErrors} to check if the error matches the method's declared
  * error types for type-safe error handling.
  *
  * @typeParam M - The XRPC method type
@@ -168,25 +180,32 @@ export class XrpcResponseError<
     return RETRYABLE_HTTP_STATUS_CODES.has(this.response.status)
   }
 
-  override toJSON() {
+  override toJSON(): LexErrorData<N> {
     return this.payload.body
   }
 
-  override toResponse(): Response {
-    // Re-expose schema-valid errors as-is to downstream clients
-    if (this.matchesSchema()) {
-      const status = this.response.status >= 500 ? 502 : this.response.status
-      return Response.json(this.toJSON(), { status })
+  override toDownstreamError(): DownstreamError {
+    // If the upstream server returned a 5xx error, we want to return a 502 Bad
+    // Gateway to downstream clients, as the issue is with the upstream server,
+    // not us. We still return the original error code and message in the body
+    // for transparency, but we do not want to expose internal server errors
+    // from the upstream server as-is to downstream clients.
+    return {
+      status: this.response.status === 500 ? 502 : this.status,
+      headers: stripHopByHopHeaders(this.headers),
+      body: this.toJSON(),
     }
-
-    return this.response.status >= 500
-      ? // The upstream server had an error, return a generic upstream failure
-        Response.json({ error: 'UpstreamFailure' }, { status: 502 })
-      : // If the error is on our side, return a generic internal server error
-        Response.json({ error: 'InternalServerError' }, { status: 500 })
   }
 
-  get body(): LexErrorData {
+  get status(): number {
+    return this.response.status
+  }
+
+  get headers(): Headers {
+    return this.response.headers
+  }
+
+  get body(): LexErrorData<N> {
     return this.payload.body
   }
 }
@@ -240,6 +259,14 @@ export class XrpcAuthenticationError<
         this.response.headers.get('www-authenticate'),
       ) ?? {})
   }
+
+  override toDownstreamError(): DownstreamError {
+    return {
+      status: 401,
+      headers: stripHopByHopHeaders(this.headers),
+      body: this.toJSON(),
+    }
+  }
 }
 
 /**
@@ -280,23 +307,53 @@ export class XrpcUpstreamError<
     return RETRYABLE_HTTP_STATUS_CODES.has(this.response.status)
   }
 
-  override toResponse(): Response {
-    return Response.json(this.toJSON(), { status: 502 })
+  override toDownstreamError(): DownstreamError {
+    return { status: 502, body: this.toJSON() }
   }
 }
 
 /**
- * Error class for internal/client-side errors during XRPC requests.
+ * Error class for invalid XRPC responses that fail schema validation.
  *
- * This represents errors that occur before or during the request that are not
- * server responses, such as:
- * - Network errors (connection refused, DNS failure)
- * - Request timeouts
- * - Request aborted via AbortSignal
- * - Invalid request construction
+ * This is a specific type of {@link XrpcUpstreamError} that indicates the
+ * upstream server returned a response that was structurally valid but did not
+ * conform to the expected schema for the method. This likely indicates a
+ * mismatch between client and server versions or an issue with the server's
+ * XRPC implementation.
  *
- * The error code is always 'InternalServerError' and these errors are
- * optimistically considered retryable.
+ * @typeParam M - The XRPC method type
+ */
+export class XrpcInvalidResponseError<
+  M extends Procedure | Query = Procedure | Query,
+> extends XrpcUpstreamError<M> {
+  name = 'XrpcInvalidResponseError'
+
+  constructor(
+    method: M,
+    response: Response,
+    payload: XrpcResponsePayload,
+    readonly cause: LexValidationError,
+  ) {
+    super(method, response, payload, `Invalid response: ${cause.message}`, {
+      cause,
+    })
+  }
+
+  override toDownstreamError(): DownstreamError {
+    // @NOTE This could be reflected as both a 500 ("we" are at fault) and 502
+    // ("they" are at fault). We are using 502 here to allow downstream clients
+    // to determine that the issue lies at the interface between us and the
+    // upstream server, rather than an issue with our internal processing.
+    return { status: 502, body: this.toJSON() }
+  }
+}
+
+/**
+ * Error class for unexpected internal/client-side errors during XRPC requests.
+ *
+ * The error code is always 'InternalServerError' and these errors not
+ * considered retryable as they stem from unforeseen issues in the
+ * implementation.
  *
  * @typeParam M - The XRPC method type
  */
@@ -318,17 +375,60 @@ export class XrpcInternalError<
     return this
   }
 
-  override shouldRetry(): true {
-    // Ideally, we would inspect the reason to determine if it's retryable
-    // (by detecting network errors, timeouts, etc.). Since these cases are
-    // highly platform-dependent, we optimistically assume all internal
-    // errors are retryable.
+  override shouldRetry(): boolean {
+    return false
+  }
+
+  override toJSON(): LexErrorData {
+    // @NOTE Do not expose internal error details to downstream clients
+    return { error: this.error, message: 'Internal Server Error' }
+  }
+
+  override toDownstreamError(): DownstreamError {
+    return { status: 500, body: this.toJSON() }
+  }
+}
+
+/**
+ * Special case of XrpcInternalError that specifically represents errors thrown
+ * by {@link Agent.fetchHandler} during the XRPC request. This includes:
+ * - Network errors (connection refused, DNS failure)
+ * - Request timeouts
+ * - Request aborted via AbortSignal
+ *
+ * These errors are optimistically considered retryable, as many fetch errors
+ * are transient and may succeed on retry.
+ */
+export class XrpcFetchError<
+  M extends Procedure | Query = Procedure | Query,
+> extends XrpcInternalError<M> {
+  name = 'XrpcFetchError'
+
+  constructor(method: M, cause: unknown) {
+    const message = cause instanceof Error ? cause.message : String(cause)
+    super(method, `Unexpected fetchHandler() error: ${message}`, { cause })
+  }
+
+  override shouldRetry(): boolean {
+    // Ideally, we would inspect the reason to determine if it's retryable (by
+    // detecting network errors, timeouts, etc.). Since these cases are highly
+    // platform-dependent, we optimistically assume all fetch errors are
+    // transient and retryable.
     return true
   }
 
-  override toResponse(): Response {
-    // Do not expose internal error details to downstream clients
-    return Response.json({ error: this.error }, { status: 500 })
+  override toJSON(): LexErrorData {
+    // @NOTE Do not expose internal error details to downstream clients
+    return { error: this.error, message: 'Failed to perform upstream request' }
+  }
+
+  override toDownstreamError(): DownstreamError {
+    // While it might technically be a 500 error, we use 502 Bad Gateway here to
+    // indicate that the error occurred while communicating with the upstream
+    // server, allowing downstream clients to distinguish between errors in our
+    // internal processing (500) and errors in the upstream server or network
+    // (502).
+    return { status: 502, body: this.toJSON() }
   }
 }
 
@@ -392,4 +492,40 @@ export function asXrpcFailure<M extends Procedure | Query>(
   }
 
   return new XrpcInternalError(method, undefined, { cause })
+}
+
+const HOP_BY_HOP_HEADERS = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+])
+
+function stripHopByHopHeaders(headers: Headers): Headers {
+  const result = new Headers(headers)
+
+  // Remove statically known hop-by-hop headers
+  for (const name of HOP_BY_HOP_HEADERS) {
+    result.delete(name)
+  }
+
+  // Remove headers listed in the "Connection" header
+  const connection = headers.get('connection')
+  if (connection) {
+    for (const name of connection.split(',')) {
+      result.delete(name.trim())
+    }
+  }
+
+  // These are not actually hop-by-hop headers, but we remove them because the
+  // upstream payload gets parsed and re-serialized, so content length and
+  // encoding may no longer be accurate.
+  result.delete('content-length')
+  result.delete('content-encoding')
+
+  return result
 }

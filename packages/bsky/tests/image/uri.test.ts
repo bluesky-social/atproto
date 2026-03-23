@@ -1,14 +1,15 @@
 import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
+import { FeatureGatesClient } from '../../src/feature-gates'
 import { BadPathError, ImageUriBuilder } from '../../src/image/uri'
 
 describe('image uri builder', () => {
+  const endpoint = 'https://example.com/img'
   let uriBuilder: ImageUriBuilder
   let cid: CID
   const did = 'did:plc:xyz'
 
   beforeAll(async () => {
-    const endpoint = 'https://example.com/img'
     uriBuilder = new ImageUriBuilder(endpoint)
     cid = await cidForCbor('test cid')
   })
@@ -16,14 +17,14 @@ describe('image uri builder', () => {
   it('generates paths.', () => {
     expect(
       ImageUriBuilder.getPath({ preset: 'banner', did, cid: cid.toString() }),
-    ).toEqual(`/banner/plain/${did}/${cid.toString()}@jpeg`)
+    ).toEqual(`/banner/plain/${did}/${cid.toString()}`)
     expect(
       ImageUriBuilder.getPath({
         preset: 'feed_thumbnail',
         did,
         cid: cid.toString(),
       }),
-    ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}@jpeg`)
+    ).toEqual(`/feed_thumbnail/plain/${did}/${cid.toString()}`)
   })
 
   it('generates uris.', () => {
@@ -39,12 +40,12 @@ describe('image uri builder', () => {
 
   it('parses options.', () => {
     expect(
-      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@png`),
+      ImageUriBuilder.getOptions(`/banner/plain/${did}/${cid.toString()}@jpeg`),
     ).toEqual({
       did: 'did:plc:xyz',
       cid: cid.toString(),
       fit: 'cover',
-      format: 'png',
+      format: 'jpeg',
       height: 1000,
       min: true,
       preset: 'banner',
@@ -64,6 +65,45 @@ describe('image uri builder', () => {
       preset: 'feed_thumbnail',
       width: 2000,
     })
+    expect(
+      ImageUriBuilder.getOptions(
+        `/feed_thumbnail/plain/${did}/${cid.toString()}`,
+      ),
+    ).toEqual({
+      did: 'did:plc:xyz',
+      cid: cid.toString(),
+      fit: 'inside',
+      format: 'jpeg',
+      height: 2000,
+      min: true,
+      preset: 'feed_thumbnail',
+      width: 2000,
+    })
+  })
+
+  it('includes format based on feature gate', () => {
+    const testDid = 'did:example:alice'
+    const testCid = 'bafkabc'
+    const base = `https://example.com/img/avatar/plain/${testDid}`
+
+    const mockFeatureGates = {
+      checkGates: jest.fn(),
+    } as unknown as FeatureGatesClient
+    const mockCheckGates = mockFeatureGates.checkGates as jest.Mock
+
+    mockCheckGates.mockImplementation(() => {
+      return new Map([['image:remove_format_from_url', false]])
+    })
+    expect(
+      uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
+    ).toBe(`${base}/${testCid}@jpeg`)
+
+    mockCheckGates.mockReturnValue(
+      new Map([['image:remove_format_from_url', true]]),
+    )
+    expect(
+      uriBuilder.getPresetUri('avatar', testDid, testCid, mockFeatureGates),
+    ).toBe(`${base}/${testCid}`)
   })
 
   it('errors on bad url pattern.', () => {
@@ -80,9 +120,9 @@ describe('image uri builder', () => {
   })
 
   it('errors on bad format.', () => {
-    expect(
-      tryGetOptions(`/banner/plain/${did}/${cid.toString()}@webp`),
-    ).toThrow(new BadPathError('Invalid path: bad format'))
+    expect(tryGetOptions(`/banner/plain/${did}/${cid.toString()}@gif`)).toThrow(
+      new BadPathError('Invalid path: bad format'),
+    )
   })
 
   function tryGetOptions(path: string) {

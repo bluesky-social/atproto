@@ -2,6 +2,7 @@ import assert from 'node:assert'
 import { mapDefined } from '@atproto/common'
 import { AtUri } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { FeatureGatesClient } from '../feature-gates'
 import { type CheckedFeatureGatesMap } from '../feature-gates/types'
 import { ids } from '../lexicon/lexicons'
 import { Record as ProfileRecord } from '../lexicon/types/app/bsky/actor/profile'
@@ -83,6 +84,9 @@ export class HydrateCtx {
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
   includeDebugField = this.vals.includeDebugField
+
+  featureGatesClient = this.vals.featureGatesClient
+
   /**
    * Cache of evaluated feature gates to be used in a given request lifecycle.
    * The actual evaluations happen at the top of the route handler and the
@@ -109,6 +113,8 @@ export type HydrateCtxVals = {
   include3pBlocks?: boolean
   includeDebugField?: boolean
   featureGatesMap?: CheckedFeatureGatesMap
+  // TODO: remove after image format rollout.
+  featureGatesClient?: FeatureGatesClient
 }
 
 export type HydrationState = {
@@ -184,10 +190,14 @@ export class Hydrator {
   serviceLabelers: Set<string>
   config: HydratorConfig
 
+  // TODO: remove after image format rollout.
+  featureGatesClient: FeatureGatesClient
+
   constructor(
     public dataplane: DataPlaneClient,
     serviceLabelers: string[] = [],
     config: HydratorConfig,
+    featureGatesClient: FeatureGatesClient,
   ) {
     this.config = config
     this.actor = new ActorHydrator(dataplane)
@@ -195,6 +205,7 @@ export class Hydrator {
     this.graph = new GraphHydrator(dataplane)
     this.label = new LabelHydrator(dataplane)
     this.serviceLabelers = new Set(serviceLabelers)
+    this.featureGatesClient = featureGatesClient
   }
 
   // app.bsky.actor.defs#profileView
@@ -1338,6 +1349,7 @@ export class Hydrator {
       include3pBlocks: vals.include3pBlocks,
       includeDebugField,
       featureGatesMap: vals.featureGatesMap,
+      featureGatesClient: this.featureGatesClient,
     })
   }
 

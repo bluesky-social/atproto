@@ -19,7 +19,7 @@ import {
  *
  * @example
  * ```typescript
- * const error = new ValidationError([
+ * const error = new LexValidationError([
  *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
  * ])
  * console.log(error.message)
@@ -29,9 +29,16 @@ import {
  * console.log(error.toJSON())
  * // { error: 'InvalidRequest', message: '...', issues: [...] }
  * ```
+ *
+ * @note this class implements {@link ResultFailure} to allow it to be used
+ * directly as a failure reason in validation results, avoiding the need for
+ * wrapping it in an additional object.
  */
-export class ValidationError extends LexError {
-  name = 'ValidationError'
+export class LexValidationError
+  extends LexError<'InvalidRequest'>
+  implements ResultFailure<LexValidationError>
+{
+  name = 'LexValidationError'
 
   /**
    * The list of validation issues that caused this error.
@@ -56,12 +63,20 @@ export class ValidationError extends LexError {
     this.issues = issuesAgg
   }
 
+  /** @see {ResultFailure.success} */
+  readonly success = false as const
+
+  /** @see {ResultFailure.reason} */
+  get reason() {
+    return this
+  }
+
   /**
    * Converts the error to a JSON-serializable object.
    *
-   * @returns An object containing the error details and all issues in JSON format
+   * @returns An object containing the error details and issues details
    */
-  toJSON() {
+  override toJSON() {
     return {
       ...super.toJSON(),
       issues: this.issues.map((issue) => issue.toJSON()),
@@ -81,23 +96,23 @@ export class ValidationError extends LexError {
    * ```typescript
    * const failures = schemas.map(s => s.safeValidate(data)).filter(r => !r.success)
    * if (failures.length === schemas.length) {
-   *   throw ValidationError.fromFailures(failures)
+   *   throw LexValidationError.fromFailures(failures)
    * }
    * ```
    */
   static fromFailures(
-    failures: ResultFailure<ValidationError>[],
-  ): ValidationError {
+    failures: readonly ResultFailure<LexValidationError>[],
+  ): LexValidationError {
     if (failures.length === 1) return failureReason(failures[0])
     const issues = failures.flatMap(extractFailureIssues)
-    return new ValidationError(issues, {
+    return new LexValidationError(issues, {
       // Keep the original errors as the cause chain
       cause: failures.map(failureReason),
     })
   }
 }
 
-function extractFailureIssues(result: ResultFailure<ValidationError>) {
+function extractFailureIssues(result: ResultFailure<LexValidationError>) {
   return result.reason.issues
 }
 

@@ -1,5 +1,16 @@
 # @atproto/common
 
+## 0.5.14
+
+### Patch Changes
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove unnecessary validation of already properly formatted ISO date string
+
+- Updated dependencies [[`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7)]:
+  - @atproto/lex-data@0.0.13
+  - @atproto/common-web@0.4.18
+  - @atproto/lex-cbor@0.0.14
+
 ## 0.5.13
 
 ### Patch Changes

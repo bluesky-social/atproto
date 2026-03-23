@@ -1028,6 +1028,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'integer',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -4947,6 +4951,10 @@ export const schemaDict = {
             type: 'object',
             required: ['interactions'],
             properties: {
+              feed: {
+                type: 'string',
+                format: 'at-uri',
+              },
               interactions: {
                 type: 'array',
                 items: {
@@ -8104,6 +8112,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8438,6 +8450,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8565,6 +8581,10 @@ export const schemaDict = {
               },
               recId: {
                 type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
+                type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',
               },
@@ -8617,6 +8637,10 @@ export const schemaDict = {
                 },
               },
               recId: {
+                type: 'string',
+                description: 'DEPRECATED: use recIdStr instead.',
+              },
+              recIdStr: {
                 type: 'string',
                 description:
                   'Snowflake for this recommendation, use when submitting recommendation events.',

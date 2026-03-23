@@ -9,9 +9,9 @@ import {
   RecordKeyString,
   TidString,
   UriString,
+  isDatetimeString,
   isValidAtIdentifier as isValidAtId,
   isValidAtUri,
-  isValidDatetime,
   isValidDid,
   isValidHandle,
   isValidLanguage,
@@ -25,6 +25,19 @@ import { CheckFn } from '../util/assertion-util.js'
 // -----------------------------------------------------------------------------
 // Individual string format types and type guards
 // -----------------------------------------------------------------------------
+
+// Re-exporting from @atproto/syntax without modification to preserve types and
+// documentation for types and utilities that are already well-defined there.
+// @TODO rework other string formats in @atproto/syntax to follow this pattern
+// and re-export here, e.g. language tags, NSIDs, record keys, etc.
+export {
+  type DatetimeString,
+  asDatetimeString,
+  currentDatetimeString,
+  ifDatetimeString,
+  isDatetimeString,
+  toDatetimeString,
+} from '@atproto/syntax'
 
 /**
  * Type guard that checks if a value is a valid AT identifier (DID or handle).
@@ -73,22 +86,6 @@ export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
  * @example `"bafyreig..."`
  */
 export type CidString = string
-
-/**
- * Type guard that checks if a value is a valid datetime string.
- *
- * @param value - The value to check
- * @returns `true` if the value is a valid datetime string
- */
-export const isDatetimeString: CheckFn<DatetimeString> = isValidDatetime
-export type {
-  /**
-   * An ISO 8601 datetime string.
-   *
-   * @example `"2024-01-15T12:30:00.000Z"`
-   */
-  DatetimeString,
-}
 
 /**
  * Type guard that checks if a value is a valid DID string.

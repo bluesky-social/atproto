@@ -1,5 +1,25 @@
 # @atproto/syntax
 
+## 0.5.0
+
+### Minor Changes
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove global `Date.toISOString()` overload and replace with more accurate, less permissive, `AtprotoDate` interface. This change prevent using any `Date` instance to generate a `DatetimeString`, since some JS dates can actually not be safely stringified to a `DatetimeString`.
+
+### Patch Changes
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add type safe accessors to read and write `AtUri`'s `did`, `collection` and `rkey` properties
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Test `ensureValidDatetime`, `isValidDatetime` and `normalizeDatetime` individually, for expected failures.
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow calling `DatetimeString` validation utilities with `unknown` values (instead of only `string`)
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Preserve input type when normalizing a valid `HandleString`
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor optimization in regex based NSID string validation
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve type strictness of `NSID`'s `authority` and `toString()` properties
+
 ## 0.4.3
 
 ### Patch Changes

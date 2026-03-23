@@ -1,6 +1,8 @@
 import { AtIdentifierString, ensureValidAtIdentifier } from './at-identifier.js'
 import { AtUriString } from './aturi_validation.js'
-import { ensureValidNsid } from './nsid.js'
+import { DidString, ensureValidDid } from './did.js'
+import { NsidString, ensureValidNsid } from './nsid.js'
+import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
 
 export * from './aturi_validation.js'
 
@@ -47,6 +49,12 @@ export class AtUri {
     return `at://${this.host}` as const
   }
 
+  get did(): DidString {
+    const { hostname } = this
+    ensureValidDid(hostname)
+    return hostname
+  }
+
   get hostname() {
     return this.host
   }
@@ -68,8 +76,18 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[0] || ''
   }
 
+  get collectionSafe(): NsidString {
+    const { collection } = this
+    ensureValidNsid(collection)
+    return collection
+  }
+
   set collection(v: string) {
     ensureValidNsid(v)
+    this.unsafelySetCollection(v)
+  }
+
+  unsafelySetCollection(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     parts[0] = v
     this.pathname = parts.join('/')
@@ -79,7 +97,18 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[1] || ''
   }
 
+  get rkeySafe(): RecordKeyString {
+    const { rkey } = this
+    ensureValidRecordKey(rkey)
+    return rkey
+  }
+
   set rkey(v: string) {
+    ensureValidRecordKey(v)
+    this.unsafelySetRkey(v)
+  }
+
+  unsafelySetRkey(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     parts[0] ||= 'undefined'
     parts[1] = v

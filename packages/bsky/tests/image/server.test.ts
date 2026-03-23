@@ -43,8 +43,8 @@ describe('image processing server', () => {
     expect(info).toEqual({
       height: 580,
       width: 1000,
-      size: 127578,
       mime: 'image/jpeg',
+      size: 127578,
     })
     expect(Object.fromEntries(res.headers)).toEqual(
       expect.objectContaining({

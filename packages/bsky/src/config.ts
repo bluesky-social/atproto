@@ -145,6 +145,7 @@ export class ServerConfig {
       process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
     )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    // Values 0 through 16
     const etcdHosts =
       overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8

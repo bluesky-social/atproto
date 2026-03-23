@@ -104,10 +104,19 @@ export function toReadableStream(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {
   // Use the native ReadableStream.from() if available.
+
+  /* v8 ignore next -- @preserve */
   if ('from' in ReadableStream && typeof ReadableStream.from === 'function') {
     return ReadableStream.from(data)
   }
 
+  /* v8 ignore next -- @preserve */
+  return toReadableStreamPonyfill(data)
+}
+
+export function toReadableStreamPonyfill(
+  data: AsyncIterable<Uint8Array>,
+): ReadableStream<Uint8Array> {
   let iterator: AsyncIterator<Uint8Array> | undefined
   return new ReadableStream({
     async pull(controller) {

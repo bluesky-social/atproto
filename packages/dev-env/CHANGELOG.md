@@ -1,5 +1,31 @@
 # @atproto/dev-env
 
+## 0.3.213
+
+### Patch Changes
+
+- Updated dependencies [[`6634140`](https://github.com/bluesky-social/atproto/commit/66341400d49d1210619b000a040852d87085c32c), [`0e5df95`](https://github.com/bluesky-social/atproto/commit/0e5df95e3a8d81931524848d301cd43d1f12fb78)]:
+  - @atproto/ozone@0.1.166
+  - @atproto/bsky@0.0.219
+  - @atproto/api@0.19.2
+  - @atproto/pds@0.4.214
+
+## 0.3.212
+
+### Patch Changes
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`d5f4224`](https://github.com/bluesky-social/atproto/commit/d5f4224f73894a62d23d2375950cdadce6f130f4), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`138f0a0`](https://github.com/bluesky-social/atproto/commit/138f0a0b374c0d78372d5095237061d46db75a32), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`e8969b6`](https://github.com/bluesky-social/atproto/commit/e8969b6b3d3fed8912be53fd72b4d5288ca34766), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`137065b`](https://github.com/bluesky-social/atproto/commit/137065b333b8c9b97e6b3b2ac6147c7509a1ae42), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/pds@0.4.213
+  - @atproto/common-web@0.4.18
+  - @atproto/sync@0.1.40
+  - @atproto/xrpc-server@0.10.15
+  - @atproto/ozone@0.1.165
+  - @atproto/bsky@0.0.218
+  - @atproto/api@0.19.1
+  - @atproto/bsync@0.0.24
+  - @atproto/lexicon@0.6.2
+
 ## 0.3.211
 
 ### Patch Changes

@@ -12,7 +12,7 @@ import {
   createDidResolver,
 } from '@atproto-labs/did-resolver'
 import { LexServerAuthError } from './errors.js'
-import { LexRouterAuth } from './lex-server.js'
+import type { LexRouterAuth } from './lex-router.js'
 
 const BEARER_PREFIX = 'Bearer '
 
