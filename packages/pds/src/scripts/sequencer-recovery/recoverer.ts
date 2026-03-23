@@ -162,6 +162,7 @@ const processRepoCreation = async (
     newBlocks: blocks,
     relevantBlocks: new BlockMap(),
     removedCids: new CidSet(),
+    preorderOps: [],
   }
   await ctx.actorStore.transact(did, async (actorTxn) => {
     await actorTxn.repo.storage.applyCommit(commit, true)

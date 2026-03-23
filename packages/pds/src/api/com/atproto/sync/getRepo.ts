@@ -1,5 +1,5 @@
 import stream from 'node:stream'
-import { byteIterableToStream } from '@atproto/common'
+import { byteIterableToStream, coalesceByteIterable } from '@atproto/common'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
@@ -43,7 +43,10 @@ export const getCarStream = async (
   try {
     const storage = new SqlRepoReader(actorDb)
     const carIter = await storage.getCarStream(since)
-    carStream = byteIterableToStream(carIter)
+    // carIter yields many small chunks. Without coalesceByteIterable, the small chunks would
+    // end up being transmitted in separate TCP packets (assuming TCP_NODELAY), which would
+    // incur a lot of overhead.
+    carStream = byteIterableToStream(coalesceByteIterable(carIter))
   } catch (err) {
     await actorDb.close()
     if (err instanceof RepoRootNotFoundError) {

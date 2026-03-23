@@ -82,6 +82,12 @@ export default function (server: Server, ctx: AppContext) {
               )
             }
 
+            if (typeof parsedRecord['$type'] !== 'string') {
+              throw new InvalidRequestError(
+                `Record at '${write.collection}/${write.rkey}' is missing a $type field`,
+              )
+            }
+
             await store.record.indexRecord(
               uri,
               write.cid,

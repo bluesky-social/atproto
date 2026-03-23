@@ -81,7 +81,52 @@ export class SqlRepoReader extends ReadableBlockstore {
     if (!root) {
       throw new RepoRootNotFoundError()
     }
-    return writeCarStream(root, this.iterateCarBlocks(since))
+    if (since) {
+      return writeCarStream(root, this.iterateCarBlocks(since))
+    }
+    return writeCarStream(root, this.iterateCarBlocksPreorder(root))
+  }
+
+  async *iterateCarBlocksPreorder(root: CID): AsyncIterable<CarBlock> {
+    // Yield the commit block first (not in preorder_map)
+    const commitBytes = await this.getBytes(root)
+    if (!commitBytes) {
+      throw new Error(
+        `Missing commit block bytes for root CID ${root.toString()}`,
+      )
+    }
+    yield { cid: root, bytes: commitBytes }
+
+    // Yield remaining blocks in preorder traversal order
+    const { ref } = this.db.db.dynamic
+    let lastLpath = ''
+    let lastDepth = 0
+    while (true) {
+      const res = await this.db.db
+        .selectFrom('preorder_map')
+        .innerJoin('repo_block', 'repo_block.cid', 'preorder_map.cid')
+        .select([
+          'preorder_map.lpath',
+          'preorder_map.depth',
+          'repo_block.cid',
+          'repo_block.content',
+        ])
+        .where(
+          sql`((${ref('preorder_map.lpath')}, ${ref('preorder_map.depth')}) >= (${lastLpath}, ${lastDepth}))`,
+        )
+        .orderBy('preorder_map.lpath', 'asc')
+        .orderBy('preorder_map.depth', 'asc')
+        .limit(500)
+        .execute()
+      if (res.length === 0) break
+      for (const row of res) {
+        yield { cid: CID.parse(row.cid), bytes: row.content }
+      }
+      if (res.length < 500) break
+      const last = res.at(-1)!
+      lastLpath = last.lpath
+      lastDepth = last.depth + 1
+    }
   }
 
   async *iterateCarBlocks(since?: string): AsyncIterable<CarBlock> {
