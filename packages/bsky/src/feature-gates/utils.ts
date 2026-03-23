@@ -37,6 +37,11 @@ export function normalizeUserContext(
   }
 }
 
+/**
+ * Merge the base user context with any overrides provided at check time. This
+ * allows us to set a base context for the request, but also override or add
+ * properties for specific gate checks if needed.
+ */
 export function mergeUserContexts(
   base: NormalizedUserContext,
   overrides?: UserContext,
