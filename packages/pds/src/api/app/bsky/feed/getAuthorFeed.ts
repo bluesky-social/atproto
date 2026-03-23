@@ -75,7 +75,8 @@ const isUsersFeed = (
   if (!first) return false
   if (!first.reason && first.post.author.did === requester) return true
   if (
-    app.bsky.feed.defs.reasonRepost.$matches(first.reason) &&
+    first.reason &&
+    app.bsky.feed.defs.reasonRepost.$isTypeOf(first.reason) &&
     first.reason.by.did === requester
   )
     return true
