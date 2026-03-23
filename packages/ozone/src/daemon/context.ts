@@ -19,10 +19,10 @@ import { EventReverser } from './event-reverser'
 import { MaterializedViewRefresher } from './materialized-view-refresher'
 import { QueueRouter } from './queue-router'
 import { ScheduledActionProcessor } from './scheduled-action-processor'
+import { StatsComputer } from './stats-computer'
 import { StrikeExpiryProcessor } from './strike-expiry-processor'
 import { TeamProfileSynchronizer } from './team-profile-synchronizer'
 import { VerificationListener } from './verification-listener'
-import { StatsComputer } from './stats-computer'
 
 export type DaemonContextOptions = {
   db: Database

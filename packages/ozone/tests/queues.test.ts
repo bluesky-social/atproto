@@ -394,7 +394,6 @@ describe('ozone-queues', () => {
         expect(typeof queue.stats.pendingCount).toBe('number')
         expect(typeof queue.stats.actionedCount).toBe('number')
         expect(typeof queue.stats.escalatedPendingCount).toBe('number')
-        expect(queue.stats.lastUpdated).toBeDefined()
       }
     })
   })

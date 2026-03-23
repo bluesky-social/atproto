@@ -1,5 +1,7 @@
+import { Selectable } from 'kysely'
 import { AppBskyActorDefs, ToolsOzoneQueueDefs } from '@atproto/api'
 import { addAccountInfoToRepoViewDetail } from '../api/util'
+import { ReportStat } from '../db/schema/report_stat'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import {
   RecordViewDetail,
@@ -8,8 +10,6 @@ import {
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
 import { ActiveReportAssignment, ReportWithEvent } from '../mod-service/report'
 import { ParsedLabelers } from '../util'
-import { ReportStat } from '../db/schema/report_stat'
-import { Selectable } from 'kysely'
 
 type ReportViews = {
   repoDetails(
@@ -207,6 +207,6 @@ export function viewQueueStats(
     escalatedPendingCount: row?.escalatedCount ?? 0,
     inboundCount: row?.inboundCount ?? 0,
     actionRate: row?.actionRate ?? 0,
-    lastUpdated: row?.computedAt ?? new Date().toISOString(),
+    lastUpdated: row?.computedAt,
   }
 }

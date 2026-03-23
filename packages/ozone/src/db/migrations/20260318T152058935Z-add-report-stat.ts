@@ -11,7 +11,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('pendingCount', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('actionedCount', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('escalatedCount', 'integer', (col) => col.notNull().defaultTo(0))
-    .addColumn('actionRate', 'integer') // NULL when inboundCount = 0
+    .addColumn('actionRate', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('computedAt', 'varchar', (col) => col.notNull())
     .execute()
 

@@ -1,8 +1,8 @@
 import { Selectable, sql } from 'kysely'
-import { Database } from '../db'
-import { dbLogger } from '../logger'
-import { ReportStat } from '../db/schema/report_stat'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
+import { Database } from '../db'
+import { ReportStat } from '../db/schema/report_stat'
+import { dbLogger } from '../logger'
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
@@ -18,7 +18,7 @@ export type ReportStatistics = {
   pendingCount: number
   actionedCount: number
   escalatedCount: number
-  actionRate: number | null
+  actionRate: number
 }
 
 export class ReportStatsService {

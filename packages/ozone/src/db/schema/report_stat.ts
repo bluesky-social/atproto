@@ -15,7 +15,7 @@ export interface ReportStat {
   pendingCount: number // Reports with status = 'open' (all time)
   actionedCount: number // Reports with status = 'closed' in last 24h
   escalatedCount: number // Reports with status = 'escalated' in last 24h
-  actionRate: number | null // actionedCount / inboundCount * 100, NULL when inboundCount = 0
+  actionRate: number // actionedCount / inboundCount * 100
   computedAt: string // ISO timestamp
 }
 

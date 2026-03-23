@@ -59,11 +59,11 @@ export interface QueueStats {
   /** Number of reports in 'escalated' status */
   escalatedPendingCount: number
   /** Reports received in this queue in the last 24 hours. */
-  inboundCount?: number
+  inboundCount: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0. */
-  actionRate?: number
+  actionRate: number
   /** When these statistics were last computed */
-  lastUpdated: string
+  lastUpdated?: string
 }
 
 const hashQueueStats = 'queueStats'

@@ -18832,7 +18832,8 @@ export const schemaDict = {
           'pendingCount',
           'actionedCount',
           'escalatedPendingCount',
-          'lastUpdated',
+          'inboundCount',
+          'actionRate',
         ],
         properties: {
           pendingCount: {

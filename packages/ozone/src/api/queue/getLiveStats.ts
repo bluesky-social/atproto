@@ -1,4 +1,3 @@
-import { ToolsOzoneQueueDefs } from '@atproto/api'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
 import { viewQueueStats } from '../../report/views'

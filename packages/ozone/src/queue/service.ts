@@ -225,7 +225,8 @@ export class QueueService {
         pendingCount: 0,
         actionedCount: 0,
         escalatedPendingCount: 0,
-        lastUpdated: new Date().toISOString(),
+        inboundCount: 0,
+        actionRate: 0,
       }
     }
 
@@ -234,7 +235,7 @@ export class QueueService {
       pendingCount: row.pendingCount,
       actionedCount: row.actionedCount,
       escalatedPendingCount: row.escalatedCount,
-      actionRate: row.actionRate ?? undefined,
+      actionRate: row.actionRate,
       lastUpdated: row.computedAt,
     }
   }
@@ -257,7 +258,8 @@ export class QueueService {
         pendingCount: 0,
         actionedCount: 0,
         escalatedPendingCount: 0,
-        lastUpdated: new Date().toISOString(),
+        inboundCount: 0,
+        actionRate: 0,
       },
     }
   }
