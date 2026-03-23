@@ -175,6 +175,19 @@ export function createSchemaParamsVerifier<
   return (req) => {
     const urlSearchParams = getSearchParams(req.url) ?? new URLSearchParams()
     try {
+      // Convert (un-official XRPC) "array syntax" back to normal syntax before
+      // validation, for backwards compatibility.
+      for (const key of urlSearchParams.keys()) {
+        if (key.endsWith('[]')) {
+          const values = urlSearchParams.getAll(key)
+          urlSearchParams.delete(key)
+          const fixedKey = key.slice(0, -2)
+          for (const value of values) {
+            urlSearchParams.append(fixedKey, value)
+          }
+        }
+      }
+
       const params = schema.parameters.fromURLSearchParams(urlSearchParams)
       return params as LexMethodParams<M>
     } catch (cause) {
