@@ -76,7 +76,7 @@ export class PDS {
     const { rateLimits } = ctx.cfg
 
     const server = createServer([], {
-      validateResponse: false,
+      validateResponse: cfg.service.devMode,
       payload: {
         jsonLimit: 150 * 1024, // 150kb
         textLimit: 100 * 1024, // 100kb

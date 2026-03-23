@@ -40,7 +40,6 @@ export default function (server: Server, ctx: AppContext) {
       if (entrywayClient) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         await entrywayClient.xrpc(com.atproto.server.requestPasswordReset, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body,
         })

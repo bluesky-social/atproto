@@ -27,7 +27,6 @@ export default function (server: Server, ctx: AppContext) {
           com.atproto.server.confirmEmail.$lxm,
         )
         await ctx.entrywayClient.xrpc(com.atproto.server.confirmEmail, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body,
         })

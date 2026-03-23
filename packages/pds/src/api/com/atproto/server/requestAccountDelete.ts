@@ -48,7 +48,6 @@ export default function (server: Server, ctx: AppContext) {
           com.atproto.server.requestAccountDelete.$lxm,
         )
         await ctx.entrywayClient.xrpc(com.atproto.server.requestAccountDelete, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
         })
         return

@@ -9,7 +9,6 @@ export default function (server: Server, ctx: AppContext) {
     server.add(com.atproto.server.deleteSession, async ({ req }) => {
       const { headers } = ctx.entrywayPassthruHeaders(req)
       await entrywayClient.xrpc(com.atproto.server.deleteSession, {
-        validateResponse: false, // ignore invalid upstream responses
         headers,
       })
     })

@@ -27,7 +27,6 @@ export default function (server: Server, ctx: AppContext) {
       const { headers } = ctx.entrywayPassthruHeaders(req)
 
       return ctx.entrywayClient.xrpc(com.atproto.temp.checkSignupQueue, {
-        validateResponse: false, // ignore invalid upstream responses
         headers,
       })
     },

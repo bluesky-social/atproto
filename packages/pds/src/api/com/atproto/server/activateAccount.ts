@@ -24,7 +24,6 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayClient) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         await ctx.entrywayClient.xrpc(com.atproto.server.activateAccount, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
         })
         return

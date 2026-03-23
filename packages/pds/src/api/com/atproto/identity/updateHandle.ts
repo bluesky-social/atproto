@@ -37,7 +37,6 @@ export default function (server: Server, ctx: AppContext) {
         // -> entryway(identity.updateHandle) [update handle, submit plc op]
         // -> pds(admin.updateAccountHandle)  [track handle, sequence handle update]
         await ctx.entrywayClient.xrpc(com.atproto.identity.updateHandle, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body: {
             handle: input.body.handle,

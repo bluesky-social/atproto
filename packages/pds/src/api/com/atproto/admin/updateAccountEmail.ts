@@ -17,7 +17,6 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayClient) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         await ctx.entrywayClient.xrpc(com.atproto.admin.updateAccountEmail, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body,
         })

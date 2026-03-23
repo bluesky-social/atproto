@@ -32,8 +32,9 @@ export class Crawlers {
       this.backgroundQueue.add(async () => {
         try {
           await xrpc(crawler, com.atproto.sync.requestCrawl, {
-            strictResponseProcessing: false,
+            validateRequest: false,
             validateResponse: false,
+            strictResponseProcessing: false,
             body: { hostname: this.hostname },
           })
         } catch (err) {

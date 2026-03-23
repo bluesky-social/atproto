@@ -95,7 +95,7 @@ export class BskyAppView {
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
-            validateResponse: false,
+            validateResponse: config.debugMode,
           },
         )
       : undefined
@@ -111,7 +111,7 @@ export class BskyAppView {
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
-            validateResponse: false,
+            validateResponse: config.debugMode,
           },
         )
       : undefined
@@ -127,7 +127,7 @@ export class BskyAppView {
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
-            validateResponse: false,
+            validateResponse: config.debugMode,
           },
         )
       : undefined

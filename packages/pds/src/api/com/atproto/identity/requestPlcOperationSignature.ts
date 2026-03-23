@@ -28,10 +28,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         await entrywayClient.xrpc(
           com.atproto.identity.requestPlcOperationSignature,
-          {
-            validateResponse: false, // ignore invalid upstream responses
-            headers,
-          },
+          { headers },
         )
       },
     })

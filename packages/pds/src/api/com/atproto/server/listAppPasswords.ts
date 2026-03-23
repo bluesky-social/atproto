@@ -24,7 +24,6 @@ export default function (server: Server, ctx: AppContext) {
         )
 
         return entrywayClient.xrpc(com.atproto.server.listAppPasswords, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
         })
       },

@@ -37,7 +37,6 @@ export default function (server: Server, ctx: AppContext) {
       handler: async ({ input: { body }, req }) => {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         return entrywayClient.xrpc(com.atproto.server.createSession, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body,
         })

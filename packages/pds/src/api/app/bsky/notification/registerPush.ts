@@ -49,8 +49,9 @@ export default function (server: Server, ctx: AppContext) {
       const notifEndpoint = await getEndpoint(ctx, serviceDid)
 
       await xrpc(notifEndpoint, app.bsky.notification.registerPush, {
-        strictResponseProcessing: false,
-        validateResponse: false,
+        validateRequest: ctx.cfg.service.devMode,
+        validateResponse: ctx.cfg.service.devMode,
+        strictResponseProcessing: ctx.cfg.service.devMode,
         body,
         headers,
       })

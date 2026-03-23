@@ -29,9 +29,9 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return xrpc(url, com.atproto.moderation.createReport, {
-        strictResponseProcessing: false,
-        validateResponse: false,
-        validateRequest: false,
+        validateRequest: ctx.cfg.service.devMode,
+        validateResponse: ctx.cfg.service.devMode,
+        strictResponseProcessing: ctx.cfg.service.devMode,
         headers,
         params,
         body,

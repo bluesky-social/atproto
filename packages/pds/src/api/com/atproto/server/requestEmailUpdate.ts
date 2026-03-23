@@ -42,7 +42,6 @@ export default function (server: Server, ctx: AppContext) {
           com.atproto.server.requestEmailUpdate.$lxm,
         )
         return entrywayClient.xrpc(com.atproto.server.requestEmailUpdate, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
         })
       }

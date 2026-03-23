@@ -44,7 +44,6 @@ export default function (server: Server, ctx: AppContext) {
         )
 
         await ctx.entrywayClient.xrpc(com.atproto.server.updateEmail, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body,
         })

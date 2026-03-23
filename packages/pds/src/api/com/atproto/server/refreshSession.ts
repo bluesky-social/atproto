@@ -37,7 +37,6 @@ export default function (server: Server, ctx: AppContext) {
       if (ctx.entrywayClient) {
         const { headers } = ctx.entrywayPassthruHeaders(req)
         return ctx.entrywayClient.xrpc(com.atproto.server.refreshSession, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
         })
       }

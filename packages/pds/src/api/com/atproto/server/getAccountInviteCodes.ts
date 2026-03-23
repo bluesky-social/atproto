@@ -29,11 +29,7 @@ export default function (server: Server, ctx: AppContext) {
         )
         return ctx.entrywayClient.xrpc(
           com.atproto.server.getAccountInviteCodes,
-          {
-            validateResponse: false, // ignore invalid upstream responses
-            params,
-            headers,
-          },
+          { params, headers },
         )
       }
 

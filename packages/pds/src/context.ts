@@ -207,7 +207,7 @@ export class AppContext {
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
-            validateResponse: false,
+            validateResponse: cfg.service.devMode,
           },
         )
       : undefined
@@ -217,7 +217,7 @@ export class AppContext {
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
-            validateResponse: false,
+            validateResponse: cfg.service.devMode,
           },
         )
       : undefined
@@ -227,7 +227,7 @@ export class AppContext {
           {
             // Trust internal services to send us well-formed responses
             strictResponseProcessing: false,
-            validateResponse: false,
+            validateResponse: cfg.service.devMode,
           },
         )
       : undefined
@@ -244,7 +244,7 @@ export class AppContext {
               },
               // Trust internal services to send us well-formed responses
               strictResponseProcessing: false,
-              validateResponse: false,
+              validateResponse: cfg.service.devMode,
             },
           )
         : undefined

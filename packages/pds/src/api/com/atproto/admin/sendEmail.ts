@@ -24,7 +24,6 @@ export default function (server: Server, ctx: AppContext) {
         )
 
         return ctx.entrywayClient.xrpc(com.atproto.admin.sendEmail, {
-          validateResponse: false, // ignore invalid upstream responses
           headers,
           body,
         })
