@@ -93,7 +93,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     db,
   )
 
-  // Index for inbound report statistics
+  // Index for report statistics
   await db.schema
     .createIndex('idx_report_queue_created_id')
     .on('report')
