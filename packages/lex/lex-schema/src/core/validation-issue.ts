@@ -1,5 +1,8 @@
 import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
 
+const STRING_PREVIEW_MAX_LENGTH = 48
+const STRING_PREVIEW_TRUNCATED_SUFFIX = '…'
+
 /**
  * Abstract base class for all validation issues.
  *
@@ -307,7 +310,11 @@ function stringifyType(value: unknown): string {
     case 'bigint':
       return `${value}n`
     case 'string':
-      if (value.length < 32) return JSON.stringify(value)
+      return JSON.stringify(
+        value.length < STRING_PREVIEW_MAX_LENGTH
+          ? value
+          : `${value.slice(0, STRING_PREVIEW_MAX_LENGTH - STRING_PREVIEW_TRUNCATED_SUFFIX.length)}${STRING_PREVIEW_TRUNCATED_SUFFIX}`,
+      )
     // fallthrough
     default:
       return typeof value
