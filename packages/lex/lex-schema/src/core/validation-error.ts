@@ -23,7 +23,7 @@ import {
  *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
  * ])
  * console.log(error.message)
- * // "Expected number value type at $.user.age (got string)"
+ * // "Expected integer value type (got "some-string") at $.user.age"
  *
  * console.log(error.issues.length) // 1
  * console.log(error.toJSON())

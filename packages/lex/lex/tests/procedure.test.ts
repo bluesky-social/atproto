@@ -41,7 +41,7 @@ describe('com.example.procedure', () => {
         integer: 123,
         string: 'string',
       })
-    }).toThrow('Expected boolean value type (got string) at $.object.boolean')
+    }).toThrow('Expected boolean value type (got "string") at $.object.boolean')
   })
 
   it('Rejects missing properties', () => {
