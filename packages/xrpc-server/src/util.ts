@@ -122,7 +122,22 @@ export function getSearchParams(url?: string): URLSearchParams | undefined {
   const queryString = url.slice(queryStringIdx + 1)
   if (queryString.length === 0) return undefined
 
-  return new URLSearchParams(queryString)
+  const urlSearchParams = new URLSearchParams(queryString)
+
+  // For backwards compatibility, we convert "foo[]=bar" syntax into
+  // "foo=bar&foo=bar"
+  for (const key of urlSearchParams.keys()) {
+    if (key.endsWith('[]')) {
+      const values = urlSearchParams.getAll(key)
+      urlSearchParams.delete(key)
+      const fixedKey = key.slice(0, -2)
+      for (const value of values) {
+        urlSearchParams.append(fixedKey, value)
+      }
+    }
+  }
+
+  return urlSearchParams
 }
 
 export function getQueryParams(
@@ -175,19 +190,6 @@ export function createSchemaParamsVerifier<
   return (req) => {
     const urlSearchParams = getSearchParams(req.url) ?? new URLSearchParams()
     try {
-      // Convert (un-official XRPC) "array syntax" back to normal syntax before
-      // validation, for backwards compatibility.
-      for (const key of urlSearchParams.keys()) {
-        if (key.endsWith('[]')) {
-          const values = urlSearchParams.getAll(key)
-          urlSearchParams.delete(key)
-          const fixedKey = key.slice(0, -2)
-          for (const value of values) {
-            urlSearchParams.append(fixedKey, value)
-          }
-        }
-      }
-
       const params = schema.parameters.fromURLSearchParams(urlSearchParams)
       return params as LexMethodParams<M>
     } catch (cause) {
