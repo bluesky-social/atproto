@@ -57,7 +57,7 @@ export type XrpcResponseBody<M extends Procedure | Query> =
   M['output'] extends Payload<infer TEncoding, infer TSchema>
     ? TEncoding extends string
       ? InferBodyType<TEncoding, TSchema>
-      : undefined
+      : undefined | LexValue | Uint8Array
     : never
 
 /**
@@ -74,7 +74,9 @@ export type XrpcResponsePayload<M extends Procedure | Query> =
           encoding: InferEncodingType<TEncoding>
           body: InferBodyType<TEncoding, TSchema>
         }
-      : undefined
+      : // If the schema does not specify an output encoding, anything could be
+        // returned, including no payload at all (undefined).
+        undefined | { body: LexValue | Uint8Array; encoding: string }
     : never
 
 export type XrpcResponseOptions = {
@@ -217,18 +219,11 @@ export class XrpcResponse<M extends Procedure | Query>
     })
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
-    if (method.output.encoding == null) {
-      // Schema expects no payload
-      if (payload) {
-        throw new XrpcInvalidResponseError(
-          method,
-          response,
-          payload,
-          `Expected response with no body, got "${payload.encoding}"`,
-        )
-      }
-    } else {
-      // Schema expects a payload
+    if (method.output.encoding != null) {
+      // If the schema specifies an output encoding, verify that the response
+      // properly matches the expected output format (encoding and schema). If
+      // no output encoding is specified, any payload could be returned.
+
       if (!payload || !method.output.matchesEncoding(payload.encoding)) {
         throw new XrpcInvalidResponseError(
           method,
