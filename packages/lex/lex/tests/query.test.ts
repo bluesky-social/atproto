@@ -64,7 +64,7 @@ describe('com.example.query', () => {
           integer: 123,
           string: 'string',
         }),
-      ).toThrow('Expected boolean value type (got string) at $.boolean')
+      ).toThrow('Expected boolean value type (got "string") at $.boolean')
     })
 
     it('rejects invalid parameter type', () => {
@@ -75,7 +75,7 @@ describe('com.example.query', () => {
           float: 123.45,
         }),
       ).toThrow(
-        'Expected one of boolean, integer, string or array value type (got float) at $.float',
+        'Expected one of boolean, integer, string or array value type (got 123.45) at $.float',
       )
 
       expect(() =>
@@ -84,7 +84,7 @@ describe('com.example.query', () => {
           integer: 123,
           array: 'x',
         }),
-      ).toThrow('Expected array value type (got string) at $.array')
+      ).toThrow('Expected array value type (got "x") at $.array')
 
       expect(() =>
         com.example.query.$params.$parse({
@@ -92,7 +92,7 @@ describe('com.example.query', () => {
           integer: 123,
           array: 3,
         }),
-      ).toThrow('Expected array value type (got integer) at $.array')
+      ).toThrow('Expected array value type (got 3) at $.array')
 
       expect(() =>
         com.example.query.$params.$parse({
@@ -141,7 +141,9 @@ describe('com.example.query', () => {
           integer: 123,
           string: 'string',
         })
-      }).toThrow('Expected boolean value type (got string) at $.object.boolean')
+      }).toThrow(
+        'Expected boolean value type (got "string") at $.object.boolean',
+      )
     })
   })
 })

@@ -35,7 +35,7 @@ describe('union', () => {
         unionClosed: {},
       }),
     ).toThrow(
-      'Expected an object which includes the "$type" property value type (got object) at $.unionOpen',
+      'Expected an object which includes the "$type" property value type (got {}) at $.unionOpen',
     )
     expect(() =>
       com.example.union.$parse({
