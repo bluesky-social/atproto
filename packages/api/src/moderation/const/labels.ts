@@ -117,10 +117,20 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         content: {
           contentMedia: 'blur',
@@ -139,10 +149,20 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         content: {
           contentMedia: 'blur',
@@ -161,6 +181,7 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
@@ -183,10 +204,20 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         content: {
           contentMedia: 'blur',
@@ -206,10 +237,20 @@ export const LABELS: Record<KnownLabelValue, InterpretedLabelValueDefinition> =
         account: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         profile: {
           avatar: 'blur',
           banner: 'blur',
+          profileList: 'blur',
+          profileView: 'blur',
+          contentList: 'blur',
+          contentView: 'blur',
+          contentMedia: 'blur',
         },
         content: {
           contentMedia: 'blur',
