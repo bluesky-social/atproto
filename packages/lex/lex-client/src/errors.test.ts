@@ -146,12 +146,12 @@ describe(XrpcResponseError, () => {
       expect(err.error).toBe('UpstreamTimeout')
     })
 
-    it('defaults to UpstreamFailure for unmapped 4xx status codes', () => {
+    it('defaults to InvalidRequest for unmapped 4xx status codes', () => {
       const err = new XrpcResponseError(
         testQuery,
         new Response(null, { status: 418 }),
       )
-      expect(err.error).toBe('UpstreamFailure')
+      expect(err.error).toBe('InvalidRequest')
     })
 
     it('defaults to UpstreamFailure for unmapped 5xx status codes', () => {
@@ -412,7 +412,7 @@ describe(XrpcAuthenticationError, () => {
 // ============================================================================
 
 describe(XrpcInvalidResponseError, () => {
-  it('has error code XrpcInvalidResponseError', () => {
+  it('has error code InvalidResponse', () => {
     const response = new Response(null, { status: 399 })
     const err = new XrpcInvalidResponseError(testQuery, response)
     expect(err.reason).toBe(err)
@@ -429,8 +429,7 @@ describe(XrpcInvalidResponseError, () => {
   it('toDownstreamError returns 502 for 500 upstream errors', () => {
     const response = new Response(null, { status: 500 })
     const err = new XrpcInvalidResponseError(testQuery, response)
-    const downstream = err.toDownstreamError()
-    expect(downstream.status).toBe(502)
+    expect(err.toDownstreamError().status).toBe(502)
   })
 
   it('shouldRetry is true for retryable status codes', () => {
@@ -440,7 +439,7 @@ describe(XrpcInvalidResponseError, () => {
   })
 
   it('shouldRetry is false for non-retryable status codes', () => {
-    const response = new Response(null, { status: 200 })
+    const response = new Response(null, { status: 400 })
     const err = new XrpcInvalidResponseError(testQuery, response)
     expect(err.shouldRetry()).toBe(false)
   })

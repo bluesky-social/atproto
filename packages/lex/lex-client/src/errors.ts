@@ -199,7 +199,9 @@ export class XrpcResponseError<
     const { error, message } = isXrpcErrorPayload(payload)
       ? payload.body
       : {
-          error: StatusErrorCodes.get(response.status) ?? 'UpstreamFailure',
+          error:
+            StatusErrorCodes.get(response.status) ??
+            (response.status >= 500 ? 'UpstreamFailure' : 'InvalidRequest'),
           message: buildResponseOverviewMessage(response),
         }
     super(method, error, message, options)

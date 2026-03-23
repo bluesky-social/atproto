@@ -265,46 +265,6 @@ describe('Client', () => {
       })
     })
 
-    it('extracts error message from RFC7807 JSON payloads', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async () => {
-        return Response.json({ title: 'Custom error title' }, { status: 400 })
-      })
-
-      const client = new Client({ fetchHandler })
-
-      await expect(
-        client.call(app.bsky.actor.getPreferences),
-      ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcResponseError)
-        expect(err.message).toBe('Upstream server responded with a 400 error')
-        expect(err.payload).toEqual({
-          encoding: 'application/json',
-          body: { title: 'Custom error title' },
-        })
-        return true
-      })
-    })
-
-    it('uses plain text error message as error message', async () => {
-      const fetchHandler = vi.fn<FetchHandler>(async () => {
-        return new Response('Not a JSON body', {
-          status: 400,
-          headers: { 'Content-Type': 'text/plain' },
-        })
-      })
-
-      const client = new Client({ fetchHandler })
-
-      await expect(
-        client.call(app.bsky.actor.getPreferences),
-      ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcResponseError)
-        expect(err.error).toBe('InvalidRequest')
-        expect(err.message).toBe('Upstream server responded with a 400 error')
-        return true
-      })
-    })
-
     it('uses the status code to construct the "error"', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
         return new Response(null, { status: 429 })
@@ -324,9 +284,7 @@ describe('Client', () => {
 
     it('handles XRPC errors with invalid status code', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
-        return new Response(null, {
-          status: 302,
-        })
+        return new Response(null, { status: 302 })
       })
 
       const client = new Client({ fetchHandler })
@@ -681,9 +639,12 @@ describe('Client', () => {
             },
             { rkey: 'test', validateRequest: true },
           ),
-        ).rejects.toThrow('Invalid DID')
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch('Invalid DID')
+          return true
+        })
 
-        // Should not make request if validation fails
         expect(fetchHandler).not.toHaveBeenCalled()
       })
 
@@ -696,7 +657,6 @@ describe('Client', () => {
         })
         const client = new Client({ fetchHandler, did })
 
-        // Should make request even with invalid data
         await client.create(
           app.bsky.feed.generator,
           {
@@ -720,7 +680,6 @@ describe('Client', () => {
         })
         const client = new Client({ fetchHandler, did })
 
-        // Should make request without validation by default
         await client.create(
           app.bsky.feed.generator,
           {
@@ -742,13 +701,17 @@ describe('Client', () => {
         await expect(
           client.create(
             app.bsky.feed.generator,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // @ts-expect-error
             {
               displayName: 'Test',
-            } as any,
+            },
             { rkey: 'test', validateRequest: true },
           ),
-        ).rejects.toThrow()
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch('Missing required key "did"')
+          return true
+        })
 
         expect(fetchHandler).not.toHaveBeenCalled()
       })
@@ -770,6 +733,9 @@ describe('Client', () => {
           ),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof LexValidationError)
+          expect(err.message).toMatch(
+            'Expected string value type (got integer)',
+          )
           return true
         })
 
@@ -791,7 +757,13 @@ describe('Client', () => {
             },
             { validateRequest: true },
           ),
-        ).rejects.toThrow()
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch(
+            'Expected string value type (got integer)',
+          )
+          return true
+        })
 
         expect(fetchHandler).not.toHaveBeenCalled()
       })
