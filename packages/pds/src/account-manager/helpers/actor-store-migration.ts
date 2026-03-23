@@ -3,6 +3,7 @@ import { wait } from '@atproto/common'
 import { ActorStore } from '../../actor-store/actor-store'
 import { getMigrator } from '../../actor-store/db'
 import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
+import { retrySqlite } from '../../db'
 import { actorStoreMigrationLogger as logger } from '../../logger'
 import { AccountDb } from '../db'
 
@@ -68,20 +69,21 @@ export class ActorStoreMigrator {
       if (this.destroyed) return
       // Unstick migrations that have been in-progress for >60s so that they can be retried
       const staleThreshold = new Date(Date.now() - 60_000).toISOString()
-      const unstuck = await this.db.db
-        .updateTable('actor')
-        .set({ storeIsMigrating: 0 })
-        .where('storeIsMigrating', '=', 1)
-        .where('storeMigratedAt', '<', staleThreshold)
-        .returning('did')
-        .execute()
+      const unstuck = await this.db.executeWithRetry(
+        this.db.db
+          .updateTable('actor')
+          .set({ storeIsMigrating: 0 })
+          .where('storeIsMigrating', '=', 1)
+          .where('storeMigratedAt', '<', staleThreshold)
+          .returning('did'),
+      )
       for (const row of unstuck) {
         logger.warn({ did: row.did }, 'Unstuck stale actor store migration')
       }
 
       const now = new Date().toISOString()
       // get next unmigrated actor, least-recently-migrated first
-      const claimed = await this.db.db
+      const claimQuery = this.db.db
         .updateTable('actor')
         .set({ storeIsMigrating: 1, storeMigratedAt: now })
         .where(
@@ -97,7 +99,7 @@ export class ActorStoreMigrator {
         )
         .where('storeIsMigrating', '=', 0)
         .returning('did')
-        .executeTakeFirst()
+      const claimed = await retrySqlite(() => claimQuery.executeTakeFirst())
       if (!claimed) {
         // There may be no work left to claim, but active tasks remaining.
         // Either the other tasks are stuck and will eventually time out, or a concurrent process is actively working on them.
@@ -114,21 +116,23 @@ export class ActorStoreMigrator {
         actorDb.close()
 
         // record the success
-        await this.db.db
-          .updateTable('actor')
-          .set({
-            storeSchemaVersion: getLatestStoreSchemaVersion(),
-            storeIsMigrating: 0,
-            storeMigratedAt: new Date().toISOString(),
-          })
-          .where('did', '=', claimed.did)
-          .execute()
+        await this.db.executeWithRetry(
+          this.db.db
+            .updateTable('actor')
+            .set({
+              storeSchemaVersion: getLatestStoreSchemaVersion(),
+              storeIsMigrating: 0,
+              storeMigratedAt: new Date().toISOString(),
+            })
+            .where('did', '=', claimed.did),
+        )
       } catch (e) {
-        await this.db.db
-          .updateTable('actor')
-          .set({ storeIsMigrating: 0 })
-          .where('did', '=', claimed.did)
-          .execute()
+        await this.db.executeWithRetry(
+          this.db.db
+            .updateTable('actor')
+            .set({ storeIsMigrating: 0 })
+            .where('did', '=', claimed.did),
+        )
         logger.error(
           { did: claimed.did, err: e },
           'Failed to migrate actor store',

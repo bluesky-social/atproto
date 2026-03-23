@@ -101,12 +101,13 @@ export class ActorStore {
       )
     }
 
-    await this.accountDb.db
-      .updateTable('actor')
-      .set({ storeIsMigrating: 1, storeMigratedAt: new Date().toISOString() })
-      .where('did', '=', did)
-      .where('storeIsMigrating', '=', 0) // don't bump storeMigratedAt if there's a concurrent migration
-      .execute()
+    await this.accountDb.executeWithRetry(
+      this.accountDb.db
+        .updateTable('actor')
+        .set({ storeIsMigrating: 1, storeMigratedAt: new Date().toISOString() })
+        .where('did', '=', did)
+        .where('storeIsMigrating', '=', 0), // don't bump storeMigratedAt if there's a concurrent migration
+    )
 
     try {
       await getMigrator(db).migrateToLatestOrThrow()
@@ -114,21 +115,23 @@ export class ActorStore {
       // NOTE: If the process dies here (after migration but before the account db has been updated),
       // the account db and the actor store will be out of sync
 
-      await this.accountDb.db
-        .updateTable('actor')
-        .set({
-          storeSchemaVersion: getLatestStoreSchemaVersion(),
-          storeIsMigrating: 0,
-          storeMigratedAt: new Date().toISOString(),
-        })
-        .where('did', '=', did)
-        .execute()
+      await this.accountDb.executeWithRetry(
+        this.accountDb.db
+          .updateTable('actor')
+          .set({
+            storeSchemaVersion: getLatestStoreSchemaVersion(),
+            storeIsMigrating: 0,
+            storeMigratedAt: new Date().toISOString(),
+          })
+          .where('did', '=', did),
+      )
     } catch (err) {
-      await this.accountDb.db
-        .updateTable('actor')
-        .set({ storeIsMigrating: 0 })
-        .where('did', '=', did)
-        .execute()
+      await this.accountDb.executeWithRetry(
+        this.accountDb.db
+          .updateTable('actor')
+          .set({ storeIsMigrating: 0 })
+          .where('did', '=', did),
+      )
       throw err
     }
   }
