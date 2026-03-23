@@ -2,6 +2,7 @@ import {
   LexError,
   LexErrorCode,
   LexErrorData,
+  LexValue,
   isPlainObject,
 } from '@atproto/lex-data'
 import {
@@ -19,6 +20,28 @@ import {
   WWWAuthenticate,
   parseWWWAuthenticateHeader,
 } from './www-authenticate.js'
+
+/**
+ * Mapping that allows generating an XRPC error code from an HTTP status code
+ * when the response does not contain a valid XRPC error payload. This is used
+ * to convert non-XRPC error responses from upstream servers into a standardized
+ * XRPC error for downstream clients.
+ */
+const StatusErrorCodes = new Map<number, LexErrorCode>([
+  [400, 'InvalidRequest'],
+  [401, 'AuthenticationRequired'],
+  [403, 'Forbidden'],
+  [404, 'XRPCNotSupported'],
+  [406, 'NotAcceptable'],
+  [413, 'PayloadTooLarge'],
+  [415, 'UnsupportedMediaType'],
+  [429, 'RateLimitExceeded'],
+  [500, 'InternalServerError'],
+  [501, 'MethodNotImplemented'],
+  [502, 'UpstreamFailure'],
+  [503, 'NotEnoughResources'],
+  [504, 'UpstreamTimeout'],
+])
 
 export type { XrpcUnknownResponsePayload }
 
@@ -177,7 +200,7 @@ export class XrpcResponseError<
     const { error, message } = isXrpcErrorPayload(payload)
       ? payload.body
       : {
-          error: ResponseTypeStrings.get(response.status) ?? 'UpstreamFailure',
+          error: StatusErrorCodes.get(response.status) ?? 'UpstreamFailure',
           message: buildResponseOverviewMessage(response, payload),
         }
     super(method, error, message, options)
@@ -204,29 +227,30 @@ export class XrpcResponseError<
 
   override toDownstreamError(): DownstreamError {
     const { status, headers } = this.response
+    // If the upstream server returned a 5xx error, we want to return a 502 Bad
+    // Gateway to downstream clients, as the issue is with the upstream server,
+    // not us. We still return the original error code and message in the body
+    // for transparency, but we do not want to expose internal server errors
+    // from the upstream server as-is to downstream clients.
     return {
       status: status === 500 ? 502 : status,
       headers: stripHopByHopHeaders(headers),
       body: this.toJSON(),
     }
   }
-}
 
-const ResponseTypeStrings = new Map<number, LexErrorCode>([
-  [400, 'InvalidRequest'],
-  [401, 'AuthenticationRequired'],
-  [403, 'Forbidden'],
-  [404, 'XRPCNotSupported'],
-  [406, 'NotAcceptable'],
-  [413, 'PayloadTooLarge'],
-  [415, 'UnsupportedMediaType'],
-  [429, 'RateLimitExceeded'],
-  [500, 'InternalServerError'],
-  [501, 'MethodNotImplemented'],
-  [502, 'UpstreamFailure'],
-  [503, 'NotEnoughResources'],
-  [504, 'UpstreamTimeout'],
-])
+  get status(): number {
+    return this.response.status
+  }
+
+  get headers(): Headers {
+    return this.response.headers
+  }
+
+  get body(): undefined | Uint8Array | LexValue {
+    return this.payload?.body
+  }
+}
 
 export type { WWWAuthenticate }
 
@@ -276,14 +300,6 @@ export class XrpcAuthenticationError<
         this.response.headers.get('www-authenticate'),
       ) ?? {})
   }
-
-  override toDownstreamError(): DownstreamError {
-    return {
-      status: 401,
-      headers: stripHopByHopHeaders(this.response.headers),
-      body: this.toJSON(),
-    }
-  }
 }
 
 /**
@@ -296,13 +312,15 @@ export class XrpcAuthenticationError<
  * - Non-JSON error responses
  * - Responses from non-XRPC endpoints
  *
- * The error code is always 'UpstreamFailure'.
+ * The error code is always 'InvalidResponse' and maps to HTTP 502 Bad Gateway
+ * when converted to a response. This should allow downstream clients to
+ * determine at which boundary the error occurred.
  *
  * @typeParam M - The XRPC method type
  */
 export class XrpcInvalidResponseError<
   M extends Procedure | Query = Procedure | Query,
-> extends XrpcError<M, 'UpstreamFailure', XrpcInvalidResponseError<M>> {
+> extends XrpcError<M, 'InvalidResponse', XrpcInvalidResponseError<M>> {
   name = 'XrpcInvalidResponseError'
 
   constructor(
@@ -312,7 +330,7 @@ export class XrpcInvalidResponseError<
     message: string = buildResponseOverviewMessage(response, payload),
     options?: ErrorOptions,
   ) {
-    super(method, 'UpstreamFailure', message, options)
+    super(method, 'InvalidResponse', message, options)
   }
 
   override get reason(): this {
@@ -324,71 +342,8 @@ export class XrpcInvalidResponseError<
   }
 
   override toDownstreamError(): DownstreamError {
-    const { status, headers } = this.response
-    return {
-      status: status === 500 ? 502 : status,
-      headers: stripHopByHopHeaders(headers),
-      body: this.toJSON(),
-    }
+    return { status: 502, body: this.toJSON() }
   }
-}
-
-function buildResponseOverviewMessage(
-  response: Response,
-  payload?: XrpcUnknownResponsePayload,
-): string {
-  if (response.status < 400) {
-    return `Upstream server responded with an invalid status code (${response.status})`
-  }
-
-  if (!payload) {
-    return `Upstream server responded with a ${response.status} response`
-  }
-
-  const payloadStr = trimString(stringifyPayload(payload), 100)
-
-  return `Upstream server responded with a ${response.status} response: ${payloadStr}`
-}
-
-function stringifyPayload(payload: XrpcUnknownResponsePayload): string {
-  if (typeof payload.body === 'string') {
-    return payload.body
-  }
-
-  if (
-    payload.encoding.startsWith('text/') &&
-    payload.body instanceof Uint8Array
-  ) {
-    try {
-      return new TextDecoder().decode(payload.body)
-    } catch {
-      // Continue
-    }
-  }
-
-  if (payload.encoding === 'application/json' && isPlainObject(payload.body)) {
-    for (const key of [
-      'message', // Express, Koa, HapiJS (Boom), Laravel, Spring Boot, Flask-RESTful
-      'error', // Rails, many generic APIs
-      'detail', // Django REST Framework, FastAPI (scalar)
-      'title', // RFC 7807 Problem Details
-      'description', // Custom APIs
-      'Message', // .NET Web API
-    ]) {
-      const value = payload.body[key]
-      if (typeof value === 'string') {
-        const trimmed = value.trim()
-        if (trimmed.length > 0) return trimmed
-      }
-    }
-  }
-
-  return `"${payload.encoding}" payload`
-}
-
-function trimString(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str
-  return `${str.slice(0, maxLength - 1)}…`
 }
 
 /**
@@ -420,14 +375,6 @@ export class XrpcResponseValidationError<
       `Invalid response payload: ${cause.message}`,
       { cause },
     )
-  }
-
-  override toDownstreamError(): DownstreamError {
-    // @NOTE This could be reflected as both a 500 ("we" are at fault) and 502
-    // ("they" are at fault). We are using 502 here to allow downstream clients
-    // to determine that the issue lies at the interface between us and the
-    // upstream server, rather than an issue with our internal processing.
-    return { status: 502, body: this.toJSON() }
   }
 }
 
@@ -611,4 +558,64 @@ function stripHopByHopHeaders(headers: Headers): Headers {
   result.delete('content-encoding')
 
   return result
+}
+
+function buildResponseOverviewMessage(
+  response: Response,
+  payload?: XrpcUnknownResponsePayload,
+): string {
+  if (response.status < 400) {
+    return `Upstream server responded with an invalid status code (${response.status})`
+  }
+
+  if (!payload) {
+    return `Upstream server responded with a ${response.status} error`
+  }
+
+  const payloadStr = trimString(stringifyUnknownErrorPayload(payload), 100)
+
+  return `Upstream server responded with a ${response.status} error: ${payloadStr}`
+}
+
+function stringifyUnknownErrorPayload(
+  payload: XrpcUnknownResponsePayload,
+): string {
+  if (typeof payload.body === 'string') {
+    return payload.body
+  }
+
+  if (
+    payload.encoding.startsWith('text/') &&
+    payload.body instanceof Uint8Array
+  ) {
+    try {
+      return new TextDecoder().decode(payload.body)
+    } catch {
+      // Continue
+    }
+  }
+
+  if (payload.encoding === 'application/json' && isPlainObject(payload.body)) {
+    for (const key of [
+      'message', // Express, Koa, HapiJS (Boom), Laravel, Spring Boot, Flask-RESTful
+      'error', // Rails, many generic APIs
+      'detail', // Django REST Framework, FastAPI (scalar)
+      'title', // RFC7807 Problem Details
+      'description', // Custom APIs
+      'Message', // .NET Web API
+    ]) {
+      const value = payload.body[key]
+      if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (trimmed.length > 0) return trimmed
+      }
+    }
+  }
+
+  return `"${payload.encoding}" payload`
+}
+
+function trimString(str: string, maxLength: number): string {
+  if (str.length <= maxLength) return str
+  return `${str.slice(0, maxLength - 1)}…`
 }

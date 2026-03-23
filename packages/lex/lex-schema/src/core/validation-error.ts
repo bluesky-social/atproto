@@ -1,6 +1,11 @@
 import { LexError } from '@atproto/lex-data'
+import { arrayAgg } from '../util/array-agg.js'
 import { ResultFailure, failureReason } from './result.js'
-import { Issue } from './validation-issue.js'
+import {
+  Issue,
+  IssueInvalidType,
+  IssueInvalidValue,
+} from './validation-issue.js'
 
 /**
  * Error thrown when validation fails.
@@ -52,9 +57,10 @@ export class LexValidationError
    * @param issues - The validation issues that caused this error
    * @param options - Standard Error options (e.g., `cause`)
    */
-  constructor(issues: readonly Issue[], options?: ErrorOptions) {
-    super('InvalidRequest', issues.join(', '), options)
-    this.issues = [...issues]
+  constructor(issues: Issue[], options?: ErrorOptions) {
+    const issuesAgg = aggregateIssues(issues)
+    super('InvalidRequest', issuesAgg.join(', '), options)
+    this.issues = issuesAgg
   }
 
   /** @see {ResultFailure.success} */
@@ -108,4 +114,53 @@ export class LexValidationError
 
 function extractFailureIssues(result: ResultFailure<LexValidationError>) {
   return result.reason.issues
+}
+
+function aggregateIssues(issues: Issue[]): Issue[] {
+  // Quick path for common cases
+  if (issues.length <= 1) return issues
+  if (issues.length === 2 && issues[0].code !== issues[1].code) return issues
+
+  return [
+    // Aggregate invalid_type with identical paths
+    ...arrayAgg(
+      issues.filter((issue) => issue instanceof IssueInvalidType),
+      (a, b) => comparePropertyPaths(a.path, b.path),
+      (issues) =>
+        new IssueInvalidType(
+          issues[0].path,
+          issues[0].input,
+          Array.from(new Set(issues.flatMap((iss) => iss.expected))),
+        ),
+    ),
+    // Aggregate invalid_value with identical paths
+    ...arrayAgg(
+      issues.filter((issue) => issue instanceof IssueInvalidValue),
+      (a, b) => comparePropertyPaths(a.path, b.path),
+      (issues) =>
+        new IssueInvalidValue(
+          issues[0].path,
+          issues[0].input,
+          Array.from(new Set(issues.flatMap((iss) => iss.values))),
+        ),
+    ),
+    // Pass through other issues
+    ...issues.filter(
+      (issue) =>
+        !(issue instanceof IssueInvalidType) &&
+        !(issue instanceof IssueInvalidValue),
+    ),
+  ]
+}
+
+/*@__NO_SIDE_EFFECTS__*/
+function comparePropertyPaths(
+  a: readonly PropertyKey[],
+  b: readonly PropertyKey[],
+) {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }

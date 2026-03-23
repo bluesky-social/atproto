@@ -783,20 +783,26 @@ if (result.success) {
 } else {
   // Handle failure - result is an XrpcFailure
   if (result instanceof XrpcResponseError) {
-    // The server returned a valid XRPC error response
-    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", etc.)
+    // The server responded with an error status code (4xx or 5xx).
+    // This is used for all error responses, whether or not they have a valid XRPC error payload.
+
+    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", "UpstreamFailure", etc.)
     result.message // string
     result.response.status // number
     result.response.headers // Headers
-    result.payload // { body: { error: string, message?: string }; encoding: string }
+    result.payload // undefined | { body: unknown; encoding: string }
+
+    // Coerce to a valid XRPC error payload using toJSON():
+    result.toJSON() // { error: string, message?: string }
   } else if (result instanceof XrpcInvalidResponseError) {
-    // The response was not a valid XRPC response (e.g. malformed JSON,
-    // data does not match schema, connection dropped)
+    // The response was truly invalid (3xx redirect, malformed JSON, schema mismatch, etc.).
+    // This is a more specific error for responses that are not processable.
+
     result.error // "UpstreamFailure"
     result.message // string
     result.response.status // number
     result.response.headers // Headers
-    result.payload // null | { body: unknown; encoding: string }
+    result.payload // undefined | { body: unknown; encoding: string }
   } else if (result instanceof XrpcInternalError) {
     // Something went wrong on the client side (network error, etc.)
     result.error // "InternalServerError"
@@ -816,9 +822,9 @@ if (result.success) {
 
 The `XrpcFailure<M>` type is a union of three error classes:
 
-1. **`XrpcResponseError`** - The server returned a valid XRPC error response (non-2xx with proper error payload)
+1. **`XrpcResponseError`** - The server responded with an error status code (4xx or 5xx). This is now used for all error responses from the upstream server, regardless of whether the response body is a valid XRPC error payload. If the server returned a valid XRPC error, you can access it via `error.toJSON()`. Otherwise, the error code will be inferred from the HTTP status code (e.g., 429 → "RateLimitExceeded", 500 → "InternalServerError").
 
-2. **`XrpcInvalidResponseError`** - The response was invalid or unprocessable (malformed JSON, schema mismatch, incomplete response)
+2. **`XrpcInvalidResponseError`** - The response was truly invalid or unprocessable (3xx redirects, malformed JSON that isn't an error response, schema validation failures for success responses, incomplete responses). This is a subclass that includes `XrpcResponseValidationError` for schema validation failures specifically.
 
 3. **`XrpcInternalError`** - Client-side errors (network failures, timeouts, etc.)
 

@@ -41,13 +41,141 @@ describe(XrpcResponseError, () => {
     })
   }
 
-  it('exposes status from the response', () => {
-    const err = createResponseError(404, 'NotFound')
-    expect(err.reason).toBe(err)
-    expect(err.status).toBe(404)
+  describe('StatusErrorCodes mapping for non-XRPC responses', () => {
+    it('maps 400 to InvalidRequest', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 400 }),
+      )
+      expect(err.error).toBe('InvalidRequest')
+    })
+
+    it('maps 401 to AuthenticationRequired', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 401 }),
+      )
+      expect(err.error).toBe('AuthenticationRequired')
+    })
+
+    it('maps 403 to Forbidden', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 403 }),
+      )
+      expect(err.error).toBe('Forbidden')
+    })
+
+    it('maps 404 to XRPCNotSupported', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 404 }),
+      )
+      expect(err.error).toBe('XRPCNotSupported')
+    })
+
+    it('maps 406 to NotAcceptable', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 406 }),
+      )
+      expect(err.error).toBe('NotAcceptable')
+    })
+
+    it('maps 413 to PayloadTooLarge', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 413 }),
+      )
+      expect(err.error).toBe('PayloadTooLarge')
+    })
+
+    it('maps 415 to UnsupportedMediaType', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 415 }),
+      )
+      expect(err.error).toBe('UnsupportedMediaType')
+    })
+
+    it('maps 429 to RateLimitExceeded', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 429 }),
+      )
+      expect(err.error).toBe('RateLimitExceeded')
+    })
+
+    it('maps 500 to InternalServerError', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 500 }),
+      )
+      expect(err.error).toBe('InternalServerError')
+    })
+
+    it('maps 501 to MethodNotImplemented', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 501 }),
+      )
+      expect(err.error).toBe('MethodNotImplemented')
+    })
+
+    it('maps 502 to UpstreamFailure', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 502 }),
+      )
+      expect(err.error).toBe('UpstreamFailure')
+    })
+
+    it('maps 503 to NotEnoughResources', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 503 }),
+      )
+      expect(err.error).toBe('NotEnoughResources')
+    })
+
+    it('maps 504 to UpstreamTimeout', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 504 }),
+      )
+      expect(err.error).toBe('UpstreamTimeout')
+    })
+
+    it('defaults to UpstreamFailure for unmapped 4xx status codes', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 418 }),
+      )
+      expect(err.error).toBe('UpstreamFailure')
+    })
+
+    it('defaults to UpstreamFailure for unmapped 5xx status codes', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 599 }),
+      )
+      expect(err.error).toBe('UpstreamFailure')
+    })
+
+    it('uses error from valid XRPC payload instead of status code mapping', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 400 }),
+        {
+          encoding: 'application/json',
+          body: { error: 'CustomError', message: 'Custom message' },
+        },
+      )
+      expect(err.error).toBe('CustomError')
+    })
   })
 
-  it('exposes headers from the response', () => {
+  it('exposes the response object', () => {
     const response = new Response(null, {
       status: 400,
       headers: { 'X-Test': 'value' },
@@ -57,12 +185,13 @@ describe(XrpcResponseError, () => {
       body: { error: 'TestError' },
     })
     expect(err.reason).toBe(err)
-    expect(err.headers.get('X-Test')).toBe('value')
+    expect(err.response.status).toBe(400)
+    expect(err.response.headers.get('X-Test')).toBe('value')
   })
 
   it('exposes body from the payload', () => {
     const err = createResponseError(400, 'TestError', 'details')
-    expect(err.body).toEqual({ error: 'TestError', message: 'details' })
+    expect(err.toJSON()).toEqual({ error: 'TestError', message: 'details' })
   })
 
   describe('toDownstreamError', () => {
@@ -102,12 +231,296 @@ describe(XrpcResponseError, () => {
         message: 'Record not found',
       })
     })
+
+    it('preserves 429 status for rate limiting', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 429 }),
+      )
+      expect(err.toDownstreamError().status).toBe(429)
+    })
+
+    it('converts 500 to 502', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 500 }),
+      )
+      expect(err.toDownstreamError().status).toBe(502)
+    })
+
+    it('strips hop-by-hop headers', () => {
+      const response = new Response(null, {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          Connection: 'keep-alive',
+          'Keep-Alive': 'timeout=5',
+          'Transfer-Encoding': 'chunked',
+        },
+      })
+      const err = new XrpcResponseError(testQuery, response, {
+        encoding: 'application/json',
+        body: { error: 'TestError' },
+      })
+      const downstream = err.toDownstreamError()
+
+      expect(downstream.headers?.has('Content-Type')).toBe(true)
+      expect(downstream.headers?.has('Connection')).toBe(false)
+      expect(downstream.headers?.has('Keep-Alive')).toBe(false)
+      expect(downstream.headers?.has('Transfer-Encoding')).toBe(false)
+    })
+  })
+
+  describe('error message extraction from various payload formats', () => {
+    it('extracts message from Express/Koa/Spring Boot format', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 500 }),
+        {
+          encoding: 'application/json',
+          body: { message: 'Database connection failed' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 500 error: Database connection failed',
+      )
+    })
+
+    it('extracts error from Rails format', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 422 }),
+        {
+          encoding: 'application/json',
+          body: { error: 'Validation failed' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 422 error: Validation failed',
+      )
+    })
+
+    it('extracts detail from Django REST Framework format', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 403 }),
+        {
+          encoding: 'application/json',
+          body: { detail: 'Permission denied' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 403 error: Permission denied',
+      )
+    })
+
+    it('extracts title from RFC7807 format', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 404 }),
+        {
+          encoding: 'application/json',
+          body: { title: 'Resource Not Found' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 404 error: Resource Not Found',
+      )
+    })
+
+    it('extracts description from custom APIs', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 503 }),
+        {
+          encoding: 'application/json',
+          body: { description: 'Service temporarily unavailable' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 503 error: Service temporarily unavailable',
+      )
+    })
+
+    it('extracts Message from .NET Web API format', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 400 }),
+        {
+          encoding: 'application/json',
+          body: { Message: 'Invalid input provided' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 400 error: Invalid input provided',
+      )
+    })
+
+    it('prioritizes message over error field', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 400 }),
+        {
+          encoding: 'application/json',
+          body: { message: 'Detailed message', error: 'Short error' },
+        },
+      )
+      expect(err.message).toContain('Detailed message')
+      expect(err.message).not.toContain('Short error')
+    })
+
+    it('handles Uint8Array with text/* encoding', () => {
+      const body = new TextEncoder().encode('Server error occurred')
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 500 }),
+        {
+          encoding: 'text/plain',
+          body,
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 500 error: Server error occurred',
+      )
+    })
+
+    it('handles Uint8Array with text/html encoding', () => {
+      const body = new TextEncoder().encode('<html>Error page</html>')
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 502 }),
+        {
+          encoding: 'text/html',
+          body,
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 502 error: <html>Error page</html>',
+      )
+    })
+
+    it('falls back to encoding description for unknown binary formats', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 415 }),
+        {
+          encoding: 'application/xml',
+          body: new Uint8Array([1, 2, 3]),
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 415 error: "application/xml" payload',
+      )
+    })
+
+    it('skips empty string values in JSON error objects', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 400 }),
+        {
+          encoding: 'application/json',
+          body: { message: '   ', detail: 'Actual error' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 400 error: Actual error',
+      )
+    })
+
+    it('handles payload with no extractable message', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 500 }),
+        {
+          encoding: 'application/json',
+          body: { code: 123, timestamp: '2024-01-01' },
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 500 error: "application/json" payload',
+      )
+    })
+
+    it('handles string body directly', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 404 }),
+        {
+          encoding: 'text/plain',
+          body: 'Not Found',
+        },
+      )
+      expect(err.message).toBe(
+        'Upstream server responded with a 404 error: Not Found',
+      )
+    })
+
+    it('trims long error messages to 100 characters', () => {
+      const longMessage = 'a'.repeat(200)
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 500 }),
+        {
+          encoding: 'text/plain',
+          body: longMessage,
+        },
+      )
+      expect(err.message.length).toBeLessThanOrEqual(150) // "Upstream server..." + 100 chars
+      expect(err.message).toMatch(/…/)
+    })
+
+    it('handles response without payload', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 429 }),
+      )
+      expect(err.message).toBe('Upstream server responded with a 429 error')
+    })
   })
 
   describe('toJSON', () => {
-    it('returns the payload body', () => {
+    it('returns the payload body for valid XRPC errors', () => {
       const err = createResponseError(400, 'TestError', 'message')
       expect(err.toJSON()).toEqual({ error: 'TestError', message: 'message' })
+    })
+
+    it('constructs XRPC error from status code when payload is not valid XRPC', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 429 }),
+        { encoding: 'text/plain', body: 'Rate limit exceeded' },
+      )
+      expect(err.toJSON()).toEqual({
+        error: 'RateLimitExceeded',
+        message:
+          'Upstream server responded with a 429 error: Rate limit exceeded',
+      })
+    })
+
+    it('constructs XRPC error from status code when payload is missing', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 503 }),
+      )
+      expect(err.toJSON()).toEqual({
+        error: 'NotEnoughResources',
+        message: 'Upstream server responded with a 503 error',
+      })
+    })
+
+    it('returns valid XRPC payload unchanged', () => {
+      const err = new XrpcResponseError(
+        testQuery,
+        new Response(null, { status: 400 }),
+        {
+          encoding: 'application/json',
+          body: { error: 'CustomError', message: 'Custom message' },
+        },
+      )
+      expect(err.toJSON()).toEqual({
+        error: 'CustomError',
+        message: 'Custom message',
+      })
     })
   })
 
@@ -208,14 +621,21 @@ describe(XrpcAuthenticationError, () => {
 
 describe(XrpcInvalidResponseError, () => {
   it('has error code UpstreamFailure', () => {
-    const response = new Response(null, { status: 200 })
+    const response = new Response(null, { status: 399 })
     const err = new XrpcInvalidResponseError(testQuery, response)
     expect(err.reason).toBe(err)
-    expect(err.error).toBe('UpstreamFailure')
+    expect(err.error).toBe('InvalidResponse')
+    expect(err.toDownstreamError()).toMatchObject({
+      status: 502,
+      body: {
+        error: 'InvalidResponse',
+        message: 'Upstream server responded with an invalid status code (399)',
+      },
+    })
   })
 
-  it('toDownstreamError returns 502', () => {
-    const response = new Response(null, { status: 200 })
+  it('toDownstreamError returns 502 for 500 upstream errors', () => {
+    const response = new Response(null, { status: 500 })
     const err = new XrpcInvalidResponseError(testQuery, response)
     const downstream = err.toDownstreamError()
     expect(downstream.status).toBe(502)
@@ -253,7 +673,7 @@ describe(XrpcResponseValidationError, () => {
 
     expect(err).toBeInstanceOf(XrpcInvalidResponseError)
     expect(err.reason).toBe(err)
-    expect(err.error).toBe('UpstreamFailure')
+    expect(err.error).toBe('InvalidResponse')
     expect(err.cause).toBe(validationError)
   })
 
@@ -268,7 +688,7 @@ describe(XrpcResponseValidationError, () => {
       validationError,
     )
 
-    expect(err.message).toContain('Invalid response:')
+    expect(err.message).toContain('Invalid response payload:')
     expect(err.message).toContain(validationError.message)
   })
 
