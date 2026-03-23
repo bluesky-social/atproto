@@ -8,7 +8,7 @@ import {
   Client,
   FetchHandler,
   XrpcAuthenticationError,
-  XrpcUpstreamError,
+  XrpcInvalidResponseError,
 } from '../src/index.js'
 import { app, com } from './lexicons/index.js'
 
@@ -250,7 +250,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toMatch(
           'Upstream server responded with a 400 error',
         )
@@ -274,7 +274,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toBe(
           'Upstream server responded with a 400 error: "Not a JSON body"',
         )
@@ -297,7 +297,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toMatch(
           'Upstream server responded with an invalid status code (302)',
         )
@@ -321,7 +321,7 @@ describe('Client', () => {
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toBe(
           'Upstream server responded with a 500 error: "<p>Server error</p>"',
         )

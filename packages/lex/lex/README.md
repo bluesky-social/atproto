@@ -765,7 +765,7 @@ The `xrpcSafe()` method returns a union type that includes the success case (`Xr
 import {
   Client,
   XrpcResponseError,
-  XrpcUpstreamError,
+  XrpcInvalidResponseError,
   XrpcInternalError,
 } from '@atproto/lex'
 import * as com from './lexicons/com.js'
@@ -789,7 +789,7 @@ if (result.success) {
     result.response.status // number
     result.response.headers // Headers
     result.payload // { body: { error: string, message?: string }; encoding: string }
-  } else if (result instanceof XrpcUpstreamError) {
+  } else if (result instanceof XrpcInvalidResponseError) {
     // The response was not a valid XRPC response (e.g. malformed JSON,
     // data does not match schema, connection dropped)
     result.error // "UpstreamFailure"
@@ -818,7 +818,7 @@ The `XrpcFailure<M>` type is a union of three error classes:
 
 1. **`XrpcResponseError`** - The server returned a valid XRPC error response (non-2xx with proper error payload)
 
-2. **`XrpcUpstreamError`** - The response was invalid or unprocessable (malformed JSON, schema mismatch, incomplete response)
+2. **`XrpcInvalidResponseError`** - The response was invalid or unprocessable (malformed JSON, schema mismatch, incomplete response)
 
 3. **`XrpcInternalError`** - Client-side errors (network failures, timeouts, etc.)
 

@@ -1,4 +1,9 @@
-import { LexError, LexErrorCode, LexErrorData } from '@atproto/lex-data'
+import {
+  LexError,
+  LexErrorCode,
+  LexErrorData,
+  isPlainObject,
+} from '@atproto/lex-data'
 import {
   InferMethodError,
   LexValidationError,
@@ -90,7 +95,7 @@ export function isXrpcErrorPayload(
  * @typeParam TReason - The reason type for ResultFailure
  *
  * @see {@link XrpcResponseError} - For valid XRPC error responses
- * @see {@link XrpcUpstreamError} - For invalid/unexpected responses
+ * @see {@link XrpcInvalidResponseError} - For invalid/unexpected responses
  * @see {@link XrpcInternalError} - For network/internal errors
  */
 export abstract class XrpcError<
@@ -160,17 +165,21 @@ export abstract class XrpcError<
  */
 export class XrpcResponseError<
   M extends Procedure | Query = Procedure | Query,
-  N extends LexErrorCode = InferMethodError<M> | LexErrorCode,
-> extends XrpcError<M, N, XrpcResponseError<M, N>> {
+> extends XrpcError<M, LexErrorCode, XrpcResponseError<M>> {
   name = 'XrpcResponseError'
 
   constructor(
     method: M,
     readonly response: Response,
-    readonly payload: XrpcErrorPayload<N>,
+    readonly payload?: XrpcUnknownResponsePayload,
     options?: ErrorOptions,
   ) {
-    const { error, message } = payload.body
+    const { error, message } = isXrpcErrorPayload(payload)
+      ? payload.body
+      : {
+          error: ResponseTypeStrings.get(response.status) ?? 'UpstreamFailure',
+          message: buildResponseOverviewMessage(response, payload),
+        }
     super(method, error, message, options)
   }
 
@@ -182,35 +191,42 @@ export class XrpcResponseError<
     return RETRYABLE_HTTP_STATUS_CODES.has(this.response.status)
   }
 
-  override toJSON(): LexErrorData<N> {
-    return this.payload.body
+  override toJSON(): LexErrorData {
+    // Return the original error payload if it's a valid XRPC error, otherwise
+    // convert to an XRPC error format.
+    const { payload } = this
+    if (isXrpcErrorPayload(payload)) {
+      return payload.body
+    }
+
+    return super.toJSON()
   }
 
   override toDownstreamError(): DownstreamError {
-    // If the upstream server returned a 5xx error, we want to return a 502 Bad
-    // Gateway to downstream clients, as the issue is with the upstream server,
-    // not us. We still return the original error code and message in the body
-    // for transparency, but we do not want to expose internal server errors
-    // from the upstream server as-is to downstream clients.
+    const { status, headers } = this.response
     return {
-      status: this.response.status === 500 ? 502 : this.status,
-      headers: stripHopByHopHeaders(this.headers),
+      status: status === 500 ? 502 : status,
+      headers: stripHopByHopHeaders(headers),
       body: this.toJSON(),
     }
   }
-
-  get status(): number {
-    return this.response.status
-  }
-
-  get headers(): Headers {
-    return this.response.headers
-  }
-
-  get body(): LexErrorData<N> {
-    return this.payload.body
-  }
 }
+
+const ResponseTypeStrings = new Map<number, LexErrorCode>([
+  [400, 'InvalidRequest'],
+  [401, 'AuthenticationRequired'],
+  [403, 'Forbidden'],
+  [404, 'XRPCNotSupported'],
+  [406, 'NotAcceptable'],
+  [413, 'PayloadTooLarge'],
+  [415, 'UnsupportedMediaType'],
+  [429, 'RateLimitExceeded'],
+  [500, 'InternalServerError'],
+  [501, 'MethodNotImplemented'],
+  [502, 'UpstreamFailure'],
+  [503, 'NotEnoughResources'],
+  [504, 'UpstreamTimeout'],
+])
 
 export type { WWWAuthenticate }
 
@@ -242,8 +258,7 @@ export type { WWWAuthenticate }
  */
 export class XrpcAuthenticationError<
   M extends Procedure | Query = Procedure | Query,
-  N extends LexErrorCode = LexErrorCode,
-> extends XrpcResponseError<M, N> {
+> extends XrpcResponseError<M> {
   name = 'XrpcAuthenticationError'
 
   override shouldRetry(): boolean {
@@ -265,7 +280,7 @@ export class XrpcAuthenticationError<
   override toDownstreamError(): DownstreamError {
     return {
       status: 401,
-      headers: stripHopByHopHeaders(this.headers),
+      headers: stripHopByHopHeaders(this.response.headers),
       body: this.toJSON(),
     }
   }
@@ -281,21 +296,20 @@ export class XrpcAuthenticationError<
  * - Non-JSON error responses
  * - Responses from non-XRPC endpoints
  *
- * The error code is always 'UpstreamFailure' and maps to HTTP 502 Bad Gateway
- * when converted to a response.
+ * The error code is always 'UpstreamFailure'.
  *
  * @typeParam M - The XRPC method type
  */
-export class XrpcUpstreamError<
+export class XrpcInvalidResponseError<
   M extends Procedure | Query = Procedure | Query,
-> extends XrpcError<M, 'UpstreamFailure', XrpcUpstreamError<M>> {
-  name = 'XrpcUpstreamError'
+> extends XrpcError<M, 'UpstreamFailure', XrpcInvalidResponseError<M>> {
+  name = 'XrpcInvalidResponseError'
 
   constructor(
     method: M,
     readonly response: Response,
-    readonly payload: XrpcUnknownResponsePayload | null = null,
-    message: string = buildUpstreamErrorMessage(response, payload),
+    readonly payload?: XrpcUnknownResponsePayload,
+    message: string = buildResponseOverviewMessage(response, payload),
     options?: ErrorOptions,
   ) {
     super(method, 'UpstreamFailure', message, options)
@@ -310,45 +324,66 @@ export class XrpcUpstreamError<
   }
 
   override toDownstreamError(): DownstreamError {
-    return { status: 502, body: this.toJSON() }
+    const { status, headers } = this.response
+    return {
+      status: status === 500 ? 502 : status,
+      headers: stripHopByHopHeaders(headers),
+      body: this.toJSON(),
+    }
   }
 }
 
-function buildUpstreamErrorMessage(
+function buildResponseOverviewMessage(
   response: Response,
-  payload: XrpcUnknownResponsePayload | null,
+  payload?: XrpcUnknownResponsePayload,
 ): string {
   if (response.status < 400) {
     return `Upstream server responded with an invalid status code (${response.status})`
   }
 
-  const payloadStr = payload ? extractPayloadOverview(payload) : '<no payload>'
-
-  return `Upstream server responded with a ${response.status} error: ${payloadStr}`
-}
-
-function extractPayloadOverview(
-  payload: XrpcUnknownResponsePayload,
-): string | undefined {
-  try {
-    if (
-      typeof payload.body === 'string' ||
-      payload.encoding.startsWith('text/')
-    ) {
-      const body =
-        payload.body instanceof Uint8Array
-          ? new TextDecoder().decode(payload.body)
-          : payload.body
-
-      if (typeof body === 'string') {
-        return JSON.stringify(trimString(body, 200))
-      }
-    }
-  } catch {
-    // Ignore
+  if (!payload) {
+    return `Upstream server responded with a ${response.status} response`
   }
 
-  return `${payload.encoding} data`
+  const payloadStr = trimString(stringifyPayload(payload), 100)
+
+  return `Upstream server responded with a ${response.status} response: ${payloadStr}`
+}
+
+function stringifyPayload(payload: XrpcUnknownResponsePayload): string {
+  if (typeof payload.body === 'string') {
+    return payload.body
+  }
+
+  if (
+    payload.encoding.startsWith('text/') &&
+    payload.body instanceof Uint8Array
+  ) {
+    try {
+      return new TextDecoder().decode(payload.body)
+    } catch {
+      // Continue
+    }
+  }
+
+  if (payload.encoding === 'application/json' && isPlainObject(payload.body)) {
+    for (const key of [
+      'message', // Express, Koa, HapiJS (Boom), Laravel, Spring Boot, Flask-RESTful
+      'error', // Rails, many generic APIs
+      'detail', // Django REST Framework, FastAPI (scalar)
+      'title', // RFC 7807 Problem Details
+      'description', // Custom APIs
+      'Message', // .NET Web API
+    ]) {
+      const value = payload.body[key]
+      if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (trimmed.length > 0) return trimmed
+      }
+    }
+  }
+
+  return `"${payload.encoding}" payload`
 }
 
 function trimString(str: string, maxLength: number): string {
@@ -359,7 +394,7 @@ function trimString(str: string, maxLength: number): string {
 /**
  * Error class for invalid XRPC responses that fail schema validation.
  *
- * This is a specific type of {@link XrpcUpstreamError} that indicates the
+ * This is a specific type of {@link XrpcInvalidResponseError} that indicates the
  * upstream server returned a response that was structurally valid but did not
  * conform to the expected schema for the method. This likely indicates a
  * mismatch between client and server versions or an issue with the server's
@@ -367,10 +402,10 @@ function trimString(str: string, maxLength: number): string {
  *
  * @typeParam M - The XRPC method type
  */
-export class XrpcInvalidResponseError<
+export class XrpcResponseValidationError<
   M extends Procedure | Query = Procedure | Query,
-> extends XrpcUpstreamError<M> {
-  name = 'XrpcInvalidResponseError'
+> extends XrpcInvalidResponseError<M> {
+  name = 'XrpcResponseValidationError'
 
   constructor(
     method: M,
@@ -378,9 +413,13 @@ export class XrpcInvalidResponseError<
     payload: XrpcUnknownResponsePayload,
     readonly cause: LexValidationError,
   ) {
-    super(method, response, payload, `Invalid response: ${cause.message}`, {
-      cause,
-    })
+    super(
+      method,
+      response,
+      payload,
+      `Invalid response payload: ${cause.message}`,
+      { cause },
+    )
   }
 
   override toDownstreamError(): DownstreamError {
@@ -490,7 +529,7 @@ export class XrpcFetchError<
  * if (result.success) {
  *   console.log(result.body) // XrpcResponse
  * } else {
- *   // result is XrpcFailure (XrpcResponseError | XrpcUpstreamError | XrpcInternalError)
+ *   // result is XrpcFailure (XrpcResponseError | XrpcInvalidResponseError | XrpcInternalError)
  *   console.error(result.error, result.message)
  * }
  * ```
@@ -499,7 +538,7 @@ export type XrpcFailure<M extends Procedure | Query = Procedure | Query> =
   // The server returned a valid XRPC error response
   | XrpcResponseError<M>
   // The response was not a valid XRPC response, or it does not match the schema
-  | XrpcUpstreamError<M>
+  | XrpcInvalidResponseError<M>
   // Something went wrong (network error, etc.)
   | XrpcInternalError<M>
 
@@ -529,7 +568,7 @@ export function asXrpcFailure<M extends Procedure | Query>(
 ): XrpcFailure<M> {
   if (
     cause instanceof XrpcResponseError ||
-    cause instanceof XrpcUpstreamError ||
+    cause instanceof XrpcInvalidResponseError ||
     cause instanceof XrpcInternalError
   ) {
     if (cause.method === method) return cause

@@ -6,7 +6,7 @@ import {
   XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
-  XrpcUpstreamError,
+  XrpcResponseValidationError,
   asXrpcFailure,
 } from './errors.js'
 
@@ -203,55 +203,55 @@ describe(XrpcAuthenticationError, () => {
 })
 
 // ============================================================================
-// XrpcUpstreamError
+// XrpcInvalidResponseError
 // ============================================================================
 
-describe(XrpcUpstreamError, () => {
+describe(XrpcInvalidResponseError, () => {
   it('has error code UpstreamFailure', () => {
     const response = new Response(null, { status: 200 })
-    const err = new XrpcUpstreamError(testQuery, response)
+    const err = new XrpcInvalidResponseError(testQuery, response)
     expect(err.reason).toBe(err)
     expect(err.error).toBe('UpstreamFailure')
   })
 
   it('toDownstreamError returns 502', () => {
     const response = new Response(null, { status: 200 })
-    const err = new XrpcUpstreamError(testQuery, response)
+    const err = new XrpcInvalidResponseError(testQuery, response)
     const downstream = err.toDownstreamError()
     expect(downstream.status).toBe(502)
   })
 
   it('shouldRetry is true for retryable status codes', () => {
     const response = new Response(null, { status: 502 })
-    const err = new XrpcUpstreamError(testQuery, response)
+    const err = new XrpcInvalidResponseError(testQuery, response)
     expect(err.shouldRetry()).toBe(true)
   })
 
   it('shouldRetry is false for non-retryable status codes', () => {
     const response = new Response(null, { status: 200 })
-    const err = new XrpcUpstreamError(testQuery, response)
+    const err = new XrpcInvalidResponseError(testQuery, response)
     expect(err.shouldRetry()).toBe(false)
   })
 })
 
 // ============================================================================
-// XrpcInvalidResponseError
+// XrpcResponseValidationError
 // ============================================================================
 
-describe(XrpcInvalidResponseError, () => {
-  it('extends XrpcUpstreamError', () => {
+describe(XrpcResponseValidationError, () => {
+  it('extends XrpcInvalidResponseError', () => {
     const response = new Response(null, { status: 200 })
     const validationError = new LexValidationError([
       new IssueInvalidType([], 42, ['string']),
     ])
-    const err = new XrpcInvalidResponseError(
+    const err = new XrpcResponseValidationError(
       testQuery,
       response,
       { encoding: 'application/json', body: { value: 42 } },
       validationError,
     )
 
-    expect(err).toBeInstanceOf(XrpcUpstreamError)
+    expect(err).toBeInstanceOf(XrpcInvalidResponseError)
     expect(err.reason).toBe(err)
     expect(err.error).toBe('UpstreamFailure')
     expect(err.cause).toBe(validationError)
@@ -261,7 +261,7 @@ describe(XrpcInvalidResponseError, () => {
     const validationError = new LexValidationError([
       new IssueInvalidType([], 42, ['string']),
     ])
-    const err = new XrpcInvalidResponseError(
+    const err = new XrpcResponseValidationError(
       testQuery,
       new Response(null, { status: 200 }),
       { encoding: 'application/json', body: { value: 42 } },
@@ -276,7 +276,7 @@ describe(XrpcInvalidResponseError, () => {
     const validationError = new LexValidationError([
       new IssueInvalidType([], 42, ['string']),
     ])
-    const err = new XrpcInvalidResponseError(
+    const err = new XrpcResponseValidationError(
       testQuery,
       new Response(null, { status: 200 }),
       { encoding: 'application/json', body: { value: 42 } },
