@@ -10,7 +10,7 @@ export enum Gate {
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
 
   // temp
-  AATest = 'aa-test-appview'
+  AATest = 'aa-test-appview',
 }
 
 /**
