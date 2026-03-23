@@ -9,7 +9,7 @@ import {
   XrpcInternalError,
   XrpcInvalidResponseError,
   XrpcResponseError,
-  XrpcUpstreamError,
+  XrpcResponseValidationError,
 } from './errors.js'
 import { XrpcResponse } from './response.js'
 import { xrpc, xrpcSafe } from './xrpc.js'
@@ -271,7 +271,7 @@ describe(xrpc, () => {
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
           expect(err.status).toBe(400)
-          expect(err.body).toEqual({
+          expect(err.toJSON()).toEqual({
             error: 'TestError',
             message: 'bad request',
           })
@@ -297,7 +297,7 @@ describe(xrpc, () => {
         })
       })
 
-      it('throws XrpcUpstreamError for non-XRPC error response', async () => {
+      it('throws XrpcResponseError for non-XRPC error response', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('Not Found', {
             status: 404,
@@ -308,13 +308,13 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Invalid response payload')
+          assert(err instanceof XrpcResponseError)
+          expect(err.message).toBe('Upstream server responded with a 404 error')
           return true
         })
       })
 
-      it('throws XrpcUpstreamError for 500 without valid error payload', async () => {
+      it('throws XrpcResponseError for 500 without valid error payload', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('Internal Server Error', {
             status: 500,
@@ -325,8 +325,8 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Upstream server encountered an error')
+          assert(err instanceof XrpcResponseError)
+          expect(err.message).toBe('Upstream server responded with a 500 error')
           return true
         })
       })
@@ -344,7 +344,7 @@ describe(xrpc, () => {
         ).rejects.toSatisfy((err) => {
           assert(err instanceof XrpcResponseError)
           expect(err.status).toBe(502)
-          expect(err.body).toEqual({
+          expect(err.toJSON()).toEqual({
             error: 'ServerError',
             message: 'Something went wrong',
           })
@@ -354,7 +354,7 @@ describe(xrpc, () => {
     })
 
     describe('invalid response errors', () => {
-      it('throws XrpcInvalidResponseError when response body fails validation', async () => {
+      it('throws XrpcResponseValidationError when response body fails validation', async () => {
         // Schema expects { value: string } but we return { value: 123 }
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return Response.json({ value: 123 })
@@ -363,14 +363,14 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcInvalidResponseError)
-          expect(err).toBeInstanceOf(XrpcUpstreamError)
+          assert(err instanceof XrpcResponseValidationError)
+          expect(err).toBeInstanceOf(XrpcInvalidResponseError)
           expect(err.cause).toBeInstanceOf(Error)
           return true
         })
       })
 
-      it('throws XrpcUpstreamError when response has wrong content-type', async () => {
+      it('throws XrpcInvalidResponseError when response has wrong content-type', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('binary data', {
             status: 200,
@@ -381,7 +381,7 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
+          assert(err instanceof XrpcInvalidResponseError)
           expect(err.message).toContain('application/json')
           return true
         })
@@ -408,7 +408,7 @@ describe(xrpc, () => {
     })
 
     describe('response payload parsing', () => {
-      it('throws XrpcUpstreamError when error response body cannot be parsed', async () => {
+      it('throws XrpcInvalidResponseError when error response body cannot be parsed', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('not valid json', {
             status: 400,
@@ -419,7 +419,7 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
+          assert(err instanceof XrpcInvalidResponseError)
           expect(err.message).toMatch('Unable to parse response payload')
           assert(err.cause instanceof Error)
           expect(err.cause.message).toContain('Unexpected token')
@@ -427,7 +427,7 @@ describe(xrpc, () => {
         })
       })
 
-      it('throws XrpcUpstreamError when success response body cannot be parsed', async () => {
+      it('throws XrpcInvalidResponseError when success response body cannot be parsed', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response('not valid json', {
             status: 200,
@@ -438,7 +438,7 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
+          assert(err instanceof XrpcInvalidResponseError)
           expect(err.message).toMatch('Unable to parse response payload')
           assert(err.cause instanceof Error)
           expect(err.cause.message).toContain('Unexpected token')
@@ -446,21 +446,21 @@ describe(xrpc, () => {
         })
       })
 
-      it('throws XrpcUpstreamError when schema expects no payload but got one', async () => {
+      it('throws XrpcInvalidResponseError when schema expects no payload but got one', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return Response.json({ unexpected: 'data' })
         })
 
         await expect(xrpc(fetchHandler, testNoOutputQuery)).rejects.toSatisfy(
           (err) => {
-            assert(err instanceof XrpcUpstreamError)
+            assert(err instanceof XrpcInvalidResponseError)
             expect(err.message).toContain('no body')
             return true
           },
         )
       })
 
-      it('throws XrpcUpstreamError when schema expects payload but response is empty', async () => {
+      it('throws XrpcInvalidResponseError when schema expects payload but response is empty', async () => {
         const fetchHandler = vi.fn<FetchHandler>(async () => {
           return new Response(null, { status: 200 })
         })
@@ -468,8 +468,8 @@ describe(xrpc, () => {
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toContain('non-empty response')
+          assert(err instanceof XrpcInvalidResponseError)
+          expect(err.message).toContain('got no payload')
           return true
         })
       })
@@ -516,15 +516,15 @@ describe(xrpc, () => {
     })
 
     describe('non-2xx non-4xx/5xx responses', () => {
-      it('throws XrpcUpstreamError for 3xx status codes', async () => {
+      it('throws XrpcInvalidResponseError for 3xx status codes', async () => {
         const fetchHandler: FetchHandler = async () =>
           Response.json({ value: 'redirect' }, { status: 302 })
 
         await expect(
           xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
         ).rejects.toSatisfy((err) => {
-          assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toBe('Invalid response status code')
+          assert(err instanceof XrpcInvalidResponseError)
+          expect(err.message).toBe('Unexpected status code 302')
           return true
         })
       })
@@ -606,8 +606,8 @@ describe(xrpc, () => {
       await expect(
         xrpc(fetchHandler, testQuery, { params: { limit: 10 } }),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcInvalidResponseError)
-        expect(err).toBeInstanceOf(XrpcUpstreamError)
+        assert(err instanceof XrpcResponseValidationError)
+        expect(err).toBeInstanceOf(XrpcInvalidResponseError)
         return true
       })
     })
@@ -660,7 +660,7 @@ describe(xrpc, () => {
       await expect(
         xrpc(validWithFloatHandler, testQuery, { params: { limit: 10 } }),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toMatch('Unable to parse response payload')
         expect(err.cause).toBeInstanceOf(TypeError)
         return true
@@ -683,7 +683,7 @@ describe(xrpc, () => {
           strictResponseProcessing: true,
         }),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toMatch('Unable to parse response payload')
         expect(err.cause).toBeInstanceOf(TypeError)
         return true
@@ -693,8 +693,8 @@ describe(xrpc, () => {
     it('rejects error response with invalid lex data by default', async () => {
       await expect(xrpc(errorWithFloatHandler, testQuery)).rejects.toSatisfy(
         (err) => {
-          assert(err instanceof XrpcUpstreamError)
-          expect(err.message).toMatch('Unable to parse response payload')
+          assert(err instanceof XrpcResponseError)
+          expect(err.message).toBe('test-error-description')
           return true
         },
       )
@@ -710,7 +710,7 @@ describe(xrpc, () => {
         // Error response is still an error, but it should be parsed successfully
         assert(err instanceof XrpcResponseError)
         expect(err.status).toBe(400)
-        expect(err.payload.body).toEqual({
+        expect(err.payload?.body).toEqual({
           error: 'TestError',
           message: 'test-error-description',
           extra: 1.5,
@@ -731,8 +731,8 @@ describe(xrpc, () => {
           validateResponse: true,
         }),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcInvalidResponseError)
-        expect(err).toBeInstanceOf(XrpcUpstreamError)
+        assert(err instanceof XrpcResponseValidationError)
+        expect(err).toBeInstanceOf(XrpcInvalidResponseError)
         return true
       })
     })
@@ -778,7 +778,7 @@ describe(xrpc, () => {
           validateResponse: false,
         }),
       ).rejects.toSatisfy((err) => {
-        assert(err instanceof XrpcUpstreamError)
+        assert(err instanceof XrpcInvalidResponseError)
         expect(err.message).toMatch('Unable to parse response payload')
         return true
       })
@@ -925,8 +925,8 @@ describe(xrpcSafe, () => {
 
         assert(!result.success)
         assert(result instanceof XrpcResponseError)
-        expect(result.status).toBe(400)
-        expect(result.body).toEqual({
+        expect(result.response.status).toBe(400)
+        expect(result.toJSON()).toEqual({
           error: 'TestError',
           message: 'bad request',
         })
@@ -946,10 +946,10 @@ describe(xrpcSafe, () => {
         assert(!result.success)
         assert(result instanceof XrpcResponseError)
         expect(result).toBeInstanceOf(XrpcAuthenticationError)
-        expect(result.status).toBe(401)
+        expect(result.response.status).toBe(401)
       })
 
-      it('returns XrpcUpstreamError for non-XRPC error response', async () => {
+      it('returns XrpcResponseError for non-XRPC error response', async () => {
         const fetchHandler: FetchHandler = async () =>
           new Response('Not Found', {
             status: 404,
@@ -961,10 +961,10 @@ describe(xrpcSafe, () => {
         })
 
         assert(!result.success)
-        expect(result).toBeInstanceOf(XrpcUpstreamError)
+        expect(result).toBeInstanceOf(XrpcResponseError)
       })
 
-      it('returns XrpcUpstreamError for 500 without valid error payload', async () => {
+      it('returns XrpcResponseError for 500 without valid error payload', async () => {
         const fetchHandler: FetchHandler = async () =>
           new Response('Internal Server Error', {
             status: 500,
@@ -976,12 +976,16 @@ describe(xrpcSafe, () => {
         })
 
         assert(!result.success)
-        expect(result).toBeInstanceOf(XrpcUpstreamError)
+        expect(result).toBeInstanceOf(XrpcResponseError)
+        expect(result.error).toBe('InternalServerError')
+        expect(result.message).toMatch(
+          'Upstream server responded with a 500 error',
+        )
       })
     })
 
     describe('invalid response errors', () => {
-      it('returns XrpcInvalidResponseError when response body fails validation', async () => {
+      it('returns XrpcResponseValidationError when response body fails validation', async () => {
         const fetchHandler: FetchHandler = async () =>
           Response.json({ value: 123 })
 
@@ -990,11 +994,11 @@ describe(xrpcSafe, () => {
         })
 
         assert(!result.success)
+        expect(result).toBeInstanceOf(XrpcResponseValidationError)
         expect(result).toBeInstanceOf(XrpcInvalidResponseError)
-        expect(result).toBeInstanceOf(XrpcUpstreamError)
       })
 
-      it('returns XrpcUpstreamError when response has wrong content-type', async () => {
+      it('returns XrpcInvalidResponseError when response has wrong content-type', async () => {
         const fetchHandler: FetchHandler = async () =>
           new Response('binary data', {
             status: 200,
@@ -1006,7 +1010,7 @@ describe(xrpcSafe, () => {
         })
 
         assert(!result.success)
-        expect(result).toBeInstanceOf(XrpcUpstreamError)
+        expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       })
     })
 
@@ -1042,6 +1046,7 @@ describe(xrpcSafe, () => {
       assert(!result.success)
       expect(result).toBeInstanceOf(XrpcInternalError)
       expect(result).not.toBeInstanceOf(XrpcFetchError)
+      expect(fetchHandler).not.toHaveBeenCalled()
     })
 
     it('returns XrpcInternalError for invalid body when enabled', async () => {
@@ -1088,7 +1093,7 @@ describe(xrpcSafe, () => {
   })
 
   describe('validateResponse', () => {
-    it('returns XrpcInvalidResponseError for invalid body by default', async () => {
+    it('returns XrpcResponseValidationError for invalid body by default', async () => {
       const fetchHandler = vi.fn<FetchHandler>(async () => {
         return Response.json({ value: 123 })
       })
@@ -1098,8 +1103,8 @@ describe(xrpcSafe, () => {
       })
 
       assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcResponseValidationError)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
     })
 
     it('accepts invalid response body when disabled', async () => {
@@ -1164,7 +1169,7 @@ describe(xrpcSafe, () => {
 
       const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid blob object')
@@ -1187,7 +1192,7 @@ describe(xrpcSafe, () => {
 
       const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid blob object')
@@ -1209,9 +1214,9 @@ describe(xrpcSafe, () => {
 
       const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toBe(
-        'Invalid response: Expected "image/png" (got "invalid/mime") at $.blobRef.mimeType',
+        'Invalid response payload: Expected "image/png" (got "invalid/mime") at $.blobRef.mimeType',
       )
     })
 
@@ -1231,9 +1236,9 @@ describe(xrpcSafe, () => {
 
       const result = await xrpcSafe(fetchHandler, testQueryGetBlobRef)
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toBe(
-        'Invalid response: blob too big (maximum 10, got 100) at $.blobRef',
+        'Invalid response payload: blob too big (maximum 10, got 100) at $.blobRef',
       )
     })
 
@@ -1342,7 +1347,7 @@ describe(xrpcSafe, () => {
       })
 
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
@@ -1369,7 +1374,7 @@ describe(xrpcSafe, () => {
       })
 
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
@@ -1383,10 +1388,8 @@ describe(xrpcSafe, () => {
       })
 
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
-      expect(result.message).toMatch('Unable to parse response payload')
-      assert(result.cause instanceof TypeError)
-      expect(result.cause.message).toBe('Invalid non-integer number: 1.5')
+      expect(result).toBeInstanceOf(XrpcResponseError)
+      expect(result.message).toBe('test-error-description')
     })
 
     it('parses error response with invalid lex data when strict processing is disabled', async () => {
@@ -1399,7 +1402,7 @@ describe(xrpcSafe, () => {
 
       assert(!result.success)
       assert(result instanceof XrpcResponseError)
-      expect(result.status).toBe(400)
+      expect(result.response.status).toBe(400)
       expect(result.message).toBe('test-error-description')
     })
 
@@ -1415,8 +1418,8 @@ describe(xrpcSafe, () => {
       })
 
       assert(!result.success)
+      expect(result).toBeInstanceOf(XrpcResponseValidationError)
       expect(result).toBeInstanceOf(XrpcInvalidResponseError)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
     })
 
     it('with strictResponseProcessing: false and validateResponse: false, schema validation is skipped', async () => {
@@ -1444,7 +1447,7 @@ describe(xrpcSafe, () => {
       })
 
       assert(!result.success)
-      expect(result).toBeInstanceOf(XrpcUpstreamError)
+      expect(result).toBeInstanceOf(XrpcInvalidResponseError)
       expect(result.message).toMatch('Unable to parse response payload')
       assert(result.cause instanceof TypeError)
       expect(result.cause.message).toBe('Invalid non-integer number: 1.5')

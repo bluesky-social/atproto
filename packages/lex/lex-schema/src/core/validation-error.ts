@@ -46,7 +46,7 @@ export class LexValidationError
    * Issues are aggregated when possible (e.g., multiple invalid type issues
    * at the same path are combined into a single issue listing all expected types).
    */
-  readonly issues: Issue[]
+  readonly issues: readonly Issue[]
 
   /**
    * Creates a new validation error from a list of issues.

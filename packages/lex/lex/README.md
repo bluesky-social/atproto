@@ -10,7 +10,7 @@ Type-safe Lexicon tooling for AT Protocol data.
 - Tree-shaking and composition friendly
 
 ```typescript
-// Build data with generated builders and validators
+// Build and validate data with generated utilities
 
 const newPost = app.bsky.feed.post.$build({
   text: 'Hello, world!',
@@ -222,7 +222,7 @@ function renderPost(p: app.bsky.feed.post.Main) {
 
 ### Building data
 
-It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
+It is recommended to use the generated builders to create data that conforms to the schema. TypeScript ensures that all required fields are present at compile time.
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -234,6 +234,10 @@ const post = app.bsky.feed.post.$build({
   text: 'Hello, world!',
   createdAt: l.toDatetimeString(new Date()),
 })
+
+// For runtime validation, use $parse()/$validate() instead
+const postWithDefaults = app.bsky.feed.post.$parse(post)
+app.bsky.feed.post.$validate(post)
 ```
 
 ### Validation Helpers
@@ -359,7 +363,7 @@ app.bsky.feed.post.$safeParse(data, { strict: false })
 
 #### `$build(data)` - Build with Defaults
 
-Builds data without needing to specify the `$type` property, and properly types the result:
+Builds data by adding the `$type` property and properly types the result. Note that `$build()` does not perform validation - use `$parse()` if you need validation:
 
 ```typescript
 import { l } from '@atproto/lex'
@@ -662,7 +666,8 @@ console.log(result.cid)
 Options:
 
 - `rkey` - Custom record key (auto-generated if not provided)
-- `validate` - Validate record against schema before creating
+- `validate` - Asks the PDS to validate the record against schema when processing the request
+- `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - CID for optimistic concurrency control
 
 #### `client.get()`
@@ -703,6 +708,8 @@ await client.put(app.bsky.actor.profile, {
 Options:
 
 - `rkey` - Record key (required for non-literal keys)
+- `validate` - Validate record against schema before updating (falls back to `validateRequest` option if not specified)
+- `validateRequest` - Alternative way to enable validation (used if `validate` is not specified)
 - `swapCommit` - Expected repo commit CID
 - `swapRecord` - Expected record CID
 
@@ -759,7 +766,7 @@ The `xrpcSafe()` method returns a union type that includes the success case (`Xr
 import {
   Client,
   XrpcResponseError,
-  XrpcUpstreamError,
+  XrpcInvalidResponseError,
   XrpcInternalError,
 } from '@atproto/lex'
 import * as com from './lexicons/com.js'
@@ -777,20 +784,26 @@ if (result.success) {
 } else {
   // Handle failure - result is an XrpcFailure
   if (result instanceof XrpcResponseError) {
-    // The server returned a valid XRPC error response
-    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", etc.)
+    // The server responded with an error status code (4xx or 5xx).
+    // This is used for all error responses, whether or not they have a valid XRPC error payload.
+
+    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", "UpstreamFailure", etc.)
     result.message // string
     result.response.status // number
     result.response.headers // Headers
-    result.payload // { body: { error: string, message?: string }; encoding: string }
-  } else if (result instanceof XrpcUpstreamError) {
-    // The response was not a valid XRPC response (e.g. malformed JSON,
-    // data does not match schema, connection dropped)
+    result.payload // undefined | { body: unknown; encoding: string }
+
+    // Coerce to a valid XRPC error payload using toJSON():
+    result.toJSON() // { error: string, message?: string }
+  } else if (result instanceof XrpcInvalidResponseError) {
+    // The response was truly invalid (3xx redirect, malformed JSON, schema mismatch, etc.).
+    // This is a more specific error for responses that are not processable.
+
     result.error // "UpstreamFailure"
     result.message // string
     result.response.status // number
     result.response.headers // Headers
-    result.payload // null | { body: unknown; encoding: string }
+    result.payload // undefined | { body: unknown; encoding: string }
   } else if (result instanceof XrpcInternalError) {
     // Something went wrong on the client side (network error, etc.)
     result.error // "InternalServerError"
@@ -810,9 +823,9 @@ if (result.success) {
 
 The `XrpcFailure<M>` type is a union of three error classes:
 
-1. **`XrpcResponseError`** - The server returned a valid XRPC error response (non-2xx with proper error payload)
+1. **`XrpcResponseError`** - The server responded with a 4xx/5xx error status code. This is used for all error responses from the upstream server.
 
-2. **`XrpcUpstreamError`** - The response was invalid or unprocessable (malformed JSON, schema mismatch, incomplete response)
+2. **`XrpcInvalidResponseError`** - The upstream server returned a 2xx/3xx that does not comply with XRPC specifications for successful responses. A sub-class, `XrpcResponseValidationError`, is used for payload schema validation failures specifically.
 
 3. **`XrpcInternalError`** - Client-side errors (network failures, timeouts, etc.)
 
@@ -947,7 +960,7 @@ isLanguageString('en-US') // true
 
 ### Datetime Strings
 
-Many AT Protocol records (such as posts, likes, and follows) include a `createdAt` field that expects a valid `DatetimeString`. While `new Date().toISOString()` produces a string that looks like a valid datetime, it is not guaranteed to always conform to the AT Protocol's [datetime format requirements](https://atproto.com/specs/lexicon#datetime) (for example, `Date` objects representing dates before year 10 or after year 9999 will produce non-conforming strings). To ensure correctness and type safety, use the `DatetimeString` utilities exported from `@atproto/lex`:
+Many AT Protocol records (such as posts, likes, and follows) include a `createdAt` field that expects a valid `DatetimeString`. While `new Date().toISOString()` produces a string that looks like a valid datetime, it is not guaranteed to always conform to the AT Protocol's [datetime format requirements](https://atproto.com/specs/lexicon#datetime) (for example, `Date` objects representing dates before year 0 or after year 9999 will produce non-conforming strings). To ensure correctness and type safety, use the `DatetimeString` utilities exported from `@atproto/lex`:
 
 - **`toDatetimeString(date: Date)`** - Converts a `Date` object into a valid `DatetimeString`, throwing an `InvalidDatetimeError` if the date cannot be represented as a valid AT Protocol datetime.
 - **`asDatetimeString(input: string)`** - Validates and casts an arbitrary string to `DatetimeString`, throwing an `InvalidDatetimeError` if the string does not conform.

@@ -161,9 +161,9 @@ export function createLexiconParamsVerifier<P extends Params = Params>(
     const params = decodeQueryParams(def, queryParams)
     try {
       return lexicons.assertValidXrpcParams(nsid, params) as P
-    } catch (e) {
+    } catch (cause) {
       // @NOTE WE historically did not check for specific error types here,
-      throw new InvalidRequestError(String(e))
+      throw new InvalidRequestError(String(cause), undefined, { cause })
     }
   }
 }
@@ -177,11 +177,14 @@ export function createSchemaParamsVerifier<
     try {
       const params = schema.parameters.fromURLSearchParams(urlSearchParams)
       return params as LexMethodParams<M>
-    } catch (err) {
-      if (err instanceof l.LexValidationError) {
-        throw new InvalidRequestError(err.message)
+    } catch (cause) {
+      if (cause instanceof l.LexValidationError) {
+        const message = `Invalid query parameters: ${cause.issues
+          .map((issue) => issue.message)
+          .join(', ')}`
+        throw new InvalidRequestError(message, undefined, { cause })
       }
-      throw err
+      throw cause
     }
   }
 }
