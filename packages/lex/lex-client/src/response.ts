@@ -220,9 +220,9 @@ export class XrpcResponse<M extends Procedure | Query>
 
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
     if (method.output.encoding != null) {
-      // If the schema specifies an output encoding, verify that the response
-      // properly matches the expected output format (encoding and schema). If
-      // no output encoding is specified, any payload could be returned.
+      // If the schema specifies an output, verify that the response properly
+      // matches the expected format (encoding and schema, if present). If no
+      // output is specified, any payload could be returned.
 
       if (!payload || !method.output.matchesEncoding(payload.encoding)) {
         throw new XrpcInvalidResponseError(
