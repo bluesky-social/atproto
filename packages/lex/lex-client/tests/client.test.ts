@@ -733,9 +733,7 @@ describe('Client', () => {
           ),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof LexValidationError)
-          expect(err.message).toMatch(
-            'Expected string value type (got integer)',
-          )
+          expect(err.message).toMatch('Expected string value type (got 123)')
           return true
         })
 
@@ -759,9 +757,7 @@ describe('Client', () => {
           ),
         ).rejects.toSatisfy((err) => {
           assert(err instanceof LexValidationError)
-          expect(err.message).toMatch(
-            'Expected string value type (got integer)',
-          )
+          expect(err.message).toMatch('Expected string value type (got 123)')
           return true
         })
 
