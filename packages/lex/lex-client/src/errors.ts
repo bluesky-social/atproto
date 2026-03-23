@@ -347,34 +347,6 @@ export class XrpcInvalidResponseError<
   }
 }
 
-function buildUpstreamErrorMessage(
-  response: Response,
-  payload: XrpcUnknownResponsePayload | null,
-): string {
-  if (response.status < 400) {
-    return `Upstream server responded with an invalid status code (${response.status})`
-  }
-
-  const bodyPreview = !payload
-    ? `<no payload>`
-    : payload.encoding.startsWith('text/')
-      ? typeof payload.body === 'string'
-        ? JSON.stringify(trimString(payload.body))
-        : payload.body instanceof Uint8Array
-          ? JSON.stringify(trimString(new TextDecoder().decode(payload.body)))
-          : `${payload.encoding} payload`
-      : payload.body instanceof Uint8Array
-        ? `[${payload.body.byteLength} bytes]`
-        : trimString(lexStringify(payload.body))
-
-  return `Upstream server responded with a ${response.status} "${payload?.encoding}" error (${bodyPreview})`
-}
-
-function trimString(str: string, maxLength: number = 100): string {
-  if (str.length <= maxLength) return str
-  return `${str.slice(0, maxLength - 3)}...`
-}
-
 /**
  * Error class for invalid XRPC responses that fail schema validation.
  *
