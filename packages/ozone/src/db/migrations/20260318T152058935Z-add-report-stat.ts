@@ -22,13 +22,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   )
 
   await db.schema
-    .createIndex('idx_report_stat_computed_at')
+    .createIndex('idx_report_stat_lookup')
     .on('report_stat')
-    .column('computedAt')
+    .columns(['mode', 'timeframe', 'queueId', 'computedAt'])
     .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
+  await db.schema.dropIndex('idx_report_stat_lookup').ifExists().execute()
   await db.schema.dropIndex('idx_report_stat_computed_at').ifExists().execute()
   await db.schema.dropIndex('idx_report_stat_live').ifExists().execute()
   await db.schema.dropTable('report_stat').ifExists().execute()
