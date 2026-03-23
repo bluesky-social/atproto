@@ -7,12 +7,28 @@ import {
   PluginTransformResultArgs,
   QueryResult,
   RootOperationNode,
+  SqliteAdapter,
   SqliteDialect,
   UnknownRow,
   sql,
 } from 'kysely'
 import { dbLogger } from '../logger'
 import { retrySqlite } from './util'
+
+// Kysely 0.22.0's SqliteAdapter incorrectly reports supportsTransactionalDdl = false.
+// SQLite fully supports transactional DDL. Without this fix, the migrator runs migrations
+// outside of a transaction, causing race conditions when multiple processes start concurrently.
+class TransactionalSqliteAdapter extends SqliteAdapter {
+  get supportsTransactionalDdl() {
+    return true
+  }
+}
+
+class TransactionalSqliteDialect extends SqliteDialect {
+  createAdapter() {
+    return new TransactionalSqliteAdapter()
+  }
+}
 
 const DEFAULT_PRAGMAS = {
   // strict: 'ON', // @TODO strictness should live on table defs instead
@@ -39,7 +55,7 @@ export class Database<Schema> {
       sqliteDb.pragma(`${pragma} = ${pragmas[pragma]}`)
     }
     const db = new Kysely<T>({
-      dialect: new SqliteDialect({
+      dialect: new TransactionalSqliteDialect({
         database: sqliteDb,
       }),
     })
