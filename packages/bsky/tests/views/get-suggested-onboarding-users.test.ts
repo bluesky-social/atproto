@@ -2,10 +2,12 @@ import { once } from 'node:events'
 import { Server, createServer } from 'node:http'
 import { AddressInfo } from 'node:net'
 import express, { Application } from 'express'
-import AtpAgent from '@atproto/api'
+import {
+  AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton,
+  AtpAgent,
+  ids,
+} from '@atproto/api'
 import { SeedClient, TestNetwork } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { OutputSchema } from '../../src/lexicon/types/app/bsky/unspecced/getOnboardingSuggestedUsersSkeleton'
 
 type User = {
   id: string
@@ -75,7 +77,7 @@ describe('getSuggestedOnboardingUsers', () => {
         suggestionsApiKey: 'test',
       },
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     const result = await seed(sc)
@@ -175,9 +177,10 @@ class MockServer {
     app.get(
       '/xrpc/app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
       (req, res) => {
-        const skeleton: OutputSchema = {
-          dids: Array.from(this.mockedDids.values()),
-        }
+        const skeleton: AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.OutputSchema =
+          {
+            dids: Array.from(this.mockedDids.values()),
+          }
         return res.json(skeleton)
       },
     )

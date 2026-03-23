@@ -1,6 +1,6 @@
 import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
 import { Database } from '@atproto/bsky'
-import { AtUri } from '@atproto/syntax'
+import { AtUri, AtUriString } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
 import { postTexts, replyTexts } from './data'
 import blurHashB64 from './img/blur-hash-avatar-b64'
@@ -78,19 +78,19 @@ export async function generateMockSetup(env: TestNetwork) {
 
   const userAgents = await Promise.all(
     users.map(async (user) => {
-      const client: AtpAgent = env.pds.getClient()
-      await client.createAccount(user)
-      client.assertAuthenticated()
+      const agent: AtpAgent = env.pds.getAgent()
+      await agent.createAccount(user)
+      agent.assertAuthenticated()
       if (user.displayName || user.description) {
-        await client.app.bsky.actor.profile.create(
-          { repo: client.did },
+        await agent.app.bsky.actor.profile.create(
+          { repo: agent.did },
           {
             displayName: user.displayName,
             description: user.description,
           },
         )
       }
-      return client
+      return agent
     }),
   )
 
@@ -269,7 +269,7 @@ export async function generateMockSetup(env: TestNetwork) {
     [fg1Uri.toString()]: async () => {
       const feed = posts
         .filter(() => rand(2) === 0)
-        .map((post) => ({ post: post.uri }))
+        .map((post) => ({ post: post.uri as AtUriString }))
       return {
         encoding: 'application/json',
         body: {
@@ -323,7 +323,7 @@ export async function generateMockSetup(env: TestNetwork) {
     [fg2Uri.toString()]: async () => {
       const feed = posts
         .filter(() => rand(2) === 0)
-        .map((post) => ({ post: post.uri }))
+        .map((post) => ({ post: post.uri as AtUriString }))
       return {
         encoding: 'application/json',
         body: {
@@ -362,7 +362,7 @@ export async function generateMockSetup(env: TestNetwork) {
     [fg3Uri.toString()]: async () => {
       const feed = posts
         .filter(() => rand(2) === 0)
-        .map((post) => ({ post: post.uri }))
+        .map((post) => ({ post: post.uri as AtUriString }))
       return {
         encoding: 'application/json',
         body: {

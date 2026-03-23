@@ -14,7 +14,7 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": "dist/bin.js",
+  "bin": "bin.js",
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
     "start": "../dev-infra/with-test-redis-and-db.sh node --enable-source-maps dist/bin.js",
@@ -30,6 +30,7 @@
     "@atproto/common-web": "workspace:^",
     "@atproto/crypto": "workspace:^",
     "@atproto/identity": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/lexicon": "workspace:^",
     "@atproto/ozone": "workspace:^",
     "@atproto/pds": "workspace:^",

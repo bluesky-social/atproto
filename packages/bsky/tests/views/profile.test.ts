@@ -5,10 +5,10 @@ import {
   AppBskyEmbedExternal,
   AtpAgent,
   ComGermnetworkDeclaration,
+  ids,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
 import { forSnapshot, stripViewer } from '../_util'
 
 describe('pds profile views', () => {
@@ -29,8 +29,8 @@ describe('pds profile views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_profile',
     })
-    agent = network.bsky.getClient()
-    pdsAgent = network.pds.getClient()
+    agent = network.bsky.getAgent()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
 

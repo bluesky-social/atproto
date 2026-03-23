@@ -1,14 +1,13 @@
-import AtpAgent from '@atproto/api'
 import { dedupeStrs, mapDefined, noUndefinedVals } from '@atproto/common'
-import { InternalServerError } from '@atproto/xrpc-server'
+import { Client, DidString } from '@atproto/lex'
+import { MethodNotImplementedError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
   HydrateCtx,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/unspecced/getSuggestedOnboardingUsers'
+import { app } from '../../../../lexicons'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -25,7 +24,7 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrFollows,
     presentation,
   )
-  server.app.bsky.unspecced.getSuggestedOnboardingUsers({
+  server.add(app.bsky.unspecced.getSuggestedOnboardingUsers, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
@@ -58,22 +57,21 @@ export default function (server: Server, ctx: AppContext) {
 
 const skeleton = async (input: SkeletonFnInput<Context, Params>) => {
   const { params, ctx } = input
-  if (!ctx.suggestionsAgent)
-    throw new InternalServerError('Suggestions agent not available')
+  if (!ctx.suggestionsClient) {
+    throw new MethodNotImplementedError('Suggestions agent not available')
+  }
 
-  const res =
-    await ctx.suggestionsAgent.app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton(
-      {
-        limit: params.limit,
-        viewer: params.hydrateCtx.viewer ?? undefined,
-        category: params.category,
-      },
-      {
-        headers: params.headers,
-      },
-    )
-
-  return res.data
+  return ctx.suggestionsClient.call(
+    app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton,
+    {
+      limit: params.limit,
+      viewer: params.hydrateCtx.viewer ?? undefined,
+      category: params.category,
+    },
+    {
+      headers: params.headers,
+    },
+  )
 }
 
 const hydration = async (
@@ -81,7 +79,7 @@ const hydration = async (
 ) => {
   const { ctx, params, skeleton } = input
   const dids = dedupeStrs(skeleton.dids)
-  const pairs: Map<string, string[]> = new Map()
+  const pairs: Map<DidString, DidString[]> = new Map()
   const viewer = params.hydrateCtx.viewer
   if (viewer) {
     pairs.set(viewer, dids)
@@ -128,18 +126,18 @@ const presentation = (
 type Context = {
   hydrator: Hydrator
   views: Views
-  topicsAgent: AtpAgent | undefined
-  suggestionsAgent: AtpAgent | undefined
+  topicsClient: Client | undefined
+  suggestionsClient: Client | undefined
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.unspecced.getSuggestedOnboardingUsers.$Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
   category?: string
 }
 
 type SkeletonState = {
-  dids: string[]
+  dids: DidString[]
   recId?: string
   recIdStr?: string
 }
