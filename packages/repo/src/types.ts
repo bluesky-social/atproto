@@ -124,6 +124,28 @@ export type RecordWriteDescript =
 
 export type WriteLog = RecordWriteDescript[][]
 
+// Preorder Map
+// ---------------
+
+// The hypothetical max MST layer is 128, so `PREORDER_MAX_DEPTH - layer` is always > 0
+// (depth=0 is used to represent records, rather than MST nodes)
+export const PREORDER_MAX_DEPTH = 129
+
+export type PreorderOpInsert = {
+  action: 'insert'
+  lpath: string
+  depth: number
+  cid: string
+}
+
+export type PreorderOpDelete = {
+  action: 'delete'
+  lpath: string
+  depth: number
+}
+
+export type PreorderOp = PreorderOpInsert | PreorderOpDelete
+
 // Updates/Commits
 // ---------------
 
@@ -135,6 +157,7 @@ export type CommitData = {
   newBlocks: BlockMap
   relevantBlocks: BlockMap
   removedCids: CidSet
+  preorderOps?: PreorderOp[]
 }
 
 export type RepoUpdate = CommitData & {
