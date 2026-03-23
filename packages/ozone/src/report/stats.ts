@@ -28,7 +28,7 @@ export class ReportStatsService {
     return (db: Database) => new ReportStatsService(db)
   }
 
-  /** Materialize each group, refreshing stats if needed. */
+  /** Materialize all groups, refreshing stats if needed. */
   async materializeAll(opts?: { force?: boolean }): Promise<void> {
     try {
       const start = Date.now()
@@ -53,6 +53,10 @@ export class ReportStatsService {
   private async enumerateGroups(): Promise<ReportStatGroup[]> {
     const groups: ReportStatGroup[] = []
 
+    // global
+    groups.push({ queueId: -1, mode: 'live', timeframe: 'day' })
+    groups.push({ queueId: -1, mode: 'fixed', timeframe: 'day' })
+
     // per-queue
     const queues = await this.db.db
       .selectFrom('report_queue')
@@ -67,9 +71,6 @@ export class ReportStatsService {
       )
     }
 
-    // global
-    groups.push({ queueId: -1, mode: 'live', timeframe: 'day' })
-
     return groups
   }
 
@@ -79,7 +80,7 @@ export class ReportStatsService {
   private async materializeGroup(
     group: ReportStatGroup,
     opts?: { force?: boolean },
-  ): Promise<Selectable<ReportStat>> {
+  ): Promise<boolean> {
     if (!opts?.force) {
       // check if up to date
       const cached = await this.getLatestStats(group)
@@ -91,11 +92,12 @@ export class ReportStatsService {
             : 7 * 24 * HOUR
       const expiresAt = Date.now() - ttl
       const computedAt = new Date(cached?.computedAt || 0).getTime()
-      if (cached && computedAt > expiresAt) return cached
+      if (cached && computedAt > expiresAt) return false
     }
 
     const stats = await this.computeGroup(group)
-    return await this.updateGroup(group, stats)
+    await this.updateGroup(group, stats)
+    return true
   }
 
   private async updateGroup(

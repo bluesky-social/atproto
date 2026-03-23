@@ -22,6 +22,7 @@ import { ScheduledActionProcessor } from './scheduled-action-processor'
 import { StrikeExpiryProcessor } from './strike-expiry-processor'
 import { TeamProfileSynchronizer } from './team-profile-synchronizer'
 import { VerificationListener } from './verification-listener'
+import { StatsComputer } from './stats-computer'
 
 export type DaemonContextOptions = {
   db: Database
@@ -36,6 +37,7 @@ export type DaemonContextOptions = {
   strikeExpiryProcessor: StrikeExpiryProcessor
   queueRouter: QueueRouter
   verificationListener?: VerificationListener
+  statsComputer?: StatsComputer
 }
 
 export class DaemonContext {
@@ -116,8 +118,10 @@ export class DaemonContext {
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
     const queueService = QueueService.creator()
+    const queueRouter = new QueueRouter(db, queueService)
+
     const reportStatsService = ReportStatsService.creator()
-    const queueRouter = new QueueRouter(db, queueService, reportStatsService)
+    const statsComputer = new StatsComputer(db, reportStatsService)
 
     // Only spawn the listener if verifier config exists and a jetstream URL is provided
     const verificationListener =
@@ -142,6 +146,7 @@ export class DaemonContext {
       strikeExpiryProcessor,
       queueRouter,
       verificationListener,
+      statsComputer,
       ...(overrides ?? {}),
     })
   }
