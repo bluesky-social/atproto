@@ -83,11 +83,7 @@ export class ReportStatsService {
   ): Promise<Selectable<ReportStat>> {
     if (!opts?.force) {
       const cached = await this.getLatestStats(group)
-      const fresh = this.isGroupFresh(cached)
-      if (cached && fresh) {
-        dbLogger.info({ group }, 'report stats group is fresh, skipping')
-        return cached
-      }
+      if (cached && this.isGroupFresh(cached)) return cached
     }
 
     const stats = await this.computeGroup(group)
@@ -95,8 +91,7 @@ export class ReportStatsService {
     return result
   }
 
-  private isGroupFresh(stats?: Selectable<ReportStat> | undefined): boolean {
-    if (!stats) return false
+  private isGroupFresh(stats: Selectable<ReportStat>): boolean {
     const ttl =
       stats.mode === 'live'
         ? 15 * MINUTE
