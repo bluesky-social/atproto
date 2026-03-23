@@ -80,24 +80,32 @@ export class ReportStatsService {
   private async materializeGroup(
     group: ReportStatGroup,
     opts?: { force?: boolean },
-  ): Promise<boolean> {
+  ): Promise<Selectable<ReportStat>> {
     if (!opts?.force) {
-      // check if up to date
       const cached = await this.getLatestStats(group)
-      const ttl =
-        group.mode === 'live'
-          ? 15 * MINUTE
-          : group.timeframe === 'day'
-            ? 24 * HOUR
-            : 7 * 24 * HOUR
-      const expiresAt = Date.now() - ttl
-      const computedAt = new Date(cached?.computedAt || 0).getTime()
-      if (cached && computedAt > expiresAt) return false
+      const fresh = this.isGroupFresh(cached)
+      if (cached && fresh) {
+        dbLogger.info({ group }, 'report stats group is fresh, skipping')
+        return cached
+      }
     }
 
     const stats = await this.computeGroup(group)
-    await this.updateGroup(group, stats)
-    return true
+    const result = await this.updateGroup(group, stats)
+    return result
+  }
+
+  private isGroupFresh(stats?: Selectable<ReportStat> | undefined): boolean {
+    if (!stats) return false
+    const ttl =
+      stats.mode === 'live'
+        ? 15 * MINUTE
+        : stats.timeframe === 'day'
+          ? 24 * HOUR
+          : 7 * 24 * HOUR
+    const expiresAt = Date.now() - ttl
+    const computedAt = new Date(stats.computedAt).getTime()
+    return computedAt > expiresAt
   }
 
   private async updateGroup(
