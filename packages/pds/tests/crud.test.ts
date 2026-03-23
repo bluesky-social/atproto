@@ -658,7 +658,7 @@ describe('crud operations', () => {
     const postRecord = {
       $type: 'app.bsky.feed.post',
       text: 'test',
-      createdAt: '0000-04-12T23:20:50.123Z',
+      createdAt: '0000-00-12T23:20:50.123Z',
     }
     await expect(
       aliceAgent.com.atproto.repo.createRecord({
