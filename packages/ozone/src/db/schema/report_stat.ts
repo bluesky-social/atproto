@@ -6,6 +6,10 @@ export interface ReportStat {
   id: Generated<number>
   // group
   queueId: number // -1 = aggregate across all queues
+  /** The expiration policy for the statistic.
+   * 'live' expires in 15 minutes
+   * 'fixed' expires based on its timeframe (e.g. each day).
+   * */
   mode: string // 'live' or 'fixed'
   timeframe: string // 'day' or 'week'
   // output
