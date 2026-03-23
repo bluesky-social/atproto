@@ -161,50 +161,30 @@ export class ReportStatsService {
           : 0
     const cutoff = new Date(timestamp).toISOString()
 
-    // pending
-    let pendingQb = this.db.db
+    let qb = this.db.db
       .selectFrom('report')
-      .select(sql<number>`count(*)`.as('count'))
-      .where('status', '=', 'open')
+      .select([
+        sql<number>`count(*)`.as('inboundCount'),
+        sql<number>`count(*) filter (where "status" = 'open')`.as(
+          'pendingCount',
+        ),
+        sql<number>`count(*) filter (where "status" = 'closed' and "updatedAt" > ${cutoff})`.as(
+          'actionedCount',
+        ),
+        sql<number>`count(*) filter (where "status" = 'escalated' and "updatedAt" > ${cutoff})`.as(
+          'escalatedCount',
+        ),
+      ])
       .where('createdAt', '>', cutoff)
     if (queueId !== -1) {
-      pendingQb = pendingQb.where('queueId', '=', queueId)
+      qb = qb.where('queueId', '=', queueId)
     }
-    const pendingCount = (await pendingQb.executeTakeFirst())?.count ?? 0
 
-    // inbound
-    let inboundQb = this.db.db
-      .selectFrom('report')
-      .select(sql<number>`count(*)`.as('count'))
-      .where('createdAt', '>', cutoff)
-    if (queueId !== -1) {
-      inboundQb = inboundQb.where('queueId', '=', queueId)
-    }
-    const inboundCount = (await inboundQb.executeTakeFirst())?.count ?? 0
-
-    // actioned
-    let actionedQb = this.db.db
-      .selectFrom('report')
-      .select(sql<number>`count(*)`.as('count'))
-      .where('status', '=', 'closed')
-      .where('updatedAt', '>', cutoff)
-    if (queueId !== -1) {
-      actionedQb = actionedQb.where('queueId', '=', queueId)
-    }
-    const actionedCount = (await actionedQb.executeTakeFirst())?.count ?? 0
-
-    // escalated
-    let escalatedQb = this.db.db
-      .selectFrom('report')
-      .select(sql<number>`count(*)`.as('count'))
-      .where('status', '=', 'escalated')
-      .where('updatedAt', '>', cutoff)
-    if (queueId !== -1) {
-      escalatedQb = escalatedQb.where('queueId', '=', queueId)
-    }
-    const escalatedCount = (await escalatedQb.executeTakeFirst())?.count ?? 0
-
-    // action rate
+    const row = await qb.executeTakeFirst()
+    const inboundCount = row?.inboundCount ?? 0
+    const pendingCount = row?.pendingCount ?? 0
+    const actionedCount = row?.actionedCount ?? 0
+    const escalatedCount = row?.escalatedCount ?? 0
     const actionRate =
       inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
 
