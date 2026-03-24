@@ -1,14 +1,17 @@
+import { Readable } from 'node:stream'
 import express from 'express'
+import { decodeStream, omit } from '@atproto/common'
 import { LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
 import {
   HandlerPipeThrough,
   HandlerPipeThroughBuffer,
+  HandlerPipeThroughStream,
 } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
 import { readStickyLogger as log } from '../logger'
 import {
-  asPipeThroughBuffer,
+  bufferUpstreamResponseMaybe,
   isJsonContentType,
   pipethrough,
 } from '../pipethrough'
@@ -51,38 +54,32 @@ export const pipethroughReadAfterWrite = async <
     return streamRes
   }
 
-  // if the munging fails, we can't return the original response because the
-  // stream will already have been read. If we end-up buffering the response,
-  // we'll return the buffered response in case of an error.
-  let bufferRes: HandlerPipeThroughBuffer | undefined
+  const buffered = await bufferUpstreamResponseMaybe(streamRes)
+
+  // response is too big to buffer, skip munge and return the stream
+  if ('stream' in buffered) return buffered
 
   try {
+    const lex = lexParse(buffered.buffer.toString('utf8'), { strict: false })
+
+    const original = method.output.schema.validate(lex, {
+      strict: false,
+    }) as l.InferMethodOutputBody<M, never>
+
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await store.record.getRecordsSinceRev(rev)
-      if (local.count === 0) return streamRes
-
-      const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
-
-      const lex = lexParse(buffer.toString('utf8'), { strict: false })
-
-      const result = method.output.schema.safeValidate(lex, { strict: false })
-
-      // We won't perform munging with invalid upstream data
-      if (!result.success) return bufferRes
-
-      const parsedRes = result.value as l.InferMethodOutputBody<M, never>
+      if (local.count === 0) return buffered
 
       const localViewer = ctx.localViewer(store)
 
-      const data = await munge(localViewer, parsedRes, local, requester)
+      const data = await munge(localViewer, original, local, requester)
+
       return formatMungedResponse(data, getLocalLag(local))
     })
   } catch (err) {
-    // The error occurred while reading the stream, this is non-recoverable
-    if (!bufferRes && !streamRes.stream.readable) throw err
-
     log.warn({ err, requester }, 'error in read after write munge')
-    return bufferRes ?? streamRes
+
+    return buffered
   }
 }
 
