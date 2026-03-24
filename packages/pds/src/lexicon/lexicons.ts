@@ -19188,7 +19188,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Assign a report to the current user.',
+        description:
+          'Assign a report to a user. Defaults to the caller. Admins may assign to any moderator.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -19203,6 +19204,12 @@ export const schemaDict = {
                 type: 'integer',
                 description:
                   'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description:
+                  "DID to be assigned. Defaults to the caller's DID. Admins may assign to any moderator.",
               },
               isPermanent: {
                 type: 'boolean',

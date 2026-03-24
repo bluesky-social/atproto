@@ -23,6 +23,8 @@ export interface InputSchema {
   reportId: number
   /** Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue. */
   queueId?: number
+  /** DID to be assigned. Defaults to the caller's DID. Admins may assign to any moderator. */
+  did?: string
   /** When true, the assignment has no expiry (endAt is null). Throws AlreadyAssigned if another user already has a permanent assignment on this report. */
   isPermanent?: boolean
 }

@@ -43,6 +43,7 @@ export interface AssignReportInput {
   reportId: number
   queueId?: number | null
   isPermanent?: boolean
+  createdBy?: string
 }
 export interface UnassignReportInput {
   reportId: number
@@ -447,7 +448,8 @@ export class AssignmentService {
           reportId,
           activityType: 'assignmentActivity',
           isAutomated: false,
-          createdBy: did,
+          createdBy: input.createdBy ?? did,
+          meta: { assignedTo: did },
         })
       } catch (err) {
         if (
