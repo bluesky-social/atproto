@@ -1078,6 +1078,7 @@ async function getProcedureInput<M extends Procedure>(
     const body: Body = request
     return { encoding, body } as InferMethodInput<M, Body>
   } else {
+    await request.body?.cancel()
     return undefined as InferMethodInput<M, Body>
   }
 }
@@ -1091,6 +1092,7 @@ async function getQueryInput<M extends Query>(
     request.headers.has('content-type') ||
     request.headers.has('content-length')
   ) {
+    await request.body?.cancel()
     throw new LexServerError(400, {
       error: 'InvalidRequest',
       message: 'GET requests must not have a body',

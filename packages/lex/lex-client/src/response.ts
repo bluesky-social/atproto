@@ -221,20 +221,24 @@ export class XrpcResponse<M extends Procedure | Query>
             : false,
     })
 
+    if (!method.output.matchesEncoding(payload?.encoding)) {
+      throw new XrpcInvalidResponseError(
+        method,
+        response,
+        payload,
+        `Expected ${stringifyEncoding(method.output.encoding)} response (got ${stringifyEncoding(payload?.encoding)})`,
+      )
+    }
+
     // Response is successful (2xx). Validate payload (data and encoding) against schema.
     if (method.output.encoding != null) {
       // If the schema specifies an output, verify that the response properly
       // matches the expected format (encoding and schema, if present). If no
       // output is specified, any payload could be returned.
 
-      if (!payload || !method.output.matchesEncoding(payload.encoding)) {
-        throw new XrpcInvalidResponseError(
-          method,
-          response,
-          payload,
-          `Expected "${method.output.encoding}" response, got ${payload ? `"${payload.encoding}"` : 'no payload'}`,
-        )
-      }
+      // Needed for type safety. Should never happen since matchesEncoding()
+      // should return not succeed if there is a schema encoding but no payload.
+      if (!payload) throw new Error('Expected payload')
 
       // Assert valid response body.
       if (method.output.schema && options?.validateResponse !== false) {
@@ -347,4 +351,8 @@ async function readPayload(
       { cause },
     )
   }
+}
+
+function stringifyEncoding(encoding: string | undefined) {
+  return encoding ? `"${encoding}"` : 'no payload'
 }

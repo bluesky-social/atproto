@@ -273,6 +273,7 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
     //
     return async (req) => {
       if (getBodyPresence(req) === 'present') {
+        // @NOTE we *could* also discard the body here instead of throwing an error
         throw new InvalidRequestError(
           `A request body was provided when none was expected`,
         )
