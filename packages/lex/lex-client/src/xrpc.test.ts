@@ -221,6 +221,17 @@ describe(xrpc, () => {
       expect(response.success).toBe(true)
       expect(response.body).toEqual({ value: 'ok' })
     })
+
+    it('ignores output for no-output queries', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json({ unexpected: 'data' })
+      })
+
+      const response = await xrpc(fetchHandler, testNoOutputQuery)
+
+      expect(response.success).toBe(true)
+      expect(response.body).toStrictEqual({ unexpected: 'data' })
+    })
   })
 
   describe('error handling', () => {
@@ -444,20 +455,6 @@ describe(xrpc, () => {
           expect(err.cause.message).toContain('Unexpected token')
           return true
         })
-      })
-
-      it('throws XrpcInvalidResponseError when schema expects no payload but got one', async () => {
-        const fetchHandler = vi.fn<FetchHandler>(async () => {
-          return Response.json({ unexpected: 'data' })
-        })
-
-        await expect(xrpc(fetchHandler, testNoOutputQuery)).rejects.toSatisfy(
-          (err) => {
-            assert(err instanceof XrpcInvalidResponseError)
-            expect(err.message).toContain('no body')
-            return true
-          },
-        )
       })
 
       it('throws XrpcInvalidResponseError when schema expects payload but response is empty', async () => {
