@@ -8,13 +8,20 @@ export default function (server: Server, ctx: AppContext) {
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ input, auth }) => {
       const authDid = getAuthDid(auth, ctx.cfg.service.did)
+      const did = input.body.did ?? authDid
 
-      if (!authDid) {
+      if (!did) {
         throw new ForbiddenError('No one to assign report to')
       }
 
+      // RuBAC: only admins can assign to a different user
+      if (did !== authDid && !auth.credentials.isAdmin) {
+        throw new ForbiddenError('Unauthorized')
+      }
+
       const result = await ctx.assignmentService.assignReport({
-        did: authDid,
+        did,
+        createdBy: authDid,
         reportId: input.body.reportId,
         queueId: input.body.queueId,
         isPermanent: input.body.isPermanent,

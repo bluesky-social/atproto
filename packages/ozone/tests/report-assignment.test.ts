@@ -2,6 +2,7 @@ import AtpAgent, {
   ComAtprotoModerationDefs,
   ToolsOzoneReportAssignModerator,
   ToolsOzoneReportGetAssignments,
+  ToolsOzoneReportListActivities,
   ToolsOzoneReportUnassignModerator,
 } from '@atproto/api'
 import { SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
@@ -58,6 +59,19 @@ describe('report-assignment', () => {
   }
   const clearAssignments = async () => {
     await network.ozone.ctx.db.db.deleteFrom('moderator_assignment').execute()
+  }
+
+  const listActivities = async (
+    params: ToolsOzoneReportListActivities.QueryParams,
+    callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+  ) => {
+    const { data } = await agent.tools.ozone.report.listActivities(params, {
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneReportListActivities,
+        callerRole,
+      ),
+    })
+    return data
   }
 
   const createReport = async (): Promise<number> => {
@@ -376,6 +390,58 @@ describe('report-assignment', () => {
       await assignReport({ reportId, isPermanent: true }, 'moderator')
       await expect(assignReport({ reportId }, 'admin')).rejects.toThrow(
         'Report already assigned',
+      )
+    })
+
+    it('records assignedTo in activity meta when admin assigns to another mod', async () => {
+      const reportId = await createReport()
+      const assignment = await assignReport(
+        { reportId, isPermanent: true, did: network.ozone.moderatorAccnt.did },
+        'admin',
+      )
+      expect(assignment.reportId).toBe(reportId)
+      expect(assignment.moderator?.did).toBe(network.ozone.moderatorAccnt.did)
+
+      const { activities } = await listActivities({ reportId })
+      const assignmentActivity = activities.find(
+        (a) =>
+          a.activity.$type === 'tools.ozone.report.defs#assignmentActivity',
+      )
+      expect(assignmentActivity).toBeDefined()
+      expect(assignmentActivity!.meta?.assignedTo).toBe(
+        network.ozone.moderatorAccnt.did,
+      )
+      expect(assignmentActivity!.createdBy).toBe(network.ozone.adminAccnt.did)
+    })
+
+    it('non-admin cannot assign to a different user', async () => {
+      const reportId = await createReport()
+      await expect(
+        assignReport(
+          { reportId, isPermanent: true, did: network.ozone.adminAccnt.did },
+          'moderator',
+        ),
+      ).rejects.toThrow('Unauthorized')
+    })
+
+    it('assignedTo equals createdBy when mod assigns to self', async () => {
+      const reportId = await createReport()
+      await assignReport(
+        { reportId, isPermanent: true, did: network.ozone.moderatorAccnt.did },
+        'moderator',
+      )
+
+      const { activities } = await listActivities({ reportId })
+      const assignmentActivity = activities.find(
+        (a) =>
+          a.activity.$type === 'tools.ozone.report.defs#assignmentActivity',
+      )
+      expect(assignmentActivity).toBeDefined()
+      expect(assignmentActivity!.meta?.assignedTo).toBe(
+        network.ozone.moderatorAccnt.did,
+      )
+      expect(assignmentActivity!.createdBy).toBe(
+        network.ozone.moderatorAccnt.did,
       )
     })
 

@@ -15,6 +15,7 @@ export class QueueRouter {
   constructor(
     private db: Database,
     private queueServiceCreator: QueueServiceCreator,
+    private serviceDid: string,
   ) {}
 
   start() {
@@ -56,10 +57,10 @@ export class QueueRouter {
     const queueService = this.queueServiceCreator(this.db)
     const lastId = await this.getCursor()
 
-    const result = await queueService.assignReportBatch({
-      cursor: lastId,
-      limit: BATCH_SIZE,
-    })
+    const result = await queueService.assignReportBatch(
+      { cursor: lastId, limit: BATCH_SIZE },
+      { serviceDid: this.serviceDid },
+    )
 
     if (result.processed === 0) {
       dbLogger.info('no unassigned reports to route')

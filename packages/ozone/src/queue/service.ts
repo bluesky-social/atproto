@@ -6,6 +6,7 @@ import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'
 import { jsonb } from '../db/types'
+import { handleReportUpdate } from '../report/handle-report-update'
 
 export type QueueServiceCreator = (db: Database) => QueueService
 
@@ -243,7 +244,7 @@ export class QueueService {
     params:
       | { start: number; end: number; limit: number }
       | { cursor: number | null; limit: number },
-    opts?: { includeUnmatched?: boolean },
+    opts?: { includeUnmatched?: boolean; serviceDid?: string },
   ): Promise<{
     processed: number
     assigned: number
@@ -259,7 +260,14 @@ export class QueueService {
     let query = this.db.db
       .selectFrom('report as r')
       .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
-      .select(['r.id', 'me.subjectUri', 'me.subjectMessageId', 'me.meta'])
+      .select([
+        'r.id',
+        'r.status',
+        'me.subjectUri',
+        'me.subjectMessageId',
+        'me.meta',
+      ])
+      .where('r.status', '!=', 'closed')
       .orderBy('r.id', 'asc')
       .limit(params.limit)
 
@@ -288,8 +296,17 @@ export class QueueService {
     }
 
     const now = new Date().toISOString()
-    let assigned = 0
-    let unassigned = 0
+
+    // Resolve each report's destination in memory — no DB calls in this loop
+    type MatchedEntry = {
+      id: number
+      queueId: number
+      nextStatus: string | null
+      activity: { activityType: string; previousStatus: string } | null
+    }
+
+    const matchedByQueue = new Map<number, MatchedEntry[]>()
+    const unmatchedIds: number[] = []
     let maxReportId = 0
 
     for (const report of reports) {
@@ -318,29 +335,93 @@ export class QueueService {
         reportType,
       )
 
-      await this.db.db
-        .updateTable('report')
-        .set({
-          queueId: matchingQueue?.id ?? -1,
-          queuedAt: matchingQueue ? now : null,
-          updatedAt: now,
-        })
-        .where('id', '=', report.id)
-        .execute()
-
       if (matchingQueue) {
-        assigned++
+        const result = handleReportUpdate(report.status, { type: 'queue' })
+        const group = matchedByQueue.get(matchingQueue.id) ?? []
+        group.push({
+          id: report.id,
+          queueId: matchingQueue.id,
+          nextStatus: result.nextStatus,
+          activity: result.activity,
+        })
+        matchedByQueue.set(matchingQueue.id, group)
       } else {
-        unassigned++
+        unmatchedIds.push(report.id)
       }
 
       if (report.id > maxReportId) maxReportId = report.id
     }
 
+    // Bulk UPDATE matched reports — split by whether status should change.
+    // handleReportUpdate returns nextStatus only for open → queued;
+    // other statuses keep their current status but still get routed.
+    for (const [queueId, group] of matchedByQueue) {
+      const withTransition = group
+        .filter((r) => r.nextStatus !== null)
+        .map((r) => r.id)
+      const withoutTransition = group
+        .filter((r) => r.nextStatus === null)
+        .map((r) => r.id)
+
+      if (withTransition.length) {
+        await this.db.db
+          .updateTable('report')
+          .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
+          .where('id', 'in', withTransition)
+          .execute()
+      }
+      if (withoutTransition.length) {
+        await this.db.db
+          .updateTable('report')
+          .set({ queueId, queuedAt: now, updatedAt: now })
+          .where('id', 'in', withoutTransition)
+          .execute()
+      }
+    }
+
+    // Bulk UPDATE unmatched reports — status stays unchanged
+    if (unmatchedIds.length) {
+      await this.db.db
+        .updateTable('report')
+        .set({ queueId: -1, queuedAt: null, updatedAt: now })
+        .where('id', 'in', unmatchedIds)
+        .execute()
+    }
+
+    // Bulk INSERT activities for matched reports that changed status.
+    if (opts?.serviceDid) {
+      const withActivities = [...matchedByQueue.values()]
+        .flat()
+        .filter((r) => r.activity !== null)
+      if (withActivities.length) {
+        await this.db.db
+          .insertInto('report_activity')
+          .values(
+            withActivities.map((r) => ({
+              reportId: r.id,
+              activityType: r.activity!.activityType,
+              previousStatus: r.activity!.previousStatus,
+              internalNote: null,
+              publicNote: null,
+              meta: null,
+              isAutomated: true,
+              createdBy: opts.serviceDid!,
+              createdAt: now,
+            })),
+          )
+          .execute()
+      }
+    }
+
+    const assigned = [...matchedByQueue.values()].reduce(
+      (sum, g) => sum + g.length,
+      0,
+    )
+
     return {
       processed: reports.length,
       assigned,
-      unmatched: unassigned,
+      unmatched: unmatchedIds.length,
       maxId: maxReportId,
     }
   }
