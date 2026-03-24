@@ -766,6 +766,11 @@ export class LexRouter {
         })
       } catch (error) {
         return this.handlerError(request, method, error)
+      } finally {
+        if (!request.bodyUsed) {
+          const { body } = request
+          if (body && !body.locked) await body.cancel()
+        }
       }
     }
   }
