@@ -360,9 +360,7 @@ function buildPayload(
 ): null | { body: BodyInit; encoding: string } {
   if (schema.encoding === undefined) {
     if (body !== undefined) {
-      throw new TypeError(
-        `Cannot send a ${typeof body} body with undefined encoding`,
-      )
+      throw new TypeError(`Endpoint expects no payload`)
     }
 
     return null

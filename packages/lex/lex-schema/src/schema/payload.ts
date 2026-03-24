@@ -109,10 +109,9 @@ export class Payload<
   matchesEncoding(contentType: string | undefined): boolean {
     const { encoding } = this
 
-    // Handle undefined cases
     if (encoding === undefined) {
-      // Expecting no body
-      return contentType == null
+      // When the output is not defined, we don't enforce any rule on the payload.
+      return true
     } else if (contentType == null) {
       // Expecting a body, but got no content-type
       return false
