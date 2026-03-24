@@ -6,6 +6,7 @@ import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'
 import { jsonb } from '../db/types'
+import { handleReportUpdate } from '../report/handle-report-update'
 
 export type QueueServiceCreator = (db: Database) => QueueService
 
@@ -297,7 +298,12 @@ export class QueueService {
     const now = new Date().toISOString()
 
     // Resolve each report's destination in memory — no DB calls in this loop
-    type MatchedEntry = { id: number; fromStatus: string; queueId: number }
+    type MatchedEntry = {
+      id: number
+      queueId: number
+      nextStatus: string | null
+      activity: { activityType: string; previousStatus: string } | null
+    }
 
     const matchedByQueue = new Map<number, MatchedEntry[]>()
     const unmatchedIds: number[] = []
@@ -330,11 +336,13 @@ export class QueueService {
       )
 
       if (matchingQueue) {
+        const result = handleReportUpdate(report.status, { type: 'queue' })
         const group = matchedByQueue.get(matchingQueue.id) ?? []
         group.push({
           id: report.id,
-          fromStatus: report.status,
           queueId: matchingQueue.id,
+          nextStatus: result.nextStatus,
+          activity: result.activity,
         })
         matchedByQueue.set(matchingQueue.id, group)
       } else {
@@ -345,28 +353,28 @@ export class QueueService {
     }
 
     // Bulk UPDATE matched reports — split by whether status should change.
-    // Only transition to 'queued' from 'open'; other statuses (escalated,
-    // assigned) keep their current status but still get routed to the queue.
+    // handleReportUpdate returns nextStatus only for open → queued;
+    // other statuses keep their current status but still get routed.
     for (const [queueId, group] of matchedByQueue) {
-      const openIds = group
-        .filter((r) => r.fromStatus === 'open')
+      const withTransition = group
+        .filter((r) => r.nextStatus !== null)
         .map((r) => r.id)
-      const nonOpenIds = group
-        .filter((r) => r.fromStatus !== 'open')
+      const withoutTransition = group
+        .filter((r) => r.nextStatus === null)
         .map((r) => r.id)
 
-      if (openIds.length) {
+      if (withTransition.length) {
         await this.db.db
           .updateTable('report')
           .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
-          .where('id', 'in', openIds)
+          .where('id', 'in', withTransition)
           .execute()
       }
-      if (nonOpenIds.length) {
+      if (withoutTransition.length) {
         await this.db.db
           .updateTable('report')
           .set({ queueId, queuedAt: now, updatedAt: now })
-          .where('id', 'in', nonOpenIds)
+          .where('id', 'in', withoutTransition)
           .execute()
       }
     }
@@ -381,20 +389,18 @@ export class QueueService {
     }
 
     // Bulk INSERT activities for matched reports that changed status.
-    // Only 'open' → 'queued' is a real state transition; reports that
-    // were already escalated/assigned don't get a queueActivity entry.
     if (opts?.serviceDid) {
-      const statusChanged = [...matchedByQueue.values()]
+      const withActivities = [...matchedByQueue.values()]
         .flat()
-        .filter((r) => r.fromStatus === 'open')
-      if (statusChanged.length) {
+        .filter((r) => r.activity !== null)
+      if (withActivities.length) {
         await this.db.db
           .insertInto('report_activity')
           .values(
-            statusChanged.map((r) => ({
+            withActivities.map((r) => ({
               reportId: r.id,
-              activityType: 'queueActivity',
-              previousStatus: r.fromStatus,
+              activityType: r.activity!.activityType,
+              previousStatus: r.activity!.previousStatus,
               internalNote: null,
               publicNote: null,
               meta: null,

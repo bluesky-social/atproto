@@ -3,22 +3,11 @@ import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
 import { Report } from '../db/schema/report'
 import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports'
-
-export function getReportStatusForEventType(eventType: string): string | null {
-  // Returns the status that reports should transition to for a given event type
-  // Returns null if the event type doesn't affect report status
-  switch (eventType) {
-    case 'tools.ozone.moderation.defs#modEventAcknowledge':
-    case 'tools.ozone.moderation.defs#modEventTakedown':
-    case 'tools.ozone.moderation.defs#modEventLabel':
-    case 'tools.ozone.moderation.defs#modEventComment':
-      return 'closed'
-    case 'tools.ozone.moderation.defs#modEventEscalate':
-      return 'escalated'
-    default:
-      return null
-  }
-}
+import {
+  AlreadyInTargetState,
+  InvalidStateTransition,
+  handleReportUpdate,
+} from '../report/handle-report-update'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
@@ -366,39 +355,70 @@ export async function processReportAction(
     }
   }
 
-  // Determine the new status based on event type
-  const newStatus = getReportStatusForEventType(eventType)
-  if (!newStatus) {
-    // Event type doesn't affect report status, no updates needed
+  // Determine per-report transitions via the pure state machine.
+  // Skip reports whose current status doesn't allow the transition.
+  const validUpdates: {
+    id: number
+    nextStatus: string
+    activityType: string
+    previousStatus: string
+  }[] = []
+
+  for (const report of matchingReports) {
+    try {
+      const result = handleReportUpdate(report.status, {
+        type: 'event',
+        eventType,
+      })
+      if (result.nextStatus && result.activity) {
+        validUpdates.push({
+          id: report.id,
+          nextStatus: result.nextStatus,
+          activityType: result.activity.activityType,
+          previousStatus: result.activity.previousStatus,
+        })
+      }
+    } catch (err) {
+      if (
+        err instanceof AlreadyInTargetState ||
+        err instanceof InvalidStateTransition
+      ) {
+        // Skip reports that can't transition — silent per design
+        continue
+      }
+      throw err
+    }
+  }
+
+  if (!validUpdates.length) {
     return 0
   }
 
   const now = new Date().toISOString()
-  const reportIds = matchingReports.map((r) => r.id)
+  const updateIds = validUpdates.map((u) => u.id)
 
-  // Bulk UPDATE all matched reports in a single query
+  // Bulk UPDATE reports that passed validation
+  // All valid reports share the same target status since they come from the
+  // same event type, so a single UPDATE is sufficient.
   await db.db
     .updateTable('report')
     .set({
       actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
       actionNote: reportAction.note ?? null,
-      status: newStatus,
+      status: validUpdates[0].nextStatus,
       updatedAt: now,
     })
-    .where('id', 'in', reportIds)
+    .where('id', 'in', updateIds)
     .execute()
-
-  const activityType =
-    newStatus === 'escalated' ? 'escalationActivity' : 'closeActivity'
 
   // Bulk INSERT one activity per updated report
   await db.db
     .insertInto('report_activity')
     .values(
-      matchingReports.map((r) => ({
-        reportId: r.id,
-        activityType,
-        previousStatus: r.status,
+      validUpdates.map((u) => ({
+        reportId: u.id,
+        activityType: u.activityType,
+        previousStatus: u.previousStatus,
         internalNote: null,
         publicNote: reportAction.note ?? null,
         meta: null,
@@ -409,5 +429,5 @@ export async function processReportAction(
     )
     .execute()
 
-  return reportIds.length
+  return validUpdates.length
 }

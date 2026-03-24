@@ -1,6 +1,11 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 import { Member } from '../lexicon/types/tools/ozone/team/defs'
+import {
+  AlreadyInTargetState,
+  InvalidStateTransition,
+  handleReportUpdate,
+} from './handle-report-update'
 
 export type ActivityType =
   | 'queueActivity'
@@ -9,29 +14,6 @@ export type ActivityType =
   | 'closeActivity'
   | 'reopenActivity'
   | 'noteActivity'
-
-// State-change activity types and the status they transition the report to
-const ACTIVITY_TO_STATE: Record<string, string> = {
-  queueActivity: 'queued',
-  assignmentActivity: 'assigned',
-  escalationActivity: 'escalated',
-  closeActivity: 'closed',
-  reopenActivity: 'open',
-}
-
-// For activity types that are only valid from specific source states
-const ACTIVITY_VALID_FROM_STATES: Record<string, string[]> = {
-  reopenActivity: ['closed'],
-}
-
-// Valid state transitions: key = fromState, value = allowed toStates
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  open: ['closed', 'escalated', 'queued', 'assigned'],
-  closed: ['open'],
-  escalated: ['open', 'closed'],
-  queued: ['assigned', 'open'],
-  assigned: ['open', 'closed', 'escalated'],
-}
 
 export type CreateActivityParams = {
   reportId: number
@@ -58,8 +40,6 @@ export async function createReportActivity(
     createdBy,
   } = params
 
-  const toState = ACTIVITY_TO_STATE[activityType] ?? null
-
   return db.transaction(async (dbTxn) => {
     // Lock the report row for the duration of the transaction to prevent
     // concurrent writes from racing on status validation + update.
@@ -77,33 +57,28 @@ export async function createReportActivity(
       )
     }
 
-    const previousStatus = report.status
+    let result
+    try {
+      result = handleReportUpdate(report.status, {
+        type: 'activity',
+        activityType,
+      })
+    } catch (err) {
+      if (err instanceof AlreadyInTargetState) {
+        throw new InvalidRequestError(err.message, 'AlreadyInTargetState')
+      }
+      if (err instanceof InvalidStateTransition) {
+        throw new InvalidRequestError(err.message, 'InvalidStateTransition')
+      }
+      throw err
+    }
+
     const now = new Date().toISOString()
 
-    if (toState !== null) {
-      const validFromStates = ACTIVITY_VALID_FROM_STATES[activityType]
-      if (validFromStates && !validFromStates.includes(previousStatus)) {
-        throw new InvalidRequestError(
-          `Cannot transition report from '${previousStatus}' to '${toState}'`,
-          'InvalidStateTransition',
-        )
-      }
-      if (previousStatus === toState) {
-        throw new InvalidRequestError(
-          `Report is already in '${toState}' status`,
-          'AlreadyInTargetState',
-        )
-      }
-      const allowed = VALID_TRANSITIONS[previousStatus] ?? []
-      if (!allowed.includes(toState)) {
-        throw new InvalidRequestError(
-          `Cannot transition report from '${previousStatus}' to '${toState}'`,
-          'InvalidStateTransition',
-        )
-      }
+    if (result.nextStatus !== null) {
       await dbTxn.db
         .updateTable('report')
-        .set({ status: toState, updatedAt: now })
+        .set({ status: result.nextStatus, updatedAt: now })
         .where('id', '=', reportId)
         .execute()
     }
@@ -113,7 +88,7 @@ export async function createReportActivity(
       .values({
         reportId,
         activityType,
-        previousStatus: toState !== null ? previousStatus : null,
+        previousStatus: result.activity?.previousStatus ?? null,
         internalNote: internalNote ?? null,
         publicNote: publicNote ?? null,
         meta: meta ?? null,
