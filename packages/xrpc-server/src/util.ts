@@ -113,7 +113,10 @@ export function decodeQueryParam(
   }
 }
 
-export function getSearchParams(url?: string): URLSearchParams | undefined {
+function getSearchParams(
+  url?: string,
+  opts?: { parseLoose?: boolean },
+): URLSearchParams | undefined {
   if (!url) return undefined
 
   const queryStringIdx = url.indexOf('?')
@@ -124,26 +127,28 @@ export function getSearchParams(url?: string): URLSearchParams | undefined {
 
   const urlSearchParams = new URLSearchParams(queryString)
 
-  // For backwards compatibility, we convert "foo[]=bar" syntax into
-  // "foo=bar&foo=bar"
+  if (opts?.parseLoose) {
+    // @NOTE this is non-standard and should only be used for limited backwards-compatibility purposes.
+    // Converts "foo[]=bar&foo[]=baz" syntax into "foo=bar&foo=baz"
 
-  // We cannot "delete()" while iterating. SO we'll fist collect all keys that
-  // need to be changed, then apply the changes after
-  const toChange = new Map<string, string[]>()
+    // We cannot "delete()" while iterating. SO we'll fist collect all keys that
+    // need to be changed, then apply the changes after
+    const toChange = new Map<string, string[]>()
 
-  for (const key of urlSearchParams.keys()) {
-    if (key.endsWith('[]')) {
-      if (!toChange.has(key)) {
-        toChange.set(key, urlSearchParams.getAll(key))
+    for (const key of urlSearchParams.keys()) {
+      if (key.endsWith('[]')) {
+        if (!toChange.has(key)) {
+          toChange.set(key, urlSearchParams.getAll(key))
+        }
       }
     }
-  }
 
-  for (const [key, values] of toChange.entries()) {
-    urlSearchParams.delete(key)
-    const newKey = key.slice(0, -2)
-    for (const value of values) {
-      urlSearchParams.append(newKey, value)
+    for (const [key, values] of toChange.entries()) {
+      urlSearchParams.delete(key)
+      const newKey = key.slice(0, -2)
+      for (const value of values) {
+        urlSearchParams.append(newKey, value)
+      }
     }
   }
 
@@ -152,12 +157,13 @@ export function getSearchParams(url?: string): URLSearchParams | undefined {
 
 export function getQueryParams(
   req: IncomingMessage | ExpressRequest,
+  opts?: { parseLoose?: boolean },
 ): UndecodedParams {
   if ('query' in req) return req.query
 
   const result: UndecodedParams = Object.create(null)
 
-  const searchParams = getSearchParams(req.url)
+  const searchParams = getSearchParams(req.url, opts)
   if (!searchParams) return result
 
   if (searchParams.has('__proto__')) {
@@ -195,10 +201,15 @@ export function createLexiconParamsVerifier<P extends Params = Params>(
 
 export function createSchemaParamsVerifier<
   M extends l.Procedure | l.Query | l.Subscription,
->(ns: l.Main<M>): ParamsVerifierInternal<LexMethodParams<M>> {
+>(
+  ns: l.Main<M>,
+  options?: RouteOptions,
+): ParamsVerifierInternal<LexMethodParams<M>> {
   const schema = l.getMain(ns)
+  const queryOpts = { parseLoose: options?.paramsParseLoose }
   return (req) => {
-    const urlSearchParams = getSearchParams(req.url) ?? new URLSearchParams()
+    const urlSearchParams =
+      getSearchParams(req.url, queryOpts) ?? new URLSearchParams()
     try {
       const params = schema.parameters.fromURLSearchParams(urlSearchParams)
       return params as LexMethodParams<M>
