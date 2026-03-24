@@ -348,8 +348,12 @@ export class QueueService {
     // Only transition to 'queued' from 'open'; other statuses (escalated,
     // assigned) keep their current status but still get routed to the queue.
     for (const [queueId, group] of matchedByQueue) {
-      const openIds = group.filter((r) => r.fromStatus === 'open').map((r) => r.id)
-      const nonOpenIds = group.filter((r) => r.fromStatus !== 'open').map((r) => r.id)
+      const openIds = group
+        .filter((r) => r.fromStatus === 'open')
+        .map((r) => r.id)
+      const nonOpenIds = group
+        .filter((r) => r.fromStatus !== 'open')
+        .map((r) => r.id)
 
       if (openIds.length) {
         await this.db.db
