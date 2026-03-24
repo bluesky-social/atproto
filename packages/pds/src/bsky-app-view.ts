@@ -5,6 +5,7 @@ export type AppViewOptions = {
   url: string
   did: string
   cdnUrlPattern?: string
+  validateResponse?: boolean
 }
 
 export class BskyAppView {
@@ -16,7 +17,13 @@ export class BskyAppView {
   constructor(options: AppViewOptions) {
     this.did = options.did
     this.url = options.url
-    this.client = new Client({ service: options.url })
+    this.client = new Client(
+      { service: options.url },
+      {
+        strictResponseProcessing: false,
+        validateResponse: options.validateResponse ?? false,
+      },
+    )
     this.cdnUrlPattern = options.cdnUrlPattern
   }
 

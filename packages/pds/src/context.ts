@@ -198,7 +198,10 @@ export class AppContext {
       : undefined
 
     const bskyAppView = cfg.bskyAppView
-      ? new BskyAppView(cfg.bskyAppView)
+      ? new BskyAppView({
+          ...cfg.bskyAppView,
+          validateResponse: cfg.service.devMode,
+        })
       : undefined
 
     const moderationClient = cfg.modService
