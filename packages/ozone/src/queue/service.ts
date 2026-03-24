@@ -266,6 +266,7 @@ export class QueueService {
         'me.subjectMessageId',
         'me.meta',
       ])
+      .where('r.status', '!=', 'closed')
       .orderBy('r.id', 'asc')
       .limit(params.limit)
 
@@ -343,18 +344,27 @@ export class QueueService {
       if (report.id > maxReportId) maxReportId = report.id
     }
 
-    // Bulk UPDATE matched reports — one query per distinct queue, combines
-    // queueId + queuedAt + status into a single UPDATE
+    // Bulk UPDATE matched reports — split by whether status should change.
+    // Only transition to 'queued' from 'open'; other statuses (escalated,
+    // assigned) keep their current status but still get routed to the queue.
     for (const [queueId, group] of matchedByQueue) {
-      await this.db.db
-        .updateTable('report')
-        .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
-        .where(
-          'id',
-          'in',
-          group.map((r) => r.id),
-        )
-        .execute()
+      const openIds = group.filter((r) => r.fromStatus === 'open').map((r) => r.id)
+      const nonOpenIds = group.filter((r) => r.fromStatus !== 'open').map((r) => r.id)
+
+      if (openIds.length) {
+        await this.db.db
+          .updateTable('report')
+          .set({ queueId, queuedAt: now, status: 'queued', updatedAt: now })
+          .where('id', 'in', openIds)
+          .execute()
+      }
+      if (nonOpenIds.length) {
+        await this.db.db
+          .updateTable('report')
+          .set({ queueId, queuedAt: now, updatedAt: now })
+          .where('id', 'in', nonOpenIds)
+          .execute()
+      }
     }
 
     // Bulk UPDATE unmatched reports — status stays unchanged
@@ -366,15 +376,18 @@ export class QueueService {
         .execute()
     }
 
-    // Bulk INSERT activities for matched reports only.
-    // Unmatched reports stay 'open' — no status change, no activity.
+    // Bulk INSERT activities for matched reports that changed status.
+    // Only 'open' → 'queued' is a real state transition; reports that
+    // were already escalated/assigned don't get a queueActivity entry.
     if (opts?.serviceDid) {
-      const allMatched = [...matchedByQueue.values()].flat()
-      if (allMatched.length) {
+      const statusChanged = [...matchedByQueue.values()]
+        .flat()
+        .filter((r) => r.fromStatus === 'open')
+      if (statusChanged.length) {
         await this.db.db
           .insertInto('report_activity')
           .values(
-            allMatched.map((r) => ({
+            statusChanged.map((r) => ({
               reportId: r.id,
               activityType: 'queueActivity',
               previousStatus: r.fromStatus,

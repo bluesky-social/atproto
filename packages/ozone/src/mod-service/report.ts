@@ -270,8 +270,10 @@ export async function findReportsForSubject(
     // Target all open/escalated reports on the subject
     builder = builder.where('r.status', 'in', ['open', 'escalated'])
   } else if (params.reportIds?.length) {
-    // Target specific report IDs
-    builder = builder.where('r.id', 'in', params.reportIds)
+    // Target specific report IDs — still enforce state transition rules
+    builder = builder
+      .where('r.id', 'in', params.reportIds)
+      .where('r.status', 'in', ['open', 'escalated'])
   } else if (params.reportTypes?.length) {
     // Target reports matching specific report types
     const reportTypeConditions = params.reportTypes.map(
@@ -359,7 +361,7 @@ export async function processReportAction(
 
     if (missingIds.length > 0) {
       throw new Error(
-        `Report IDs ${missingIds.join(', ')} do not exist or do not belong to this subject`,
+        `Report IDs ${missingIds.join(', ')} do not exist, are already closed, or do not belong to this subject`,
       )
     }
   }
