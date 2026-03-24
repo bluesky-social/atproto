@@ -1,6 +1,7 @@
 import { dedupeStrs } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { app } from '../lexicons/index.js'
 import {
   postUriToPostgateUri,
   postUriToThreadgateUri,
@@ -140,7 +141,11 @@ export class FeedHydrator {
       )
 
       for (let i = 0; i < need.length; i++) {
-        const record = parseRecord<PostRecord>(res.records[i], includeTakedowns)
+        const record = parseRecord(
+          app.bsky.feed.post.main,
+          res.records[i],
+          includeTakedowns,
+        )
         const violatesThreadGate = res.meta[i].violatesThreadGate
         const violatesEmbeddingRules = res.meta[i].violatesEmbeddingRules
         const hasThreadGate = res.meta[i].hasThreadGate
@@ -304,7 +309,8 @@ export class FeedHydrator {
 
     const res = await this.dataplane.getFeedGeneratorRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<FeedGenRecord>(
+      const record = parseRecord(
+        app.bsky.feed.generator.main,
         res.records[i],
         includeTakedowns,
       )
@@ -369,7 +375,11 @@ export class FeedHydrator {
 
     const res = await this.dataplane.getThreadGateRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<GateRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.feed.threadgate.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uris[i], record ?? null)
     }
 
@@ -393,7 +403,8 @@ export class FeedHydrator {
 
     const res = await this.dataplane.getPostgateRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<PostgateRecord>(
+      const record = parseRecord(
+        app.bsky.feed.postgate.main,
         res.records[i],
         includeTakedowns,
       )
@@ -412,7 +423,11 @@ export class FeedHydrator {
 
     const res = await this.dataplane.getLikeRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<LikeRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.feed.like.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uris[i], record ?? null)
     }
 
@@ -428,7 +443,11 @@ export class FeedHydrator {
 
     const res = await this.dataplane.getRepostRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<RepostRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.feed.repost.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uris[i], record ?? null)
     }
 

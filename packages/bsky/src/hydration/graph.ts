@@ -1,5 +1,6 @@
 import { AtUriString, DidString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
+import { app } from '../lexicons/index.js'
 import { FollowInfo } from '../proto/bsky_pb'
 import {
   BlockRecord,
@@ -115,7 +116,11 @@ export class GraphHydrator {
 
     const res = await this.dataplane.getListRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<ListRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.graph.list.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uris[i], record ?? null)
     }
 
@@ -131,7 +136,8 @@ export class GraphHydrator {
 
     const res = await this.dataplane.getListItemRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<ListItemRecord>(
+      const record = parseRecord(
+        app.bsky.graph.listitem.main,
         res.records[i],
         includeTakedowns,
       )
@@ -214,7 +220,11 @@ export class GraphHydrator {
     const res = await this.dataplane.getFollowRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<FollowRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.graph.follow.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uri, record ?? null)
     }
 
@@ -231,7 +241,8 @@ export class GraphHydrator {
     const res = await this.dataplane.getVerificationRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<VerificationRecord>(
+      const record = parseRecord(
+        app.bsky.graph.verification.main,
         res.records[i],
         includeTakedowns,
       )
@@ -251,7 +262,11 @@ export class GraphHydrator {
     const res = await this.dataplane.getBlockRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<BlockRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.graph.block.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uri, record ?? null)
     }
 
@@ -296,7 +311,8 @@ export class GraphHydrator {
     const res = await this.dataplane.getStarterPackRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<StarterPackRecord>(
+      const record = parseRecord(
+        app.bsky.graph.starterpack.main,
         res.records[i],
         includeTakedowns,
       )

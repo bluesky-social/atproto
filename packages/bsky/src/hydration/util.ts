@@ -1,18 +1,19 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import * as ui8 from 'uint8arrays'
 import {
   AtUriString,
   Cid,
+  Infer,
+  LexParseOptions,
   LexValue,
+  RecordSchema,
+  Schema,
   TypedLexMap,
-  isPlainObject,
-  l,
+  ValidateOptions,
   lexParse,
   parseCidSafe,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
-import * as lexicons from '../lexicons/index.js'
-import { Record } from '../proto/bsky_pb'
+import { Record as RecordEntry } from '../proto/bsky_pb'
 
 export class HydrationMap<K, T> extends Map<K, T | null> implements Merges {
   merge(map: HydrationMap<K, T>): this {
@@ -65,73 +66,49 @@ export const mergeManyMaps = <K, T>(...maps: HydrationMap<K, T>[]) => {
 
 export type ItemRef = { uri: AtUriString; cid?: string }
 
-export const parseRecord = <T extends { $type: string }>(
-  entry: Record,
+export function parseRecord<TSchema extends RecordSchema>(
+  recordSchema: TSchema,
+  recordEntry: RecordEntry,
   includeTakedowns: boolean,
-): RecordInfo<T> | undefined => {
-  if (!includeTakedowns && entry.takenDown) {
+): RecordInfo<Infer<TSchema>> | undefined {
+  if (!includeTakedowns && recordEntry.takenDown) {
     return undefined
   }
 
-  const cid = entry.cid
+  const cid = recordEntry.cid
   if (!cid) return
 
-  const record = parseJsonBytes<T>(entry.record)
-  if (!record || !isValidRecord(record)) return
+  const record = parseJsonBytes(recordSchema, recordEntry.record)
+  if (!record) {
+    return
+  }
 
   return {
     record,
     cid,
-    sortedAt: parseDate(entry.sortedAt) ?? new Date(0),
-    indexedAt: parseDate(entry.indexedAt) ?? new Date(0),
-    takedownRef: safeTakedownRef(entry),
+    sortedAt: parseDate(recordEntry.sortedAt) ?? new Date(0),
+    indexedAt: parseDate(recordEntry.indexedAt) ?? new Date(0),
+    takedownRef: safeTakedownRef(recordEntry),
   }
 }
 
-/**
- * Recursively enumerate all RecordSchemas in a namespace.
- */
-function* enumerateRecordSchemas(namespace: {
-  [key: string]: unknown
-}): Generator<l.RecordSchema> {
-  for (const key of Object.keys(namespace)) {
-    if (key === '$defs') {
-      const { main } = (namespace as { $defs: { main?: unknown } })[key]
-      if (main && main instanceof l.RecordSchema) {
-        yield main
-      }
-    } else if (key.charCodeAt(0) !== 36) {
-      // skip keys starting with '$' (generated utils)
-      const val = namespace[key]
-      if (val && typeof val === 'object') {
-        yield* enumerateRecordSchemas(val as { [key: string]: unknown })
-      }
-    }
-  }
-}
-
-const KNOWN_RECORD_TYPES = new Map<string, l.RecordSchema>(
-  Array.from(enumerateRecordSchemas(lexicons), (s) => [s.$type, s]),
-)
-
-const isValidRecord = (value: LexValue): boolean => {
-  if (!isPlainObject(value) || typeof value.$type !== 'string') {
-    return false
-  }
-
-  const schema = KNOWN_RECORD_TYPES.get(value.$type)
-  if (!schema) {
-    return false
-  }
-
-  return schema.matches(value)
-}
-
-export const parseJsonBytes = <T extends LexValue = LexValue>(
+export const parseJsonBytes = <TSchema extends Schema<LexValue>>(
+  schema: TSchema,
   bytes: Uint8Array | undefined,
-): T | undefined => {
+  options: LexParseOptions & ValidateOptions = { strict: false },
+): Infer<TSchema> | undefined => {
   if (!bytes || bytes.byteLength === 0) return undefined
-  return lexParse<T>(ui8.toString(bytes, 'utf8'))
+
+  // @NOTE Buffer.from(bytes) creates a copy of the ArrayBuffer
+  const jsonBuffer = Buffer.from(
+    bytes.buffer,
+    bytes.byteOffset,
+    bytes.byteLength,
+  )
+  const jsonString = jsonBuffer.toString('utf8')
+
+  const value = lexParse(jsonString, options)
+  return schema.ifMatches(value, options)
 }
 
 export const parseString = <T extends string | undefined>(

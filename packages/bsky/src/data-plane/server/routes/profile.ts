@@ -3,12 +3,9 @@ import { ServiceImpl } from '@connectrpc/connect'
 import { Selectable, sql } from 'kysely'
 import { keyBy } from '@atproto/common'
 import { parseJsonBytes } from '../../../hydration/util'
+import { app, chat } from '../../../lexicons/index.js'
 import { Service } from '../../../proto/bsky_connect'
 import { VerificationMeta } from '../../../proto/bsky_pb'
-import {
-  ChatDeclarationRecord,
-  NotificationDeclarationRecord,
-} from '../../../views/types'
 import { Database } from '../db'
 import { Verification } from '../db/tables/verification'
 import { getRecords } from './records'
@@ -96,7 +93,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
 
       const status = statuses.records[i]
 
-      const chatDeclaration = parseJsonBytes<ChatDeclarationRecord>(
+      const chatDeclaration = parseJsonBytes(
+        chat.bsky.actor.declaration.main,
         chatDeclarations.records[i].record,
       )
 
@@ -115,7 +113,8 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       const ageAssuranceForDids = new Set(returnAgeAssuranceForDids)
 
       const activitySubscription = () => {
-        const record = parseJsonBytes<NotificationDeclarationRecord>(
+        const record = parseJsonBytes(
+          app.bsky.notification.declaration.main,
           notifDeclarations.records[i].record,
         )
 

@@ -1,6 +1,6 @@
 import { AtUri, AtUriString, DidString, UriString } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { app } from '../lexicons/index.js'
+import { app, com } from '../lexicons/index.js'
 import { ParsedLabelers } from '../util'
 import { Label, LabelerRecord } from '../views/types.js'
 import {
@@ -84,7 +84,7 @@ export class LabelHydrator {
     })
 
     for (const cur of res.labels) {
-      const parsed = parseJsonBytes(cur) as Label | undefined
+      const parsed = parseJsonBytes(com.atproto.label.defs.label, cur)
       if (!parsed || parsed.neg) continue
       const { sig: _, ...label } = parsed
       let entry = map.get(label.uri)
@@ -142,7 +142,8 @@ export class LabelHydrator {
     })
     for (let i = 0; i < dids.length; i++) {
       const did = dids[i]
-      const record = parseRecord<LabelerRecord>(
+      const record = parseRecord(
+        app.bsky.labeler.service.main,
         res.records[i],
         includeTakedowns,
       )
