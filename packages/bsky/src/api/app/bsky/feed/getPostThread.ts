@@ -25,6 +25,11 @@ export default function (server: Server, ctx: AppContext) {
   )
   server.add(app.bsky.feed.getPostThread, {
     auth: ctx.authVerifier.optionalStandardOrRole,
+    opts: {
+      // @TODO remove after grace period has passed, behavior is non-standard.
+      // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.
+      paramsParseLoose: true,
+    },
     handler: async ({ params, auth, req, res }) => {
       const { viewer, includeTakedowns, include3pBlocks } =
         ctx.authVerifier.parseCreds(auth)
