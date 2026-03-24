@@ -113,7 +113,10 @@ export function decodeQueryParam(
   }
 }
 
-export function getSearchParams(url?: string): URLSearchParams | undefined {
+function getSearchParams(
+  url?: string,
+  opts?: { parseLoose?: boolean },
+): URLSearchParams | undefined {
   if (!url) return undefined
 
   const queryStringIdx = url.indexOf('?')
@@ -122,17 +125,45 @@ export function getSearchParams(url?: string): URLSearchParams | undefined {
   const queryString = url.slice(queryStringIdx + 1)
   if (queryString.length === 0) return undefined
 
-  return new URLSearchParams(queryString)
+  const urlSearchParams = new URLSearchParams(queryString)
+
+  if (opts?.parseLoose) {
+    // @NOTE this is non-standard and should only be used for limited backwards-compatibility purposes.
+    // Converts "foo[]=bar&foo[]=baz" syntax into "foo=bar&foo=baz"
+
+    // We cannot "delete()" while iterating. SO we'll fist collect all keys that
+    // need to be changed, then apply the changes after
+    const toChange = new Map<string, string[]>()
+
+    for (const key of urlSearchParams.keys()) {
+      if (key.endsWith('[]')) {
+        if (!toChange.has(key)) {
+          toChange.set(key, urlSearchParams.getAll(key))
+        }
+      }
+    }
+
+    for (const [key, values] of toChange.entries()) {
+      urlSearchParams.delete(key)
+      const newKey = key.slice(0, -2)
+      for (const value of values) {
+        urlSearchParams.append(newKey, value)
+      }
+    }
+  }
+
+  return urlSearchParams
 }
 
 export function getQueryParams(
   req: IncomingMessage | ExpressRequest,
+  opts?: { parseLoose?: boolean },
 ): UndecodedParams {
   if ('query' in req) return req.query
 
   const result: UndecodedParams = Object.create(null)
 
-  const searchParams = getSearchParams(req.url)
+  const searchParams = getSearchParams(req.url, opts)
   if (!searchParams) return result
 
   if (searchParams.has('__proto__')) {
@@ -170,16 +201,21 @@ export function createLexiconParamsVerifier<P extends Params = Params>(
 
 export function createSchemaParamsVerifier<
   M extends l.Procedure | l.Query | l.Subscription,
->(ns: l.Main<M>): ParamsVerifierInternal<LexMethodParams<M>> {
+>(
+  ns: l.Main<M>,
+  options?: RouteOptions,
+): ParamsVerifierInternal<LexMethodParams<M>> {
   const schema = l.getMain(ns)
+  const queryOpts = { parseLoose: options?.paramsParseLoose }
   return (req) => {
-    const urlSearchParams = getSearchParams(req.url) ?? new URLSearchParams()
+    const urlSearchParams =
+      getSearchParams(req.url, queryOpts) ?? new URLSearchParams()
     try {
       const params = schema.parameters.fromURLSearchParams(urlSearchParams)
       return params as LexMethodParams<M>
     } catch (cause) {
       if (cause instanceof l.LexValidationError) {
-        const message = `Invalid query parameters: ${cause.issues
+        const message = `Invalid ${schema.nsid} params: ${cause.issues
           .map((issue) => issue.message)
           .join(', ')}`
         throw new InvalidRequestError(message, undefined, { cause })

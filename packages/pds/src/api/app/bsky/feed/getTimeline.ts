@@ -18,6 +18,11 @@ export default function (server: Server, ctx: AppContext) {
         permissions.assertRpc({ aud, lxm })
       },
     }),
+    opts: {
+      // @TODO remove after grace period has passed, behavior is non-standard.
+      // temporarily added for compat w/ previous version of xrpc-server to avoid breakage of a few specified parties.
+      paramsParseLoose: true,
+    },
     handler: async (reqCtx) => {
       return pipethroughReadAfterWrite(
         ctx,

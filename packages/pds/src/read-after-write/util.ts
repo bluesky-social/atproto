@@ -63,16 +63,14 @@ export const pipethroughReadAfterWrite = async <
 
       const { buffer } = (bufferRes = await asPipeThroughBuffer(streamRes))
 
-      const lex = lexParse(buffer.toString('utf8'))
+      const lex = lexParse(buffer.toString('utf8'), { strict: false })
 
-      // @TODO we do not validate in production and will unsafely type cast the
-      // upstream response to the expected output. This means that the munge
-      // function might fail if the upstream response is not in the expected
-      // format. We might want to change this to only validate when piping
-      // through AppViews other than our own.
-      const parsedRes = (
-        ctx.cfg.service.devMode ? method.output.schema.validate(lex) : lex
-      ) as l.InferMethodOutputBody<M, never>
+      const result = method.output.schema.safeValidate(lex, { strict: false })
+
+      // We won't perform munging with invalid upstream data
+      if (!result.success) return bufferRes
+
+      const parsedRes = result.value as l.InferMethodOutputBody<M, never>
 
       const localViewer = ctx.localViewer(store)
 
