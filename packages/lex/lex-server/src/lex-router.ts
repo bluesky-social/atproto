@@ -766,11 +766,6 @@ export class LexRouter {
         })
       } catch (error) {
         return this.handlerError(request, method, error)
-      } finally {
-        if (!request.bodyUsed) {
-          const { body } = request
-          if (body && !body.locked) await body.cancel()
-        }
       }
     }
   }
@@ -1083,7 +1078,6 @@ async function getProcedureInput<M extends Procedure>(
     const body: Body = request
     return { encoding, body } as InferMethodInput<M, Body>
   } else {
-    await request.body?.cancel()
     return undefined as InferMethodInput<M, Body>
   }
 }
@@ -1097,7 +1091,6 @@ async function getQueryInput<M extends Query>(
     request.headers.has('content-type') ||
     request.headers.has('content-length')
   ) {
-    await request.body?.cancel()
     throw new LexServerError(400, {
       error: 'InvalidRequest',
       message: 'GET requests must not have a body',
