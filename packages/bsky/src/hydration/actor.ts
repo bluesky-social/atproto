@@ -10,7 +10,7 @@ import {
   normalizeHandle,
 } from '@atproto/syntax'
 import { DataPlaneClient } from '../data-plane/client'
-import { app } from '../lexicons'
+import { app, chat, com } from '../lexicons/index.js'
 import { ActivitySubscription, VerificationMeta } from '../proto/bsky_pb'
 import {
   ChatDeclarationRecord,
@@ -215,11 +215,16 @@ export class ActorHydrator {
       }
 
       const profile = actor.profile?.record
-        ? parseRecord<ProfileRecord>(actor.profile, includeTakedowns)
+        ? parseRecord(
+            app.bsky.actor.profile.main,
+            actor.profile,
+            includeTakedowns,
+          )
         : undefined
 
       const status = actor.statusRecord
-        ? parseRecord<StatusRecord>(
+        ? parseRecord(
+            app.bsky.actor.status.main,
             actor.statusRecord,
             /*
              * Always true, we filter this out in the `Views.status()`. If we
@@ -230,7 +235,11 @@ export class ActorHydrator {
         : undefined
 
       const germ = actor.germRecord
-        ? parseRecord<GermDeclarationRecord>(actor.germRecord, includeTakedowns)
+        ? parseRecord(
+            com.germnetwork.declaration.main,
+            actor.germRecord,
+            includeTakedowns,
+          )
         : undefined
 
       const verifications = mapDefined(
@@ -316,7 +325,8 @@ export class ActorHydrator {
     const res = await this.dataplane.getActorChatDeclarationRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<ChatDeclarationRecord>(
+      const record = parseRecord(
+        chat.bsky.actor.declaration.main,
         res.records[i],
         includeTakedowns,
       )
@@ -335,7 +345,8 @@ export class ActorHydrator {
 
     const res = await this.dataplane.getGermDeclarationRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
-      const record = parseRecord<GermDeclarationRecord>(
+      const record = parseRecord(
+        com.germnetwork.declaration.main,
         res.records[i],
         includeTakedowns,
       )
@@ -357,7 +368,8 @@ export class ActorHydrator {
     })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<NotificationDeclarationRecord>(
+      const record = parseRecord(
+        app.bsky.notification.declaration.main,
         res.records[i],
         includeTakedowns,
       )
@@ -377,7 +389,11 @@ export class ActorHydrator {
     const res = await this.dataplane.getStatusRecords({ uris })
     for (let i = 0; i < uris.length; i++) {
       const uri = uris[i]
-      const record = parseRecord<StatusRecord>(res.records[i], includeTakedowns)
+      const record = parseRecord(
+        app.bsky.actor.status.main,
+        res.records[i],
+        includeTakedowns,
+      )
       map.set(uri, record ?? null)
     }
 
