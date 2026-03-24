@@ -62,7 +62,7 @@ export const pipethroughReadAfterWrite = async <
   try {
     const lex = lexParse(buffered.buffer.toString('utf8'), { strict: false })
 
-    const original = method.output.schema.validate(lex, {
+    const parsedRes = method.output.schema.validate(lex, {
       strict: false,
     }) as l.InferMethodOutputBody<M, never>
 
@@ -72,7 +72,7 @@ export const pipethroughReadAfterWrite = async <
 
       const localViewer = ctx.localViewer(store)
 
-      const data = await munge(localViewer, original, local, requester)
+      const data = await munge(localViewer, parsedRes, local, requester)
 
       return formatMungedResponse(data, getLocalLag(local))
     })
