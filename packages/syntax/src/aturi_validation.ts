@@ -143,7 +143,7 @@ export function isValidAtUri<I extends string>(
   input: I,
 ): input is I & AtUriString {
   try {
-    ensureValidAtUriRegex(input)
+    ensureValidAtUri(input)
   } catch {
     return false
   }
