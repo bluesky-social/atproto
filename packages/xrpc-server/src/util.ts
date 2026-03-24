@@ -215,7 +215,7 @@ export function createSchemaParamsVerifier<
       return params as LexMethodParams<M>
     } catch (cause) {
       if (cause instanceof l.LexValidationError) {
-        const message = `Invalid query parameters: ${cause.issues
+        const message = `Invalid ${schema.nsid} params: ${cause.issues
           .map((issue) => issue.message)
           .join(', ')}`
         throw new InvalidRequestError(message, undefined, { cause })
