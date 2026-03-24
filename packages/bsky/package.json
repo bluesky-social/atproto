@@ -16,7 +16,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "codegen": "lex build --lexicons ../../lexicons --clear --indexFile",
+    "codegen": "lex build --override --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
