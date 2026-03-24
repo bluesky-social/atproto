@@ -19,7 +19,7 @@
     "node": ">=18.7.0"
   },
   "scripts": {
-    "codegen": "lex build --clear --indexFile --lexicons ../../lexicons",
+    "codegen": "lex build --override --indexFile --lexicons ../../lexicons",
     "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "postbuild": "node ./build.templates.js",
