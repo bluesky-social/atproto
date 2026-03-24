@@ -229,6 +229,7 @@ export class DaemonContext {
         this.strikeExpiryProcessor.destroy(),
         this.queueRouter.destroy(),
         this.verificationListener?.stop(),
+        this.statsComputer?.destroy(),
       ])
     } finally {
       await this.backgroundQueue.destroy()
