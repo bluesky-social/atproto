@@ -403,7 +403,9 @@ async function tryParsingError(
   }
 
   try {
-    const buffer = await streamToNodeBuffer(asDecodedStream(readable, headers))
+    const decodedStream = asDecodedStream(readable, headers)
+    // Read no more than 1mb of error response body, to avoid OOM crashes
+    const buffer = await streamToNodeBuffer(decodedStream, 1024 * 1024)
 
     const errInfo: unknown = JSON.parse(buffer.toString('utf8'))
     return {
@@ -454,7 +456,7 @@ export async function asPipeThroughBuffer(
 ): Promise<HandlerPipeThroughBuffer | HandlerPipeThroughStream> {
   const decodedStream = asDecodedStream(streamRes.stream, streamRes.headers)
 
-  const buffered = await bufferizeIterable(decodedStream, maxBufferSize).catch(
+  const buffered = await bufferIterable(decodedStream, maxBufferSize).catch(
     (err) => {
       throw new XRPCServerError(
         ResponseType.UpstreamFailure,
@@ -472,9 +474,9 @@ export async function asPipeThroughBuffer(
     'content-length',
   ])
 
-  return buffered.type === 'buffer'
-    ? { encoding: streamRes.encoding, headers, buffer: buffered.buffer }
-    : { encoding: streamRes.encoding, headers, stream: buffered.stream }
+  return buffered instanceof Readable
+    ? { encoding: streamRes.encoding, headers, stream: buffered }
+    : { encoding: streamRes.encoding, headers, buffer: buffered }
 }
 
 /**
@@ -482,22 +484,18 @@ export async function asPipeThroughBuffer(
  * total size exceeds a specified limit, in which case it returns a Readable
  * stream of the data instead.
  */
-async function bufferizeIterable(
+async function bufferIterable(
   iterable: AsyncIterable<Uint8Array>,
   maxBufferSize?: undefined,
-): Promise<{ type: 'buffer'; buffer: Buffer }>
-async function bufferizeIterable(
+): Promise<Buffer>
+async function bufferIterable(
   iterable: AsyncIterable<Uint8Array>,
   maxBufferSize: number | undefined,
-): Promise<
-  { type: 'buffer'; buffer: Buffer } | { type: 'stream'; stream: Readable }
->
-async function bufferizeIterable(
+): Promise<Buffer | Readable>
+async function bufferIterable(
   iterable: AsyncIterable<Uint8Array>,
   maxBufferSize?: number,
-): Promise<
-  { type: 'buffer'; buffer: Buffer } | { type: 'stream'; stream: Readable }
-> {
+): Promise<Buffer | Readable> {
   const chunks: Uint8Array[] = []
   let totalLength = 0
 
@@ -535,7 +533,7 @@ async function bufferizeIterable(
           }
         })
 
-        return { type: 'stream', stream }
+        return stream
       }
     } catch (err) {
       await it.throw?.(err)
@@ -553,7 +551,7 @@ async function bufferizeIterable(
           chunks[0].byteLength,
         )
       : Buffer.concat(chunks, totalLength)
-  return { type: 'buffer', buffer }
+  return buffer
 }
 
 async function* combineWithIterator(
