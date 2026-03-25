@@ -529,7 +529,7 @@ async function bufferIterable(
             await it.return?.()
           } catch (err) {
             // Should never happen. Prevent server from crashing if it does.
-            httpLogger.error({ err }, 'Error closing pipethrough stream')
+            httpLogger.warn({ err }, 'Error closing pipethrough stream')
           }
         })
 

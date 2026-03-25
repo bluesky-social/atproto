@@ -48,13 +48,13 @@ export const pipethroughReadAfterWrite = async <
     return streamRes
   }
 
-  const buffered = await asPipeThroughBuffer(streamRes, 10 * 1024 * 1024) // 10mb max buffer size
+  const bufferRes = await asPipeThroughBuffer(streamRes, 10 * 1024 * 1024) // 10mb max buffer size
 
   // response is too big to buffer, skip munge and return the stream
-  if (!('buffer' in buffered)) return buffered
+  if (!('buffer' in bufferRes)) return bufferRes
 
   try {
-    const lex = lexParse(buffered.buffer.toString('utf8'), { strict: false })
+    const lex = lexParse(bufferRes.buffer.toString('utf8'), { strict: false })
 
     const parsedRes = method.output.schema.validate(lex, {
       strict: false,
@@ -62,18 +62,17 @@ export const pipethroughReadAfterWrite = async <
 
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await store.record.getRecordsSinceRev(rev)
-      if (local.count === 0) return buffered
+      if (local.count === 0) return bufferRes
 
       const localViewer = ctx.localViewer(store)
 
       const data = await munge(localViewer, parsedRes, local, requester)
-
       return formatMungedResponse(data, getLocalLag(local))
     })
   } catch (err) {
     log.warn({ err, requester }, 'error in read after write munge')
 
-    return buffered
+    return bufferRes
   }
 }
 
