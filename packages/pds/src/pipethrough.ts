@@ -428,11 +428,12 @@ function asDecodedStream(
   } catch (cause) {
     // content encoding not supported
     if (!readable.destroyed) readable.destroy()
+
+    const reason = cause instanceof TypeError ? cause.message : undefined
+
     throw new XRPCServerError(
       ResponseType.UpstreamFailure,
-      cause instanceof TypeError
-        ? cause.message
-        : 'unable to decode response body',
+      `Unable to decode "${contentEncoding}"${reason ? `: ${reason}` : ''}`,
       undefined,
       { cause },
     )
