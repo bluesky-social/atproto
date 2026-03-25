@@ -52,6 +52,6 @@ function requestHook(span, { request }) {
   if (url?.startsWith('/xrpc/')) {
     const queryIndex = url.indexOf('?', 6)
     const nsid = url.slice(6, queryIndex === -1 ? undefined : queryIndex)
-    span.updateName(nsid)
+    span.updateName(`XRPC ${nsid}`)
   }
 }
