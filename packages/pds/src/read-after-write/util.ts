@@ -15,6 +15,8 @@ import {
 } from '../pipethrough'
 import { HandlerResponse, LocalRecords, MungeFn } from './types'
 
+const MAX_BUFFER_SIZE = 10 * 1024 * 1024
+
 export const getLocalLag = (local: LocalRecords): number | undefined => {
   let oldest: string | undefined = local.profile?.indexedAt
   for (const post of local.posts) {
@@ -53,6 +55,14 @@ export const pipethroughReadAfterWrite = async <
     return result
   }
 
+  // IF the response is not chunked, we can determine that the content is too
+  // large to buffer without consuming the stream, so we skip munge in that case
+  // to avoid breaking the stream.
+  const contentLength = result.headers?.['content-length']
+  if (contentLength && Number(contentLength) > MAX_BUFFER_SIZE) {
+    return result
+  }
+
   try {
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await store.record.getRecordsSinceRev(rev)
@@ -64,7 +74,7 @@ export const pipethroughReadAfterWrite = async <
       // use of "result" is safe.
       result = await asPipeThroughBuffer(
         result as HandlerPipeThroughStream,
-        10 * 1024 * 1024,
+        MAX_BUFFER_SIZE,
       )
 
       // result was too big to buffer, skip munge
