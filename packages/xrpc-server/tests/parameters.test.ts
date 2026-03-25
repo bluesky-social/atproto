@@ -48,7 +48,10 @@ describe('Parameters', () => {
   beforeAll(async () => {
     s = await createServer(server)
     const { port } = s.address() as AddressInfo
-    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
+    client = new XrpcClient(
+      `http://localhost:${port}`,
+      structuredClone(LEXICONS),
+    )
   })
   afterAll(async () => {
     await closeServer(s)
@@ -272,7 +275,9 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
 
 describe('paramsParseLoose option', () => {
   it('throws when used with method()', () => {
-    const server = xrpcServer.createServer(LOOSE_PARAMS_LEXICONS)
+    const server = xrpcServer.createServer(
+      structuredClone(LOOSE_PARAMS_LEXICONS),
+    )
     expect(() => {
       server.method('io.example.looseParamsTest', {
         opts: { paramsParseLoose: true },
