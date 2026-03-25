@@ -1,29 +1,28 @@
 /* eslint-env node */
-/* eslint-disable import/order */
 
 'use strict'
 
 /** @typedef {import('express').Request} Request */
 
 const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http')
-const { AwsInstrumentation } = require('@opentelemetry/instrumentation-aws-sdk')
 const { registerInstrumentations } = require('@opentelemetry/instrumentation')
+const { AwsInstrumentation } = require('@opentelemetry/instrumentation-aws-sdk')
+const {
+  ExpressInstrumentation,
+} = require('@opentelemetry/instrumentation-express')
 const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http')
 const {
   IORedisInstrumentation,
 } = require('@opentelemetry/instrumentation-ioredis')
-const {
-  ExpressInstrumentation,
-} = require('@opentelemetry/instrumentation-express')
 const { PinoInstrumentation } = require('@opentelemetry/instrumentation-pino')
-const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node')
-const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base')
-const {
-  BetterSqlite3Instrumentation,
-} = require('opentelemetry-plugin-better-sqlite3')
 const {
   UndiciInstrumentation,
 } = require('@opentelemetry/instrumentation-undici')
+const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base')
+const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node')
+const {
+  BetterSqlite3Instrumentation,
+} = require('opentelemetry-plugin-better-sqlite3')
 
 const provider = new NodeTracerProvider({
   spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
