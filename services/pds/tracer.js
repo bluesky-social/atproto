@@ -3,37 +3,56 @@
 
 'use strict'
 
+/** @typedef {import('express').Request} Request */
+
+const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http')
+const { AwsInstrumentation } = require('@opentelemetry/instrumentation-aws-sdk')
 const { registerInstrumentations } = require('@opentelemetry/instrumentation')
+const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http')
+const {
+  IORedisInstrumentation,
+} = require('@opentelemetry/instrumentation-ioredis')
+const {
+  ExpressInstrumentation,
+} = require('@opentelemetry/instrumentation-express')
+const { PinoInstrumentation } = require('@opentelemetry/instrumentation-pino')
+const { NodeTracerProvider } = require('@opentelemetry/sdk-trace-node')
+const { BatchSpanProcessor } = require('@opentelemetry/sdk-trace-base')
 const {
   BetterSqlite3Instrumentation,
 } = require('opentelemetry-plugin-better-sqlite3')
-const { TracerProvider } = require('dd-trace') // Only works with commonjs
-  .init({ logInjection: true })
-  .use('express', {
-    hooks: { request: maintainXrpcResource },
-  })
+const {
+  UndiciInstrumentation,
+} = require('@opentelemetry/instrumentation-undici')
 
-const tracer = new TracerProvider()
-tracer.register()
-
-registerInstrumentations({
-  tracerProvider: tracer,
-  instrumentations: [new BetterSqlite3Instrumentation()],
+const provider = new NodeTracerProvider({
+  spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
 })
 
-const path = require('node:path')
+provider.register()
 
-function maintainXrpcResource(span, req) {
-  // Show actual xrpc method as resource rather than the route pattern
-  if (span && req.originalUrl?.startsWith('/xrpc/')) {
-    span.setTag(
-      'resource.name',
-      [
-        req.method,
-        path.posix.join(req.baseUrl || '', req.path || '', '/').slice(0, -1), // Ensures no trailing slash
-      ]
-        .filter(Boolean)
-        .join(' '),
-    )
+registerInstrumentations({
+  tracerProvider: provider,
+  instrumentations: [
+    new ExpressInstrumentation({ requestHook }),
+    new AwsInstrumentation(),
+    new IORedisInstrumentation(),
+    new HttpInstrumentation(),
+    new UndiciInstrumentation(),
+    new BetterSqlite3Instrumentation(),
+    new PinoInstrumentation(),
+  ],
+})
+
+/**
+ * @param {import('@opentelemetry/api').Span} span
+ * @param {import('@opentelemetry/instrumentation-express').ExpressRequestInfo<Request>} info
+ */
+function requestHook(span, { request }) {
+  const url = request.originalUrl || request.url
+  if (url?.startsWith('/xrpc/')) {
+    const queryIndex = url.indexOf('?', 6)
+    const nsid = url.slice(6, queryIndex === -1 ? undefined : queryIndex)
+    span.updateName(nsid)
   }
 }
