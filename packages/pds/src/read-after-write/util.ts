@@ -55,9 +55,8 @@ export const pipethroughReadAfterWrite = async <
     return result
   }
 
-  // IF the response is not chunked, we can determine that the content is too
-  // large to buffer without consuming the stream, so we skip munge in that case
-  // to avoid breaking the stream.
+  // If the response is not chunked, we can determine that the content is too
+  // large to buffer without consuming the stream
   const contentLength = result.headers?.['content-length']
   if (contentLength && Number(contentLength) > MAX_BUFFER_SIZE) {
     return result
