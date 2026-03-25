@@ -61,7 +61,7 @@ export const pipethroughReadAfterWrite = async <
     const result = method.output.schema.safeValidate(lex, { strict: false })
 
     // Upstream payload does not conform to schema, skip munge and return the
-    // original response
+    // buffered response as-is
     if (!result.success) return bufferRes
 
     const parsedRes = result.value as l.InferMethodOutputBody<M, never>

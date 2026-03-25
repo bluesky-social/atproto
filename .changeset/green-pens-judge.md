@@ -2,4 +2,4 @@
 '@atproto/pds': patch
 ---
 
-Avoid buffering or large payloads during read-after-write
+Avoid buffering of large payloads during read-after-write

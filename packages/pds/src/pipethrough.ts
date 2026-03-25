@@ -168,7 +168,7 @@ export async function pipethrough(
       // weight) to negotiate the encoding.
 
       // @TODO We should make this configurable through pipethrough options,
-      // allowing to opt-in the the negociated encodings on a per-request basis.
+      // allowing opting in to the negotiated encodings on a per-request basis.
       'accept-encoding': buildProxiedContentEncoding(
         req.headers['accept-encoding'],
         ctx.cfg.proxy.preferCompressed,
@@ -462,7 +462,7 @@ export async function asPipeThroughBuffer(
         ResponseType.UpstreamFailure,
         err instanceof TypeError
           ? err.message
-          : 'unable to decode request body',
+          : 'unable to decode response body',
         undefined,
         { cause: err },
       )
@@ -512,7 +512,9 @@ async function bufferIterable(
 
       // Response is too big, abort buffering and return a stream
       if (maxBufferSize !== undefined && totalLength > maxBufferSize) {
-        const stream = Readable.from(combineWithIterator(chunks, it))
+        const stream = Readable.from(combineWithIterator(chunks, it), {
+          objectMode: false,
+        })
 
         // Because we've already started consuming the input iterator, we need
         // to make sure that that iterator gets return()'ed. Since a generator
