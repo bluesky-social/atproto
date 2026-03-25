@@ -129,26 +129,27 @@ function getSearchParams(
 
   if (opts?.parseLoose) {
     // @NOTE this is non-standard and should only be used for limited backwards-compatibility purposes.
-    // Converts "foo[]=bar&foo[]=baz" syntax into "foo=bar&foo=baz"
+    // Converts "foo[]=bar&foo[0]=baz" syntax into "foo=bar&foo=baz"
 
-    // We cannot "delete()" while iterating. SO we'll fist collect all keys that
-    // need to be changed, then apply the changes after
-    const toChange = new Map<string, string[]>()
+    // We cannot "delete()" while iterating. SO we'll first collect all keys
+    // that need to be changed, then apply the changes after
+    const toAppend = new URLSearchParams()
+    const toDelete = new Set<string>()
 
-    for (const key of urlSearchParams.keys()) {
-      if (key.endsWith('[]')) {
-        if (!toChange.has(key)) {
-          toChange.set(key, urlSearchParams.getAll(key))
-        }
+    for (const [key, value] of urlSearchParams) {
+      const match = key.endsWith(']') ? key.match(/^([^[]*)\[\d*\]$/) : null
+      if (match) {
+        toAppend.append(match[1], value)
+        toDelete.add(key)
       }
     }
 
-    for (const [key, values] of toChange.entries()) {
+    for (const key of toDelete) {
       urlSearchParams.delete(key)
-      const newKey = key.slice(0, -2)
-      for (const value of values) {
-        urlSearchParams.append(newKey, value)
-      }
+    }
+
+    for (const [key, value] of toAppend) {
+      urlSearchParams.append(key, value)
     }
   }
 
