@@ -137,7 +137,7 @@ function getSearchParams(
     const toDelete = new Set<string>()
 
     for (const [key, value] of urlSearchParams) {
-      const match = key.match(/^(.*)\[\d*\]$/)
+      const match = key.endsWith(']') ? key.match(/^([^[]]*)\[\d*\]$/) : null
       if (match) {
         toAppend.append(match[1], value)
         toDelete.add(key)
