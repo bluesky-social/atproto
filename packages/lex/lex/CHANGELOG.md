@@ -1,5 +1,15 @@
 # @atproto/lex
 
+## 0.0.23
+
+### Patch Changes
+
+- Updated dependencies [[`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`c4df84c`](https://github.com/bluesky-social/atproto/commit/c4df84cd78df68ee8cb7289e7b61b3a032ad484e), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`a99dd58`](https://github.com/bluesky-social/atproto/commit/a99dd58b5fe1995e571cf5e7b0105355583efa93), [`e5e5bcf`](https://github.com/bluesky-social/atproto/commit/e5e5bcf85fbc0d418f05724d684e7265be6a0be9), [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138), [`c5c6c7d`](https://github.com/bluesky-social/atproto/commit/c5c6c7dac3b08e5f63cc918f57705573028ad797)]:
+  - @atproto/lex-schema@0.0.17
+  - @atproto/lex-client@0.0.18
+  - @atproto/lex-builder@0.0.20
+  - @atproto/lex-installer@0.0.23
+
 ## 0.0.22
 
 ### Patch Changes

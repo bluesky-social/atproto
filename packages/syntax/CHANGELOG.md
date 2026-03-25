@@ -1,5 +1,15 @@
 # @atproto/syntax
 
+## 0.5.2
+
+### Patch Changes
+
+- [#4792](https://github.com/bluesky-social/atproto/pull/4792) [`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make AT-uri validation faster
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `isHandleIdentifier` and `isDidIdentifier` utilities to discriminate `AtIdentifierString` variants
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove year 10 limit on `DatetimeString` and `AtprotoDate`
+
 ## 0.5.1
 
 ### Patch Changes

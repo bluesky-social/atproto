@@ -1,5 +1,31 @@
 # @atproto/pds
 
+## 0.4.217
+
+### Patch Changes
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid calling `requestCrawl` multiple times at once
+
+- [#4797](https://github.com/bluesky-social/atproto/pull/4797) [`36e3019`](https://github.com/bluesky-social/atproto/commit/36e3019711713a0ecd2a73ab1b60f098dfbf3971) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable AppView response validation
+
+- [#4802](https://github.com/bluesky-social/atproto/pull/4802) [`6116d56`](https://github.com/bluesky-social/atproto/commit/6116d56d3663a8820717accce4e535dfebd87a0b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `[]` query params syntax with `app.bsky.feed.getPostThread` endpoint
+
+- [#4793](https://github.com/bluesky-social/atproto/pull/4793) [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Temporarily allow use of legacy `[]` syntaxt for array params
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "codegen" as part of the build
+
+- [#4798](https://github.com/bluesky-social/atproto/pull/4798) [`960a02b`](https://github.com/bluesky-social/atproto/commit/960a02b8d57a0aac04f4405e07f4fd8b725b7711) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Skip read-after-write for invalid records
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ignore commit operations with a `path` that is not a valid `<nsid>/<rkey>` in sequencer recovery script.
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+  - @atproto/repo@0.9.0
+  - @atproto/xrpc-server@0.10.18
+  - @atproto/aws@0.2.32
+  - @atproto/lex@0.0.23
+  - @atproto/oauth-provider@0.15.15
+
 ## 0.4.216
 
 ### Patch Changes

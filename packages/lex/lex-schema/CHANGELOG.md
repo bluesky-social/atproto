@@ -1,5 +1,24 @@
 # @atproto/lex-schema
 
+## 0.0.17
+
+### Patch Changes
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `lexErrorDataSchema` to match spec (rejecting `error` constants with whitespace)
+
+- [#4787](https://github.com/bluesky-social/atproto/pull/4787) [`c4df84c`](https://github.com/bluesky-social/atproto/commit/c4df84cd78df68ee8cb7289e7b61b3a032ad484e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Optimize counting of graphemes when validating strings
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `build()` method of record and typed object to not perform validation.
+
+- [#4784](https://github.com/bluesky-social/atproto/pull/4784) [`e5e5bcf`](https://github.com/bluesky-social/atproto/commit/e5e5bcf85fbc0d418f05724d684e7265be6a0be9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Show invalid values in issue description (when stringifiable in reasonably small string)
+
+- [#4796](https://github.com/bluesky-social/atproto/pull/4796) [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow specifying `ValidateOptions` to `matches()` and `ifMathces()` method, allowing disabling "strict" mode
+
+- [#4799](https://github.com/bluesky-social/atproto/pull/4799) [`c5c6c7d`](https://github.com/bluesky-social/atproto/commit/c5c6c7dac3b08e5f63cc918f57705573028ad797) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow any encoding to match payload that don't expect any particular encoding
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+
 ## 0.0.16
 
 ### Patch Changes

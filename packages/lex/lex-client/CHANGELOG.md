@@ -1,5 +1,18 @@
 # @atproto/lex-client
 
+## 0.0.18
+
+### Patch Changes
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve handling of XRPC response errors by always using `XrpcResponseError` errors when upstream server responds with an error status code. Before, `XrpcResponseError` would only be used if the upstream server responded with a valid XRPC payload (json with `error` field). Any other response payload (e.g. non-json, invalid "error" payload) would be treated as the upstream server not being able to output a valid XRPC response, and would throw `XrpcUpstreamError` instead. This change allows to better reflect upstream server errors to downstream services (eg. return a 429 if the upstream server responds with a 429 status code, instead of a 502, even if the response payload is not a valid XRPC error payload).
+
+  `XrpcUpstreamError` was removed and replaced with `XrpcInvalidResponseError` to better reflect the intent to those errors (invalid status code, non-json, or invalid payload). `XrpcResponseValidationError` is a special case of `XrpcInvalidResponseError` that is thrown when the response does not conform to the expected XRPC output schema.
+
+- [#4788](https://github.com/bluesky-social/atproto/pull/4788) [`a99dd58`](https://github.com/bluesky-social/atproto/commit/a99dd58b5fe1995e571cf5e7b0105355583efa93) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow XRPC endpoints with no `output` specified in their schema to output anything.
+
+- Updated dependencies [[`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`c4df84c`](https://github.com/bluesky-social/atproto/commit/c4df84cd78df68ee8cb7289e7b61b3a032ad484e), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`e5e5bcf`](https://github.com/bluesky-social/atproto/commit/e5e5bcf85fbc0d418f05724d684e7265be6a0be9), [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138), [`c5c6c7d`](https://github.com/bluesky-social/atproto/commit/c5c6c7dac3b08e5f63cc918f57705573028ad797)]:
+  - @atproto/lex-schema@0.0.17
+
 ## 0.0.17
 
 ### Patch Changes

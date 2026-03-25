@@ -1,5 +1,21 @@
 # @atproto/xrpc-server
 
+## 0.10.18
+
+### Patch Changes
+
+- [#4804](https://github.com/bluesky-social/atproto/pull/4804) [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for indexed bracket query params
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve message of params validation errors
+
+- [#4793](https://github.com/bluesky-social/atproto/pull/4793) [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow use of `foo[]=bar` syntax in query params with new `paramsParseLoose` route option.
+
+- [#4793](https://github.com/bluesky-social/atproto/pull/4793) [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add endpoint name in "Invalid params" error message
+
+- Updated dependencies [[`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`c4df84c`](https://github.com/bluesky-social/atproto/commit/c4df84cd78df68ee8cb7289e7b61b3a032ad484e), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`a99dd58`](https://github.com/bluesky-social/atproto/commit/a99dd58b5fe1995e571cf5e7b0105355583efa93), [`e5e5bcf`](https://github.com/bluesky-social/atproto/commit/e5e5bcf85fbc0d418f05724d684e7265be6a0be9), [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138), [`c5c6c7d`](https://github.com/bluesky-social/atproto/commit/c5c6c7dac3b08e5f63cc918f57705573028ad797)]:
+  - @atproto/lex-schema@0.0.17
+  - @atproto/lex-client@0.0.18
+
 ## 0.10.17
 
 ### Patch Changes
