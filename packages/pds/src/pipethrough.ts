@@ -135,13 +135,7 @@ export async function pipethrough(
   ctx: AppContext,
   req: Request,
   options?: PipethroughOptions,
-): Promise<
-  HandlerPipeThroughStream & {
-    stream: Readable
-    headers: Record<string, string>
-    encoding: string
-  }
-> {
+): Promise<HandlerPipeThroughStream> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     // pipethrough() is used from within xrpcServer handlers, which means that
     // the request body either has been parsed or is a readable stream that has
@@ -430,53 +424,77 @@ function asDecodedStream(
   try {
     return decodeStream(readable, contentEncoding)
   } catch (err) {
+    // content encoding not supported
     if (!readable.destroyed) readable.destroy()
     throw err
   }
 }
 
 /**
- * Attempt to bufferize a pipethrough stream response into a
+ * Attempts to bufferize a pipethrough stream response into a
  * {@link HandlerPipeThroughBuffer}, falling back to a stream if the response is
  * bigger than {@link maxBufferSize}.
+ *
+ * If no {@link maxBufferSize} is provided, the whole response will be buffered,
+ * which could lead to high memory usage or OOM crashes if the response is too
+ * big. It is recommended to provide a reasonable {@link maxBufferSize} based on
+ * the expected response sizes.
  */
-export async function bufferUpstreamResponseMaybe(
+export async function asPipeThroughBuffer(
   streamRes: HandlerPipeThroughStream,
-  maxBufferSize = 10 * 1024 * 1024, // 10MB
+  maxBufferSize?: undefined,
+): Promise<HandlerPipeThroughBuffer>
+export async function asPipeThroughBuffer(
+  streamRes: HandlerPipeThroughStream,
+  maxBufferSize: number | undefined,
+): Promise<HandlerPipeThroughBuffer | HandlerPipeThroughStream>
+export async function asPipeThroughBuffer(
+  streamRes: HandlerPipeThroughStream,
+  maxBufferSize?: number,
 ): Promise<HandlerPipeThroughBuffer | HandlerPipeThroughStream> {
-  const buffered = await bufferReadableMaybe(
-    asDecodedStream(streamRes.stream, streamRes.headers),
-    maxBufferSize,
-  ).catch((err) => {
-    throw new XRPCServerError(
-      ResponseType.UpstreamFailure,
-      err instanceof TypeError ? err.message : 'unable to decode request body',
-      undefined,
-      { cause: err },
-    )
-  })
+  const decodedStream = asDecodedStream(streamRes.stream, streamRes.headers)
+
+  const buffered = await bufferizeIterable(decodedStream, maxBufferSize).catch(
+    (err) => {
+      throw new XRPCServerError(
+        ResponseType.UpstreamFailure,
+        err instanceof TypeError
+          ? err.message
+          : 'unable to decode request body',
+        undefined,
+        { cause: err },
+      )
+    },
+  )
 
   const headers = omit(streamRes.headers, [
     'content-encoding',
     'content-length',
   ])
 
-  return buffered.type === 'stream'
-    ? {
-        encoding: streamRes.encoding,
-        stream: buffered.stream,
-        headers,
-      }
-    : {
-        encoding: streamRes.encoding,
-        buffer: buffered.buffer,
-        headers,
-      }
+  return buffered.type === 'buffer'
+    ? { encoding: streamRes.encoding, headers, buffer: buffered.buffer }
+    : { encoding: streamRes.encoding, headers, stream: buffered.stream }
 }
 
-async function bufferReadableMaybe(
+/**
+ * Buffers an async iterable of Uint8Arrays into a single Buffer, unless the
+ * total size exceeds a specified limit, in which case it returns a Readable
+ * stream of the data instead.
+ */
+async function bufferizeIterable(
   iterable: AsyncIterable<Uint8Array>,
-  maxBufferSize = 10 * 1024 * 1024, // 10MB
+  maxBufferSize?: undefined,
+): Promise<{ type: 'buffer'; buffer: Buffer }>
+async function bufferizeIterable(
+  iterable: AsyncIterable<Uint8Array>,
+  maxBufferSize: number | undefined,
+): Promise<
+  { type: 'buffer'; buffer: Buffer } | { type: 'stream'; stream: Readable }
+>
+async function bufferizeIterable(
+  iterable: AsyncIterable<Uint8Array>,
+  maxBufferSize?: number,
 ): Promise<
   { type: 'buffer'; buffer: Buffer } | { type: 'stream'; stream: Readable }
 > {
@@ -489,34 +507,67 @@ async function bufferReadableMaybe(
     const { value: chunk, done } = await it.next()
     if (done) break
 
-    if (chunk instanceof Uint8Array) {
-      chunks.push(chunk)
+    try {
+      // @NOTE next line will throw if chunk is not a Uint8Array
       totalLength += Buffer.byteLength(chunk)
-    } else {
-      throw new TypeError('expected Uint8Array')
-    }
+      chunks.push(chunk)
 
-    // Response is too big, abort buffering and return a stream
-    if (totalLength > maxBufferSize) {
-      const stream = Readable.from(combine(chunks, it))
-      return { type: 'stream', stream }
+      // Response is too big, abort buffering and return a stream
+      if (maxBufferSize !== undefined && totalLength > maxBufferSize) {
+        const stream = Readable.from(combineWithIterator(chunks, it))
+
+        // Because we've already started consuming the input iterator, we need
+        // to make sure that that iterator gets return()'ed. Since a generator
+        // function's "finally" block will only be executed if the generator
+        // actually started iterating (by calling next() at least once), the
+        // "finally" block in combineWithIterator() might not be executed if
+        // Readable.from() did not start consuming the combined iterator (eg. if
+        // it gets destroyed during the current event loop). In order to avoid
+        // any leak we ensure that closing the stream will also close the input
+        // iterator.
+        const cleanup = finished(stream, async () => {
+          cleanup()
+          try {
+            await it.return?.()
+          } catch (err) {
+            // Should never happen. Prevent server from crashing if it does.
+            httpLogger.error({ err }, 'Error closing pipethrough stream')
+          }
+        })
+
+        return { type: 'stream', stream }
+      }
+    } catch (err) {
+      await it.throw?.(err)
+      throw err
     }
   }
 
-  const buffer = Buffer.concat(chunks, totalLength)
+  // All chunks buffered successfully, concatenate into a single Buffer
+  const buffer =
+    // Avoid unnecessary copy if there's only one chunk
+    chunks.length === 1
+      ? Buffer.from(
+          chunks[0].buffer,
+          chunks[0].byteOffset,
+          chunks[0].byteLength,
+        )
+      : Buffer.concat(chunks, totalLength)
   return { type: 'buffer', buffer }
 }
 
-async function* combine(
-  chunks: Iterable<Uint8Array>,
-  iterator: AsyncIterator<Uint8Array>,
-) {
+async function* combineWithIterator(
+  chunks: Iterable<Uint8Array> | AsyncIterable<Uint8Array>,
+  iterator: Iterator<Uint8Array> | AsyncIterator<Uint8Array>,
+): AsyncGenerator<Uint8Array, void, unknown> {
   try {
     yield* chunks
-    while (true) {
-      const { value: chunk, done } = await iterator.next()
-      if (done) break
-      else yield chunk
+    for (
+      let result = await iterator.next();
+      !result.done;
+      result = await iterator.next()
+    ) {
+      yield result.value
     }
   } finally {
     await iterator.return?.()

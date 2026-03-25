@@ -5,7 +5,7 @@ import { HandlerPipeThrough } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
 import { readStickyLogger as log } from '../logger'
 import {
-  bufferUpstreamResponseMaybe,
+  asPipeThroughBuffer,
   isJsonContentType,
   pipethrough,
 } from '../pipethrough'
@@ -40,18 +40,18 @@ export const pipethroughReadAfterWrite = async <
 
   const streamRes = await pipethrough(ctx, req, { iss: requester })
 
-  const rev = streamRes.headers['atproto-repo-rev']
+  const rev = streamRes.headers?.['atproto-repo-rev']
   if (!rev) return streamRes
 
-  if (isJsonContentType(streamRes.headers['content-type']) === false) {
+  if (isJsonContentType(streamRes.headers?.['content-type']) === false) {
     // content-type is present but not JSON, we can't munge this
     return streamRes
   }
 
-  const buffered = await bufferUpstreamResponseMaybe(streamRes)
+  const buffered = await asPipeThroughBuffer(streamRes, 10 * 1024 * 1024) // 10mb max buffer size
 
   // response is too big to buffer, skip munge and return the stream
-  if ('stream' in buffered) return buffered
+  if (!('buffer' in buffered)) return buffered
 
   try {
     const lex = lexParse(buffered.buffer.toString('utf8'), { strict: false })

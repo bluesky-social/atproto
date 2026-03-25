@@ -2,4 +2,4 @@
 '@atproto/pds': patch
 ---
 
-Avoid i/o during read after write munging transaction
+Avoid buffering or large payloads during read-after-write
