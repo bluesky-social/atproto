@@ -48,7 +48,9 @@ export const pipethroughReadAfterWrite = async <
     return streamRes
   }
 
-  const bufferRes = await asPipeThroughBuffer(streamRes, 10 * 1024 * 1024) // 10mb max buffer size
+  // Buffer up to 10mb of response body for munge, if larger we skip munge and
+  // return the stream directly to avoid OOM crashes
+  const bufferRes = await asPipeThroughBuffer(streamRes, 10 * 1024 * 1024)
 
   // response is too big to buffer, skip munge and return the stream
   if (!('buffer' in bufferRes)) return bufferRes
@@ -56,9 +58,13 @@ export const pipethroughReadAfterWrite = async <
   try {
     const lex = lexParse(bufferRes.buffer.toString('utf8'), { strict: false })
 
-    const parsedRes = method.output.schema.validate(lex, {
-      strict: false,
-    }) as l.InferMethodOutputBody<M, never>
+    const result = method.output.schema.safeValidate(lex, { strict: false })
+
+    // Upstream payload does not conform to schema, skip munge and return the
+    // original response
+    if (!result.success) return bufferRes
+
+    const parsedRes = result.value as l.InferMethodOutputBody<M, never>
 
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await store.record.getRecordsSinceRev(rev)
