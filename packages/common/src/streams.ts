@@ -32,11 +32,14 @@ export const streamSize = async (stream: Readable): Promise<number> => {
   return size
 }
 
-export const streamToBytes = async (stream: AsyncIterable<Uint8Array>) =>
+export const streamToBytes = async (
+  stream: AsyncIterable<Uint8Array>,
+  maxSize?: number,
+) =>
   // @NOTE Though Buffer is a sub-class of Uint8Array, we have observed
   // inconsistencies when using a Buffer in place of Uint8Array. For this
   // reason, we convert the Buffer to a Uint8Array.
-  new Uint8Array(await streamToNodeBuffer(stream))
+  new Uint8Array(await streamToNodeBuffer(stream, maxSize))
 
 // streamToBuffer identifier name already taken by @atproto/common-web
 export const streamToNodeBuffer = async (
