@@ -81,9 +81,7 @@ export const pipethroughReadAfterWrite = async <
         return result
       }
 
-      const lex = lexParse(result.buffer.toString('utf8'), {
-        strict: false,
-      })
+      const lex = lexParse(result.buffer.toString('utf8'), { strict: false })
 
       const parsed = method.output.schema.safeValidate(lex, { strict: false })
 

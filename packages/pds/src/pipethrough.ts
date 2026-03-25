@@ -506,10 +506,8 @@ async function bufferIterable(
   let totalLength = 0
 
   const it: AsyncIterator<Uint8Array> = iterable[Symbol.asyncIterator]()
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const { value: chunk, done } = await it.next()
-    if (done) break
+  for (let result = await it.next(); !result.done; result = await it.next()) {
+    const chunk = result.value
 
     try {
       // @NOTE next line will throw if chunk is not a Uint8Array
