@@ -97,6 +97,13 @@ describe('streams', () => {
         'expected Uint8Array',
       )
     })
+
+    it('respects maxSize', async () => {
+      const stream = Readable.from(Buffer.from('foo'))
+      await expect(streams.streamToNodeBuffer(stream, 2)).rejects.toThrow(
+        'Stream exceeds maximum size',
+      )
+    })
   })
 
   describe('byteIterableToStream', () => {

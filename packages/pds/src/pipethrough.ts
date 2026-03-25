@@ -425,10 +425,17 @@ function asDecodedStream(
   const contentEncoding = headers?.['content-encoding']
   try {
     return decodeStream(readable, contentEncoding)
-  } catch (err) {
+  } catch (cause) {
     // content encoding not supported
     if (!readable.destroyed) readable.destroy()
-    throw err
+    throw new XRPCServerError(
+      ResponseType.UpstreamFailure,
+      cause instanceof TypeError
+        ? cause.message
+        : 'unable to decode response body',
+      undefined,
+      { cause },
+    )
   }
 }
 
@@ -457,14 +464,12 @@ export async function asPipeThroughBuffer(
   const decodedStream = asDecodedStream(streamRes.stream, streamRes.headers)
 
   const buffered = await bufferIterable(decodedStream, maxBufferSize).catch(
-    (err) => {
+    (cause) => {
       throw new XRPCServerError(
         ResponseType.UpstreamFailure,
-        err instanceof TypeError
-          ? err.message
-          : 'unable to decode response body',
+        'unable to read response body',
         undefined,
-        { cause: err },
+        { cause },
       )
     },
   )

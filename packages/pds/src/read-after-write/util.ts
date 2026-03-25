@@ -1,7 +1,11 @@
 import express from 'express'
 import { LexValue, l } from '@atproto/lex'
 import { lexParse } from '@atproto/lex-json'
-import { HandlerPipeThrough } from '@atproto/xrpc-server'
+import {
+  HandlerPipeThrough,
+  HandlerPipeThroughBuffer,
+  HandlerPipeThroughStream,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../context'
 import { readStickyLogger as log } from '../logger'
 import {
@@ -38,47 +42,65 @@ export const pipethroughReadAfterWrite = async <
   const requester = auth.credentials.did
   const method = l.getMain(ns)
 
-  const streamRes = await pipethrough(ctx, req, { iss: requester })
+  let streamRes: HandlerPipeThroughBuffer | HandlerPipeThroughStream =
+    await pipethrough(ctx, req, { iss: requester })
 
-  const rev = streamRes.headers?.['atproto-repo-rev']
-  if (!rev) return streamRes
-
-  if (isJsonContentType(streamRes.headers?.['content-type']) === false) {
-    // content-type is present but not JSON, we can't munge this
+  // Only json responses can be parsed for munging
+  if (!isJsonContentType(streamRes.encoding)) {
     return streamRes
   }
 
-  // Buffer up to 10mb of response body for munge, if larger we skip munge and
-  // return the stream directly to avoid OOM crashes
-  const bufferRes = await asPipeThroughBuffer(streamRes, 10 * 1024 * 1024)
-
-  // response is too big to buffer, skip munge and return the stream
-  if (!('buffer' in bufferRes)) return bufferRes
+  // Check that the rev is one that we can munge against, if not we return the
+  // stream directly without buffering since we won't be doing a munge and want
+  // to avoid unnecessary memory usage.
+  const rev = streamRes.headers?.['atproto-repo-rev']
+  if (!rev) {
+    return streamRes
+  }
 
   try {
-    const lex = lexParse(bufferRes.buffer.toString('utf8'), { strict: false })
-
-    const result = method.output.schema.safeValidate(lex, { strict: false })
-
-    // Upstream payload does not conform to schema, skip munge and return the
-    // buffered response as-is
-    if (!result.success) return bufferRes
-
-    const parsedRes = result.value as l.InferMethodOutputBody<M, never>
-
     return await ctx.actorStore.read(requester, async (store) => {
       const local = await store.record.getRecordsSinceRev(rev)
-      if (local.count === 0) return bufferRes
+
+      if (local.count === 0) {
+        return streamRes
+      }
+
+      // @NOTE we replace streamRes to avoid accidentally using the stream after
+      // it's been consumed by asPipeThroughBuffer, which would cause an error. By
+      // replacing it with the buffered version, we ensure that any further use of
+      // streamRes is safe.
+      streamRes = await asPipeThroughBuffer(
+        streamRes as HandlerPipeThroughStream,
+        10 * 1024 * 1024,
+      )
+
+      // response was too big to buffer, skip munge
+      if (!('buffer' in streamRes)) {
+        return streamRes
+      }
+
+      const lex = lexParse(streamRes.buffer.toString('utf8'), { strict: false })
+
+      const result = method.output.schema.safeValidate(lex, { strict: false })
+
+      // Upstream payload does not conform to schema, skip munge
+      if (!result.success) {
+        return streamRes
+      }
+
+      const parsedRes = result.value as l.InferMethodOutputBody<M, never>
 
       const localViewer = ctx.localViewer(store)
 
       const data = await munge(localViewer, parsedRes, local, requester)
+
       return formatMungedResponse(data, getLocalLag(local))
     })
   } catch (err) {
     log.warn({ err, requester }, 'error in read after write munge')
 
-    return bufferRes
+    return streamRes
   }
 }
 
