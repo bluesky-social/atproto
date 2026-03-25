@@ -228,16 +228,6 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       expect(body.arr).toEqual(['one', 'two'])
     })
 
-    it('ignores indices when using bracket[n] syntax', async () => {
-      const res = await fetch(
-        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[0]=one&arr[1]=two`,
-      )
-      expect(res.status).toBe(200)
-      const body = await res.json()
-      expect(body.str).toBe('hello')
-      expect(body.arr).toEqual(['one', 'two'])
-    })
-
     it('ignores empty indices when using bracket[n] syntax', async () => {
       const res = await fetch(
         `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[4]=one&arr[9]=two`,

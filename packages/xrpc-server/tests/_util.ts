@@ -15,6 +15,9 @@ import {
   StreamConfigOrHandler,
 } from '../src'
 
+// @ts-expect-error
+Symbol.asyncDispose ??= Symbol.for('nodejs.asyncDispose')
+
 export async function createServer({ router }: Server): Promise<http.Server> {
   const app = express()
   app.use(router)

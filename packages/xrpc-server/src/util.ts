@@ -131,8 +131,8 @@ function getSearchParams(
     // @NOTE this is non-standard and should only be used for limited backwards-compatibility purposes.
     // Converts "foo[]=bar&foo[0]=baz" syntax into "foo=bar&foo=baz"
 
-    // We cannot "delete()" while iterating. SO we'll fist collect all keys that
-    // need to be changed, then apply the changes after
+    // We cannot "delete()" while iterating. SO we'll first collect all keys
+    // that need to be changed, then apply the changes after
     const toAppend = new URLSearchParams()
     const toDelete = new Set<string>()
 
