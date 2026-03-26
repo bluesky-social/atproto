@@ -7,6 +7,7 @@ import { dbLogger } from '../logger'
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
 export type ReportStatMode = 'live' | 'fixed'
+const REPORT_STAT_LIVE_TTL = 15 * MINUTE
 export type ReportStatTimeframe = 'day' | 'week'
 export type ReportStatGroup = {
   queueId: number
@@ -159,7 +160,7 @@ export class ReportStatsService {
   private isGroupFresh(stats: Selectable<ReportStat>): boolean {
     const ttl =
       stats.mode === 'live'
-        ? 15 * MINUTE
+        ? REPORT_STAT_LIVE_TTL
         : stats.timeframe === 'day'
           ? 24 * HOUR
           : 7 * 24 * HOUR
