@@ -42,16 +42,28 @@ describe('getLiveStats', () => {
     })
   }
 
-  const getLiveStats = async (queueId?: number, moderatorDid?: string) => {
-    const params: { queueId?: number; moderatorDid?: string } = {}
+  const getLiveStats = async (queueId?: number) => {
+    const params: { queueId?: number } = {}
     if (queueId !== undefined) params.queueId = queueId
-    if (moderatorDid !== undefined) params.moderatorDid = moderatorDid
     const { data } = await agent.tools.ozone.queue.getLiveStats(params, {
       headers: await network.ozone.modHeaders(
         ids.ToolsOzoneQueueGetLiveStats,
         'admin',
       ),
     })
+    return data.stats
+  }
+
+  const getLiveModeratorStats = async (moderatorDid: string) => {
+    const { data } = await agent.tools.ozone.report.getLiveModeratorStats(
+      { moderatorDid },
+      {
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneReportGetLiveModeratorStats,
+          'admin',
+        ),
+      },
+    )
     return data.stats
   }
 
@@ -167,7 +179,7 @@ describe('getLiveStats', () => {
     // The moderator (default role) took action on alice earlier in 'reflects status changes after recompute'
     const moderatorDid = network.ozone.moderatorAccnt.did
     await computeStats()
-    const stats = await getLiveStats(undefined, moderatorDid)
+    const stats = await getLiveModeratorStats(moderatorDid)
 
     expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
     expect(stats.lastUpdated).toBeDefined()
@@ -177,19 +189,12 @@ describe('getLiveStats', () => {
     // Use a DID that hasn't taken any actions
     const triageDid = network.ozone.triageAccnt.did
     await computeStats()
-    const stats = await getLiveStats(undefined, triageDid)
+    const stats = await getLiveModeratorStats(triageDid)
 
     expect(stats.actionedCount).toBe(0)
     expect(stats.escalatedPendingCount).toBe(0)
     // inboundCount and pendingCount are not computed for per-moderator stats
     expect(stats.inboundCount).toBeUndefined()
     expect(stats.pendingCount).toBeUndefined()
-  })
-
-  it('rejects request with both queueId and moderatorDid', async () => {
-    const adminDid = network.ozone.adminAccnt.did
-    await expect(getLiveStats(spamQueueId, adminDid)).rejects.toThrow(
-      'Cannot filter by both queue and moderator',
-    )
   })
 })

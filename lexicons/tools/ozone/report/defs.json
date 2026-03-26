@@ -471,6 +471,37 @@
         }
       }
     },
+    "moderatorStats": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "pendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'open' status"
+        },
+        "actionedCount": {
+          "type": "integer",
+          "description": "Number of reports in 'closed' status"
+        },
+        "escalatedPendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'escalated' status"
+        },
+        "inboundCount": {
+          "type": "integer",
+          "description": "Reports received in the last 24 hours."
+        },
+        "actionRate": {
+          "type": "integer",
+          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When these statistics were last computed"
+        }
+      }
+    },
     "assignmentView": {
       "type": "object",
       "required": ["id", "did", "reportId", "startAt"],

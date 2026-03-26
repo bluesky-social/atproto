@@ -1,20 +1,20 @@
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import { viewQueueStats } from '../../report/views'
+import { viewModeratorStats } from '../../report/views'
 
 export default function (server: Server, ctx: AppContext) {
-  server.tools.ozone.queue.getLiveStats({
+  server.tools.ozone.report.getLiveModeratorStats({
     auth: ctx.authVerifier.modOrAdminToken,
     handler: async ({ params }) => {
-      const { queueId } = params
+      const { moderatorDid } = params
 
       const reportStatsService = ctx.reportStatsService(ctx.db)
-      const row = await reportStatsService.getLiveQueueStats(queueId)
+      const row = await reportStatsService.getLiveModeratorStats(moderatorDid)
 
       return {
         encoding: 'application/json' as const,
         body: {
-          stats: viewQueueStats(row),
+          stats: viewModeratorStats(row),
         },
       }
     },

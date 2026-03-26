@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.getLiveModeratorStats",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get live moderation statistics for a specific moderator from the past 24 hours.",
+      "parameters": {
+        "type": "params",
+        "required": ["moderatorDid"],
+        "properties": {
+          "moderatorDid": {
+            "type": "string",
+            "format": "did",
+            "description": "DID of the moderator to get statistics for."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["stats"],
+          "properties": {
+            "stats": {
+              "type": "ref",
+              "ref": "tools.ozone.report.defs#moderatorStats",
+              "description": "Statistics for the requested moderator."
+            }
+          }
+        }
+      }
+    }
+  }
+}

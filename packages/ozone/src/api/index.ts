@@ -33,6 +33,7 @@ import listQueues from './queue/listQueues'
 import routeReports from './queue/routeReports'
 import updateQueue from './queue/updateQueue'
 import assignReportModerator from './report/assignModerator'
+import getLiveModeratorStats from './report/getLiveModeratorStats'
 import createActivity from './report/createActivity'
 import createReport from './report/createReport'
 import getReportAssignments from './report/getAssignments'
@@ -129,6 +130,7 @@ export default function (server: Server, ctx: AppContext) {
   getLatestReport(server, ctx)
   assignReportModerator(server, ctx)
   unassignReportModerator(server, ctx)
+  getLiveModeratorStats(server, ctx)
   getReportAssignments(server, ctx)
   createActivity(server, ctx)
   listActivities(server, ctx)

@@ -19085,13 +19085,7 @@ export const schemaDict = {
             queueId: {
               type: 'integer',
               description:
-                'Filter stats by queue. Cannot filter by both queue and moderator.',
-            },
-            moderatorDid: {
-              type: 'string',
-              format: 'did',
-              description:
-                'Filter stats by moderator. Cannot filter by both queue and moderator.',
+                'Filter stats by queue. Omit for aggregate stats across all queues.',
             },
           },
         },
@@ -19901,6 +19895,38 @@ export const schemaDict = {
           },
         },
       },
+      moderatorStats: {
+        type: 'object',
+        required: [],
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'open' status",
+          },
+          actionedCount: {
+            type: 'integer',
+            description: "Number of reports in 'closed' status",
+          },
+          escalatedPendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'escalated' status",
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received in the last 24 hours.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed',
+          },
+        },
+      },
       assignmentView: {
         type: 'object',
         required: ['id', 'did', 'reportId', 'startAt'],
@@ -20033,6 +20059,42 @@ export const schemaDict = {
             description: 'No report found.',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneReportGetLiveModeratorStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLiveModeratorStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get live moderation statistics for a specific moderator from the past 24 hours.',
+        parameters: {
+          type: 'params',
+          required: ['moderatorDid'],
+          properties: {
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'DID of the moderator to get statistics for.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#moderatorStats',
+                description: 'Statistics for the requested moderator.',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -22475,6 +22537,8 @@ export const ids = {
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
+  ToolsOzoneReportGetLiveModeratorStats:
+    'tools.ozone.report.getLiveModeratorStats',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
   ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',

@@ -9,20 +9,20 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ToolsOzoneQueueDefs from './defs.js'
+import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.queue.getLiveStats'
+const id = 'tools.ozone.report.getLiveModeratorStats'
 
 export type QueryParams = {
-  /** Filter stats by queue. Omit for aggregate stats across all queues. */
-  queueId?: number
+  /** DID of the moderator to get statistics for. */
+  moderatorDid: string
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  stats: ToolsOzoneQueueDefs.QueueStats
+  stats: ToolsOzoneReportDefs.ModeratorStats
 }
 
 export type HandlerInput = void

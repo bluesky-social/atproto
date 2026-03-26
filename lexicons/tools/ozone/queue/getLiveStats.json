@@ -10,12 +10,7 @@
         "properties": {
           "queueId": {
             "type": "integer",
-            "description": "Filter stats by queue. Cannot filter by both queue and moderator."
-          },
-          "moderatorDid": {
-            "type": "string",
-            "format": "did",
-            "description": "Filter stats by moderator. Cannot filter by both queue and moderator."
+            "description": "Filter stats by queue. Omit for aggregate stats across all queues."
           }
         }
       },
