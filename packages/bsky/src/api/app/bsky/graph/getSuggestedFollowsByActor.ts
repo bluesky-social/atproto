@@ -27,7 +27,7 @@ export default function (server: Server, ctx: AppContext) {
     presentation,
   )
   server.add(app.bsky.graph.getSuggestedFollowsByActor, {
-    auth: ctx.authVerifier.standard,
+    auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
       const viewer = auth.credentials.iss
       const labelers = ctx.reqLabelers(req)
@@ -160,7 +160,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getSuggestedFollowsByActor.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtx
   headers: HeadersMap
 }
 
