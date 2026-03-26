@@ -8594,6 +8594,105 @@ export const schemaDict = {
       },
     },
   },
+  AppBskyUnspeccedGetSuggestedUsersForDiscover: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedUsersForDiscover',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested users for Discover',
+        parameters: {
+          type: 'params',
+          properties: {
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+              recIdStr: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested users for Discover. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForDiscover',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+              recIdStr: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   AppBskyUnspeccedGetSuggestedUsersForExplore: {
     lexicon: 1,
     id: 'app.bsky.unspecced.getSuggestedUsersForExplore',
@@ -8648,6 +8747,105 @@ export const schemaDict = {
         type: 'query',
         description:
           'Get a skeleton of suggested users for Explore. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForExplore',
+        parameters: {
+          type: 'params',
+          properties: {
+            viewer: {
+              type: 'string',
+              format: 'did',
+              description:
+                'DID of the account making the request (not included for public/unauthenticated queries).',
+            },
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['dids'],
+            properties: {
+              dids: {
+                type: 'array',
+                items: {
+                  type: 'string',
+                  format: 'did',
+                },
+              },
+              recIdStr: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedUsersForSeeMore: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedUsersForSeeMore',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a list of suggested users for See More',
+        parameters: {
+          type: 'params',
+          properties: {
+            category: {
+              type: 'string',
+              description: 'Category of users to get suggestions for.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 25,
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['actors'],
+            properties: {
+              actors: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:app.bsky.actor.defs#profileView',
+                },
+              },
+              recIdStr: {
+                type: 'string',
+                description:
+                  'Snowflake for this recommendation, use when submitting recommendation events.',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton: {
+    lexicon: 1,
+    id: 'app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a skeleton of suggested users for See More. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForSeeMore',
         parameters: {
           type: 'params',
           properties: {
@@ -20983,10 +21181,18 @@ export const ids = {
   AppBskyUnspeccedGetSuggestedStarterPacksSkeleton:
     'app.bsky.unspecced.getSuggestedStarterPacksSkeleton',
   AppBskyUnspeccedGetSuggestedUsers: 'app.bsky.unspecced.getSuggestedUsers',
+  AppBskyUnspeccedGetSuggestedUsersForDiscover:
+    'app.bsky.unspecced.getSuggestedUsersForDiscover',
+  AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton:
+    'app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton',
   AppBskyUnspeccedGetSuggestedUsersForExplore:
     'app.bsky.unspecced.getSuggestedUsersForExplore',
   AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton:
     'app.bsky.unspecced.getSuggestedUsersForExploreSkeleton',
+  AppBskyUnspeccedGetSuggestedUsersForSeeMore:
+    'app.bsky.unspecced.getSuggestedUsersForSeeMore',
+  AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton:
+    'app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton',
   AppBskyUnspeccedGetSuggestedUsersSkeleton:
     'app.bsky.unspecced.getSuggestedUsersSkeleton',
   AppBskyUnspeccedGetSuggestionsSkeleton:

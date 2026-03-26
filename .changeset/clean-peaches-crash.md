@@ -4,4 +4,4 @@
 '@atproto/api': patch
 ---
 
-Create new endpoint for suggested users for Explore
+Create new endpoints for suggested users
