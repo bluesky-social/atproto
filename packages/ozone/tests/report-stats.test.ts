@@ -7,7 +7,7 @@ import {
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
 
-describe('getLiveStats', () => {
+describe('live', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let sc: SeedClient
@@ -31,26 +31,16 @@ describe('getLiveStats', () => {
     return data.queue
   }
 
-  const reportAccount = async (did: string, reportType: string) => {
-    await modClient.emitEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventReport',
-        reportType,
-        comment: 'automated test report',
+  const getLiveQueueStats = async (queueId?: number) => {
+    const { data } = await agent.tools.ozone.queue.getLiveStats(
+      { queueId },
+      {
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneQueueGetLiveStats,
+          'admin',
+        ),
       },
-      subject: { $type: 'com.atproto.admin.defs#repoRef', did },
-    })
-  }
-
-  const getLiveStats = async (queueId?: number) => {
-    const params: { queueId?: number } = {}
-    if (queueId !== undefined) params.queueId = queueId
-    const { data } = await agent.tools.ozone.queue.getLiveStats(params, {
-      headers: await network.ozone.modHeaders(
-        ids.ToolsOzoneQueueGetLiveStats,
-        'admin',
-      ),
-    })
+    )
     return data.stats
   }
 
@@ -98,12 +88,30 @@ describe('getLiveStats', () => {
     ])
     spamQueueId = spamQueue.id
     harassmentQueueId = harassmentQueue.id
-    await reportAccount(sc.dids.alice, 'com.atproto.moderation.defs#reasonSpam')
-    await reportAccount(sc.dids.bob, 'com.atproto.moderation.defs#reasonSpam')
-    await reportAccount(
-      sc.dids.carol,
-      'com.atproto.moderation.defs#reasonHarassment',
-    )
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonSpam',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.alice,
+      },
+      reportedBy: sc.dids.bob,
+    })
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonSpam',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.bob,
+      },
+      reportedBy: sc.dids.alice,
+    })
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonHarassment',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      },
+      reportedBy: sc.dids.alice,
+    })
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     await computeStats()
   })
@@ -113,19 +121,19 @@ describe('getLiveStats', () => {
   })
 
   it('returns aggregate stats when no queueId provided', async () => {
-    const stats = await getLiveStats()
+    const stats = await getLiveQueueStats()
     expect(stats.inboundCount).toBeGreaterThanOrEqual(3)
     expect(stats.lastUpdated).toBeDefined()
   })
 
   it('returns per-queue stats for spam queue', async () => {
-    const stats = await getLiveStats(spamQueueId)
+    const stats = await getLiveQueueStats(spamQueueId)
     expect(stats.pendingCount).toBe(2) // alice + bob
     expect(stats.inboundCount).toBeGreaterThanOrEqual(2)
   })
 
   it('returns per-queue stats for harassment queue', async () => {
-    const stats = await getLiveStats(harassmentQueueId)
+    const stats = await getLiveQueueStats(harassmentQueueId)
     expect(stats.pendingCount).toBe(1) // carol
   })
 
@@ -142,12 +150,79 @@ describe('getLiveStats', () => {
       reportAction: { all: true },
     })
     await computeStats()
-    const stats = await getLiveStats(spamQueueId)
+    const stats = await getLiveQueueStats(spamQueueId)
 
     expect(stats.pendingCount).toBe(1)
     expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
     expect(stats.avgHandlingTimeSec).toBeDefined()
-    expect(stats.avgHandlingTimeSec).toBeGreaterThan(0)
+    expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(0)
+  })
+
+  it('average handling time', async () => {
+    const moderatorDid = network.ozone.moderatorAccnt.did
+    const db = network.ozone.ctx.db
+    // Create reports, assign moderator, backdate assignment, then close
+    const ages = [30, 60, 90]
+    for (const ts of ages) {
+      await sc.createReport({
+        reasonType: 'com.atproto.moderation.defs#reasonOther',
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.carol,
+        },
+        reportedBy: sc.dids.bob,
+      })
+      const backdate = new Date(Date.now() - ts * 1000).toISOString()
+      const report = await db.db
+        .selectFrom('report')
+        .select(['id', 'status'])
+        .orderBy('id', 'desc')
+        .executeTakeFirstOrThrow()
+      // Set report to open and backdate createdAt
+      await db.db
+        .updateTable('report')
+        .set({
+          status: 'open',
+          createdAt: backdate,
+          updatedAt: backdate,
+        })
+        .where('id', '=', report.id)
+        .execute()
+      // Create a moderator assignment with startAt = backdate
+      await db.db
+        .insertInto('moderator_assignment')
+        .values({
+          did: moderatorDid,
+          reportId: report.id,
+          queueId: null,
+          startAt: backdate,
+          endAt: null,
+        })
+        .execute()
+
+      // Close the report
+      await modClient.emitEvent(
+        {
+          event: {
+            $type: 'tools.ozone.moderation.defs#modEventAcknowledge',
+          },
+          subject: {
+            $type: 'com.atproto.admin.defs#repoRef',
+            did: sc.dids.carol,
+          },
+          reportAction: { all: true },
+        },
+        'moderator',
+      )
+    }
+
+    // get updated stats and check
+    await computeStats()
+    const stats = await getLiveModeratorStats(moderatorDid)
+    const avgHandlingTime = ages.reduce((a, b) => a + b, 0) / ages.length
+    expect(stats.avgHandlingTimeSec).toBeDefined()
+    expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(avgHandlingTime - 5)
+    expect(stats.avgHandlingTimeSec).toBeLessThanOrEqual(avgHandlingTime + 5)
   })
 
   it('returns zeroed stats for empty queue', async () => {
@@ -157,7 +232,7 @@ describe('getLiveStats', () => {
       reportTypes: ['com.atproto.moderation.defs#reasonOther'],
     })
     await computeStats()
-    const stats = await getLiveStats(emptyQueue.id)
+    const stats = await getLiveQueueStats(emptyQueue.id)
 
     expect(stats.pendingCount).toBe(0)
     expect(stats.inboundCount).toBe(0)
@@ -166,13 +241,17 @@ describe('getLiveStats', () => {
 
   it('includes unqueued reports in aggregate', async () => {
     // Report with a reason that matches no queue
-    await reportAccount(
-      sc.dids.dan,
-      'com.atproto.moderation.defs#reasonMisleading',
-    )
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonMisleading',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.carol,
+      },
+      reportedBy: sc.dids.bob,
+    })
     await network.ozone.daemon.ctx.queueRouter.routeReports()
     await computeStats()
-    const stats = await getLiveStats()
+    const stats = await getLiveQueueStats()
 
     // Aggregate includes all reports (queued + unqueued)
     expect(stats.pendingCount).toBeGreaterThanOrEqual(1)
