@@ -7,9 +7,9 @@ export interface ReportStat {
   queueId: number // -1 = aggregate across all queues
   /** The expiration policy for the statistic.
    * 'live' expires in 15 minutes
-   * 'fixed' expires based on its timeframe (e.g. each day).
+   * 'historical' expires based on its timeframe (e.g. each day).
    * */
-  mode: string // 'live' or 'fixed'
+  mode: string // 'live' or 'historical'
   timeframe: string // 'day' or 'week'
   inboundCount: number | null // Reports received in the last 24 hours
   pendingCount: number | null // Reports with status = 'open' (all time)

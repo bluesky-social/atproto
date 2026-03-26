@@ -5,7 +5,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .createTable('report_stat')
     .addColumn('id', 'serial', (col) => col.primaryKey())
     .addColumn('queueId', 'integer', (col) => col.notNull().defaultTo(-1)) // -1 = aggregate across all queues
-    .addColumn('mode', 'varchar', (col) => col.notNull()) // 'live' or 'fixed'
+    .addColumn('mode', 'varchar', (col) => col.notNull()) // 'live' or 'historical'
     .addColumn('timeframe', 'varchar', (col) => col.notNull()) // 'day' or 'week'
     .addColumn('inboundCount', 'integer')
     .addColumn('pendingCount', 'integer')

@@ -6,7 +6,7 @@ import { dbLogger } from '../logger'
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
-export type ReportStatMode = 'live' | 'fixed'
+export type ReportStatMode = 'live' | 'historical'
 const REPORT_STAT_LIVE_TTL = 15 * MINUTE
 export type ReportStatTimeframe = 'day' | 'week'
 export type ReportStatGroup = {
@@ -82,7 +82,7 @@ export class ReportStatsService {
     })
     groups.push({
       queueId: -1,
-      mode: 'fixed',
+      mode: 'historical',
       timeframe: 'day',
       moderatorDid: null,
     })
@@ -104,7 +104,7 @@ export class ReportStatsService {
         },
         {
           queueId: queue.id,
-          mode: 'fixed',
+          mode: 'historical',
           timeframe: 'day',
           moderatorDid: null,
         },
@@ -131,7 +131,7 @@ export class ReportStatsService {
       })
       groups.push({
         queueId: -1,
-        mode: 'fixed',
+        mode: 'historical',
         timeframe: 'day',
         moderatorDid: member.did,
       })
