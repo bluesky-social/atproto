@@ -17,6 +17,7 @@ export interface ReportStat {
   escalatedCount: number | null // Reports with status = 'escalated' in last 24h
   actionRate: number | null // actionedCount / inboundCount * 100
   moderatorDid: string | null // NULL = aggregate, non-null = per-moderator
+  avgHandlingTimeSec: number | null // Average time from open/assigned to closed, in milliseconds
   computedAt: string // ISO timestamp
 }
 

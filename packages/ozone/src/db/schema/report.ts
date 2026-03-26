@@ -12,6 +12,7 @@ export interface Report {
   status: string // 'open', 'closed', 'escalated', 'queued', 'assigned'
   createdAt: string
   updatedAt: string
+  closedAt: string | null
 }
 
 export type PartialDB = {

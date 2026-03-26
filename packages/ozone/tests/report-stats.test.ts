@@ -146,6 +146,8 @@ describe('getLiveStats', () => {
 
     expect(stats.pendingCount).toBe(1)
     expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
+    expect(stats.avgHandlingTimeSec).toBeDefined()
+    expect(stats.avgHandlingTimeSec).toBeGreaterThan(0)
   })
 
   it('returns zeroed stats for empty queue', async () => {
@@ -159,6 +161,7 @@ describe('getLiveStats', () => {
 
     expect(stats.pendingCount).toBe(0)
     expect(stats.inboundCount).toBe(0)
+    expect(stats.avgHandlingTimeSec).toBeUndefined()
   })
 
   it('includes unqueued reports in aggregate', async () => {

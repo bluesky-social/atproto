@@ -18851,6 +18851,11 @@ export const schemaDict = {
             description:
               'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
           },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation to close, for reports closed in this period.',
+          },
           lastUpdated: {
             type: 'string',
             format: 'datetime',
@@ -19852,6 +19857,11 @@ export const schemaDict = {
             type: 'integer',
             description:
               'Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from moderator assignment to report close, for reports closed by this moderator in this period.',
           },
           lastUpdated: {
             type: 'string',

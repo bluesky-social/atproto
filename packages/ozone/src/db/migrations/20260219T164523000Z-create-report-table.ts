@@ -25,6 +25,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // Timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
+    .addColumn('closedAt', 'varchar')
     .execute()
 
   // Indexes

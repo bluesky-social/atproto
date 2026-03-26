@@ -62,6 +62,8 @@ export interface QueueStats {
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0. */
   actionRate?: number
+  /** Average time in seconds from report creation to close, for reports closed in this period. */
+  avgHandlingTimeSec?: number
   /** When these statistics were last computed */
   lastUpdated?: string
 }

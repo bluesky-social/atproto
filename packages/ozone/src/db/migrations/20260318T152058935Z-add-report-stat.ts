@@ -13,6 +13,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('escalatedCount', 'integer')
     .addColumn('actionRate', 'integer')
     .addColumn('moderatorDid', 'varchar')
+    .addColumn('avgHandlingTimeSec', 'integer')
     .addColumn('computedAt', 'varchar', (col) => col.notNull())
     .execute()
 

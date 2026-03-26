@@ -207,6 +207,7 @@ export function viewQueueStats(
     escalatedPendingCount: row?.escalatedCount ?? undefined,
     inboundCount: row?.inboundCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
     lastUpdated: row?.computedAt,
   }
 }
@@ -220,6 +221,7 @@ export function viewModeratorStats(
     escalatedPendingCount: row?.escalatedCount ?? undefined,
     assignedCount: row?.inboundCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
     lastUpdated: row?.computedAt,
   }
 }

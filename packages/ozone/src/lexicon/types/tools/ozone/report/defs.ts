@@ -395,6 +395,8 @@ export interface ModeratorStats {
   assignedCount?: number
   /** Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0. */
   actionRate?: number
+  /** Average time in seconds from moderator assignment to report close, for reports closed by this moderator in this period. */
+  avgHandlingTimeSec?: number
   /** When these statistics were last computed */
   lastUpdated?: string
 }

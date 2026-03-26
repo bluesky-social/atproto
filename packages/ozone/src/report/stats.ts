@@ -20,6 +20,7 @@ export type QueueStatistics = {
   actionedCount?: number
   escalatedCount?: number
   actionRate?: number
+  avgHandlingTimeSec?: number
 }
 export type ModeratorStatistics = {
   inboundCount?: number
@@ -27,6 +28,7 @@ export type ModeratorStatistics = {
   actionedCount?: number
   escalatedCount?: number
   actionRate?: number
+  avgHandlingTimeSec?: number
 }
 export type AggregateStatistics = {
   inboundCount?: number
@@ -34,6 +36,7 @@ export type AggregateStatistics = {
   actionedCount?: number
   escalatedCount?: number
   actionRate?: number
+  avgHandlingTimeSec?: number
 }
 export type ReportStatistics =
   | QueueStatistics
@@ -187,6 +190,7 @@ export class ReportStatsService {
         actionedCount: stats.actionedCount ?? null,
         escalatedCount: stats.escalatedCount ?? null,
         actionRate: stats.actionRate ?? null,
+        avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
         computedAt,
       })
       .onConflict((oc) =>
@@ -199,6 +203,7 @@ export class ReportStatsService {
             actionedCount: stats.actionedCount ?? null,
             escalatedCount: stats.escalatedCount ?? null,
             actionRate: stats.actionRate ?? null,
+            avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
             computedAt,
           }),
       )
@@ -242,6 +247,9 @@ export class ReportStatsService {
         sql<number>`count(*) filter (where "status" = 'escalated' and "updatedAt" > ${cutoff})`.as(
           'escalatedCount',
         ),
+        sql<number>`avg(extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)) ) filter (where "status" = 'closed' and "closedAt" is not null and "updatedAt" > ${cutoff})`.as(
+          'avgHandlingTimeSec',
+        ),
       ])
       .where('createdAt', '>', cutoff)
 
@@ -252,6 +260,9 @@ export class ReportStatsService {
     const escalatedCount = row?.escalatedCount ?? 0
     const actionRate =
       inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
+    const avgHandlingTimeSec = row?.avgHandlingTimeSec
+      ? Math.round(row.avgHandlingTimeSec)
+      : undefined
 
     return {
       inboundCount,
@@ -259,6 +270,7 @@ export class ReportStatsService {
       actionedCount,
       escalatedCount,
       actionRate,
+      avgHandlingTimeSec,
     }
   }
 
@@ -285,6 +297,9 @@ export class ReportStatsService {
         sql<number>`count(*) filter (where "status" = 'escalated' and "updatedAt" > ${cutoff})`.as(
           'escalatedCount',
         ),
+        sql<number>`avg(extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)) ) filter (where "status" = 'closed' and "closedAt" is not null and "updatedAt" > ${cutoff})`.as(
+          'avgHandlingTimeSec',
+        ),
       ])
       .where('createdAt', '>', cutoff)
       .where('queueId', '=', queueId)
@@ -296,6 +311,9 @@ export class ReportStatsService {
     const escalatedCount = row?.escalatedCount ?? 0
     const actionRate =
       inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
+    const avgHandlingTimeSec = row?.avgHandlingTimeSec
+      ? Math.round(row.avgHandlingTimeSec)
+      : undefined
 
     return {
       inboundCount,
@@ -303,6 +321,7 @@ export class ReportStatsService {
       actionedCount,
       escalatedCount,
       actionRate,
+      avgHandlingTimeSec,
     }
   }
 
@@ -331,15 +350,31 @@ export class ReportStatsService {
           and me."createdBy" = ${moderatorDid}
           and me."createdAt" > ${cutoff}
         ))`.as('escalatedCount'),
+        // Average time from moderator assignment to close (only for reports with an assignment record)
+        sql<number>`avg(extract(epoch from (r."closedAt"::timestamp - ma."startAt"::timestamp)) ) filter (where r."status" = 'closed' and r."closedAt" is not null and ma."startAt" is not null and exists (
+          select 1 from moderation_event me
+          where r."actionEventIds" @> jsonb_build_array(me.id)
+          and me."createdBy" = ${moderatorDid}
+          and me."createdAt" > ${cutoff}
+        ))`.as('avgHandlingTimeSec'),
       ])
+      .leftJoin('moderator_assignment as ma', (join) =>
+        join
+          .onRef('ma.reportId', '=', 'r.id')
+          .on('ma.did', '=', moderatorDid!),
+      )
       .where('r.createdAt', '>', cutoff)
       .executeTakeFirst()
     const actionedCount = row?.actionedCount ?? 0
     const escalatedCount = row?.escalatedCount ?? 0
+    const avgHandlingTimeSec = row?.avgHandlingTimeSec
+      ? Math.round(row.avgHandlingTimeSec)
+      : undefined
 
     return {
       actionedCount,
       escalatedCount,
+      avgHandlingTimeSec,
     }
   }
 
