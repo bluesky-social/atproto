@@ -57,12 +57,6 @@ describe('live', () => {
     return data.stats
   }
 
-  const computeStats = async () => {
-    const db = network.ozone.ctx.db
-    const statsService = network.ozone.ctx.reportStatsService(db)
-    await statsService.materializeAll({ force: true })
-  }
-
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_report_stats',
@@ -113,7 +107,7 @@ describe('live', () => {
       reportedBy: sc.dids.alice,
     })
     await network.ozone.daemon.ctx.queueRouter.routeReports()
-    await computeStats()
+    await modClient.computeStats()
   })
 
   afterAll(async () => {
@@ -149,9 +143,9 @@ describe('live', () => {
       },
       reportAction: { all: true },
     })
-    await computeStats()
+    await modClient.computeStats()
+    
     const stats = await getLiveQueueStats(spamQueueId)
-
     expect(stats.pendingCount).toBe(1)
     expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
     expect(stats.avgHandlingTimeSec).toBeDefined()
@@ -217,7 +211,7 @@ describe('live', () => {
     }
 
     // get updated stats and check
-    await computeStats()
+    await modClient.computeStats()
     const stats = await getLiveModeratorStats(moderatorDid)
     const avgHandlingTime = ages.reduce((a, b) => a + b, 0) / ages.length
     expect(stats.avgHandlingTimeSec).toBeDefined()
@@ -231,7 +225,7 @@ describe('live', () => {
       subjectTypes: ['record'],
       reportTypes: ['com.atproto.moderation.defs#reasonOther'],
     })
-    await computeStats()
+    await modClient.computeStats()
     const stats = await getLiveQueueStats(emptyQueue.id)
 
     expect(stats.pendingCount).toBe(0)
@@ -250,7 +244,7 @@ describe('live', () => {
       reportedBy: sc.dids.bob,
     })
     await network.ozone.daemon.ctx.queueRouter.routeReports()
-    await computeStats()
+    await modClient.computeStats()
     const stats = await getLiveQueueStats()
 
     // Aggregate includes all reports (queued + unqueued)
@@ -260,7 +254,7 @@ describe('live', () => {
   it('returns per-moderator stats after action', async () => {
     // The moderator (default role) took action on alice earlier in 'reflects status changes after recompute'
     const moderatorDid = network.ozone.moderatorAccnt.did
-    await computeStats()
+    await modClient.computeStats()
     const stats = await getLiveModeratorStats(moderatorDid)
 
     expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
@@ -270,7 +264,7 @@ describe('live', () => {
   it('returns zeroed per-moderator stats for inactive moderator', async () => {
     // Use a DID that hasn't taken any actions
     const triageDid = network.ozone.triageAccnt.did
-    await computeStats()
+    await modClient.computeStats()
     const stats = await getLiveModeratorStats(triageDid)
 
     expect(stats.actionedCount).toBe(0)
