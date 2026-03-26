@@ -218,7 +218,7 @@ export function viewModeratorStats(
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
     escalatedPendingCount: row?.escalatedCount ?? undefined,
-    inboundCount: row?.inboundCount ?? undefined,
+    assignedCount: row?.inboundCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     lastUpdated: row?.computedAt,
   }

@@ -382,6 +382,7 @@ export function validateReportActivityView<V>(v: V) {
   return validate<ReportActivityView & V>(v, id, hashReportActivityView)
 }
 
+/** Statistics across reports for a moderator. */
 export interface ModeratorStats {
   $type?: 'tools.ozone.report.defs#moderatorStats'
   /** Number of reports in 'open' status */
@@ -390,9 +391,9 @@ export interface ModeratorStats {
   actionedCount?: number
   /** Number of reports in 'escalated' status */
   escalatedPendingCount?: number
-  /** Reports received in the last 24 hours. */
-  inboundCount?: number
-  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0. */
+  /** Reports assigned to this moderator in the last 24 hours. */
+  assignedCount?: number
+  /** Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0. */
   actionRate?: number
   /** When these statistics were last computed */
   lastUpdated?: string

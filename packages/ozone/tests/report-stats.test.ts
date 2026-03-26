@@ -193,8 +193,8 @@ describe('getLiveStats', () => {
 
     expect(stats.actionedCount).toBe(0)
     expect(stats.escalatedPendingCount).toBe(0)
-    // inboundCount and pendingCount are not computed for per-moderator stats
-    expect(stats.inboundCount).toBeUndefined()
+    // assignedCount and pendingCount are not computed for per-moderator stats
+    expect(stats.assignedCount).toBeUndefined()
     expect(stats.pendingCount).toBeUndefined()
   })
 })

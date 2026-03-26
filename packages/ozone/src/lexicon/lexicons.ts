@@ -19827,6 +19827,7 @@ export const schemaDict = {
         },
       },
       moderatorStats: {
+        description: 'Statistics across reports for a moderator.',
         type: 'object',
         required: [],
         properties: {
@@ -19842,14 +19843,15 @@ export const schemaDict = {
             type: 'integer',
             description: "Number of reports in 'escalated' status",
           },
-          inboundCount: {
+          assignedCount: {
             type: 'integer',
-            description: 'Reports received in the last 24 hours.',
+            description:
+              'Reports assigned to this moderator in the last 24 hours.',
           },
           actionRate: {
             type: 'integer',
             description:
-              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
+              'Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0.',
           },
           lastUpdated: {
             type: 'string',
