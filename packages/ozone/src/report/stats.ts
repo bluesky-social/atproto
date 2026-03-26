@@ -175,6 +175,13 @@ export class ReportStatsService {
     const { queueId, mode, timeframe, moderatorDid } = group
     const computedAt = new Date().toISOString()
 
+    const pendingCount =
+      'pendingCount' in stats ? (stats.pendingCount ?? null) : null
+    const escalatedCount =
+      'escalatedCount' in stats ? (stats.escalatedCount ?? null) : null
+    const actionRate =
+      'actionRate' in stats ? (stats.actionRate ?? null) : null
+
     return this.db.db
       .insertInto('report_stat')
       .values({
@@ -183,7 +190,10 @@ export class ReportStatsService {
         timeframe,
         moderatorDid,
         inboundCount: stats.inboundCount ?? null,
+        pendingCount,
         actionedCount: stats.actionedCount ?? null,
+        escalatedCount,
+        actionRate,
         avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
         computedAt,
       })
@@ -193,7 +203,10 @@ export class ReportStatsService {
           .where('mode', '=', 'live')
           .doUpdateSet({
             inboundCount: stats.inboundCount ?? null,
+            pendingCount,
             actionedCount: stats.actionedCount ?? null,
+            escalatedCount,
+            actionRate,
             avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
             computedAt,
           }),

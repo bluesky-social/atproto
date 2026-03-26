@@ -265,9 +265,8 @@ describe('live', () => {
     const stats = await getLiveModeratorStats(triageDid)
 
     expect(stats.actionedCount).toBe(0)
-    expect(stats.escalatedPendingCount).toBe(0)
-    // assignedCount and pendingCount are not computed for per-moderator stats
-    expect(stats.assignedCount).toBeUndefined()
+    expect(stats.assignedCount).toBe(0)
+    expect(stats.escalatedPendingCount).toBeUndefined()
     expect(stats.pendingCount).toBeUndefined()
   })
 })
