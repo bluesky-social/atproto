@@ -15,27 +15,24 @@ export type ReportStatGroup = {
   moderatorDid: string | null
 }
 export type QueueStatistics = {
-  inboundCount?: number
-  pendingCount?: number
-  actionedCount?: number
-  escalatedCount?: number
-  actionRate?: number
+  inboundCount: number
+  pendingCount: number
+  actionedCount: number
+  escalatedCount: number
+  actionRate: number
   avgHandlingTimeSec?: number
 }
 export type ModeratorStatistics = {
-  inboundCount?: number
-  pendingCount?: number
-  actionedCount?: number
-  escalatedCount?: number
-  actionRate?: number
+  inboundCount: number
+  actionedCount: number
   avgHandlingTimeSec?: number
 }
 export type AggregateStatistics = {
-  inboundCount?: number
-  pendingCount?: number
-  actionedCount?: number
-  escalatedCount?: number
-  actionRate?: number
+  inboundCount: number
+  pendingCount: number
+  actionedCount: number
+  escalatedCount: number
+  actionRate: number
   avgHandlingTimeSec?: number
 }
 export type ReportStatistics =
@@ -186,10 +183,7 @@ export class ReportStatsService {
         timeframe,
         moderatorDid,
         inboundCount: stats.inboundCount ?? null,
-        pendingCount: stats.pendingCount ?? null,
         actionedCount: stats.actionedCount ?? null,
-        escalatedCount: stats.escalatedCount ?? null,
-        actionRate: stats.actionRate ?? null,
         avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
         computedAt,
       })
@@ -199,10 +193,7 @@ export class ReportStatsService {
           .where('mode', '=', 'live')
           .doUpdateSet({
             inboundCount: stats.inboundCount ?? null,
-            pendingCount: stats.pendingCount ?? null,
             actionedCount: stats.actionedCount ?? null,
-            escalatedCount: stats.escalatedCount ?? null,
-            actionRate: stats.actionRate ?? null,
             avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
             computedAt,
           }),
@@ -338,19 +329,18 @@ export class ReportStatsService {
     const row = await this.db.db
       .selectFrom('report as r')
       .select([
+        sql<number>`count(*) filter (where exists (
+          select 1 from moderation_event me
+          where r."actionEventIds" @> jsonb_build_array(me.id)
+          and me."createdBy" = ${moderatorDid}
+          and me."createdAt" > ${cutoff}
+        ))`.as('inboundCount'),
         sql<number>`count(*) filter (where r."status" = 'closed' and exists (
           select 1 from moderation_event me
           where r."actionEventIds" @> jsonb_build_array(me.id)
           and me."createdBy" = ${moderatorDid}
           and me."createdAt" > ${cutoff}
         ))`.as('actionedCount'),
-        sql<number>`count(*) filter (where r."status" = 'escalated' and exists (
-          select 1 from moderation_event me
-          where r."actionEventIds" @> jsonb_build_array(me.id)
-          and me."createdBy" = ${moderatorDid}
-          and me."createdAt" > ${cutoff}
-        ))`.as('escalatedCount'),
-        // Average time from moderator assignment to close (only for reports with an assignment record)
         sql<number>`avg(extract(epoch from (r."closedAt"::timestamp - ma."startAt"::timestamp)) ) filter (where r."status" = 'closed' and r."closedAt" is not null and ma."startAt" is not null and exists (
           select 1 from moderation_event me
           where r."actionEventIds" @> jsonb_build_array(me.id)
@@ -359,21 +349,19 @@ export class ReportStatsService {
         ))`.as('avgHandlingTimeSec'),
       ])
       .leftJoin('moderator_assignment as ma', (join) =>
-        join
-          .onRef('ma.reportId', '=', 'r.id')
-          .on('ma.did', '=', moderatorDid!),
+        join.onRef('ma.reportId', '=', 'r.id').on('ma.did', '=', moderatorDid!),
       )
       .where('r.createdAt', '>', cutoff)
       .executeTakeFirst()
+    const inboundCount = row?.inboundCount ?? 0
     const actionedCount = row?.actionedCount ?? 0
-    const escalatedCount = row?.escalatedCount ?? 0
     const avgHandlingTimeSec = row?.avgHandlingTimeSec
       ? Math.round(row.avgHandlingTimeSec)
       : undefined
 
     return {
+      inboundCount,
       actionedCount,
-      escalatedCount,
       avgHandlingTimeSec,
     }
   }
