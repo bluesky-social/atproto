@@ -18828,13 +18828,7 @@ export const schemaDict = {
       },
       queueStats: {
         type: 'object',
-        required: [
-          'pendingCount',
-          'actionedCount',
-          'escalatedPendingCount',
-          'inboundCount',
-          'actionRate',
-        ],
+        required: [],
         properties: {
           pendingCount: {
             type: 'integer',
@@ -19022,7 +19016,13 @@ export const schemaDict = {
             queueId: {
               type: 'integer',
               description:
-                'Queue ID to get stats for. When omitted, returns aggregate stats.',
+                'Filter stats by queue. Cannot filter by both queue and moderator.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter stats by moderator. Cannot filter by both queue and moderator.',
             },
           },
         },

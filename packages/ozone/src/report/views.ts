@@ -202,11 +202,11 @@ export function viewQueueStats(
   row?: Selectable<ReportStat>,
 ): ToolsOzoneQueueDefs.QueueStats {
   return {
-    pendingCount: row?.pendingCount ?? 0,
-    actionedCount: row?.actionedCount ?? 0,
-    escalatedPendingCount: row?.escalatedCount ?? 0,
-    inboundCount: row?.inboundCount ?? 0,
-    actionRate: row?.actionRate ?? 0,
+    pendingCount: row?.pendingCount ?? undefined,
+    actionedCount: row?.actionedCount ?? undefined,
+    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    inboundCount: row?.inboundCount ?? undefined,
+    actionRate: row?.actionRate ?? undefined,
     lastUpdated: row?.computedAt,
   }
 }

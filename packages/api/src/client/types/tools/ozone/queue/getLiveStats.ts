@@ -17,8 +17,10 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.queue.getLiveStats'
 
 export type QueryParams = {
-  /** Queue ID to get stats for. When omitted, returns aggregate stats. */
+  /** Filter stats by queue. Cannot filter by both queue and moderator. */
   queueId?: number
+  /** Filter stats by moderator. Cannot filter by both queue and moderator. */
+  moderatorDid?: string
 }
 export type InputSchema = undefined
 

@@ -11,11 +11,12 @@ export interface ReportStat {
    * */
   mode: string // 'live' or 'fixed'
   timeframe: string // 'day' or 'week'
-  inboundCount: number // Reports received in the last 24 hours
-  pendingCount: number // Reports with status = 'open' (all time)
-  actionedCount: number // Reports with status = 'closed' in last 24h
-  escalatedCount: number // Reports with status = 'escalated' in last 24h
-  actionRate: number // actionedCount / inboundCount * 100
+  inboundCount: number | null // Reports received in the last 24 hours
+  pendingCount: number | null // Reports with status = 'open' (all time)
+  actionedCount: number | null // Reports with status = 'closed' in last 24h
+  escalatedCount: number | null // Reports with status = 'escalated' in last 24h
+  actionRate: number | null // actionedCount / inboundCount * 100
+  moderatorDid: string | null // NULL = aggregate, non-null = per-moderator
   computedAt: string // ISO timestamp
 }
 

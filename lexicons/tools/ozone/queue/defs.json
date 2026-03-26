@@ -81,13 +81,7 @@
     },
     "queueStats": {
       "type": "object",
-      "required": [
-        "pendingCount",
-        "actionedCount",
-        "escalatedPendingCount",
-        "inboundCount",
-        "actionRate"
-      ],
+      "required": [],
       "properties": {
         "pendingCount": {
           "type": "integer",
