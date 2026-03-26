@@ -3,22 +3,11 @@ import { AtUri } from '@atproto/syntax'
 import { Database } from '../db'
 import { Report } from '../db/schema/report'
 import { QueryParams } from '../lexicon/types/tools/ozone/report/queryReports'
-
-export function getReportStatusForEventType(eventType: string): string | null {
-  // Returns the status that reports should transition to for a given event type
-  // Returns null if the event type doesn't affect report status
-  switch (eventType) {
-    case 'tools.ozone.moderation.defs#modEventAcknowledge':
-    case 'tools.ozone.moderation.defs#modEventTakedown':
-    case 'tools.ozone.moderation.defs#modEventLabel':
-    case 'tools.ozone.moderation.defs#modEventComment':
-      return 'closed'
-    case 'tools.ozone.moderation.defs#modEventEscalate':
-      return 'escalated'
-    default:
-      return null
-  }
-}
+import {
+  AlreadyInTargetState,
+  InvalidStateTransition,
+  handleReportUpdate,
+} from '../report/handle-report-update'
 
 export type ReportWithEvent = Omit<Report, 'id'> & {
   id: number
@@ -270,8 +259,10 @@ export async function findReportsForSubject(
     // Target all open/escalated reports on the subject
     builder = builder.where('r.status', 'in', ['open', 'escalated'])
   } else if (params.reportIds?.length) {
-    // Target specific report IDs
-    builder = builder.where('r.id', 'in', params.reportIds)
+    // Target specific report IDs — still enforce state transition rules
+    builder = builder
+      .where('r.id', 'in', params.reportIds)
+      .where('r.status', 'in', ['open', 'escalated'])
   } else if (params.reportTypes?.length) {
     // Target reports matching specific report types
     const reportTypeConditions = params.reportTypes.map(
@@ -302,21 +293,30 @@ export type ProcessReportActionParams = {
   subjectUri: string | null
   eventId: number
   eventType: string
+  createdBy: string
 }
 
 /**
  * Validates and processes a report action by:
  * 1. Finding matching reports based on targeting criteria
  * 2. Validating that specified report IDs exist and belong to the subject
- * 3. Updating reports with the action event ID, note, and status
+ * 3. Bulk-updating reports with the action event ID, note, and status
+ * 4. Bulk-inserting a report_activity row for each updated report
  *
  * @throws InvalidRequestError if validation fails
  */
 export async function processReportAction(
   params: ProcessReportActionParams,
 ): Promise<number> {
-  const { db, reportAction, subjectDid, subjectUri, eventId, eventType } =
-    params
+  const {
+    db,
+    reportAction,
+    subjectDid,
+    subjectUri,
+    eventId,
+    eventType,
+    createdBy,
+  } = params
 
   // Find reports matching the criteria
   const matchingReports = await findReportsForSubject(db, {
@@ -350,34 +350,84 @@ export async function processReportAction(
 
     if (missingIds.length > 0) {
       throw new Error(
-        `Report IDs ${missingIds.join(', ')} do not exist or do not belong to this subject`,
+        `Report IDs ${missingIds.join(', ')} do not exist, are already closed, or do not belong to this subject`,
       )
     }
   }
 
-  // Determine the new status based on event type
-  const newStatus = getReportStatusForEventType(eventType)
-  if (!newStatus) {
-    // Event type doesn't affect report status, no updates needed
+  // Determine per-report transitions via the pure state machine.
+  // Skip reports whose current status doesn't allow the transition.
+  const validUpdates: {
+    id: number
+    nextStatus: string
+    activityType: string
+    previousStatus: string
+  }[] = []
+
+  for (const report of matchingReports) {
+    try {
+      const result = handleReportUpdate(report.status, {
+        type: 'event',
+        eventType,
+      })
+      if (result.nextStatus && result.activity) {
+        validUpdates.push({
+          id: report.id,
+          nextStatus: result.nextStatus,
+          activityType: result.activity.activityType,
+          previousStatus: result.activity.previousStatus,
+        })
+      }
+    } catch (err) {
+      if (
+        err instanceof AlreadyInTargetState ||
+        err instanceof InvalidStateTransition
+      ) {
+        // Skip reports that can't transition — silent per design
+        continue
+      }
+      throw err
+    }
+  }
+
+  if (!validUpdates.length) {
     return 0
   }
 
-  // Update all matched reports
   const now = new Date().toISOString()
-  const reportIds = matchingReports.map((r) => r.id)
+  const updateIds = validUpdates.map((u) => u.id)
 
-  for (const reportId of reportIds) {
-    await db.db
-      .updateTable('report')
-      .set({
-        actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
-        actionNote: reportAction.note ?? null,
-        status: newStatus,
-        updatedAt: now,
-      })
-      .where('id', '=', reportId)
-      .execute()
-  }
+  // Bulk UPDATE reports that passed validation
+  // All valid reports share the same target status since they come from the
+  // same event type, so a single UPDATE is sufficient.
+  await db.db
+    .updateTable('report')
+    .set({
+      actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
+      actionNote: reportAction.note ?? null,
+      status: validUpdates[0].nextStatus,
+      updatedAt: now,
+    })
+    .where('id', 'in', updateIds)
+    .execute()
 
-  return reportIds.length
+  // Bulk INSERT one activity per updated report
+  await db.db
+    .insertInto('report_activity')
+    .values(
+      validUpdates.map((u) => ({
+        reportId: u.id,
+        activityType: u.activityType,
+        previousStatus: u.previousStatus,
+        internalNote: null,
+        publicNote: reportAction.note ?? null,
+        meta: null,
+        isAutomated: false,
+        createdBy,
+        createdAt: now,
+      })),
+    )
+    .execute()
+
+  return validUpdates.length
 }

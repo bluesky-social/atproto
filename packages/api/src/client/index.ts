@@ -301,10 +301,12 @@ import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
+import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
@@ -632,10 +634,12 @@ export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues
 export * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
 export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
+export * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 export * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
+export * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
 export * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
@@ -5609,6 +5613,17 @@ export class ToolsOzoneReportNS {
       })
   }
 
+  createActivity(
+    data?: ToolsOzoneReportCreateActivity.InputSchema,
+    opts?: ToolsOzoneReportCreateActivity.CallOptions,
+  ): Promise<ToolsOzoneReportCreateActivity.Response> {
+    return this._client
+      .call('tools.ozone.report.createActivity', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ToolsOzoneReportCreateActivity.toKnownErr(e)
+      })
+  }
+
   getAssignments(
     params?: ToolsOzoneReportGetAssignments.QueryParams,
     opts?: ToolsOzoneReportGetAssignments.CallOptions,
@@ -5641,6 +5656,18 @@ export class ToolsOzoneReportNS {
       .catch((e) => {
         throw ToolsOzoneReportGetReport.toKnownErr(e)
       })
+  }
+
+  listActivities(
+    params?: ToolsOzoneReportListActivities.QueryParams,
+    opts?: ToolsOzoneReportListActivities.CallOptions,
+  ): Promise<ToolsOzoneReportListActivities.Response> {
+    return this._client.call(
+      'tools.ozone.report.listActivities',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   queryReports(

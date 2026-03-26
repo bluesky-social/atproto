@@ -1,0 +1,75 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.createActivity",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Register an activity on a report. For state-change activity types, validates the transition and updates report.status atomically.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["reportId", "activity"],
+          "properties": {
+            "reportId": {
+              "type": "integer",
+              "description": "ID of the report to record activity on"
+            },
+            "activity": {
+              "type": "union",
+              "refs": [
+                "tools.ozone.report.defs#queueActivity",
+                "tools.ozone.report.defs#assignmentActivity",
+                "tools.ozone.report.defs#escalationActivity",
+                "tools.ozone.report.defs#closeActivity",
+                "tools.ozone.report.defs#reopenActivity",
+                "tools.ozone.report.defs#noteActivity"
+              ],
+              "description": "The type of activity to record."
+            },
+            "internalNote": {
+              "type": "string",
+              "description": "Optional moderator-only note. Not visible to reporters."
+            },
+            "publicNote": {
+              "type": "string",
+              "description": "Optional public-facing note, potentially visible to the reporter."
+            },
+            "isAutomated": {
+              "type": "boolean",
+              "description": "Set true when this activity is triggered by an automated process. Defaults to false.",
+              "default": false
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["activity"],
+          "properties": {
+            "activity": {
+              "type": "ref",
+              "ref": "tools.ozone.report.defs#reportActivityView"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "ReportNotFound",
+          "description": "No report exists with the given reportId"
+        },
+        {
+          "name": "InvalidStateTransition",
+          "description": "The requested state transition is not permitted from the report's current status"
+        },
+        {
+          "name": "AlreadyInTargetState",
+          "description": "The report is already in the status implied by this activity type"
+        }
+      ]
+    }
+  }
+}

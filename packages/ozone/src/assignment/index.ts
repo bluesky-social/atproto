@@ -1,12 +1,14 @@
 import { Selectable } from 'kysely'
-import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
+import { ToolsOzoneQueueDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 import { EndAtIdKeyset, paginate } from '../db/pagination'
 import { ModeratorAssignment } from '../db/schema/moderator_assignment'
 import { ReportQueue } from '../db/schema/report_queue'
+import type * as ToolsOzoneReportDefs from '../lexicon/types/tools/ozone/report/defs'
 import type { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
 import { QueueService, QueueServiceCreator } from '../queue/service'
+import { createReportActivity } from '../report/activity'
 import { TeamService, TeamServiceCreator } from '../team'
 
 export interface AssignmentServiceOpts {
@@ -41,6 +43,7 @@ export interface AssignReportInput {
   reportId: number
   queueId?: number | null
   isPermanent?: boolean
+  createdBy?: string
 }
 export interface UnassignReportInput {
   reportId: number
@@ -436,6 +439,29 @@ export class AssignmentService {
         .returningAll()
         .executeTakeFirstOrThrow()
     })
+
+    // Log an assignmentActivity ONLY for permanent assignments. Swallow AlreadyInTargetState
+    // so that re-assignments (e.g. refreshing expiry) don't throw.
+    if (input.isPermanent) {
+      try {
+        await createReportActivity(this.db, {
+          reportId,
+          activityType: 'assignmentActivity',
+          isAutomated: false,
+          createdBy: input.createdBy ?? did,
+          meta: { assignedTo: did },
+        })
+      } catch (err) {
+        if (
+          err instanceof InvalidRequestError &&
+          err.customErrorName === 'AlreadyInTargetState'
+        ) {
+          // no-op — report already assigned, no state change to record
+        } else {
+          throw err
+        }
+      }
+    }
 
     return this.hydrateReportAssignment(result.id)
   }

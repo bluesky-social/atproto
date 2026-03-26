@@ -264,7 +264,7 @@
         },
         "status": {
           "type": "string",
-          "knownValues": ["open", "closed", "escalated"],
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
           "description": "Current status of the report"
         },
         "subject": {
@@ -343,6 +343,131 @@
           "type": "ref",
           "ref": "tools.ozone.queue.defs#queueView",
           "description": "The queue this report is assigned to (if any)"
+        }
+      }
+    },
+    "queueActivity": {
+      "type": "object",
+      "description": "Activity recording a report being routed to a queue.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "assignmentActivity": {
+      "type": "object",
+      "description": "Activity recording a moderator being assigned to a report.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "escalationActivity": {
+      "type": "object",
+      "description": "Activity recording a report being escalated.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "closeActivity": {
+      "type": "object",
+      "description": "Activity recording a report being closed.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "reopenActivity": {
+      "type": "object",
+      "description": "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
+      "properties": {
+        "previousStatus": {
+          "type": "string",
+          "knownValues": ["open", "closed", "escalated", "queued", "assigned"],
+          "description": "The report's status before this activity. Populated automatically from the report row; not required in input."
+        }
+      }
+    },
+    "noteActivity": {
+      "type": "object",
+      "description": "Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both).",
+      "properties": {}
+    },
+    "reportActivityView": {
+      "type": "object",
+      "description": "A single activity entry on a report.",
+      "required": [
+        "id",
+        "reportId",
+        "activity",
+        "isAutomated",
+        "createdBy",
+        "createdAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Activity ID"
+        },
+        "reportId": {
+          "type": "integer",
+          "description": "ID of the report this activity belongs to"
+        },
+        "activity": {
+          "type": "union",
+          "refs": [
+            "#queueActivity",
+            "#assignmentActivity",
+            "#escalationActivity",
+            "#closeActivity",
+            "#reopenActivity",
+            "#noteActivity"
+          ],
+          "description": "The typed activity object describing what occurred."
+        },
+        "internalNote": {
+          "type": "string",
+          "description": "Optional moderator-only note. Not visible to reporters."
+        },
+        "publicNote": {
+          "type": "string",
+          "description": "Optional public note, potentially visible to the reporter."
+        },
+        "meta": {
+          "type": "unknown",
+          "description": "Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId)."
+        },
+        "isAutomated": {
+          "type": "boolean",
+          "description": "True if this activity was created by an automated process (e.g. queue router) rather than a direct human action."
+        },
+        "createdBy": {
+          "type": "string",
+          "format": "did",
+          "description": "DID of the actor who created this activity, or the service DID for automated activities."
+        },
+        "moderator": {
+          "type": "ref",
+          "ref": "tools.ozone.team.defs#member",
+          "description": "Full member record of the moderator who created this activity"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When this activity was created"
         }
       }
     },

@@ -118,7 +118,7 @@ export class DaemonContext {
     const strikeExpiryProcessor = new StrikeExpiryProcessor(db, strikeService)
 
     const queueService = QueueService.creator()
-    const queueRouter = new QueueRouter(db, queueService)
+    const queueRouter = new QueueRouter(db, queueService, cfg.service.did)
 
     const reportStatsService = ReportStatsService.creator()
     const statsComputer = new StatsComputer(db, reportStatsService)

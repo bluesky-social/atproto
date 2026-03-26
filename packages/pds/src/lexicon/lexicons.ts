@@ -19218,7 +19218,8 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'procedure',
-        description: 'Assign a report to the current user.',
+        description:
+          'Assign a report to a user. Defaults to the caller. Admins may assign to any moderator.',
         input: {
           encoding: 'application/json',
           schema: {
@@ -19233,6 +19234,12 @@ export const schemaDict = {
                 type: 'integer',
                 description:
                   'Optional queue ID to associate the assignment with. If not provided and the report has been assigned on a queue before, it will stay on that queue.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description:
+                  "DID to be assigned. Defaults to the caller's DID. Admins may assign to any moderator.",
               },
               isPermanent: {
                 type: 'boolean',
@@ -19257,6 +19264,87 @@ export const schemaDict = {
           {
             name: 'InvalidAssignment',
             description: 'The report ID or queue ID is invalid.',
+          },
+        ],
+      },
+    },
+  },
+  ToolsOzoneReportCreateActivity: {
+    lexicon: 1,
+    id: 'tools.ozone.report.createActivity',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Register an activity on a report. For state-change activity types, validates the transition and updates report.status atomically.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['reportId', 'activity'],
+            properties: {
+              reportId: {
+                type: 'integer',
+                description: 'ID of the report to record activity on',
+              },
+              activity: {
+                type: 'union',
+                refs: [
+                  'lex:tools.ozone.report.defs#queueActivity',
+                  'lex:tools.ozone.report.defs#assignmentActivity',
+                  'lex:tools.ozone.report.defs#escalationActivity',
+                  'lex:tools.ozone.report.defs#closeActivity',
+                  'lex:tools.ozone.report.defs#reopenActivity',
+                  'lex:tools.ozone.report.defs#noteActivity',
+                ],
+                description: 'The type of activity to record.',
+              },
+              internalNote: {
+                type: 'string',
+                description:
+                  'Optional moderator-only note. Not visible to reporters.',
+              },
+              publicNote: {
+                type: 'string',
+                description:
+                  'Optional public-facing note, potentially visible to the reporter.',
+              },
+              isAutomated: {
+                type: 'boolean',
+                description:
+                  'Set true when this activity is triggered by an automated process. Defaults to false.',
+                default: false,
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activity'],
+            properties: {
+              activity: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#reportActivityView',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'ReportNotFound',
+            description: 'No report exists with the given reportId',
+          },
+          {
+            name: 'InvalidStateTransition',
+            description:
+              "The requested state transition is not permitted from the report's current status",
+          },
+          {
+            name: 'AlreadyInTargetState',
+            description:
+              'The report is already in the status implied by this activity type',
           },
         ],
       },
@@ -19521,7 +19609,7 @@ export const schemaDict = {
           },
           status: {
             type: 'string',
-            knownValues: ['open', 'closed', 'escalated'],
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
             description: 'Current status of the report',
           },
           subject: {
@@ -19602,6 +19690,145 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:tools.ozone.queue.defs#queueView',
             description: 'The queue this report is assigned to (if any)',
+          },
+        },
+      },
+      queueActivity: {
+        type: 'object',
+        description: 'Activity recording a report being routed to a queue.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      assignmentActivity: {
+        type: 'object',
+        description:
+          'Activity recording a moderator being assigned to a report.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      escalationActivity: {
+        type: 'object',
+        description: 'Activity recording a report being escalated.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      closeActivity: {
+        type: 'object',
+        description: 'Activity recording a report being closed.',
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      reopenActivity: {
+        type: 'object',
+        description:
+          "Activity recording a closed report being reopened. Only valid when the report is in 'closed' status.",
+        properties: {
+          previousStatus: {
+            type: 'string',
+            knownValues: ['open', 'closed', 'escalated', 'queued', 'assigned'],
+            description:
+              "The report's status before this activity. Populated automatically from the report row; not required in input.",
+          },
+        },
+      },
+      noteActivity: {
+        type: 'object',
+        description:
+          'Activity recording a note on a report. Use internalNote for moderator-only notes or publicNote for reporter-visible notes (or both).',
+        properties: {},
+      },
+      reportActivityView: {
+        type: 'object',
+        description: 'A single activity entry on a report.',
+        required: [
+          'id',
+          'reportId',
+          'activity',
+          'isAutomated',
+          'createdBy',
+          'createdAt',
+        ],
+        properties: {
+          id: {
+            type: 'integer',
+            description: 'Activity ID',
+          },
+          reportId: {
+            type: 'integer',
+            description: 'ID of the report this activity belongs to',
+          },
+          activity: {
+            type: 'union',
+            refs: [
+              'lex:tools.ozone.report.defs#queueActivity',
+              'lex:tools.ozone.report.defs#assignmentActivity',
+              'lex:tools.ozone.report.defs#escalationActivity',
+              'lex:tools.ozone.report.defs#closeActivity',
+              'lex:tools.ozone.report.defs#reopenActivity',
+              'lex:tools.ozone.report.defs#noteActivity',
+            ],
+            description: 'The typed activity object describing what occurred.',
+          },
+          internalNote: {
+            type: 'string',
+            description:
+              'Optional moderator-only note. Not visible to reporters.',
+          },
+          publicNote: {
+            type: 'string',
+            description:
+              'Optional public note, potentially visible to the reporter.',
+          },
+          meta: {
+            type: 'unknown',
+            description:
+              'Extensible JSON payload for loose activity-specific metadata (e.g. assignmentId).',
+          },
+          isAutomated: {
+            type: 'boolean',
+            description:
+              'True if this activity was created by an automated process (e.g. queue router) rather than a direct human action.',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'did',
+            description:
+              'DID of the actor who created this activity, or the service DID for automated activities.',
+          },
+          moderator: {
+            type: 'ref',
+            ref: 'lex:tools.ozone.team.defs#member',
+            description:
+              'Full member record of the moderator who created this activity',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this activity was created',
           },
         },
       },
@@ -19773,6 +20000,55 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportListActivities: {
+    lexicon: 1,
+    id: 'tools.ozone.report.listActivities',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List all activities for a report, sorted most-recent-first.',
+        parameters: {
+          type: 'params',
+          required: ['reportId'],
+          properties: {
+            reportId: {
+              type: 'integer',
+              description: 'ID of the report whose activities to list',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['activities'],
+            properties: {
+              activities: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#reportActivityView',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneReportQueryReports: {
     lexicon: 1,
     id: 'tools.ozone.report.queryReports',
@@ -19798,7 +20074,13 @@ export const schemaDict = {
             },
             status: {
               type: 'string',
-              knownValues: ['open', 'closed', 'escalated'],
+              knownValues: [
+                'open',
+                'closed',
+                'escalated',
+                'queued',
+                'assigned',
+              ],
               description: 'Filter by report status.',
             },
             subject: {
@@ -22119,10 +22401,12 @@ export const ids = {
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
   ToolsOzoneReportAssignModerator: 'tools.ozone.report.assignModerator',
+  ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
+  ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
   ToolsOzoneReportUnassignModerator: 'tools.ozone.report.unassignModerator',
