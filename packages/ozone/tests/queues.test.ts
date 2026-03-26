@@ -388,6 +388,7 @@ describe('ozone-queues', () => {
     })
 
     it('returns queue stats', async () => {
+      await modClient.computeStats()
       const result = await listQueues()
       for (const queue of result.queues) {
         expect(queue.stats).toBeDefined()
