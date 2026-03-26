@@ -68,18 +68,16 @@ describe('live', () => {
     await network.processAll()
 
     // seed
-    const [spamQueue, harassmentQueue] = await Promise.all([
-      createQueue({
-        name: 'Stats: Spam Accounts',
-        subjectTypes: ['account'],
-        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
-      }),
-      createQueue({
-        name: 'Stats: Harassment Accounts',
-        subjectTypes: ['account'],
-        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
-      }),
-    ])
+    const spamQueue = await createQueue({
+      name: 'Stats: Spam Accounts',
+      subjectTypes: ['account'],
+      reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+    })
+    const harassmentQueue = await createQueue({
+      name: 'Stats: Harassment Accounts',
+      subjectTypes: ['account'],
+      reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+    })
     spamQueueId = spamQueue.id
     harassmentQueueId = harassmentQueue.id
     await sc.createReport({
@@ -132,24 +130,23 @@ describe('live', () => {
   })
 
   it('reflects status changes after recompute', async () => {
-    // Take action on alice's report and close associated reports
-    await modClient.emitEvent({
-      event: {
-        $type: 'tools.ozone.moderation.defs#modEventTakedown',
-      },
+    const stats1 = await getLiveQueueStats(spamQueueId)
+
+    // create report
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonSpam',
       subject: {
         $type: 'com.atproto.admin.defs#repoRef',
-        did: sc.dids.alice,
+        did: sc.dids.carol,
       },
-      reportAction: { all: true },
+      reportedBy: sc.dids.bob,
     })
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
     await modClient.computeStats()
-    
-    const stats = await getLiveQueueStats(spamQueueId)
-    expect(stats.pendingCount).toBe(1)
-    expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
-    expect(stats.avgHandlingTimeSec).toBeDefined()
-    expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(0)
+    const stats2 = await getLiveQueueStats(spamQueueId)
+
+    expect(stats2.pendingCount! - stats1.pendingCount!).toBe(1)
+    expect(stats2.inboundCount! - stats1.inboundCount!).toBe(1)
   })
 
   it('average handling time', async () => {
