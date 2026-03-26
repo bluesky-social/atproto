@@ -58,7 +58,6 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-// TODO: rename to `skeleton` once we can fully migrate to Discover
 const skeletonFromGetSuggestedUsersSkeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
@@ -80,6 +79,7 @@ const skeletonFromGetSuggestedUsersSkeleton = async (
   )
 }
 
+// TODO: rename to `skeleton` once we can fully migrate to the new endpoint
 const skeletonFromGetSuggestedUsersForExploreSkeleton = async (
   input: SkeletonFnInput<Context, Params>,
 ): Promise<SkeletonState> => {
