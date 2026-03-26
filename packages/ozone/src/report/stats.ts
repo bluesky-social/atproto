@@ -176,11 +176,10 @@ export class ReportStatsService {
     const computedAt = new Date().toISOString()
 
     const pendingCount =
-      'pendingCount' in stats ? (stats.pendingCount ?? null) : null
+      'pendingCount' in stats ? stats.pendingCount ?? null : null
     const escalatedCount =
-      'escalatedCount' in stats ? (stats.escalatedCount ?? null) : null
-    const actionRate =
-      'actionRate' in stats ? (stats.actionRate ?? null) : null
+      'escalatedCount' in stats ? stats.escalatedCount ?? null : null
+    const actionRate = 'actionRate' in stats ? stats.actionRate ?? null : null
 
     return this.db.db
       .insertInto('report_stat')
@@ -227,8 +226,6 @@ export class ReportStatsService {
       return this.computeQueueGroup(group)
     }
   }
-
-  /** Calculate aggregate statistics. */
   private async computeAggregateStats(
     group: ReportStatGroup,
   ): Promise<AggregateStatistics> {
@@ -277,8 +274,6 @@ export class ReportStatsService {
       avgHandlingTimeSec,
     }
   }
-
-  /** Calculate statistics for a queue. */
   private async computeQueueGroup(
     group: ReportStatGroup,
   ): Promise<QueueStatistics> {
@@ -328,8 +323,6 @@ export class ReportStatsService {
       avgHandlingTimeSec,
     }
   }
-
-  /** Calculate per-moderator statistics. */
   private async computeModeratorStats(
     group: ReportStatGroup,
   ): Promise<ModeratorStatistics> {
@@ -379,7 +372,6 @@ export class ReportStatsService {
     }
   }
 
-  /** Get latest statistics for a group. */
   private async getLatestStats(
     group: ReportStatGroup,
   ): Promise<Selectable<ReportStat> | undefined> {
@@ -399,7 +391,7 @@ export class ReportStatsService {
     return qb.executeTakeFirst()
   }
 
-  /** Get live daily statistics for a queue or aggregate. */
+  /** Get live daily statistics for a queue. */
   async getLiveQueueStats(
     queueId?: number,
   ): Promise<Selectable<ReportStat> | undefined> {
