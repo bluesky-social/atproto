@@ -8,6 +8,7 @@ import getAccountInfo from './getAccountInfo'
 import getAccountInfos from './getAccountInfos'
 import getInviteCodes from './getInviteCodes'
 import getSubjectStatus from './getSubjectStatus'
+import searchAccounts from './searchAccounts'
 import sendEmail from './sendEmail'
 import updateAccountEmail from './updateAccountEmail'
 import updateAccountHandle from './updateAccountHandle'
@@ -28,4 +29,5 @@ export default function (server: Server, ctx: AppContext) {
   updateAccountPassword(server, ctx)
   sendEmail(server, ctx)
   deleteAccount(server, ctx)
+  searchAccounts(server, ctx)
 }

@@ -105,6 +105,28 @@ export const getAccountByEmail = async (
   return found || null
 }
 
+export const searchAccounts = async (
+  db: AccountDb,
+  opts: {
+    email?: string
+    cursor?: string
+    limit: number
+  },
+  flags?: AvailabilityFlags,
+): Promise<ActorAccount[]> => {
+  const { email, cursor, limit } = opts
+  let builder = selectAccountQB(db, flags)
+    .orderBy('actor.did', 'asc')
+    .limit(limit)
+  if (email) {
+    builder = builder.where('account.email', 'like', `%${email.toLowerCase()}%`)
+  }
+  if (cursor) {
+    builder = builder.where('actor.did', '>', cursor as DidString)
+  }
+  return builder.execute()
+}
+
 export const registerActor = async (
   db: AccountDb,
   opts: {
