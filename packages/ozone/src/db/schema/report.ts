@@ -11,6 +11,10 @@ export interface Report {
   actionNote: string | null
   isMuted: boolean
   status: string // 'open', 'closed', 'escalated', 'queued', 'assigned'
+  reportType: string // Denormalized from moderation_event.meta.reportType
+  did: string // Denormalized from moderation_event.subjectDid
+  recordPath: string // '' = account/message, 'collection/rkey' = record
+  subjectMessageId: string | null // Denormalized from moderation_event.subjectMessageId
   createdAt: string
   updatedAt: string
 }

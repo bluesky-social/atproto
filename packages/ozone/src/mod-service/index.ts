@@ -1023,6 +1023,10 @@ export class ModerationService {
         actionNote: null,
         isMuted,
         status: 'open',
+        reportType: reasonType,
+        did: subject.did,
+        recordPath: subject.isRecord() ? subject.recordPath : '',
+        subjectMessageId: subject.isMessage() ? subject.messageId : null,
         createdAt: now,
         updatedAt: now,
       })

@@ -264,6 +264,10 @@ const handleModerationEvent = async ({
           actionNote: null,
           isMuted,
           status: 'open',
+          reportType: event.reportType,
+          did: subject.did,
+          recordPath: subject.isRecord() ? subject.recordPath : '',
+          subjectMessageId: subject.isMessage() ? subject.messageId : null,
           createdAt: now,
           updatedAt: now,
         })
