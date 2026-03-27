@@ -10,9 +10,9 @@ export type ReportStatMode = 'live' | 'historical'
 const REPORT_STAT_LIVE_TTL = 15 * MINUTE
 export type ReportStatTimeframe = 'day' | 'week'
 export type ReportStatGroup = {
-  queueId: number
   mode: ReportStatMode
   timeframe: ReportStatTimeframe
+  queueId: number
   moderatorDid: string | null
 }
 export type QueueStatistics = {
@@ -236,13 +236,18 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
+    // all-time (sped up with an index)
+    const pendingRow = await this.db.db
+      .selectFrom('report')
+      .select(sql<number>`count(*)`.as('pendingCount'))
+      .where('status', 'in', ['open', 'queued'])
+      .executeTakeFirst()
+
+    // windowed
     let qb = this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
-        sql<number>`count(*) filter (where "status" in ('open', 'queued'))`.as(
-          'pendingCount',
-        ),
         sql<number>`count(*) filter (where "status" = 'closed' and "updatedAt" > ${cutoff})`.as(
           'actionedCount',
         ),
@@ -257,7 +262,7 @@ export class ReportStatsService {
 
     const row = await qb.executeTakeFirst()
     const inboundCount = row?.inboundCount ?? 0
-    const pendingCount = row?.pendingCount ?? 0
+    const pendingCount = pendingRow?.pendingCount ?? 0
     const actionedCount = row?.actionedCount ?? 0
     const escalatedCount = row?.escalatedCount ?? 0
     const actionRate =
@@ -284,13 +289,19 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
+    // all-time (sped up with an index)
+    const pendingRow = await this.db.db
+      .selectFrom('report')
+      .select(sql<number>`count(*)`.as('pendingCount'))
+      .where('status', 'in', ['open', 'queued'])
+      .where('queueId', '=', queueId)
+      .executeTakeFirst()
+
+    // windowed
     let qb = this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
-        sql<number>`count(*) filter (where "status" in ('open', 'queued'))`.as(
-          'pendingCount',
-        ),
         sql<number>`count(*) filter (where "status" = 'closed' and "updatedAt" > ${cutoff})`.as(
           'actionedCount',
         ),
@@ -306,7 +317,7 @@ export class ReportStatsService {
 
     const row = await qb.executeTakeFirst()
     const inboundCount = row?.inboundCount ?? 0
-    const pendingCount = row?.pendingCount ?? 0
+    const pendingCount = pendingRow?.pendingCount ?? 0
     const actionedCount = row?.actionedCount ?? 0
     const escalatedCount = row?.escalatedCount ?? 0
     const actionRate =

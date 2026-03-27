@@ -216,6 +216,45 @@ describe('live', () => {
     expect(stats.avgHandlingTimeSec).toBeLessThanOrEqual(avgHandlingTime + 5)
   })
 
+  it('pendingCount includes reports created before the time window', async () => {
+    const db = network.ozone.ctx.db
+
+    // Create a report and backdate it beyond the 24h window
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonSpam',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.alice,
+      },
+      reportedBy: sc.dids.carol,
+    })
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+    // Backdate the report's createdAt to 3 days ago
+    const oldDate = new Date(
+      Date.now() - 3 * 24 * 60 * 60 * 1000,
+    ).toISOString()
+    const report = await db.db
+      .selectFrom('report')
+      .select(['id'])
+      .where('status', 'in', ['open', 'queued'])
+      .orderBy('id', 'desc')
+      .executeTakeFirstOrThrow()
+    await db.db
+      .updateTable('report')
+      .set({ createdAt: oldDate, updatedAt: oldDate })
+      .where('id', '=', report.id)
+      .execute()
+
+    await modClient.computeStats()
+    const aggregateStats = await getLiveQueueStats()
+    const queueStats = await getLiveQueueStats(spamQueueId)
+
+    // The backdated report should still be counted in pendingCount
+    expect(aggregateStats.pendingCount).toBeGreaterThanOrEqual(1)
+    expect(queueStats.pendingCount).toBeGreaterThanOrEqual(1)
+  })
+
   it('returns zeroed stats for empty queue', async () => {
     const emptyQueue = await createQueue({
       name: 'Stats: Empty Queue',
