@@ -240,7 +240,7 @@ export class ReportStatsService {
     const pendingRow = await this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
-      .where('status', 'in', ['open', 'queued'])
+      .where('status', '!=', 'closed')
       .executeTakeFirst()
 
     // windowed
@@ -293,7 +293,7 @@ export class ReportStatsService {
     const pendingRow = await this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
-      .where('status', 'in', ['open', 'queued'])
+      .where('status', '!=', 'closed')
       .where('queueId', '=', queueId)
       .executeTakeFirst()
 

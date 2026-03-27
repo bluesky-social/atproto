@@ -100,6 +100,15 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('report')
     .columns(['queueId', 'createdAt', 'id'])
     .execute()
+
+  // aggregate pending count query
+  await sql`CREATE INDEX idx_report_pending ON report (id) WHERE status != 'closed'`.execute(
+    db,
+  )
+  // per-queue pending count query
+  await sql`CREATE INDEX idx_report_queue_pending ON report ("queueId") WHERE status != 'closed'`.execute(
+    db,
+  )
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

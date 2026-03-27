@@ -237,7 +237,7 @@ describe('live', () => {
     const report = await db.db
       .selectFrom('report')
       .select(['id'])
-      .where('status', 'in', ['open', 'queued'])
+      .where('status', '!=', 'closed')
       .orderBy('id', 'desc')
       .executeTakeFirstOrThrow()
     await db.db
