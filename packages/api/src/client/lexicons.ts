@@ -19730,6 +19730,11 @@ export const schemaDict = {
             ref: 'lex:tools.ozone.queue.defs#queueView',
             description: 'The queue this report is assigned to (if any)',
           },
+          isMuted: {
+            type: 'boolean',
+            description:
+              'Whether this report is muted. A report is muted if the reporter was muted or the subject was muted at the time the report was created.',
+          },
         },
       },
       queueActivity: {
@@ -20152,6 +20157,12 @@ export const schemaDict = {
               type: 'string',
               format: 'datetime',
               description: 'Retrieve reports created before a given timestamp',
+            },
+            isMuted: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Filter by muted status. true returns only muted reports, false returns only unmuted reports. Defaults to false.',
             },
             reviewedBy: {
               type: 'string',

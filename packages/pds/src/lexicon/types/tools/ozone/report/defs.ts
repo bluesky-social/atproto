@@ -200,6 +200,8 @@ export interface ReportView {
   relatedReportCount?: number
   assignment?: ReportAssignment
   queue?: ToolsOzoneQueueDefs.QueueView
+  /** Whether this report is muted. A report is muted if the reporter was muted or the subject was muted at the time the report was created. */
+  isMuted?: boolean
 }
 
 const hashReportView = 'reportView'

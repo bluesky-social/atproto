@@ -49,38 +49,38 @@ export async function queryReports(
     if (isRecord) {
       const uri = new AtUri(params.subject)
       builder = builder
-        .where('me.subjectDid', '=', uri.host)
-        .where('me.subjectUri', '=', params.subject)
+        .where('r.did', '=', uri.host)
+        .where('r.recordPath', '=', `${uri.collection}/${uri.rkey}`)
     } else {
       builder = builder
-        .where('me.subjectDid', '=', params.subject)
-        .where('me.subjectUri', 'is', null)
+        .where('r.did', '=', params.subject)
+        .where('r.recordPath', '=', '')
     }
   }
 
   if (params.subjectType) {
     const normalizedType = params.subjectType as 'account' | 'record'
     if (normalizedType === 'account') {
-      builder = builder.where('me.subjectUri', 'is', null)
+      builder = builder.where('r.recordPath', '=', '')
     } else if (normalizedType === 'record') {
-      builder = builder.where('me.subjectUri', 'is not', null)
+      builder = builder.where('r.recordPath', '!=', '')
     }
   }
 
   if (params.collections?.length) {
-    // Filter by collection (only applies to records)
+    // Filter by collection prefix on recordPath (uses text_pattern_ops index)
     const collectionConditions = params.collections.map(
-      (collection) => sql`me."subjectUri" LIKE ${`%/${collection}/%`}`,
+      (collection) => sql`r."recordPath" LIKE ${`${collection}/%`}`,
     )
     builder = builder.where(sql`(${sql.join(collectionConditions, sql` OR `)})`)
   }
 
   if (params.reportTypes?.length) {
-    // Filter by report types using JSON contains
-    const reportTypeConditions = params.reportTypes.map(
-      (reportType) => sql`me.meta @> ${JSON.stringify({ reportType })}`,
-    )
-    builder = builder.where(sql`(${sql.join(reportTypeConditions, sql` OR `)})`)
+    builder = builder.where('r.reportType', 'in', params.reportTypes)
+  }
+
+  if (params.isMuted !== undefined) {
+    builder = builder.where('r.isMuted', '=', params.isMuted)
   }
 
   if (params.reportedAfter) {
@@ -237,6 +237,7 @@ export type ReportResult = {
   queuedAt: string | null
   actionEventIds: number[] | null
   actionNote: string | null
+  isMuted: boolean
   status: string
   createdAt: string
   updatedAt: string
@@ -246,13 +247,18 @@ export async function findReportsForSubject(
   db: Database,
   params: FindReportsForSubjectParams,
 ): Promise<ReportResult[]> {
-  let builder = reportQuery(db).where('me.subjectDid', '=', params.subjectDid)
+  let builder = reportQuery(db).where('r.did', '=', params.subjectDid)
 
   // Filter by subject URI (if provided, match exactly; if null/undefined, match repo-level)
   if (params.subjectUri) {
-    builder = builder.where('me.subjectUri', '=', params.subjectUri)
+    const uri = new AtUri(params.subjectUri)
+    builder = builder.where(
+      'r.recordPath',
+      '=',
+      `${uri.collection}/${uri.rkey}`,
+    )
   } else {
-    builder = builder.where('me.subjectUri', 'is', null)
+    builder = builder.where('r.recordPath', '=', '')
   }
 
   if (params.targetAll) {
@@ -265,11 +271,8 @@ export async function findReportsForSubject(
       .where('r.status', 'in', ['open', 'escalated'])
   } else if (params.reportTypes?.length) {
     // Target reports matching specific report types
-    const reportTypeConditions = params.reportTypes.map(
-      (reportType) => sql`me.meta @> ${JSON.stringify({ reportType })}`,
-    )
     builder = builder
-      .where(sql`(${sql.join(reportTypeConditions, sql` OR `)})`)
+      .where('r.reportType', 'in', params.reportTypes)
       .where('r.status', 'in', ['open', 'escalated'])
   } else {
     // No targeting criteria provided
