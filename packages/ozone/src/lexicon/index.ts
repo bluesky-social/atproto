@@ -101,6 +101,12 @@ import * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/u
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForDiscover from './types/app/bsky/unspecced/getSuggestedUsersForDiscover.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForDiscoverSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForExplore from './types/app/bsky/unspecced/getSuggestedUsersForExplore.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForExploreSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForSeeMore from './types/app/bsky/unspecced/getSuggestedUsersForSeeMore.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForSeeMoreSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
@@ -1624,6 +1630,78 @@ export class AppBskyUnspeccedNS {
     >,
   ) {
     const nsid = 'app.bsky.unspecced.getSuggestedUsers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersForDiscover<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersForDiscover.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersForDiscover.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersForDiscover.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersForDiscover' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersForDiscoverSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersForExplore<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersForExplore.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersForExplore.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersForExplore.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersForExplore' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersForExploreSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersForExploreSkeleton' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersForSeeMore<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersForSeeMore.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersForSeeMore.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersForSeeMore.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersForSeeMore' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSuggestedUsersForSeeMoreSkeleton<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.QueryParams,
+      AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.HandlerInput,
+      AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.HandlerOutput
+    >,
+  ) {
+    const nsid = 'app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

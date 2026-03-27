@@ -134,6 +134,12 @@ import * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/u
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForDiscover from './types/app/bsky/unspecced/getSuggestedUsersForDiscover.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForDiscoverSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForExplore from './types/app/bsky/unspecced/getSuggestedUsersForExplore.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForExploreSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForSeeMore from './types/app/bsky/unspecced/getSuggestedUsersForSeeMore.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForSeeMoreSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
@@ -449,6 +455,12 @@ export * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/u
 export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForDiscover from './types/app/bsky/unspecced/getSuggestedUsersForDiscover.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForDiscoverSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForExplore from './types/app/bsky/unspecced/getSuggestedUsersForExplore.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForExploreSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForSeeMore from './types/app/bsky/unspecced/getSuggestedUsersForSeeMore.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForSeeMoreSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
@@ -3339,6 +3351,78 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetSuggestedUsers.Response> {
     return this._client.call(
       'app.bsky.unspecced.getSuggestedUsers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForDiscover(
+    params?: AppBskyUnspeccedGetSuggestedUsersForDiscover.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForDiscover.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForDiscover.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForDiscover',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForDiscoverSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForExplore(
+    params?: AppBskyUnspeccedGetSuggestedUsersForExplore.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForExplore.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForExplore.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForExplore',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForExploreSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForExploreSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForSeeMore(
+    params?: AppBskyUnspeccedGetSuggestedUsersForSeeMore.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForSeeMore.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForSeeMore.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForSeeMore',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForSeeMoreSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton',
       params,
       undefined,
       opts,

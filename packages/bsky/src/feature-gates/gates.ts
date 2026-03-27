@@ -8,6 +8,9 @@ export enum Gate {
   SuggestedUsersSocialProofEnable = 'suggested_users:social_proof:enable',
   ThreadsReplyRankingExplorationEnable = 'threads:reply_ranking_exploration:enable',
   SearchFilteringExplorationEnable = 'search:filtering_exploration:enable',
+  SuggestedUsersForExploreEnable = 'suggested_users:for_explore:enable',
+  SuggestedUsersForDiscoverEnable = 'suggested_users:for_discover:enable',
+  SuggestedUsersForSeeMoreEnable = 'suggested_users:for_see_more:enable',
 
   // temp
   AATest = 'aa-test-appview',
