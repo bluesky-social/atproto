@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a skeleton of suggested users for See More. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForSeeMore",
+      "description": "Get a skeleton of suggested users for the See More page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForSeeMore",
       "parameters": {
         "type": "params",
         "properties": {

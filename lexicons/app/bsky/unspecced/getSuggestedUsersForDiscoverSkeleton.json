@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a skeleton of suggested users for Discover. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForDiscover",
+      "description": "Get a skeleton of suggested users for the Discover page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForDiscover",
       "parameters": {
         "type": "params",
         "properties": {

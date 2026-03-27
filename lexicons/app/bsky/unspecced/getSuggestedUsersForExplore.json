@@ -4,7 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a list of suggested users for Explore",
+      "description": "Get a list of suggested users for the Explore page",
       "parameters": {
         "type": "params",
         "properties": {

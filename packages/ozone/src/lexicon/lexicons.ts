@@ -8600,7 +8600,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Get a list of suggested users for Discover',
+        description: 'Get a list of suggested users for the Discover page',
         parameters: {
           type: 'params',
           properties: {
@@ -8643,7 +8643,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a skeleton of suggested users for Discover. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForDiscover',
+          'Get a skeleton of suggested users for the Discover page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForDiscover',
         parameters: {
           type: 'params',
           properties: {
@@ -8691,7 +8691,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Get a list of suggested users for Explore',
+        description: 'Get a list of suggested users for the Explore page',
         parameters: {
           type: 'params',
           properties: {
@@ -8738,7 +8738,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a skeleton of suggested users for Explore. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForExplore',
+          'Get a skeleton of suggested users for the Explore page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForExplore',
         parameters: {
           type: 'params',
           properties: {
@@ -8790,7 +8790,7 @@ export const schemaDict = {
     defs: {
       main: {
         type: 'query',
-        description: 'Get a list of suggested users for See More',
+        description: 'Get a list of suggested users for the See More page',
         parameters: {
           type: 'params',
           properties: {
@@ -8837,7 +8837,7 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get a skeleton of suggested users for See More. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForSeeMore',
+          'Get a skeleton of suggested users for the See More page. Intended to be called and hydrated by app.bsky.unspecced.getSuggestedUsersForSeeMore',
         parameters: {
           type: 'params',
           properties: {
