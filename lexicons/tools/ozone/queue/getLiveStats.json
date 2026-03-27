@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.queue.getLiveStats",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get statistics from the past 24 hours by queue or across all queues.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "queueId": {
+            "type": "integer",
+            "description": "Filter stats by queue. Omit for aggregate stats across all queues."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["stats"],
+          "properties": {
+            "stats": {
+              "type": "ref",
+              "ref": "tools.ozone.queue.defs#queueStats",
+              "description": "Statistics for the requested queue or aggregate."
+            }
+          }
+        }
+      }
+    }
+  }
+}

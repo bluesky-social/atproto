@@ -25,6 +25,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // Timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
+    .addColumn('closedAt', 'varchar')
     .execute()
 
   // Indexes
@@ -90,6 +91,22 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // Supports: WHERE "queueId" IS NULL [AND id > $cursor] ORDER BY id ASC LIMIT n
   // Kysely's CreateIndexBuilder doesn't support partial indexes, so we use raw SQL.
   await sql`CREATE INDEX idx_report_unassigned_id ON report (id) WHERE "queueId" IS NULL`.execute(
+    db,
+  )
+
+  // Index for report statistics
+  await db.schema
+    .createIndex('idx_report_queue_created_id')
+    .on('report')
+    .columns(['queueId', 'createdAt', 'id'])
+    .execute()
+
+  // aggregate pending count query
+  await sql`CREATE INDEX idx_report_pending ON report (id) WHERE status != 'closed'`.execute(
+    db,
+  )
+  // per-queue pending count query
+  await sql`CREATE INDEX idx_report_queue_pending ON report ("queueId") WHERE status != 'closed'`.execute(
     db,
   )
 }

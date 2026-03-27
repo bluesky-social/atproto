@@ -81,12 +81,7 @@
     },
     "queueStats": {
       "type": "object",
-      "required": [
-        "pendingCount",
-        "actionedCount",
-        "escalatedPendingCount",
-        "lastUpdated"
-      ],
+      "required": [],
       "properties": {
         "pendingCount": {
           "type": "integer",
@@ -100,17 +95,17 @@
           "type": "integer",
           "description": "Number of reports in 'escalated' status"
         },
-        "uniqueReportersCount": {
+        "inboundCount": {
           "type": "integer",
-          "description": "Number of distinct reporters with reports in this queue"
+          "description": "Reports received in this queue in the last 24 hours."
         },
-        "uniqueSubjectsDidCount": {
+        "actionRate": {
           "type": "integer",
-          "description": "Number of distinct subject DIDs with reports in this queue"
+          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0."
         },
-        "uniqueSubjectsFullCount": {
+        "avgHandlingTimeSec": {
           "type": "integer",
-          "description": "Number of distinct subject DID+URI combinations in this queue"
+          "description": "Average time in seconds from report creation to close, for reports closed in this period."
         },
         "lastUpdated": {
           "type": "string",

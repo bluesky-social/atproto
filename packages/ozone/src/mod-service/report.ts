@@ -257,12 +257,12 @@ export async function findReportsForSubject(
 
   if (params.targetAll) {
     // Target all open/escalated reports on the subject
-    builder = builder.where('r.status', 'in', ['open', 'escalated'])
+    builder = builder.where('r.status', 'in', ['open', 'escalated', 'assigned'])
   } else if (params.reportIds?.length) {
     // Target specific report IDs — still enforce state transition rules
     builder = builder
       .where('r.id', 'in', params.reportIds)
-      .where('r.status', 'in', ['open', 'escalated'])
+      .where('r.status', 'in', ['open', 'escalated', 'assigned'])
   } else if (params.reportTypes?.length) {
     // Target reports matching specific report types
     const reportTypeConditions = params.reportTypes.map(
@@ -270,7 +270,7 @@ export async function findReportsForSubject(
     )
     builder = builder
       .where(sql`(${sql.join(reportTypeConditions, sql` OR `)})`)
-      .where('r.status', 'in', ['open', 'escalated'])
+      .where('r.status', 'in', ['open', 'escalated', 'assigned'])
   } else {
     // No targeting criteria provided
     return []
@@ -400,13 +400,16 @@ export async function processReportAction(
   // Bulk UPDATE reports that passed validation
   // All valid reports share the same target status since they come from the
   // same event type, so a single UPDATE is sufficient.
+  const status = validUpdates[0].nextStatus
+  const closedAt = status === 'closed' ? now : null
   await db.db
     .updateTable('report')
     .set({
       actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
       actionNote: reportAction.note ?? null,
-      status: validUpdates[0].nextStatus,
+      status,
       updatedAt: now,
+      closedAt,
     })
     .where('id', 'in', updateIds)
     .execute()

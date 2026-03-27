@@ -18897,12 +18897,7 @@ export const schemaDict = {
       },
       queueStats: {
         type: 'object',
-        required: [
-          'pendingCount',
-          'actionedCount',
-          'escalatedPendingCount',
-          'lastUpdated',
-        ],
+        required: [],
         properties: {
           pendingCount: {
             type: 'integer',
@@ -18916,20 +18911,19 @@ export const schemaDict = {
             type: 'integer',
             description: "Number of reports in 'escalated' status",
           },
-          uniqueReportersCount: {
+          inboundCount: {
             type: 'integer',
-            description:
-              'Number of distinct reporters with reports in this queue',
+            description: 'Reports received in this queue in the last 24 hours.',
           },
-          uniqueSubjectsDidCount: {
+          actionRate: {
             type: 'integer',
             description:
-              'Number of distinct subject DIDs with reports in this queue',
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
           },
-          uniqueSubjectsFullCount: {
+          avgHandlingTimeSec: {
             type: 'integer',
             description:
-              'Number of distinct subject DID+URI combinations in this queue',
+              'Average time in seconds from report creation to close, for reports closed in this period.',
           },
           lastUpdated: {
             type: 'string',
@@ -19075,6 +19069,41 @@ export const schemaDict = {
                   type: 'ref',
                   ref: 'lex:tools.ozone.queue.defs#assignmentView',
                 },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneQueueGetLiveStats: {
+    lexicon: 1,
+    id: 'tools.ozone.queue.getLiveStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get statistics from the past 24 hours by queue or across all queues.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Omit for aggregate stats across all queues.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.queue.defs#queueStats',
+                description: 'Statistics for the requested queue or aggregate.',
               },
             },
           },
@@ -19871,6 +19900,45 @@ export const schemaDict = {
           },
         },
       },
+      moderatorStats: {
+        description: 'Statistics across reports for a moderator.',
+        type: 'object',
+        required: [],
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'open' status",
+          },
+          actionedCount: {
+            type: 'integer',
+            description: "Number of reports in 'closed' status",
+          },
+          escalatedPendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'escalated' status",
+          },
+          assignedCount: {
+            type: 'integer',
+            description:
+              'Reports assigned to this moderator in the last 24 hours.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from moderator assignment to report close, for reports closed by this moderator in this period.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed',
+          },
+        },
+      },
       assignmentView: {
         type: 'object',
         required: ['id', 'did', 'reportId', 'startAt'],
@@ -20003,6 +20071,42 @@ export const schemaDict = {
             description: 'No report found.',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneReportGetLiveModeratorStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLiveModeratorStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get live moderation statistics for a specific moderator from the past 24 hours.',
+        parameters: {
+          type: 'params',
+          required: ['moderatorDid'],
+          properties: {
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'DID of the moderator to get statistics for.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#moderatorStats',
+                description: 'Statistics for the requested moderator.',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -22436,6 +22540,7 @@ export const ids = {
   ToolsOzoneQueueDefs: 'tools.ozone.queue.defs',
   ToolsOzoneQueueDeleteQueue: 'tools.ozone.queue.deleteQueue',
   ToolsOzoneQueueGetAssignments: 'tools.ozone.queue.getAssignments',
+  ToolsOzoneQueueGetLiveStats: 'tools.ozone.queue.getLiveStats',
   ToolsOzoneQueueListQueues: 'tools.ozone.queue.listQueues',
   ToolsOzoneQueueRouteReports: 'tools.ozone.queue.routeReports',
   ToolsOzoneQueueUpdateQueue: 'tools.ozone.queue.updateQueue',
@@ -22444,6 +22549,8 @@ export const ids = {
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
   ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
+  ToolsOzoneReportGetLiveModeratorStats:
+    'tools.ozone.report.getLiveModeratorStats',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
   ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',

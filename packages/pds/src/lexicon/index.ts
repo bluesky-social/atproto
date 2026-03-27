@@ -246,6 +246,7 @@ import * as ToolsOzoneQueueAssignModerator from './types/tools/ozone/queue/assig
 import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQueue.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
+import * as ToolsOzoneQueueGetLiveStats from './types/tools/ozone/queue/getLiveStats.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
@@ -253,6 +254,7 @@ import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+import * as ToolsOzoneReportGetLiveModeratorStats from './types/tools/ozone/report/getLiveModeratorStats.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
@@ -3619,6 +3621,18 @@ export class ToolsOzoneQueueNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getLiveStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneQueueGetLiveStats.QueryParams,
+      ToolsOzoneQueueGetLiveStats.HandlerInput,
+      ToolsOzoneQueueGetLiveStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.queue.getLiveStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   listQueues<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3708,6 +3722,18 @@ export class ToolsOzoneReportNS {
     >,
   ) {
     const nsid = 'tools.ozone.report.getLatestReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLiveModeratorStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetLiveModeratorStats.QueryParams,
+      ToolsOzoneReportGetLiveModeratorStats.HandlerInput,
+      ToolsOzoneReportGetLiveModeratorStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getLiveModeratorStats' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

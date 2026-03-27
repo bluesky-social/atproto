@@ -471,6 +471,42 @@
         }
       }
     },
+    "moderatorStats": {
+      "description": "Statistics across reports for a moderator.",
+      "type": "object",
+      "required": [],
+      "properties": {
+        "pendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'open' status"
+        },
+        "actionedCount": {
+          "type": "integer",
+          "description": "Number of reports in 'closed' status"
+        },
+        "escalatedPendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'escalated' status"
+        },
+        "assignedCount": {
+          "type": "integer",
+          "description": "Reports assigned to this moderator in the last 24 hours."
+        },
+        "actionRate": {
+          "type": "integer",
+          "description": "Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0."
+        },
+        "avgHandlingTimeSec": {
+          "type": "integer",
+          "description": "Average time in seconds from moderator assignment to report close, for reports closed by this moderator in this period."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When these statistics were last computed"
+        }
+      }
+    },
     "assignmentView": {
       "type": "object",
       "required": ["id", "did", "reportId", "startAt"],

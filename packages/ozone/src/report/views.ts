@@ -1,5 +1,7 @@
-import { AppBskyActorDefs, ToolsOzoneQueueDefs } from '@atproto/api'
+import { Selectable } from 'kysely'
+import { AppBskyActorDefs, ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
 import { addAccountInfoToRepoViewDetail } from '../api/util'
+import { ReportStat } from '../db/schema/report_stat'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import {
   RecordViewDetail,
@@ -193,5 +195,33 @@ export function buildReportView(
       report.queueId && report.queueId > 0
         ? queues.get(report.queueId)
         : undefined,
+  }
+}
+
+export function viewQueueStats(
+  row?: Selectable<ReportStat>,
+): ToolsOzoneQueueDefs.QueueStats {
+  return {
+    pendingCount: row?.pendingCount ?? undefined,
+    actionedCount: row?.actionedCount ?? undefined,
+    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    inboundCount: row?.inboundCount ?? undefined,
+    actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    lastUpdated: row?.computedAt,
+  }
+}
+
+export function viewModeratorStats(
+  row?: Selectable<ReportStat>,
+): ToolsOzoneReportDefs.ModeratorStats {
+  return {
+    pendingCount: row?.pendingCount ?? undefined,
+    actionedCount: row?.actionedCount ?? undefined,
+    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    assignedCount: row?.inboundCount ?? undefined,
+    actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    lastUpdated: row?.computedAt,
   }
 }
