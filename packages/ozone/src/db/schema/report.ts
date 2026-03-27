@@ -9,6 +9,7 @@ export interface Report {
   queuedAt: string | null
   actionEventIds: number[] | null // Array of event IDs, sorted DESC [newest, ..., oldest]
   actionNote: string | null
+  isMuted: boolean
   status: string // 'open', 'closed', 'escalated', 'queued', 'assigned'
   createdAt: string
   updatedAt: string

@@ -83,6 +83,10 @@ export async function queryReports(
     builder = builder.where(sql`(${sql.join(reportTypeConditions, sql` OR `)})`)
   }
 
+  if (params.isMuted !== undefined) {
+    builder = builder.where('r.isMuted', '=', params.isMuted)
+  }
+
   if (params.reportedAfter) {
     builder = builder.where('r.createdAt', '>', params.reportedAfter)
   }
@@ -237,6 +241,7 @@ export type ReportResult = {
   queuedAt: string | null
   actionEventIds: number[] | null
   actionNote: string | null
+  isMuted: boolean
   status: string
   createdAt: string
   updatedAt: string

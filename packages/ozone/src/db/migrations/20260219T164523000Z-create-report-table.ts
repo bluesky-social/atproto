@@ -19,6 +19,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // Reporter communication
     .addColumn('actionNote', 'text')
 
+    // Whether the report is muted (reporter was muted or subject was muted at creation time)
+    .addColumn('isMuted', 'boolean', (col) => col.notNull().defaultTo(false))
+
     // Status of the ticket/report
     .addColumn('status', 'varchar', (col) => col.notNull().defaultTo('open')) // "open", "closed", "escalated"
 
@@ -39,42 +42,42 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createIndex('idx_report_queue_status_created')
     .on('report')
-    .columns(['queueId', 'status', 'createdAt', 'id'])
+    .columns(['queueId', 'status', 'isMuted', 'createdAt', 'id'])
     .execute()
 
   // Queue + status filters with sorting by updatedAt
   await db.schema
     .createIndex('idx_report_queue_status_updated')
     .on('report')
-    .columns(['queueId', 'status', 'updatedAt', 'id'])
+    .columns(['queueId', 'status', 'isMuted', 'updatedAt', 'id'])
     .execute()
 
   // Status filter with createdAt sorting (when queueId not specified)
   await db.schema
     .createIndex('idx_report_status_created_id')
     .on('report')
-    .columns(['status', 'createdAt', 'id'])
+    .columns(['status', 'isMuted', 'createdAt', 'id'])
     .execute()
 
   // Status filter with updatedAt sorting
   await db.schema
     .createIndex('idx_report_status_updated_id')
     .on('report')
-    .columns(['status', 'updatedAt', 'id'])
+    .columns(['status', 'isMuted', 'updatedAt', 'id'])
     .execute()
 
-  // Default query (no filters) sorted by createdAt
+  // Default query (no filters) sorted by createdAt, with isMuted for filtering
   await db.schema
     .createIndex('idx_report_created_id')
     .on('report')
-    .columns(['createdAt', 'id'])
+    .columns(['isMuted', 'createdAt', 'id'])
     .execute()
 
-  // Default query sorted by updatedAt
+  // Default query sorted by updatedAt, with isMuted for filtering
   await db.schema
     .createIndex('idx_report_updated_id')
     .on('report')
-    .columns(['updatedAt', 'id'])
+    .columns(['isMuted', 'updatedAt', 'id'])
     .execute()
 
   // GIN index for reviewedBy queries (ANY operator on array)
