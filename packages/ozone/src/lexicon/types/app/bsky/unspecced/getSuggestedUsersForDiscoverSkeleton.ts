@@ -17,8 +17,6 @@ const id = 'app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton'
 export type QueryParams = {
   /** DID of the account making the request (not included for public/unauthenticated queries). */
   viewer?: string
-  /** Category of users to get suggestions for. */
-  category?: string
   limit: number
 }
 export type InputSchema = undefined

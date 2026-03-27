@@ -16,8 +16,6 @@ const is$typed = _is$typed,
 const id = 'app.bsky.unspecced.getSuggestedUsersForDiscover'
 
 export type QueryParams = {
-  /** Category of users to get suggestions for. */
-  category?: string
   limit: number
 }
 export type InputSchema = undefined

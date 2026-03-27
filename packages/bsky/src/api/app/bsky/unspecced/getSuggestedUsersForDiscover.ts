@@ -70,7 +70,6 @@ const skeletonFromGetSuggestedUsersSkeleton = async (
     app.bsky.unspecced.getSuggestedUsersSkeleton,
     {
       limit: params.limit,
-      category: params.category,
       viewer: params.hydrateCtx.viewer ?? undefined,
     },
     {
@@ -93,7 +92,6 @@ const skeletonFromGetSuggestedUsersForDiscoverSkeleton = async (
     app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton,
     {
       limit: params.limit,
-      category: params.category,
       viewer: params.hydrateCtx.viewer ?? undefined,
     },
     {
@@ -169,7 +167,6 @@ type Context = {
 type Params = app.bsky.unspecced.getSuggestedUsersForDiscover.$Params & {
   hydrateCtx: HydrateCtx & { viewer: string | null }
   headers: Record<string, string>
-  category?: string
 }
 
 type SkeletonState = {

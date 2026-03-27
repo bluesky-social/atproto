@@ -8,10 +8,6 @@
       "parameters": {
         "type": "params",
         "properties": {
-          "category": {
-            "type": "string",
-            "description": "Category of users to get suggestions for."
-          },
           "limit": {
             "type": "integer",
             "minimum": 1,

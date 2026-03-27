@@ -8604,10 +8604,6 @@ export const schemaDict = {
         parameters: {
           type: 'params',
           properties: {
-            category: {
-              type: 'string',
-              description: 'Category of users to get suggestions for.',
-            },
             limit: {
               type: 'integer',
               minimum: 1,
@@ -8656,10 +8652,6 @@ export const schemaDict = {
               format: 'did',
               description:
                 'DID of the account making the request (not included for public/unauthenticated queries).',
-            },
-            category: {
-              type: 'string',
-              description: 'Category of users to get suggestions for.',
             },
             limit: {
               type: 'integer',
