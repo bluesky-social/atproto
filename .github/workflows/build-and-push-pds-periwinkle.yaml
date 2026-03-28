@@ -128,35 +128,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: dev
     steps:
-      - name: Start Temporal updateImages workflow (dev)
-        run: |
-          SHA="${{ needs.build.outputs.short_sha }}"
-          WORKFLOW_ID="update-images-dev-${SHA}-$(date +%s)"
-          FULL_IMAGE="${{ needs.push-dev.outputs.full_image }}"
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          # Encode workflow input as Temporal payload (json/plain encoding)
-          INPUT_JSON="{\"region\":\"${{ vars.PDS_REGION }}\",\"clusterName\":\"${{ vars.PDS_CLUSTER_NAME }}\",\"pdsImage\":\"${FULL_IMAGE}\"}"
-          ENCODED_DATA=$(echo -n "${INPUT_JSON}" | base64 -w0)
-
-          curl -sf -X POST \
-            "https://${TEMPORAL_ADDRESS}/api/v1/namespaces/${TEMPORAL_NAMESPACE}/workflows/${WORKFLOW_ID}" \
-            -H "Authorization: Bearer ${TEMPORAL_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"workflowType\": { \"name\": \"updateImages\" },
-              \"taskQueue\": { \"name\": \"pds-operations\" },
-              \"input\": {
-                \"payloads\": [{
-                  \"metadata\": { \"encoding\": \"anNvbi9wbGFpbg==\" },
-                  \"data\": \"${ENCODED_DATA}\"
-                }]
-              },
-              \"workflowExecutionTimeout\": \"3600s\",
-              \"requestId\": \"$(cat /proc/sys/kernel/random/uuid)\"
-            }"
-
-          echo "Temporal workflow started: ${WORKFLOW_ID}"
+      - name: Trigger updateImages workflows (dev)
+        run: .github/scripts/trigger-update-images.sh "${{ needs.push-dev.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
         env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
           TEMPORAL_ADDRESS: ${{ vars.TEMPORAL_ADDRESS }}
@@ -166,34 +145,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: Start Temporal updateImages workflow (prod)
-        run: |
-          SHA="${{ needs.build.outputs.short_sha }}"
-          WORKFLOW_ID="update-images-prod-${SHA}-$(date +%s)"
-          FULL_IMAGE="${{ needs.push-prod.outputs.full_image }}"
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          INPUT_JSON="{\"region\":\"${{ vars.PDS_REGION }}\",\"clusterName\":\"${{ vars.PDS_CLUSTER_NAME }}\",\"pdsImage\":\"${FULL_IMAGE}\"}"
-          ENCODED_DATA=$(echo -n "${INPUT_JSON}" | base64 -w0)
-
-          curl -sf -X POST \
-            "https://${TEMPORAL_ADDRESS}/api/v1/namespaces/${TEMPORAL_NAMESPACE}/workflows/${WORKFLOW_ID}" \
-            -H "Authorization: Bearer ${TEMPORAL_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d "{
-              \"workflowType\": { \"name\": \"updateImages\" },
-              \"taskQueue\": { \"name\": \"pds-operations\" },
-              \"input\": {
-                \"payloads\": [{
-                  \"metadata\": { \"encoding\": \"anNvbi9wbGFpbg==\" },
-                  \"data\": \"${ENCODED_DATA}\"
-                }]
-              },
-              \"workflowExecutionTimeout\": \"3600s\",
-              \"requestId\": \"$(cat /proc/sys/kernel/random/uuid)\"
-            }"
-
-          echo "Temporal workflow started: ${WORKFLOW_ID}"
+      - name: Trigger updateImages workflows (prod)
+        run: .github/scripts/trigger-update-images.sh "${{ needs.push-prod.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
         env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
           TEMPORAL_ADDRESS: ${{ vars.TEMPORAL_ADDRESS }}
