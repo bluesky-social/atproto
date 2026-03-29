@@ -134,8 +134,7 @@ jobs:
       - name: Trigger updateImages workflows (dev)
         run: .github/scripts/trigger-update-images.sh "${{ needs.push-dev.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PDS_REGIONS_DB_URL: ${{ secrets.PDS_REGIONS_DB_URL }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
           TEMPORAL_ADDRESS: ${{ vars.TEMPORAL_ADDRESS }}
@@ -151,8 +150,7 @@ jobs:
       - name: Trigger updateImages workflows (prod)
         run: .github/scripts/trigger-update-images.sh "${{ needs.push-prod.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PDS_REGIONS_DB_URL: ${{ secrets.PDS_REGIONS_DB_URL }}
           TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
           TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
           TEMPORAL_ADDRESS: ${{ vars.TEMPORAL_ADDRESS }}

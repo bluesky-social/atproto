@@ -4,7 +4,7 @@ set -euo pipefail
 # Trigger Temporal updateImages workflows for all active PDS regions.
 #
 # Required env vars:
-#   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  — query active pds_instances
+#   PDS_REGIONS_DB_URL  — Postgres connection string (pds_regions_reader role)
 #   TEMPORAL_ADDRESS, TEMPORAL_NAMESPACE, TEMPORAL_API_KEY — start workflows
 #
 # Usage: trigger-update-images.sh <pds-image> <short-sha>
@@ -12,32 +12,27 @@ set -euo pipefail
 PDS_IMAGE="${1:?Usage: trigger-update-images.sh <pds-image> <short-sha>}"
 SHORT_SHA="${2:?Usage: trigger-update-images.sh <pds-image> <short-sha>}"
 
-: "${SUPABASE_URL:?}"
-: "${SUPABASE_SERVICE_ROLE_KEY:?}"
+: "${PDS_REGIONS_DB_URL:?}"
 : "${TEMPORAL_ADDRESS:?}"
 : "${TEMPORAL_NAMESPACE:?}"
 : "${TEMPORAL_API_KEY:?}"
 
-# --- Query Supabase for distinct active region/cluster pairs ----------------
+# --- Query pds_regions for distinct active region/cluster pairs -------------
 
-REGIONS=$(curl -sf \
-  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
-  "${SUPABASE_URL}/rest/v1/pds_instances?select=region,cluster_name&status=eq.active" \
-  | jq -c 'unique')
+REGIONS=$(psql "${PDS_REGIONS_DB_URL}" -t -A -F'|' \
+  -c "SELECT DISTINCT region, name_prefix FROM pds_regions WHERE active = true")
 
-COUNT=$(echo "${REGIONS}" | jq 'length')
-if [ "${COUNT}" -eq 0 ]; then
-  echo "::error::No active PDS instances found in Supabase"
+if [ -z "${REGIONS}" ]; then
+  echo "::error::No active PDS regions found"
   exit 1
 fi
-echo "Found ${COUNT} region/cluster pair(s): ${REGIONS}"
+
+COUNT=$(echo "${REGIONS}" | wc -l | tr -d ' ')
+echo "Found ${COUNT} region/cluster pair(s)"
 
 # --- Start one Temporal workflow per region/cluster -------------------------
 
-echo "${REGIONS}" | jq -c '.[]' | while read -r ENTRY; do
-  REGION=$(echo "${ENTRY}" | jq -r '.region')
-  CLUSTER=$(echo "${ENTRY}" | jq -r '.cluster_name')
+echo "${REGIONS}" | while IFS='|' read -r REGION CLUSTER; do
   WORKFLOW_ID="update-images-${REGION}-${SHORT_SHA}-$(date +%s)"
 
   INPUT_JSON=$(jq -nc \
