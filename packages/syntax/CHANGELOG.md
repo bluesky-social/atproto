@@ -1,5 +1,11 @@
 # @atproto/syntax
 
+## 0.5.3
+
+### Patch Changes
+
+- [#4815](https://github.com/bluesky-social/atproto/pull/4815) [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite of tests
+
 ## 0.5.2
 
 ### Patch Changes
