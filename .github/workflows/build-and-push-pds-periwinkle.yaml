@@ -85,6 +85,7 @@ jobs:
           echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
 
   push-prod:
+    if: github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
     environment: prod
@@ -149,6 +150,7 @@ jobs:
         run: .github/scripts/trigger-update-images.sh "${{ needs.push-dev.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
 
   trigger-prod-deploy:
+    if: github.event_name == 'workflow_dispatch'
     needs: [build, push-prod]
     runs-on: ubuntu-latest
     environment: prod
@@ -184,4 +186,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tag:** \`${{ needs.build.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Rolling image update triggered via Temporal \`updateImages\` workflow for dev and prod." >> $GITHUB_STEP_SUMMARY
+          echo "### Dev" >> $GITHUB_STEP_SUMMARY
+          echo "- push-dev: \`${{ needs.push-dev.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- trigger-dev-deploy: \`${{ needs.trigger-dev-deploy.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Prod" >> $GITHUB_STEP_SUMMARY
+          echo "- push-prod: \`${{ needs.push-prod.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- trigger-prod-deploy: \`${{ needs.trigger-prod-deploy.result }}\`" >> $GITHUB_STEP_SUMMARY
