@@ -131,13 +131,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v2
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PDS_REGIONS_DB_URL: op://Periwinkle/periwinkle-dev/PDS_REGIONS_DB_URL
+          TEMPORAL_API_KEY: op://Periwinkle/periwinkle-dev/TEMPORAL_API_KEY
+          TEMPORAL_ADDRESS: op://Periwinkle/periwinkle-dev/TEMPORAL_ADDRESS
+          TEMPORAL_NAMESPACE: op://Periwinkle/periwinkle-dev/TEMPORAL_NAMESPACE
+
       - name: Trigger updateImages workflows (dev)
         run: .github/scripts/trigger-update-images.sh "${{ needs.push-dev.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
-        env:
-          PDS_REGIONS_DB_URL: ${{ secrets.PDS_REGIONS_DB_URL }}
-          TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
-          TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
-          TEMPORAL_ADDRESS: ${{ vars.TEMPORAL_ADDRESS }}
 
   trigger-prod-deploy:
     needs: [build, push-prod]
@@ -147,13 +151,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v2
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PDS_REGIONS_DB_URL: op://Periwinkle/periwinkle-prod/PDS_REGIONS_DB_URL
+          TEMPORAL_API_KEY: op://Periwinkle/periwinkle-prod/TEMPORAL_API_KEY
+          TEMPORAL_ADDRESS: op://Periwinkle/periwinkle-prod/TEMPORAL_ADDRESS
+          TEMPORAL_NAMESPACE: op://Periwinkle/periwinkle-prod/TEMPORAL_NAMESPACE
+
       - name: Trigger updateImages workflows (prod)
         run: .github/scripts/trigger-update-images.sh "${{ needs.push-prod.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
-        env:
-          PDS_REGIONS_DB_URL: ${{ secrets.PDS_REGIONS_DB_URL }}
-          TEMPORAL_API_KEY: ${{ secrets.TEMPORAL_API_KEY }}
-          TEMPORAL_NAMESPACE: ${{ vars.TEMPORAL_NAMESPACE }}
-          TEMPORAL_ADDRESS: ${{ vars.TEMPORAL_ADDRESS }}
 
   summary:
     needs: [build, push-dev, push-prod, trigger-dev-deploy, trigger-prod-deploy]
