@@ -39,7 +39,8 @@
             "type": "string",
             "knownValues": [
               "com.atproto.feed.defs#contentModeUnspecified",
-              "com.atproto.feed.defs#contentModeVideo"
+              "com.atproto.feed.defs#contentModeVideo",
+              "com.atproto.feed.defs#contentModeMedia"
             ],
             "maxLength": 300
           },
