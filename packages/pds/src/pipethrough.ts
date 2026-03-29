@@ -91,7 +91,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         headers,
       }
 
-      await pipethroughStream(ctx, dispatchOptions, (upstream) => {
+      await pipethroughStream(ctx, req, dispatchOptions, (upstream) => {
         res.status(upstream.statusCode)
 
         for (const [name, val] of responseHeaders(upstream.headers)) {
@@ -188,7 +188,7 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const { headers, body } = await pipethroughRequest(ctx, dispatchOptions)
+  const { headers, body } = await pipethroughRequest(ctx, req, dispatchOptions)
 
   return {
     encoding: safeString(headers['content-type']) ?? 'application/json',
@@ -291,6 +291,7 @@ export const parseProxyHeader = async (
  */
 async function pipethroughStream(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
@@ -327,7 +328,7 @@ async function pipethroughStream(
       // or writable stream errors. In the latter case, the promise will already
       // be resolved, and reject()ing it there after will have no effect. Those
       // error would still be logged by the successStreamFactory() function.
-      .catch(handleUpstreamRequestError)
+      .catch(handleUpstreamRequestError.bind(req))
       .catch(reject)
   })
 }
@@ -338,6 +339,7 @@ async function pipethroughStream(
  */
 async function pipethroughRequest(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
 ) {
   // HandlerPipeThroughStream requires a readable stream to be returned, so we
@@ -345,7 +347,7 @@ async function pipethroughRequest(
 
   const upstream = await ctx.proxyAgent
     .request(dispatchOptions)
-    .catch(handleUpstreamRequestError)
+    .catch(handleUpstreamRequestError.bind(req))
 
   if (upstream.statusCode >= 400) {
     const parsed = await tryParsingError(upstream.headers, upstream.body)
@@ -359,13 +361,21 @@ async function pipethroughRequest(
 }
 
 function handleUpstreamRequestError(
+  this: Request,
   err: unknown,
   message = 'Upstream service unreachable',
 ): never {
-  httpLogger.error({ err }, message)
+  const logger = isPinoHttpRequest(this) ? this.log : httpLogger
+  logger.error({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
     cause: err,
   })
+}
+
+function isPinoHttpRequest(req: Request): req is Request & {
+  log: { error: (obj: unknown, msg: string) => void }
+} {
+  return typeof (req as { log?: any }).log?.error === 'function'
 }
 
 // Request parsing/forwarding
