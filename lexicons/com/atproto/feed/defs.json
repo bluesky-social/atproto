@@ -120,11 +120,15 @@
     },
     "contentModeUnspecified": {
       "type": "token",
-      "description": "Declares the feed generator returns any types of posts."
+      "description": "Declares the feed generator returns any types of items."
     },
     "contentModeVideo": {
       "type": "token",
-      "description": "Declares the feed generator returns posts containing video embeds."
+      "description": "Declares the feed generator returns items containing video embeds."
+    },
+    "contentModeMedia": {
+      "type": "token",
+      "description": "Declares the feed generator returns items containing media (images, videos, audio, etc)."
     },
     "interactionSeen": {
       "type": "token",
