@@ -78,7 +78,7 @@ export class PDS {
     const server = createServer([], {
       validateResponse: cfg.service.devMode,
       payload: {
-        jsonLimit: 150 * 1024, // 150kb
+        jsonLimit: 1024 * 1024, // 1mb
         textLimit: 100 * 1024, // 100kb
         blobLimit: cfg.service.blobUploadLimit,
       },
