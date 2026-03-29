@@ -1,10 +1,9 @@
-name: build-and-push-pds
+name: build-and-push-pds-dev
 
 on:
   push:
     branches:
       - feat/configurable-actor-key-directory
-  workflow_dispatch:
 
 env:
   IMAGE_NAME: periwinkle/pds
@@ -84,46 +83,6 @@ jobs:
           docker push "${FULL_IMAGE}"
           echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
 
-  push-prod:
-    if: github.event_name == 'workflow_dispatch'
-    needs: build
-    runs-on: ubuntu-latest
-    environment: prod
-    permissions:
-      contents: read
-      id-token: write
-    outputs:
-      full_image: ${{ steps.push.outputs.full_image }}
-
-    steps:
-      - name: Download image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: pds-image
-          path: /tmp
-
-      - name: Load Docker image
-        run: docker load -i /tmp/pds-image.tar
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.PDS_DEPLOY_ROLE_ARN }}
-          aws-region: eu-central-1
-
-      - name: Log in to ECR
-        id: ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Tag and push
-        id: push
-        run: |
-          SHA=${{ needs.build.outputs.short_sha }}
-          FULL_IMAGE=${{ steps.ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${SHA}
-          docker tag $(docker images -q | head -1) "${FULL_IMAGE}"
-          docker push "${FULL_IMAGE}"
-          echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
-
   trigger-dev-deploy:
     needs: [build, push-dev]
     runs-on: ubuntu-latest
@@ -149,47 +108,17 @@ jobs:
       - name: Trigger updateImages workflows (dev)
         run: .github/scripts/trigger-update-images.sh "${{ needs.push-dev.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
 
-  trigger-prod-deploy:
-    if: github.event_name == 'workflow_dispatch'
-    needs: [build, push-prod]
-    runs-on: ubuntu-latest
-    environment: prod
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Temporal CLI
-        run: |
-          curl -sSf https://temporal.download/cli.sh | sh
-          echo "${HOME}/.temporalio/bin" >> "$GITHUB_PATH"
-
-      - name: Load secrets from 1Password
-        uses: 1password/load-secrets-action@v2
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          PDS_REGIONS_DB_URL: op://Periwinkle/periwinkle-prod/PDS_REGIONS_DB_URL
-          TEMPORAL_API_KEY: op://Periwinkle/periwinkle-prod/TEMPORAL_API_KEY
-          TEMPORAL_ADDRESS: op://Periwinkle/periwinkle-prod/TEMPORAL_ADDRESS
-          TEMPORAL_NAMESPACE: op://Periwinkle/periwinkle-prod/TEMPORAL_NAMESPACE
-
-      - name: Trigger updateImages workflows (prod)
-        run: .github/scripts/trigger-update-images.sh "${{ needs.push-prod.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
-
   summary:
-    needs: [build, push-dev, push-prod, trigger-dev-deploy, trigger-prod-deploy]
+    needs: [build, push-dev, trigger-dev-deploy]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Summary
         run: |
-          echo "## PDS Fork Image Built & Pushed" >> $GITHUB_STEP_SUMMARY
+          echo "## PDS Fork Image Built & Pushed (Dev)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tag:** \`${{ needs.build.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Dev" >> $GITHUB_STEP_SUMMARY
           echo "- push-dev: \`${{ needs.push-dev.result }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- trigger-dev-deploy: \`${{ needs.trigger-dev-deploy.result }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Prod" >> $GITHUB_STEP_SUMMARY
-          echo "- push-prod: \`${{ needs.push-prod.result }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- trigger-prod-deploy: \`${{ needs.trigger-prod-deploy.result }}\`" >> $GITHUB_STEP_SUMMARY
