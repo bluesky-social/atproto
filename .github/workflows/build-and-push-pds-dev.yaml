@@ -100,13 +100,12 @@ jobs:
         uses: 1password/load-secrets-action@v2
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          PDS_REGIONS_DB_URL: op://Periwinkle/periwinkle-dev/PDS_REGIONS_DB_URL
           TEMPORAL_API_KEY: op://Periwinkle/periwinkle-dev/TEMPORAL_API_KEY
           TEMPORAL_ADDRESS: op://Periwinkle/periwinkle-dev/TEMPORAL_ADDRESS
           TEMPORAL_NAMESPACE: op://Periwinkle/periwinkle-dev/TEMPORAL_NAMESPACE
 
-      - name: Trigger updateImages workflows (dev)
-        run: .github/scripts/trigger-update-images.sh "${{ needs.push-dev.outputs.full_image }}" "${{ needs.build.outputs.short_sha }}"
+      - name: Trigger updateImages workflow (dev)
+        run: .github/scripts/trigger-update-images.sh "${{ needs.build.outputs.short_sha }}"
 
   summary:
     needs: [build, push-dev, trigger-dev-deploy]
