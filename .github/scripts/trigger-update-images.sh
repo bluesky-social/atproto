@@ -32,7 +32,8 @@ echo "Found ${COUNT} region/cluster pair(s)"
 
 # --- Start one Temporal workflow per region/cluster -------------------------
 
-echo "${REGIONS}" | while IFS='|' read -r REGION CLUSTER; do
+echo "${REGIONS}" | while IFS='|' read -r REGION NAME_PREFIX; do
+  CLUSTER="${NAME_PREFIX}-cluster"
   WORKFLOW_ID="update-images-${REGION}-${SHORT_SHA}-$(date +%s)"
 
   INPUT_JSON=$(jq -nc \
@@ -40,24 +41,16 @@ echo "${REGIONS}" | while IFS='|' read -r REGION CLUSTER; do
     --arg cluster "${CLUSTER}" \
     --arg image "${PDS_IMAGE}" \
     '{region: $region, clusterName: $cluster, pdsImage: $image}')
-  ENCODED_DATA=$(echo -n "${INPUT_JSON}" | base64 -w0)
 
-  curl -sf -X POST \
-    "https://${TEMPORAL_ADDRESS}/api/v1/namespaces/${TEMPORAL_NAMESPACE}/workflows/${WORKFLOW_ID}" \
-    -H "Authorization: Bearer ${TEMPORAL_API_KEY}" \
-    -H "Content-Type: application/json" \
-    -d "{
-      \"workflowType\": { \"name\": \"updateImages\" },
-      \"taskQueue\": { \"name\": \"pds-operations\" },
-      \"input\": {
-        \"payloads\": [{
-          \"metadata\": { \"encoding\": \"anNvbi9wbGFpbg==\" },
-          \"data\": \"${ENCODED_DATA}\"
-        }]
-      },
-      \"workflowExecutionTimeout\": \"3600s\",
-      \"requestId\": \"$(cat /proc/sys/kernel/random/uuid)\"
-    }"
+  temporal workflow start \
+    --address "${TEMPORAL_ADDRESS}" \
+    --namespace "${TEMPORAL_NAMESPACE}" \
+    --api-key "${TEMPORAL_API_KEY}" \
+    --tls \
+    --task-queue pds-operations \
+    --type updateImages \
+    --input "${INPUT_JSON}" \
+    --workflow-id "${WORKFLOW_ID}"
 
   echo "Temporal workflow started: ${WORKFLOW_ID} (region=${REGION}, cluster=${CLUSTER})"
 done

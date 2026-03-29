@@ -131,6 +131,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Temporal CLI
+        run: |
+          curl -sSf https://temporal.download/cli.sh | sh
+          echo "${HOME}/.temporalio/bin" >> "$GITHUB_PATH"
+
       - name: Load secrets from 1Password
         uses: 1password/load-secrets-action@v2
         env:
@@ -150,6 +155,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Temporal CLI
+        run: |
+          curl -sSf https://temporal.download/cli.sh | sh
+          echo "${HOME}/.temporalio/bin" >> "$GITHUB_PATH"
 
       - name: Load secrets from 1Password
         uses: 1password/load-secrets-action@v2
