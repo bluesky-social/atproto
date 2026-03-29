@@ -34,7 +34,7 @@
               "type": "array",
               "items": {
                 "type": "ref",
-                "ref": "com.atproto.feed.defs#skeletonFeedPost"
+                "ref": "com.atproto.feed.defs#skeletonFeedItem"
               }
             },
             "reqId": {

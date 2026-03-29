@@ -46,7 +46,7 @@
         "like": { "type": "string", "format": "at-uri" }
       }
     },
-    "skeletonFeedPost": {
+    "skeletonFeedItem": {
       "type": "object",
       "required": ["record"],
       "properties": {
