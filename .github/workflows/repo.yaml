@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - '*'
+    paths-ignore:
+      - '.github/**'
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.head_ref || github.ref }}'
