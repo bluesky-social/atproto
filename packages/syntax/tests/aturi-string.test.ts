@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'vitest'
-import { ensureValidAtUri, isValidAtUri } from '../src'
+import {
+  InvalidAtUriError,
+  assertAtUriString,
+  ensureValidAtUri,
+  isAtUriString,
+} from '../src'
 
 describe('valid interop', () => {
   for (const value of readLines(
@@ -10,13 +15,13 @@ describe('valid interop', () => {
   }
 })
 
-// describe('invalid interop', () => {
-//   for (const value of readLines(
-//     `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_invalid.txt`,
-//   )) {
-//     testInvalid(value)
-//   }
-// })
+describe('invalid interop', () => {
+  for (const value of readLines(
+    `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_invalid.txt`,
+  )) {
+    testInvalid(value)
+  }
+})
 
 describe('custom cases', () => {
   describe('valid spec basics', () => {
@@ -74,8 +79,11 @@ describe('custom cases', () => {
   })
 
   describe('very long strings', () => {
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(800))
+    testValid('at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(512))
+    testValid(`at://did:web:x${'.y'.repeat(100)}/com.atproto.feed.post/record`)
     testInvalid(`at://did:plc:${'o'.repeat(8200)}/com.atproto.feed.post/record`)
+    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(513))
+    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(800))
   })
 
   describe('invalid collection', () => {
@@ -107,36 +115,39 @@ describe('custom cases', () => {
     testValid('at://did:plc:asdf123/com.atproto.feed.post/asdf123')
   })
 
-  describe('invalid trailing slash', () => {
-    testInvalid('at://did:plc:asdf123/')
-    testInvalid('at://user.bsky.social/')
-    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/')
-    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/record/')
-    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/record/#/frag')
+  describe('loosely valid trailing slash', () => {
+    testLoose('at://did:plc:asdf123/')
+    testLoose('at://user.bsky.social/')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/record/')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/record/#/frag')
   })
 
-  describe('invalid record keys', () => {
-    // is probably too permissive about URL encoding
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/%30')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/%3')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/%')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/%zz')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/%%%')
+  describe('loosely valid record keys', () => {
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/%23')
 
-    // is very permissive about fragments
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/%23')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/$@!*)(:,;~.sdf123')
+    testLoose("at://did:plc:asdf123/com.atproto.feed.post/~'sdf123")
 
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/$@!*)(:,;~.sdf123')
-    testValid("at://did:plc:asdf123/com.atproto.feed.post/~'sdf123")
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/$')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/@')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/!')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/*')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/(')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/,')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/;')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/abc%30123')
 
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/$')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/@')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/!')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/*')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/(')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/,')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/;')
-    testValid('at://did:plc:asdf123/com.atproto.feed.post/abc%30123')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/%30')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/%3')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/%')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/%zz')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/%%%')
+
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/[]')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/foo[')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/bar]')
+    testLoose('at://did:plc:asdf123/com.atproto.feed.post/[baz]')
   })
 
   describe('valid fragment', () => {
@@ -165,14 +176,24 @@ describe('custom cases', () => {
 
 function testValid(value: string) {
   test(value, () => {
-    expect(isValidAtUri(value)).toBe(true)
+    expect(isAtUriString(value)).toBe(true)
+    expect(() => assertAtUriString(value)).not.toThrow()
     expect(() => ensureValidAtUri(value)).not.toThrow()
   })
 }
 
 function testInvalid(value: string) {
   test(value, () => {
-    expect(isValidAtUri(value)).toBe(false)
+    expect(isAtUriString(value)).toBe(false)
+    expect(() => assertAtUriString(value)).toThrow(InvalidAtUriError)
+  })
+}
+
+function testLoose(value: string) {
+  test(value, () => {
+    expect(isAtUriString(value)).toBe(false)
+    expect(isAtUriString(value, { strict: false })).toBe(true)
+    expect(() => ensureValidAtUri(value)).not.toThrow()
   })
 }
 

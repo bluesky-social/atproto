@@ -11,8 +11,8 @@ import {
   TidString,
   UriString,
   isAtIdentifierString,
+  isAtUriString,
   isDatetimeString,
-  isValidAtUri,
   isValidDid,
   isValidHandle,
   isValidLanguage,
@@ -35,6 +35,7 @@ import { CheckFn } from '../util/assertion-util.js'
 export {
   type AtIdentifierString,
   asAtIdentifierString,
+  assertAtIdentifierString,
   ifAtIdentifierString,
   isAtIdentifierString,
 } from '@atproto/syntax'
@@ -45,6 +46,7 @@ export { isDidIdentifier, isHandleIdentifier } from '@atproto/syntax'
 export {
   type DatetimeString,
   asDatetimeString,
+  assertDatetimeString,
   ifDatetimeString,
   isDatetimeString,
 } from '@atproto/syntax'
@@ -72,20 +74,22 @@ export function isDatetimeStringLoose<I>(
 // DatetimeString utilities
 export { currentDatetimeString, toDatetimeString } from '@atproto/syntax'
 
+export {
+  type AtUriString,
+  asAtUriString,
+  assertAtUriString,
+  ifAtUriString,
+  isAtUriString,
+} from '@atproto/syntax'
+
 /**
- * Type guard that checks if a value is a valid AT URI.
+ * Loose version of {@link isAtUriString} that does not enforce the validity of
+ * the record key (rkey) path component (if present).
  *
- * @param value - The value to check
- * @returns `true` if the value is a valid AT URI
+ * @see {@link isAtUriString}
  */
-export const isAtUriString: CheckFn<AtUriString> = isValidAtUri
-export type {
-  /**
-   * An AT URI string pointing to a resource in the AT Protocol network.
-   *
-   * @example `"at://did:plc:1234.../app.bsky.feed.post/3k2..."`
-   */
-  AtUriString,
+export function isAtUriStringLoose<I>(input: I): input is I & AtUriString {
+  return isAtUriString(input, { strict: false })
 }
 
 /**
@@ -252,7 +256,7 @@ const stringFormatVerifiers: {
   __proto__: null,
 
   'at-identifier': [isAtIdentifierString],
-  'at-uri': [isAtUriString],
+  'at-uri': [isAtUriString, isAtUriStringLoose],
   cid: [isCidString],
   datetime: [isDatetimeString, isDatetimeStringLoose],
   did: [isDidString],

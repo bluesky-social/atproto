@@ -133,19 +133,23 @@ export class AtUri {
   }
 
   toString(): AtUriString {
-    let path = this.pathname || '/'
-    if (!path.startsWith('/')) {
-      path = `/${path}`
+    let pathname = this.pathname
+    if (pathname === '/') {
+      pathname = ''
+    } else if (pathname && !pathname.startsWith('/')) {
+      pathname = `/${pathname}`
     }
     let qs = ''
     if (this.searchParams.size) {
       qs = `?${this.searchParams.toString()}`
     }
-    let hash = this.hash
-    if (hash && !hash.startsWith('#')) {
-      hash = `#${hash}`
+    let fragment = this.hash
+    if (fragment === '#') {
+      fragment = ''
+    } else if (fragment && !fragment.startsWith('#')) {
+      fragment = `#${fragment}`
     }
-    return `at://${this.host}${path}${qs}${hash}` as AtUriString
+    return `at://${this.host}${pathname}${qs}${fragment}` as AtUriString
   }
 }
 
