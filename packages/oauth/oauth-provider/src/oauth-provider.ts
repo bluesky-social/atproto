@@ -1,8 +1,14 @@
 import { createHash } from 'node:crypto'
 import type { Redis, RedisOptions } from 'ioredis'
-import { Jwks, Keyset } from '@atproto/jwk'
+import { Jwks, Keyset, SignedJwt, unsafeDecodeJwt, Jwk, jwkSchema, JwkError, VerifyResult } from '@atproto/jwk'
+import { parseMultikey, ParsedMultikey } from '@atproto/crypto'
+import { JoseKey } from '@atproto/jwk-jose'
+import { secp256k1 as k256 } from '@noble/curves/secp256k1'
+import { p256 } from '@noble/curves/p256'
+import { IdResolver } from '@atproto/identity'
+import { getSigningKey } from '@atproto/common'
 import { LexResolver } from '@atproto/lex-resolver'
-import type { Account } from '@atproto/oauth-provider-api'
+import type { Account,Session } from '@atproto/oauth-provider-api'
 import {
   CLIENT_ASSERTION_TYPE_JWT_BEARER,
   OAuthAccessToken,
@@ -104,6 +110,9 @@ import {
   refreshTokenSchema,
 } from './token/token-store.js'
 import { isPARResponseError } from './types/par-response-error.js'
+import { isDid } from '@atproto/did'
+import { InvalidTokenError } from './oauth-errors.js'
+import { ApiTokenPayload } from './signer/api-token-payload.js'
 
 export { AccessTokenMode, Keyset, LexResolver }
 export type {
@@ -162,6 +171,11 @@ type OAuthProviderConfig = {
   lexResolver?: LexResolver
 
   /**
+ * A IdResolver to use for validating idTokens.
+ */
+  idResolver: IdResolver
+
+  /**
    * A custom fetch function that can be used to fetch the client metadata from
    * the internet. By default, the fetch function is a safeFetchWrap() function
    * that protects against SSRF attacks, large responses & known bad domains. If
@@ -185,12 +199,12 @@ type OAuthProviderConfig = {
    */
   store?: Partial<
     AccountStore &
-      ClientStore &
-      DeviceStore &
-      LexiconStore &
-      ReplayStore &
-      RequestStore &
-      TokenStore
+    ClientStore &
+    DeviceStore &
+    LexiconStore &
+    ReplayStore &
+    RequestStore &
+    TokenStore
   >
 
   accountStore?: AccountStore
@@ -249,6 +263,7 @@ export class OAuthProvider extends OAuthVerifier {
   public readonly lexiconManager: LexiconManager
   public readonly requestManager: RequestManager
   public readonly tokenManager: TokenManager
+  protected readonly idResolver: IdResolver
 
   public constructor({
     // OAuthProviderConfig
@@ -261,6 +276,7 @@ export class OAuthProvider extends OAuthVerifier {
     safeFetch = safeFetchWrap(),
     store, // compound store implementation
     lexResolver = new LexResolver({ fetch: safeFetch }),
+    idResolver = new IdResolver({}),
 
     // Required stores
     accountStore = asAccountStore(store),
@@ -346,7 +362,8 @@ export class OAuthProvider extends OAuthVerifier {
       this.hooks,
       this.accessTokenMode,
       tokenMaxAge,
-    )
+    ),
+      this.idResolver = idResolver
   }
 
   get jwks() {
@@ -612,21 +629,25 @@ export class OAuthProvider extends OAuthVerifier {
     ).catch(throwAuthorizationError)
 
     try {
-      const sessions = (
+      var sessions  = (
         await this.accountManager.listDeviceAccounts(deviceId)
-      ).map((deviceAccount) => ({
-        account: deviceAccount.account,
-
-        // @TODO Return the session expiration date instead of a boolean to
-        // avoid having to rely on a leeway when "accepting" the request.
-        loginRequired:
-          parameters.prompt === 'login' ||
-          this.checkLoginRequired(deviceAccount),
-        consentRequired: this.checkConsentRequired(
-          parameters,
-          deviceAccount.authorizedClients.get(client.id),
-        ),
-      }))
+      ).map((deviceAccount) => {
+        const session:Session = {
+          account: deviceAccount.account,
+          // @TODO Return the session expiration date instead of a boolean to
+          // avoid having to rely on a leeway when "accepting" the request.
+          loginRequired:
+            parameters.prompt === 'login' ||
+            this.checkLoginRequired(deviceAccount),
+          consentRequired: this.checkConsentRequired(
+            parameters,
+            deviceAccount.authorizedClients.get(client.id),
+          ),
+          ephemeralToken:undefined,
+          selected: false,
+        }
+        return session
+    })
 
       // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
 
@@ -699,6 +720,21 @@ export class OAuthProvider extends OAuthVerifier {
         }
       }
 
+      // Automatic SSO when an valid id_token_hint is provided
+      if (parameters.prompt == "consent" && parameters.id_token_hint != null) {
+        // Parse JWT and verify signature against users signing key
+        var { account, validIdToken,verifyResult } = await this.getAccountForIdToken(parameters.id_token_hint)
+        // IdToken is valid create session
+        if ( verifyResult.payload.sub) {
+          const payload: ApiTokenPayload = {iss:"",sub:verifyResult.payload.sub,"deviceId":deviceId,"requestUri":requestUri}
+          const ephemeralToken = await this.signer.createEphemeralToken(payload) as string
+          const session = { selected:true, account: account, consentRequired: true, loginRequired: false,ephemeralToken: ephemeralToken }
+          sessions = [session]
+        } else {
+           throw new InvalidTokenError("id_token_hint", "invalid idToken")
+        }
+      }
+
       return {
         issuer,
         client,
@@ -712,10 +748,11 @@ export class OAuthProvider extends OAuthVerifier {
 
           selected:
             parameters.prompt == null ||
-            parameters.prompt === 'login' ||
-            parameters.prompt === 'consent'
-              ? matchesHint.call(parameters, session)
+              parameters.prompt === 'login' ||
+              parameters.prompt === 'consent'
+              ? matchesHint.call(parameters, session) || validIdToken
               : false,
+          ephemeralToken: session.ephemeralToken
         })),
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
@@ -1095,6 +1132,36 @@ export class OAuthProvider extends OAuthVerifier {
 
     return tokenPayload
   }
+
+
+  // validates the IdToken against the issuer
+  protected async getAccountForIdToken(
+    idToken: SignedJwt
+  ): Promise<{ account: Account, validIdToken: boolean,verifyResult:VerifyResult  }> {
+    const { payload } = unsafeDecodeJwt(idToken)
+    if (payload.iss && payload.sub) {
+
+      const { account } = await this.accountManager.getAccount(payload.sub)
+
+      if (isDid(payload.iss) && payload.iss == payload.sub) {// IdTokend needs to be signed with users signing key
+        try {
+          const didDoc = await this.idResolver.did.resolve(payload.iss)
+          const publicMultibaseKey = didDoc ? getSigningKey(didDoc) : undefined
+          const parsedMultikey = publicMultibaseKey ? parseMultikey(publicMultibaseKey.publicKeyMultibase) : undefined
+          const key = parsedMultikey ? fromMultikey(parsedMultikey) : undefined
+          if (key) {
+            const verifyResult = await key.verifyJwt(idToken)
+            return { account: account, validIdToken: true,verifyResult: verifyResult }
+          }
+        } catch (e) {
+          throw new InvalidTokenError("id_token_hint", "invalid signature")
+        }
+      } else {
+        throw new InvalidTokenError("id_token_hint", "untrusted issuer")
+      }
+    }
+    throw new InvalidTokenError("id_token_hint", "invalid idToken")
+  }
 }
 
 function matchesHint(
@@ -1106,3 +1173,26 @@ function matchesHint(
 
   return account.sub === hint || account.preferred_username === hint
 }
+
+
+// convert multikey to josekey this probably should land somewehere in @atproto/crypto or @atproto/jwk-jose
+function fromMultikey(
+  multiKey: ParsedMultikey
+): JoseKey {
+  switch (multiKey.jwtAlg) {
+    case "ES256K": {
+      const point = k256.ProjectivePoint.fromHex(Buffer.from(multiKey.keyBytes.buffer).toString("hex"))
+      const x = Buffer.from(point.x.toString(16), "hex").toString("base64url")
+      const y = Buffer.from(point.y.toString(16), "hex").toString("base64url")
+      return new JoseKey<Jwk>(jwkSchema.parse({ "kty": "EC", "crv": "secp256k1", "x": x, "y": y }))
+    }
+    case "P256": {
+      const point = p256.ProjectivePoint.fromHex(Buffer.from(multiKey.keyBytes.buffer).toString("hex"))
+      const x = Buffer.from(point.x.toString(16), "hex").toString("base64url")
+      const y = Buffer.from(point.y.toString(16), "hex").toString("base64url")
+      return new JoseKey<Jwk>(jwkSchema.parse({ "kty": "EC", "crv": "P-256", "x": x, "y": y }))
+    }
+    default: throw new JwkError("unsupported alg")
+  }
+}
+
