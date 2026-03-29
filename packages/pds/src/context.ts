@@ -276,7 +276,7 @@ export class AppContext {
     )
     await accountManager.migrateOrThrow()
 
-    const plcRotationKey =
+    const plcRotationKey = overrides?.plcRotationKey || (
       secrets.plcRotationKey.provider === 'kms'
         ? await KmsKeypair.load({
             keyId: secrets.plcRotationKey.keyId,
@@ -284,6 +284,7 @@ export class AppContext {
         : await crypto.Secp256k1Keypair.import(
             secrets.plcRotationKey.privateKeyHex,
           )
+    )
 
     const localViewer = LocalViewer.creator(
       accountManager,
