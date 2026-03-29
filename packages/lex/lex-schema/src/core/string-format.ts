@@ -12,8 +12,8 @@ import {
   UriString,
   isAtIdentifierString,
   isDatetimeString,
+  isDidString,
   isValidAtUri,
-  isValidDid,
   isValidHandle,
   isValidLanguage,
   isValidNsid,
@@ -72,6 +72,13 @@ export function isDatetimeStringLoose<I>(
 // DatetimeString utilities
 export { currentDatetimeString, toDatetimeString } from '@atproto/syntax'
 
+export {
+  type DidString,
+  asDidString,
+  ifDidString,
+  isDidString,
+} from '@atproto/syntax'
+
 /**
  * Type guard that checks if a value is a valid AT URI.
  *
@@ -103,24 +110,6 @@ export const isCidString = ((v) => validateCidString(v)) as CheckFn<CidString>
  * @example `"bafyreig..."`
  */
 export type CidString = string
-
-/**
- * Type guard that checks if a value is a valid DID string.
- *
- * @param value - The value to check
- * @returns `true` if the value is a valid DID string
- */
-export const isDidString: CheckFn<DidString> = isValidDid
-export type {
-  /**
-   * A Decentralized Identifier (DID) string.
-   *
-   * DIDs are globally unique identifiers that don't require a central authority.
-   *
-   * @example `"did:plc:1234abcd..."` or `"did:web:example.com"`
-   */
-  DidString,
-}
 
 /**
  * Type guard that checks if a value is a valid handle string.
