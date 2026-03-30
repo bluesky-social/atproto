@@ -23,7 +23,7 @@ export type AtUriStringFragment = `#/${string}`
  * - optionally, the authority can be followed by a "/" and a valid NSID (validated by {@link isValidNsid})
  * - optionally, if an NSID is given, it can be followed by "/" and a record key (which can be any non-empty string of allowed chars)
  * - optionally, the URI can have a fragment, which must start with "#/" and then follow JSON pointer syntax (RFC-6901), but with the allowed chars above instead of full UTF-8
- * - query ("?") is not allowed in ATURI strings
+ * - query string ("?") is allowed, but not used
  * - percent-encoding is allowed an must be valid (e.g. "%FF" is not valid, but "%20" is)
  *
  * @example "at://did:plc:1234.../app.bsky.feed.post/3k2..."
@@ -206,10 +206,6 @@ export function parseUriString(
         return failure('ATURI must start with "at://"')
       }
 
-      if (input.includes('?')) {
-        return failure('ATURI can not contain a query string')
-      }
-
       if (input.includes(' ')) {
         return failure('ATURI can not contain spaces')
       }
@@ -234,10 +230,6 @@ export function parseUriString(
     }
 
     return failure('ATURI does not match expected format')
-  }
-
-  if (groups.query != null) {
-    return failure('ATURI can not contain a query string')
   }
 
   // @NOTE Percent-encoding is allowed by the AT URI specification, but any
