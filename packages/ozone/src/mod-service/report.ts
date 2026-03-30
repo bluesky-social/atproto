@@ -263,17 +263,17 @@ export async function findReportsForSubject(
 
   if (params.targetAll) {
     // Target all open/escalated reports on the subject
-    builder = builder.where('r.status', 'in', ['open', 'escalated'])
+    builder = builder.where('r.status', 'not in', ['closed'])
   } else if (params.reportIds?.length) {
     // Target specific report IDs — still enforce state transition rules
     builder = builder
       .where('r.id', 'in', params.reportIds)
-      .where('r.status', 'in', ['open', 'escalated'])
+      .where('r.status', 'not in', ['closed'])
   } else if (params.reportTypes?.length) {
     // Target reports matching specific report types
     builder = builder
       .where('r.reportType', 'in', params.reportTypes)
-      .where('r.status', 'in', ['open', 'escalated'])
+      .where('r.status', 'not in', ['closed'])
   } else {
     // No targeting criteria provided
     return []
@@ -281,7 +281,7 @@ export async function findReportsForSubject(
 
   const reports = await builder.selectAll('r').execute()
 
-  return reports as ReportResult[]
+  return reports
 }
 
 export type ProcessReportActionParams = {
