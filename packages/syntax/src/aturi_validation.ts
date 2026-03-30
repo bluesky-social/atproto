@@ -34,13 +34,6 @@ export type AtUriString =
   | AtUriStringBase
   | `${AtUriStringBase}${AtUriStringFragment}`
 
-const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
-
-// Regexp based on the constraints above (without the length constraint,
-// authority and collection validation)
-const AT_URI_REGEXP =
-  /^(?<uri>at:\/\/(?<authority>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?(?<trailingSlash>\/)?)(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
-
 /**
  * Type guard that checks if a value is a valid {@link AtUriString}
  *
@@ -170,6 +163,10 @@ export type AtUriParts = {
   | { collection?: NsidString; rkey?: undefined }
   | { collection: NsidString; rkey?: string }
 )
+
+const INVALID_CHAR_REGEXP = /[^a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]/
+const AT_URI_REGEXP =
+  /^(?<uri>at:\/\/(?<authority>[^/?#\s]+)(?:\/(?<collection>[^/?#\s]+)(?:\/(?<rkey>[^/?#\s]+))?)?(?<trailingSlash>\/)?)(?:\?(?<query>[^#\s]*))?(?:#(?<hash>[^\s]*))?$/
 
 /**
  * Parses a valid {@link AtUriString} into a {@link AtUriParts} object, or
