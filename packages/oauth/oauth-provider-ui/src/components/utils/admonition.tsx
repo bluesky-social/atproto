@@ -1,7 +1,7 @@
+import { InfoIcon, WarningIcon } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, memo } from 'react'
-import { Override } from '../../lib/util.ts'
-import { AlertIcon, CircleInfoIcon } from './icons.tsx'
+import { JSX, ReactNode } from 'react'
+import { Override } from '#/lib/util.ts'
 
 export type AdmonitionProps = Override<
   JSX.IntrinsicElements['div'],
@@ -13,7 +13,7 @@ export type AdmonitionProps = Override<
   }
 >
 
-export const Admonition = memo(function Admonition({
+export function Admonition({
   prominent,
   title,
   type = 'status',
@@ -24,7 +24,7 @@ export const Admonition = memo(function Admonition({
   className,
   ...props
 }: AdmonitionProps) {
-  const Icon = type === 'alert' ? AlertIcon : CircleInfoIcon
+  const Icon = type === 'alert' ? WarningIcon : InfoIcon
   const titleColor = prominent
     ? 'text-inherit'
     : type === 'alert'
@@ -57,4 +57,4 @@ export const Admonition = memo(function Admonition({
       </div>
     </div>
   )
-})
+}

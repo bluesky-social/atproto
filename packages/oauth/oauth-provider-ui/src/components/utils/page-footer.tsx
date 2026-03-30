@@ -1,10 +1,10 @@
 import { JSX } from 'react'
-import { Override } from '#/lib/util'
-import { LocaleSelector } from '#/locales/locale-selector.tsx'
 import type {
   CustomizationData,
   LinkDefinition,
 } from '@atproto/oauth-provider-api'
+import { Override } from '#/lib/util'
+import { LocaleSelector } from '#/locales/locale-selector.tsx'
 import { LinkAnchor } from './link-anchor.tsx'
 
 export type { CustomizationData }

@@ -1,7 +1,7 @@
 import { useLingui } from '@lingui/react/macro'
+import { NumpadIcon } from '@phosphor-icons/react'
 import { ChangeEvent, useState } from 'react'
-import { Override } from '../../lib/util.ts'
-import { TokenIcon } from '../utils/icons.tsx'
+import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
 
 export type InputTokenProps = Override<
@@ -31,7 +31,7 @@ export function InputToken({
   onToken,
 
   // InputTextProps
-  icon = <TokenIcon className="w-5" />,
+  icon = <NumpadIcon className="w-5" />,
   title = example,
   onChange,
   value,

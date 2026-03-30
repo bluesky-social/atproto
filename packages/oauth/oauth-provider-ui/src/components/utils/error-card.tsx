@@ -1,25 +1,31 @@
 import { Trans } from '@lingui/react/macro'
-import { memo, useEffect, useMemo, useState } from 'react'
-import { useRandomString } from '../../hooks/use-random-string.ts'
-import { Api } from '../../lib/api.ts'
-import { JsonErrorResponse } from '../../lib/json-client.ts'
-import { Override } from '../../lib/util.ts'
+import { useEffect, useMemo, useState } from 'react'
+import { useErrorMessage } from '#/hooks/use-error-message.ts'
+import { useRandomString } from '#/hooks/use-random-string.ts'
+import { Api } from '#/lib/api.ts'
+import { JsonErrorResponse } from '#/lib/json-client.ts'
+import { Override } from '#/lib/util.ts'
 import { Admonition, AdmonitionProps } from './admonition.tsx'
-import { ErrorMessage } from './error-message.tsx'
 
 export type ErrorCardProps = Override<
-  Omit<AdmonitionProps, 'role'>,
+  AdmonitionProps,
   {
+    'aria-controls'?: never
     error: unknown
+    resetErrorBoundary?: () => void
   }
 >
-export const ErrorCard = memo(function ErrorCard({
+
+export function ErrorCard({
   error,
+  resetErrorBoundary,
 
   // Admonition
+  type = 'alert',
   children,
   onClick,
   onKeyDown,
+  tabIndex,
   ...props
 }: ErrorCardProps) {
   const [inputCount, setInputCount] = useState(0)
@@ -27,6 +33,7 @@ export const ErrorCard = memo(function ErrorCard({
   const showDetails = ((inputCount / 5) | 0) % 2 === 1
 
   const detailsDivId = useRandomString('error-card-')
+  const errorMessage = useErrorMessage(error)
 
   const parsedError = useMemo(
     () =>
@@ -51,7 +58,7 @@ export const ErrorCard = memo(function ErrorCard({
       prominent
       {...props}
       aria-controls={detailsDivId}
-      tabIndex={0}
+      tabIndex={tabIndex ?? 0}
       onKeyDown={(event) => {
         onKeyDown?.(event)
         if (!event.defaultPrevented) {
@@ -64,8 +71,8 @@ export const ErrorCard = memo(function ErrorCard({
           setInputCount((c) => c + 1)
         }
       }}
-      type="alert"
-      title={<ErrorMessage error={parsedError} />}
+      type={type}
+      title={errorMessage}
     >
       {children && <div className="mt-2">{children}</div>}
 
@@ -90,4 +97,4 @@ export const ErrorCard = memo(function ErrorCard({
       </div>
     </Admonition>
   )
-})
+}

@@ -1,8 +1,8 @@
 import { useLingui } from '@lingui/react/macro'
+import { LockIcon } from '@phosphor-icons/react'
 import { ChangeEvent, useCallback, useRef, useState } from 'react'
-import { mergeRefs } from '../../lib/ref.ts'
-import { Override } from '../../lib/util.ts'
-import { LockIcon } from '../utils/icons.tsx'
+import { mergeRefs } from '#/lib/ref.ts'
+import { Override } from '#/lib/util.ts'
 import { ButtonToggleVisibility } from './button-toggle-visibility.tsx'
 import { InputText, InputTextProps } from './input-text.tsx'
 
@@ -73,6 +73,7 @@ export function InputPassword({
         <>
           <ButtonToggleVisibility
             className="m-1"
+            color="darkGrey"
             visible={visible}
             toggleVisible={() => {
               setVisible((prev) => !prev)

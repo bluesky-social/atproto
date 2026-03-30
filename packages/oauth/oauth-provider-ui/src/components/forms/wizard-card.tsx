@@ -1,8 +1,8 @@
 import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
 import { JSX, ReactNode, useCallback } from 'react'
-import { DisabledStep, Step, useStepper } from '../../hooks/use-stepper.ts'
-import { Override } from '../../lib/util.ts'
+import { DisabledStep, Step, useStepper } from '#/hooks/use-stepper.ts'
+import { Override } from '#/lib/util.ts'
 
 export type DoneFn = (...a: any) => unknown
 

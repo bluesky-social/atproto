@@ -1,8 +1,8 @@
 import { useLingui } from '@lingui/react/macro'
 import { clsx } from 'clsx'
 import { JSX } from 'react'
-import { PasswordStrength, getPasswordStrength } from '../../lib/password.ts'
-import { Override } from '../../lib/util.ts'
+import { PasswordStrength, getPasswordStrength } from '#/lib/password.ts'
+import { Override } from '#/lib/util.ts'
 
 export type PasswordStrengthMeterProps = Override<
   Omit<

@@ -1,7 +1,16 @@
-import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
 import { Trans, useLingui } from '@lingui/react/macro'
+import {
+  AtomIcon,
+  BookOpenIcon,
+  CertificateIcon,
+  ChatCircleDotsIcon,
+  CheckIcon,
+  EnvelopeIcon,
+  HandIcon,
+  IdentificationBadgeIcon,
+  UserIcon,
+} from '@phosphor-icons/react'
 import { Fragment, HTMLAttributes, ReactNode, useMemo } from 'react'
-import { Override } from '#/lib/util'
 import {
   AudParam,
   BlobPermission,
@@ -12,22 +21,13 @@ import {
   RpcPermission,
   ScopePermissionsTransition,
 } from '@atproto/oauth-scopes'
-import { Checkbox } from '../forms/checkbox'
-import { Admonition, AdmonitionProps } from './admonition'
-import { DescriptionCard } from './description-card'
-import {
-  AccountOutlinedIcon,
-  AtSymbolIcon,
-  AtomIcon,
-  AuthenticateIcon,
-  ButterflyIcon,
-  ChatIcon,
-  CheckMarkIcon,
-  EmailIcon,
-  NewspaperIcon,
-  RaisingHandIcon,
-} from './icons'
-import { LangProp } from './lang-string'
+import type { PermissionSet, PermissionSets } from '#/hydration-data.d.ts'
+import { Override } from '#/lib/util'
+import { Checkbox } from '../forms/checkbox.tsx'
+import { Admonition, AdmonitionProps } from './admonition.tsx'
+import { DescriptionCard } from './description-card.tsx'
+import { ButterflyIcon } from './icons.tsx'
+import { LangProp } from './lang-string.tsx'
 
 export type ScopeDescriptionProps = Override<
   HTMLAttributes<HTMLDivElement>,
@@ -35,7 +35,7 @@ export type ScopeDescriptionProps = Override<
     clientTrusted?: boolean
     clientFirstParty?: boolean
     scope?: string
-    permissionSets: PermissionSets
+    permissionSets?: PermissionSets
 
     allowEmail?: boolean
     onAllowEmail?: (allowed: boolean) => void
@@ -106,7 +106,7 @@ function IncludedPermissions({
   permissionSets,
 }: {
   includeScopes: IncludeScope[]
-  permissionSets: PermissionSets
+  permissionSets?: PermissionSets
 }) {
   if (!includeScopes.length) return null
 
@@ -116,7 +116,7 @@ function IncludedPermissions({
         <IncludeScopePermissions
           key={i}
           includeScope={includeScope}
-          permissionSet={permissionSets[includeScope.nsid]}
+          permissionSet={permissionSets?.[includeScope.nsid]}
         />
       ))}
     </>
@@ -144,9 +144,9 @@ function IncludeScopePermissions({
         isBskyAppNsid(nsid) ? (
           <ButterflyIcon className="size-6" />
         ) : isBskyChatNsid(nsid) ? (
-          <ChatIcon className="size-6" />
+          <ChatCircleDotsIcon className="size-6" />
         ) : nsid.startsWith('com.atproto.moderation.') ? (
-          <RaisingHandIcon className="size-6" />
+          <HandIcon className="size-6" />
         ) : (
           <AtomIcon className="size-6" />
         )
@@ -235,7 +235,7 @@ function EmailPermissions({
       <label className={onAllowEmail ? 'cursor-pointer' : undefined}>
         <DescriptionCard
           role="listitem"
-          image={<EmailIcon className="size-6" />}
+          image={<EnvelopeIcon className="size-6" />}
           title={t`Email`}
           description={
             allowedAction === 'manage' ? (
@@ -275,7 +275,7 @@ function AccountPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AccountOutlinedIcon className="size-6" />}
+        image={<UserIcon className="size-6" />}
         title={t`Account`}
         description={t`Temporarily activate or deactivate your account`}
       />
@@ -387,7 +387,7 @@ function BlueskyChatPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<ChatIcon className="size-6" />}
+        image={<ChatCircleDotsIcon className="size-6" />}
         title={t`Chat`}
         description={t`Read and send messages`}
       />
@@ -420,7 +420,7 @@ function IdentityPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AtSymbolIcon className="h-6" />}
+        image={<IdentificationBadgeIcon className="size-6" />}
         title={t`Identity`}
         description={
           attr === '*' ? (
@@ -451,8 +451,8 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AuthenticateIcon className="size-6" />}
-        title={t`Authenticate`}
+        image={<CertificateIcon className="size-6" />}
+        title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={
           <Trans>
             Perform authenticated actions towards <b>any service</b> on your
@@ -471,8 +471,8 @@ function RpcMethodsDetails({
     return (
       <DescriptionCard
         role="listitem"
-        image={<AuthenticateIcon className="size-6" />}
-        title={t`Authenticate`}
+        image={<CertificateIcon className="size-6" />}
+        title={t({ context: 'OAuthScope', message: 'Authenticate' })}
         description={t`Perform actions on your behalf`}
       >
         <p>
@@ -591,7 +591,7 @@ function RepoPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<NewspaperIcon className="size-6" />}
+        image={<BookOpenIcon className="size-6" />}
         title={t`Repository`}
         description={t`Create, update, and delete any public record`}
       >
@@ -612,7 +612,7 @@ function RepoPermissions({
     return (
       <DescriptionCard
         role="listitem"
-        image={<NewspaperIcon className="size-6" />}
+        image={<BookOpenIcon className="size-6" />}
         title={t`Repository`}
         description={t`Publish changes`}
       >
@@ -721,17 +721,17 @@ function RepoTable({ permissions, className, ...attrs }: RepoTableProps) {
             </td>
             <td className="text-center">
               {starActions?.create || actions.create ? (
-                <CheckMarkIcon className="inline-block size-3" />
+                <CheckIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.update || actions.update ? (
-                <CheckMarkIcon className="inline-block size-3" />
+                <CheckIcon className="inline-block size-3" />
               ) : null}
             </td>
             <td className="text-center">
               {starActions?.delete || actions.delete ? (
-                <CheckMarkIcon className="inline-block size-3" />
+                <CheckIcon className="inline-block size-3" />
               ) : null}
             </td>
           </tr>
