@@ -1,6 +1,5 @@
 import { Selectable, sql } from 'kysely'
 import { ToolsOzoneQueueDefs } from '@atproto/api'
-import { AtUri } from '@atproto/syntax'
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
@@ -259,13 +258,12 @@ export class QueueService {
 
     let query = this.db.db
       .selectFrom('report as r')
-      .innerJoin('moderation_event as me', 'me.id', 'r.eventId')
       .select([
         'r.id',
         'r.status',
-        'me.subjectUri',
-        'me.subjectMessageId',
-        'me.meta',
+        'r.reportType',
+        'r.recordPath',
+        'r.subjectMessageId',
       ])
       .where('r.status', '!=', 'closed')
       .orderBy('r.id', 'asc')
@@ -312,27 +310,20 @@ export class QueueService {
     for (const report of reports) {
       const subjectType = report.subjectMessageId
         ? 'message'
-        : report.subjectUri
+        : report.recordPath
           ? 'record'
           : 'account'
 
-      let collection: string | null = null
-      if (report.subjectUri) {
-        try {
-          collection = new AtUri(report.subjectUri).collection || null
-        } catch {
-          collection = null
-        }
-      }
-
-      const reportType = (report.meta as Record<string, unknown> | null)
-        ?.reportType as string | undefined
+      // recordPath is 'collection/rkey' for records, '' for accounts
+      const slashIdx = report.recordPath.indexOf('/')
+      const collection =
+        slashIdx > 0 ? report.recordPath.slice(0, slashIdx) : null
 
       const matchingQueue = findMatchingQueue(
         queues,
         subjectType,
         collection,
-        reportType,
+        report.reportType,
       )
 
       if (matchingQueue) {

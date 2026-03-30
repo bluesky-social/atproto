@@ -193,5 +193,6 @@ export function buildReportView(
       report.queueId && report.queueId > 0
         ? queues.get(report.queueId)
         : undefined,
+    isMuted: report.isMuted,
   }
 }
