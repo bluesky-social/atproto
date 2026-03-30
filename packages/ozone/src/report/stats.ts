@@ -349,6 +349,10 @@ export class ReportStatsService {
   ): Promise<ModeratorStatistics> {
     const { timeframe, moderatorDid } = group
 
+    if (!moderatorDid) {
+      throw new Error('Moderator DID is required for moderator stats')
+    }
+
     const timestamp =
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
@@ -376,7 +380,7 @@ export class ReportStatsService {
         ))`.as('avgHandlingTimeSec'),
       ])
       .leftJoin('moderator_assignment as ma', (join) =>
-        join.onRef('ma.reportId', '=', 'r.id').on('ma.did', '=', moderatorDid!),
+        join.onRef('ma.reportId', '=', 'r.id').on('ma.did', '=', moderatorDid),
       )
       .where('r.createdAt', '>', cutoff)
       .executeTakeFirst()
