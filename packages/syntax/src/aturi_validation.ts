@@ -210,18 +210,14 @@ export function parseUriString(
         return failure('ATURI can not contain spaces')
       }
 
-      const fragmentIndex = input.indexOf('#')
-      const pathEnd = fragmentIndex !== -1 ? fragmentIndex : input.length
-      if (input.charAt(pathEnd - 1) === '/') {
-        return failure('ATURI can not have a trailing slash')
-      }
-
       if (input.includes('//', 5)) {
         return failure('ATURI can not have empty path segments')
       }
 
       const pathStart = input.indexOf('/', 5) // after "at://"
       if (pathStart !== -1) {
+        const fragmentIndex = input.indexOf('#')
+        const pathEnd = fragmentIndex !== -1 ? fragmentIndex : input.length
         const secondSlash = input.indexOf('/', pathStart + 1)
         if (secondSlash !== -1 && secondSlash !== pathEnd - 1) {
           return failure('ATURI can not have more than two path segments')
