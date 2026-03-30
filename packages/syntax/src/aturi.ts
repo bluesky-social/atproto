@@ -134,7 +134,7 @@ export class AtUri {
 
   toString(): AtUriString {
     let pathname = this.pathname
-    if (!pathname.startsWith('/')) {
+    if (pathname && !pathname.startsWith('/')) {
       pathname = `/${pathname}`
     }
     while (pathname.endsWith('/')) {

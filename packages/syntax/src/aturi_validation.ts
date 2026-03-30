@@ -11,24 +11,46 @@ export type AtUriStringBase =
 export type AtUriStringFragment = `#/${string}`
 
 /**
- * A URI string as used to point at resources in the AT protocol
+ * A URI string as used to point at resources in the AT Protocol
+ *
+ * The full, general structure of an AT URI is:
+ *
+ * ```bnf
+ * AT-URI = "at://" AUTHORITY [ PATH ] [ "?" QUERY ] [ "#" FRAGMENT ]
+ * ```
+ *
+ * The authority part of the URI can be either a handle or a DID, indicating the
+ * identity associated with the repository. In current atproto Lexicon use, the
+ * query and fragment parts are not yet supported, and only a fixed pattern of
+ * paths are allowed:
+ *
+ * ```bnf
+ * AT-URI     = "at://" AUTHORITY [ "/" COLLECTION [ "/" RKEY ] ]
+ *
+ * AUTHORITY  = HANDLE | DID
+ * COLLECTION = NSID
+ * RKEY       = RECORD-KEY
+ * ```
+ *
+ * The authority section is required, and should be normalized.
  *
  * AT URI strings must respect the following syntax (as prescribed by the AT
  * protocol specification):
  *
- * - must start with "at://"
- * - the entire value is ASCII: [a-zA-Z0-9._~:@!$&'()*+,;=%/\\[\]#?-]
- * - hard length limit of 8192 chars (imposed by AT protocol)
- * - the authority part must be a valid DID or handle (validated by {@link isAtIdentifierString})
- * - optionally, the authority can be followed by a "/" and a valid NSID (validated by {@link isValidNsid})
- * - optionally, if an NSID is given, it can be followed by "/" and a record key (which can be any non-empty string of allowed chars)
- * - optionally, the URI can have a fragment, which must start with "#/" and then follow JSON pointer syntax (RFC-6901), but with the allowed chars above instead of full UTF-8
- * - query string ("?") is allowed, but not used
- * - percent-encoding is allowed an must be valid (e.g. "%FF" is not valid, but "%20" is)
+ * - The overall URI is restricted to a subset of ASCII characters
+ * - For reference below, the set of unreserved characters, as defined in [RFC-3986](https://www.rfc-editor.org/rfc/rfc3986), includes alphanumeric (`A-Za-z0-9`), period, hyphen, underscore, and tilde (`.-_~`)
+ * - Maximum overall length is 8 kilobytes (which may be shortened in the future)
+ * - Hex-encoding of characters is permitted (but in practice not necessary and should be avoided to keep the URI normalized and human-readable)
+ * - The URI scheme is `at`, and an authority part preceded with double slashes is always required. AT URIs always start with `at://`.
+ * - An authority section is required and must be non-empty. the authority can be either an atproto Handle, or a DID meeting the restrictions for use with atproto. The authority part can *not* be interpreted as a host:port pair, because of the use of colon characters (`:`) in DIDs. Colons and unreserved characters should not be escaped in DIDs, but other reserved characters (including `#`, `/`, `$`, `&`, `@`) must be escaped.
+ *     - Note that none of the current "blessed" DID methods for atproto allow these characters in DID identifiers
+ * - An optional path section may follow the authority. The path may contain multiple segments separated by a single slash (`/`). Generic URI path normalization rules may be used.
+ * - An optional query part is allowed, following generic URI syntax restrictions
+ * - An optional fragment part is allowed, using JSON Path syntax
  *
- * @example "at://did:plc:1234.../app.bsky.feed.post/3k2..."
+ * @example "at://did:plc:ewvi7nxzyoun6zhxrhs64oiz/app.bsky.actor.profile/self"
  *
- * @see {@link https://atproto.com/specs/at-uri-scheme AT protocol -- AT URI Scheme}
+ * @see {@link https://atproto.com/specs/at-uri-scheme AT protocol - AT URI Scheme}
  */
 export type AtUriString =
   | AtUriStringBase
@@ -229,8 +251,8 @@ export function parseUriString(
   // percent-encoded characters appearing in the collection NSID or record key
   // will effectively be rejected by the isValidNsid and isValidRecordKey
   // validators. Since these values are defined to be plain ASCII identifiers,
-  // this legacy behavior is beneficial: it ensures that already-normalized,
-  // non-percent-encoded values are always used.
+  // this legacy behavior is beneficial: it ensures that normalized
+  // (non-percent-encoded) values are always used, as prescribed by the spec.
 
   if (!isAtIdentifierString(groups.authority)) {
     return failure('ATURI has invalid authority')
