@@ -1,6 +1,6 @@
 import { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
-import { Override } from '../../lib/util.ts'
+import { Override } from '#/lib/util.ts'
 import { LinkTitle } from './link-title.tsx'
 
 export type LinkAnchorProps = Override<

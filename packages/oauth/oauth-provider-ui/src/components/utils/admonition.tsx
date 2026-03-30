@@ -1,7 +1,7 @@
+import { InfoIcon, WarningIcon } from '@phosphor-icons/react'
 import { clsx } from 'clsx'
-import { JSX, ReactNode, memo } from 'react'
-import { Override } from '../../lib/util.ts'
-import { AlertIcon, CircleInfoIcon } from './icons.tsx'
+import { JSX, ReactNode } from 'react'
+import { Override } from '#/lib/util.ts'
 
 export type AdmonitionProps = Override<
   JSX.IntrinsicElements['div'],
@@ -10,21 +10,23 @@ export type AdmonitionProps = Override<
     title?: ReactNode
     append?: ReactNode
     type?: 'alert' | 'status'
+    noIcon?: boolean
   }
 >
 
-export const Admonition = memo(function Admonition({
+export function Admonition({
   prominent,
   title,
   type = 'status',
   append,
+  noIcon = false,
 
   // div
   children,
   className,
   ...props
 }: AdmonitionProps) {
-  const Icon = type === 'alert' ? AlertIcon : CircleInfoIcon
+  const Icon = type === 'alert' ? WarningIcon : InfoIcon
   const titleColor = prominent
     ? 'text-inherit'
     : type === 'alert'
@@ -48,7 +50,9 @@ export const Admonition = memo(function Admonition({
         className,
       )}
     >
-      <Icon aria-hidden className={clsx('size-6 fill-current', titleColor)} />
+      {!noIcon && (
+        <Icon aria-hidden className={clsx('size-6 fill-current', titleColor)} />
+      )}
 
       <div className="flex flex-1 flex-col justify-center space-y-1">
         {title && <h3 className={`text-md ${titleColor}`}>{title}</h3>}
@@ -57,4 +61,4 @@ export const Admonition = memo(function Admonition({
       </div>
     </div>
   )
-})
+}

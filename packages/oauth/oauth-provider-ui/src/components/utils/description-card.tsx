@@ -11,10 +11,11 @@ export type DescriptionCardProps = Override<
   HTMLAttributes<HTMLDivElement>,
   {
     hint?: string
-    image: ReactNode
+    image?: ReactNode
     title?: ReactNode
     description?: ReactNode
     append?: ReactNode
+    noIcon?: boolean
   }
 >
 
@@ -24,6 +25,7 @@ export function DescriptionCard({
   title,
   description,
   append,
+  noIcon = false,
 
   // HTMLDivElement
   className,
@@ -44,12 +46,14 @@ export function DescriptionCard({
   return (
     <div ref={ref} className={className} {...attrs}>
       <div className={`flex items-center justify-start gap-2`}>
-        <div
-          className="ml-2 flex w-8 flex-grow-0 items-center justify-center"
-          aria-hidden
-        >
-          {image}
-        </div>
+        {image && (
+          <div
+            className="ml-2 flex w-8 flex-grow-0 items-center justify-center"
+            aria-hidden
+          >
+            {image}
+          </div>
+        )}
         <div
           className={`flex flex-1 flex-col`}
           aria-describedby={hasChildren ? detailsDivId : undefined}
@@ -87,6 +91,7 @@ export function DescriptionCard({
           hidden={!open}
           id={detailsDivId}
           aria-hidden={!open}
+          noIcon={noIcon}
         >
           {children}
         </Admonition>

@@ -1,5 +1,4 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { HydrationData as FeHydrationData } from '@atproto/oauth-provider-frontend/hydration-data'
 import type { HydrationData as UiHydrationData } from '@atproto/oauth-provider-ui/hydration-data'
 import { buildCustomizationCss } from '../../customization/build-customization-css.js'
 import { buildCustomizationData } from '../../customization/build-customization-data.js'
@@ -7,7 +6,6 @@ import { Customization } from '../../customization/customization.js'
 import { CspConfig, mergeCsp } from '../../lib/csp/index.js'
 import { declareHydrationData } from '../../lib/html/hydration-data.js'
 import { cssCode, html } from '../../lib/html/index.js'
-import { combineMiddlewares } from '../../lib/http/middleware.js'
 import { WriteResponseOptions } from '../../lib/http/response.js'
 import {
   CrossOriginEmbedderPolicy,
@@ -29,24 +27,18 @@ import { setupCsrfToken } from './csrf.js'
 const ui = parseAssetsManifest(
   require.resolve('@atproto/oauth-provider-ui/bundle-manifest.json'),
 )
-const fe = parseAssetsManifest(
-  require.resolve('@atproto/oauth-provider-frontend/bundle-manifest.json'),
-)
 
-type HydrationData = Simplify<UiHydrationData & FeHydrationData>
+type HydrationData = Simplify<UiHydrationData>
 
 function getAssets(entryName: keyof HydrationData) {
-  const assetRef = ui.getAssets(entryName) || fe.getAssets(entryName)
+  const assetRef = ui.getAssets(entryName)
   if (assetRef) return assetRef
 
   // Fool-proof. Should never happen.
   throw new Error(`Entry "${entryName}" not found in assets`)
 }
 
-export const assetsMiddleware = combineMiddlewares([
-  ui.assetsMiddleware,
-  fe.assetsMiddleware,
-])
+export const assetsMiddleware = ui.assetsMiddleware
 
 const SPA_CSP: CspConfig = {
   // API calls are made to the same origin

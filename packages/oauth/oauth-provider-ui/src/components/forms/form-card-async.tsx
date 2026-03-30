@@ -3,13 +3,13 @@ import { FormEvent, ReactNode, useCallback } from 'react'
 import {
   UseAsyncActionOptions,
   useAsyncAction,
-} from '../../hooks/use-async-action.ts'
-import { Override } from '../../lib/util.ts'
+} from '#/hooks/use-async-action.ts'
+import { Override } from '#/lib/util.ts'
 import { ErrorCard } from '../utils/error-card.tsx'
 import { Button } from './button.tsx'
 import { FormCard, FormCardProps } from './form-card.tsx'
 
-export type { AsyncActionController } from '../../hooks/use-async-action.ts'
+export type { AsyncActionController } from '#/hooks/use-async-action.ts'
 
 export type ErrorRender = (data: { error: Error }) => ReactNode
 export const errorRenderDefault: ErrorRender = ({ error }) => (
@@ -18,7 +18,7 @@ export const errorRenderDefault: ErrorRender = ({ error }) => (
 
 export type FormCardAsyncProps = Override<
   Override<
-    Omit<FormCardProps, 'cancel' | 'actions' | 'prepend'>,
+    Omit<FormCardProps, 'cancel' | 'prepend'>,
     Pick<UseAsyncActionOptions, 'ref' | 'onLoading' | 'onError'>
   >,
   {
@@ -54,6 +54,7 @@ export function FormCardAsync({
 
   // FormCardProps
   children,
+  actions,
   ...props
 }: FormCardAsyncProps) {
   const { run, loading, error } = useAsyncAction(onSubmit, {
@@ -87,14 +88,17 @@ export function FormCardAsync({
         )
       }
       actions={
-        <Button
-          color="primary"
-          type="submit"
-          loading={loading}
-          disabled={disabled}
-        >
-          {submitLabel || <Trans>Submit</Trans>}
-        </Button>
+        <>
+          <Button
+            color="primary"
+            type="submit"
+            loading={loading}
+            disabled={disabled}
+          >
+            {submitLabel || <Trans>Submit</Trans>}
+          </Button>
+          {actions}
+        </>
       }
     >
       {children}

@@ -2,7 +2,13 @@ import { z } from 'zod'
 import { colorHueSchema } from '../types/color-hue.js'
 import { rgbColorSchema } from '../types/rgb-color.js'
 
-export const COLOR_NAMES = ['primary', 'error', 'warning', 'success'] as const
+export const COLOR_NAMES = [
+  'primary',
+  'secondary',
+  'error',
+  'warning',
+  'success',
+] as const
 export type ColorName = (typeof COLOR_NAMES)[number]
 
 export const colorsSchema = z

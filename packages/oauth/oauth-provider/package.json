@@ -44,7 +44,6 @@
     "@atproto/lex-resolver": "workspace:^",
     "@atproto/oauth-types": "workspace:^",
     "@atproto/oauth-provider-api": "workspace:*",
-    "@atproto/oauth-provider-frontend": "workspace:*",
     "@atproto/oauth-provider-ui": "workspace:*",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/syntax": "workspace:^",

@@ -1,4 +1,4 @@
-import { CustomizationData } from '@atproto/oauth-provider-api'
+import type { CustomizationData } from '@atproto/oauth-provider-api'
 import { Customization } from './customization.js'
 
 export function buildCustomizationData({

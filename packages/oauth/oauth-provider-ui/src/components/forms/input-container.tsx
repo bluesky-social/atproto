@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useState } from 'react'
-import { Override } from '../../lib/util.ts'
+import { JSX, KeyboardEvent, MouseEvent, ReactNode, useState } from 'react'
+import { Override } from '#/lib/util.ts'
 
 export type InputContainerProps = Override<
   JSX.IntrinsicElements['div'],
@@ -9,6 +9,10 @@ export type InputContainerProps = Override<
     append?: ReactNode
     bellow?: ReactNode
     actionable?: boolean
+    transparent?: boolean
+    onAction?: (
+      event: KeyboardEvent<HTMLDivElement> | MouseEvent<HTMLDivElement>,
+    ) => void
   }
 >
 
@@ -17,17 +21,22 @@ export function InputContainer({
   append,
   bellow,
   actionable,
+  transparent,
+  onAction,
 
   // div
   className,
   children,
   onFocus,
   onBlur,
+  onClick,
+  onKeyDown,
+  tabIndex,
   ...props
 }: InputContainerProps) {
   const [hasFocus, setHasFocus] = useState(false)
 
-  actionable ??= props.onClick != null
+  actionable ??= onAction != null || onClick != null
 
   return (
     <div
@@ -40,6 +49,25 @@ export function InputContainer({
         onBlur?.(event)
         if (!event.defaultPrevented) setHasFocus(false)
       }}
+      onKeyDown={(event) => {
+        onKeyDown?.(event)
+        if (
+          onAction &&
+          !event.defaultPrevented &&
+          event.target === event.currentTarget &&
+          (event.key === 'Enter' || event.key === ' ')
+        ) {
+          onAction?.(event)
+        }
+      }}
+      onClick={(event) => {
+        onClick?.(event)
+        if (onAction && !event.defaultPrevented) {
+          onAction?.(event)
+        }
+      }}
+      tabIndex={tabIndex ?? (actionable ? 0 : -1)}
+      role={actionable ? 'button' : undefined}
       className={clsx(
         // Layout
         'min-h-12',
@@ -53,11 +81,19 @@ export function InputContainer({
 
         // Outline
         'outline-none',
-        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-        'has-focus:ring-primary has-focus:ring-2 has-focus:ring-offset-1 has-focus:ring-offset-white dark:has-focus:ring-offset-black',
+        'focus:ring-primary',
+        'focus:ring-2',
+        'focus:ring-offset-1',
+        'focus:ring-offset-white',
+        'dark:focus:ring-offset-black',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-primary',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-2',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-1',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-white',
+        'dark:has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-black',
 
         // Background
-        'bg-gray-100 dark:bg-gray-800',
+        transparent ? 'bg-transparent' : 'bg-gray-100 dark:bg-gray-800',
         actionable
           ? 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700'
           : undefined,
