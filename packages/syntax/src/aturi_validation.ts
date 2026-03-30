@@ -220,7 +220,7 @@ export function parseUriString(
         return failure('ATURI can not have a trailing slash')
       }
 
-      if (input.includes('//')) {
+      if (input.includes('//', 5)) {
         return failure('ATURI can not have empty path segments')
       }
 
@@ -240,11 +240,12 @@ export function parseUriString(
     return failure('ATURI can not contain a query string')
   }
 
-  // @NOTE percent-encoding, while allowed in the at-uri format, will end-up
-  // being rejected by the isValidNsid, isValidRecordKey and isValidRecordKey
-  // checks. Since those value should always be ASCII strings, this (legacy)
-  // behavior is actually beneficial as it ensures that normalized values values
-  // are always used.
+  // @NOTE Percent-encoding is allowed by the AT URI specification, but any
+  // percent-encoded characters appearing in the collection NSID or record key
+  // will effectively be rejected by the isValidNsid and isValidRecordKey
+  // validators. Since these values are defined to be plain ASCII identifiers,
+  // this legacy behavior is beneficial: it ensures that already-normalized,
+  // non-percent-encoded values are always used.
 
   if (!isAtIdentifierString(groups.authority)) {
     return failure('ATURI has invalid authority')
