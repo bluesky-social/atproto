@@ -70,48 +70,17 @@ export class ReportStatsService {
     }
   }
 
+  /** List out groups to calculate, ordered by priority. */
   private async enumerateGroups(): Promise<ReportStatGroup[]> {
     const groups: ReportStatGroup[] = []
 
-    // global
-    groups.push({
-      queueId: -1,
-      mode: 'live',
-      timeframe: 'day',
-      moderatorDid: null,
-    })
-    groups.push({
-      queueId: -1,
-      mode: 'historical',
-      timeframe: 'day',
-      moderatorDid: null,
-    })
-
-    // per-queue
+    // context
     const queues = await this.db.db
       .selectFrom('report_queue')
       .selectAll()
       .where('enabled', '=', true)
       .where('deletedAt', 'is', null)
       .execute()
-    for (const queue of queues) {
-      groups.push(
-        {
-          queueId: queue.id,
-          mode: 'live',
-          timeframe: 'day',
-          moderatorDid: null,
-        },
-        {
-          queueId: queue.id,
-          mode: 'historical',
-          timeframe: 'day',
-          moderatorDid: null,
-        },
-      )
-    }
-
-    // per-moderator
     const members = await this.db.db
       .selectFrom('member')
       .select('did')
@@ -122,20 +91,60 @@ export class ReportStatsService {
         'tools.ozone.team.defs#roleTriage',
       ])
       .execute()
-    for (const member of members) {
+
+    // live
+    /// aggregate
+    groups.push({
+      queueId: -1,
+      mode: 'live',
+      timeframe: 'day',
+      moderatorDid: null,
+    })
+    /// per-queue
+    queues.map((queue) =>
+      groups.push({
+        queueId: queue.id,
+        mode: 'live',
+        timeframe: 'day',
+        moderatorDid: null,
+      }),
+    )
+    /// per-moderator
+    members.map((member) =>
       groups.push({
         queueId: -1,
         mode: 'live',
         timeframe: 'day',
         moderatorDid: member.did,
-      })
+      }),
+    )
+
+    // historical
+    /// aggregate
+    groups.push({
+      queueId: -1,
+      mode: 'historical',
+      timeframe: 'day',
+      moderatorDid: null,
+    })
+    /// per-queue
+    queues.map((queue) =>
+      groups.push({
+        queueId: queue.id,
+        mode: 'historical',
+        timeframe: 'day',
+        moderatorDid: null,
+      }),
+    )
+    /// per-moderator
+    members.map((member) =>
       groups.push({
         queueId: -1,
         mode: 'historical',
         timeframe: 'day',
         moderatorDid: member.did,
-      })
-    }
+      }),
+    )
 
     return groups
   }
