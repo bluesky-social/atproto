@@ -4,7 +4,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('report_stat')
     .addColumn('id', 'serial', (col) => col.primaryKey())
-    .addColumn('queueId', 'integer', (col) => col.notNull().defaultTo(-1)) // -1 = aggregate across all queues
+    .addColumn('queueId', 'integer') // NULL = aggregate across all queues
     .addColumn('mode', 'varchar', (col) => col.notNull()) // 'live' or 'historical'
     .addColumn('timeframe', 'varchar', (col) => col.notNull()) // 'day' or 'week'
     .addColumn('inboundCount', 'integer')
@@ -16,11 +16,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('avgHandlingTimeSec', 'integer')
     .addColumn('computedAt', 'varchar', (col) => col.notNull())
     .execute()
-
-  // Only one row with live stats per group (aggregate, per queue, per moderator).
-  await sql`CREATE UNIQUE INDEX idx_report_stat_live ON report_stat ("queueId", "timeframe", COALESCE("moderatorDid", '')) WHERE "mode" = 'live'`.execute(
-    db,
-  )
 
   // queue/aggregate statistics
   await db.schema
@@ -40,6 +35,5 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropIndex('idx_report_stat_queue').ifExists().execute()
   await db.schema.dropIndex('idx_report_stat_moderator').ifExists().execute()
-  await db.schema.dropIndex('idx_report_stat_live').ifExists().execute()
   await db.schema.dropTable('report_stat').ifExists().execute()
 }

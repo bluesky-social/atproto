@@ -12,7 +12,7 @@ export type ReportStatTimeframe = 'day' | 'week'
 export type ReportStatGroup = {
   mode: ReportStatMode
   timeframe: ReportStatTimeframe
-  queueId: number
+  queueId: number | null
   moderatorDid: string | null
 }
 export type QueueStatistics = {
@@ -95,26 +95,33 @@ export class ReportStatsService {
     // live
     /// aggregate
     groups.push({
-      queueId: -1,
       mode: 'live',
       timeframe: 'day',
+      queueId: null,
       moderatorDid: null,
     })
     /// per-queue
     queues.map((queue) =>
       groups.push({
-        queueId: queue.id,
         mode: 'live',
         timeframe: 'day',
+        queueId: queue.id,
         moderatorDid: null,
       }),
     )
+    /// unqueued
+    groups.push({
+      mode: 'historical',
+      timeframe: 'day',
+      queueId: -1,
+      moderatorDid: null,
+    })
     /// per-moderator
     members.map((member) =>
       groups.push({
-        queueId: -1,
         mode: 'live',
         timeframe: 'day',
+        queueId: null,
         moderatorDid: member.did,
       }),
     )
@@ -122,26 +129,33 @@ export class ReportStatsService {
     // historical
     /// aggregate
     groups.push({
-      queueId: -1,
       mode: 'historical',
       timeframe: 'day',
+      queueId: null,
       moderatorDid: null,
     })
     /// per-queue
     queues.map((queue) =>
       groups.push({
-        queueId: queue.id,
         mode: 'historical',
         timeframe: 'day',
+        queueId: queue.id,
         moderatorDid: null,
       }),
     )
+    /// unqueued
+    groups.push({
+      mode: 'historical',
+      timeframe: 'day',
+      queueId: -1,
+      moderatorDid: null,
+    })
     /// per-moderator
     members.map((member) =>
       groups.push({
-        queueId: -1,
         mode: 'historical',
         timeframe: 'day',
+        queueId: null,
         moderatorDid: member.did,
       }),
     )
@@ -191,12 +205,31 @@ export class ReportStatsService {
       'escalatedCount' in stats ? stats.escalatedCount ?? null : null
     const actionRate = 'actionRate' in stats ? stats.actionRate ?? null : null
 
+    // For live stats, delete the existing row first
+    if (mode === 'live') {
+      let del = this.db.db
+        .deleteFrom('report_stat')
+        .where('mode', '=', 'live')
+        .where('timeframe', '=', timeframe)
+      if (queueId !== null) {
+        del = del.where('queueId', '=', queueId)
+      } else {
+        del = del.where('queueId', 'is', null)
+      }
+      if (moderatorDid) {
+        del = del.where('moderatorDid', '=', moderatorDid)
+      } else {
+        del = del.where('moderatorDid', 'is', null)
+      }
+      await del.execute()
+    }
+
     return this.db.db
       .insertInto('report_stat')
       .values({
-        queueId,
         mode,
         timeframe,
+        queueId,
         moderatorDid,
         inboundCount: stats.inboundCount ?? null,
         pendingCount,
@@ -206,20 +239,6 @@ export class ReportStatsService {
         avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
         computedAt,
       })
-      .onConflict((oc) =>
-        oc
-          .expression(sql`"queueId", "timeframe", COALESCE("moderatorDid", '')`)
-          .where('mode', '=', 'live')
-          .doUpdateSet({
-            inboundCount: stats.inboundCount ?? null,
-            pendingCount,
-            actionedCount: stats.actionedCount ?? null,
-            escalatedCount,
-            actionRate,
-            avgHandlingTimeSec: stats.avgHandlingTimeSec ?? null,
-            computedAt,
-          }),
-      )
       .returningAll()
       .executeTakeFirstOrThrow()
   }
@@ -230,7 +249,7 @@ export class ReportStatsService {
   ): Promise<ReportStatistics> {
     if (group.moderatorDid) {
       return this.computeModeratorStats(group)
-    } else if (group.queueId === -1) {
+    } else if (group.queueId === null) {
       return this.computeAggregateStats(group)
     } else {
       return this.computeQueueGroup(group)
@@ -293,6 +312,9 @@ export class ReportStatsService {
     group: ReportStatGroup,
   ): Promise<QueueStatistics> {
     const { queueId, timeframe } = group
+    if (queueId === null) {
+      throw new Error('Queue ID is required for queue stats')
+    }
 
     const timestamp =
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
@@ -398,8 +420,12 @@ export class ReportStatsService {
       .selectAll()
       .where('mode', '=', group.mode)
       .where('timeframe', '=', group.timeframe)
-      .where('queueId', '=', group.queueId)
       .orderBy('computedAt', 'desc')
+    if (group.queueId !== null) {
+      qb = qb.where('queueId', '=', group.queueId)
+    } else {
+      qb = qb.where('queueId', 'is', null)
+    }
     if (group.moderatorDid) {
       qb = qb.where('moderatorDid', '=', group.moderatorDid)
     } else {
@@ -414,9 +440,9 @@ export class ReportStatsService {
     queueId?: number,
   ): Promise<Selectable<ReportStat> | undefined> {
     return this.getLatestStats({
-      queueId: queueId ?? -1,
       mode: 'live',
       timeframe: 'day',
+      queueId: queueId ?? null,
       moderatorDid: null,
     })
   }
@@ -426,9 +452,9 @@ export class ReportStatsService {
     moderatorDid: string,
   ): Promise<Selectable<ReportStat> | undefined> {
     return this.getLatestStats({
-      queueId: -1,
       mode: 'live',
       timeframe: 'day',
+      queueId: null,
       moderatorDid,
     })
   }

@@ -4,7 +4,7 @@ export const reportStatTableName = 'report_stat'
 
 export interface ReportStat {
   id: Generated<number>
-  queueId: number // -1 = aggregate across all queues
+  queueId: number | null // NULL = aggregate across all queues
   /** The expiration policy for the statistic.
    * 'live' expires in 15 minutes
    * 'historical' expires based on its timeframe (e.g. each day).
