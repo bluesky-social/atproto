@@ -59,6 +59,11 @@
             "format": "datetime",
             "description": "Retrieve reports created before a given timestamp"
           },
+          "isMuted": {
+            "type": "boolean",
+            "default": false,
+            "description": "Filter by muted status. true returns only muted reports, false returns only unmuted reports. Defaults to false."
+          },
           "reviewedBy": {
             "type": "string",
             "format": "did",

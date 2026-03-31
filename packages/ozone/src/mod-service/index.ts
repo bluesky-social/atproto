@@ -1008,6 +1008,11 @@ export class ModerationService {
     })
 
     // Create report entry
+    // A report is muted if either the reporter was muted or the subject was muted at creation time
+    const isReporterMuted = !!result.event.meta?.isReporterMuted
+    const isSubjectMuted = await this.isSubjectMuted(subject.did)
+    const isMuted = isReporterMuted || isSubjectMuted
+
     const now = new Date().toISOString()
     await this.db.db
       .insertInto('report')
@@ -1016,7 +1021,12 @@ export class ModerationService {
         queueId: null, // Will be assigned by background job in future iteration
         actionEventIds: null,
         actionNote: null,
+        isMuted,
         status: 'open',
+        reportType: reasonType,
+        did: subject.did,
+        recordPath: subject.isRecord() ? subject.recordPath : '',
+        subjectMessageId: subject.isMessage() ? subject.messageId : null,
         createdAt: now,
         updatedAt: now,
       })
@@ -1394,6 +1404,19 @@ export class ModerationService {
       .where('did', '=', did)
       .where('recordPath', '=', '')
       .where('muteReportingUntil', '>', new Date().toISOString())
+      .select(sql`true`.as('status'))
+      .executeTakeFirst()
+
+    return !!result
+  }
+
+  // Check if a subject (the account being reported) has an active mute
+  async isSubjectMuted(did: string) {
+    const result = await this.db.db
+      .selectFrom('moderation_subject_status')
+      .where('did', '=', did)
+      .where('recordPath', '=', '')
+      .where('muteUntil', '>', new Date().toISOString())
       .select(sql`true`.as('status'))
       .executeTakeFirst()
 

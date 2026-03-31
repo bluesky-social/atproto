@@ -250,6 +250,10 @@ const handleModerationEvent = async ({
 
     // Create report entry if this is a report event
     if (isModEventReport(event)) {
+      const isReporterMuted = !!result.event.meta?.isReporterMuted
+      const isSubjectMuted = await moderationTxn.isSubjectMuted(subject.did)
+      const isMuted = isReporterMuted || isSubjectMuted
+
       const now = new Date().toISOString()
       await dbTxn.db
         .insertInto('report')
@@ -258,7 +262,12 @@ const handleModerationEvent = async ({
           queueId: null, // Will be assigned by background job in future iteration
           actionEventIds: null,
           actionNote: null,
+          isMuted,
           status: 'open',
+          reportType: event.reportType,
+          did: subject.did,
+          recordPath: subject.isRecord() ? subject.recordPath : '',
+          subjectMessageId: subject.isMessage() ? subject.messageId : null,
           createdAt: now,
           updatedAt: now,
         })

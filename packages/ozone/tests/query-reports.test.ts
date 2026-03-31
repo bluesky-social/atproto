@@ -1,3 +1,4 @@
+import { ComAtprotoModerationDefs } from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -297,6 +298,128 @@ describe('query-reports', () => {
       response.reports.forEach((report) => {
         expect(report.subject.type).toBe('account')
         expect(report.reportType).toBe(REASONSPAM)
+      })
+    })
+  })
+
+  describe('isMuted filtering', () => {
+    let mutedReporterReportId: number
+    let mutedSubjectReportId: number
+
+    beforeAll(async () => {
+      // Mute carol as a reporter, then have carol file a report
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventMuteReporter',
+          durationInHours: 24,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.carol,
+        },
+      })
+
+      await sc.createReport({
+        reportedBy: sc.dids.carol,
+        reasonType: ComAtprotoModerationDefs.REASONMISLEADING,
+        reason: 'muted reporter report',
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.bob,
+        },
+      })
+
+      // Find the report we just created (most recent)
+      const allReports = await modClient.queryReports({
+        isMuted: true,
+      })
+      mutedReporterReportId = allReports.reports[0].id
+
+      // Unmute carol so it doesn't affect other tests
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventUnmuteReporter',
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.carol,
+        },
+      })
+
+      // Mute alice as a subject, then have bob report alice
+      await modClient.emitEvent({
+        event: {
+          $type: 'tools.ozone.moderation.defs#modEventMute',
+          durationInHours: 24,
+        },
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+      })
+
+      await sc.createReport({
+        reportedBy: sc.dids.bob,
+        reasonType: ComAtprotoModerationDefs.REASONSPAM,
+        reason: 'muted subject report',
+        subject: {
+          $type: 'com.atproto.admin.defs#repoRef',
+          did: sc.dids.alice,
+        },
+      })
+
+      // Find the muted subject report
+      const mutedReports = await modClient.queryReports({
+        isMuted: true,
+      })
+      mutedSubjectReportId = mutedReports.reports[0].id
+    })
+
+    it('marks reports as muted when reporter is muted', async () => {
+      const allMuted = await modClient.queryReports({ isMuted: true })
+      const mutedReport = allMuted.reports.find(
+        (r) => r.id === mutedReporterReportId,
+      )
+      expect(mutedReport).toBeDefined()
+      expect(mutedReport!.isMuted).toBe(true)
+    })
+
+    it('marks reports as muted when subject is muted', async () => {
+      const allMuted = await modClient.queryReports({ isMuted: true })
+      const mutedReport = allMuted.reports.find(
+        (r) => r.id === mutedSubjectReportId,
+      )
+      expect(mutedReport).toBeDefined()
+      expect(mutedReport!.isMuted).toBe(true)
+    })
+
+    it('excludes muted reports by default (isMuted=false)', async () => {
+      const response = await modClient.queryReports({ isMuted: false })
+      response.reports.forEach((report) => {
+        expect(report.isMuted).toBe(false)
+      })
+      // Should not contain our muted reports
+      const ids = response.reports.map((r) => r.id)
+      expect(ids).not.toContain(mutedReporterReportId)
+      expect(ids).not.toContain(mutedSubjectReportId)
+    })
+
+    it('returns only muted reports when isMuted=true', async () => {
+      const response = await modClient.queryReports({ isMuted: true })
+      expect(response.reports.length).toBeGreaterThanOrEqual(2)
+      response.reports.forEach((report) => {
+        expect(report.isMuted).toBe(true)
+      })
+    })
+
+    it('defaults to excluding muted reports when isMuted is not specified', async () => {
+      // The lexicon default for isMuted is false, so calling without it
+      // should behave the same as isMuted=false
+      const defaultReports = await modClient.queryReports({})
+      const explicitFalse = await modClient.queryReports({ isMuted: false })
+      expect(defaultReports.reports.length).toBe(explicitFalse.reports.length)
+      defaultReports.reports.forEach((report) => {
+        expect(report.isMuted).toBe(false)
       })
     })
   })
