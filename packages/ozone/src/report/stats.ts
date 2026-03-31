@@ -4,10 +4,11 @@ import { Database } from '../db'
 import { ReportStat } from '../db/schema/report_stat'
 import { dbLogger } from '../logger'
 
+const REPORT_STAT_LIVE_TTL = 15 * MINUTE
+
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
 
 export type ReportStatMode = 'live' | 'historical'
-const REPORT_STAT_LIVE_TTL = 15 * MINUTE
 export type ReportStatTimeframe = 'day' | 'week'
 export type ReportStatGroup = {
   mode: ReportStatMode
