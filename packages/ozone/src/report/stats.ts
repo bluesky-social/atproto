@@ -248,14 +248,14 @@ export class ReportStatsService {
     group: ReportStatGroup,
   ): Promise<ReportStatistics> {
     if (group.moderatorDid) {
-      return this.computeModeratorStats(group)
+      return this.computeModerator(group)
     } else if (group.queueId === null) {
-      return this.computeAggregateStats(group)
+      return this.computeAggregate(group)
     } else {
-      return this.computeQueueGroup(group)
+      return this.computeQueue(group)
     }
   }
-  private async computeAggregateStats(
+  private async computeAggregate(
     group: ReportStatGroup,
   ): Promise<AggregateStatistics> {
     const { timeframe } = group
@@ -308,9 +308,7 @@ export class ReportStatsService {
       avgHandlingTimeSec,
     }
   }
-  private async computeQueueGroup(
-    group: ReportStatGroup,
-  ): Promise<QueueStatistics> {
+  private async computeQueue(group: ReportStatGroup): Promise<QueueStatistics> {
     const { queueId, timeframe } = group
     if (queueId === null) {
       throw new Error('Queue ID is required for queue stats')
@@ -366,7 +364,7 @@ export class ReportStatsService {
       avgHandlingTimeSec,
     }
   }
-  private async computeModeratorStats(
+  private async computeModerator(
     group: ReportStatGroup,
   ): Promise<ModeratorStatistics> {
     const { timeframe, moderatorDid } = group
