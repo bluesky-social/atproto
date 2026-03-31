@@ -264,15 +264,13 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    // all-time (sped up with an index)
-    const pendingRow = await this.db.db
+    const allTime = await this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
       .where('status', '!=', 'closed')
       .executeTakeFirst()
 
-    // windowed
-    let qb = this.db.db
+    const createdAt = await this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
@@ -287,16 +285,16 @@ export class ReportStatsService {
         ),
       ])
       .where('createdAt', '>', cutoff)
+      .executeTakeFirst()
 
-    const row = await qb.executeTakeFirst()
-    const inboundCount = row?.inboundCount ?? 0
-    const pendingCount = pendingRow?.pendingCount ?? 0
-    const actionedCount = row?.actionedCount ?? 0
-    const escalatedCount = row?.escalatedCount ?? 0
+    const inboundCount = createdAt?.inboundCount ?? 0
+    const pendingCount = allTime?.pendingCount ?? 0
+    const actionedCount = createdAt?.actionedCount ?? 0
+    const escalatedCount = createdAt?.escalatedCount ?? 0
     const actionRate =
       inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
-    const avgHandlingTimeSec = row?.avgHandlingTimeSec
-      ? Math.round(row.avgHandlingTimeSec)
+    const avgHandlingTimeSec = createdAt?.avgHandlingTimeSec
+      ? Math.round(createdAt.avgHandlingTimeSec)
       : undefined
 
     return {
@@ -318,16 +316,14 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    // all-time (sped up with an index)
-    const pendingRow = await this.db.db
+    const allTime = await this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
       .where('status', '!=', 'closed')
       .where('queueId', '=', queueId)
       .executeTakeFirst()
 
-    // windowed
-    let qb = this.db.db
+    const createdAt = await this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
@@ -343,16 +339,16 @@ export class ReportStatsService {
       ])
       .where('createdAt', '>', cutoff)
       .where('queueId', '=', queueId)
+      .executeTakeFirst()
 
-    const row = await qb.executeTakeFirst()
-    const inboundCount = row?.inboundCount ?? 0
-    const pendingCount = pendingRow?.pendingCount ?? 0
-    const actionedCount = row?.actionedCount ?? 0
-    const escalatedCount = row?.escalatedCount ?? 0
+    const inboundCount = createdAt?.inboundCount ?? 0
+    const pendingCount = allTime?.pendingCount ?? 0
+    const actionedCount = createdAt?.actionedCount ?? 0
+    const escalatedCount = createdAt?.escalatedCount ?? 0
     const actionRate =
       inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
-    const avgHandlingTimeSec = row?.avgHandlingTimeSec
-      ? Math.round(row.avgHandlingTimeSec)
+    const avgHandlingTimeSec = createdAt?.avgHandlingTimeSec
+      ? Math.round(createdAt.avgHandlingTimeSec)
       : undefined
 
     return {
@@ -377,7 +373,7 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    const row = await this.db.db
+    const createdAt = await this.db.db
       .selectFrom('report as r')
       .innerJoin('moderator_assignment as ma', (join) =>
         join
@@ -397,10 +393,10 @@ export class ReportStatsService {
       .where('r.createdAt', '>', cutoff)
       .executeTakeFirst()
 
-    const inboundCount = row?.inboundCount ?? 0
-    const actionedCount = row?.actionedCount ?? 0
-    const avgHandlingTimeSec = row?.avgHandlingTimeSec
-      ? Math.round(row.avgHandlingTimeSec)
+    const inboundCount = createdAt?.inboundCount ?? 0
+    const actionedCount = createdAt?.actionedCount ?? 0
+    const avgHandlingTimeSec = createdAt?.avgHandlingTimeSec
+      ? Math.round(createdAt.avgHandlingTimeSec)
       : undefined
 
     return {
