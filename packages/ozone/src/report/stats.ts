@@ -359,31 +359,24 @@ export class ReportStatsService {
 
     const row = await this.db.db
       .selectFrom('report as r')
-      .select([
-        sql<number>`count(*) filter (where exists (
-          select 1 from moderation_event me
-          where r."actionEventIds" @> jsonb_build_array(me.id)
-          and me."createdBy" = ${moderatorDid}
-          and me."createdAt" > ${cutoff}
-        ))`.as('inboundCount'),
-        sql<number>`count(*) filter (where r."status" = 'closed' and exists (
-          select 1 from moderation_event me
-          where r."actionEventIds" @> jsonb_build_array(me.id)
-          and me."createdBy" = ${moderatorDid}
-          and me."createdAt" > ${cutoff}
-        ))`.as('actionedCount'),
-        sql<number>`avg(extract(epoch from (r."closedAt"::timestamp - ma."startAt"::timestamp)) ) filter (where r."status" = 'closed' and r."closedAt" is not null and ma."startAt" is not null and exists (
-          select 1 from moderation_event me
-          where r."actionEventIds" @> jsonb_build_array(me.id)
-          and me."createdBy" = ${moderatorDid}
-          and me."createdAt" > ${cutoff}
-        ))`.as('avgHandlingTimeSec'),
-      ])
-      .leftJoin('moderator_assignment as ma', (join) =>
-        join.onRef('ma.reportId', '=', 'r.id').on('ma.did', '=', moderatorDid),
+      .innerJoin('moderator_assignment as ma', (join) =>
+        join
+          .onRef('ma.reportId', '=', 'r.id')
+          .on('ma.did', '=', moderatorDid)
+          .on('ma.endAt', 'is', null),
       )
+      .select([
+        sql<number>`count(*)`.as('inboundCount'),
+        sql<number>`count(*) filter (where r."status" = 'closed')`.as(
+          'actionedCount',
+        ),
+        sql<number>`avg(extract(epoch from (r."closedAt"::timestamp - ma."startAt"::timestamp)) ) filter (where r."status" = 'closed' and r."closedAt" is not null)`.as(
+          'avgHandlingTimeSec',
+        ),
+      ])
       .where('r.createdAt', '>', cutoff)
       .executeTakeFirst()
+
     const inboundCount = row?.inboundCount ?? 0
     const actionedCount = row?.actionedCount ?? 0
     const avgHandlingTimeSec = row?.avgHandlingTimeSec
