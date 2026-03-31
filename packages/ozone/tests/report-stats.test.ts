@@ -1,4 +1,5 @@
 import AtpAgent from '@atproto/api'
+import { sql } from 'kysely'
 import {
   ModeratorClient,
   SeedClient,
@@ -285,6 +286,58 @@ describe('live', () => {
 
     // Aggregate includes all reports (queued + unqueued)
     expect(stats.pendingCount).toBeGreaterThanOrEqual(1)
+  })
+
+  it('computes live stats for unqueued reports (queueId = -1)', async () => {
+    const db = network.ozone.ctx.db
+
+    // Count how many reports are currently unqueued (queueId = -1)
+    const unqueuedBefore = await db.db
+      .selectFrom('report')
+      .select(sql<number>`count(*)`.as('count'))
+      .where('queueId', '=', -1)
+      .where('status', '!=', 'closed')
+      .executeTakeFirstOrThrow()
+
+    // Create a report with a reason that won't match any queue
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonMisleading',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.alice,
+      },
+      reportedBy: sc.dids.carol,
+    })
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+    await modClient.computeStats()
+
+    // Verify the report ended up unqueued
+    const unqueuedAfter = await db.db
+      .selectFrom('report')
+      .select(sql<number>`count(*)`.as('count'))
+      .where('queueId', '=', -1)
+      .where('status', '!=', 'closed')
+      .executeTakeFirstOrThrow()
+    expect(Number(unqueuedAfter.count)).toBe(Number(unqueuedBefore.count) + 1)
+
+    // Fetch unqueued stats via queueId = -1
+    const stats = await getLiveQueueStats(-1)
+    expect(stats.pendingCount).toBe(Number(unqueuedAfter.count))
+    expect(stats.inboundCount).toBeGreaterThanOrEqual(1)
+    expect(stats.lastUpdated).toBeDefined()
+  })
+
+  it('unqueued stats are separate from aggregate stats', async () => {
+    await modClient.computeStats()
+
+    const aggregateStats = await getLiveQueueStats()
+    const unqueuedStats = await getLiveQueueStats(-1)
+
+    // Aggregate pendingCount should be >= unqueued pendingCount
+    // since aggregate includes all reports
+    expect(aggregateStats.pendingCount).toBeGreaterThanOrEqual(
+      unqueuedStats.pendingCount ?? 0,
+    )
   })
 
   it('returns per-moderator stats after action', async () => {

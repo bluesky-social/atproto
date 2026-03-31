@@ -111,7 +111,7 @@ export class ReportStatsService {
     )
     /// unqueued
     groups.push({
-      mode: 'historical',
+      mode: 'live',
       timeframe: 'day',
       queueId: -1,
       moderatorDid: null,
