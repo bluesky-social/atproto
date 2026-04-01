@@ -209,9 +209,7 @@ export function parseUriString(
 
   const invalidChar = input.match(INVALID_CHAR_REGEXP)
   if (invalidChar) {
-    return failure(
-      `ATURI contains invalid character "${invalidChar[0]}" at position ${invalidChar.index}`,
-    )
+    return failure('Disallowed characters in ATURI (ASCII)')
   }
 
   const match = input.match(AT_URI_REGEXP)
