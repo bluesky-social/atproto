@@ -662,4 +662,59 @@ export class ReportStatsService {
       reportTypes: null,
     })
   }
+
+  /** Get historical aggregate statistics. */
+  async getHistoricalAggregateStats(
+    timeframe: ReportStatTimeframe,
+  ): Promise<Selectable<ReportStat> | undefined> {
+    return this.getLatestStats({
+      mode: 'historical',
+      timeframe,
+      queueId: null,
+      moderatorDid: null,
+      reportTypes: null,
+    })
+  }
+
+  /** Get historical statistics for a queue. */
+  async getHistoricalQueueStats(
+    timeframe: ReportStatTimeframe,
+    queueId: number,
+  ): Promise<Selectable<ReportStat> | undefined> {
+    return this.getLatestStats({
+      mode: 'historical',
+      timeframe,
+      queueId,
+      moderatorDid: null,
+      reportTypes: null,
+    })
+  }
+
+  /** Get historical statistics for a report type. */
+  async getHistoricalReportTypeStats(
+    timeframe: ReportStatTimeframe,
+    reportTypes: string[],
+  ): Promise<Selectable<ReportStat> | undefined> {
+    return this.getLatestStats({
+      mode: 'historical',
+      timeframe,
+      queueId: null,
+      moderatorDid: null,
+      reportTypes,
+    })
+  }
+
+  /** Get historical statistics for a moderator. */
+  async getHistoricalModeratorStats(
+    timeframe: ReportStatTimeframe,
+    moderatorDid: string,
+  ): Promise<Selectable<ReportStat> | undefined> {
+    return this.getLatestStats({
+      mode: 'historical',
+      timeframe,
+      queueId: null,
+      moderatorDid,
+      reportTypes: null,
+    })
+  }
 }

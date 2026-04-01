@@ -34,6 +34,7 @@ import routeReports from './queue/routeReports'
 import updateQueue from './queue/updateQueue'
 import assignReportModerator from './report/assignModerator'
 import createActivity from './report/createActivity'
+import getHistoricalStats from './report/getHistoricalStats'
 import createReport from './report/createReport'
 import getReportAssignments from './report/getAssignments'
 import getLatestReport from './report/getLatestReport'
@@ -124,6 +125,7 @@ export default function (server: Server, ctx: AppContext) {
   cancelScheduledActions(server, ctx)
   routeReports(server, ctx)
   getLiveStats(server, ctx)
+  getHistoricalStats(server, ctx)
   assignQueueModerator(server, ctx)
   getQueueAssignments(server, ctx)
   getLatestReport(server, ctx)

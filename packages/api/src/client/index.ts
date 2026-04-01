@@ -303,6 +303,7 @@ import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 import * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
@@ -636,6 +637,7 @@ export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 export * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+export * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
 export * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 export * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
@@ -5618,6 +5620,18 @@ export class ToolsOzoneReportNS {
   ): Promise<ToolsOzoneReportGetAssignments.Response> {
     return this._client.call(
       'tools.ozone.report.getAssignments',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getHistoricalStats(
+    params?: ToolsOzoneReportGetHistoricalStats.QueryParams,
+    opts?: ToolsOzoneReportGetHistoricalStats.CallOptions,
+  ): Promise<ToolsOzoneReportGetHistoricalStats.Response> {
+    return this._client.call(
+      'tools.ozone.report.getHistoricalStats',
       params,
       undefined,
       opts,

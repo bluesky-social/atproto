@@ -1,0 +1,51 @@
+{
+  "lexicon": 1,
+  "id": "tools.ozone.report.getHistoricalStats",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get historical report statistics. Filter by queue, moderator, or report type. Omit filter parameters for aggregate stats.",
+      "parameters": {
+        "type": "params",
+        "required": ["timeframe"],
+        "properties": {
+          "timeframe": {
+            "type": "string",
+            "knownValues": ["day", "week"],
+            "description": "Time window for the statistics."
+          },
+          "queueId": {
+            "type": "integer",
+            "description": "Filter stats by queue. Use -1 for unqueued reports."
+          },
+          "moderatorDid": {
+            "type": "string",
+            "format": "did",
+            "description": "Filter stats by moderator DID."
+          },
+          "reportTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Filter stats by report types."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["stats"],
+          "properties": {
+            "stats": {
+              "type": "ref",
+              "ref": "tools.ozone.report.defs#historicalStats",
+              "description": "Statistics for the requested filter and timeframe."
+            }
+          }
+        }
+      }
+    }
+  }
+}

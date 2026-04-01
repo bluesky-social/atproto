@@ -252,6 +252,7 @@ import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQue
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
 import * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
@@ -3697,6 +3698,18 @@ export class ToolsOzoneReportNS {
     >,
   ) {
     const nsid = 'tools.ozone.report.getAssignments' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getHistoricalStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetHistoricalStats.QueryParams,
+      ToolsOzoneReportGetHistoricalStats.HandlerInput,
+      ToolsOzoneReportGetHistoricalStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getHistoricalStats' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

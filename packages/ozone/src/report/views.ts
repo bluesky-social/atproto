@@ -226,3 +226,17 @@ export function viewLiveStats(
     lastUpdated: row?.computedAt,
   }
 }
+
+export function viewHistoricalStats(
+  row?: Selectable<ReportStat>,
+): ToolsOzoneReportDefs.HistoricalStats {
+  return {
+    pendingCount: row?.pendingCount ?? undefined,
+    actionedCount: row?.actionedCount ?? undefined,
+    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    inboundCount: row?.inboundCount ?? undefined,
+    actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    lastUpdated: row?.computedAt,
+  }
+}

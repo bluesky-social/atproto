@@ -510,6 +510,41 @@
         }
       }
     },
+    "historicalStats": {
+      "description": "Historical statistics for reports over a given timeframe, filterable by queue, moderator, or report type.",
+      "type": "object",
+      "properties": {
+        "pendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'open' status."
+        },
+        "actionedCount": {
+          "type": "integer",
+          "description": "Number of reports in 'closed' status within the timeframe."
+        },
+        "escalatedPendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'escalated' status within the timeframe."
+        },
+        "inboundCount": {
+          "type": "integer",
+          "description": "Reports received within the timeframe."
+        },
+        "actionRate": {
+          "type": "integer",
+          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer."
+        },
+        "avgHandlingTimeSec": {
+          "type": "integer",
+          "description": "Average time in seconds from report creation (or moderator assignment) to close."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When these statistics were last computed."
+        }
+      }
+    },
     "assignmentView": {
       "type": "object",
       "required": ["id", "did", "reportId", "startAt"],
