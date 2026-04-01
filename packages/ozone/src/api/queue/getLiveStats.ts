@@ -9,7 +9,9 @@ export default function (server: Server, ctx: AppContext) {
       const { queueId } = params
 
       const reportStatsService = ctx.reportStatsService(ctx.db)
-      const row = await reportStatsService.getLiveQueueStats(queueId)
+      const row = queueId
+        ? await reportStatsService.getLiveQueueStats(queueId)
+        : await reportStatsService.getLiveAggregateStats()
 
       return {
         encoding: 'application/json' as const,

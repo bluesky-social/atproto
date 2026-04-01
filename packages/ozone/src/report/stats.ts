@@ -2,6 +2,7 @@ import { Selectable, sql } from 'kysely'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
 import { Database } from '../db'
 import { ReportStat } from '../db/schema/report_stat'
+import { jsonb } from '../db/types'
 import { dbLogger } from '../logger'
 
 const REPORT_STAT_LIVE_TTL = 15 * MINUTE
@@ -15,6 +16,7 @@ export type ReportStatGroup = {
   timeframe: ReportStatTimeframe
   queueId: number | null
   moderatorDid: string | null
+  reportTypes: string[] | null
 }
 export type QueueStatistics = {
   inboundCount: number
@@ -92,6 +94,11 @@ export class ReportStatsService {
         'tools.ozone.team.defs#roleTriage',
       ])
       .execute()
+    const reportTypes = await this.db.db
+      .selectFrom('report')
+      .select('reportType')
+      .distinct()
+      .execute()
 
     // live
     /// aggregate
@@ -100,14 +107,16 @@ export class ReportStatsService {
       timeframe: 'day',
       queueId: null,
       moderatorDid: null,
+      reportTypes: null,
     })
-    /// per-queue
+    /// per queue
     queues.map((queue) =>
       groups.push({
         mode: 'live',
         timeframe: 'day',
         queueId: queue.id,
         moderatorDid: null,
+        reportTypes: null,
       }),
     )
     /// unqueued
@@ -116,16 +125,53 @@ export class ReportStatsService {
       timeframe: 'day',
       queueId: -1,
       moderatorDid: null,
+      reportTypes: null,
     })
-    /// per-moderator
+    /// per moderator
     members.map((member) =>
       groups.push({
         mode: 'live',
         timeframe: 'day',
         queueId: null,
         moderatorDid: member.did,
+        reportTypes: null,
       }),
     )
+    /// per report type
+    for (const { reportType } of reportTypes) {
+      groups.push({
+        mode: 'live',
+        timeframe: 'day',
+        queueId: null,
+        moderatorDid: null,
+        reportTypes: [reportType],
+      })
+      queues.map((queue) =>
+        groups.push({
+          mode: 'live',
+          timeframe: 'day',
+          queueId: queue.id,
+          moderatorDid: null,
+          reportTypes: [reportType],
+        }),
+      )
+      groups.push({
+        mode: 'live',
+        timeframe: 'day',
+        queueId: -1,
+        moderatorDid: null,
+        reportTypes: [reportType],
+      })
+      members.map((member) =>
+        groups.push({
+          mode: 'live',
+          timeframe: 'day',
+          queueId: null,
+          moderatorDid: member.did,
+          reportTypes: [reportType],
+        }),
+      )
+    }
 
     // historical
     /// aggregate
@@ -134,14 +180,16 @@ export class ReportStatsService {
       timeframe: 'day',
       queueId: null,
       moderatorDid: null,
+      reportTypes: null,
     })
-    /// per-queue
+    /// per queue
     queues.map((queue) =>
       groups.push({
         mode: 'historical',
         timeframe: 'day',
         queueId: queue.id,
         moderatorDid: null,
+        reportTypes: null,
       }),
     )
     /// unqueued
@@ -150,16 +198,53 @@ export class ReportStatsService {
       timeframe: 'day',
       queueId: -1,
       moderatorDid: null,
+      reportTypes: null,
     })
-    /// per-moderator
+    /// per moderator
     members.map((member) =>
       groups.push({
         mode: 'historical',
         timeframe: 'day',
         queueId: null,
         moderatorDid: member.did,
+        reportTypes: null,
       }),
     )
+    /// per report type
+    for (const { reportType } of reportTypes) {
+      groups.push({
+        mode: 'historical',
+        timeframe: 'day',
+        queueId: null,
+        moderatorDid: null,
+        reportTypes: [reportType],
+      })
+      queues.map((queue) =>
+        groups.push({
+          mode: 'historical',
+          timeframe: 'day',
+          queueId: queue.id,
+          moderatorDid: null,
+          reportTypes: [reportType],
+        }),
+      )
+      groups.push({
+        mode: 'historical',
+        timeframe: 'day',
+        queueId: -1,
+        moderatorDid: null,
+        reportTypes: [reportType],
+      })
+      members.map((member) =>
+        groups.push({
+          mode: 'historical',
+          timeframe: 'day',
+          queueId: null,
+          moderatorDid: member.did,
+          reportTypes: [reportType],
+        }),
+      )
+    }
 
     return groups
   }
@@ -197,7 +282,7 @@ export class ReportStatsService {
     group: ReportStatGroup,
     stats: ReportStatistics,
   ): Promise<Selectable<ReportStat>> {
-    const { queueId, mode, timeframe, moderatorDid } = group
+    const { queueId, mode, timeframe, moderatorDid, reportTypes } = group
     const computedAt = new Date().toISOString()
 
     const pendingCount =
@@ -222,6 +307,13 @@ export class ReportStatsService {
       } else {
         del = del.where('moderatorDid', 'is', null)
       }
+      if (reportTypes !== null) {
+        del = del.where(
+          sql`"reportTypes"::jsonb = ${jsonb(reportTypes)}::jsonb`,
+        )
+      } else {
+        del = del.where('reportTypes', 'is', null)
+      }
       await del.execute()
     }
 
@@ -232,6 +324,7 @@ export class ReportStatsService {
         timeframe,
         queueId,
         moderatorDid,
+        reportTypes: reportTypes !== null ? jsonb(reportTypes) : null,
         inboundCount: stats.inboundCount ?? null,
         pendingCount,
         actionedCount: stats.actionedCount ?? null,
@@ -259,19 +352,22 @@ export class ReportStatsService {
   private async computeAggregate(
     group: ReportStatGroup,
   ): Promise<AggregateStatistics> {
-    const { timeframe } = group
+    const { timeframe, reportTypes } = group
 
     const timestamp =
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    const allTime = await this.db.db
+    let allTimeQb = this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
       .where('status', '!=', 'closed')
-      .executeTakeFirst()
+    if (reportTypes !== null) {
+      allTimeQb = allTimeQb.where('reportType', 'in', reportTypes)
+    }
+    const allTime = await allTimeQb.executeTakeFirst()
 
-    const createdAt = await this.db.db
+    let createdAtQb = this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
@@ -286,7 +382,10 @@ export class ReportStatsService {
         ),
       ])
       .where('createdAt', '>', cutoff)
-      .executeTakeFirst()
+    if (reportTypes !== null) {
+      createdAtQb = createdAtQb.where('reportType', 'in', reportTypes)
+    }
+    const createdAt = await createdAtQb.executeTakeFirst()
 
     const inboundCount = createdAt?.inboundCount ?? 0
     const pendingCount = allTime?.pendingCount ?? 0
@@ -308,7 +407,7 @@ export class ReportStatsService {
     }
   }
   private async computeQueue(group: ReportStatGroup): Promise<QueueStatistics> {
-    const { queueId, timeframe } = group
+    const { queueId, timeframe, reportTypes } = group
     if (queueId === null) {
       throw new Error('Queue ID is required for queue stats')
     }
@@ -317,14 +416,17 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    const allTime = await this.db.db
+    let allTimeQb = this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
       .where('status', '!=', 'closed')
       .where('queueId', '=', queueId)
-      .executeTakeFirst()
+    if (reportTypes !== null) {
+      allTimeQb = allTimeQb.where('reportType', 'in', reportTypes)
+    }
+    const allTime = await allTimeQb.executeTakeFirst()
 
-    const createdAt = await this.db.db
+    let createdAtQb = this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
@@ -340,7 +442,10 @@ export class ReportStatsService {
       ])
       .where('createdAt', '>', cutoff)
       .where('queueId', '=', queueId)
-      .executeTakeFirst()
+    if (reportTypes !== null) {
+      createdAtQb = createdAtQb.where('reportType', 'in', reportTypes)
+    }
+    const createdAt = await createdAtQb.executeTakeFirst()
 
     const inboundCount = createdAt?.inboundCount ?? 0
     const pendingCount = allTime?.pendingCount ?? 0
@@ -364,7 +469,7 @@ export class ReportStatsService {
   private async computeModerator(
     group: ReportStatGroup,
   ): Promise<ModeratorStatistics> {
-    const { timeframe, moderatorDid } = group
+    const { timeframe, moderatorDid, reportTypes } = group
 
     if (!moderatorDid) {
       throw new Error('Moderator DID is required for moderator stats')
@@ -374,7 +479,7 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    const createdAt = await this.db.db
+    let qb = this.db.db
       .selectFrom('report as r')
       .innerJoin('moderator_assignment as ma', (join) =>
         join
@@ -392,7 +497,10 @@ export class ReportStatsService {
         ),
       ])
       .where('r.createdAt', '>', cutoff)
-      .executeTakeFirst()
+    if (reportTypes !== null) {
+      qb = qb.where('r.reportType', 'in', reportTypes)
+    }
+    const createdAt = await qb.executeTakeFirst()
 
     const inboundCount = createdAt?.inboundCount ?? 0
     const actionedCount = createdAt?.actionedCount ?? 0
@@ -426,19 +534,51 @@ export class ReportStatsService {
     } else {
       qb = qb.where('moderatorDid', 'is', null)
     }
+    if (group.reportTypes !== null) {
+      qb = qb.where(
+        sql`"reportTypes"::jsonb = ${jsonb(group.reportTypes)}::jsonb`,
+      )
+    } else {
+      qb = qb.where('reportTypes', 'is', null)
+    }
 
     return qb.executeTakeFirst()
   }
 
+  /** Get live aggregate statistics. */
+  async getLiveAggregateStats(): Promise<Selectable<ReportStat> | undefined> {
+    return this.getLatestStats({
+      mode: 'live',
+      timeframe: 'day',
+      queueId: null,
+      moderatorDid: null,
+      reportTypes: null,
+    })
+  }
+
   /** Get live daily statistics for a queue. */
   async getLiveQueueStats(
-    queueId?: number,
+    queueId: number,
   ): Promise<Selectable<ReportStat> | undefined> {
     return this.getLatestStats({
       mode: 'live',
       timeframe: 'day',
       queueId: queueId ?? null,
       moderatorDid: null,
+      reportTypes: null,
+    })
+  }
+
+  /** Get live daily statistics for a report type. */
+  async getLiveReportTypeStats(
+    reportTypes: string[],
+  ): Promise<Selectable<ReportStat> | undefined> {
+    return this.getLatestStats({
+      mode: 'live',
+      timeframe: 'day',
+      queueId: null,
+      moderatorDid: null,
+      reportTypes: reportTypes ?? null,
     })
   }
 
@@ -451,6 +591,7 @@ export class ReportStatsService {
       timeframe: 'day',
       queueId: null,
       moderatorDid,
+      reportTypes: null,
     })
   }
 }

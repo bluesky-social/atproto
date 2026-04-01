@@ -3,10 +3,18 @@ import { Kysely, sql } from 'kysely'
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable('report_stat')
+
+    // metadata
     .addColumn('id', 'serial', (col) => col.primaryKey())
-    .addColumn('queueId', 'integer') // NULL = aggregate across all queues
+    .addColumn('computedAt', 'varchar', (col) => col.notNull())
+
+    // group
     .addColumn('mode', 'varchar', (col) => col.notNull()) // 'live' or 'historical'
     .addColumn('timeframe', 'varchar', (col) => col.notNull()) // 'day' or 'week'
+    .addColumn('queueId', 'integer') // NULL = aggregate across all queues
+    .addColumn('reportTypes', 'jsonb') // NULL = aggregate across all report types
+
+    // stats
     .addColumn('inboundCount', 'integer')
     .addColumn('pendingCount', 'integer')
     .addColumn('actionedCount', 'integer')
@@ -14,21 +22,20 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('actionRate', 'integer')
     .addColumn('moderatorDid', 'varchar')
     .addColumn('avgHandlingTimeSec', 'integer')
-    .addColumn('computedAt', 'varchar', (col) => col.notNull())
     .execute()
 
   // queue/aggregate statistics
   await db.schema
     .createIndex('idx_report_stat_queue')
     .on('report_stat')
-    .columns(['mode', 'timeframe', 'queueId', 'computedAt'])
+    .columns(['mode', 'timeframe', 'queueId', 'reportTypes', 'computedAt'])
     .execute()
 
   // moderator statistics
   await db.schema
     .createIndex('idx_report_stat_moderator')
     .on('report_stat')
-    .columns(['mode', 'timeframe', 'moderatorDid', 'computedAt'])
+    .columns(['mode', 'timeframe', 'moderatorDid', 'reportTypes', 'computedAt'])
     .execute()
 }
 

@@ -361,4 +361,48 @@ describe('live', () => {
     expect(stats.escalatedPendingCount).toBeUndefined()
     expect(stats.pendingCount).toBeUndefined()
   })
+
+  it('computes per-reportType aggregate stats', async () => {
+    const statsService = network.ozone.ctx.reportStatsService(
+      network.ozone.ctx.db,
+    )
+    await statsService.materializeAll({ force: true })
+
+    const spamStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonSpam',
+    ])
+    const harassmentStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonHarassment',
+    ])
+    const allStats = await statsService.getLiveQueueStats()
+
+    // Spam aggregate should only count spam reports
+    expect(spamStats).toBeDefined()
+    expect(spamStats!.inboundCount).toBeGreaterThanOrEqual(1)
+
+    // Harassment aggregate should only count harassment reports
+    expect(harassmentStats).toBeDefined()
+    expect(harassmentStats!.inboundCount).toBeGreaterThanOrEqual(1)
+
+    // All-types aggregate should be >= sum of individual types
+    expect(allStats).toBeDefined()
+    expect(allStats!.inboundCount).toBeGreaterThanOrEqual(
+      spamStats!.inboundCount! + harassmentStats!.inboundCount!,
+    )
+  })
+
+  it('null reportTypes returns same as all-types aggregate', async () => {
+    const statsService = network.ozone.ctx.reportStatsService(
+      network.ozone.ctx.db,
+    )
+    await statsService.materializeAll({ force: true })
+
+    // Calling without reportTypes should return all-types aggregate
+    const viaApi = await getLiveQueueStats()
+    const viaService = await statsService.getLiveQueueStats()
+
+    expect(viaService).toBeDefined()
+    expect(viaService!.inboundCount).toBe(viaApi.inboundCount)
+    expect(viaService!.pendingCount).toBe(viaApi.pendingCount)
+  })
 })
