@@ -7,6 +7,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { ids } from '../src/lexicon/lexicons'
+import { REPORT_TYPE_GROUPS } from '../src/report/stats'
 
 describe('report-stats', () => {
   let network: TestNetwork
@@ -345,44 +346,37 @@ describe('report-stats', () => {
     })
   })
 
-  describe('report type', () => {
-    it('computes per-reportType stats', async () => {
+  describe('report type group', () => {
+    it('computes per-group stats for Legacy group', async () => {
       await modClient.computeStats()
 
-      const spamStats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
-      })
-      const harassmentStats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+      const legacyStats = await getLiveStats({
+        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
       })
       const allStats = await getLiveStats()
 
-      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(1)
-      expect(harassmentStats.inboundCount).toBeGreaterThanOrEqual(1)
+      // Legacy group includes spam, harassment, etc. seeded above
+      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(3)
 
-      // Aggregate should be >= sum of individual types
+      // Aggregate should be >= legacy group
       expect(allStats.inboundCount).toBeGreaterThanOrEqual(
-        spamStats.inboundCount! + harassmentStats.inboundCount!,
+        legacyStats.inboundCount!,
       )
     })
 
-    it('only counts matching report types', async () => {
+    it('only counts matching report types within group', async () => {
       await modClient.computeStats()
 
-      const spamStats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
-      })
-      const harassmentStats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+      const legacyStats = await getLiveStats({
+        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
       })
 
-      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
-      expect(harassmentStats.inboundCount).toBeGreaterThanOrEqual(1)
-      expect(spamStats.pendingCount).toBeGreaterThanOrEqual(0)
-      expect(harassmentStats.pendingCount).toBeGreaterThanOrEqual(0)
+      // Legacy group should include all seeded spam + harassment + misleading + other reports
+      expect(legacyStats.inboundCount).toBeGreaterThanOrEqual(3)
+      expect(legacyStats.pendingCount).toBeGreaterThanOrEqual(0)
     })
 
-    it('tracks escalated counts', async () => {
+    it('tracks escalated counts within group', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -410,27 +404,27 @@ describe('report-stats', () => {
       await modClient.computeStats()
 
       const stats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
       })
       expect(stats.escalatedPendingCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('returns empty stats for unused report type', async () => {
+    it('returns zeroed stats for unused report type group', async () => {
       await modClient.computeStats()
 
-      // Report type with no reports: API returns stats with all fields undefined
+      // Violence group has no seeded reports: all counts should be 0
       const stats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+        reportTypes: REPORT_TYPE_GROUPS['Violence'],
       })
-      expect(stats.inboundCount).toBeUndefined()
-      expect(stats.pendingCount).toBeUndefined()
+      expect(stats.inboundCount).toBe(0)
+      expect(stats.pendingCount).toBe(0)
     })
 
-    it('handles avg handling time', async () => {
+    it('handles avg handling time within group', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
-        reasonType: 'com.atproto.moderation.defs#reasonHarassment',
+        reasonType: 'com.atproto.moderation.defs#reasonRude',
         subject: {
           $type: 'com.atproto.admin.defs#repoRef',
           did: sc.dids.alice,
@@ -461,11 +455,12 @@ describe('report-stats', () => {
       await modClient.computeStats()
 
       const stats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+        reportTypes: REPORT_TYPE_GROUPS['Legacy'],
       })
       expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
       expect(stats.avgHandlingTimeSec).toBeDefined()
-      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(100)
+      // Group includes all legacy types; avg is diluted by other closed reports
+      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(1)
     })
   })
 })

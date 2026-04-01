@@ -6,6 +6,80 @@ import { ReportStat } from '../db/schema/report_stat'
 import { jsonb } from '../db/types'
 import { dbLogger } from '../logger'
 
+/**
+ * Grouped report types. Stats are computed per group rather than per individual report type.
+ */
+export const REPORT_TYPE_GROUPS: Record<string, string[]> = {
+  Legacy: [
+    'com.atproto.moderation.defs#reasonSpam',
+    'com.atproto.moderation.defs#reasonViolation',
+    'com.atproto.moderation.defs#reasonMisleading',
+    'com.atproto.moderation.defs#reasonSexual',
+    'com.atproto.moderation.defs#reasonRude',
+    'com.atproto.moderation.defs#reasonOther',
+    'com.atproto.moderation.defs#reasonAppeal',
+  ],
+  Appeal: ['tools.ozone.report.defs#reasonAppeal'],
+  Violence: [
+    'tools.ozone.report.defs#reasonViolenceAnimalWelfare',
+    'tools.ozone.report.defs#reasonViolenceThreats',
+    'tools.ozone.report.defs#reasonViolenceGraphicContent',
+    'tools.ozone.report.defs#reasonViolenceSelfHarm',
+    'tools.ozone.report.defs#reasonViolenceGlorification',
+    'tools.ozone.report.defs#reasonViolenceExtremistContent',
+    'tools.ozone.report.defs#reasonViolenceTrafficking',
+    'tools.ozone.report.defs#reasonViolenceOther',
+  ],
+  Sexual: [
+    'tools.ozone.report.defs#reasonSexualAbuseContent',
+    'tools.ozone.report.defs#reasonSexualNCII',
+    'tools.ozone.report.defs#reasonSexualSextortion',
+    'tools.ozone.report.defs#reasonSexualDeepfake',
+    'tools.ozone.report.defs#reasonSexualAnimal',
+    'tools.ozone.report.defs#reasonSexualUnlabeled',
+    'tools.ozone.report.defs#reasonSexualOther',
+  ],
+  'Child Safety': [
+    'tools.ozone.report.defs#reasonChildSafetyCSAM',
+    'tools.ozone.report.defs#reasonChildSafetyGroom',
+    'tools.ozone.report.defs#reasonChildSafetyMinorPrivacy',
+    'tools.ozone.report.defs#reasonChildSafetyEndangerment',
+    'tools.ozone.report.defs#reasonChildSafetyHarassment',
+    'tools.ozone.report.defs#reasonChildSafetyPromotion',
+    'tools.ozone.report.defs#reasonChildSafetyOther',
+  ],
+  Harassment: [
+    'tools.ozone.report.defs#reasonHarassmentTroll',
+    'tools.ozone.report.defs#reasonHarassmentTargeted',
+    'tools.ozone.report.defs#reasonHarassmentHateSpeech',
+    'tools.ozone.report.defs#reasonHarassmentDoxxing',
+    'tools.ozone.report.defs#reasonHarassmentOther',
+  ],
+  Misleading: [
+    'tools.ozone.report.defs#reasonMisleadingBot',
+    'tools.ozone.report.defs#reasonMisleadingImpersonation',
+    'tools.ozone.report.defs#reasonMisleadingSpam',
+    'tools.ozone.report.defs#reasonMisleadingScam',
+    'tools.ozone.report.defs#reasonMisleadingSyntheticContent',
+    'tools.ozone.report.defs#reasonMisleadingMisinformation',
+    'tools.ozone.report.defs#reasonMisleadingOther',
+  ],
+  'Rule Violations': [
+    'tools.ozone.report.defs#reasonRuleSiteSecurity',
+    'tools.ozone.report.defs#reasonRuleStolenContent',
+    'tools.ozone.report.defs#reasonRuleProhibitedSales',
+    'tools.ozone.report.defs#reasonRuleBanEvasion',
+    'tools.ozone.report.defs#reasonRuleOther',
+  ],
+  Civic: [
+    'tools.ozone.report.defs#reasonCivicElectoralProcess',
+    'tools.ozone.report.defs#reasonCivicDisclosure',
+    'tools.ozone.report.defs#reasonCivicInterference',
+    'tools.ozone.report.defs#reasonCivicMisinformation',
+    'tools.ozone.report.defs#reasonCivicImpersonation',
+  ],
+}
+
 const REPORT_STAT_LIVE_TTL = 15 * MINUTE
 
 export type ReportStatsServiceCreator = (db: Database) => ReportStatsService
@@ -104,12 +178,6 @@ export class ReportStatsService {
         'tools.ozone.team.defs#roleTriage',
       ])
       .execute()
-    const reportTypes = await this.db.db
-      .selectFrom('report')
-      .select('reportType')
-      .distinct()
-      .execute()
-
     // live
     /// aggregate
     groups.push({
@@ -147,14 +215,14 @@ export class ReportStatsService {
         reportTypes: null,
       }),
     )
-    /// per report type
-    for (const { reportType } of reportTypes) {
+    /// per report type group
+    for (const groupTypes of Object.values(REPORT_TYPE_GROUPS)) {
       groups.push({
         mode: 'live',
         timeframe: 'day',
         queueId: null,
         moderatorDid: null,
-        reportTypes: [reportType],
+        reportTypes: groupTypes,
       })
     }
 
@@ -195,14 +263,14 @@ export class ReportStatsService {
         reportTypes: null,
       }),
     )
-    /// per report type
-    for (const { reportType } of reportTypes) {
+    /// per report type group
+    for (const groupTypes of Object.values(REPORT_TYPE_GROUPS)) {
       groups.push({
         mode: 'historical',
         timeframe: 'day',
         queueId: null,
         moderatorDid: null,
-        reportTypes: [reportType],
+        reportTypes: groupTypes,
       })
     }
 
