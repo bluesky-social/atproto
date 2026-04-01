@@ -18,6 +18,14 @@ export type ReportStatGroup = {
   moderatorDid: string | null
   reportTypes: string[] | null
 }
+export type AggregateStatistics = {
+  inboundCount: number
+  pendingCount: number
+  actionedCount: number
+  escalatedCount: number
+  actionRate: number
+  avgHandlingTimeSec?: number
+}
 export type QueueStatistics = {
   inboundCount: number
   pendingCount: number
@@ -31,7 +39,7 @@ export type ModeratorStatistics = {
   actionedCount: number
   avgHandlingTimeSec?: number
 }
-export type AggregateStatistics = {
+export type ReportTypeStatistics = {
   inboundCount: number
   pendingCount: number
   actionedCount: number
@@ -43,6 +51,7 @@ export type ReportStatistics =
   | QueueStatistics
   | ModeratorStatistics
   | AggregateStatistics
+  | ReportTypeStatistics
 
 export class ReportStatsService {
   constructor(public db: Database) {}
@@ -341,8 +350,23 @@ export class ReportStatsService {
   private async computeGroup(
     group: ReportStatGroup,
   ): Promise<ReportStatistics> {
+    // validation
+    const filters = [
+      group.queueId,
+      group.moderatorDid,
+      group.reportTypes,
+    ].filter((x) => x !== null)
+    if (filters.length > 1) {
+      throw new Error(
+        'Only one of queueId, moderatorDid, or reportTypes can be set',
+      )
+    }
+
+    // compute
     if (group.moderatorDid) {
       return this.computeModerator(group)
+    } else if (group.reportTypes !== null && group.queueId === null) {
+      return this.computeReportType(group)
     } else if (group.queueId === null) {
       return this.computeAggregate(group)
     } else {
@@ -352,22 +376,19 @@ export class ReportStatsService {
   private async computeAggregate(
     group: ReportStatGroup,
   ): Promise<AggregateStatistics> {
-    const { timeframe, reportTypes } = group
+    const { timeframe } = group
 
     const timestamp =
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    let allTimeQb = this.db.db
+    const allTime = await this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
       .where('status', '!=', 'closed')
-    if (reportTypes !== null) {
-      allTimeQb = allTimeQb.where('reportType', 'in', reportTypes)
-    }
-    const allTime = await allTimeQb.executeTakeFirst()
+      .executeTakeFirst()
 
-    let createdAtQb = this.db.db
+    const createdAt = await this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
@@ -382,10 +403,7 @@ export class ReportStatsService {
         ),
       ])
       .where('createdAt', '>', cutoff)
-    if (reportTypes !== null) {
-      createdAtQb = createdAtQb.where('reportType', 'in', reportTypes)
-    }
-    const createdAt = await createdAtQb.executeTakeFirst()
+      .executeTakeFirst()
 
     const inboundCount = createdAt?.inboundCount ?? 0
     const pendingCount = allTime?.pendingCount ?? 0
@@ -407,7 +425,7 @@ export class ReportStatsService {
     }
   }
   private async computeQueue(group: ReportStatGroup): Promise<QueueStatistics> {
-    const { queueId, timeframe, reportTypes } = group
+    const { queueId, timeframe } = group
     if (queueId === null) {
       throw new Error('Queue ID is required for queue stats')
     }
@@ -416,17 +434,14 @@ export class ReportStatsService {
       timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
     const cutoff = new Date(timestamp).toISOString()
 
-    let allTimeQb = this.db.db
+    const allTime = await this.db.db
       .selectFrom('report')
       .select(sql<number>`count(*)`.as('pendingCount'))
       .where('status', '!=', 'closed')
       .where('queueId', '=', queueId)
-    if (reportTypes !== null) {
-      allTimeQb = allTimeQb.where('reportType', 'in', reportTypes)
-    }
-    const allTime = await allTimeQb.executeTakeFirst()
+      .executeTakeFirst()
 
-    let createdAtQb = this.db.db
+    const createdAt = await this.db.db
       .selectFrom('report')
       .select([
         sql<number>`count(*)`.as('inboundCount'),
@@ -442,10 +457,63 @@ export class ReportStatsService {
       ])
       .where('createdAt', '>', cutoff)
       .where('queueId', '=', queueId)
-    if (reportTypes !== null) {
-      createdAtQb = createdAtQb.where('reportType', 'in', reportTypes)
+      .executeTakeFirst()
+
+    const inboundCount = createdAt?.inboundCount ?? 0
+    const pendingCount = allTime?.pendingCount ?? 0
+    const actionedCount = createdAt?.actionedCount ?? 0
+    const escalatedCount = createdAt?.escalatedCount ?? 0
+    const actionRate =
+      inboundCount > 0 ? Math.round((actionedCount / inboundCount) * 100) : 0
+    const avgHandlingTimeSec = createdAt?.avgHandlingTimeSec
+      ? Math.round(createdAt.avgHandlingTimeSec)
+      : undefined
+
+    return {
+      inboundCount,
+      pendingCount,
+      actionedCount,
+      escalatedCount,
+      actionRate,
+      avgHandlingTimeSec,
     }
-    const createdAt = await createdAtQb.executeTakeFirst()
+  }
+  private async computeReportType(
+    group: ReportStatGroup,
+  ): Promise<ReportTypeStatistics> {
+    const { timeframe, reportTypes } = group
+    if (reportTypes === null) {
+      throw new Error('Report types are required for report type stats')
+    }
+
+    const timestamp =
+      timeframe === 'week' ? Date.now() - 7 * DAY : Date.now() - DAY
+    const cutoff = new Date(timestamp).toISOString()
+
+    const allTime = await this.db.db
+      .selectFrom('report')
+      .select(sql<number>`count(*)`.as('pendingCount'))
+      .where('status', '!=', 'closed')
+      .where('reportType', 'in', reportTypes)
+      .executeTakeFirst()
+
+    const createdAt = await this.db.db
+      .selectFrom('report')
+      .select([
+        sql<number>`count(*)`.as('inboundCount'),
+        sql<number>`count(*) filter (where "status" = 'closed' and "updatedAt" > ${cutoff})`.as(
+          'actionedCount',
+        ),
+        sql<number>`count(*) filter (where "status" = 'escalated' and "updatedAt" > ${cutoff})`.as(
+          'escalatedCount',
+        ),
+        sql<number>`avg(extract(epoch from ("closedAt"::timestamp - "createdAt"::timestamp)) ) filter (where "status" = 'closed' and "closedAt" is not null and "updatedAt" > ${cutoff})`.as(
+          'avgHandlingTimeSec',
+        ),
+      ])
+      .where('createdAt', '>', cutoff)
+      .where('reportType', 'in', reportTypes)
+      .executeTakeFirst()
 
     const inboundCount = createdAt?.inboundCount ?? 0
     const pendingCount = allTime?.pendingCount ?? 0
@@ -578,7 +646,7 @@ export class ReportStatsService {
       timeframe: 'day',
       queueId: null,
       moderatorDid: null,
-      reportTypes: reportTypes ?? null,
+      reportTypes,
     })
   }
 

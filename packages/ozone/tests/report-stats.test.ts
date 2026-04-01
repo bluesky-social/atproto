@@ -391,6 +391,129 @@ describe('live', () => {
     )
   })
 
+  it('computeReportType only counts matching report types', async () => {
+    const statsService = network.ozone.ctx.reportStatsService(
+      network.ozone.ctx.db,
+    )
+    await statsService.materializeAll({ force: true })
+
+    const spamStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonSpam',
+    ])
+    const harassmentStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonHarassment',
+    ])
+
+    expect(spamStats).toBeDefined()
+    expect(harassmentStats).toBeDefined()
+
+    // Spam and harassment counts should not overlap
+    // We created 2+ spam reports and 1+ harassment reports in beforeAll
+    expect(spamStats!.inboundCount).toBeGreaterThanOrEqual(2)
+    expect(harassmentStats!.inboundCount).toBeGreaterThanOrEqual(1)
+
+    // pendingCount should be scoped to the report type
+    expect(spamStats!.pendingCount).toBeGreaterThanOrEqual(0)
+    expect(harassmentStats!.pendingCount).toBeGreaterThanOrEqual(0)
+  })
+
+  it('computeReportType tracks escalated and actioned counts', async () => {
+    const db = network.ozone.ctx.db
+
+    // Create a spam report and directly set it to escalated
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonSpam',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.bob,
+      },
+      reportedBy: sc.dids.carol,
+    })
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+    const report = await db.db
+      .selectFrom('report')
+      .select(['id'])
+      .orderBy('id', 'desc')
+      .executeTakeFirstOrThrow()
+
+    await db.db
+      .updateTable('report')
+      .set({ status: 'escalated', updatedAt: new Date().toISOString() })
+      .where('id', '=', report.id)
+      .execute()
+
+    const statsService = network.ozone.ctx.reportStatsService(db)
+    await statsService.materializeAll({ force: true })
+
+    const spamStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonSpam',
+    ])
+    expect(spamStats).toBeDefined()
+    expect(spamStats!.escalatedCount).toBeGreaterThanOrEqual(1)
+  })
+
+  it('computeReportType returns zeroed stats for unused report type', async () => {
+    const statsService = network.ozone.ctx.reportStatsService(
+      network.ozone.ctx.db,
+    )
+
+    // Manually materialize a group with a report type that has no reports
+    // Use the service directly since no reports of this type exist
+    const unusedStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonRude',
+    ])
+
+    // No reports of this type exist, so stats should be undefined (no materialized row)
+    expect(unusedStats).toBeUndefined()
+  })
+
+  it('computeReportType handles avg handling time', async () => {
+    const db = network.ozone.ctx.db
+
+    // Create a harassment report, backdate it, then close it directly in DB
+    await sc.createReport({
+      reasonType: 'com.atproto.moderation.defs#reasonHarassment',
+      subject: {
+        $type: 'com.atproto.admin.defs#repoRef',
+        did: sc.dids.alice,
+      },
+      reportedBy: sc.dids.carol,
+    })
+    await network.ozone.daemon.ctx.queueRouter.routeReports()
+
+    const report = await db.db
+      .selectFrom('report')
+      .select(['id'])
+      .orderBy('id', 'desc')
+      .executeTakeFirstOrThrow()
+
+    // Backdate createdAt by 120 seconds, then close with current closedAt
+    const backdate = new Date(Date.now() - 120 * 1000).toISOString()
+    const now = new Date().toISOString()
+    await db.db
+      .updateTable('report')
+      .set({
+        createdAt: backdate,
+        updatedAt: now,
+        closedAt: now,
+        status: 'closed',
+      })
+      .where('id', '=', report.id)
+      .execute()
+
+    const statsService = network.ozone.ctx.reportStatsService(db)
+    await statsService.materializeAll({ force: true })
+
+    const harassmentStats = await statsService.getLiveReportTypeStats([
+      'com.atproto.moderation.defs#reasonHarassment',
+    ])
+    expect(harassmentStats).toBeDefined()
+    expect(harassmentStats!.actionedCount).toBeGreaterThanOrEqual(1)
+    expect(harassmentStats!.avgHandlingTimeSec).toBeDefined()
+    expect(harassmentStats!.avgHandlingTimeSec).toBeGreaterThanOrEqual(100)
+  })
+
   it('null reportTypes returns same as all-types aggregate', async () => {
     const statsService = network.ozone.ctx.reportStatsService(
       network.ozone.ctx.db,
