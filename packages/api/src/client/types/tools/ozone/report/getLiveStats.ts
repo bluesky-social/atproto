@@ -14,16 +14,20 @@ import type * as ToolsOzoneReportDefs from './defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'tools.ozone.report.getLiveModeratorStats'
+const id = 'tools.ozone.report.getLiveStats'
 
 export type QueryParams = {
-  /** DID of the moderator to get statistics for. */
-  moderatorDid: string
+  /** Filter stats by queue. Use -1 for unqueued reports. */
+  queueId?: number
+  /** Filter stats by moderator DID. */
+  moderatorDid?: string
+  /** Filter stats by report types. */
+  reportTypes?: string[]
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  stats: ToolsOzoneReportDefs.ModeratorStats
+  stats: ToolsOzoneReportDefs.LiveStats
 }
 
 export interface CallOptions {

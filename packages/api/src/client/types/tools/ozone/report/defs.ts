@@ -384,33 +384,33 @@ export function validateReportActivityView<V>(v: V) {
   return validate<ReportActivityView & V>(v, id, hashReportActivityView)
 }
 
-/** Statistics across reports for a moderator. */
-export interface ModeratorStats {
-  $type?: 'tools.ozone.report.defs#moderatorStats'
-  /** Number of reports in 'open' status */
+/** Live statistics for reports, filterable by queue, moderator, or report type. */
+export interface LiveStats {
+  $type?: 'tools.ozone.report.defs#liveStats'
+  /** Number of reports in 'open' status. */
   pendingCount?: number
-  /** Number of reports in 'closed' status */
+  /** Number of reports in 'closed' status. */
   actionedCount?: number
-  /** Number of reports in 'escalated' status */
+  /** Number of reports in 'escalated' status. */
   escalatedPendingCount?: number
-  /** Reports assigned to this moderator in the last 24 hours. */
-  assignedCount?: number
-  /** Percentage of reports actioned (actionedCount / assignedCount * 100), rounded to nearest integer. Absent when assignedCount is 0. */
+  /** Reports received in the last 24 hours. */
+  inboundCount?: number
+  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
   actionRate?: number
-  /** Average time in seconds from moderator assignment to report close, for reports closed by this moderator in this period. */
+  /** Average time in seconds from report creation (or moderator assignment) to close. */
   avgHandlingTimeSec?: number
-  /** When these statistics were last computed */
+  /** When these statistics were last computed. */
   lastUpdated?: string
 }
 
-const hashModeratorStats = 'moderatorStats'
+const hashLiveStats = 'liveStats'
 
-export function isModeratorStats<V>(v: V) {
-  return is$typed(v, id, hashModeratorStats)
+export function isLiveStats<V>(v: V) {
+  return is$typed(v, id, hashLiveStats)
 }
 
-export function validateModeratorStats<V>(v: V) {
-  return validate<ModeratorStats & V>(v, id, hashModeratorStats)
+export function validateLiveStats<V>(v: V) {
+  return validate<LiveStats & V>(v, id, hashLiveStats)
 }
 
 export interface AssignmentView {

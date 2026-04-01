@@ -296,7 +296,6 @@ import * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQue
 import * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 import * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 import * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
-import * as ToolsOzoneQueueGetLiveStats from './types/tools/ozone/queue/getLiveStats.js'
 import * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 import * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
@@ -305,7 +304,7 @@ import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/crea
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
-import * as ToolsOzoneReportGetLiveModeratorStats from './types/tools/ozone/report/getLiveModeratorStats.js'
+import * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
@@ -630,7 +629,6 @@ export * as ToolsOzoneQueueCreateQueue from './types/tools/ozone/queue/createQue
 export * as ToolsOzoneQueueDefs from './types/tools/ozone/queue/defs.js'
 export * as ToolsOzoneQueueDeleteQueue from './types/tools/ozone/queue/deleteQueue.js'
 export * as ToolsOzoneQueueGetAssignments from './types/tools/ozone/queue/getAssignments.js'
-export * as ToolsOzoneQueueGetLiveStats from './types/tools/ozone/queue/getLiveStats.js'
 export * as ToolsOzoneQueueListQueues from './types/tools/ozone/queue/listQueues.js'
 export * as ToolsOzoneQueueRouteReports from './types/tools/ozone/queue/routeReports.js'
 export * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQueue.js'
@@ -639,7 +637,7 @@ export * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/crea
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
 export * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
-export * as ToolsOzoneReportGetLiveModeratorStats from './types/tools/ozone/report/getLiveModeratorStats.js'
+export * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 export * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
@@ -5549,18 +5547,6 @@ export class ToolsOzoneQueueNS {
     )
   }
 
-  getLiveStats(
-    params?: ToolsOzoneQueueGetLiveStats.QueryParams,
-    opts?: ToolsOzoneQueueGetLiveStats.CallOptions,
-  ): Promise<ToolsOzoneQueueGetLiveStats.Response> {
-    return this._client.call(
-      'tools.ozone.queue.getLiveStats',
-      params,
-      undefined,
-      opts,
-    )
-  }
-
   listQueues(
     params?: ToolsOzoneQueueListQueues.QueryParams,
     opts?: ToolsOzoneQueueListQueues.CallOptions,
@@ -5649,12 +5635,12 @@ export class ToolsOzoneReportNS {
       })
   }
 
-  getLiveModeratorStats(
-    params?: ToolsOzoneReportGetLiveModeratorStats.QueryParams,
-    opts?: ToolsOzoneReportGetLiveModeratorStats.CallOptions,
-  ): Promise<ToolsOzoneReportGetLiveModeratorStats.Response> {
+  getLiveStats(
+    params?: ToolsOzoneReportGetLiveStats.QueryParams,
+    opts?: ToolsOzoneReportGetLiveStats.CallOptions,
+  ): Promise<ToolsOzoneReportGetLiveStats.Response> {
     return this._client.call(
-      'tools.ozone.report.getLiveModeratorStats',
+      'tools.ozone.report.getLiveStats',
       params,
       undefined,
       opts,

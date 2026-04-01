@@ -213,14 +213,14 @@ export function viewQueueStats(
   }
 }
 
-export function viewModeratorStats(
+export function viewLiveStats(
   row?: Selectable<ReportStat>,
-): ToolsOzoneReportDefs.ModeratorStats {
+): ToolsOzoneReportDefs.LiveStats {
   return {
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
     escalatedPendingCount: row?.escalatedCount ?? undefined,
-    assignedCount: row?.inboundCount ?? undefined,
+    inboundCount: row?.inboundCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
     lastUpdated: row?.computedAt,
