@@ -374,7 +374,7 @@ describe('live', () => {
     const harassmentStats = await statsService.getLiveReportTypeStats([
       'com.atproto.moderation.defs#reasonHarassment',
     ])
-    const allStats = await statsService.getLiveQueueStats()
+    const allStats = await statsService.getLiveAggregateStats()
 
     // Spam aggregate should only count spam reports
     expect(spamStats).toBeDefined()
@@ -399,7 +399,7 @@ describe('live', () => {
 
     // Calling without reportTypes should return all-types aggregate
     const viaApi = await getLiveQueueStats()
-    const viaService = await statsService.getLiveQueueStats()
+    const viaService = await statsService.getLiveAggregateStats()
 
     expect(viaService).toBeDefined()
     expect(viaService!.inboundCount).toBe(viaApi.inboundCount)
