@@ -19909,27 +19909,31 @@ export const schemaDict = {
         },
       },
       historicalStats: {
-        description:
-          'Historical statistics for reports over a given timeframe, filterable by queue, moderator, or report type.',
+        description: 'A single daily snapshot of historical report statistics.',
         type: 'object',
+        required: ['computedAt'],
         properties: {
+          computedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this snapshot was computed.',
+          },
           pendingCount: {
             type: 'integer',
             description: "Number of reports in 'open' status.",
           },
           actionedCount: {
             type: 'integer',
-            description:
-              "Number of reports in 'closed' status within the timeframe.",
+            description: "Number of reports in 'closed' status within the day.",
           },
           escalatedPendingCount: {
             type: 'integer',
             description:
-              "Number of reports in 'escalated' status within the timeframe.",
+              "Number of reports in 'escalated' status within the day.",
           },
           inboundCount: {
             type: 'integer',
-            description: 'Reports received within the timeframe.',
+            description: 'Reports received within the day.',
           },
           actionRate: {
             type: 'integer',
@@ -19940,11 +19944,6 @@ export const schemaDict = {
             type: 'integer',
             description:
               'Average time in seconds from report creation (or moderator assignment) to close.',
-          },
-          lastUpdated: {
-            type: 'string',
-            format: 'datetime',
-            description: 'When these statistics were last computed.',
           },
         },
       },
@@ -20057,16 +20056,10 @@ export const schemaDict = {
       main: {
         type: 'query',
         description:
-          'Get historical report statistics. Filter by queue, moderator, or report type. Omit filter parameters for aggregate stats.',
+          'Get historical daily report statistics. Returns a paginated list of daily stat snapshots, newest first. Filter by queue, moderator, or report type.',
         parameters: {
           type: 'params',
-          required: ['timeframe'],
           properties: {
-            timeframe: {
-              type: 'string',
-              knownValues: ['day', 'week'],
-              description: 'Time window for the statistics.',
-            },
             queueId: {
               type: 'integer',
               description:
@@ -20084,6 +20077,27 @@ export const schemaDict = {
               },
               description: 'Filter stats by report types.',
             },
+            startDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Earliest date to include (inclusive).',
+            },
+            endDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Latest date to include (inclusive).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 30,
+              description: 'Maximum number of entries to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
           },
         },
         output: {
@@ -20093,10 +20107,14 @@ export const schemaDict = {
             required: ['stats'],
             properties: {
               stats: {
-                type: 'ref',
-                ref: 'lex:tools.ozone.report.defs#historicalStats',
-                description:
-                  'Statistics for the requested filter and timeframe.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#historicalStats',
+                },
+              },
+              cursor: {
+                type: 'string',
               },
             },
           },

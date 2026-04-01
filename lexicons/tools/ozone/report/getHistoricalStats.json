@@ -4,16 +4,10 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get historical report statistics. Filter by queue, moderator, or report type. Omit filter parameters for aggregate stats.",
+      "description": "Get historical daily report statistics. Returns a paginated list of daily stat snapshots, newest first. Filter by queue, moderator, or report type.",
       "parameters": {
         "type": "params",
-        "required": ["timeframe"],
         "properties": {
-          "timeframe": {
-            "type": "string",
-            "knownValues": ["day", "week"],
-            "description": "Time window for the statistics."
-          },
           "queueId": {
             "type": "integer",
             "description": "Filter stats by queue. Use -1 for unqueued reports."
@@ -29,6 +23,27 @@
               "type": "string"
             },
             "description": "Filter stats by report types."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Earliest date to include (inclusive)."
+          },
+          "endDate": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Latest date to include (inclusive)."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 30,
+            "description": "Maximum number of entries to return."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor."
           }
         }
       },
@@ -39,9 +54,14 @@
           "required": ["stats"],
           "properties": {
             "stats": {
-              "type": "ref",
-              "ref": "tools.ozone.report.defs#historicalStats",
-              "description": "Statistics for the requested filter and timeframe."
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "tools.ozone.report.defs#historicalStats"
+              }
+            },
+            "cursor": {
+              "type": "string"
             }
           }
         }

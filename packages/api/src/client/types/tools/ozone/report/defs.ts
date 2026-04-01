@@ -413,23 +413,23 @@ export function validateLiveStats<V>(v: V) {
   return validate<LiveStats & V>(v, id, hashLiveStats)
 }
 
-/** Historical statistics for reports over a given timeframe, filterable by queue, moderator, or report type. */
+/** A single daily snapshot of historical report statistics. */
 export interface HistoricalStats {
   $type?: 'tools.ozone.report.defs#historicalStats'
+  /** When this snapshot was computed. */
+  computedAt: string
   /** Number of reports in 'open' status. */
   pendingCount?: number
-  /** Number of reports in 'closed' status within the timeframe. */
+  /** Number of reports in 'closed' status within the day. */
   actionedCount?: number
-  /** Number of reports in 'escalated' status within the timeframe. */
+  /** Number of reports in 'escalated' status within the day. */
   escalatedPendingCount?: number
-  /** Reports received within the timeframe. */
+  /** Reports received within the day. */
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
   actionRate?: number
   /** Average time in seconds from report creation (or moderator assignment) to close. */
   avgHandlingTimeSec?: number
-  /** When these statistics were last computed. */
-  lastUpdated?: string
 }
 
 const hashHistoricalStats = 'historicalStats'

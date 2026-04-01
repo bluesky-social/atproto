@@ -16,19 +16,26 @@ const is$typed = _is$typed,
 const id = 'tools.ozone.report.getHistoricalStats'
 
 export type QueryParams = {
-  /** Time window for the statistics. */
-  timeframe: 'day' | 'week' | (string & {})
   /** Filter stats by queue. Use -1 for unqueued reports. */
   queueId?: number
   /** Filter stats by moderator DID. */
   moderatorDid?: string
   /** Filter stats by report types. */
   reportTypes?: string[]
+  /** Earliest date to include (inclusive). */
+  startDate?: string
+  /** Latest date to include (inclusive). */
+  endDate?: string
+  /** Maximum number of entries to return. */
+  limit: number
+  /** Pagination cursor. */
+  cursor?: string
 }
 export type InputSchema = undefined
 
 export interface OutputSchema {
-  stats: ToolsOzoneReportDefs.HistoricalStats
+  stats: ToolsOzoneReportDefs.HistoricalStats[]
+  cursor?: string
 }
 
 export type HandlerInput = void

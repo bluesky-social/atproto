@@ -1,6 +1,7 @@
 import { Selectable, sql } from 'kysely'
 import { DAY, HOUR, MINUTE } from '@atproto/common'
 import { Database } from '../db'
+import { ComputedAtIdKeyset, paginate } from '../db/pagination'
 import { ReportStat } from '../db/schema/report_stat'
 import { jsonb } from '../db/types'
 import { dbLogger } from '../logger'
@@ -155,31 +156,6 @@ export class ReportStatsService {
         moderatorDid: null,
         reportTypes: [reportType],
       })
-      queues.map((queue) =>
-        groups.push({
-          mode: 'live',
-          timeframe: 'day',
-          queueId: queue.id,
-          moderatorDid: null,
-          reportTypes: [reportType],
-        }),
-      )
-      groups.push({
-        mode: 'live',
-        timeframe: 'day',
-        queueId: -1,
-        moderatorDid: null,
-        reportTypes: [reportType],
-      })
-      members.map((member) =>
-        groups.push({
-          mode: 'live',
-          timeframe: 'day',
-          queueId: null,
-          moderatorDid: member.did,
-          reportTypes: [reportType],
-        }),
-      )
     }
 
     // historical
@@ -228,31 +204,6 @@ export class ReportStatsService {
         moderatorDid: null,
         reportTypes: [reportType],
       })
-      queues.map((queue) =>
-        groups.push({
-          mode: 'historical',
-          timeframe: 'day',
-          queueId: queue.id,
-          moderatorDid: null,
-          reportTypes: [reportType],
-        }),
-      )
-      groups.push({
-        mode: 'historical',
-        timeframe: 'day',
-        queueId: -1,
-        moderatorDid: null,
-        reportTypes: [reportType],
-      })
-      members.map((member) =>
-        groups.push({
-          mode: 'historical',
-          timeframe: 'day',
-          queueId: null,
-          moderatorDid: member.did,
-          reportTypes: [reportType],
-        }),
-      )
     }
 
     return groups
@@ -266,7 +217,7 @@ export class ReportStatsService {
     opts?: { force?: boolean },
   ): Promise<Selectable<ReportStat>> {
     if (!opts?.force) {
-      const cached = await this.getLatestStats(group)
+      const cached = await this.getLiveStats(group)
       if (cached && this.isGroupFresh(cached)) return cached
     }
 
@@ -583,13 +534,13 @@ export class ReportStatsService {
     }
   }
 
-  async getLatestStats(
-    group: ReportStatGroup,
+  async getLiveStats(
+    group: Omit<ReportStatGroup, 'mode'>,
   ): Promise<Selectable<ReportStat> | undefined> {
     let qb = this.db.db
       .selectFrom('report_stat')
       .selectAll()
-      .where('mode', '=', group.mode)
+      .where('mode', '=', 'live')
       .where('timeframe', '=', group.timeframe)
       .orderBy('computedAt', 'desc')
     if (group.queueId !== null) {
@@ -611,5 +562,58 @@ export class ReportStatsService {
     }
 
     return qb.executeTakeFirst()
+  }
+
+  async getHistoricalStats(opts: {
+    group: Omit<ReportStatGroup, 'mode'>
+    startDate?: string
+    endDate?: string
+    limit: number
+    cursor?: string
+  }): Promise<{ stats: Selectable<ReportStat>[]; cursor?: string }> {
+    const { group, startDate, endDate, limit } = opts
+    const { queueId, moderatorDid, reportTypes, timeframe } = group
+    const { ref } = this.db.db.dynamic
+
+    let qb = this.db.db
+      .selectFrom('report_stat')
+      .selectAll()
+      .where('mode', '=', 'historical')
+      .where('timeframe', '=', timeframe)
+
+    if (queueId !== null) {
+      qb = qb.where('queueId', '=', queueId)
+    } else {
+      qb = qb.where('queueId', 'is', null)
+    }
+    if (moderatorDid) {
+      qb = qb.where('moderatorDid', '=', moderatorDid)
+    } else {
+      qb = qb.where('moderatorDid', 'is', null)
+    }
+    if (reportTypes !== null) {
+      qb = qb.where(sql`"reportTypes"::jsonb = ${jsonb(reportTypes)}::jsonb`)
+    } else {
+      qb = qb.where('reportTypes', 'is', null)
+    }
+    if (startDate) {
+      qb = qb.where('computedAt', '>=', startDate)
+    }
+    if (endDate) {
+      qb = qb.where('computedAt', '<=', endDate)
+    }
+
+    const keyset = new ComputedAtIdKeyset(ref('computedAt'), ref('id'))
+    const paginatedBuilder = paginate(qb, {
+      limit,
+      cursor: opts.cursor,
+      keyset,
+      direction: 'desc',
+      tryIndex: true,
+    })
+
+    const stats = await paginatedBuilder.execute()
+
+    return { stats, cursor: keyset.packFromResult(stats) }
   }
 }
