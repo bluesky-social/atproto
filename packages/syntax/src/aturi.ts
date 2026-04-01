@@ -140,8 +140,6 @@ export class AtUri {
     while (pathname.endsWith('/')) {
       pathname = pathname.slice(0, -1)
     }
-    // @TODO query strings are actually not allowed by the AT URI specification,
-    // but we support them for legacy reasons. This should be removed.
     let qs = ''
     if (this.searchParams.size) {
       qs = `?${this.searchParams.toString()}`
