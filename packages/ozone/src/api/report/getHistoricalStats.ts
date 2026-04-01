@@ -9,24 +9,14 @@ export default function (server: Server, ctx: AppContext) {
     handler: async ({ params }) => {
       const { timeframe, queueId, moderatorDid, reportTypes } = params
 
-      const tf = timeframe as ReportStatTimeframe
       const reportStatsService = ctx.reportStatsService(ctx.db)
-      let row
-      if (moderatorDid) {
-        row = await reportStatsService.getHistoricalModeratorStats(
-          tf,
-          moderatorDid,
-        )
-      } else if (reportTypes && reportTypes.length > 0) {
-        row = await reportStatsService.getHistoricalReportTypeStats(
-          tf,
-          reportTypes,
-        )
-      } else if (queueId !== undefined) {
-        row = await reportStatsService.getHistoricalQueueStats(tf, queueId)
-      } else {
-        row = await reportStatsService.getHistoricalAggregateStats(tf)
-      }
+      const row = await reportStatsService.getLatestStats({
+        mode: 'historical',
+        timeframe: timeframe as ReportStatTimeframe,
+        queueId: queueId ?? null,
+        moderatorDid: moderatorDid ?? null,
+        reportTypes: reportTypes?.length ? reportTypes : null,
+      })
 
       return {
         encoding: 'application/json' as const,

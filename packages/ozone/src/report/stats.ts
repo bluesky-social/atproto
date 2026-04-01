@@ -583,7 +583,7 @@ export class ReportStatsService {
     }
   }
 
-  private async getLatestStats(
+  async getLatestStats(
     group: ReportStatGroup,
   ): Promise<Selectable<ReportStat> | undefined> {
     let qb = this.db.db
@@ -611,110 +611,5 @@ export class ReportStatsService {
     }
 
     return qb.executeTakeFirst()
-  }
-
-  /** Get live aggregate statistics. */
-  async getLiveAggregateStats(): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'live',
-      timeframe: 'day',
-      queueId: null,
-      moderatorDid: null,
-      reportTypes: null,
-    })
-  }
-
-  /** Get live daily statistics for a queue. */
-  async getLiveQueueStats(
-    queueId: number,
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'live',
-      timeframe: 'day',
-      queueId: queueId ?? null,
-      moderatorDid: null,
-      reportTypes: null,
-    })
-  }
-
-  /** Get live daily statistics for a report type. */
-  async getLiveReportTypeStats(
-    reportTypes: string[],
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'live',
-      timeframe: 'day',
-      queueId: null,
-      moderatorDid: null,
-      reportTypes,
-    })
-  }
-
-  /** Get live daily statistics for a moderator. */
-  async getLiveModeratorStats(
-    moderatorDid: string,
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'live',
-      timeframe: 'day',
-      queueId: null,
-      moderatorDid,
-      reportTypes: null,
-    })
-  }
-
-  /** Get historical aggregate statistics. */
-  async getHistoricalAggregateStats(
-    timeframe: ReportStatTimeframe,
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'historical',
-      timeframe,
-      queueId: null,
-      moderatorDid: null,
-      reportTypes: null,
-    })
-  }
-
-  /** Get historical statistics for a queue. */
-  async getHistoricalQueueStats(
-    timeframe: ReportStatTimeframe,
-    queueId: number,
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'historical',
-      timeframe,
-      queueId,
-      moderatorDid: null,
-      reportTypes: null,
-    })
-  }
-
-  /** Get historical statistics for a report type. */
-  async getHistoricalReportTypeStats(
-    timeframe: ReportStatTimeframe,
-    reportTypes: string[],
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'historical',
-      timeframe,
-      queueId: null,
-      moderatorDid: null,
-      reportTypes,
-    })
-  }
-
-  /** Get historical statistics for a moderator. */
-  async getHistoricalModeratorStats(
-    timeframe: ReportStatTimeframe,
-    moderatorDid: string,
-  ): Promise<Selectable<ReportStat> | undefined> {
-    return this.getLatestStats({
-      mode: 'historical',
-      timeframe,
-      queueId: null,
-      moderatorDid,
-      reportTypes: null,
-    })
   }
 }

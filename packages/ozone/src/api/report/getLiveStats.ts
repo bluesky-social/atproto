@@ -9,16 +9,13 @@ export default function (server: Server, ctx: AppContext) {
       const { queueId, moderatorDid, reportTypes } = params
 
       const reportStatsService = ctx.reportStatsService(ctx.db)
-      let row
-      if (moderatorDid) {
-        row = await reportStatsService.getLiveModeratorStats(moderatorDid)
-      } else if (reportTypes && reportTypes.length > 0) {
-        row = await reportStatsService.getLiveReportTypeStats(reportTypes)
-      } else if (queueId !== undefined) {
-        row = await reportStatsService.getLiveQueueStats(queueId)
-      } else {
-        row = await reportStatsService.getLiveAggregateStats()
-      }
+      const row = await reportStatsService.getLatestStats({
+        mode: 'live',
+        timeframe: 'day',
+        queueId: queueId ?? null,
+        moderatorDid: moderatorDid ?? null,
+        reportTypes: reportTypes?.length ? reportTypes : null,
+      })
 
       return {
         encoding: 'application/json' as const,
