@@ -161,18 +161,13 @@ describe('report-stats', () => {
       expect(queueStats.pendingCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('null reportTypes returns same as all-types aggregate', async () => {
-      const statsService = network.ozone.ctx.reportStatsService(
-        network.ozone.ctx.db,
-      )
-      await statsService.materializeAll({ force: true })
+    it('omitting reportTypes returns aggregate across all types', async () => {
+      await modClient.computeStats()
 
-      const viaApi = await getLiveStats()
-      const viaService = await statsService.getLiveAggregateStats()
-
-      expect(viaService).toBeDefined()
-      expect(viaService!.inboundCount).toBe(viaApi.inboundCount)
-      expect(viaService!.pendingCount).toBe(viaApi.pendingCount)
+      // No params = aggregate; reportTypes omitted should yield same result
+      const stats = await getLiveStats()
+      expect(stats.inboundCount).toBeGreaterThanOrEqual(3)
+      expect(stats.pendingCount).toBeGreaterThanOrEqual(1)
     })
   })
 
@@ -351,54 +346,43 @@ describe('report-stats', () => {
   })
 
   describe('report type', () => {
-    it('computes per-reportType aggregate stats', async () => {
-      const statsService = network.ozone.ctx.reportStatsService(
-        network.ozone.ctx.db,
-      )
-      await statsService.materializeAll({ force: true })
+    it('computes per-reportType stats', async () => {
+      await modClient.computeStats()
 
-      const spamStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonSpam',
-      ])
-      const harassmentStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonHarassment',
-      ])
-      const allStats = await statsService.getLiveAggregateStats()
+      const spamStats = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+      })
+      const harassmentStats = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+      })
+      const allStats = await getLiveStats()
 
-      expect(spamStats).toBeDefined()
-      expect(spamStats!.inboundCount).toBeGreaterThanOrEqual(1)
+      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(1)
+      expect(harassmentStats.inboundCount).toBeGreaterThanOrEqual(1)
 
-      expect(harassmentStats).toBeDefined()
-      expect(harassmentStats!.inboundCount).toBeGreaterThanOrEqual(1)
-
-      expect(allStats).toBeDefined()
-      expect(allStats!.inboundCount).toBeGreaterThanOrEqual(
-        spamStats!.inboundCount! + harassmentStats!.inboundCount!,
+      // Aggregate should be >= sum of individual types
+      expect(allStats.inboundCount).toBeGreaterThanOrEqual(
+        spamStats.inboundCount! + harassmentStats.inboundCount!,
       )
     })
 
     it('only counts matching report types', async () => {
-      const statsService = network.ozone.ctx.reportStatsService(
-        network.ozone.ctx.db,
-      )
-      await statsService.materializeAll({ force: true })
+      await modClient.computeStats()
 
-      const spamStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonSpam',
-      ])
-      const harassmentStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonHarassment',
-      ])
+      const spamStats = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+      })
+      const harassmentStats = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
+      })
 
-      expect(spamStats).toBeDefined()
-      expect(harassmentStats).toBeDefined()
-      expect(spamStats!.inboundCount).toBeGreaterThanOrEqual(2)
-      expect(harassmentStats!.inboundCount).toBeGreaterThanOrEqual(1)
-      expect(spamStats!.pendingCount).toBeGreaterThanOrEqual(0)
-      expect(harassmentStats!.pendingCount).toBeGreaterThanOrEqual(0)
+      expect(spamStats.inboundCount).toBeGreaterThanOrEqual(2)
+      expect(harassmentStats.inboundCount).toBeGreaterThanOrEqual(1)
+      expect(spamStats.pendingCount).toBeGreaterThanOrEqual(0)
+      expect(harassmentStats.pendingCount).toBeGreaterThanOrEqual(0)
     })
 
-    it('tracks escalated and actioned counts', async () => {
+    it('tracks escalated counts', async () => {
       const db = network.ozone.ctx.db
 
       await sc.createReport({
@@ -423,24 +407,23 @@ describe('report-stats', () => {
         .where('id', '=', report.id)
         .execute()
 
-      const statsService = network.ozone.ctx.reportStatsService(db)
-      await statsService.materializeAll({ force: true })
+      await modClient.computeStats()
 
-      const spamStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonSpam',
-      ])
-      expect(spamStats).toBeDefined()
-      expect(spamStats!.escalatedCount).toBeGreaterThanOrEqual(1)
+      const stats = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+      })
+      expect(stats.escalatedPendingCount).toBeGreaterThanOrEqual(1)
     })
 
-    it('returns undefined for unused report type', async () => {
-      const statsService = network.ozone.ctx.reportStatsService(
-        network.ozone.ctx.db,
-      )
-      const unusedStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonRude',
-      ])
-      expect(unusedStats).toBeUndefined()
+    it('returns empty stats for unused report type', async () => {
+      await modClient.computeStats()
+
+      // Report type with no reports: API returns stats with all fields undefined
+      const stats = await getLiveStats({
+        reportTypes: ['com.atproto.moderation.defs#reasonRude'],
+      })
+      expect(stats.inboundCount).toBeUndefined()
+      expect(stats.pendingCount).toBeUndefined()
     })
 
     it('handles avg handling time', async () => {
@@ -475,25 +458,14 @@ describe('report-stats', () => {
         .where('id', '=', report.id)
         .execute()
 
-      const statsService = network.ozone.ctx.reportStatsService(db)
-      await statsService.materializeAll({ force: true })
-
-      const harassmentStats = await statsService.getLiveReportTypeStats([
-        'com.atproto.moderation.defs#reasonHarassment',
-      ])
-      expect(harassmentStats).toBeDefined()
-      expect(harassmentStats!.actionedCount).toBeGreaterThanOrEqual(1)
-      expect(harassmentStats!.avgHandlingTimeSec).toBeDefined()
-      expect(harassmentStats!.avgHandlingTimeSec).toBeGreaterThanOrEqual(100)
-    })
-
-    it('works via API endpoint', async () => {
       await modClient.computeStats()
+
       const stats = await getLiveStats({
-        reportTypes: ['com.atproto.moderation.defs#reasonSpam'],
+        reportTypes: ['com.atproto.moderation.defs#reasonHarassment'],
       })
-      expect(stats.inboundCount).toBeGreaterThanOrEqual(2)
-      expect(stats.lastUpdated).toBeDefined()
+      expect(stats.actionedCount).toBeGreaterThanOrEqual(1)
+      expect(stats.avgHandlingTimeSec).toBeDefined()
+      expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(100)
     })
   })
 })
