@@ -10,13 +10,15 @@ import { AtpAgent } from '@atproto/api'
 import { getVerificationMaterial } from '@atproto/common'
 import { Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { IdResolver, getDidKeyFromMultibase } from '@atproto/identity'
+import { DidString, HandleString } from '@atproto/syntax'
 import {
   AuthRequiredError,
+  createServer,
   parseReqNsid,
   verifyJwt as verifyServiceJwt,
 } from '@atproto/xrpc-server'
 import { bearerTokenFromReq, createPublicKeyObject } from '../src/auth-verifier'
-import { createServer } from '../src/lexicon'
+import { com } from '../src/lexicons/index.js'
 
 interface Account {
   did: string
@@ -163,7 +165,7 @@ export class MockEntryway {
 
     const server = createServer()
 
-    server.com.atproto.server.createAccount({
+    server.add(com.atproto.server.createAccount, {
       handler: async ({ input }) => {
         const { email, handle } = input.body
 
@@ -222,7 +224,7 @@ export class MockEntryway {
         return {
           encoding: 'application/json' as const,
           body: {
-            did: plcCreate.did,
+            did: plcCreate.did as DidString,
             handle,
             accessJwt,
             refreshJwt,
@@ -231,7 +233,7 @@ export class MockEntryway {
       },
     })
 
-    server.com.atproto.server.getSession({
+    server.add(com.atproto.server.getSession, {
       auth: accessOrServiceAuth,
       handler: async ({ auth }) => {
         const account = accounts.get(auth.credentials.did)
@@ -243,8 +245,8 @@ export class MockEntryway {
         return {
           encoding: 'application/json' as const,
           body: {
-            did: account.did,
-            handle: account.handle,
+            did: account.did as DidString,
+            handle: account.handle as HandleString,
             email: account.email,
             emailConfirmed: false,
           },
@@ -252,47 +254,38 @@ export class MockEntryway {
       },
     })
 
-    server.com.atproto.identity.updateHandle({
+    server.add(com.atproto.identity.updateHandle, {
       auth: serviceAuth,
       handler: async ({ auth, input }) => {
         // The PDS sends { did, handle } where did is the target user
-        try {
-          const body = input.body as { did?: string; handle: string }
-          const targetDid = body.did || auth.credentials.did
-          const newHandle = body.handle
+        const body = input.body as { did?: string; handle: string }
+        const targetDid = body.did || auth.credentials.did
+        const newHandle = body.handle
 
-          // Update handle in PLC
-          await plcClient.updateHandle(
-            targetDid,
-            opts.plcRotationKey,
-            newHandle,
-          )
+        // Update handle in PLC
+        await plcClient.updateHandle(targetDid, opts.plcRotationKey, newHandle)
 
-          // Update in-memory account
-          const account = accounts.get(targetDid)
-          if (account) {
-            account.handle = newHandle
-          }
-
-          // Notify PDS via admin endpoint
-          const adminAuth = Buffer.from(`admin:${opts.adminPassword}`).toString(
-            'base64',
-          )
-          await pdsAgent.com.atproto.admin.updateAccountHandle(
-            { did: targetDid, handle: newHandle },
-            {
-              headers: { authorization: `Basic ${adminAuth}` },
-              encoding: 'application/json',
-            },
-          )
-        } catch (err) {
-          console.error(err)
-          throw err
+        // Update in-memory account
+        const account = accounts.get(targetDid)
+        if (account) {
+          account.handle = newHandle
         }
+
+        // Notify PDS via admin endpoint
+        const adminAuth = Buffer.from(`admin:${opts.adminPassword}`).toString(
+          'base64',
+        )
+        await pdsAgent.com.atproto.admin.updateAccountHandle(
+          { did: targetDid, handle: newHandle },
+          {
+            headers: { authorization: `Basic ${adminAuth}` },
+            encoding: 'application/json',
+          },
+        )
       },
     })
 
-    const httpServer = server.xrpc.listen(opts.port)
+    const httpServer = server.listen(opts.port)
     const terminator = createHttpTerminator({ server: httpServer })
 
     const instance = new MockEntryway(httpServer, terminator, idResolver, opts)
