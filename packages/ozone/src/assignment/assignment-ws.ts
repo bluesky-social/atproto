@@ -1,0 +1,305 @@
+import { ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
+import { IdResolver } from '@atproto/identity'
+import { verifyJwt } from '@atproto/xrpc-server'
+import { IncomingMessage } from 'node:http'
+import { Duplex } from 'node:stream'
+import { RawData, WebSocket, WebSocketServer } from 'ws'
+import type { AssignmentService } from '.'
+import { TeamService } from '../team'
+
+export interface ModeratorClient {
+  id: string
+  ws: WebSocket
+  moderatorDid: string
+  subscribedQueues: number[] // Queues they're viewing
+}
+
+export type ClientMessage =
+  | {
+      type: 'subscribe'
+      queues: number[] // Subscribe to queue updates
+    }
+  | {
+      type: 'unsubscribe'
+      queues: number[]
+    }
+  | {
+      type: 'report:review:start'
+      reportId: number
+      queueId?: number
+    }
+  | {
+      type: 'report:review:end'
+      reportId: number
+      queueId?: number
+    }
+  | {
+      type: 'ping' // Heartbeat
+    }
+export type ServerMessage =
+  | {
+      type: 'report:snapshot'
+      events: ToolsOzoneReportDefs.AssignmentView[]
+    }
+  | {
+      type: 'queue:snapshot'
+      events: ToolsOzoneQueueDefs.AssignmentView[]
+    }
+  | {
+      type: 'report:review:started'
+      reportId: number
+      moderator: { did: string }
+      queues: number[]
+    }
+  | {
+      type: 'report:review:ended'
+      reportId: number
+      moderator: { did: string }
+      queues: number[]
+    }
+  | {
+      type: 'report:actioned'
+      reportIds: number[]
+      actionEventId: number
+      moderator: { did: string }
+      queues: number[] // Which queues this affects
+    }
+  | {
+      type: 'report:created'
+      reportId: number
+      queues: number[] // Which queues this should appear in
+    }
+  | {
+      type: 'queue:assigned'
+      queueId: number
+      did: string
+    }
+  | {
+      type: 'pong'
+    }
+  | {
+      type: 'error'
+      message: string
+    }
+
+export interface AssignmentWebSocketServerOpts {
+  serviceDid: string
+  idResolver: IdResolver
+  teamService: TeamService
+}
+
+export class AssignmentWebSocketServer {
+  wss: WebSocketServer
+  clients: Map<string, ModeratorClient> = new Map()
+  private assignmentService: AssignmentService
+
+  constructor(
+    assignmentService: AssignmentService,
+    private opts: AssignmentWebSocketServerOpts,
+  ) {
+    this.wss = new WebSocketServer({ noServer: true })
+    this.assignmentService = assignmentService
+  }
+
+  // Protocol Layer
+  /** Upgrade HTTP connection to WebSocket connection */
+  handleUpgrade(req: IncomingMessage, socket: Duplex, head: Buffer) {
+    this.authenticateRequest(req)
+      .then((moderatorDid) => {
+        this.wss.handleUpgrade(req, socket, head, (ws) => {
+          this.onConnection(ws, req, moderatorDid)
+        })
+      })
+      .catch(() => {
+        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+        socket.destroy()
+      })
+  }
+  private async authenticateRequest(req: IncomingMessage): Promise<string> {
+    let jwtStr: string | undefined
+
+    // Get jwt
+    const authorization = req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization
+      : undefined
+    if (authorization?.startsWith('Bearer ')) {
+      jwtStr = authorization.slice('Bearer '.length).trim()
+    } else if (req.url) {
+      const url = new URL(req.url, 'http://localhost')
+      jwtStr = url.searchParams.get('token') ?? undefined
+    }
+    if (!jwtStr) {
+      throw new Error('Missing authorization')
+    }
+
+    // helpers
+    const getSigningKey = async (
+      did: string,
+      forceRefresh: boolean,
+    ): Promise<string> => {
+      const atprotoData = await this.opts.idResolver.did.resolveAtprotoData(
+        did,
+        forceRefresh,
+      )
+      return atprotoData.signingKey
+    }
+    const payload = await verifyJwt(
+      jwtStr,
+      this.opts.serviceDid,
+      null,
+      getSigningKey,
+    )
+
+    // access control
+    const member = await this.opts.teamService.getMember(payload.iss)
+    if (!member || member.disabled) {
+      throw new Error('Not a team member')
+    }
+    const { isTriage } = this.opts.teamService.getMemberRole(member)
+    if (!isTriage) {
+      throw new Error('Not a moderator')
+    }
+
+    return payload.iss
+  }
+  private onConnection(
+    ws: WebSocket,
+    req: IncomingMessage,
+    moderatorDid: string,
+  ) {
+    const clientId = `${moderatorDid}:${req.socket.remotePort}`
+    const client: ModeratorClient = {
+      id: clientId,
+      ws,
+      moderatorDid,
+      subscribedQueues: [],
+    }
+    this.clients.set(clientId, client)
+    ws.on('message', (message) => this.onMessage(clientId, message))
+    ws.on('close', () => this.onClose(clientId))
+  }
+  private async onMessage(clientId: string, data: RawData) {
+    const client = this.clients.get(clientId)
+    if (!client) {
+      console.error('Received message from unknown client:', clientId)
+      this.onClose(clientId)
+      return
+    }
+    let parsed: ClientMessage
+    try {
+      parsed = JSON.parse(data.toString()) satisfies ClientMessage
+    } catch (e) {
+      console.error('Invalid message format', e)
+      return
+    }
+    this.handleClientMessage(client, parsed)
+  }
+  private onClose(clientId: string) {
+    this.clients.delete(clientId)
+  }
+  private send(clientId: string, messsage: ServerMessage) {
+    const client = this.clients.get(clientId)
+    if (!client) {
+      console.error('Attempted to send message to unknown client:', clientId)
+      return
+    }
+    if (client.ws.readyState === WebSocket.OPEN) {
+      client.ws.send(JSON.stringify(messsage))
+    } else {
+      console.warn('Attempted to send message to non-open WebSocket:', clientId)
+    }
+  }
+  destroy() {
+    for (const client of this.wss.clients) {
+      client.close()
+    }
+    this.wss.close()
+  }
+
+  // Application Layer
+  /** Handle messages from clients */
+  private async handleClientMessage(
+    client: ModeratorClient,
+    message: ClientMessage,
+  ) {
+    try {
+      switch (message.type) {
+        case 'subscribe':
+          client.subscribedQueues = message.queues
+          await this.sendSnapshot(client)
+          break
+        case 'unsubscribe':
+          client.subscribedQueues = client.subscribedQueues.filter(
+            (queue) => !message.queues.includes(queue),
+          )
+          break
+        case 'report:review:start':
+          await this.assignmentService.assignReport({
+            did: client.moderatorDid,
+            reportId: message.reportId,
+            queueId: message.queueId,
+            assign: true,
+          })
+          break
+        case 'report:review:end':
+          await this.assignmentService.assignReport({
+            did: client.moderatorDid,
+            reportId: message.reportId,
+            queueId: message.queueId,
+            assign: false,
+          })
+          break
+        case 'ping':
+          this.send(client.id, { type: 'pong' })
+          break
+      }
+    } catch (e) {
+      console.error('Error handling client message:', e)
+      this.send(client.id, { type: 'error', message: 'Internal server error' })
+    }
+  }
+  /** Broadcast message to relevant connections */
+  broadcast(message: ServerMessage) {
+    for (const clientId of this.clients.keys()) {
+      const client = this.clients.get(clientId)
+      if (!client) continue
+      if ('queues' in message) {
+        // Only send to clients subscribed to affected queues
+        const subscribed = client.subscribedQueues.some((q) =>
+          message.queues.includes(q),
+        )
+        if (!subscribed) continue
+      } else if ('queueId' in message) {
+        if (!client.subscribedQueues.includes(message.queueId)) continue
+      }
+      this.send(clientId, message)
+    }
+  }
+  /** Send active assignments to client */
+  private async sendSnapshot(client: ModeratorClient) {
+    await Promise.all([
+      (async () => {
+        const assignments = await this.assignmentService.getQueueAssignments({
+          onlyActive: true,
+          queueIds: client.subscribedQueues,
+        })
+        const message: ServerMessage = {
+          type: 'queue:snapshot',
+          events: assignments.assignments,
+        }
+        this.send(client.id, message)
+      })(),
+      (async () => {
+        const assignments = await this.assignmentService.getReportAssignments({
+          onlyActive: true,
+          queueIds: client.subscribedQueues,
+        })
+        const message: ServerMessage = {
+          type: 'report:snapshot',
+          events: assignments.assignments,
+        }
+        this.send(client.id, message)
+      })(),
+    ])
+  }
+}
