@@ -1,5 +1,6 @@
 export * from './const'
 export * from './did'
+export * from './hmac'
 export * from './multibase'
 export * from './random'
 export * from './sha'
