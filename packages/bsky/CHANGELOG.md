@@ -1,5 +1,17 @@
 # @atproto/bsky
 
+## 0.0.223
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- [#4810](https://github.com/bluesky-social/atproto/pull/4810) [`34f9ae1`](https://github.com/bluesky-social/atproto/commit/34f9ae1f6824bdd7f66c94c57e41cec757e267df) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Show suggestions to logged out users
+
+- Updated dependencies [[`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13), [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/api@0.19.6
+  - @atproto/syntax@0.5.3
+
 ## 0.0.222
 
 ### Patch Changes
