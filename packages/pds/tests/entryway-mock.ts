@@ -1,4 +1,3 @@
-import assert from 'node:assert'
 import { createPrivateKey } from 'node:crypto'
 import * as http from 'node:http'
 import * as plcLib from '@did-plc/lib'
@@ -21,8 +20,8 @@ import { bearerTokenFromReq, createPublicKeyObject } from '../src/auth-verifier'
 import { com } from '../src/lexicons/index.js'
 
 interface Account {
-  did: string
-  handle: string
+  did: DidString
+  handle: HandleString
   email?: string
 }
 
@@ -84,7 +83,9 @@ export class MockEntryway {
       forceRefresh: boolean,
     ): Promise<string> => {
       const [did, serviceId] = iss.split('#')
-      assert(!serviceId, 'no service id expected in iss claim')
+      if (serviceId) {
+        throw new AuthRequiredError('no service id expected in iss claim')
+      }
       const didDoc = await idResolver.did.resolve(did, forceRefresh)
       if (!didDoc) {
         throw new AuthRequiredError(`could not resolve did: ${did}`)
@@ -116,7 +117,13 @@ export class MockEntryway {
     }): Promise<AccessAuthResult> => {
       try {
         const token = bearerToken(req)
-        const { payload } = await jose.jwtVerify(token, jwtPublicKey)
+        const { protectedHeader, payload } = await jose.jwtVerify(
+          token,
+          jwtPublicKey,
+        )
+        if (protectedHeader.typ !== 'at+jwt') {
+          throw new AuthRequiredError('expected typ: at+jwt')
+        }
         if (!payload.sub) {
           throw new AuthRequiredError('missing sub in token')
         }
@@ -135,6 +142,12 @@ export class MockEntryway {
     }): Promise<ServiceAuthResult> => {
       try {
         const token = bearerToken(req)
+        const { typ } = jose.decodeProtectedHeader(token)
+        if (typ === 'at+jwt') {
+          throw new AuthRequiredError(
+            'expected service auth: typ must not be at+jwt',
+          )
+        }
         const nsid = parseReqNsid(req)
         const payload = await verifyServiceJwt(
           token,
@@ -192,7 +205,7 @@ export class MockEntryway {
 
         // Store account in memory
         accounts.set(plcCreate.did, {
-          did: plcCreate.did,
+          did: plcCreate.did as DidString,
           handle,
           email,
         })
@@ -245,8 +258,8 @@ export class MockEntryway {
         return {
           encoding: 'application/json' as const,
           body: {
-            did: account.did as DidString,
-            handle: account.handle as HandleString,
+            did: account.did,
+            handle: account.handle,
             email: account.email,
             emailConfirmed: false,
           },
@@ -258,7 +271,7 @@ export class MockEntryway {
       auth: serviceAuth,
       handler: async ({ auth, input }) => {
         // The PDS sends { did, handle } where did is the target user
-        const body = input.body as { did?: string; handle: string }
+        const body = input.body as typeof input.body & { did?: string }
         const targetDid = body.did || auth.credentials.did
         const newHandle = body.handle
 
