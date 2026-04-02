@@ -1,0 +1,76 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listRecords",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List records in a permissioned space, matching a specific collection.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "collection"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "description": "Reference to the space."
+          },
+          "collection": {
+            "type": "string",
+            "format": "nsid",
+            "description": "The NSID of the record type."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "The number of records to return."
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "reverse": {
+            "type": "boolean",
+            "description": "Flag to reverse the order of the returned records."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["records"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "records": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#record"
+              }
+            }
+          }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "required": ["collection", "rkey", "cid"],
+      "properties": {
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.uploadBlob",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Upload a new blob to be referenced from a record in a permissioned space. The blob will be deleted if it is not referenced within a time window. Blob restrictions (mimetype, size, etc) are enforced when the reference is created. Requires auth, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "input": {
+        "encoding": "*/*"
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["blob"],
+          "properties": {
+            "blob": { "type": "blob" }
+          }
+        }
+      }
+    }
+  }
+}

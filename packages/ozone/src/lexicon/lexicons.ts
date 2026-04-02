@@ -14441,6 +14441,564 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSpaceApplyWrites: {
+    lexicon: 1,
+    id: 'com.atproto.space.applyWrites',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Apply a batch transaction of creates, updates, and deletes in a permissioned space. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'writes'],
+            properties: {
+              space: {
+                type: 'string',
+                description: 'Reference to the space.',
+              },
+              validate: {
+                type: 'boolean',
+                description:
+                  "Can be set to 'false' to skip Lexicon schema validation of record data across all operations, 'true' to require it, or leave unset to validate only for known Lexicons.",
+              },
+              writes: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.space.applyWrites#create',
+                    'lex:com.atproto.space.applyWrites#update',
+                    'lex:com.atproto.space.applyWrites#delete',
+                  ],
+                  closed: true,
+                },
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'If provided, the entire operation will fail if the current commit CID does not match this value.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              results: {
+                type: 'array',
+                items: {
+                  type: 'union',
+                  refs: [
+                    'lex:com.atproto.space.applyWrites#createResult',
+                    'lex:com.atproto.space.applyWrites#updateResult',
+                    'lex:com.atproto.space.applyWrites#deleteResult',
+                  ],
+                  closed: true,
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+            description:
+              "Indicates that the 'swapCommit' parameter did not match current commit.",
+          },
+        ],
+      },
+      create: {
+        type: 'object',
+        description: 'Operation which creates a new record.',
+        required: ['collection', 'value'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+            maxLength: 512,
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
+      update: {
+        type: 'object',
+        description: 'Operation which updates an existing record.',
+        required: ['collection', 'rkey', 'value'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          value: {
+            type: 'unknown',
+          },
+        },
+      },
+      delete: {
+        type: 'object',
+        description: 'Operation which deletes an existing record.',
+        required: ['collection', 'rkey'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+        },
+      },
+      createResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      updateResult: {
+        type: 'object',
+        required: ['uri', 'cid'],
+        properties: {
+          uri: {
+            type: 'string',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          validationStatus: {
+            type: 'string',
+            knownValues: ['valid', 'unknown'],
+          },
+        },
+      },
+      deleteResult: {
+        type: 'object',
+        required: [],
+        properties: {},
+      },
+    },
+  },
+  ComAtprotoSpaceCreateRecord: {
+    lexicon: 1,
+    id: 'com.atproto.space.createRecord',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Create a single new record in a permissioned space. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'collection', 'record'],
+            properties: {
+              space: {
+                type: 'string',
+                description: 'Reference to the space.',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description: 'The NSID of the record collection.',
+              },
+              rkey: {
+                type: 'string',
+                format: 'record-key',
+                description: 'The Record Key.',
+                maxLength: 512,
+              },
+              validate: {
+                type: 'boolean',
+                description:
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
+              },
+              record: {
+                type: 'unknown',
+                description: 'The record itself. Must contain a $type field.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+                description: 'URI of the created record. Scheme TBD.',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+            description:
+              "Indicates that 'swapCommit' didn't match current commit.",
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceDeleteRecord: {
+    lexicon: 1,
+    id: 'com.atproto.space.deleteRecord',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Delete a record in a permissioned space, or ensure it doesn't exist. Requires auth, implemented by PDS.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'collection', 'rkey'],
+            properties: {
+              space: {
+                type: 'string',
+                description: 'Reference to the space.',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description: 'The NSID of the record collection.',
+              },
+              rkey: {
+                type: 'string',
+                format: 'record-key',
+                description: 'The Record Key.',
+              },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by CID.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceGetRecord: {
+    lexicon: 1,
+    id: 'com.atproto.space.getRecord',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Get a single record from a permissioned space.',
+        parameters: {
+          type: 'params',
+          required: ['space', 'collection', 'rkey'],
+          properties: {
+            space: {
+              type: 'string',
+              description: 'Reference to the space.',
+            },
+            collection: {
+              type: 'string',
+              format: 'nsid',
+              description: 'The NSID of the record collection.',
+            },
+            rkey: {
+              type: 'string',
+              format: 'record-key',
+              description: 'The Record Key.',
+            },
+            cid: {
+              type: 'string',
+              format: 'cid',
+              description:
+                'The CID of the version of the record. If not specified, then return the most recent version.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid', 'value'],
+            properties: {
+              uri: {
+                type: 'string',
+                description: 'URI of the record. Scheme TBD.',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              value: {
+                type: 'unknown',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'RecordNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceListRecords: {
+    lexicon: 1,
+    id: 'com.atproto.space.listRecords',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List records in a permissioned space, matching a specific collection.',
+        parameters: {
+          type: 'params',
+          required: ['space', 'collection'],
+          properties: {
+            space: {
+              type: 'string',
+              description: 'Reference to the space.',
+            },
+            collection: {
+              type: 'string',
+              format: 'nsid',
+              description: 'The NSID of the record type.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+              description: 'The number of records to return.',
+            },
+            cursor: {
+              type: 'string',
+            },
+            reverse: {
+              type: 'boolean',
+              description: 'Flag to reverse the order of the returned records.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['records'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              records: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.space.listRecords#record',
+                },
+              },
+            },
+          },
+        },
+      },
+      record: {
+        type: 'object',
+        required: ['collection', 'rkey', 'cid'],
+        properties: {
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSpacePutRecord: {
+    lexicon: 1,
+    id: 'com.atproto.space.putRecord',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Write a record in a permissioned space, creating or updating it as needed. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'collection', 'rkey', 'record'],
+            nullable: ['swapRecord'],
+            properties: {
+              space: {
+                type: 'string',
+                description: 'Reference to the space.',
+              },
+              collection: {
+                type: 'string',
+                format: 'nsid',
+                description: 'The NSID of the record collection.',
+              },
+              rkey: {
+                type: 'string',
+                format: 'record-key',
+                description: 'The Record Key.',
+                maxLength: 512,
+              },
+              validate: {
+                type: 'boolean',
+                description:
+                  "Can be set to 'false' to skip Lexicon schema validation of record data, 'true' to require it, or leave unset to validate only for known Lexicons.",
+              },
+              record: {
+                type: 'unknown',
+                description: 'The record to write.',
+              },
+              swapRecord: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous record by CID.',
+              },
+              swapCommit: {
+                type: 'string',
+                format: 'cid',
+                description:
+                  'Compare and swap with the previous commit by CID.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri', 'cid'],
+            properties: {
+              uri: {
+                type: 'string',
+                description: 'URI of the written record. Scheme TBD.',
+              },
+              cid: {
+                type: 'string',
+                format: 'cid',
+              },
+              validationStatus: {
+                type: 'string',
+                knownValues: ['valid', 'unknown'],
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceUploadBlob: {
+    lexicon: 1,
+    id: 'com.atproto.space.uploadBlob',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Upload a new blob to be referenced from a record in a permissioned space. The blob will be deleted if it is not referenced within a time window. Blob restrictions (mimetype, size, etc) are enforced when the reference is created. Requires auth, implemented by PDS.',
+        parameters: {
+          type: 'params',
+          required: ['space'],
+          properties: {
+            space: {
+              type: 'string',
+              description: 'Reference to the space.',
+            },
+          },
+        },
+        input: {
+          encoding: '*/*',
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['blob'],
+            properties: {
+              blob: {
+                type: 'blob',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSyncDefs: {
     lexicon: 1,
     id: 'com.atproto.sync.defs',
@@ -21241,6 +21799,13 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
+  ComAtprotoSpaceApplyWrites: 'com.atproto.space.applyWrites',
+  ComAtprotoSpaceCreateRecord: 'com.atproto.space.createRecord',
+  ComAtprotoSpaceDeleteRecord: 'com.atproto.space.deleteRecord',
+  ComAtprotoSpaceGetRecord: 'com.atproto.space.getRecord',
+  ComAtprotoSpaceListRecords: 'com.atproto.space.listRecords',
+  ComAtprotoSpacePutRecord: 'com.atproto.space.putRecord',
+  ComAtprotoSpaceUploadBlob: 'com.atproto.space.uploadBlob',
   ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',
   ComAtprotoSyncGetBlocks: 'com.atproto.sync.getBlocks',

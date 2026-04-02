@@ -205,6 +205,13 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
+import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
+import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
+import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
+import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
+import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
+import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
 import * as ComAtprotoSyncGetCheckout from './types/com/atproto/sync/getCheckout.js'
@@ -2201,6 +2208,7 @@ export class ComAtprotoNS {
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
+  space: ComAtprotoSpaceNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
 
@@ -2213,6 +2221,7 @@ export class ComAtprotoNS {
     this.moderation = new ComAtprotoModerationNS(server)
     this.repo = new ComAtprotoRepoNS(server)
     this.server = new ComAtprotoServerNS(server)
+    this.space = new ComAtprotoSpaceNS(server)
     this.sync = new ComAtprotoSyncNS(server)
     this.temp = new ComAtprotoTempNS(server)
   }
@@ -3025,6 +3034,98 @@ export class ComAtprotoServerNS {
     >,
   ) {
     const nsid = 'com.atproto.server.updateEmail' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComAtprotoSpaceNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  applyWrites<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceApplyWrites.QueryParams,
+      ComAtprotoSpaceApplyWrites.HandlerInput,
+      ComAtprotoSpaceApplyWrites.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.applyWrites' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  createRecord<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceCreateRecord.QueryParams,
+      ComAtprotoSpaceCreateRecord.HandlerInput,
+      ComAtprotoSpaceCreateRecord.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.createRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  deleteRecord<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceDeleteRecord.QueryParams,
+      ComAtprotoSpaceDeleteRecord.HandlerInput,
+      ComAtprotoSpaceDeleteRecord.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.deleteRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRecord<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetRecord.QueryParams,
+      ComAtprotoSpaceGetRecord.HandlerInput,
+      ComAtprotoSpaceGetRecord.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listRecords<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceListRecords.QueryParams,
+      ComAtprotoSpaceListRecords.HandlerInput,
+      ComAtprotoSpaceListRecords.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.listRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  putRecord<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpacePutRecord.QueryParams,
+      ComAtprotoSpacePutRecord.HandlerInput,
+      ComAtprotoSpacePutRecord.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  uploadBlob<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceUploadBlob.QueryParams,
+      ComAtprotoSpaceUploadBlob.HandlerInput,
+      ComAtprotoSpaceUploadBlob.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.uploadBlob' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

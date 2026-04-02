@@ -250,6 +250,13 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
+import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
+import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
+import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
+import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
+import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
+import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
@@ -571,6 +578,13 @@ export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+export * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
+export * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
+export * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
+export * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
+export * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
+export * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
+export * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 export * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
@@ -3991,6 +4005,7 @@ export class ComAtprotoNS {
   moderation: ComAtprotoModerationNS
   repo: ComAtprotoRepoNS
   server: ComAtprotoServerNS
+  space: ComAtprotoSpaceNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
 
@@ -4003,6 +4018,7 @@ export class ComAtprotoNS {
     this.moderation = new ComAtprotoModerationNS(client)
     this.repo = new ComAtprotoRepoNS(client)
     this.server = new ComAtprotoServerNS(client)
+    this.space = new ComAtprotoSpaceNS(client)
     this.sync = new ComAtprotoSyncNS(client)
     this.temp = new ComAtprotoTempNS(client)
   }
@@ -4868,6 +4884,93 @@ export class ComAtprotoServerNS {
       .catch((e) => {
         throw ComAtprotoServerUpdateEmail.toKnownErr(e)
       })
+  }
+}
+
+export class ComAtprotoSpaceNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  applyWrites(
+    data?: ComAtprotoSpaceApplyWrites.InputSchema,
+    opts?: ComAtprotoSpaceApplyWrites.CallOptions,
+  ): Promise<ComAtprotoSpaceApplyWrites.Response> {
+    return this._client
+      .call('com.atproto.space.applyWrites', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceApplyWrites.toKnownErr(e)
+      })
+  }
+
+  createRecord(
+    data?: ComAtprotoSpaceCreateRecord.InputSchema,
+    opts?: ComAtprotoSpaceCreateRecord.CallOptions,
+  ): Promise<ComAtprotoSpaceCreateRecord.Response> {
+    return this._client
+      .call('com.atproto.space.createRecord', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceCreateRecord.toKnownErr(e)
+      })
+  }
+
+  deleteRecord(
+    data?: ComAtprotoSpaceDeleteRecord.InputSchema,
+    opts?: ComAtprotoSpaceDeleteRecord.CallOptions,
+  ): Promise<ComAtprotoSpaceDeleteRecord.Response> {
+    return this._client
+      .call('com.atproto.space.deleteRecord', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceDeleteRecord.toKnownErr(e)
+      })
+  }
+
+  getRecord(
+    params?: ComAtprotoSpaceGetRecord.QueryParams,
+    opts?: ComAtprotoSpaceGetRecord.CallOptions,
+  ): Promise<ComAtprotoSpaceGetRecord.Response> {
+    return this._client
+      .call('com.atproto.space.getRecord', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetRecord.toKnownErr(e)
+      })
+  }
+
+  listRecords(
+    params?: ComAtprotoSpaceListRecords.QueryParams,
+    opts?: ComAtprotoSpaceListRecords.CallOptions,
+  ): Promise<ComAtprotoSpaceListRecords.Response> {
+    return this._client.call(
+      'com.atproto.space.listRecords',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  putRecord(
+    data?: ComAtprotoSpacePutRecord.InputSchema,
+    opts?: ComAtprotoSpacePutRecord.CallOptions,
+  ): Promise<ComAtprotoSpacePutRecord.Response> {
+    return this._client
+      .call('com.atproto.space.putRecord', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpacePutRecord.toKnownErr(e)
+      })
+  }
+
+  uploadBlob(
+    data?: ComAtprotoSpaceUploadBlob.InputSchema,
+    opts?: ComAtprotoSpaceUploadBlob.CallOptions,
+  ): Promise<ComAtprotoSpaceUploadBlob.Response> {
+    return this._client.call(
+      'com.atproto.space.uploadBlob',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 }
 
