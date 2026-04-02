@@ -6,6 +6,7 @@ import {
   Repo,
   SetHash,
   SpaceContext,
+  WriteOpAction,
 } from '../src'
 
 const testSpace: SpaceContext = {
@@ -24,70 +25,177 @@ describe('Repo', () => {
     repo = Repo.create(storage, 'did:example:alice')
   })
 
-  it('creates and reads a record', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    const record = await repo.getRecord('app.bsky.feed.post', '1')
-    expect(record).toEqual({ text: 'hello' })
+  describe('formatCommit + applyCommit', () => {
+    it('creates a record', async () => {
+      const commit = await repo.formatCommit({
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      })
+      expect(commit.writes).toHaveLength(1)
+      expect(commit.writes[0].action).toBe(WriteOpAction.Create)
+      expect(commit.writes[0]).toHaveProperty('cid')
+
+      // not persisted yet
+      expect(await repo.getRecord('app.bsky.feed.post', '1')).toBeNull()
+
+      await repo.applyCommit(commit)
+      const record = await repo.getRecord('app.bsky.feed.post', '1')
+      expect(record).toEqual({ text: 'hello' })
+    })
+
+    it('updates a record', async () => {
+      await repo.applyWrites({
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      })
+
+      const commit = await repo.formatCommit({
+        action: WriteOpAction.Update,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'updated' },
+      })
+      await repo.applyCommit(commit)
+
+      const record = await repo.getRecord('app.bsky.feed.post', '1')
+      expect(record).toEqual({ text: 'updated' })
+    })
+
+    it('deletes a record', async () => {
+      await repo.applyWrites({
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      })
+
+      const commit = await repo.formatCommit({
+        action: WriteOpAction.Delete,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+      })
+      await repo.applyCommit(commit)
+
+      expect(await repo.getRecord('app.bsky.feed.post', '1')).toBeNull()
+    })
+
+    it('throws on duplicate create', async () => {
+      await repo.applyWrites({
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      })
+      await expect(
+        repo.formatCommit({
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.post',
+          rkey: '1',
+          record: { text: 'dupe' },
+        }),
+      ).rejects.toThrow(RecordAlreadyExistsError)
+    })
+
+    it('throws on update of missing record', async () => {
+      await expect(
+        repo.formatCommit({
+          action: WriteOpAction.Update,
+          collection: 'app.bsky.feed.post',
+          rkey: 'missing',
+          record: { text: 'nope' },
+        }),
+      ).rejects.toThrow(RecordNotFoundError)
+    })
+
+    it('throws on delete of missing record', async () => {
+      await expect(
+        repo.formatCommit({
+          action: WriteOpAction.Delete,
+          collection: 'app.bsky.feed.post',
+          rkey: 'missing',
+        }),
+      ).rejects.toThrow(RecordNotFoundError)
+    })
   })
 
-  it('returns null for missing record', async () => {
-    const record = await repo.getRecord('app.bsky.feed.post', 'missing')
-    expect(record).toBeNull()
+  describe('applyWrites (convenience)', () => {
+    it('creates and reads a record', async () => {
+      await repo.applyWrites({
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      })
+      const record = await repo.getRecord('app.bsky.feed.post', '1')
+      expect(record).toEqual({ text: 'hello' })
+    })
+
+    it('handles batch writes', async () => {
+      await repo.applyWrites([
+        {
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.post',
+          rkey: '1',
+          record: { text: 'first' },
+        },
+        {
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.post',
+          rkey: '2',
+          record: { text: 'second' },
+        },
+      ])
+      const records = await repo.listRecords('app.bsky.feed.post')
+      expect(records).toHaveLength(2)
+    })
   })
 
-  it('throws on duplicate create', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await expect(
-      repo.createRecord('app.bsky.feed.post', '1', { text: 'dupe' }),
-    ).rejects.toThrow(RecordAlreadyExistsError)
-  })
+  describe('enumeration', () => {
+    it('lists collections', async () => {
+      await repo.applyWrites([
+        {
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.post',
+          rkey: '1',
+          record: { text: 'hello' },
+        },
+        {
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.like',
+          rkey: '1',
+          record: { subject: 'x' },
+        },
+      ])
+      const collections = await repo.listCollections()
+      expect(collections.sort()).toEqual([
+        'app.bsky.feed.like',
+        'app.bsky.feed.post',
+      ])
+    })
 
-  it('updates an existing record', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await repo.updateRecord('app.bsky.feed.post', '1', { text: 'updated' })
-    const record = await repo.getRecord('app.bsky.feed.post', '1')
-    expect(record).toEqual({ text: 'updated' })
-  })
-
-  it('throws on update of missing record', async () => {
-    await expect(
-      repo.updateRecord('app.bsky.feed.post', 'missing', { text: 'nope' }),
-    ).rejects.toThrow(RecordNotFoundError)
-  })
-
-  it('deletes a record', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await repo.deleteRecord('app.bsky.feed.post', '1')
-    const record = await repo.getRecord('app.bsky.feed.post', '1')
-    expect(record).toBeNull()
-  })
-
-  it('throws on delete of missing record', async () => {
-    await expect(
-      repo.deleteRecord('app.bsky.feed.post', 'missing'),
-    ).rejects.toThrow(RecordNotFoundError)
-  })
-
-  it('lists collections', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await repo.createRecord('app.bsky.feed.like', '1', { subject: 'x' })
-    const collections = await repo.listCollections()
-    expect(collections.sort()).toEqual([
-      'app.bsky.feed.like',
-      'app.bsky.feed.post',
-    ])
-  })
-
-  it('lists records in a collection', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'first' })
-    await repo.createRecord('app.bsky.feed.post', '2', { text: 'second' })
-    const records = await repo.listRecords('app.bsky.feed.post')
-    expect(records).toHaveLength(2)
-    expect(records.map((r) => r.rkey).sort()).toEqual(['1', '2'])
-  })
-
-  it('exposes did', () => {
-    expect(repo.did).toBe('did:example:alice')
+    it('lists records in a collection', async () => {
+      await repo.applyWrites([
+        {
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.post',
+          rkey: '1',
+          record: { text: 'first' },
+        },
+        {
+          action: WriteOpAction.Create,
+          collection: 'app.bsky.feed.post',
+          rkey: '2',
+          record: { text: 'second' },
+        },
+      ])
+      const records = await repo.listRecords('app.bsky.feed.post')
+      expect(records).toHaveLength(2)
+      expect(records.map((r) => r.rkey).sort()).toEqual(['1', '2'])
+    })
   })
 })
 
@@ -151,7 +259,12 @@ describe('commits', () => {
   })
 
   it('creates a valid signed commit', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
     const commit = await repo.commit(testSpace, keypair)
     expect(commit.hash).toBeInstanceOf(Buffer)
     expect(commit.hmac).toBeInstanceOf(Buffer)
@@ -160,7 +273,12 @@ describe('commits', () => {
   })
 
   it('produces different ikm per commit (deniability)', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
     const c1 = await repo.commit(testSpace, keypair)
     const c2 = await repo.commit(testSpace, keypair)
     expect(c1.ikm).not.toEqual(c2.ikm)
@@ -169,15 +287,30 @@ describe('commits', () => {
   })
 
   it('repo verifies its own commit', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
     const commit = await repo.commit(testSpace, keypair)
     expect(repo.verifyCommit(testSpace, commit)).toBe(true)
   })
 
   it('commit does not verify after repo changes', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
     const commit = await repo.commit(testSpace, keypair)
-    await repo.createRecord('app.bsky.feed.post', '2', { text: 'world' })
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '2',
+      record: { text: 'world' },
+    })
     expect(repo.verifyCommit(testSpace, commit)).toBe(false)
   })
 
@@ -185,12 +318,36 @@ describe('commits', () => {
     const storage2 = new MemoryStorage()
     const repo2 = Repo.create(storage2, 'did:example:bob')
 
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await repo.createRecord('app.bsky.feed.post', '2', { text: 'world' })
+    await repo.applyWrites([
+      {
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      },
+      {
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '2',
+        record: { text: 'world' },
+      },
+    ])
 
     // Add in different order
-    await repo2.createRecord('app.bsky.feed.post', '2', { text: 'world' })
-    await repo2.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
+    await repo2.applyWrites([
+      {
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '2',
+        record: { text: 'world' },
+      },
+      {
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      },
+    ])
 
     const c1 = await repo.commit(testSpace, keypair)
     const c2 = await repo2.commit(testSpace, keypair)
@@ -198,10 +355,20 @@ describe('commits', () => {
   })
 
   it('update changes the hash correctly', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
     const before = await repo.commit(testSpace, keypair)
 
-    await repo.updateRecord('app.bsky.feed.post', '1', { text: 'updated' })
+    await repo.applyWrites({
+      action: WriteOpAction.Update,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'updated' },
+    })
     const after = await repo.commit(testSpace, keypair)
 
     expect(before.hash).not.toEqual(after.hash)
@@ -210,20 +377,40 @@ describe('commits', () => {
   it('delete reverses add for set hash', async () => {
     const emptyHash = (await repo.commit(testSpace, keypair)).hash
 
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await repo.deleteRecord('app.bsky.feed.post', '1')
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
+    await repo.applyWrites({
+      action: WriteOpAction.Delete,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+    })
 
     const afterDelete = (await repo.commit(testSpace, keypair)).hash
     expect(afterDelete).toEqual(emptyHash)
   })
 
   it('Repo.load recomputes set hash from storage', async () => {
-    await repo.createRecord('app.bsky.feed.post', '1', { text: 'hello' })
-    await repo.createRecord('app.bsky.feed.post', '2', { text: 'world' })
+    await repo.applyWrites([
+      {
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '1',
+        record: { text: 'hello' },
+      },
+      {
+        action: WriteOpAction.Create,
+        collection: 'app.bsky.feed.post',
+        rkey: '2',
+        record: { text: 'world' },
+      },
+    ])
 
     const commit = await repo.commit(testSpace, keypair)
 
-    // Load from same storage
     const loaded = await Repo.load(repo.storage, 'did:example:alice')
     expect(loaded.verifyCommit(testSpace, commit)).toBe(true)
   })

@@ -1,4 +1,4 @@
-import { RepoRecord } from '../types'
+import { CommitData, RepoRecord, WriteOpAction } from '../types'
 import { formatDataKey, parseDataKey } from '../util'
 import { SpaceStorage } from './types'
 
@@ -11,18 +11,6 @@ export class MemoryStorage implements SpaceStorage {
     rkey: string,
   ): Promise<RepoRecord | null> {
     return this.data.get(formatDataKey(collection, rkey)) ?? null
-  }
-
-  async putRecord(
-    collection: string,
-    rkey: string,
-    record: RepoRecord,
-  ): Promise<void> {
-    this.data.set(formatDataKey(collection, rkey), record)
-  }
-
-  async deleteRecord(collection: string, rkey: string): Promise<boolean> {
-    return this.data.delete(formatDataKey(collection, rkey))
   }
 
   async hasRecord(collection: string, rkey: string): Promise<boolean> {
@@ -54,8 +42,19 @@ export class MemoryStorage implements SpaceStorage {
     return this.setHash
   }
 
-  async putSetHash(hash: Buffer): Promise<void> {
-    this.setHash = Buffer.from(hash)
+  async applyCommit(commit: CommitData): Promise<void> {
+    for (const write of commit.writes) {
+      const key = formatDataKey(write.collection, write.rkey)
+      if (
+        write.action === WriteOpAction.Create ||
+        write.action === WriteOpAction.Update
+      ) {
+        this.data.set(key, write.record)
+      } else if (write.action === WriteOpAction.Delete) {
+        this.data.delete(key)
+      }
+    }
+    this.setHash = Buffer.from(commit.setHash)
   }
 
   async destroy(): Promise<void> {

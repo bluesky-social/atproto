@@ -5,6 +5,8 @@ import * as record from './record'
 import * as recordBlob from './record-blob'
 import * as repoBlock from './repo-block'
 import * as repoRoot from './repo-root'
+import * as spaceRecord from './space-record'
+import * as spaceRoot from './space-root'
 
 export type DatabaseSchema = accountPref.PartialDB &
   repoRoot.PartialDB &
@@ -12,7 +14,9 @@ export type DatabaseSchema = accountPref.PartialDB &
   backlink.PartialDB &
   repoBlock.PartialDB &
   blob.PartialDB &
-  recordBlob.PartialDB
+  recordBlob.PartialDB &
+  spaceRecord.PartialDB &
+  spaceRoot.PartialDB
 
 export type { AccountPref } from './account-pref'
 export type { RepoRoot } from './repo-root'
@@ -21,3 +25,5 @@ export type { Backlink } from './backlink'
 export type { RepoBlock } from './repo-block'
 export type { Blob } from './blob'
 export type { RecordBlob } from './record-blob'
+export type { SpaceRecord } from './space-record'
+export type { SpaceRoot } from './space-root'

@@ -1,3 +1,4 @@
+import { Cid } from '@atproto/lex-data'
 import { LexMap } from '@atproto/lex-data'
 
 export type RepoRecord = LexMap
@@ -29,6 +30,35 @@ export type RecordDeleteOp = {
 }
 
 export type RecordWriteOp = RecordCreateOp | RecordUpdateOp | RecordDeleteOp
+
+export type PreparedCreate = {
+  action: WriteOpAction.Create
+  collection: string
+  rkey: string
+  record: RepoRecord
+  cid: Cid
+}
+
+export type PreparedUpdate = {
+  action: WriteOpAction.Update
+  collection: string
+  rkey: string
+  record: RepoRecord
+  cid: Cid
+}
+
+export type PreparedDelete = {
+  action: WriteOpAction.Delete
+  collection: string
+  rkey: string
+}
+
+export type PreparedWrite = PreparedCreate | PreparedUpdate | PreparedDelete
+
+export type CommitData = {
+  writes: PreparedWrite[]
+  setHash: Buffer
+}
 
 export type SpaceContext = {
   spaceDid: string

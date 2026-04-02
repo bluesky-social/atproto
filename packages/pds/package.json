@@ -49,6 +49,7 @@
     "@atproto/oauth-provider": "workspace:^",
     "@atproto/oauth-scopes": "workspace:^",
     "@atproto/repo": "workspace:^",
+    "@atproto/space": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",

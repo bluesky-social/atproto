@@ -1877,6 +1877,9 @@ importers:
       '@atproto/repo':
         specifier: workspace:^
         version: link:../repo
+      '@atproto/space':
+        specifier: workspace:^
+        version: link:../space
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax

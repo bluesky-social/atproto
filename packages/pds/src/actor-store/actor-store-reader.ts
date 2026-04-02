@@ -5,11 +5,13 @@ import { ActorDb } from './db'
 import { PreferenceReader } from './preference/reader'
 import { RecordReader } from './record/reader'
 import { RepoReader } from './repo/reader'
+import { SpaceReader } from './space/reader'
 
 export class ActorStoreReader {
   public readonly repo: RepoReader
   public readonly record: RecordReader
   public readonly pref: PreferenceReader
+  public readonly space: SpaceReader
 
   constructor(
     public readonly did: string,
@@ -22,6 +24,7 @@ export class ActorStoreReader {
     this.repo = new RepoReader(db, blobstore)
     this.record = new RecordReader(db)
     this.pref = new PreferenceReader(db)
+    this.space = new SpaceReader(db)
 
     // Invoke "keypair" once. Also avoids leaking "this" as keypair context.
     let keypairPromise: Promise<Keypair>

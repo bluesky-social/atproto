@@ -4,11 +4,13 @@ import { ActorDb } from './db'
 import { PreferenceTransactor } from './preference/transactor'
 import { RecordTransactor } from './record/transactor'
 import { RepoTransactor } from './repo/transactor'
+import { SpaceTransactor } from './space/transactor'
 
 export class ActorStoreTransactor {
   public readonly record: RecordTransactor
   public readonly repo: RepoTransactor
   public readonly pref: PreferenceTransactor
+  public readonly space: SpaceTransactor
 
   constructor(
     public readonly did: string,
@@ -20,6 +22,7 @@ export class ActorStoreTransactor {
 
     this.record = new RecordTransactor(db, blobstore)
     this.pref = new PreferenceTransactor(db)
+    this.space = new SpaceTransactor(db)
     this.repo = new RepoTransactor(
       db,
       blobstore,

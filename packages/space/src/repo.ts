@@ -1,9 +1,18 @@
+import { cidForLex } from '@atproto/lex-cbor'
 import { Keypair } from '@atproto/crypto'
 import { createCommit, verifyCommit } from './commit'
 import { RecordAlreadyExistsError, RecordNotFoundError } from './error'
 import { SetHash } from './set-hash'
 import { SpaceStorage } from './storage'
-import { RepoRecord, SignedCommit, SpaceContext } from './types'
+import {
+  CommitData,
+  PreparedWrite,
+  RepoRecord,
+  RecordWriteOp,
+  SignedCommit,
+  SpaceContext,
+  WriteOpAction,
+} from './types'
 import { formatRecordElement } from './util'
 
 type Params = {
@@ -35,6 +44,14 @@ export class Repo {
     return Repo.recompute(storage, did)
   }
 
+  static async loadOrCreate(storage: SpaceStorage, did: string): Promise<Repo> {
+    const stored = await storage.getSetHash()
+    if (stored) {
+      return new Repo({ storage, did, setHash: new SetHash(stored) })
+    }
+    return new Repo({ storage, did })
+  }
+
   static async recompute(storage: SpaceStorage, did: string): Promise<Repo> {
     const setHash = new SetHash()
     const collections = await storage.listCollections()
@@ -44,58 +61,94 @@ export class Repo {
         await setHash.add(await formatRecordElement(collection, rkey, record))
       }
     }
-    await storage.putSetHash(setHash.toBytes())
     return new Repo({ storage, did, setHash })
   }
+
+  async formatCommit(
+    writes: RecordWriteOp | RecordWriteOp[],
+  ): Promise<CommitData> {
+    const ops = Array.isArray(writes) ? writes : [writes]
+    const prepared: PreparedWrite[] = []
+    const newSetHash = new SetHash(this.setHash.toBytes())
+
+    for (const op of ops) {
+      if (op.action === WriteOpAction.Create) {
+        const existing = await this.storage.hasRecord(op.collection, op.rkey)
+        if (existing) {
+          throw new RecordAlreadyExistsError(op.collection, op.rkey)
+        }
+        const cid = await cidForLex(op.record)
+        await newSetHash.add(
+          await formatRecordElement(op.collection, op.rkey, op.record),
+        )
+        prepared.push({
+          action: WriteOpAction.Create,
+          collection: op.collection,
+          rkey: op.rkey,
+          record: op.record,
+          cid,
+        })
+      } else if (op.action === WriteOpAction.Update) {
+        const existing = await this.storage.getRecord(op.collection, op.rkey)
+        if (!existing) {
+          throw new RecordNotFoundError(op.collection, op.rkey)
+        }
+        await newSetHash.remove(
+          await formatRecordElement(op.collection, op.rkey, existing),
+        )
+        const cid = await cidForLex(op.record)
+        await newSetHash.add(
+          await formatRecordElement(op.collection, op.rkey, op.record),
+        )
+        prepared.push({
+          action: WriteOpAction.Update,
+          collection: op.collection,
+          rkey: op.rkey,
+          record: op.record,
+          cid,
+        })
+      } else if (op.action === WriteOpAction.Delete) {
+        const existing = await this.storage.getRecord(op.collection, op.rkey)
+        if (!existing) {
+          throw new RecordNotFoundError(op.collection, op.rkey)
+        }
+        await newSetHash.remove(
+          await formatRecordElement(op.collection, op.rkey, existing),
+        )
+        prepared.push({
+          action: WriteOpAction.Delete,
+          collection: op.collection,
+          rkey: op.rkey,
+        })
+      }
+    }
+
+    return {
+      writes: prepared,
+      setHash: newSetHash.toBytes(),
+    }
+  }
+
+  async applyCommit(commit: CommitData): Promise<void> {
+    await this.storage.applyCommit(commit)
+    this.setHash = new SetHash(commit.setHash)
+  }
+
+  async applyWrites(
+    writes: RecordWriteOp | RecordWriteOp[],
+  ): Promise<CommitData> {
+    const commit = await this.formatCommit(writes)
+    await this.applyCommit(commit)
+    return commit
+  }
+
+  // Reads
 
   async getRecord(
     collection: string,
     rkey: string,
   ): Promise<RepoRecord | null> {
     return this.storage.getRecord(collection, rkey)
-  }
-
-  async createRecord(
-    collection: string,
-    rkey: string,
-    record: RepoRecord,
-  ): Promise<void> {
-    const existing = await this.storage.hasRecord(collection, rkey)
-    if (existing) {
-      throw new RecordAlreadyExistsError(collection, rkey)
-    }
-    await this.storage.putRecord(collection, rkey, record)
-    await this.setHash.add(await formatRecordElement(collection, rkey, record))
-    await this.storage.putSetHash(this.setHash.toBytes())
-  }
-
-  async updateRecord(
-    collection: string,
-    rkey: string,
-    record: RepoRecord,
-  ): Promise<void> {
-    const existing = await this.storage.getRecord(collection, rkey)
-    if (!existing) {
-      throw new RecordNotFoundError(collection, rkey)
-    }
-    await this.setHash.remove(
-      await formatRecordElement(collection, rkey, existing),
-    )
-    await this.storage.putRecord(collection, rkey, record)
-    await this.setHash.add(await formatRecordElement(collection, rkey, record))
-    await this.storage.putSetHash(this.setHash.toBytes())
-  }
-
-  async deleteRecord(collection: string, rkey: string): Promise<void> {
-    const existing = await this.storage.getRecord(collection, rkey)
-    if (!existing) {
-      throw new RecordNotFoundError(collection, rkey)
-    }
-    await this.storage.deleteRecord(collection, rkey)
-    await this.setHash.remove(
-      await formatRecordElement(collection, rkey, existing),
-    )
-    await this.storage.putSetHash(this.setHash.toBytes())
   }
 
   async listCollections(): Promise<string[]> {
@@ -108,12 +161,17 @@ export class Repo {
     return this.storage.listRecords(collection)
   }
 
+  // Signed commits
+
   async commit(space: SpaceContext, keypair: Keypair): Promise<SignedCommit> {
     return createCommit(this.setHash, space, keypair)
   }
 
   verifyCommit(space: SpaceContext, commit: SignedCommit): boolean {
-    return verifyCommit(space, commit)
+    return (
+      this.setHash.equals(new SetHash(commit.hash)) &&
+      verifyCommit(space, commit)
+    )
   }
 }
 
