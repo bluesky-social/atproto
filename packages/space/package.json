@@ -1,0 +1,30 @@
+{
+  "name": "@atproto/space",
+  "version": "0.0.1",
+  "license": "MIT",
+  "description": "atproto permissioned data protocol",
+  "keywords": [
+    "atproto",
+    "space"
+  ],
+  "engines": {
+    "node": ">=18.7.0"
+  },
+  "homepage": "https://atproto.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluesky-social/atproto",
+    "directory": "packages/space"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^28.1.2",
+    "typescript": "^5.6.3"
+  }
+}
