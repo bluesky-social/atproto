@@ -127,18 +127,18 @@ export const locales = {
   //   name: 'Tiếng Việt',
   //   flag: '🇻🇳',
   // },
-  // 'zh-CN': {
-  //   name: '中文(简体)',
-  //   flag: '🇨🇳',
-  // },
+  'zh-CN': {
+    name: '中文(简体)',
+    flag: '🇨🇳',
+  },
   // 'zh-HK': {
   //   name: '中文(香港)',
   //   flag: '🇭🇰',
   // },
-  // 'zh-TW': {
-  //   name: '中文(繁體)',
-  //   flag: '🇹🇼',
-  // },
+  'zh-TW': {
+    name: '中文(繁體)',
+    flag: '🇹🇼',
+  },
 } as const satisfies Record<string, { name: string; flag?: string }>
 
 export type Locale = keyof typeof locales
