@@ -1,6 +1,6 @@
+import { Selectable, sql } from 'kysely'
 import { ToolsOzoneQueueDefs } from '@atproto/api'
 import { InvalidRequestError } from '@atproto/xrpc-server'
-import { Selectable, sql } from 'kysely'
 import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'

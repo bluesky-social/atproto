@@ -1,5 +1,5 @@
-import AtpAgent from '@atproto/api'
 import { sql } from 'kysely'
+import AtpAgent from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -244,9 +244,7 @@ describe('report-stats', () => {
         .where('queueId', '=', -1)
         .where('status', '!=', 'closed')
         .executeTakeFirstOrThrow()
-      expect(Number(unqueuedAfter.count)).toBe(
-        Number(unqueuedBefore.count) + 1,
-      )
+      expect(Number(unqueuedAfter.count)).toBe(Number(unqueuedBefore.count) + 1)
 
       const stats = await getLiveStats({ queueId: -1 })
       expect(stats.pendingCount).toBe(Number(unqueuedAfter.count))
@@ -329,9 +327,7 @@ describe('report-stats', () => {
       expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(
         avgHandlingTime - 5,
       )
-      expect(stats.avgHandlingTimeSec).toBeLessThanOrEqual(
-        avgHandlingTime + 5,
-      )
+      expect(stats.avgHandlingTimeSec).toBeLessThanOrEqual(avgHandlingTime + 5)
     })
 
     it('returns zeroed per-moderator stats for inactive moderator', async () => {

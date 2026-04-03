@@ -1,5 +1,9 @@
 import { Selectable } from 'kysely'
-import { AppBskyActorDefs, ToolsOzoneQueueDefs, ToolsOzoneReportDefs } from '@atproto/api'
+import {
+  AppBskyActorDefs,
+  ToolsOzoneQueueDefs,
+  ToolsOzoneReportDefs,
+} from '@atproto/api'
 import { addAccountInfoToRepoViewDetail } from '../api/util'
 import { ReportStat } from '../db/schema/report_stat'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
