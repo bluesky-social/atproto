@@ -12,10 +12,11 @@ export interface ReportStat {
    * 'live' expires in 15 minutes
    * 'historical' expires based on its timeframe (e.g. each day).
    * */
-  mode: string // 'live' or 'historical'
+  mode: string
   timeframe: string // 'day' or 'week'
   queueId: number | null // NULL = aggregate across all queues
   reportTypes: string[] | null // NULL = aggregate across all report types
+  moderatorDid: string | null // NULL = aggregate, non-null = per-moderator
 
   // stats
   inboundCount: number | null // Reports received in the last 24 hours
@@ -23,7 +24,6 @@ export interface ReportStat {
   actionedCount: number | null // Reports with status = 'closed' in last 24h
   escalatedCount: number | null // Reports with status = 'escalated' in last 24h
   actionRate: number | null // actionedCount / inboundCount * 100
-  moderatorDid: string | null // NULL = aggregate, non-null = per-moderator
   avgHandlingTimeSec: number | null // Average time from open/assigned to closed, in milliseconds
 }
 

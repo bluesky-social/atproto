@@ -13,6 +13,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('timeframe', 'varchar', (col) => col.notNull()) // 'day' or 'week'
     .addColumn('queueId', 'integer') // NULL = aggregate across all queues
     .addColumn('reportTypes', 'jsonb') // NULL = aggregate across all report types
+    .addColumn('moderatorDid', 'varchar') // NULL = aggregate across all moderators
 
     // stats
     .addColumn('inboundCount', 'integer')
@@ -20,7 +21,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('actionedCount', 'integer')
     .addColumn('escalatedCount', 'integer')
     .addColumn('actionRate', 'integer')
-    .addColumn('moderatorDid', 'varchar')
     .addColumn('avgHandlingTimeSec', 'integer')
     .execute()
 
