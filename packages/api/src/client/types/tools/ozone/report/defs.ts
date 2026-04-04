@@ -384,6 +384,64 @@ export function validateReportActivityView<V>(v: V) {
   return validate<ReportActivityView & V>(v, id, hashReportActivityView)
 }
 
+/** Live statistics for reports, filterable by queue, moderator, or report type. */
+export interface LiveStats {
+  $type?: 'tools.ozone.report.defs#liveStats'
+  /** Number of reports in 'open' status. */
+  pendingCount?: number
+  /** Number of reports in 'closed' status. */
+  actionedCount?: number
+  /** Number of reports in 'escalated' status. */
+  escalatedPendingCount?: number
+  /** Reports received in the last 24 hours. */
+  inboundCount?: number
+  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
+  actionRate?: number
+  /** Average time in seconds from report creation (or moderator assignment) to close. */
+  avgHandlingTimeSec?: number
+  /** When these statistics were last computed. */
+  lastUpdated?: string
+}
+
+const hashLiveStats = 'liveStats'
+
+export function isLiveStats<V>(v: V) {
+  return is$typed(v, id, hashLiveStats)
+}
+
+export function validateLiveStats<V>(v: V) {
+  return validate<LiveStats & V>(v, id, hashLiveStats)
+}
+
+/** A single daily snapshot of historical report statistics. */
+export interface HistoricalStats {
+  $type?: 'tools.ozone.report.defs#historicalStats'
+  /** When this snapshot was computed. */
+  computedAt: string
+  /** Number of reports in 'open' status. */
+  pendingCount?: number
+  /** Number of reports in 'closed' status within the day. */
+  actionedCount?: number
+  /** Number of reports in 'escalated' status within the day. */
+  escalatedPendingCount?: number
+  /** Reports received within the day. */
+  inboundCount?: number
+  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
+  actionRate?: number
+  /** Average time in seconds from report creation (or moderator assignment) to close. */
+  avgHandlingTimeSec?: number
+}
+
+const hashHistoricalStats = 'historicalStats'
+
+export function isHistoricalStats<V>(v: V) {
+  return is$typed(v, id, hashHistoricalStats)
+}
+
+export function validateHistoricalStats<V>(v: V) {
+  return validate<HistoricalStats & V>(v, id, hashHistoricalStats)
+}
+
 export interface AssignmentView {
   $type?: 'tools.ozone.report.defs#assignmentView'
   id: number

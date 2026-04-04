@@ -19,6 +19,7 @@ import * as repoPushEvent from './repo_push_event'
 import * as report from './report'
 import * as reportActivity from './report_activity'
 import * as reportQueue from './report_queue'
+import * as reportStat from './report_stat'
 import * as safelink from './safelink'
 import * as scheduledAction from './scheduled-action'
 import * as setting from './setting'
@@ -49,7 +50,8 @@ export type DatabaseSchemaType = modEvent.PartialDB &
   jobCursor.PartialDB &
   safelink.PartialDB &
   scheduledAction.PartialDB &
-  moderatorAssignment.PartialDB
+  moderatorAssignment.PartialDB &
+  reportStat.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>
 

@@ -76,9 +76,18 @@ export async function createReportActivity(
     const now = new Date().toISOString()
 
     if (result.nextStatus !== null) {
+      const updateSet: Record<string, string | null> = {
+        status: result.nextStatus,
+        updatedAt: now,
+      }
+      if (result.nextStatus === 'closed') {
+        updateSet.closedAt = now
+      } else if (result.nextStatus === 'open') {
+        updateSet.closedAt = null
+      }
       await dbTxn.db
         .updateTable('report')
-        .set({ status: result.nextStatus, updatedAt: now })
+        .set(updateSet)
         .where('id', '=', reportId)
         .execute()
     }

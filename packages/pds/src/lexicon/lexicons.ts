@@ -18828,12 +18828,7 @@ export const schemaDict = {
       },
       queueStats: {
         type: 'object',
-        required: [
-          'pendingCount',
-          'actionedCount',
-          'escalatedPendingCount',
-          'lastUpdated',
-        ],
+        required: [],
         properties: {
           pendingCount: {
             type: 'integer',
@@ -18847,20 +18842,19 @@ export const schemaDict = {
             type: 'integer',
             description: "Number of reports in 'escalated' status",
           },
-          uniqueReportersCount: {
+          inboundCount: {
             type: 'integer',
-            description:
-              'Number of distinct reporters with reports in this queue',
+            description: 'Reports received in this queue in the last 24 hours.',
           },
-          uniqueSubjectsDidCount: {
+          actionRate: {
             type: 'integer',
             description:
-              'Number of distinct subject DIDs with reports in this queue',
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0.',
           },
-          uniqueSubjectsFullCount: {
+          avgHandlingTimeSec: {
             type: 'integer',
             description:
-              'Number of distinct subject DID+URI combinations in this queue',
+              'Average time in seconds from report creation to close, for reports closed in this period.',
           },
           lastUpdated: {
             type: 'string',
@@ -19807,6 +19801,83 @@ export const schemaDict = {
           },
         },
       },
+      liveStats: {
+        description:
+          'Live statistics for reports, filterable by queue, moderator, or report type.',
+        type: 'object',
+        properties: {
+          pendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'open' status.",
+          },
+          actionedCount: {
+            type: 'integer',
+            description: "Number of reports in 'closed' status.",
+          },
+          escalatedPendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'escalated' status.",
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received in the last 24 hours.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation (or moderator assignment) to close.',
+          },
+          lastUpdated: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When these statistics were last computed.',
+          },
+        },
+      },
+      historicalStats: {
+        description: 'A single daily snapshot of historical report statistics.',
+        type: 'object',
+        required: ['computedAt'],
+        properties: {
+          computedAt: {
+            type: 'string',
+            format: 'datetime',
+            description: 'When this snapshot was computed.',
+          },
+          pendingCount: {
+            type: 'integer',
+            description: "Number of reports in 'open' status.",
+          },
+          actionedCount: {
+            type: 'integer',
+            description: "Number of reports in 'closed' status within the day.",
+          },
+          escalatedPendingCount: {
+            type: 'integer',
+            description:
+              "Number of reports in 'escalated' status within the day.",
+          },
+          inboundCount: {
+            type: 'integer',
+            description: 'Reports received within the day.',
+          },
+          actionRate: {
+            type: 'integer',
+            description:
+              'Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer.',
+          },
+          avgHandlingTimeSec: {
+            type: 'integer',
+            description:
+              'Average time in seconds from report creation (or moderator assignment) to close.',
+          },
+        },
+      },
       assignmentView: {
         type: 'object',
         required: ['id', 'did', 'reportId', 'startAt'],
@@ -19909,6 +19980,79 @@ export const schemaDict = {
       },
     },
   },
+  ToolsOzoneReportGetHistoricalStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getHistoricalStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get historical daily report statistics. Returns a paginated list of daily stat snapshots, newest first. Filter by queue, moderator, or report type.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Use -1 for unqueued reports.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'Filter stats by moderator DID.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter stats by report types.',
+            },
+            startDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Earliest date to include (inclusive).',
+            },
+            endDate: {
+              type: 'string',
+              format: 'datetime',
+              description: 'Latest date to include (inclusive).',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 30,
+              description: 'Maximum number of entries to return.',
+            },
+            cursor: {
+              type: 'string',
+              description: 'Pagination cursor.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:tools.ozone.report.defs#historicalStats',
+                },
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
   ToolsOzoneReportGetLatestReport: {
     lexicon: 1,
     id: 'tools.ozone.report.getLatestReport',
@@ -19939,6 +20083,53 @@ export const schemaDict = {
             description: 'No report found.',
           },
         ],
+      },
+    },
+  },
+  ToolsOzoneReportGetLiveStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.getLiveStats',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get live report statistics from the past 24 hours. Filter by queue, moderator, or report type. Omit all parameters for aggregate stats.',
+        parameters: {
+          type: 'params',
+          properties: {
+            queueId: {
+              type: 'integer',
+              description:
+                'Filter stats by queue. Use -1 for unqueued reports.',
+            },
+            moderatorDid: {
+              type: 'string',
+              format: 'did',
+              description: 'Filter stats by moderator DID.',
+            },
+            reportTypes: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Filter stats by report types.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['stats'],
+            properties: {
+              stats: {
+                type: 'ref',
+                ref: 'lex:tools.ozone.report.defs#liveStats',
+                description: 'Statistics for the requested filter.',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -22384,7 +22575,9 @@ export const ids = {
   ToolsOzoneReportCreateActivity: 'tools.ozone.report.createActivity',
   ToolsOzoneReportDefs: 'tools.ozone.report.defs',
   ToolsOzoneReportGetAssignments: 'tools.ozone.report.getAssignments',
+  ToolsOzoneReportGetHistoricalStats: 'tools.ozone.report.getHistoricalStats',
   ToolsOzoneReportGetLatestReport: 'tools.ozone.report.getLatestReport',
+  ToolsOzoneReportGetLiveStats: 'tools.ozone.report.getLiveStats',
   ToolsOzoneReportGetReport: 'tools.ozone.report.getReport',
   ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',

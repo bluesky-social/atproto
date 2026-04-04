@@ -252,7 +252,9 @@ import * as ToolsOzoneQueueUpdateQueue from './types/tools/ozone/queue/updateQue
 import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/assignModerator.js'
 import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+import * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
@@ -3699,6 +3701,18 @@ export class ToolsOzoneReportNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getHistoricalStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetHistoricalStats.QueryParams,
+      ToolsOzoneReportGetHistoricalStats.HandlerInput,
+      ToolsOzoneReportGetHistoricalStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getHistoricalStats' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getLatestReport<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3708,6 +3722,18 @@ export class ToolsOzoneReportNS {
     >,
   ) {
     const nsid = 'tools.ozone.report.getLatestReport' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getLiveStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportGetLiveStats.QueryParams,
+      ToolsOzoneReportGetLiveStats.HandlerInput,
+      ToolsOzoneReportGetLiveStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.getLiveStats' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

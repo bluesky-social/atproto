@@ -24,6 +24,7 @@ import {
 } from './mod-service/profile'
 import { StrikeService, StrikeServiceCreator } from './mod-service/strike'
 import { QueueService, QueueServiceCreator } from './queue/service'
+import { ReportStatsService, ReportStatsServiceCreator } from './report/stats'
 import {
   SafelinkRuleService,
   SafelinkRuleServiceCreator,
@@ -61,6 +62,7 @@ export type AppContextOptions = {
   safelinkRuleService: SafelinkRuleServiceCreator
   scheduledActionService: ScheduledActionServiceCreator
   queueService: QueueServiceCreator
+  reportStatsService: ReportStatsServiceCreator
   setService: SetServiceCreator
   settingService: SettingServiceCreator
   strikeService: StrikeServiceCreator
@@ -148,6 +150,7 @@ export class AppContext {
       createAuthHeaders,
     )
     const queueService = QueueService.creator()
+    const reportStatsService = ReportStatsService.creator()
     const setService = SetService.creator()
     const settingService = SettingService.creator()
     const strikeService = StrikeService.creator()
@@ -197,6 +200,7 @@ export class AppContext {
         scheduledActionService,
         teamService,
         queueService,
+        reportStatsService,
         setService,
         settingService,
         strikeService,
@@ -262,6 +266,10 @@ export class AppContext {
 
   get queueService(): QueueServiceCreator {
     return this.opts.queueService
+  }
+
+  get reportStatsService(): ReportStatsServiceCreator {
+    return this.opts.reportStatsService
   }
 
   get setService(): SetServiceCreator {

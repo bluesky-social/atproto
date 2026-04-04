@@ -53,19 +53,19 @@ export function validateQueueView<V>(v: V) {
 export interface QueueStats {
   $type?: 'tools.ozone.queue.defs#queueStats'
   /** Number of reports in 'open' status */
-  pendingCount: number
+  pendingCount?: number
   /** Number of reports in 'closed' status */
-  actionedCount: number
+  actionedCount?: number
   /** Number of reports in 'escalated' status */
-  escalatedPendingCount: number
-  /** Number of distinct reporters with reports in this queue */
-  uniqueReportersCount?: number
-  /** Number of distinct subject DIDs with reports in this queue */
-  uniqueSubjectsDidCount?: number
-  /** Number of distinct subject DID+URI combinations in this queue */
-  uniqueSubjectsFullCount?: number
+  escalatedPendingCount?: number
+  /** Reports received in this queue in the last 24 hours. */
+  inboundCount?: number
+  /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. Absent when inboundCount is 0. */
+  actionRate?: number
+  /** Average time in seconds from report creation to close, for reports closed in this period. */
+  avgHandlingTimeSec?: number
   /** When these statistics were last computed */
-  lastUpdated: string
+  lastUpdated?: string
 }
 
 const hashQueueStats = 'queueStats'

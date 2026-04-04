@@ -475,6 +475,77 @@
         }
       }
     },
+    "liveStats": {
+      "description": "Live statistics for reports, filterable by queue, moderator, or report type.",
+      "type": "object",
+      "properties": {
+        "pendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'open' status."
+        },
+        "actionedCount": {
+          "type": "integer",
+          "description": "Number of reports in 'closed' status."
+        },
+        "escalatedPendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'escalated' status."
+        },
+        "inboundCount": {
+          "type": "integer",
+          "description": "Reports received in the last 24 hours."
+        },
+        "actionRate": {
+          "type": "integer",
+          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer."
+        },
+        "avgHandlingTimeSec": {
+          "type": "integer",
+          "description": "Average time in seconds from report creation (or moderator assignment) to close."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When these statistics were last computed."
+        }
+      }
+    },
+    "historicalStats": {
+      "description": "A single daily snapshot of historical report statistics.",
+      "type": "object",
+      "required": ["computedAt"],
+      "properties": {
+        "computedAt": {
+          "type": "string",
+          "format": "datetime",
+          "description": "When this snapshot was computed."
+        },
+        "pendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'open' status."
+        },
+        "actionedCount": {
+          "type": "integer",
+          "description": "Number of reports in 'closed' status within the day."
+        },
+        "escalatedPendingCount": {
+          "type": "integer",
+          "description": "Number of reports in 'escalated' status within the day."
+        },
+        "inboundCount": {
+          "type": "integer",
+          "description": "Reports received within the day."
+        },
+        "actionRate": {
+          "type": "integer",
+          "description": "Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer."
+        },
+        "avgHandlingTimeSec": {
+          "type": "integer",
+          "description": "Average time in seconds from report creation (or moderator assignment) to close."
+        }
+      }
+    },
     "assignmentView": {
       "type": "object",
       "required": ["id", "did", "reportId", "startAt"],

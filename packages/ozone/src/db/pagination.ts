@@ -239,6 +239,37 @@ export class EndAtIdKeyset extends GenericKeyset<EndAtIdKeysetParam, Cursor> {
   }
 }
 
+type ComputedAtIdKeysetParam = {
+  id: number
+  computedAt: string | Date
+}
+
+export class ComputedAtIdKeyset extends GenericKeyset<
+  ComputedAtIdKeysetParam,
+  Cursor
+> {
+  labelResult(result: ComputedAtIdKeysetParam): Cursor
+  labelResult(result: ComputedAtIdKeysetParam) {
+    return { primary: result.computedAt, secondary: result.id.toString() }
+  }
+  labeledResultToCursor(labeled: Cursor) {
+    return {
+      primary: new Date(labeled.primary).getTime().toString(),
+      secondary: labeled.secondary,
+    }
+  }
+  cursorToLabeledResult(cursor: Cursor) {
+    const primaryDate = new Date(parseInt(cursor.primary, 10))
+    if (isNaN(primaryDate.getTime())) {
+      throw new InvalidRequestError('Malformed cursor')
+    }
+    return {
+      primary: primaryDate.toISOString(),
+      secondary: cursor.secondary,
+    }
+  }
+}
+
 export const paginate = <
   QB extends AnyQb,
   K extends GenericKeyset<unknown, any>,

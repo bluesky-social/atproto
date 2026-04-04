@@ -1,5 +1,11 @@
-import { AppBskyActorDefs, ToolsOzoneQueueDefs } from '@atproto/api'
+import { Selectable } from 'kysely'
+import {
+  AppBskyActorDefs,
+  ToolsOzoneQueueDefs,
+  ToolsOzoneReportDefs,
+} from '@atproto/api'
 import { addAccountInfoToRepoViewDetail } from '../api/util'
+import { ReportStat } from '../db/schema/report_stat'
 import { AccountView } from '../lexicon/types/com/atproto/admin/defs'
 import {
   RecordViewDetail,
@@ -194,5 +200,47 @@ export function buildReportView(
         ? queues.get(report.queueId)
         : undefined,
     isMuted: report.isMuted,
+  }
+}
+
+export function viewQueueStats(
+  row?: Selectable<ReportStat>,
+): ToolsOzoneQueueDefs.QueueStats {
+  return {
+    pendingCount: row?.pendingCount ?? undefined,
+    actionedCount: row?.actionedCount ?? undefined,
+    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    inboundCount: row?.inboundCount ?? undefined,
+    actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    lastUpdated: row?.computedAt,
+  }
+}
+
+export function viewLiveStats(
+  row?: Selectable<ReportStat>,
+): ToolsOzoneReportDefs.LiveStats {
+  return {
+    pendingCount: row?.pendingCount ?? undefined,
+    actionedCount: row?.actionedCount ?? undefined,
+    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    inboundCount: row?.inboundCount ?? undefined,
+    actionRate: row?.actionRate ?? undefined,
+    avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
+    lastUpdated: row?.computedAt,
+  }
+}
+
+export function viewHistoricalStats(
+  row: Selectable<ReportStat>,
+): ToolsOzoneReportDefs.HistoricalStats {
+  return {
+    computedAt: row.computedAt,
+    pendingCount: row.pendingCount ?? undefined,
+    actionedCount: row.actionedCount ?? undefined,
+    escalatedPendingCount: row.escalatedCount ?? undefined,
+    inboundCount: row.inboundCount ?? undefined,
+    actionRate: row.actionRate ?? undefined,
+    avgHandlingTimeSec: row.avgHandlingTimeSec ?? undefined,
   }
 }

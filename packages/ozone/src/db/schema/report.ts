@@ -17,6 +17,7 @@ export interface Report {
   subjectMessageId: string | null // Denormalized from moderation_event.subjectMessageId
   createdAt: string
   updatedAt: string
+  closedAt: string | null
 }
 
 export type PartialDB = {
