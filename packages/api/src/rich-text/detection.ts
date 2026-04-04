@@ -8,6 +8,7 @@ import {
   TRAILING_PUNCTUATION_REGEX,
   URL_REGEX,
 } from './util'
+import { graphemeLen } from '@atproto/common-web'
 
 export type Facet = AppBskyRichtextFacet.Main
 
@@ -86,7 +87,7 @@ export function detectFacets(text: UnicodeString): Facet[] | undefined {
       // strip ending punctuation and any spaces
       tag = tag.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
 
-      if (tag.length === 0 || tag.length > 64) continue
+      if (tag.length === 0 || graphemeLen(tag) > 64) continue
 
       const index = match.index + leading.length
 
