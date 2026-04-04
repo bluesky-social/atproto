@@ -285,7 +285,10 @@ export class ReportStatsService {
     opts?: { force?: boolean },
   ): Promise<Selectable<ReportStat>> {
     if (!opts?.force) {
-      const cached = await this.getLiveStats(group)
+      const cached =
+        group.mode === 'live'
+          ? await this.getLiveStats(group)
+          : (await this.getHistoricalStats({ group, limit: 1 })).stats[0]
       if (cached && this.isGroupFresh(cached)) return cached
     }
 
