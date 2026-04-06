@@ -81,6 +81,8 @@ EXPOSE 3000 3001
 ENV NODE_ENV=development
 ENV PDS_PORT=3000
 ENV PLC_PORT=3001
+ENV PDS_HOSTNAME=localhost
+ENV PDS_DID_PLC_URL=http://127.0.0.1:3001
 
 # Run via service wrapper (which runs packages/dev-env/dist/custom/run-pds-plc.js)
 CMD ["node", "--enable-source-maps", "services/custom-dev-env/index.js"]

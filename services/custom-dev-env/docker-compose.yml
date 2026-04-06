@@ -1,13 +1,11 @@
-# PDS + PLC dev environment
-# Lightweight alternative to dev container - runs only PDS and PLC servers.
-# No Postgres or Redis required (uses SQLite + in-memory stores).
+# PDS + PLC — single image, two ports.
+# No Postgres or Redis (SQLite + in-memory PLC).
 #
-# Usage from repo root:
+# Local:
 #   docker compose -f services/custom-dev-env/docker-compose.yml up --build
-#   docker compose -f services/custom-dev-env/docker-compose.yml up -d
 #
-# PDS: http://localhost:3000
-# PLC: http://localhost:3001
+# Deploy: push image to GHCR (see .github/workflows/build-and-push-custom-dev-ghcr.yaml),
+# then run the same image with -p 3000:3000 -p 3001:3001 and set PDS_HOSTNAME (see .env.example).
 
 services:
   custom-dev-env:
@@ -15,9 +13,18 @@ services:
       context: ../..
       dockerfile: services/custom-dev-env/Dockerfile
     ports:
-      - "3000:3000"  # PDS
-      - "3001:3001"  # PLC
+      # PDS
+      - '${PDS_HOST_PORT:-3000}:3000'
+      # PLC
+      - '${PLC_HOST_PORT:-3001}:3001'
     environment:
-      - NODE_ENV=development
-    # Data is ephemeral (tmp dirs) - restart clears everything
+      NODE_ENV: development
+      PDS_PORT: ${PDS_PORT:-3000}
+      PLC_PORT: ${PLC_PORT:-3001}
+      PDS_HOSTNAME: ${PDS_HOSTNAME:-localhost}
+      # PDS → PLC inside the container
+      PDS_DID_PLC_URL: ${PDS_DID_PLC_URL:-http://127.0.0.1:3001}
+      PDS_PUBLIC_URL: ${PDS_PUBLIC_URL:-}
+      PLC_PUBLIC_URL: ${PLC_PUBLIC_URL:-}
+      PLC_HOSTNAME: ${PLC_HOSTNAME:-}
     restart: unless-stopped

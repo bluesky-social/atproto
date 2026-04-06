@@ -27,3 +27,6 @@ packages/oauth/oauth-client-browser-example/src/lexicons
 packages/oauth/*/src/locales/*/messages.ts
 packages/oauth/oauth-provider-frontend/src/routeTree.gen.ts
 packages/oauth/oauth-client-expo/android/build
+
+# symlinks into interop-test-files (not real JSON)
+packages/crypto/tests/signature-fixtures.json

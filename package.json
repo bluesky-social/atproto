@@ -12,8 +12,8 @@
   "scripts": {
     "lint:fix": "pnpm lint --fix",
     "lint": "NODE_OPTIONS=--max_old_space_size=4096 eslint . --ext .ts,.js,.tsx,.jsx",
-    "style:fix": "prettier --write .",
-    "style": "prettier --check .",
+    "style:fix": "node ./node_modules/prettier/bin/prettier.cjs --write .",
+    "style": "node ./node_modules/prettier/bin/prettier.cjs --check .",
     "verify": "pnpm --stream '/^verify:.+$/'",
     "verify:style": "pnpm run style",
     "verify:lint": "pnpm lint",

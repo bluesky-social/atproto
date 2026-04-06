@@ -162,7 +162,7 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
       .values({
         did: actorDid,
         lastSeenNotifs: timestampIso,
-        priorityNotifs: priority,
+        priorityNotifs: false,
         lastSeenPriorityNotifs: priority ? timestampIso : undefined,
       })
       .onConflict((oc) => oc.doNothing())

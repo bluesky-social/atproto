@@ -2,7 +2,7 @@
   "extends": "../../../tsconfig/node.json",
   "compilerOptions": {
     "outDir": "../dist/custom",
-    "rootDir": "."
+    "rootDir": ".."
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts", "../src/env.ts"]
 }
