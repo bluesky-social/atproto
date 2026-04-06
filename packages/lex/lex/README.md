@@ -350,7 +350,7 @@ if (result.success) {
 }
 ```
 
-All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, non-raw CIDs are allowed in blob references, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted in parse mode. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
 
 ```typescript
 // Strict mode (default) - rejects datetime without timezone
@@ -610,7 +610,7 @@ const client = new Client(session, {
 
 - **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
-- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `true`.
+- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. Default: `true`.
 
 ### Core Methods
 
@@ -932,7 +932,13 @@ import {
 
   // Blob references
   BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  LegacyBlobRef, // { cid: string, mimeType: string }
   isBlobRef, // Type guard for BlobRef objects
+  isLegacyBlobRef, // Type guard for LegacyBlobRef objects
+  getBlobCid, // Extract Cid from BlobRef or LegacyBlobRef
+  getBlobCidString, // Extract CID string from BlobRef or LegacyBlobRef
+  getBlobMime, // Extract MIME type from BlobRef or LegacyBlobRef
+  getBlobSize, // Extract size from BlobRef (returns undefined for LegacyBlobRef)
 
   // Equality
   lexEquals, // Deep equality (handles CIDs and bytes)
@@ -1061,6 +1067,8 @@ if (isBlobRef(blobRef)) {
 >   mimeType: string
 > }
 > ```
+>
+> This legacy format is still accepted when parsing data with `strict: false` (such as when `strictResponseProcessing` is disabled on the Client). However, it is rejected during validation mode (`$validate`, `$safeValidate`) regardless of the `strict` setting, as validation mode does not apply transformations or accept alternative formats.
 
 ### Actions
 

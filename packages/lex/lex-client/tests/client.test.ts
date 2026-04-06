@@ -1,6 +1,6 @@
 import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
-import { cidForRawBytes, parseCid } from '@atproto/lex-data'
+import { cidForRawBytes, isBlobRef, parseCid } from '@atproto/lex-data'
 import { lexParse, lexToJson } from '@atproto/lex-json'
 import {
   $Typed,
@@ -581,6 +581,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(blob)
 
       expect(fetchHandler).toHaveBeenCalledTimes(1)
+      assert(isBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('text/plain')
       expect(body.blob.size).toBe(11)
@@ -596,6 +597,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(data)
 
       expect(fetchHandler).toHaveBeenCalledTimes(2)
+      assert(isBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
       expect(body.blob.size).toBe(11)
@@ -611,6 +613,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(data)
 
       expect(fetchHandler).toHaveBeenCalledTimes(3)
+      assert(isBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
       expect(body.blob.size).toBe(11)

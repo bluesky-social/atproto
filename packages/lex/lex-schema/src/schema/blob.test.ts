@@ -256,22 +256,16 @@ describe('BlobSchema', () => {
   })
 
   describe('legacy blob format', () => {
-    it('accepts legacy format in validate mode', () => {
+    it('rejects legacy format in validate mode', () => {
       const schema = blob({})
       const result = schema.safeValidate({
         cid: blobCid.toString(),
         mimeType: 'image/jpeg',
       })
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect('cid' in result.value && result.value.cid).toBe(
-          blobCid.toString(),
-        )
-        expect(result.value.mimeType).toBe('image/jpeg')
-      }
+      expect(result.success).toBe(false)
     })
 
-    it('accepts legacy format to BlobRef in parse mode', () => {
+    it('accepts legacy format in parse mode with strict: false', () => {
       const schema = blob({})
       const result = schema.safeParse(
         {
@@ -289,7 +283,7 @@ describe('BlobSchema', () => {
       expect(result.value.cid).toBe(blobCid.toString())
     })
 
-    it('rejects legacy format with lexCid in non-strict mode', () => {
+    it('accepts legacy format with lexCid in non-strict mode', () => {
       const schema = blob({})
       const result = schema.safeParse(
         {
@@ -298,7 +292,7 @@ describe('BlobSchema', () => {
         },
         { strict: false },
       )
-      expect(result.success).toBe(false)
+      assert(result.success)
     })
 
     it('rejects legacy format without cid', () => {
@@ -356,11 +350,14 @@ describe('BlobSchema', () => {
       })
       expect(blobRefResult.success).toBe(true)
 
-      const legacyResult = schema.safeValidate({
-        cid: blobCid.toString(),
-        mimeType: 'image/jpeg',
-      })
-      expect(legacyResult.success).toBe(true)
+      const legacyResult = schema.safeParse(
+        {
+          cid: blobCid.toString(),
+          mimeType: 'image/jpeg',
+        },
+        { strict: false },
+      )
+      assert(legacyResult.success)
     })
   })
 
@@ -479,12 +476,12 @@ describe('BlobSchema', () => {
       const schema = blob()
 
       describe('strict: true (default)', () => {
-        it('accepts legacy blob format in validate mode', () => {
+        it('rejects legacy blob format in validate mode', () => {
           const result = schema.safeValidate({
             cid: blobCid.toString(),
             mimeType: 'image/jpeg',
           })
-          expect(result.success).toBe(true)
+          expect(result.success).toBe(false)
         })
 
         it('accepts standard BlobRef', () => {
@@ -499,7 +496,7 @@ describe('BlobSchema', () => {
       })
 
       describe('strict: false', () => {
-        it('rejects legacy blob format (not processed with strict: false)', () => {
+        it('accepts legacy blob format with strict: false', () => {
           const result = schema.safeParse(
             {
               cid: blobCid.toString(),
@@ -507,7 +504,7 @@ describe('BlobSchema', () => {
             },
             { strict: false },
           )
-          expect(result.success).toBe(false)
+          assert(result.success)
         })
 
         it('accepts standard BlobRef with non-raw CID', () => {
