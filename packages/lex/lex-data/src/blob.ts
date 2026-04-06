@@ -200,7 +200,10 @@ export type LegacyBlobRef = {
  *
  * @see {@link isBlobRef} for checking the current blob reference format
  */
-export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
+export function isLegacyBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): input is LegacyBlobRef {
   if (!isPlainObject(input)) {
     return false
   }
@@ -220,7 +223,12 @@ export function isLegacyBlobRef(input: unknown): input is LegacyBlobRef {
     }
   }
 
-  if (!validateCidString(cid)) {
+  if (
+    !validateCidString(
+      cid,
+      options?.strict === false ? undefined : { flavor: 'raw' },
+    )
+  ) {
     return false
   }
 
@@ -280,8 +288,8 @@ export type InferEnumBlobRefs<TOptions extends EnumBlobRefsOptions> =
  * }
  *
  * // Include legacy blob references
- * for (const ref of enumBlobRefs(record, { allowLegacy: true })) {
- *   // ref may be BlobRef or LegacyBlobRef
+ * for (const ref of enumBlobRefs(record, { allowLegacy: true, strict: false })) {
+ *   // ref may be BlobRef or LegacyBlobRef, with relaxed CID validation
  * }
  * ```
  */
@@ -324,7 +332,7 @@ export function* enumBlobRefs(
         visited.add(value)
         if (isBlobRef(value, options)) {
           yield value
-        } else if (includeLegacy && isLegacyBlobRef(value)) {
+        } else if (includeLegacy && isLegacyBlobRef(value, options)) {
           yield value
         } else {
           for (const v of Object.values(value)) {

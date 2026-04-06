@@ -13,14 +13,6 @@ import { memoizedOptions } from '../util/memoize.js'
  */
 export type BlobSchemaOptions = {
   /**
-   * Whether to allow legacy blob references format
-   *
-   * @default false
-   * @see {@link LegacyBlobRef}
-   */
-  allowLegacy?: boolean
-
-  /**
    * List of accepted MIME types (supports wildcards like 'image/*' or '*\/*')
    *
    * @default undefined // accepts all MIME types
@@ -55,9 +47,7 @@ export { isBlobRef, isLegacyBlobRef }
  */
 export class BlobSchema<
   const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
-> extends Schema<
-  TOptions extends { allowLegacy: true } ? BlobRef | LegacyBlobRef : BlobRef
-> {
+> extends Schema<BlobRef | LegacyBlobRef, BlobRef> {
   readonly type = 'blob' as const
 
   constructor(readonly options?: TOptions) {
@@ -65,8 +55,7 @@ export class BlobSchema<
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
-    const blob = parseValue.call(ctx, input, this.options)
-
+    const blob = parseValue.call(ctx, input)
     if (!blob) {
       return ctx.issueUnexpectedType(input, 'blob')
     }
@@ -98,7 +87,6 @@ export class BlobSchema<
 function parseValue(
   this: ValidationContext,
   input: unknown,
-  options?: BlobSchemaOptions,
 ): BlobRef | LegacyBlobRef | null {
   // If there is a $type property, we treat if as a potential BlobRef and
   // validate accordingly.
@@ -112,19 +100,42 @@ function parseValue(
   // allowed, but we are in non-strict "parse" mode, coerce legacy refs into
   // standard BlobRef format for backward compatibility. Otherwise, reject the
   // value.
-  if (options?.allowLegacy) {
-    if (isLegacyBlobRef(input)) {
-      return input
-    }
-  } else if (!this.options.strict && this.options.mode === 'parse') {
-    if (isLegacyBlobRef(input)) {
+  if (this.options.strict !== false && isLegacyBlobRef(input, this.options)) {
+    if (this.options.mode === 'parse') {
+      // mode === "parse", we must return a TOutput ("BlobRef"), so we can
+      // coerce legacy refs into standard BlobRefs.
       const { cid, mimeType } = input
       const ref = parseCidSafe(cid)
-      if (ref) return { $type: 'blob', ref, mimeType, size: -1 }
+      if (ref) {
+        const blobRef: BlobRef = { $type: 'blob', ref, mimeType, size: -1 }
+
+        // Ensures that the value, when serialized to JSON, round-trips back to
+        // the original legacy format.
+        // See https://github.com/rvagg/cborg/issues/173 for CBOR round-tripping
+        Object.defineProperty(blobRef, 'toJSON', {
+          value: toLegacyBlobRefJSON,
+          enumerable: false,
+          configurable: true,
+          writable: true,
+        })
+
+        return blobRef
+      }
+    } else {
+      // mode === 'validate', we cannot alter the value, but we *can* return
+      // "LegacyBlobRef" (TInput).
+      return input
     }
   }
 
   return null
+}
+
+function toLegacyBlobRefJSON(this: BlobRef): LegacyBlobRef {
+  return {
+    cid: this.ref.toString(),
+    mimeType: this.mimeType,
+  }
 }
 
 function matchesMime(mime: string, accepted: string[]): boolean {
@@ -163,7 +174,7 @@ function matchesMime(mime: string, accepted: string[]): boolean {
  * ```
  */
 export const blob = /*#__PURE__*/ memoizedOptions(function <
-  O extends BlobSchemaOptions = { allowLegacy?: false },
+  O extends BlobSchemaOptions = NonNullable<unknown>,
 >(options?: O) {
   return new BlobSchema(options)
 })

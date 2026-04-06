@@ -74,7 +74,6 @@ const testQueryGetBlobRef = l.query(
   l.params(),
   l.jsonPayload({
     blobRef: l.blob({
-      allowLegacy: false,
       accept: ['image/png'],
       maxSize: 10,
     }),

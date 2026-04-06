@@ -51,15 +51,6 @@ export type LexDefBuilderOptions = RefResolverOptions & {
    */
   lib?: string
   /**
-   * Whether to allow legacy blob references in the generated schemas.
-   *
-   * When `true`, blob types will accept both modern `BlobRef` and legacy
-   * `LegacyBlobRef` formats.
-   *
-   * @default false
-   */
-  allowLegacyBlobs?: boolean
-  /**
    * Whether to add `#__PURE__` annotations to function calls.
    *
    * These annotations help bundlers with tree-shaking by marking
@@ -852,19 +843,15 @@ export class LexDefBuilder {
   }
 
   private async compileBlobSchema(def: LexiconBlob): Promise<string> {
-    const opts = { ...def, allowLegacy: this.options.allowLegacyBlobs === true }
-    const options = stringifyOptions(opts, [
+    const options = stringifyOptions(def, [
       'maxSize',
       'accept',
-      'allowLegacy',
     ] satisfies (keyof l.BlobSchemaOptions)[])
     return this.pure(`l.blob(${options})`)
   }
 
   private async compileBlobType(_def: LexiconBlob): Promise<string> {
-    return this.options.allowLegacyBlobs
-      ? 'l.BlobRef | l.LegacyBlobRef'
-      : 'l.BlobRef'
+    return 'l.BlobRef | l.LegacyBlobRef'
   }
 
   private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {

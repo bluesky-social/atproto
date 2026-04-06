@@ -194,7 +194,6 @@ Options:
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
-- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
 - `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
@@ -1062,10 +1061,6 @@ if (isBlobRef(blobRef)) {
 >   mimeType: string
 > }
 > ```
->
-> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
->
-> When using non-strict validation (e.g. `$safeParse(data, { strict: false })`), legacy blob references are automatically coerced into standard `BlobRef` objects with `size: -1`, even without `--allowLegacyBlobs`.
 
 ### Actions
 
