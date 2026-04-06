@@ -1,5 +1,11 @@
 # @atproto/bsky
 
+## 0.0.224
+
+### Patch Changes
+
+- [#4830](https://github.com/bluesky-social/atproto/pull/4830) [`42232c7`](https://github.com/bluesky-social/atproto/commit/42232c7f3622f1d4a4ebe78eb1321817a8df1c96) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Register new suggested user endpoints with the router
+
 ## 0.0.223
 
 ### Patch Changes
