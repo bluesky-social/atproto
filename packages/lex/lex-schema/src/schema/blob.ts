@@ -96,10 +96,10 @@ function parseValue(
   }
 
   // If there is no $type property, we may be dealing with a legacy blob ref. If
-  // legacy refs are allowed, validate against the legacy format. If not
-  // allowed, but we are in non-strict "parse" mode, coerce legacy refs into
-  // standard BlobRef format for backward compatibility. Otherwise, reject the
-  // value.
+  // legacy refs are allowed (non-strict mode), validate against the legacy
+  // format. In "parse" mode, coerce legacy refs into standard BlobRef format
+  // for backward compatibility. In "validate" mode, we cannot alter the value,
+  // but we can still accept legacy refs as valid.
   if (this.options.strict !== false && isLegacyBlobRef(input, this.options)) {
     if (this.options.mode === 'parse') {
       // mode === "parse", we must return a TOutput ("BlobRef"), so we can
