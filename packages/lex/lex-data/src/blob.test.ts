@@ -221,14 +221,27 @@ describe(isLegacyBlobRef, () => {
     ).toBe(true)
 
     expect(
-      isLegacyBlobRef({
-        cid: invalidBlobCid.toString(),
-        mimeType: 'image/jpeg',
-      }),
+      isLegacyBlobRef(
+        {
+          cid: invalidBlobCid.toString(),
+          mimeType: 'image/jpeg',
+        },
+        { strict: false },
+      ),
     ).toBe(true)
   })
 
   it('rejects invalid inputs', () => {
+    expect(
+      isLegacyBlobRef(
+        {
+          cid: invalidBlobCid.toString(),
+          mimeType: 'image/jpeg',
+        },
+        { strict: true },
+      ),
+    ).toBe(false)
+
     expect(
       isLegacyBlobRef({
         cid: 'babbaaa',

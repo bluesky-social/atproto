@@ -1,4 +1,4 @@
-import { Cid, RawCid, ifCid, validateCidString } from './cid.js'
+import { Cid, RawCid, ifCid, parseCid, validateCidString } from './cid.js'
 import { LexValue } from './lex.js'
 import { isPlainObject, isPlainProto } from './object.js'
 
@@ -233,6 +233,91 @@ export function isLegacyBlobRef(
   }
 
   return true
+}
+
+/**
+ * Extracts the MIME type from a {@link BlobRef} or {@link LegacyBlobRef}.
+ *
+ * @example
+ * ```ts
+ * const mimeType = getBlobMime(blobRef)
+ * console.log(mimeType)  // e.g., 'image/jpeg'
+ * ```
+ */
+export function getBlobMime(blob: BlobRef | LegacyBlobRef): string
+export function getBlobMime(blob?: BlobRef | LegacyBlobRef): string | undefined
+export function getBlobMime(
+  blob?: BlobRef | LegacyBlobRef,
+): string | undefined {
+  return blob?.mimeType
+}
+
+/**
+ * Extracts the size (in bytes) from a {@link BlobRef}. For
+ * {@link LegacyBlobRef}, size information is not available, so this function
+ * returns `undefined` for legacy refs.
+ *
+ * @note The size property, in blob refs, cannot be 100% trusted since the PDS
+ * might not have a local copy of the blob (to check the size against) and might
+ * just be passing through the blob ref from the client without validating it.
+ * So, while this function can be useful for getting size information when
+ * available, it should not be solely relied upon for critical functionality
+ * without additional validation.
+ *
+ * @example
+ * ```ts
+ * const size = getBlobSize(blobRef)
+ * if (size !== undefined) {
+ *   console.log(`Blob size: ${size} bytes`)
+ * } else {
+ *   console.log('Size information not available for legacy blob ref')
+ * }
+ * ```
+ */
+export function getBlobSize(blob: BlobRef | LegacyBlobRef): number | undefined {
+  if ('$type' in blob && blob.size >= 0) return blob.size
+  // LegacyBlobRef doesn't have size information
+  return undefined
+}
+
+/**
+ * Extracts the {@link Cid} from a {@link BlobRef} or {@link LegacyBlobRef}.
+ *
+ * @example
+ * ```ts
+ * const cid = getBlobCid(blobRef)
+ * console.log(cid.bytes)
+ * ```
+ */
+export function getBlobCid(blob: BlobRef | LegacyBlobRef): Cid
+export function getBlobCid(blob?: BlobRef | LegacyBlobRef): Cid | undefined
+export function getBlobCid(blob?: BlobRef | LegacyBlobRef): Cid | undefined {
+  if (!blob) return undefined
+  return '$type' in blob ? blob.ref : parseCid(blob.cid)
+}
+
+/**
+ * Extracts the CID string from a {@link BlobRef} or {@link LegacyBlobRef}.
+ *
+ * This is similar to `getBlobCid(blob).toString()` but is more optimized since
+ * the CID string is already available in the legacy format and we can avoid
+ * parsing it into a CID object just to convert it back to a string.
+ *
+ * @example
+ * ```ts
+ * const cidString = getBlobCidString(blobRef)
+ * console.log(cidString)
+ * ```
+ */
+export function getBlobCidString(blob: BlobRef | LegacyBlobRef): string
+export function getBlobCidString(
+  blob?: BlobRef | LegacyBlobRef,
+): string | undefined
+export function getBlobCidString(
+  blob?: BlobRef | LegacyBlobRef,
+): string | undefined {
+  if (!blob) return undefined
+  return '$type' in blob ? blob.ref.toString() : blob.cid
 }
 
 /**

@@ -3,7 +3,6 @@ import {
   LegacyBlobRef,
   isBlobRef,
   isLegacyBlobRef,
-  parseCidSafe,
 } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
@@ -47,7 +46,7 @@ export { isBlobRef, isLegacyBlobRef }
  */
 export class BlobSchema<
   const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
-> extends Schema<BlobRef | LegacyBlobRef, BlobRef> {
+> extends Schema<BlobRef | LegacyBlobRef> {
   readonly type = 'blob' as const
 
   constructor(readonly options?: TOptions) {
@@ -96,46 +95,13 @@ function parseValue(
   }
 
   // If there is no $type property, we may be dealing with a legacy blob ref. If
-  // legacy refs are allowed (non-strict mode), validate against the legacy
-  // format. In "parse" mode, coerce legacy refs into standard BlobRef format
-  // for backward compatibility. In "validate" mode, we cannot alter the value,
-  // but we can still accept legacy refs as valid.
-  if (this.options.strict !== false && isLegacyBlobRef(input, this.options)) {
-    if (this.options.mode === 'parse') {
-      // mode === "parse", we must return a TOutput ("BlobRef"), so we can
-      // coerce legacy refs into standard BlobRefs.
-      const { cid, mimeType } = input
-      const ref = parseCidSafe(cid)
-      if (ref) {
-        const blobRef: BlobRef = { $type: 'blob', ref, mimeType, size: -1 }
-
-        // Ensures that the value, when serialized to JSON, round-trips back to
-        // the original legacy format.
-        // See https://github.com/rvagg/cborg/issues/173 for CBOR round-tripping
-        Object.defineProperty(blobRef, 'toJSON', {
-          value: toLegacyBlobRefJSON,
-          enumerable: false,
-          configurable: true,
-          writable: true,
-        })
-
-        return blobRef
-      }
-    } else {
-      // mode === 'validate', we cannot alter the value, but we *can* return
-      // "LegacyBlobRef" (TInput).
-      return input
-    }
+  // legacy refs are allowed (non-strict mode), we check if the input matches
+  // the legacy format.
+  if (this.options.strict === false && isLegacyBlobRef(input, this.options)) {
+    return input
   }
 
   return null
-}
-
-function toLegacyBlobRefJSON(this: BlobRef): LegacyBlobRef {
-  return {
-    cid: this.ref.toString(),
-    mimeType: this.mimeType,
-  }
 }
 
 function matchesMime(mime: string, accepted: string[]): boolean {

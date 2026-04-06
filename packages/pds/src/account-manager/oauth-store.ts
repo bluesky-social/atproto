@@ -5,6 +5,7 @@ import { Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   HandleString,
   asAtIdentifierString,
+  getBlobCidString,
   isDidString,
   isHandleString,
 } from '@atproto/lex'
@@ -633,7 +634,7 @@ export class OAuthStore
 
         account.name ||= displayName
         account.picture ||= avatar
-          ? this.imageUrlBuilder.build('avatar', did, avatar.ref.toString())
+          ? this.imageUrlBuilder.build('avatar', did, getBlobCidString(avatar))
           : undefined
       }
     }

@@ -1257,7 +1257,9 @@ describe(xrpcSafe, () => {
       })
 
       assert(result.success)
-      expectTypeOf(result.body).toMatchObjectType<{ blobRef: l.BlobRef }>()
+      expectTypeOf(result.body).toEqualTypeOf<{
+        blobRef: l.BlobRef | l.LegacyBlobRef
+      }>()
       expect(result.body).toEqual({
         blobRef: {
           $type: 'blob',
@@ -1283,13 +1285,13 @@ describe(xrpcSafe, () => {
       })
 
       assert(result.success)
-      expectTypeOf(result.body).toMatchObjectType<{ blobRef: l.BlobRef }>()
+      expectTypeOf(result.body).toEqualTypeOf<{
+        blobRef: l.BlobRef | l.LegacyBlobRef
+      }>()
       expect(result.body).toEqual({
         blobRef: {
-          $type: 'blob',
-          ref: rawCid,
+          cid: rawCid.toString(),
           mimeType: 'invalid/mime',
-          size: -1,
         },
       })
     })
@@ -1311,7 +1313,9 @@ describe(xrpcSafe, () => {
       })
 
       assert(result.success)
-      expectTypeOf(result.body).toMatchObjectType<{ blobRef: l.BlobRef }>()
+      expectTypeOf(result.body).toEqualTypeOf<{
+        blobRef: l.BlobRef | l.LegacyBlobRef
+      }>()
       expect(result.body).toEqual({
         blobRef: {
           $type: 'blob',
