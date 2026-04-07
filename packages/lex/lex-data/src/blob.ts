@@ -1,6 +1,22 @@
-import { Cid, RawCid, ifCid, parseCid, validateCidString } from './cid.js'
+import {
+  CheckCidOptions,
+  Cid,
+  RawCid,
+  ifCid,
+  parseCid,
+  validateCidString,
+} from './cid.js'
 import { LexValue } from './lex.js'
 import { isPlainObject, isPlainProto } from './object.js'
+
+/**
+ * Options to use with {@link ifCid}, {@link validateCidString}, and related CID
+ * validation functions when validating CIDs in BlobRefs, in strict mode. This
+ * ensures that the CID is a {@link RawCid} (CID v1, raw multicodec, sha256
+ * multihash), which is the expected format for blob references in the AT
+ * Protocol data model.
+ */
+const STRICT_CID_CHECK_OPTIONS: CheckCidOptions = { flavor: 'raw' }
 
 // Number.isSafeInteger is actually safe to use with non-number values, so we
 // can use it as a type guard.
@@ -153,7 +169,7 @@ export function isBlobRef(
   const cid = ifCid(
     ref,
     // Strict unless explicitly disabled
-    options?.strict === false ? undefined : { flavor: 'raw' },
+    options?.strict === false ? undefined : STRICT_CID_CHECK_OPTIONS,
   )
   if (!cid) {
     return false
@@ -336,7 +352,7 @@ export function isLegacyBlobRef(
   if (
     !validateCidString(
       cid,
-      options?.strict === false ? undefined : { flavor: 'raw' },
+      options?.strict === false ? undefined : STRICT_CID_CHECK_OPTIONS,
     )
   ) {
     return false
