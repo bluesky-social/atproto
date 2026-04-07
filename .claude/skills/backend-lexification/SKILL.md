@@ -701,19 +701,87 @@ The old `BlobRef` class from `@atproto/lexicon` is replaced by a simple interfac
 
 ### Legacy BlobRefs
 
-Support for legacy blobrefs (`{ ref: string; mimeType: string }`) requires explicit opt-in using the `--allowLegacyBlobs` argument when calling `lex build`. This option will cause lexicon schemas that are defined as `type: "blob"` to be typed as `BlobRef | LegacyBlobRef`. Legacy blobs can be checked using `isLegacyBlobRef()`:
+Legacy blob references (`{ cid: string, mimeType: string }`) are automatically handled based on the **strict mode** setting. When `strict: false`, both standard and legacy blob formats are accepted. When `strict: true` (the default), only standard `BlobRef` format is accepted.
 
-```diff
-- import { BlobRef } from '@atproto/lexicon'
-+ import { BlobRef, isLegacyBlobRef } from '@atproto/lex'
+```typescript
+import {
+  BlobRef,
+  LegacyBlobRef,
+  isBlobRef,
+  isLegacyBlobRef,
+} from '@atproto/lex-data'
 
-- if (value instanceof BlobRef) { ... }
-+ if (isLegacyBlobRef(value)) {
-+   // Handle legacy blobref
-+ } else if (isBlobRef(value)) {
-+   // Handle new blobref
-+ }
+// Check for standard BlobRef
+if (isBlobRef(value)) {
+  console.log(value.ref.toString())
+}
+
+// Check for legacy format
+if (isLegacyBlobRef(value)) {
+  console.log(value.cid)
+}
 ```
+
+New utility functions are available for working with both formats:
+
+```typescript
+import {
+  getBlobCid,
+  getBlobCidString,
+  getBlobMime,
+  getBlobSize,
+} from '@atproto/lex-data'
+
+// Works with both BlobRef and LegacyBlobRef
+const cid = getBlobCid(blobRef) // Returns Cid object
+const cidString = getBlobCidString(blobRef) // Returns string (optimized)
+const mimeType = getBlobMime(blobRef)
+const size = getBlobSize(blobRef) // Returns number | undefined (legacy refs don't have size)
+```
+
+### Strict Mode in Validation
+
+All schema validation methods (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option that controls validation behavior uniformly across both parse and validate modes:
+
+**Strict mode (`strict: true`, the default):**
+
+- Datetime strings must have proper timezone information
+- Blob MIME types and size constraints are enforced
+- Only raw CIDs are allowed in blob references
+- Legacy blob references are rejected
+
+**Non-strict mode (`strict: false`):**
+
+- Datetime strings without timezones are accepted
+- Blob MIME type and size constraints are not enforced
+- Any valid CID is allowed in blob references
+- Legacy blob references are accepted
+
+```typescript
+// Default strict validation
+const result1 = schema.$safeParse(data) // strict: true by default
+
+// Explicit strict validation
+const result2 = schema.$safeParse(data, { strict: true })
+
+// Non-strict validation (lenient)
+const result3 = schema.$safeParse(data, { strict: false })
+
+// Applies to all validation methods
+schema.$validate(data, { strict: false })
+schema.$parse(data, { strict: false })
+schema.$safeValidate(data, { strict: false })
+```
+
+The `Client` class has a `strictResponseProcessing` option that controls the default strict mode for all XRPC calls:
+
+```typescript
+const client = new Client(session, {
+  strictResponseProcessing: false, // Use non-strict mode for all calls
+})
+```
+
+When `strictResponseProcessing: false`, response validation will use `strict: false`, which means legacy blobs and other lenient data formats are automatically accepted. Individual calls can override this with per-call options.
 
 ### Lex Stringify
 
@@ -824,7 +892,7 @@ Do not change how tests make XRPC calls — they continue to use `AtpAgent` from
 | Before                                            | After                                                                        |
 | ------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `@atproto/api` (`AtpAgent`)                       | `@atproto/lex` (`Client`)                                                    |
-| `@atproto/lexicon` (`jsonStringToLex`, `BlobRef`) | `@atproto/lex` (`lexParse`, `BlobRef`)                                      |
+| `@atproto/lexicon` (`jsonStringToLex`, `BlobRef`) | `@atproto/lex` (`lexParse`, `BlobRef`)                                       |
 | `@atproto/lexicon` (`stringifyLex`)               | `@atproto/lex` (`lexStringify`)                                              |
 | `@atproto/xrpc` (`HeadersMap`, `XRPCError`)       | `@atproto/xrpc-server` (`Headers`), `@atproto/lex` (`XrpcError`, `xrpcSafe`) |
 | `multiformats/cid` (`CID`)                        | `@atproto/lex` (`Cid`, `parseCid`)                                           |
