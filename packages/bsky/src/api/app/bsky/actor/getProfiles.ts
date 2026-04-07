@@ -30,7 +30,8 @@ export default function (server: Server, ctx: AppContext) {
       paramsParseLoose: true,
     },
     handler: async ({ auth, params, req }) => {
-      const { viewer, includeTakedowns, skipViewerBlocks } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         viewer,
