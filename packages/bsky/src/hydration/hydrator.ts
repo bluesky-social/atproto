@@ -85,6 +85,7 @@ export class HydrateCtx {
   includeTakedowns = this.vals.includeTakedowns
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
+  skipViewerBlocks = this.vals.skipViewerBlocks
   includeDebugField = this.vals.includeDebugField
   features = this.vals.features
   constructor(private vals: HydrateCtxVals) {}
@@ -104,6 +105,7 @@ export type HydrateCtxVals = {
   includeTakedowns?: boolean
   overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
+  skipViewerBlocks?: boolean
   includeDebugField?: boolean
   features: ScopedFeatureGatesClient
 }
@@ -1357,6 +1359,7 @@ export class Hydrator {
       viewer: vals.viewer,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
+      skipViewerBlocks: vals.skipViewerBlocks,
       includeDebugField,
       // create default anonymous scope
       features: vals.features || this.config.featureGatesClient.scope({}),
