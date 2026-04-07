@@ -207,7 +207,7 @@ describe('feed hidden replies', () => {
 
       expect(posterNotificationB).toBeDefined()
       expect(posterNotificationC).toBeUndefined() // hidden bc OP
-      expect(posterNotificationD).toBeUndefined() // hidden bc no propogation
+      expect(posterNotificationD).toBeUndefined() // hidden bc no propagation
 
       const {
         data: { notifications: replierNotifications },
@@ -229,7 +229,7 @@ describe('feed hidden replies', () => {
       })
 
       expect(replierNotificationC).toBeDefined() // not hidden bc not OP
-      expect(replierNotificationD).toBeUndefined() // hidden bc no propogation
+      expect(replierNotificationD).toBeUndefined() // hidden bc no propagation
 
       await pdsAgent.api.app.bsky.feed.threadgate.delete(
         {
