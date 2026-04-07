@@ -22,6 +22,16 @@ const STRICT_CID_CHECK_OPTIONS: CheckCidOptions = { flavor: 'raw' }
 // can use it as a type guard.
 const isSafeInteger = Number.isSafeInteger as (v: unknown) => v is number
 
+/**
+ * Reference to binary data (like images, videos, etc.) in the AT Protocol data
+ * model.
+ *
+ * This type represents a reference to a blob of binary data, identified by its
+ * content hash (CID) and accompanied by metadata such as MIME type and size.
+ *
+ * The {@link BlobRef} type is a union of the current {@link TypedBlobRef}
+ * format and the legacy {@link LegacyBlobRef} format.
+ */
 export type BlobRef<Ref extends Cid = Cid> = TypedBlobRef<Ref> | LegacyBlobRef
 
 /**
@@ -38,11 +48,18 @@ export type BlobRefCheckOptions = {
   strict?: boolean
 }
 
+/**
+ * Type guard to check if a value is a valid {@link BlobRef}, which can be
+ * either a {@link TypedBlobRef} or a {@link LegacyBlobRef}. By default, strict
+ * CID validation is applied to ensure that the CID in the blob reference is in
+ * the expected format for the AT Protocol, but this can be relaxed with the
+ * `strict: false` option.
+ */
 export function isBlobRef(input: unknown): input is BlobRef<RawCid>
 export function isBlobRef<TOptions extends BlobRefCheckOptions>(
   input: unknown,
   options: TOptions,
-): input is LegacyBlobRef | InferTypedBlobRefCheck<TOptions>
+): input is LegacyBlobRef | InferTypedBlobRef<TOptions>
 export function isBlobRef(
   input: unknown,
   options?: BlobRefCheckOptions,
@@ -57,7 +74,7 @@ export function isBlobRef(
 }
 
 /**
- * Extracts the MIME type from a {@link BlobRef} or {@link LegacyBlobRef}.
+ * Extracts the MIME type from a {@link BlobRef}.
  *
  * @example
  * ```ts
@@ -72,7 +89,7 @@ export function getBlobMime(blob?: BlobRef): string | undefined {
 }
 
 /**
- * Extracts the size (in bytes) from a {@link BlobRef}. For
+ * Extracts the size (in bytes) from a {@link TypedBlobRef}. For
  * {@link LegacyBlobRef}, size information is not available, so this function
  * returns `undefined` for legacy refs.
  *
@@ -100,7 +117,7 @@ export function getBlobSize(blob: BlobRef): number | undefined {
 }
 
 /**
- * Extracts the {@link Cid} from a {@link BlobRef} or {@link LegacyBlobRef}.
+ * Extracts the {@link Cid} from a {@link BlobRef}.
  *
  * @throws If the input input is a {@link LegacyBlobRef} with an invalid CID string
  * @example
@@ -117,7 +134,7 @@ export function getBlobCid(blob?: BlobRef): Cid | undefined {
 }
 
 /**
- * Extracts the CID string from a {@link BlobRef} or {@link LegacyBlobRef}.
+ * Extracts the CID string from a {@link BlobRef}.
  *
  * This is similar to `getBlobCid(blob).toString()` but is more optimized since
  * the CID string is already available in the legacy format and we can avoid
@@ -147,9 +164,9 @@ export function getBlobCidString(blob?: BlobRef): string | undefined {
  *
  * @example
  * ```typescript
- * import type { NewBlobRef } from '@atproto/lex-data'
+ * import type { TypedBlobRef } from '@atproto/lex-data'
  *
- * const imageRef: NewBlobRef = {
+ * const imageRef: TypedBlobRef = {
  *   $type: 'blob',
  *   mimeType: 'image/jpeg',
  *   ref: cid,  // CID of the blob content
@@ -157,7 +174,7 @@ export function getBlobCidString(blob?: BlobRef): string | undefined {
  * }
  * ```
  *
- * @see {@link isTypedBlobRef} to check if a value is a valid NewBlobRef
+ * @see {@link isTypedBlobRef} to check if a value is a valid {@link TypedBlobRef}
  * @see {@link LegacyBlobRef} for the older blob reference format
  */
 export type TypedBlobRef<Ref extends Cid = Cid> = {
@@ -172,7 +189,7 @@ export type TypedBlobRef<Ref extends Cid = Cid> = {
  *
  * @typeParam TOptions - The options used for checking
  */
-export type InferTypedBlobRefCheck<TOptions extends BlobRefCheckOptions> =
+export type InferTypedBlobRef<TOptions extends BlobRefCheckOptions> =
   TOptions extends { strict: false }
     ? TypedBlobRef
     : { strict: boolean } extends TOptions
@@ -211,7 +228,7 @@ export function isTypedBlobRef(input: unknown): input is TypedBlobRef<RawCid>
 export function isTypedBlobRef<TOptions extends BlobRefCheckOptions>(
   input: unknown,
   options: TOptions,
-): input is InferTypedBlobRefCheck<TOptions>
+): input is InferTypedBlobRef<TOptions>
 export function isTypedBlobRef(
   input: unknown,
   options?: BlobRefCheckOptions,
@@ -368,10 +385,10 @@ export type EnumBlobRefsOptions = BlobRefCheckOptions & {
  */
 export type InferEnumBlobRefs<TOptions extends EnumBlobRefsOptions> =
   TOptions extends { allowLegacy: true }
-    ? InferTypedBlobRefCheck<TOptions> | LegacyBlobRef
+    ? InferTypedBlobRef<TOptions> | LegacyBlobRef
     : { allowLegacy: boolean } extends TOptions
-      ? InferTypedBlobRefCheck<TOptions> | LegacyBlobRef
-      : InferTypedBlobRefCheck<TOptions>
+      ? InferTypedBlobRef<TOptions> | LegacyBlobRef
+      : InferTypedBlobRef<TOptions>
 
 /**
  * Generator that enumerates all {@link BlobRef}s (and, optionally,

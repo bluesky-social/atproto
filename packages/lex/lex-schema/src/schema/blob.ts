@@ -64,16 +64,20 @@ export class BlobSchema<
 
     // In non-strict mode, we allow blob refs to pass through without MIME
     // type or size checks.
-    if (ctx.options.strict) {
-      const accept = this.options?.accept
+    if (ctx.options.strict && this.options != null) {
+      const { accept } = this.options
       if (accept && !matchesMime(blob.mimeType, accept)) {
         return ctx.issueInvalidPropertyValue(blob, 'mimeType', accept)
       }
 
-      const maxSize = this.options?.maxSize
+      const { maxSize } = this.options
       if (maxSize != null) {
         const size = getBlobSize(blob)
-        if (size !== undefined && size > maxSize) {
+        if (size === undefined) {
+          // Unable to enforce size constraint if size is not available (legacy
+          // blob ref), so we treat it as a validation failure in strict mode.
+          return ctx.issueInvalidPropertyType(blob, 'size' as any, 'integer')
+        } else if (size > maxSize) {
           return ctx.issueTooBig(blob, 'blob', maxSize, size)
         }
       }
@@ -100,8 +104,8 @@ function parseValue(this: ValidationContext, input: unknown): BlobRef | null {
   // If there is no $type property, we may be dealing with a legacy blob ref. If
   // legacy refs are allowed (non-strict mode), we check if the input matches
   // the legacy format.
-  if (this.options.strict === false && isLegacyBlobRef(input, this.options)) {
-    return input
+  if (!this.options.strict) {
+    if (isLegacyBlobRef(input, this.options)) return input
   }
 
   return null

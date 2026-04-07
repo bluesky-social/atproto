@@ -8,6 +8,7 @@ import {
   TypedLexMap,
   cidForCbor,
   enumBlobRefs,
+  isLegacyBlobRef,
 } from '@atproto/lex-data'
 import {
   RecordCreateOp,
@@ -195,7 +196,7 @@ async function prepareWrite(opts: {
     // accurate validations error (esp. in case of legacy blobs).
     validationStatus: validateRecord(record, rkey, opts),
     blobs: Array.from(
-      enumBlobRefs(record, { allowLegacy: true, strict: false }),
+      enumBlobRefs(record, { strict: false, allowLegacy: true }),
       (blob) => {
         // @NOTE as we migrated from legacy blobs to non legacy blobs, we wanted
         // to prevent the creation of legacy blobs. Note that this prevents the
@@ -204,7 +205,7 @@ async function prepareWrite(opts: {
         // deemed an acceptable tradeoff to prevent the creation of new legacy
         // blobs. Since that migration happened a while ago, we can probably
         // remove this check in the future, by removing the "allowLegacy" option.
-        if (!('$type' in blob)) {
+        if (isLegacyBlobRef(blob)) {
           throw new InvalidRecordError(
             `Legacy blobs are not allowed (${blob.cid})`,
           )

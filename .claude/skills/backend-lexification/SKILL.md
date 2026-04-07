@@ -696,16 +696,16 @@ The old `BlobRef` class from `@atproto/lexicon` is replaced by a simple interfac
 
 ```diff
 - if (value instanceof BlobRef) { ... }
-+ if (isTypedBlobRef(value)) { ... }
++ if (isBlobRef(value)) { ... }
 ```
 
 ### Legacy BlobRefs
 
-Legacy blob references (`{ cid: string, mimeType: string }`) are automatically handled based on the **strict mode** setting. When `strict: false`, both standard and legacy blob formats are accepted. When `strict: true` (the default), only standard `BlobRef` format is accepted.
+Legacy blob references (`{ cid: string, mimeType: string }`) are automatically handled based on the **strict mode** setting. When `strict: false`, both standard and legacy blob formats are accepted. When `strict: true` (the default), only standard `TypedBlobRef` format is accepted.
 
 ```typescript
 import {
-  BlobRef,
+  TypedBlobRef,
   LegacyBlobRef,
   isTypedBlobRef,
   isLegacyBlobRef,
@@ -726,13 +726,15 @@ New utility functions are available for working with both formats:
 
 ```typescript
 import {
+  BlobRef,
   getBlobCid,
   getBlobCidString,
   getBlobMime,
   getBlobSize,
 } from '@atproto/lex-data'
 
-// Works with both BlobRef and LegacyBlobRef
+declare const blobRef: BlobRef // TypedBlobRef | LegacyBlobRef
+
 const cid = getBlobCid(blobRef) // Returns Cid object
 const cidString = getBlobCidString(blobRef) // Returns string (optimized)
 const mimeType = getBlobMime(blobRef)

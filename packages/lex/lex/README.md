@@ -931,10 +931,12 @@ import {
   ifDatetimeString, // Returns DatetimeString or undefined
 
   // Blob references
-  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  BlobRef, // TypedBlobRef | LegacyBlobRef
   LegacyBlobRef, // { cid: string, mimeType: string }
-  isTypedBlobRef, // Type guard for BlobRef objects
+  TypedBlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef (accepts both TypedBlobRef and LegacyBlobRef)
   isLegacyBlobRef, // Type guard for LegacyBlobRef objects
+  isTypedBlobRef, // Type guard for TypedBlobRef objects
   getBlobCid, // Extract Cid from BlobRef or LegacyBlobRef
   getBlobCidString, // Extract CID string from BlobRef or LegacyBlobRef
   getBlobMime, // Extract MIME type from BlobRef or LegacyBlobRef
