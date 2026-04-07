@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
   BlobRef,
+  InvalidBlobRefError,
+  InvalidLegacyBlobRefError,
   LegacyBlobRef,
+  asBlobRef,
+  asLegacyBlobRef,
+  assertBlobRef,
+  assertLegacyBlobRef,
   enumBlobRefs,
+  ifBlobRef,
+  ifLegacyBlobRef,
   isBlobRef,
   isLegacyBlobRef,
 } from './blob.js'
@@ -211,6 +219,101 @@ describe(isBlobRef, () => {
   })
 })
 
+describe(assertBlobRef, () => {
+  it('does not throw for valid blob ref', () => {
+    const validBlob = {
+      $type: 'blob' as const,
+      ref: validBlobCid,
+      mimeType: 'image/jpeg',
+      size: 10000,
+    }
+    expect(() => assertBlobRef(validBlob)).not.toThrow()
+  })
+
+  it('throws InvalidBlobRefError for invalid input', () => {
+    expect(() => assertBlobRef('not a blob')).toThrow(InvalidBlobRefError)
+    expect(() =>
+      assertBlobRef({
+        $type: 'blob',
+        ref: validBlobCid,
+        mimeType: 'image/jpeg',
+      }),
+    ).toThrow(InvalidBlobRefError)
+  })
+
+  it('respects strict option', () => {
+    const nonRawCidBlob = {
+      $type: 'blob' as const,
+      ref: invalidBlobCid,
+      mimeType: 'image/jpeg',
+      size: 10000,
+    }
+    expect(() => assertBlobRef(nonRawCidBlob, { strict: true })).toThrow(
+      InvalidBlobRefError,
+    )
+    expect(() => assertBlobRef(nonRawCidBlob, { strict: false })).not.toThrow()
+  })
+})
+
+describe(asBlobRef, () => {
+  it('returns the input for valid blob ref', () => {
+    const validBlob = {
+      $type: 'blob' as const,
+      ref: validBlobCid,
+      mimeType: 'image/jpeg',
+      size: 10000,
+    }
+    const result = asBlobRef(validBlob)
+    expect(result).toBe(validBlob)
+  })
+
+  it('throws InvalidBlobRefError for invalid input', () => {
+    expect(() => asBlobRef('not a blob')).toThrow(InvalidBlobRefError)
+    expect(() =>
+      asBlobRef({
+        $type: 'blob',
+        ref: validBlobCid,
+        mimeType: 'image/jpeg',
+      }),
+    ).toThrow(InvalidBlobRefError)
+  })
+})
+
+describe(ifBlobRef, () => {
+  it('returns the input for valid blob ref', () => {
+    const validBlob = {
+      $type: 'blob' as const,
+      ref: validBlobCid,
+      mimeType: 'image/jpeg',
+      size: 10000,
+    }
+    const result = ifBlobRef(validBlob)
+    expect(result).toBe(validBlob)
+  })
+
+  it('returns undefined for invalid input', () => {
+    expect(ifBlobRef('not a blob')).toBeUndefined()
+    expect(
+      ifBlobRef({
+        $type: 'blob',
+        ref: validBlobCid,
+        mimeType: 'image/jpeg',
+      }),
+    ).toBeUndefined()
+  })
+
+  it('respects strict option', () => {
+    const nonRawCidBlob = {
+      $type: 'blob' as const,
+      ref: invalidBlobCid,
+      mimeType: 'image/jpeg',
+      size: 10000,
+    }
+    expect(ifBlobRef(nonRawCidBlob, { strict: true })).toBeUndefined()
+    expect(ifBlobRef(nonRawCidBlob, { strict: false })).toBe(nonRawCidBlob)
+  })
+})
+
 describe(isLegacyBlobRef, () => {
   it('parses valid legacy blob', () => {
     expect(
@@ -297,6 +400,93 @@ describe(isLegacyBlobRef, () => {
         extra: 'not allowed',
       }),
     ).toBe(false)
+  })
+})
+
+describe(assertLegacyBlobRef, () => {
+  it('does not throw for valid legacy blob ref', () => {
+    const validLegacyBlob = {
+      cid: validBlobCid.toString(),
+      mimeType: 'image/jpeg',
+    }
+    expect(() => assertLegacyBlobRef(validLegacyBlob)).not.toThrow()
+  })
+
+  it('throws InvalidLegacyBlobRefError for invalid input', () => {
+    expect(() => assertLegacyBlobRef('not a blob')).toThrow(
+      InvalidLegacyBlobRefError,
+    )
+    expect(() =>
+      assertLegacyBlobRef({
+        cid: validBlobCid.toString(),
+      }),
+    ).toThrow(InvalidLegacyBlobRefError)
+  })
+
+  it('respects strict option', () => {
+    const nonRawCidBlob = {
+      cid: invalidBlobCid.toString(),
+      mimeType: 'image/jpeg',
+    }
+    expect(() => assertLegacyBlobRef(nonRawCidBlob, { strict: true })).toThrow(
+      InvalidLegacyBlobRefError,
+    )
+    expect(() =>
+      assertLegacyBlobRef(nonRawCidBlob, { strict: false }),
+    ).not.toThrow()
+  })
+})
+
+describe(asLegacyBlobRef, () => {
+  it('returns the input for valid legacy blob ref', () => {
+    const validLegacyBlob = {
+      cid: validBlobCid.toString(),
+      mimeType: 'image/jpeg',
+    }
+    const result = asLegacyBlobRef(validLegacyBlob)
+    expect(result).toBe(validLegacyBlob)
+  })
+
+  it('throws InvalidLegacyBlobRefError for invalid input', () => {
+    expect(() => asLegacyBlobRef('not a blob')).toThrow(
+      InvalidLegacyBlobRefError,
+    )
+    expect(() =>
+      asLegacyBlobRef({
+        cid: validBlobCid.toString(),
+      }),
+    ).toThrow(InvalidLegacyBlobRefError)
+  })
+})
+
+describe(ifLegacyBlobRef, () => {
+  it('returns the input for valid legacy blob ref', () => {
+    const validLegacyBlob = {
+      cid: validBlobCid.toString(),
+      mimeType: 'image/jpeg',
+    }
+    const result = ifLegacyBlobRef(validLegacyBlob)
+    expect(result).toBe(validLegacyBlob)
+  })
+
+  it('returns undefined for invalid input', () => {
+    expect(ifLegacyBlobRef('not a blob')).toBeUndefined()
+    expect(
+      ifLegacyBlobRef({
+        cid: validBlobCid.toString(),
+      }),
+    ).toBeUndefined()
+  })
+
+  it('respects strict option', () => {
+    const nonRawCidBlob = {
+      cid: invalidBlobCid.toString(),
+      mimeType: 'image/jpeg',
+    }
+    expect(ifLegacyBlobRef(nonRawCidBlob, { strict: true })).toBeUndefined()
+    expect(ifLegacyBlobRef(nonRawCidBlob, { strict: false })).toBe(
+      nonRawCidBlob,
+    )
   })
 })
 

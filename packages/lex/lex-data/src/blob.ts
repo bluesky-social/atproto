@@ -64,6 +64,16 @@ export type InferCheckedBlobRef<TOptions extends BlobRefCheckOptions> =
       : BlobRef<RawCid>
 
 /**
+ * Error thrown when a value is not a valid {@link BlobRef}.
+ */
+export class InvalidBlobRefError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'InvalidBlobRefError'
+  }
+}
+
+/**
  * Type guard to check if a value is a valid {@link BlobRef}.
  *
  * Validates the structure of the input including:
@@ -153,6 +163,99 @@ export function isBlobRef(
 }
 
 /**
+ * Asserts that a value is a valid {@link BlobRef}, throwing an error if it is not.
+ *
+ * @throws {@link InvalidBlobRefError} if the input is not a valid BlobRef
+ *
+ * @example
+ * ```typescript
+ * import { assertBlobRef } from '@atproto/lex-data'
+ *
+ * assertBlobRef(data)
+ * // TypeScript now knows data is a BlobRef
+ * console.log(data.mimeType)
+ * ```
+ */
+export function assertBlobRef(input: unknown): asserts input is BlobRef<RawCid>
+export function assertBlobRef<TOptions extends BlobRefCheckOptions>(
+  input: unknown,
+  options: TOptions,
+): asserts input is InferCheckedBlobRef<TOptions>
+export function assertBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): asserts input is BlobRef
+export function assertBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): asserts input is BlobRef {
+  if (!isBlobRef(input, options)) {
+    throw new InvalidBlobRefError('Value is not a valid BlobRef')
+  }
+}
+
+/**
+ * Casts a value to a {@link BlobRef} if it is valid, throwing an error if it is not.
+ *
+ * @throws {@link InvalidBlobRefError} if the input is not a valid BlobRef
+ *
+ * @example
+ * ```typescript
+ * import { asBlobRef } from '@atproto/lex-data'
+ *
+ * const blobRef = asBlobRef(data)
+ * console.log(blobRef.mimeType)
+ * ```
+ */
+export function asBlobRef(input: unknown): BlobRef<RawCid>
+export function asBlobRef<TOptions extends BlobRefCheckOptions>(
+  input: unknown,
+  options: TOptions,
+): InferCheckedBlobRef<TOptions>
+export function asBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): BlobRef
+export function asBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): BlobRef {
+  assertBlobRef(input, options)
+  return input
+}
+
+/**
+ * Returns the input if it is a valid {@link BlobRef}, or `undefined` if it is not.
+ *
+ * @returns The input as a BlobRef, or undefined
+ *
+ * @example
+ * ```typescript
+ * import { ifBlobRef } from '@atproto/lex-data'
+ *
+ * const blobRef = ifBlobRef(data)
+ * if (blobRef) {
+ *   console.log(blobRef.mimeType)
+ * }
+ * ```
+ */
+export function ifBlobRef(input: unknown): BlobRef<RawCid> | undefined
+export function ifBlobRef<TOptions extends BlobRefCheckOptions>(
+  input: unknown,
+  options: TOptions,
+): InferCheckedBlobRef<TOptions> | undefined
+export function ifBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): BlobRef | undefined
+export function ifBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): BlobRef | undefined {
+  return isBlobRef(input, options) ? input : undefined
+}
+
+/**
  * Legacy format for blob references used in older AT Protocol data.
  *
  * This is the older format that stores the CID as a string rather than
@@ -178,15 +281,22 @@ export type LegacyBlobRef = {
 }
 
 /**
+ * Error thrown when a value is not a valid {@link LegacyBlobRef}.
+ */
+export class InvalidLegacyBlobRefError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'InvalidLegacyBlobRefError'
+  }
+}
+
+/**
  * Type guard to check if a value is a valid {@link LegacyBlobRef}.
  *
  * Validates the structure of the input:
  * - `cid` must be a valid CID string
  * - `mimeType` must be a non-empty string
  * - No additional properties allowed
- *
- * @param input - The value to check
- * @returns `true` if the input is a valid LegacyBlobRef
  *
  * @example
  * ```typescript
@@ -233,6 +343,72 @@ export function isLegacyBlobRef(
   }
 
   return true
+}
+
+/**
+ * Asserts that a value is a valid {@link LegacyBlobRef}, throwing an error if it is not.
+ *
+ * @throws {@link InvalidLegacyBlobRefError} if the input is not a valid LegacyBlobRef
+ *
+ * @example
+ * ```typescript
+ * import { assertLegacyBlobRef } from '@atproto/lex-data'
+ *
+ * assertLegacyBlobRef(data)
+ * // TypeScript now knows data is a LegacyBlobRef
+ * console.log(data.cid)
+ * ```
+ */
+export function assertLegacyBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): asserts input is LegacyBlobRef {
+  if (!isLegacyBlobRef(input, options)) {
+    throw new InvalidLegacyBlobRefError('Value is not a valid LegacyBlobRef')
+  }
+}
+
+/**
+ * Casts a value to a {@link LegacyBlobRef} if it is valid, throwing an error if it is not.
+ *
+ * @throws {@link InvalidLegacyBlobRefError} if the input is not a valid LegacyBlobRef
+ *
+ * @example
+ * ```typescript
+ * import { asLegacyBlobRef } from '@atproto/lex-data'
+ *
+ * const legacyBlobRef = asLegacyBlobRef(data)
+ * console.log(legacyBlobRef.cid)
+ * ```
+ */
+export function asLegacyBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): LegacyBlobRef {
+  assertLegacyBlobRef(input, options)
+  return input
+}
+
+/**
+ * Returns the input if it is a valid {@link LegacyBlobRef}, or `undefined` if it is not.
+ *
+ * @returns The input as a LegacyBlobRef, or undefined
+ *
+ * @example
+ * ```typescript
+ * import { ifLegacyBlobRef } from '@atproto/lex-data'
+ *
+ * const legacyBlobRef = ifLegacyBlobRef(data)
+ * if (legacyBlobRef) {
+ *   console.log(legacyBlobRef.cid)
+ * }
+ * ```
+ */
+export function ifLegacyBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): LegacyBlobRef | undefined {
+  return isLegacyBlobRef(input, options) ? input : undefined
 }
 
 /**

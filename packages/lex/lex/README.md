@@ -350,7 +350,7 @@ if (result.success) {
 }
 ```
 
-All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, non-raw CIDs are allowed in blob references, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted in parse mode. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, non-raw CIDs are allowed in blob references, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
 
 ```typescript
 // Strict mode (default) - rejects datetime without timezone
@@ -1068,7 +1068,7 @@ if (isBlobRef(blobRef)) {
 > }
 > ```
 >
-> This legacy format is still accepted when parsing data with `strict: false` (such as when `strictResponseProcessing` is disabled on the Client). However, it is rejected during validation mode (`$validate`, `$safeValidate`) regardless of the `strict` setting, as validation mode does not apply transformations or accept alternative formats.
+> This legacy format is accepted when `strict: false` (such as when `strictResponseProcessing` is disabled on the Client). In strict mode (`strict: true`), legacy blob references are always rejected.
 
 ### Actions
 
