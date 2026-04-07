@@ -42,7 +42,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${collection}/${result.rkey}`,
+          uri: `${space}/${did}/${collection}/${result.rkey}`,
           cid: result.cid,
         },
       }

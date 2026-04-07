@@ -7,10 +7,11 @@
       "description": "List records in a permissioned space, matching a specific collection.",
       "parameters": {
         "type": "params",
-        "required": ["space", "collection"],
+        "required": ["space"],
         "properties": {
           "space": {
             "type": "string",
+            "format": "uri",
             "description": "Reference to the space."
           },
           "collection": {

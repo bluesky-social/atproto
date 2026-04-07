@@ -19,7 +19,7 @@ export type QueryParams = {
   /** Reference to the space. */
   space: string
   /** The NSID of the record type. */
-  collection: string
+  collection?: string
   /** The number of records to return. */
   limit?: number
   cursor?: string

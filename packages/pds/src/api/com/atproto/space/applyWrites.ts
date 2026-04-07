@@ -1,5 +1,4 @@
 import { TID } from '@atproto/common'
-import { LexMap } from '@atproto/lex-data'
 import { Repo, RecordWriteOp, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ScopedSpaceStorage } from '../../../../actor-store/space'
@@ -13,32 +12,30 @@ export default function (server: Server, ctx: AppContext) {
       const did = auth.credentials.did
       const { space, writes, swapCommit } = input.body
 
-      const ops: RecordWriteOp[] = writes.map(
-        (w: { $type?: string } & Record<string, unknown>) => {
-          if (w.$type === 'com.atproto.space.applyWrites#create') {
-            return {
-              action: WriteOpAction.Create as const,
-              collection: w.collection as string,
-              rkey: (w.rkey as string) ?? TID.nextStr(),
-              record: w.value as LexMap,
-            }
-          } else if (w.$type === 'com.atproto.space.applyWrites#update') {
-            return {
-              action: WriteOpAction.Update as const,
-              collection: w.collection as string,
-              rkey: w.rkey as string,
-              record: w.value as LexMap,
-            }
-          } else if (w.$type === 'com.atproto.space.applyWrites#delete') {
-            return {
-              action: WriteOpAction.Delete as const,
-              collection: w.collection as string,
-              rkey: w.rkey as string,
-            }
+      const ops: RecordWriteOp[] = writes.map((w) => {
+        if (com.atproto.space.applyWrites.create.isTypeOf(w)) {
+          return {
+            action: WriteOpAction.Create as const,
+            collection: w.collection,
+            rkey: w.rkey ?? TID.nextStr(),
+            record: w.value,
           }
-          throw new InvalidRequestError(`Unknown write type: ${w.$type}`)
-        },
-      )
+        } else if (com.atproto.space.applyWrites.update.isTypeOf(w)) {
+          return {
+            action: WriteOpAction.Update as const,
+            collection: w.collection,
+            rkey: w.rkey,
+            record: w.value,
+          }
+        } else if (com.atproto.space.applyWrites.delete.isTypeOf(w)) {
+          return {
+            action: WriteOpAction.Delete as const,
+            collection: w.collection,
+            rkey: w.rkey,
+          }
+        }
+        throw new InvalidRequestError('Unknown write type')
+      })
 
       const results = await ctx.actorStore.transact(
         did,
@@ -70,15 +67,15 @@ export default function (server: Server, ctx: AppContext) {
               w.action === WriteOpAction.Create ||
               w.action === WriteOpAction.Update
             ) {
-              return {
-                $type: `com.atproto.space.applyWrites#${w.action}Result`,
-                uri: `${space}/${w.collection}/${w.rkey}`,
+              const resultType = w.action === WriteOpAction.Create
+                ? com.atproto.space.applyWrites.createResult
+                : com.atproto.space.applyWrites.updateResult
+              return resultType.build({
+                uri: `${space}/${did}/${w.collection}/${w.rkey}`,
                 cid: w.cid.toString(),
-              }
+              })
             }
-            return {
-              $type: 'com.atproto.space.applyWrites#deleteResult',
-            }
+            return com.atproto.space.applyWrites.deleteResult.build({})
           }),
         },
       }

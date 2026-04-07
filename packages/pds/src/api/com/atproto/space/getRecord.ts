@@ -22,7 +22,7 @@ export default function (server: Server, ctx: AppContext) {
       return {
         encoding: 'application/json' as const,
         body: {
-          uri: `${space}/${collection}/${rkey}`,
+          uri: `${space}/${did}/${collection}/${rkey}`,
           cid: record.cid,
           value: record.value,
         },

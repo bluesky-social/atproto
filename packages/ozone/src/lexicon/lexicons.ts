@@ -14457,6 +14457,7 @@ export const schemaDict = {
             properties: {
               space: {
                 type: 'string',
+                format: 'uri',
                 description: 'Reference to the space.',
               },
               validate: {
@@ -14622,6 +14623,7 @@ export const schemaDict = {
             properties: {
               space: {
                 type: 'string',
+                format: 'uri',
                 description: 'Reference to the space.',
               },
               collection: {
@@ -14700,6 +14702,7 @@ export const schemaDict = {
             properties: {
               space: {
                 type: 'string',
+                format: 'uri',
                 description: 'Reference to the space.',
               },
               collection: {
@@ -14755,6 +14758,7 @@ export const schemaDict = {
           properties: {
             space: {
               type: 'string',
+              format: 'uri',
               description: 'Reference to the space.',
             },
             collection: {
@@ -14813,10 +14817,11 @@ export const schemaDict = {
           'List records in a permissioned space, matching a specific collection.',
         parameters: {
           type: 'params',
-          required: ['space', 'collection'],
+          required: ['space'],
           properties: {
             space: {
               type: 'string',
+              format: 'uri',
               description: 'Reference to the space.',
             },
             collection: {
@@ -14897,6 +14902,7 @@ export const schemaDict = {
             properties: {
               space: {
                 type: 'string',
+                format: 'uri',
                 description: 'Reference to the space.',
               },
               collection: {
@@ -14977,6 +14983,7 @@ export const schemaDict = {
           properties: {
             space: {
               type: 'string',
+              format: 'uri',
               description: 'Reference to the space.',
             },
           },
