@@ -1065,7 +1065,7 @@ Historically, blob references used a simpler format without the `$type` property
 
 ```typescript
 type LegacyBlobRef = {
-  cid: string      // CID as a string (not a Cid object)
+  cid: string // CID as a string (not a Cid object)
   mimeType: string // No size property
 }
 ```
@@ -1077,7 +1077,12 @@ type LegacyBlobRef = {
 The `BlobRef` type is a union that accepts both formats:
 
 ```typescript
-import { BlobRef, isBlobRef, isTypedBlobRef, isLegacyBlobRef } from '@atproto/lex'
+import {
+  BlobRef,
+  isBlobRef,
+  isTypedBlobRef,
+  isLegacyBlobRef,
+} from '@atproto/lex'
 
 // When reading data, always use BlobRef to handle both formats
 function processBlobRef(blob: BlobRef) {
@@ -1097,13 +1102,18 @@ if (isBlobRef(value)) {
 Helper functions work with both formats:
 
 ```typescript
-import { getBlobCid, getBlobCidString, getBlobMime, getBlobSize } from '@atproto/lex'
+import {
+  getBlobCid,
+  getBlobCidString,
+  getBlobMime,
+  getBlobSize,
+} from '@atproto/lex'
 
 // These utilities work with both TypedBlobRef and LegacyBlobRef
-const cid = getBlobCid(blobRef)           // Returns Cid object
-const cidStr = getBlobCidString(blobRef)  // Returns string (optimized)
-const mime = getBlobMime(blobRef)         // Returns mimeType
-const size = getBlobSize(blobRef)         // Returns number | undefined (legacy refs lack size)
+const cid = getBlobCid(blobRef) // Returns Cid object
+const cidStr = getBlobCidString(blobRef) // Returns string (optimized)
+const mime = getBlobMime(blobRef) // Returns mimeType
+const size = getBlobSize(blobRef) // Returns number | undefined (legacy refs lack size)
 ```
 
 > [!IMPORTANT]
@@ -1111,7 +1121,6 @@ const size = getBlobSize(blobRef)         // Returns number | undefined (legacy 
 > **Validation behavior with legacy blobs:**
 >
 > - In **strict mode** (`strict: true`, the default): Legacy blob references are rejected during validation. Use this mode when you control the data source and expect only modern blobs.
->
 > - In **non-strict mode** (`strict: false`): Legacy blob references are accepted. This mode is used automatically when `strictResponseProcessing: false` is set on the Client, allowing your application to handle older records from the network gracefully.
 >
 > ```typescript
