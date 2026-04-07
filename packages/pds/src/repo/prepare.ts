@@ -2,9 +2,9 @@ import { TID } from '@atproto/common'
 import { RecordSchema } from '@atproto/lex'
 import { encode } from '@atproto/lex-cbor'
 import {
-  BlobRef,
   Cid,
   LexMap,
+  TypedBlobRef,
   TypedLexMap,
   cidForCbor,
   enumBlobRefs,
@@ -159,7 +159,7 @@ async function prepareWrite(opts: {
   validationPath?: (string | number)[]
 }): Promise<{
   record: TypedLexMap
-  blobs: BlobRef[]
+  blobs: TypedBlobRef[]
   validationStatus?: ValidationStatus
   uri: AtUri
   cid: Cid

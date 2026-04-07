@@ -1,5 +1,11 @@
 import { HOUR, MINUTE, mapDefined } from '@atproto/common'
-import { $Typed, Un$Typed, Unknown$TypedObject, UriString } from '@atproto/lex'
+import {
+  $Typed,
+  Un$Typed,
+  Unknown$TypedObject,
+  UriString,
+  getBlobCidString,
+} from '@atproto/lex'
 import {
   AtUri,
   AtUriString,
@@ -104,12 +110,7 @@ import {
   isSelfLabelsType,
   isVideoEmbedType,
 } from './types.js'
-import {
-  VideoUriBuilder,
-  cidFromBlobJson,
-  parsePostgate,
-  parseThreadGate,
-} from './util'
+import { VideoUriBuilder, parsePostgate, parseThreadGate } from './util'
 
 const notificationDeletedRecord =
   app.bsky.notification.defs.recordDeleted.$build({})
@@ -277,7 +278,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'banner',
             did,
-            cidFromBlobJson(actor.profile.banner),
+            getBlobCidString(actor.profile.banner),
           )
         : undefined,
       followersCount: profileAggs?.followers ?? 0,
@@ -356,7 +357,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             did,
-            cidFromBlobJson(actor.profile.avatar),
+            getBlobCidString(actor.profile.avatar),
           )
         : undefined,
       // associated.feedgens and associated.lists info not necessarily included
@@ -672,7 +673,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creator,
-            cidFromBlobJson(list.record.avatar),
+            getBlobCidString(list.record.avatar),
           )
         : undefined,
       listItemCount: listAgg?.listItems ?? 0,
@@ -916,7 +917,7 @@ export class Views {
         ? this.imgUriBuilder.getPresetUri(
             'avatar',
             creatorDid,
-            cidFromBlobJson(feedgen.record.avatar),
+            getBlobCidString(feedgen.record.avatar),
           )
         : undefined,
       likeCount: aggs?.likes ?? 0,
@@ -2076,12 +2077,12 @@ export class Views {
       thumb: this.imgUriBuilder.getPresetUri(
         'feed_thumbnail',
         did,
-        cidFromBlobJson(img.image),
+        getBlobCidString(img.image),
       ),
       fullsize: this.imgUriBuilder.getPresetUri(
         'feed_fullsize',
         did,
-        cidFromBlobJson(img.image),
+        getBlobCidString(img.image),
       ),
       alt: img.alt,
       aspectRatio: img.aspectRatio,
@@ -2092,7 +2093,7 @@ export class Views {
   }
 
   videoEmbed(did: DidString, embed: VideoEmbed): $Typed<VideoEmbedView> {
-    const cid = cidFromBlobJson(embed.video)
+    const cid = getBlobCidString(embed.video)
     return app.bsky.embed.video.view.$build({
       cid,
       playlist: this.videoUriBuilder.playlist({ did, cid }),
@@ -2117,7 +2118,7 @@ export class Views {
           ? this.imgUriBuilder.getPresetUri(
               'feed_thumbnail',
               did,
-              cidFromBlobJson(thumb),
+              getBlobCidString(thumb),
             )
           : undefined,
       },

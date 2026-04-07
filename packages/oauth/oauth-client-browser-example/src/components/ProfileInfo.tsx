@@ -1,5 +1,5 @@
 import { JSX, useMemo } from 'react'
-import { l } from '@atproto/lex'
+import { getBlobCidString, l } from '@atproto/lex'
 import { app, com } from '../lexicons.ts'
 import { useBlobUrl } from '../lib/use-blob-url.ts'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
@@ -61,7 +61,7 @@ function useBlobRefUrl(ref: l.BlobRef | null | undefined) {
   const { did } = useBskyClient()
   const blobQuery = useLexQuery(
     com.atproto.sync.getBlob,
-    did && ref ? { did, cid: ref.ref.toString() } : false,
+    did && ref ? { did, cid: getBlobCidString(ref) } : false,
   )
   const blob = useMemo(() => {
     return blobQuery.data

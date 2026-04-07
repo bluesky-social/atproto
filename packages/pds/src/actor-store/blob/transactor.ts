@@ -6,8 +6,9 @@ import { SECOND, cloneStream, streamSize } from '@atproto/common'
 import {
   BlobRef,
   Cid,
-  LegacyBlobRef,
+  TypedBlobRef,
   cidForRawHash,
+  getBlobCidString,
   parseCid,
 } from '@atproto/lex-data'
 import { BlobNotFoundError, BlobStore, WriteOpAction } from '@atproto/repo'
@@ -36,13 +37,10 @@ export class BlobTransactor extends BlobReader {
     super(db, blobstore)
   }
 
-  async insertBlobs(
-    recordUri: string,
-    blobs: Iterable<BlobRef | LegacyBlobRef>,
-  ) {
+  async insertBlobs(recordUri: string, blobs: Iterable<BlobRef>) {
     const values = Array.from(blobs, (blob) => ({
       recordUri,
-      blobCid: blobCid(blob).toString(),
+      blobCid: getBlobCidString(blob),
     }))
 
     if (values.length) {
@@ -73,7 +71,7 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async trackUntetheredBlob(metadata: BlobMetadata): Promise<BlobRef> {
+  async trackUntetheredBlob(metadata: BlobMetadata): Promise<TypedBlobRef> {
     const { tempKey, size, cid, mimeType } = metadata
     const cidStr = cid.toString()
 
@@ -244,7 +242,7 @@ export class BlobTransactor extends BlobReader {
   }
 
   async verifyBlobAndMakePermanent(
-    blob: BlobRef,
+    blob: TypedBlobRef,
     signal?: AbortSignal,
   ): Promise<void> {
     const found = await this.db.db
@@ -295,7 +293,7 @@ export class BlobTransactor extends BlobReader {
     }
   }
 
-  async insertBlobMetadata(blob: BlobRef): Promise<void> {
+  async insertBlobMetadata(blob: TypedBlobRef): Promise<void> {
     await this.db.db
       .insertInto('blob')
       .values({
@@ -308,7 +306,7 @@ export class BlobTransactor extends BlobReader {
       .execute()
   }
 
-  async associateBlob(blob: BlobRef, recordUri: AtUri): Promise<void> {
+  async associateBlob(blob: TypedBlobRef, recordUri: AtUri): Promise<void> {
     await this.db.db
       .insertInto('record_blob')
       .values({
@@ -354,7 +352,7 @@ async function mimeTypeFromStream(
  * Ensures that the blob referenced in the record matches the stored blob.
  */
 function verifyBlob(
-  blob: BlobRef,
+  blob: TypedBlobRef,
   found: Pick<BlobTable, 'size' | 'mimeType'>,
 ) {
   if (blob.mimeType !== found.mimeType) {
@@ -380,8 +378,4 @@ function isUpdate(write: PreparedWrite) {
 }
 function isDelete(write: PreparedWrite) {
   return write.action === WriteOpAction.Delete
-}
-
-function blobCid(blob: BlobRef | LegacyBlobRef): Cid {
-  return '$type' in blob ? blob.ref : parseCid(blob.cid)
 }

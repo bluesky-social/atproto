@@ -6,7 +6,7 @@ import {
   LexValue,
   isCid,
 } from '@atproto/lex-data'
-import { parseBlobRef } from './blob.js'
+import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
@@ -328,7 +328,7 @@ function parseSpecialJsonObject(
     // the strict option is enabled.
     if (options.strict) {
       if (input.$type === 'blob') {
-        const blob = parseBlobRef(input, options)
+        const blob = parseTypedBlobRef(input, options)
         if (blob) return blob
         throw new TypeError(`Invalid blob object`)
       } else if (typeof input.$type !== 'string') {
