@@ -30,10 +30,10 @@ export const locales = {
   //   name: 'English (UK)',
   //   flag: '🇬🇧',
   // },
-  // es: {
-  //   name: 'Español',
-  //   flag: '🇪🇸',
-  // },
+  es: {
+    name: 'Español',
+    flag: '🇪🇸',
+  },
   // eu: {
   //   name: 'Euskara',
   // },
