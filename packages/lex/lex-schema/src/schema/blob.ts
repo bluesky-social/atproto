@@ -1,8 +1,11 @@
 import {
   BlobRef,
   LegacyBlobRef,
+  TypedBlobRef,
+  getBlobSize,
   isBlobRef,
   isLegacyBlobRef,
+  isTypedBlobRef,
 } from '@atproto/lex-data'
 import { Schema, ValidationContext } from '../core.js'
 import { memoizedOptions } from '../util/memoize.js'
@@ -26,8 +29,8 @@ export type BlobSchemaOptions = {
   maxSize?: number
 }
 
-export type { BlobRef, LegacyBlobRef }
-export { isBlobRef, isLegacyBlobRef }
+export type { BlobRef, LegacyBlobRef, TypedBlobRef }
+export { isBlobRef, isLegacyBlobRef, isTypedBlobRef }
 
 /**
  * Schema for validating blob references in AT Protocol.
@@ -46,7 +49,7 @@ export { isBlobRef, isLegacyBlobRef }
  */
 export class BlobSchema<
   const TOptions extends BlobSchemaOptions = NonNullable<unknown>,
-> extends Schema<BlobRef | LegacyBlobRef> {
+> extends Schema<BlobRef> {
   readonly type = 'blob' as const
 
   constructor(readonly options?: TOptions) {
@@ -68,8 +71,11 @@ export class BlobSchema<
       }
 
       const maxSize = this.options?.maxSize
-      if (maxSize != null && 'size' in blob && blob.size > maxSize) {
-        return ctx.issueTooBig(blob, 'blob', maxSize, blob.size)
+      if (maxSize != null) {
+        const size = getBlobSize(blob)
+        if (size !== undefined && size > maxSize) {
+          return ctx.issueTooBig(blob, 'blob', maxSize, size)
+        }
       }
     }
 
@@ -83,15 +89,12 @@ export class BlobSchema<
   }
 }
 
-function parseValue(
-  this: ValidationContext,
-  input: unknown,
-): BlobRef | LegacyBlobRef | null {
-  // If there is a $type property, we treat if as a potential BlobRef and
+function parseValue(this: ValidationContext, input: unknown): BlobRef | null {
+  // If there is a $type property, we treat if as a potential TypedBlobRef and
   // validate accordingly.
   if ((input as any)?.$type !== undefined) {
     // Use the context's option for the "strict" check
-    return isBlobRef(input, this.options) ? input : null
+    return isTypedBlobRef(input, this.options) ? input : null
   }
 
   // If there is no $type property, we may be dealing with a legacy blob ref. If

@@ -1,5 +1,5 @@
 import { assert, describe, expect, it } from 'vitest'
-import { isBlobRef, isLegacyBlobRef, parseCid } from '@atproto/lex-data'
+import { isTypedBlobRef, isLegacyBlobRef, parseCid } from '@atproto/lex-data'
 import { blob } from './blob.js'
 
 // await cidForRawBytes(Buffer.from('Hello, World!'))
@@ -23,7 +23,7 @@ describe('BlobSchema', () => {
         size: 10000,
       })
       assert(result.success)
-      assert(isBlobRef(result.value))
+      assert(isTypedBlobRef(result.value))
       expect(result.value.$type).toBe('blob')
       expect(result.value.mimeType).toBe('image/jpeg')
       expect(result.value.size).toBe(10000)

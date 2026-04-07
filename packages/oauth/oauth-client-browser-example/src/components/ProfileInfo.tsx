@@ -57,7 +57,7 @@ export function ProfileInfo({
   )
 }
 
-function useBlobRefUrl(ref: l.BlobRef | l.LegacyBlobRef | null | undefined) {
+function useBlobRefUrl(ref: l.BlobRef | null | undefined) {
   const { did } = useBskyClient()
   const blobQuery = useLexQuery(
     com.atproto.sync.getBlob,

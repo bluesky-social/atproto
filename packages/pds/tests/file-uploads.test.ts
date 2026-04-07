@@ -5,7 +5,11 @@ import * as uint8arrays from 'uint8arrays'
 import { randomBytes } from '@atproto/crypto'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { Client, DidString } from '@atproto/lex'
-import { BlobRef, getBlobCidString, isBlobRef } from '@atproto/lex-data'
+import {
+  TypedBlobRef,
+  getBlobCidString,
+  isTypedBlobRef,
+} from '@atproto/lex-data'
 import { AppContext } from '../src'
 import { ActorDb } from '../src/actor-store/db'
 import { DiskBlobStore } from '../src/disk-blobstore'
@@ -41,7 +45,7 @@ describe('file uploads', () => {
     await network.close()
   })
 
-  let smallBlob: BlobRef
+  let smallBlob: TypedBlobRef
   let smallFile: Uint8Array
 
   it('handles client abort', async () => {
@@ -79,7 +83,7 @@ describe('file uploads', () => {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
-    assert(isBlobRef(res.body.blob))
+    assert(isTypedBlobRef(res.body.blob))
     smallBlob = res.body.blob
 
     const found = await aliceDb.db
@@ -125,7 +129,7 @@ describe('file uploads', () => {
     expect(uint8arrays.equals(smallFile, body)).toBeTruthy()
   })
 
-  let largeBlob: BlobRef
+  let largeBlob: TypedBlobRef
   let largeFile: Uint8Array
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
@@ -134,7 +138,7 @@ describe('file uploads', () => {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
     })
-    assert(isBlobRef(res.body.blob))
+    assert(isTypedBlobRef(res.body.blob))
     largeBlob = res.body.blob
 
     const profilePromise = sc.updateProfile(alice, {
@@ -211,7 +215,7 @@ describe('file uploads', () => {
         'content-encoding': 'gzip',
       },
     })
-    assert(isBlobRef(uploaded.blob))
+    assert(isTypedBlobRef(uploaded.blob))
     expect(uploaded.blob.ref.equals(smallBlob.ref)).toBeTruthy()
   })
 

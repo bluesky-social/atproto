@@ -2,4 +2,4 @@
 '@atproto/lex-data': patch
 ---
 
-Export new utility functions for working with both standard and legacy blob references: `assertBlobRef`, `asBlobRef`, `ifBlobRef`, `assertLegacyBlobRef`, `asLegacyBlobRef`, `ifLegacyBlobRef`, `getBlobCid`, `getBlobCidString`, `getBlobMime`, and `getBlobSize`.
+Defines `BlobRef` as a union of `TypedBlobRef` and `LegacyBlobRef` to allow for seamless handling of both types of blob references.

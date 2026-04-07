@@ -696,7 +696,7 @@ The old `BlobRef` class from `@atproto/lexicon` is replaced by a simple interfac
 
 ```diff
 - if (value instanceof BlobRef) { ... }
-+ if (isBlobRef(value)) { ... }
++ if (isTypedBlobRef(value)) { ... }
 ```
 
 ### Legacy BlobRefs
@@ -707,12 +707,12 @@ Legacy blob references (`{ cid: string, mimeType: string }`) are automatically h
 import {
   BlobRef,
   LegacyBlobRef,
-  isBlobRef,
+  isTypedBlobRef,
   isLegacyBlobRef,
 } from '@atproto/lex-data'
 
 // Check for standard BlobRef
-if (isBlobRef(value)) {
+if (isTypedBlobRef(value)) {
   console.log(value.ref.toString())
 }
 

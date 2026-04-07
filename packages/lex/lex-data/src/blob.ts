@@ -22,36 +22,7 @@ const STRICT_CID_CHECK_OPTIONS: CheckCidOptions = { flavor: 'raw' }
 // can use it as a type guard.
 const isSafeInteger = Number.isSafeInteger as (v: unknown) => v is number
 
-/**
- * Reference to binary data (like images, videos, etc.) in the AT Protocol data model.
- *
- * A BlobRef is a {@link LexMap} with a specific structure that identifies binary
- * content by its content hash (CID), along with metadata about the content type
- * and size.
- *
- * @typeParam Ref - The type of CID reference, defaults to any {@link Cid}
- *
- * @example
- * ```typescript
- * import type { BlobRef } from '@atproto/lex-data'
- *
- * const imageRef: BlobRef = {
- *   $type: 'blob',
- *   mimeType: 'image/jpeg',
- *   ref: cid,  // CID of the blob content
- *   size: 12345
- * }
- * ```
- *
- * @see {@link isBlobRef} to check if a value is a valid BlobRef
- * @see {@link LegacyBlobRef} for the older blob reference format
- */
-export type BlobRef<Ref extends Cid = Cid> = {
-  $type: 'blob'
-  mimeType: string
-  ref: Ref
-  size: number
-}
+export type BlobRef<Ref extends Cid = Cid> = TypedBlobRef<Ref> | LegacyBlobRef
 
 /**
  * Options for validating a {@link BlobRef}.
@@ -67,27 +38,146 @@ export type BlobRefCheckOptions = {
   strict?: boolean
 }
 
+export function isBlobRef(input: unknown): input is BlobRef<RawCid>
+export function isBlobRef<TOptions extends BlobRefCheckOptions>(
+  input: unknown,
+  options: TOptions,
+): input is LegacyBlobRef | InferTypedBlobRefCheck<TOptions>
+export function isBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): input is BlobRef<RawCid>
+export function isBlobRef(
+  input: unknown,
+  options?: BlobRefCheckOptions,
+): input is BlobRef {
+  return (input as any)?.$type === 'blob'
+    ? isTypedBlobRef(input, options)
+    : isLegacyBlobRef(input, options)
+}
+
+/**
+ * Extracts the MIME type from a {@link BlobRef} or {@link LegacyBlobRef}.
+ *
+ * @example
+ * ```ts
+ * const mimeType = getBlobMime(blobRef)
+ * console.log(mimeType)  // e.g., 'image/jpeg'
+ * ```
+ */
+export function getBlobMime(blob: BlobRef): string
+export function getBlobMime(blob?: BlobRef): string | undefined
+export function getBlobMime(blob?: BlobRef): string | undefined {
+  return blob?.mimeType
+}
+
+/**
+ * Extracts the size (in bytes) from a {@link BlobRef}. For
+ * {@link LegacyBlobRef}, size information is not available, so this function
+ * returns `undefined` for legacy refs.
+ *
+ * @note The size property, in blob refs, cannot be 100% trusted since the PDS
+ * might not have a local copy of the blob (to check the size against) and might
+ * just be passing through the blob ref from the client without validating it.
+ * So, while this function can be useful for getting size information when
+ * available, it should not be solely relied upon for critical functionality
+ * without additional validation.
+ *
+ * @example
+ * ```ts
+ * const size = getBlobSize(blobRef)
+ * if (size !== undefined) {
+ *   console.log(`Blob size: ${size} bytes`)
+ * } else {
+ *   console.log('Size information not available for legacy blob ref')
+ * }
+ * ```
+ */
+export function getBlobSize(blob: BlobRef): number | undefined {
+  if ('$type' in blob && blob.size >= 0) return blob.size
+  // LegacyBlobRef doesn't have size information
+  return undefined
+}
+
+/**
+ * Extracts the {@link Cid} from a {@link BlobRef} or {@link LegacyBlobRef}.
+ *
+ * @throws If the input input is a {@link LegacyBlobRef} with an invalid CID string
+ * @example
+ * ```ts
+ * const cid = getBlobCid(blobRef)
+ * console.log(cid.bytes)
+ * ```
+ */
+export function getBlobCid(blob: BlobRef): Cid
+export function getBlobCid(blob?: BlobRef): Cid | undefined
+export function getBlobCid(blob?: BlobRef): Cid | undefined {
+  if (!blob) return undefined
+  return '$type' in blob ? blob.ref : parseCid(blob.cid)
+}
+
+/**
+ * Extracts the CID string from a {@link BlobRef} or {@link LegacyBlobRef}.
+ *
+ * This is similar to `getBlobCid(blob).toString()` but is more optimized since
+ * the CID string is already available in the legacy format and we can avoid
+ * parsing it into a CID object just to convert it back to a string.
+ *
+ * @example
+ * ```ts
+ * const cidString = getBlobCidString(blobRef)
+ * console.log(cidString)
+ * ```
+ */
+export function getBlobCidString(blob: BlobRef): string
+export function getBlobCidString(blob?: BlobRef): string | undefined
+export function getBlobCidString(blob?: BlobRef): string | undefined {
+  if (!blob) return undefined
+  return '$type' in blob ? blob.ref.toString() : blob.cid
+}
+
+/**
+ * Reference to binary data (like images, videos, etc.) in the AT Protocol data model.
+ *
+ * A {@link TypedBlobRef} is a {@link LexMap} with a specific structure that
+ * identifies binary content by its content hash (CID), along with metadata
+ * about the content type and size.
+ *
+ * @typeParam Ref - The type of CID reference, defaults to any {@link Cid}
+ *
+ * @example
+ * ```typescript
+ * import type { NewBlobRef } from '@atproto/lex-data'
+ *
+ * const imageRef: NewBlobRef = {
+ *   $type: 'blob',
+ *   mimeType: 'image/jpeg',
+ *   ref: cid,  // CID of the blob content
+ *   size: 12345
+ * }
+ * ```
+ *
+ * @see {@link isTypedBlobRef} to check if a value is a valid NewBlobRef
+ * @see {@link LegacyBlobRef} for the older blob reference format
+ */
+export type TypedBlobRef<Ref extends Cid = Cid> = {
+  $type: 'blob'
+  mimeType: string
+  ref: Ref
+  size: number
+}
+
 /**
  * Infers the BlobRef type based on the check options.
  *
  * @typeParam TOptions - The options used for checking
  */
-export type InferCheckedBlobRef<TOptions extends BlobRefCheckOptions> =
+export type InferTypedBlobRefCheck<TOptions extends BlobRefCheckOptions> =
   TOptions extends { strict: false }
-    ? BlobRef
+    ? TypedBlobRef
     : { strict: boolean } extends TOptions
-      ? BlobRef
-      : BlobRef<RawCid>
-
-/**
- * Error thrown when a value is not a valid {@link BlobRef}.
- */
-export class InvalidBlobRefError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'InvalidBlobRefError'
-  }
-}
+      ? TypedBlobRef
+      : TypedBlobRef<RawCid>
 
 /**
  * Type guard to check if a value is a valid {@link BlobRef}.
@@ -104,32 +194,32 @@ export class InvalidBlobRefError extends Error {
  *
  * @example
  * ```typescript
- * import { isBlobRef } from '@atproto/lex-data'
+ * import { isTypedBlobRef } from '@atproto/lex-data'
  *
- * if (isBlobRef(data)) {
+ * if (isTypedBlobRef(data)) {
  *   console.log(data.mimeType)  // e.g., 'image/jpeg'
  *   console.log(data.size)      // e.g., 12345
  * }
  *
  * // Allow any valid CID (not just raw CIDs)
- * if (isBlobRef(data, { strict: false })) {
+ * if (isTypedBlobRef(data, { strict: false })) {
  *   // ...
  * }
  * ```
  */
-export function isBlobRef(input: unknown): input is BlobRef<RawCid>
-export function isBlobRef<TOptions extends BlobRefCheckOptions>(
+export function isTypedBlobRef(input: unknown): input is TypedBlobRef<RawCid>
+export function isTypedBlobRef<TOptions extends BlobRefCheckOptions>(
   input: unknown,
   options: TOptions,
-): input is InferCheckedBlobRef<TOptions>
-export function isBlobRef(
+): input is InferTypedBlobRefCheck<TOptions>
+export function isTypedBlobRef(
   input: unknown,
   options?: BlobRefCheckOptions,
-): input is BlobRef
-export function isBlobRef(
+): input is TypedBlobRef<RawCid>
+export function isTypedBlobRef(
   input: unknown,
   options?: BlobRefCheckOptions,
-): input is BlobRef {
+): input is TypedBlobRef {
   if (!isPlainObject(input)) {
     return false
   }
@@ -179,99 +269,6 @@ export function isBlobRef(
 }
 
 /**
- * Asserts that a value is a valid {@link BlobRef}, throwing an error if it is not.
- *
- * @throws {@link InvalidBlobRefError} if the input is not a valid BlobRef
- *
- * @example
- * ```typescript
- * import { assertBlobRef } from '@atproto/lex-data'
- *
- * assertBlobRef(data)
- * // TypeScript now knows data is a BlobRef
- * console.log(data.mimeType)
- * ```
- */
-export function assertBlobRef(input: unknown): asserts input is BlobRef<RawCid>
-export function assertBlobRef<TOptions extends BlobRefCheckOptions>(
-  input: unknown,
-  options: TOptions,
-): asserts input is InferCheckedBlobRef<TOptions>
-export function assertBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): asserts input is BlobRef
-export function assertBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): asserts input is BlobRef {
-  if (!isBlobRef(input, options)) {
-    throw new InvalidBlobRefError('Value is not a valid BlobRef')
-  }
-}
-
-/**
- * Casts a value to a {@link BlobRef} if it is valid, throwing an error if it is not.
- *
- * @throws {@link InvalidBlobRefError} if the input is not a valid BlobRef
- *
- * @example
- * ```typescript
- * import { asBlobRef } from '@atproto/lex-data'
- *
- * const blobRef = asBlobRef(data)
- * console.log(blobRef.mimeType)
- * ```
- */
-export function asBlobRef(input: unknown): BlobRef<RawCid>
-export function asBlobRef<TOptions extends BlobRefCheckOptions>(
-  input: unknown,
-  options: TOptions,
-): InferCheckedBlobRef<TOptions>
-export function asBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): BlobRef
-export function asBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): BlobRef {
-  assertBlobRef(input, options)
-  return input
-}
-
-/**
- * Returns the input if it is a valid {@link BlobRef}, or `undefined` if it is not.
- *
- * @returns The input as a BlobRef, or undefined
- *
- * @example
- * ```typescript
- * import { ifBlobRef } from '@atproto/lex-data'
- *
- * const blobRef = ifBlobRef(data)
- * if (blobRef) {
- *   console.log(blobRef.mimeType)
- * }
- * ```
- */
-export function ifBlobRef(input: unknown): BlobRef<RawCid> | undefined
-export function ifBlobRef<TOptions extends BlobRefCheckOptions>(
-  input: unknown,
-  options: TOptions,
-): InferCheckedBlobRef<TOptions> | undefined
-export function ifBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): BlobRef | undefined
-export function ifBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): BlobRef | undefined {
-  return isBlobRef(input, options) ? input : undefined
-}
-
-/**
  * Legacy format for blob references used in older AT Protocol data.
  *
  * This is the older format that stores the CID as a string rather than
@@ -297,16 +294,6 @@ export type LegacyBlobRef = {
 }
 
 /**
- * Error thrown when a value is not a valid {@link LegacyBlobRef}.
- */
-export class InvalidLegacyBlobRefError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'InvalidLegacyBlobRefError'
-  }
-}
-
-/**
  * Type guard to check if a value is a valid {@link LegacyBlobRef}.
  *
  * Validates the structure of the input:
@@ -324,7 +311,7 @@ export class InvalidLegacyBlobRefError extends Error {
  * }
  * ```
  *
- * @see {@link isBlobRef} for checking the current blob reference format
+ * @see {@link isTypedBlobRef} for checking the current blob reference format
  */
 export function isLegacyBlobRef(
   input: unknown,
@@ -362,158 +349,6 @@ export function isLegacyBlobRef(
 }
 
 /**
- * Asserts that a value is a valid {@link LegacyBlobRef}, throwing an error if it is not.
- *
- * @throws {@link InvalidLegacyBlobRefError} if the input is not a valid LegacyBlobRef
- *
- * @example
- * ```typescript
- * import { assertLegacyBlobRef } from '@atproto/lex-data'
- *
- * assertLegacyBlobRef(data)
- * // TypeScript now knows data is a LegacyBlobRef
- * console.log(data.cid)
- * ```
- */
-export function assertLegacyBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): asserts input is LegacyBlobRef {
-  if (!isLegacyBlobRef(input, options)) {
-    throw new InvalidLegacyBlobRefError('Value is not a valid LegacyBlobRef')
-  }
-}
-
-/**
- * Casts a value to a {@link LegacyBlobRef} if it is valid, throwing an error if it is not.
- *
- * @throws {@link InvalidLegacyBlobRefError} if the input is not a valid LegacyBlobRef
- *
- * @example
- * ```typescript
- * import { asLegacyBlobRef } from '@atproto/lex-data'
- *
- * const legacyBlobRef = asLegacyBlobRef(data)
- * console.log(legacyBlobRef.cid)
- * ```
- */
-export function asLegacyBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): LegacyBlobRef {
-  assertLegacyBlobRef(input, options)
-  return input
-}
-
-/**
- * Returns the input if it is a valid {@link LegacyBlobRef}, or `undefined` if it is not.
- *
- * @returns The input as a LegacyBlobRef, or undefined
- *
- * @example
- * ```typescript
- * import { ifLegacyBlobRef } from '@atproto/lex-data'
- *
- * const legacyBlobRef = ifLegacyBlobRef(data)
- * if (legacyBlobRef) {
- *   console.log(legacyBlobRef.cid)
- * }
- * ```
- */
-export function ifLegacyBlobRef(
-  input: unknown,
-  options?: BlobRefCheckOptions,
-): LegacyBlobRef | undefined {
-  return isLegacyBlobRef(input, options) ? input : undefined
-}
-
-/**
- * Extracts the MIME type from a {@link BlobRef} or {@link LegacyBlobRef}.
- *
- * @example
- * ```ts
- * const mimeType = getBlobMime(blobRef)
- * console.log(mimeType)  // e.g., 'image/jpeg'
- * ```
- */
-export function getBlobMime(blob: BlobRef | LegacyBlobRef): string
-export function getBlobMime(blob?: BlobRef | LegacyBlobRef): string | undefined
-export function getBlobMime(
-  blob?: BlobRef | LegacyBlobRef,
-): string | undefined {
-  return blob?.mimeType
-}
-
-/**
- * Extracts the size (in bytes) from a {@link BlobRef}. For
- * {@link LegacyBlobRef}, size information is not available, so this function
- * returns `undefined` for legacy refs.
- *
- * @note The size property, in blob refs, cannot be 100% trusted since the PDS
- * might not have a local copy of the blob (to check the size against) and might
- * just be passing through the blob ref from the client without validating it.
- * So, while this function can be useful for getting size information when
- * available, it should not be solely relied upon for critical functionality
- * without additional validation.
- *
- * @example
- * ```ts
- * const size = getBlobSize(blobRef)
- * if (size !== undefined) {
- *   console.log(`Blob size: ${size} bytes`)
- * } else {
- *   console.log('Size information not available for legacy blob ref')
- * }
- * ```
- */
-export function getBlobSize(blob: BlobRef | LegacyBlobRef): number | undefined {
-  if ('$type' in blob && blob.size >= 0) return blob.size
-  // LegacyBlobRef doesn't have size information
-  return undefined
-}
-
-/**
- * Extracts the {@link Cid} from a {@link BlobRef} or {@link LegacyBlobRef}.
- *
- * @throws If the input input is a {@link LegacyBlobRef} with an invalid CID string
- * @example
- * ```ts
- * const cid = getBlobCid(blobRef)
- * console.log(cid.bytes)
- * ```
- */
-export function getBlobCid(blob: BlobRef | LegacyBlobRef): Cid
-export function getBlobCid(blob?: BlobRef | LegacyBlobRef): Cid | undefined
-export function getBlobCid(blob?: BlobRef | LegacyBlobRef): Cid | undefined {
-  if (!blob) return undefined
-  return '$type' in blob ? blob.ref : parseCid(blob.cid)
-}
-
-/**
- * Extracts the CID string from a {@link BlobRef} or {@link LegacyBlobRef}.
- *
- * This is similar to `getBlobCid(blob).toString()` but is more optimized since
- * the CID string is already available in the legacy format and we can avoid
- * parsing it into a CID object just to convert it back to a string.
- *
- * @example
- * ```ts
- * const cidString = getBlobCidString(blobRef)
- * console.log(cidString)
- * ```
- */
-export function getBlobCidString(blob: BlobRef | LegacyBlobRef): string
-export function getBlobCidString(
-  blob?: BlobRef | LegacyBlobRef,
-): string | undefined
-export function getBlobCidString(
-  blob?: BlobRef | LegacyBlobRef,
-): string | undefined {
-  if (!blob) return undefined
-  return '$type' in blob ? blob.ref.toString() : blob.cid
-}
-
-/**
  * Options for enumerating blob references within a {@link LexValue}.
  */
 export type EnumBlobRefsOptions = BlobRefCheckOptions & {
@@ -533,10 +368,10 @@ export type EnumBlobRefsOptions = BlobRefCheckOptions & {
  */
 export type InferEnumBlobRefs<TOptions extends EnumBlobRefsOptions> =
   TOptions extends { allowLegacy: true }
-    ? InferCheckedBlobRef<TOptions> | LegacyBlobRef
+    ? InferTypedBlobRefCheck<TOptions> | LegacyBlobRef
     : { allowLegacy: boolean } extends TOptions
-      ? InferCheckedBlobRef<TOptions> | LegacyBlobRef
-      : InferCheckedBlobRef<TOptions>
+      ? InferTypedBlobRefCheck<TOptions> | LegacyBlobRef
+      : InferTypedBlobRefCheck<TOptions>
 
 /**
  * Generator that enumerates all {@link BlobRef}s (and, optionally,
@@ -581,11 +416,11 @@ export function enumBlobRefs<TOptions extends EnumBlobRefsOptions>(
 export function enumBlobRefs(
   input: LexValue,
   options?: EnumBlobRefsOptions,
-): Generator<BlobRef | LegacyBlobRef, void, unknown>
+): Generator<BlobRef, void, unknown>
 export function* enumBlobRefs(
   input: LexValue,
   options?: EnumBlobRefsOptions,
-): Generator<BlobRef | LegacyBlobRef, void, unknown> {
+): Generator<BlobRef, void, unknown> {
   // LegacyBlobRef not included by default
   const includeLegacy = options?.allowLegacy === true
 
@@ -608,7 +443,7 @@ export function* enumBlobRefs(
       } else if (isPlainProto(value)) {
         if (visited.has(value)) continue
         visited.add(value)
-        if (isBlobRef(value, options)) {
+        if (isTypedBlobRef(value, options)) {
           yield value
         } else if (includeLegacy && isLegacyBlobRef(value, options)) {
           yield value

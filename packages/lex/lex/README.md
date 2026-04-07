@@ -933,7 +933,7 @@ import {
   // Blob references
   BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
   LegacyBlobRef, // { cid: string, mimeType: string }
-  isBlobRef, // Type guard for BlobRef objects
+  isTypedBlobRef, // Type guard for BlobRef objects
   isLegacyBlobRef, // Type guard for LegacyBlobRef objects
   getBlobCid, // Extract Cid from BlobRef or LegacyBlobRef
   getBlobCidString, // Extract CID string from BlobRef or LegacyBlobRef
@@ -1040,35 +1040,87 @@ This will make the generated code more easily tree-shakeable from places that im
 
 ### Blob references
 
-In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+In AT Protocol, binary data (blobs) are referenced using blob references, which include metadata like MIME type and size. These references allow PDSs to determine which binary data ("files") is referenced by records.
+
+#### TypedBlobRef: The Current Standard
+
+The current standard format for blob references is `TypedBlobRef`:
 
 ```typescript
-import { BlobRef, isBlobRef } from '@atproto/lex'
+import { TypedBlobRef } from '@atproto/lex'
 
-const blobRef: BlobRef = {
+const blobRef: TypedBlobRef = {
   $type: 'blob',
   ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
   mimeType: 'image/png',
   size: 12345,
 }
+```
 
-if (isBlobRef(blobRef)) {
-  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+**When creating new blobs**, always use the `TypedBlobRef` format. This is the format returned by `client.uploadBlob()` and expected by PDS endpoints.
+
+#### LegacyBlobRef: Historical Format
+
+Historically, blob references used a simpler format without the `$type` property:
+
+```typescript
+type LegacyBlobRef = {
+  cid: string      // CID as a string (not a Cid object)
+  mimeType: string // No size property
 }
 ```
 
-> [!NOTE]
+**Legacy blob references still exist in the AT Protocol network** in older records created before the format migration. While new blobs should always be created as `TypedBlobRef`, your code must be prepared to handle both formats when reading existing data.
+
+#### Working with Both Formats
+
+The `BlobRef` type is a union that accepts both formats:
+
+```typescript
+import { BlobRef, isBlobRef, isTypedBlobRef, isLegacyBlobRef } from '@atproto/lex'
+
+// When reading data, always use BlobRef to handle both formats
+function processBlobRef(blob: BlobRef) {
+  if (isTypedBlobRef(blob)) {
+    console.log('Modern blob:', blob.ref, blob.mimeType, blob.size)
+  } else if (isLegacyBlobRef(blob)) {
+    console.log('Legacy blob:', blob.cid, blob.mimeType)
+  }
+}
+
+// Or use the isBlobRef type guard which accepts both
+if (isBlobRef(value)) {
+  // value is BlobRef (either TypedBlobRef or LegacyBlobRef)
+}
+```
+
+Helper functions work with both formats:
+
+```typescript
+import { getBlobCid, getBlobCidString, getBlobMime, getBlobSize } from '@atproto/lex'
+
+// These utilities work with both TypedBlobRef and LegacyBlobRef
+const cid = getBlobCid(blobRef)           // Returns Cid object
+const cidStr = getBlobCidString(blobRef)  // Returns string (optimized)
+const mime = getBlobMime(blobRef)         // Returns mimeType
+const size = getBlobSize(blobRef)         // Returns number | undefined (legacy refs lack size)
+```
+
+> [!IMPORTANT]
 >
-> Historically, references to blobs were represented as simple objects with the following structure:
+> **Validation behavior with legacy blobs:**
+>
+> - In **strict mode** (`strict: true`, the default): Legacy blob references are rejected during validation. Use this mode when you control the data source and expect only modern blobs.
+>
+> - In **non-strict mode** (`strict: false`): Legacy blob references are accepted. This mode is used automatically when `strictResponseProcessing: false` is set on the Client, allowing your application to handle older records from the network gracefully.
 >
 > ```typescript
-> type LegacyBlobRef = {
->   cid: string
->   mimeType: string
-> }
-> ```
+> // Strict mode (default) - rejects legacy blobs
+> schema.$safeParse(data) // { strict: true }
 >
-> This legacy format is accepted when `strict: false` (such as when `strictResponseProcessing` is disabled on the Client). In strict mode (`strict: true`), legacy blob references are always rejected.
+> // Non-strict mode - accepts legacy blobs
+> schema.$safeParse(data, { strict: false })
+> ```
 
 ### Actions
 

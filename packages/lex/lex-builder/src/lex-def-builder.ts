@@ -851,7 +851,7 @@ export class LexDefBuilder {
   }
 
   private async compileBlobType(_def: LexiconBlob): Promise<string> {
-    return 'l.BlobRef | l.LegacyBlobRef'
+    return 'l.BlobRef'
   }
 
   private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {

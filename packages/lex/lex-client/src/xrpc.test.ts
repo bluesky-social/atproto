@@ -1257,9 +1257,7 @@ describe(xrpcSafe, () => {
       })
 
       assert(result.success)
-      expectTypeOf(result.body).toEqualTypeOf<{
-        blobRef: l.BlobRef | l.LegacyBlobRef
-      }>()
+      expectTypeOf(result.body).toEqualTypeOf<{ blobRef: l.BlobRef }>()
       expect(result.body).toEqual({
         blobRef: {
           $type: 'blob',
@@ -1285,9 +1283,7 @@ describe(xrpcSafe, () => {
       })
 
       assert(result.success)
-      expectTypeOf(result.body).toEqualTypeOf<{
-        blobRef: l.BlobRef | l.LegacyBlobRef
-      }>()
+      expectTypeOf(result.body).toEqualTypeOf<{ blobRef: l.BlobRef }>()
       expect(result.body).toEqual({
         blobRef: {
           cid: rawCid.toString(),
@@ -1313,9 +1309,7 @@ describe(xrpcSafe, () => {
       })
 
       assert(result.success)
-      expectTypeOf(result.body).toEqualTypeOf<{
-        blobRef: l.BlobRef | l.LegacyBlobRef
-      }>()
+      expectTypeOf(result.body).toEqualTypeOf<{ blobRef: l.BlobRef }>()
       expect(result.body).toEqual({
         blobRef: {
           $type: 'blob',
