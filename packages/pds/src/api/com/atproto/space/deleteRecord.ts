@@ -23,10 +23,7 @@ export default function (server: Server, ctx: AppContext) {
         if (swapCommit) {
           const currentRev = await actorTxn.space.getRev(space)
           if (currentRev !== swapCommit) {
-            throw new InvalidRequestError(
-              'Commit swap failed',
-              'InvalidSwap',
-            )
+            throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
           }
         }
 

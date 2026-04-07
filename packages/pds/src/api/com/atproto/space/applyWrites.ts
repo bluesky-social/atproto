@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { Repo, RecordWriteOp, WriteOpAction } from '@atproto/space'
+import { RecordWriteOp, Repo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ScopedSpaceStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
@@ -37,27 +37,21 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Unknown write type')
       })
 
-      const results = await ctx.actorStore.transact(
-        did,
-        async (actorTxn) => {
-          const storage = new ScopedSpaceStorage(actorTxn.space, space)
-          const repo = await Repo.loadOrCreate(storage, did)
-          const commit = await repo.formatCommit(ops)
+      const results = await ctx.actorStore.transact(did, async (actorTxn) => {
+        const storage = new ScopedSpaceStorage(actorTxn.space, space)
+        const repo = await Repo.loadOrCreate(storage, did)
+        const commit = await repo.formatCommit(ops)
 
-          if (swapCommit) {
-            const currentRev = await actorTxn.space.getRev(space)
-            if (currentRev !== swapCommit) {
-              throw new InvalidRequestError(
-                'Commit swap failed',
-                'InvalidSwap',
-              )
-            }
+        if (swapCommit) {
+          const currentRev = await actorTxn.space.getRev(space)
+          if (currentRev !== swapCommit) {
+            throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
           }
+        }
 
-          await actorTxn.space.applyCommit(space, commit)
-          return commit.writes
-        },
-      )
+        await actorTxn.space.applyCommit(space, commit)
+        return commit.writes
+      })
 
       return {
         encoding: 'application/json' as const,
@@ -67,9 +61,10 @@ export default function (server: Server, ctx: AppContext) {
               w.action === WriteOpAction.Create ||
               w.action === WriteOpAction.Update
             ) {
-              const resultType = w.action === WriteOpAction.Create
-                ? com.atproto.space.applyWrites.createResult
-                : com.atproto.space.applyWrites.updateResult
+              const resultType =
+                w.action === WriteOpAction.Create
+                  ? com.atproto.space.applyWrites.createResult
+                  : com.atproto.space.applyWrites.updateResult
               return resultType.build({
                 uri: `${space}/${did}/${w.collection}/${w.rkey}`,
                 cid: w.cid.toString(),

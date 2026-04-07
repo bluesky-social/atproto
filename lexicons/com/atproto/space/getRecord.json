@@ -51,9 +51,7 @@
           }
         }
       },
-      "errors": [
-        { "name": "RecordNotFound" }
-      ]
+      "errors": [{ "name": "RecordNotFound" }]
     }
   }
 }

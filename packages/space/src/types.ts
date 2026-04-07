@@ -1,5 +1,4 @@
-import { Cid } from '@atproto/lex-data'
-import { LexMap } from '@atproto/lex-data'
+import { Cid, LexMap } from '@atproto/lex-data'
 
 export type RepoRecord = LexMap
 

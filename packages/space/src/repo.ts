@@ -1,5 +1,5 @@
-import { cidForLex } from '@atproto/lex-cbor'
 import { Keypair } from '@atproto/crypto'
+import { cidForLex } from '@atproto/lex-cbor'
 import { createCommit, verifyCommit } from './commit'
 import { RecordAlreadyExistsError, RecordNotFoundError } from './error'
 import { SetHash } from './set-hash'
@@ -7,8 +7,8 @@ import { SpaceStorage } from './storage'
 import {
   CommitData,
   PreparedWrite,
-  RepoRecord,
   RecordWriteOp,
+  RepoRecord,
   SignedCommit,
   SpaceContext,
   WriteOpAction,

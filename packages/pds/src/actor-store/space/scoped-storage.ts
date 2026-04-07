@@ -15,11 +15,7 @@ export class ScopedSpaceStorage implements SpaceStorage {
     collection: string,
     rkey: string,
   ): Promise<RepoRecord | null> {
-    const result = await this.txn.getRecord(
-      this.space,
-      collection,
-      rkey,
-    )
+    const result = await this.txn.getRecord(this.space, collection, rkey)
     return result?.value ?? null
   }
 
@@ -39,11 +35,7 @@ export class ScopedSpaceStorage implements SpaceStorage {
     })
     const results: { rkey: string; record: RepoRecord }[] = []
     for (const row of rows) {
-      const full = await this.txn.getRecord(
-        this.space,
-        collection,
-        row.rkey,
-      )
+      const full = await this.txn.getRecord(this.space, collection, row.rkey)
       if (full) {
         results.push({ rkey: row.rkey, record: full.value })
       }
