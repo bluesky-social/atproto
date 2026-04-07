@@ -108,8 +108,7 @@ export const parseJsonBytes = <TSchema extends Schema<LexValue>>(
   const jsonString = jsonBuffer.toString('utf8')
 
   const value = lexParse(jsonString, options)
-  const result = schema.safeParse(value, options)
-  return result.success ? result.value : undefined
+  return schema.ifMatches(value, options)
 }
 
 export const parseString = <T extends string | undefined>(
