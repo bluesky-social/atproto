@@ -170,6 +170,7 @@ export class Views {
   }
 
   viewerBlockExists(did: DidString, state: HydrationState): boolean {
+    if (state.ctx?.skipViewerBlocks) return false
     const viewer = state.profileViewers?.get(did)
     if (!viewer) return false
     return !!(
