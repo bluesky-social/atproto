@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "iso-datestring-validator": "^2.2.2",
-    "multiformats": "^9.9.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

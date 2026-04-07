@@ -1,6 +1,6 @@
 import { isValidISODateString } from 'iso-datestring-validator'
-import { CID } from 'multiformats/cid'
 import { validateLanguage } from '@atproto/common-web'
+import { parseCid } from '@atproto/lex-data'
 import {
   ensureValidAtUri,
   ensureValidDid,
@@ -109,7 +109,7 @@ export function nsid(path: string, value: string): ValidationResult {
 
 export function cid(path: string, value: string): ValidationResult {
   try {
-    CID.parse(value)
+    parseCid(value)
   } catch {
     return {
       success: false,

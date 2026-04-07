@@ -1,4 +1,3 @@
-import { CID } from 'multiformats/cid'
 import {
   IpldValue,
   JsonValue,
@@ -6,6 +5,7 @@ import {
   ipldToJson,
   jsonToIpld,
 } from '@atproto/common-web'
+import { isCid } from '@atproto/lex-data'
 import { BlobRef, jsonBlobRef } from './blob-refs'
 
 /**
@@ -37,7 +37,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
       return val.original
     }
     // retain cids & bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
+    if (isCid(val) || val instanceof Uint8Array) {
       return val
     }
     // walk plain objects
@@ -65,13 +65,16 @@ export const ipldToLex = (val: IpldValue): LexValue => {
     if (
       (val['$type'] === 'blob' ||
         (typeof val['cid'] === 'string' &&
-          typeof val['mimeType'] === 'string')) &&
-      check.is(val, jsonBlobRef)
+          typeof val['mimeType'] === 'string'))
     ) {
+      const result = jsonBlobRef.safeParse(val)
+      if (result.success) {
+        return BlobRef.fromJsonRef(result.data)
+      }
       return BlobRef.fromJsonRef(val)
     }
     // retain cids, bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
+    if (isCid(val) || val instanceof Uint8Array) {
       return val
     }
     // map plain objects

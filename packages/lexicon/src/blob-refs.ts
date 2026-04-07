@@ -1,11 +1,16 @@
-import { CID } from 'multiformats/cid'
 import { z } from 'zod'
 import { check, ipldToJson, schema } from '@atproto/common-web'
+import { CID } from '@atproto/lex-data'
 
 export const typedJsonBlobRef = z
   .object({
     $type: z.literal('blob'),
-    ref: schema.cid,
+    ref: z.union([
+      schema.cid,
+      z.object({
+        $link: schema.cid
+      }).transform(({ $link }) => $link)
+    ]),
     mimeType: z.string(),
     size: z.number(),
   })
@@ -41,8 +46,9 @@ export class BlobRef {
   }
 
   static asBlobRef(obj: unknown): BlobRef | null {
-    if (check.is(obj, jsonBlobRef)) {
-      return BlobRef.fromJsonRef(obj)
+    const result = jsonBlobRef.safeParse(obj)
+    if (result.success) {
+      return BlobRef.fromJsonRef(result.data)
     }
     return null
   }
