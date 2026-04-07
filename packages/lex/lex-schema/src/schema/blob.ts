@@ -134,9 +134,6 @@ function matchesMime(mime: string, accepted: string[]): boolean {
  *
  * // Any image type with size limit
  * const avatarSchema = l.blob({ accept: ['image/*'], maxSize: 1000000 })
- *
- * // Allow legacy format
- * const legacySchema = l.blob({ allowLegacy: true })
  * ```
  */
 export const blob = /*#__PURE__*/ memoizedOptions(function <

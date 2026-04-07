@@ -5,6 +5,6 @@
 '@atproto/lex': patch
 ---
 
-Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client. The `allowLegacy` option has been removed from the blob schema builder, as legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, in non-strict mode they are accepted.
+Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client.
 
-Additionally, exported new utility functions from `@atproto/lex-data` for working with both standard and legacy blob references: `assertBlobRef`, `asBlobRef`, `ifBlobRef`, `assertLegacyBlobRef`, `asLegacyBlobRef`, `ifLegacyBlobRef`, `getBlobCid`, `getBlobCidString`, `getBlobMime`, and `getBlobSize`.
+BREAKING: The `allowLegacy` option has been removed from the blob schema builder, and legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, and in non-strict mode they are accepted. Consumers should stop passing `allowLegacy` and rely on strictness configuration instead. Likewise, CLI consumers should stop using the removed `--allowLegacyBlobs` flag and use the default strict/non-strict behavior.

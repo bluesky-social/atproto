@@ -459,6 +459,7 @@ export function getBlobSize(blob: BlobRef | LegacyBlobRef): number | undefined {
 /**
  * Extracts the {@link Cid} from a {@link BlobRef} or {@link LegacyBlobRef}.
  *
+ * @throws If the input input is a {@link LegacyBlobRef} with an invalid CID string
  * @example
  * ```ts
  * const cid = getBlobCid(blobRef)
