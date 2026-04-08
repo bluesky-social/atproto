@@ -120,6 +120,19 @@ export function lexParse<T extends LexValue = LexValue>(
 
 /**
  * Parses a JSON string from a byte array into Lex values.
+ *
+ * @note This is an optimized version of the following code that avoids
+ * intermediate string creation and parsing steps by directly decoding JSON from
+ * bytes while handling AT Protocol special types.
+ *
+ * ```typescript
+ * function lexParseJsonBytesNaive(
+ *   bytes: Uint8Array,
+ *   options?: LexParseOptions
+ * ): LexValue {
+ *   return lexParse(utf8FromBytes(bytes), options)
+ * }
+ * ```
  */
 export function lexParseJsonBytes(
   bytes: Uint8Array,
