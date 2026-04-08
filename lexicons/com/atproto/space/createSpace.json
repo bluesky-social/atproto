@@ -1,0 +1,67 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.createSpace",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Create a new space. The authenticated user becomes the space owner. Requires auth, implemented by PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["did", "type"],
+          "properties": {
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the space."
+            },
+            "type": {
+              "type": "string",
+              "format": "nsid",
+              "description": "The NSID of the space type, describing the modality of the space (e.g. app.bsky.group, app.bsky.personal)."
+            },
+            "skey": {
+              "type": "string",
+              "maxLength": 512,
+              "description": "The space key. Used to differentiate multiple spaces of the same type under the same owner. If not provided, one will be auto-generated (TID)."
+            },
+            "accessMode": {
+              "type": "string",
+              "knownValues": ["allow", "deny"],
+              "default": "allow",
+              "description": "Default access mode for third-party applications. 'allow' means any app can access (with optional denylist), 'deny' means only explicitly allowed apps can access."
+            },
+            "managingApp": {
+              "type": "string",
+              "description": "Client ID of the application that manages this space. Used to route application-level requests (join requests, invite flows, etc.)."
+            }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": {
+              "type": "string",
+              "description": "URI of the created space."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceAlreadyExists",
+          "description": "A space with this owner, type, and skey already exists."
+        },
+        {
+          "name": "InvalidType",
+          "description": "The provided space type NSID is not a recognized or valid space type."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.listSpaces",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "List the spaces that the authenticated user participates in. Requires auth, implemented by PDS.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 50,
+            "description": "The number of spaces to return."
+          },
+          "cursor": {
+            "type": "string"
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["spaces"],
+          "properties": {
+            "cursor": {
+              "type": "string"
+            },
+            "spaces": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#spaceView"
+              }
+            }
+          }
+        }
+      }
+    },
+    "spaceView": {
+      "type": "object",
+      "required": ["uri", "isOwner"],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "URI of the space."
+        },
+        "isOwner": {
+          "type": "boolean",
+          "description": "Whether the authenticated user is the owner of the space."
+        }
+      }
+    }
+  }
+}

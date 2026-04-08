@@ -9,6 +9,24 @@ export class SpaceTransactor extends SpaceReader {
     super(db)
   }
 
+  async createSpace(
+    uri: string,
+    isOwner: boolean,
+    now?: string,
+  ): Promise<void> {
+    const timestamp = now ?? new Date().toISOString()
+    await this.db.db
+      .insertInto('space')
+      .values({
+        uri,
+        isOwner: isOwner ? 1 : 0,
+        setHash: null,
+        rev: null,
+        createdAt: timestamp,
+      })
+      .execute()
+  }
+
   async applyCommit(
     space: string,
     commit: CommitData,
@@ -53,22 +71,14 @@ export class SpaceTransactor extends SpaceReader {
       }
     }
 
-    // Upsert space root with new set hash
+    // Update space with new set hash and rev
     await this.db.db
-      .insertInto('space_root')
-      .values({
-        space,
+      .updateTable('space')
+      .set({
         setHash: commit.setHash,
         rev,
-        indexedAt: timestamp,
       })
-      .onConflict((oc) =>
-        oc.column('space').doUpdateSet({
-          setHash: commit.setHash,
-          rev,
-          indexedAt: timestamp,
-        }),
-      )
+      .where('uri', '=', space)
       .execute()
 
     return rev

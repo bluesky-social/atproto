@@ -252,9 +252,11 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
 import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
 import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
+import * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
 import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
 import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
 import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
+import * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
 import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
 import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
@@ -580,9 +582,11 @@ export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
 export * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
 export * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
+export * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
 export * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
 export * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
 export * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
+export * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
 export * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
 export * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
@@ -4916,6 +4920,17 @@ export class ComAtprotoSpaceNS {
       })
   }
 
+  createSpace(
+    data?: ComAtprotoSpaceCreateSpace.InputSchema,
+    opts?: ComAtprotoSpaceCreateSpace.CallOptions,
+  ): Promise<ComAtprotoSpaceCreateSpace.Response> {
+    return this._client
+      .call('com.atproto.space.createSpace', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceCreateSpace.toKnownErr(e)
+      })
+  }
+
   deleteRecord(
     data?: ComAtprotoSpaceDeleteRecord.InputSchema,
     opts?: ComAtprotoSpaceDeleteRecord.CallOptions,
@@ -4944,6 +4959,18 @@ export class ComAtprotoSpaceNS {
   ): Promise<ComAtprotoSpaceListRecords.Response> {
     return this._client.call(
       'com.atproto.space.listRecords',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  listSpaces(
+    params?: ComAtprotoSpaceListSpaces.QueryParams,
+    opts?: ComAtprotoSpaceListSpaces.CallOptions,
+  ): Promise<ComAtprotoSpaceListSpaces.Response> {
+    return this._client.call(
+      'com.atproto.space.listSpaces',
       params,
       undefined,
       opts,

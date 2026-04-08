@@ -14686,6 +14686,80 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSpaceCreateSpace: {
+    lexicon: 1,
+    id: 'com.atproto.space.createSpace',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Create a new space. The authenticated user becomes the space owner. Requires auth, implemented by PDS.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['did', 'type'],
+            properties: {
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the space.',
+              },
+              type: {
+                type: 'string',
+                format: 'nsid',
+                description:
+                  'The NSID of the space type, describing the modality of the space (e.g. app.bsky.group, app.bsky.personal).',
+              },
+              skey: {
+                type: 'string',
+                maxLength: 512,
+                description:
+                  'The space key. Used to differentiate multiple spaces of the same type under the same owner. If not provided, one will be auto-generated (TID).',
+              },
+              accessMode: {
+                type: 'string',
+                knownValues: ['allow', 'deny'],
+                default: 'allow',
+                description:
+                  "Default access mode for third-party applications. 'allow' means any app can access (with optional denylist), 'deny' means only explicitly allowed apps can access.",
+              },
+              managingApp: {
+                type: 'string',
+                description:
+                  'Client ID of the application that manages this space. Used to route application-level requests (join requests, invite flows, etc.).',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['uri'],
+            properties: {
+              uri: {
+                type: 'string',
+                description: 'URI of the created space.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceAlreadyExists',
+            description:
+              'A space with this owner, type, and skey already exists.',
+          },
+          {
+            name: 'InvalidType',
+            description:
+              'The provided space type NSID is not a recognized or valid space type.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoSpaceDeleteRecord: {
     lexicon: 1,
     id: 'com.atproto.space.deleteRecord',
@@ -14880,6 +14954,66 @@ export const schemaDict = {
           cid: {
             type: 'string',
             format: 'cid',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSpaceListSpaces: {
+    lexicon: 1,
+    id: 'com.atproto.space.listSpaces',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'List the spaces that the authenticated user participates in. Requires auth, implemented by PDS.',
+        parameters: {
+          type: 'params',
+          properties: {
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+              description: 'The number of spaces to return.',
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['spaces'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              spaces: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.space.listSpaces#spaceView',
+                },
+              },
+            },
+          },
+        },
+      },
+      spaceView: {
+        type: 'object',
+        required: ['uri', 'isOwner'],
+        properties: {
+          uri: {
+            type: 'string',
+            description: 'URI of the space.',
+          },
+          isOwner: {
+            type: 'boolean',
+            description:
+              'Whether the authenticated user is the owner of the space.',
           },
         },
       },
@@ -21877,9 +22011,11 @@ export const ids = {
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
   ComAtprotoSpaceApplyWrites: 'com.atproto.space.applyWrites',
   ComAtprotoSpaceCreateRecord: 'com.atproto.space.createRecord',
+  ComAtprotoSpaceCreateSpace: 'com.atproto.space.createSpace',
   ComAtprotoSpaceDeleteRecord: 'com.atproto.space.deleteRecord',
   ComAtprotoSpaceGetRecord: 'com.atproto.space.getRecord',
   ComAtprotoSpaceListRecords: 'com.atproto.space.listRecords',
+  ComAtprotoSpaceListSpaces: 'com.atproto.space.listSpaces',
   ComAtprotoSpacePutRecord: 'com.atproto.space.putRecord',
   ComAtprotoSpaceUploadBlob: 'com.atproto.space.uploadBlob',
   ComAtprotoSyncDefs: 'com.atproto.sync.defs',

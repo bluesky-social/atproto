@@ -207,9 +207,11 @@ import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/r
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
 import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
 import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
+import * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
 import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
 import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
 import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
+import * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
 import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
 import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
@@ -3069,6 +3071,18 @@ export class ComAtprotoSpaceNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  createSpace<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceCreateSpace.QueryParams,
+      ComAtprotoSpaceCreateSpace.HandlerInput,
+      ComAtprotoSpaceCreateSpace.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.createSpace' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   deleteRecord<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3102,6 +3116,18 @@ export class ComAtprotoSpaceNS {
     >,
   ) {
     const nsid = 'com.atproto.space.listRecords' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  listSpaces<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceListSpaces.QueryParams,
+      ComAtprotoSpaceListSpaces.HandlerInput,
+      ComAtprotoSpaceListSpaces.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.listSpaces' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -5,6 +5,45 @@ import { ActorDb } from '../db'
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
+  async getSpace(
+    uri: string,
+  ): Promise<{
+    uri: string
+    isOwner: boolean
+    setHash: Buffer | null
+    rev: string | null
+  } | null> {
+    const row = await this.db.db
+      .selectFrom('space')
+      .selectAll()
+      .where('uri', '=', uri)
+      .executeTakeFirst()
+    if (!row) return null
+    return {
+      uri: row.uri,
+      isOwner: row.isOwner === 1,
+      setHash: row.setHash ? Buffer.from(row.setHash) : null,
+      rev: row.rev,
+    }
+  }
+
+  async listSpaces(opts: {
+    limit: number
+    cursor?: string
+  }): Promise<{ uri: string; isOwner: boolean }[]> {
+    const { limit, cursor } = opts
+    let builder = this.db.db
+      .selectFrom('space')
+      .select(['uri', 'isOwner'])
+      .orderBy('uri', 'asc')
+      .limit(limit)
+    if (cursor !== undefined) {
+      builder = builder.where('uri', '>', cursor)
+    }
+    const rows = await builder.execute()
+    return rows.map((r) => ({ uri: r.uri, isOwner: r.isOwner === 1 }))
+  }
+
   async getRecord(
     space: string,
     collection: string,
@@ -80,18 +119,18 @@ export class SpaceReader {
 
   async getSetHash(space: string): Promise<Buffer | null> {
     const row = await this.db.db
-      .selectFrom('space_root')
+      .selectFrom('space')
       .select('setHash')
-      .where('space', '=', space)
+      .where('uri', '=', space)
       .executeTakeFirst()
-    return row ? Buffer.from(row.setHash) : null
+    return row?.setHash ? Buffer.from(row.setHash) : null
   }
 
   async getRev(space: string): Promise<string | null> {
     const row = await this.db.db
-      .selectFrom('space_root')
+      .selectFrom('space')
       .select('rev')
-      .where('space', '=', space)
+      .where('uri', '=', space)
       .executeTakeFirst()
     return row?.rev ?? null
   }

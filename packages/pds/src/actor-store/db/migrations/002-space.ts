@@ -2,6 +2,15 @@ import { Kysely } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
+    .createTable('space')
+    .addColumn('uri', 'varchar', (col) => col.primaryKey())
+    .addColumn('isOwner', 'integer', (col) => col.notNull())
+    .addColumn('setHash', 'blob')
+    .addColumn('rev', 'varchar')
+    .addColumn('createdAt', 'varchar', (col) => col.notNull())
+    .execute()
+
+  await db.schema
     .createTable('space_record')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
@@ -22,17 +31,9 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('space_record')
     .columns(['space', 'repoRev'])
     .execute()
-
-  await db.schema
-    .createTable('space_root')
-    .addColumn('space', 'varchar', (col) => col.primaryKey())
-    .addColumn('setHash', 'blob', (col) => col.notNull())
-    .addColumn('rev', 'varchar', (col) => col.notNull())
-    .addColumn('indexedAt', 'varchar', (col) => col.notNull())
-    .execute()
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropTable('space_root').execute()
   await db.schema.dropTable('space_record').execute()
+  await db.schema.dropTable('space').execute()
 }
