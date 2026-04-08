@@ -142,7 +142,7 @@ export type CreateRecordOptions = Omit<
  */
 export type DeleteRecordOptions = Omit<
   XrpcOptions<typeof com.atproto.repo.deleteRecord.main>,
-  'params'
+  'body'
 > & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
