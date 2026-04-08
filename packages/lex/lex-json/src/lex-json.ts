@@ -100,22 +100,28 @@ export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: LexParseOptions = { strict: false },
 ): T {
-  return JSON.parse(input, function (key: string, value: JsonValue): LexValue {
-    switch (typeof value) {
-      case 'object':
-        if (value === null) return null
-        if (Array.isArray(value)) return value
-        return parseSpecialJsonObject(value, options) ?? value
-      case 'number':
-        if (Number.isSafeInteger(value)) return value
-        if (options.strict) {
-          throw new TypeError(`Invalid non-integer number: ${value}`)
-        }
-      // fallthrough
-      default:
-        return value
-    }
-  })
+  return JSON.parse(input, lexParseReviver.bind(options))
+}
+
+function lexParseReviver(
+  this: LexParseOptions,
+  key: string,
+  value: JsonValue,
+): LexValue {
+  switch (typeof value) {
+    case 'object':
+      if (value === null) return null
+      if (Array.isArray(value)) return value
+      return parseSpecialJsonObject(value, this) ?? value
+    case 'number':
+      if (Number.isSafeInteger(value)) return value
+      if (this.strict !== false) {
+        throw new TypeError(`Invalid non-integer number: ${value}`)
+      }
+    // fallthrough
+    default:
+      return value
+  }
 }
 
 /**
