@@ -205,6 +205,7 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSpaceAddMember from './types/com/atproto/space/addMember.js'
 import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
 import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
 import * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
@@ -212,7 +213,9 @@ import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRe
 import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
 import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
 import * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
+import * as ComAtprotoSpaceNotifyMembership from './types/com/atproto/space/notifyMembership.js'
 import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
+import * as ComAtprotoSpaceRemoveMember from './types/com/atproto/space/removeMember.js'
 import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
 import * as ComAtprotoSyncGetBlocks from './types/com/atproto/sync/getBlocks.js'
@@ -3047,6 +3050,18 @@ export class ComAtprotoSpaceNS {
     this._server = server
   }
 
+  addMember<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceAddMember.QueryParams,
+      ComAtprotoSpaceAddMember.HandlerInput,
+      ComAtprotoSpaceAddMember.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.addMember' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   applyWrites<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3131,6 +3146,18 @@ export class ComAtprotoSpaceNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  notifyMembership<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceNotifyMembership.QueryParams,
+      ComAtprotoSpaceNotifyMembership.HandlerInput,
+      ComAtprotoSpaceNotifyMembership.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.notifyMembership' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   putRecord<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3140,6 +3167,18 @@ export class ComAtprotoSpaceNS {
     >,
   ) {
     const nsid = 'com.atproto.space.putRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  removeMember<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceRemoveMember.QueryParams,
+      ComAtprotoSpaceRemoveMember.HandlerInput,
+      ComAtprotoSpaceRemoveMember.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.removeMember' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

@@ -27,6 +27,26 @@ export class SpaceTransactor extends SpaceReader {
       .execute()
   }
 
+  async addMember(space: string, did: string, now?: string): Promise<void> {
+    const timestamp = now ?? new Date().toISOString()
+    await this.db.db
+      .insertInto('space_member')
+      .values({ space, did, addedAt: timestamp })
+      .execute()
+  }
+
+  async removeMember(space: string, did: string): Promise<void> {
+    await this.db.db
+      .deleteFrom('space_member')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .execute()
+  }
+
+  async deleteSpace(uri: string): Promise<void> {
+    await this.db.db.deleteFrom('space').where('uri', '=', uri).execute()
+  }
+
   async applyCommit(
     space: string,
     commit: CommitData,

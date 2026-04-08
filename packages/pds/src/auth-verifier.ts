@@ -35,6 +35,7 @@ import {
   ModServiceOutput,
   OAuthOutput,
   RefreshOutput,
+  ServiceAuthOutput,
   UnauthenticatedOutput,
   UserServiceAuthOutput,
 } from './auth-output'
@@ -300,6 +301,46 @@ export class AuthVerifier {
       credentials: {
         type: 'user_service_auth',
         did: payload.iss,
+      },
+    }
+  }
+
+  public serviceAuth: MethodAuthVerifier<ServiceAuthOutput> = async (ctx) => {
+    setAuthHeaders(ctx.res)
+    const jwtStr = bearerTokenFromReq(ctx.req)
+    if (!jwtStr) {
+      throw new AuthRequiredError('missing jwt', 'MissingJwt')
+    }
+    const nsid = parseReqNsid(ctx.req)
+    const payload = await verifyServiceJwt(
+      jwtStr,
+      null,
+      nsid,
+      async (iss, forceRefresh) => {
+        const [did, serviceId] = iss.split('#')
+        const keyId =
+          serviceId === 'atproto_labeler' ? 'atproto_label' : 'atproto'
+        const didDoc = await this.idResolver.did.resolve(did, forceRefresh)
+        if (!didDoc) {
+          throw new AuthRequiredError('could not resolve iss did')
+        }
+        const parsedKey = getVerificationMaterial(didDoc, keyId)
+        if (!parsedKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        const didKey = getDidKeyFromMultibase(parsedKey)
+        if (!didKey) {
+          throw new AuthRequiredError('missing or bad key in did doc')
+        }
+        return didKey
+      },
+    )
+    return {
+      credentials: {
+        type: 'service_auth',
+        iss: payload.iss,
+        aud: payload.aud,
+        lxm: nsid,
       },
     }
   }

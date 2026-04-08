@@ -50,3 +50,12 @@ export type UserServiceAuthOutput = {
     did: DidString
   }
 }
+
+export type ServiceAuthOutput = {
+  credentials: {
+    type: 'service_auth'
+    iss: DidString
+    aud: string
+    lxm: string
+  }
+}

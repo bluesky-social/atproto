@@ -14441,6 +14441,47 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSpaceAddMember: {
+    lexicon: 1,
+    id: 'com.atproto.space.addMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Add a member to a space. Requires auth as the space owner.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'did'],
+            properties: {
+              space: {
+                type: 'string',
+                format: 'uri',
+                description: 'Reference to the space.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the member to add.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+            description: 'The specified space does not exist.',
+          },
+          {
+            name: 'NotSpaceOwner',
+            description:
+              'The authenticated user is not the owner of this space.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoSpaceApplyWrites: {
     lexicon: 1,
     id: 'com.atproto.space.applyWrites',
@@ -14740,6 +14781,7 @@ export const schemaDict = {
             properties: {
               uri: {
                 type: 'string',
+                format: 'uri',
                 description: 'URI of the created space.',
               },
             },
@@ -15019,6 +15061,47 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSpaceNotifyMembership: {
+    lexicon: 1,
+    id: 'com.atproto.space.notifyMembership',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Notify a member's PDS of a membership change in a space. Called by the space owner's PDS.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'did', 'isMember'],
+            properties: {
+              space: {
+                type: 'string',
+                format: 'uri',
+                description: 'Reference to the space.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the member.',
+              },
+              isMember: {
+                type: 'boolean',
+                description:
+                  'Whether the user is a member of the space. True for addition, false for removal.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'AccountNotFound',
+            description: 'The specified DID is not hosted on this PDS.',
+          },
+        ],
+      },
+    },
+  },
   ComAtprotoSpacePutRecord: {
     lexicon: 1,
     id: 'com.atproto.space.putRecord',
@@ -15098,6 +15181,47 @@ export const schemaDict = {
         errors: [
           {
             name: 'InvalidSwap',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceRemoveMember: {
+    lexicon: 1,
+    id: 'com.atproto.space.removeMember',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Remove a member from a space. Requires auth as the space owner.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'did'],
+            properties: {
+              space: {
+                type: 'string',
+                format: 'uri',
+                description: 'Reference to the space.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the member to remove.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+            description: 'The specified space does not exist.',
+          },
+          {
+            name: 'NotSpaceOwner',
+            description:
+              'The authenticated user is not the owner of this space.',
           },
         ],
       },
@@ -21940,6 +22064,7 @@ export const ids = {
   ComAtprotoServerResetPassword: 'com.atproto.server.resetPassword',
   ComAtprotoServerRevokeAppPassword: 'com.atproto.server.revokeAppPassword',
   ComAtprotoServerUpdateEmail: 'com.atproto.server.updateEmail',
+  ComAtprotoSpaceAddMember: 'com.atproto.space.addMember',
   ComAtprotoSpaceApplyWrites: 'com.atproto.space.applyWrites',
   ComAtprotoSpaceCreateRecord: 'com.atproto.space.createRecord',
   ComAtprotoSpaceCreateSpace: 'com.atproto.space.createSpace',
@@ -21947,7 +22072,9 @@ export const ids = {
   ComAtprotoSpaceGetRecord: 'com.atproto.space.getRecord',
   ComAtprotoSpaceListRecords: 'com.atproto.space.listRecords',
   ComAtprotoSpaceListSpaces: 'com.atproto.space.listSpaces',
+  ComAtprotoSpaceNotifyMembership: 'com.atproto.space.notifyMembership',
   ComAtprotoSpacePutRecord: 'com.atproto.space.putRecord',
+  ComAtprotoSpaceRemoveMember: 'com.atproto.space.removeMember',
   ComAtprotoSpaceUploadBlob: 'com.atproto.space.uploadBlob',
   ComAtprotoSyncDefs: 'com.atproto.sync.defs',
   ComAtprotoSyncGetBlob: 'com.atproto.sync.getBlob',

@@ -9,6 +9,7 @@ describe('spaces', () => {
   let sc: SeedClient
 
   let aliceHeaders: { authorization: string }
+  let bobHeaders: { authorization: string }
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
@@ -19,13 +20,14 @@ describe('spaces', () => {
     await usersSeed(sc)
 
     aliceHeaders = sc.getHeaders(sc.dids.alice)
+    bobHeaders = sc.getHeaders(sc.dids.bob)
   })
 
   afterAll(async () => {
     await network.close()
   })
 
-  let spaceUri: `${string}:${string}`
+  let spaceUri: string
 
   it('creates a space', async () => {
     const res = await client.call(
@@ -38,7 +40,7 @@ describe('spaces', () => {
       { headers: aliceHeaders },
     )
     spaceUri = res.uri
-    expect(spaceUri).toBe(`${sc.dids.alice}/app.bsky.group/test`)
+    expect(spaceUri).toBe(`ats://${sc.dids.alice}/app.bsky.group/test`)
   })
 
   it('lists spaces', async () => {
@@ -116,5 +118,44 @@ describe('spaces', () => {
       expect(rec.cid).toBeDefined()
       expect(rec.rkey).toBeDefined()
     }
+  })
+
+  it('adds a member to a space', async () => {
+    await client.call(
+      com.atproto.space.addMember,
+      { space: spaceUri, did: sc.dids.bob },
+      { headers: aliceHeaders },
+    )
+    const res = await client.call(
+      com.atproto.space.listSpaces,
+      {},
+      { headers: bobHeaders },
+    )
+    expect(res.spaces.length).toBe(1)
+    expect(res.spaces[0].uri).toBe(spaceUri)
+    expect(res.spaces[0].isOwner).toBe(false)
+  })
+
+  it('non-owner cannot add members', async () => {
+    const promise = client.call(
+      com.atproto.space.addMember,
+      { space: spaceUri, did: sc.dids.carol },
+      { headers: bobHeaders },
+    )
+    await expect(promise).rejects.toThrow('Not the space owner')
+  })
+
+  it('removes a member from a space', async () => {
+    await client.call(
+      com.atproto.space.removeMember,
+      { space: spaceUri, did: sc.dids.bob },
+      { headers: aliceHeaders },
+    )
+    const res = await client.call(
+      com.atproto.space.listSpaces,
+      {},
+      { headers: bobHeaders },
+    )
+    expect(res.spaces).toEqual([])
   })
 })

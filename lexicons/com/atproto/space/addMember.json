@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.addMember",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Add a member to a space. Requires auth as the space owner.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "did"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "uri",
+              "description": "Reference to the space."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the member to add."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound",
+          "description": "The specified space does not exist."
+        },
+        {
+          "name": "NotSpaceOwner",
+          "description": "The authenticated user is not the owner of this space."
+        }
+      ]
+    }
+  }
+}

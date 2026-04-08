@@ -1,4 +1,5 @@
 import { TID } from '@atproto/common'
+import { SpaceUri } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
@@ -10,7 +11,8 @@ export default function (server: Server, ctx: AppContext) {
       const did = auth.credentials.did
       const { type } = input.body
       const skey = input.body.skey ?? TID.nextStr()
-      const space = `${input.body.did}/${type}/${skey}`
+      const spaceUri = SpaceUri.make(input.body.did, type, skey)
+      const space = spaceUri.toString()
 
       await ctx.actorStore.transact(did, async (actorTxn) => {
         const alreadyExists = await actorTxn.space.getSpace(space)

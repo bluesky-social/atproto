@@ -250,6 +250,7 @@ import * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 import * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 import * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 import * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+import * as ComAtprotoSpaceAddMember from './types/com/atproto/space/addMember.js'
 import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
 import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
 import * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
@@ -257,7 +258,9 @@ import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRe
 import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
 import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
 import * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
+import * as ComAtprotoSpaceNotifyMembership from './types/com/atproto/space/notifyMembership.js'
 import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
+import * as ComAtprotoSpaceRemoveMember from './types/com/atproto/space/removeMember.js'
 import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 import * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 import * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
@@ -580,6 +583,7 @@ export * as ComAtprotoServerReserveSigningKey from './types/com/atproto/server/r
 export * as ComAtprotoServerResetPassword from './types/com/atproto/server/resetPassword.js'
 export * as ComAtprotoServerRevokeAppPassword from './types/com/atproto/server/revokeAppPassword.js'
 export * as ComAtprotoServerUpdateEmail from './types/com/atproto/server/updateEmail.js'
+export * as ComAtprotoSpaceAddMember from './types/com/atproto/space/addMember.js'
 export * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrites.js'
 export * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
 export * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
@@ -587,7 +591,9 @@ export * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRe
 export * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
 export * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
 export * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
+export * as ComAtprotoSpaceNotifyMembership from './types/com/atproto/space/notifyMembership.js'
 export * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
+export * as ComAtprotoSpaceRemoveMember from './types/com/atproto/space/removeMember.js'
 export * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
 export * as ComAtprotoSyncDefs from './types/com/atproto/sync/defs.js'
 export * as ComAtprotoSyncGetBlob from './types/com/atproto/sync/getBlob.js'
@@ -4898,6 +4904,17 @@ export class ComAtprotoSpaceNS {
     this._client = client
   }
 
+  addMember(
+    data?: ComAtprotoSpaceAddMember.InputSchema,
+    opts?: ComAtprotoSpaceAddMember.CallOptions,
+  ): Promise<ComAtprotoSpaceAddMember.Response> {
+    return this._client
+      .call('com.atproto.space.addMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceAddMember.toKnownErr(e)
+      })
+  }
+
   applyWrites(
     data?: ComAtprotoSpaceApplyWrites.InputSchema,
     opts?: ComAtprotoSpaceApplyWrites.CallOptions,
@@ -4977,6 +4994,17 @@ export class ComAtprotoSpaceNS {
     )
   }
 
+  notifyMembership(
+    data?: ComAtprotoSpaceNotifyMembership.InputSchema,
+    opts?: ComAtprotoSpaceNotifyMembership.CallOptions,
+  ): Promise<ComAtprotoSpaceNotifyMembership.Response> {
+    return this._client
+      .call('com.atproto.space.notifyMembership', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceNotifyMembership.toKnownErr(e)
+      })
+  }
+
   putRecord(
     data?: ComAtprotoSpacePutRecord.InputSchema,
     opts?: ComAtprotoSpacePutRecord.CallOptions,
@@ -4985,6 +5013,17 @@ export class ComAtprotoSpaceNS {
       .call('com.atproto.space.putRecord', opts?.qp, data, opts)
       .catch((e) => {
         throw ComAtprotoSpacePutRecord.toKnownErr(e)
+      })
+  }
+
+  removeMember(
+    data?: ComAtprotoSpaceRemoveMember.InputSchema,
+    opts?: ComAtprotoSpaceRemoveMember.CallOptions,
+  ): Promise<ComAtprotoSpaceRemoveMember.Response> {
+    return this._client
+      .call('com.atproto.space.removeMember', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceRemoveMember.toKnownErr(e)
       })
   }
 

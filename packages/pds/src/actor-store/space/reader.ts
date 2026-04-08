@@ -5,9 +5,7 @@ import { ActorDb } from '../db'
 export class SpaceReader {
   constructor(public db: ActorDb) {}
 
-  async getSpace(
-    uri: string,
-  ): Promise<{
+  async getSpace(uri: string): Promise<{
     uri: string
     isOwner: boolean
     setHash: Buffer | null
@@ -115,6 +113,28 @@ export class SpaceReader {
     }
     const rows = await builder.execute()
     return rows.map((r) => ({ rkey: r.rkey, cid: r.cid }))
+  }
+
+  async listMembers(
+    space: string,
+  ): Promise<{ did: string; addedAt: string }[]> {
+    const rows = await this.db.db
+      .selectFrom('space_member')
+      .select(['did', 'addedAt'])
+      .where('space', '=', space)
+      .orderBy('addedAt', 'asc')
+      .execute()
+    return rows
+  }
+
+  async isMember(space: string, did: string): Promise<boolean> {
+    const row = await this.db.db
+      .selectFrom('space_member')
+      .select('did')
+      .where('space', '=', space)
+      .where('did', '=', did)
+      .executeTakeFirst()
+    return !!row
   }
 
   async getSetHash(space: string): Promise<Buffer | null> {

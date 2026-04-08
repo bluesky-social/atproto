@@ -11,6 +11,14 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute()
 
   await db.schema
+    .createTable('space_member')
+    .addColumn('space', 'varchar', (col) => col.notNull())
+    .addColumn('did', 'varchar', (col) => col.notNull())
+    .addColumn('addedAt', 'varchar', (col) => col.notNull())
+    .addPrimaryKeyConstraint('space_member_pkey', ['space', 'did'])
+    .execute()
+
+  await db.schema
     .createTable('space_record')
     .addColumn('space', 'varchar', (col) => col.notNull())
     .addColumn('collection', 'varchar', (col) => col.notNull())
@@ -35,5 +43,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
 
 export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('space_record').execute()
+  await db.schema.dropTable('space_member').execute()
   await db.schema.dropTable('space').execute()
 }

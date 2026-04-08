@@ -1,0 +1,39 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifyMembership",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify a member's PDS of a membership change in a space. Called by the space owner's PDS.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "did", "isMember"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "uri",
+              "description": "Reference to the space."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the member."
+            },
+            "isMember": {
+              "type": "boolean",
+              "description": "Whether the user is a member of the space. True for addition, false for removal."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "AccountNotFound",
+          "description": "The specified DID is not hosted on this PDS."
+        }
+      ]
+    }
+  }
+}
