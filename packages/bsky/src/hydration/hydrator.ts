@@ -1425,6 +1425,9 @@ const labelSubjectsForDid = (dids: DidString[]) => {
     ...dids.map((did) =>
       AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
     ),
+    ...dids.map((did) =>
+      AtUri.make(did, app.bsky.actor.status.$type, 'self').toString(),
+    ),
   ]
 }
 
