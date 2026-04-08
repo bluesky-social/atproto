@@ -1,4 +1,4 @@
-import { LexParseOptions, lexParse } from '@atproto/lex-json'
+import { LexParseOptions, lexParseJsonBytes } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
   InferOutput,
@@ -323,19 +323,10 @@ async function readPayload(
     }
 
     if (options?.parse && encoding === CONTENT_TYPE_JSON) {
-      // @NOTE It might be worth returning the raw bytes here (Uint8Array) and
-      // perform the lex parsing using cborg/json, allowing to do
-      // bytes->LexValue in one step instead of bytes->text->JSON->LexValue.
-      // This would require adding encode/decode utilities to lex-json (similar
-      // to @ipld/dag-json)
-      const text = await response.text()
-
-      // @NOTE Using `lexParse(text)` (instead of `jsonToLex(json)`) here as
-      // using a reviver function during JSON.parse should be faster than
-      // parsing to JSON then converting to Lex (?)
-
-      // @TODO verify statement above
-      return { encoding, body: lexParse(text, options.parse) }
+      const arrayBuffer = await response.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      const body = lexParseJsonBytes(bytes, options.parse)
+      return { encoding, body }
     }
 
     const arrayBuffer = await response.arrayBuffer()

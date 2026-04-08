@@ -2,18 +2,23 @@ import { Timestamp } from '@bufbuild/protobuf'
 import {
   AtUriString,
   Cid,
-  Infer,
+  InferInput,
+  InferOutput,
   LexParseOptions,
   LexValue,
   RecordSchema,
   Schema,
   TypedLexMap,
   ValidateOptions,
-  lexParse,
+  lexParseJsonBytes,
   parseCidSafe,
 } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { Record as RecordEntry } from '../proto/bsky_pb'
+
+const PARSE_OPTIONS: LexParseOptions & ValidateOptions = {
+  strict: false,
+}
 
 export class HydrationMap<K, T> extends Map<K, T | null> implements Merges {
   merge(map: HydrationMap<K, T>): this {
@@ -28,8 +33,8 @@ export interface Merges {
   merge<T extends this>(map: T): this
 }
 
-export type RecordInfo<T extends { $type: string }> = {
-  record: T & TypedLexMap
+export type RecordInfo<T extends TypedLexMap> = {
+  record: T
   cid: string
   sortedAt: Date
   indexedAt: Date
@@ -70,17 +75,32 @@ export function parseRecord<TSchema extends RecordSchema>(
   recordSchema: TSchema,
   recordEntry: RecordEntry,
   includeTakedowns: boolean,
-): RecordInfo<Infer<TSchema>> | undefined {
+): RecordInfo<InferInput<TSchema>> | undefined {
   if (!includeTakedowns && recordEntry.takenDown) {
     return undefined
   }
 
   const cid = recordEntry.cid
-  if (!cid) return
+  if (!cid) {
+    return undefined
+  }
 
-  const record = parseJsonBytes(recordSchema, recordEntry.record)
+  if (recordEntry.record.byteLength === 0) {
+    return undefined
+  }
+
+  const record = lexParseJsonBytes(recordEntry.record, PARSE_OPTIONS)
   if (!record) {
-    return
+    return undefined
+  }
+
+  // @NOTE We cannot use parse mode here. We must return the original to ensure
+  // that the caller gets the same data as what is stored in the PDS (in case of
+  // records). This is important because the receiver of the data should be able
+  // to compute the right record CID.
+
+  if (!recordSchema.$matches(record, PARSE_OPTIONS)) {
+    return undefined
   }
 
   return {
@@ -92,23 +112,22 @@ export function parseRecord<TSchema extends RecordSchema>(
   }
 }
 
+/**
+ * Decodes binary data containing a JSON representation of a Lex value, and
+ * validates it against the provided schema, in parse mode (i.e., allowing
+ * coercion & defaults).
+ *
+ * Returns undefined if the input is empty (from dataplane's empty value
+ * convention), or if the validation fails.
+ */
 export const parseJsonBytes = <TSchema extends Schema<LexValue>>(
   schema: TSchema,
   bytes: Uint8Array | undefined,
-  options: LexParseOptions & ValidateOptions = { strict: false },
-): Infer<TSchema> | undefined => {
+): InferOutput<TSchema> | undefined => {
   if (!bytes || bytes.byteLength === 0) return undefined
-
-  // @NOTE Buffer.from(bytes) creates a copy of the ArrayBuffer
-  const jsonBuffer = Buffer.from(
-    bytes.buffer,
-    bytes.byteOffset,
-    bytes.byteLength,
-  )
-  const jsonString = jsonBuffer.toString('utf8')
-
-  const value = lexParse(jsonString, options)
-  return schema.ifMatches(value, options)
+  const value = lexParseJsonBytes(bytes, PARSE_OPTIONS)
+  const result = schema.safeParse(value, PARSE_OPTIONS)
+  return result.success ? result.value : undefined
 }
 
 export const parseString = <T extends string | undefined>(
