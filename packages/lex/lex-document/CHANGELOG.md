@@ -1,5 +1,12 @@
 # @atproto/lex-document
 
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex-schema@0.0.18
+
 ## 0.0.18
 
 ### Patch Changes
