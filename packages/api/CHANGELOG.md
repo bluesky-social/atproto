@@ -1,5 +1,11 @@
 # @atproto/api
 
+## 0.19.8
+
+### Patch Changes
+
+- [#4841](https://github.com/bluesky-social/atproto/pull/4841) [`55c3986`](https://github.com/bluesky-social/atproto/commit/55c39860c8fbf9747a6edec415f19c67f80c597f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make sure to include did and isMe checks on decideStatus default decision
+
 ## 0.19.7
 
 ### Patch Changes
