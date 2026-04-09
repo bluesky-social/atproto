@@ -9,6 +9,8 @@ export function decideStatus(
 ): ModerationDecision {
   const acc = new ModerationDecision()
 
+  acc.setDid(subject.did)
+  acc.setIsMe(subject.did === opts.userDid)
   if ('status' in subject) {
     if (subject.status?.labels?.length) {
       for (const label of subject.status.labels) {
