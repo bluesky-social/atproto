@@ -83,7 +83,6 @@
     "@atproto/bsky": "workspace:^",
     "@atproto/lex-document": "workspace:^",
     "@atproto/oauth-client-browser-example": "workspace:^",
-    "@atproto/pds-entryway": "npm:@atproto/pds@0.3.0-entryway.3",
     "@did-plc/server": "^0.0.1",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
