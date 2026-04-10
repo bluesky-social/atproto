@@ -2,7 +2,7 @@ import { Trans } from '@lingui/react/macro'
 import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
-import { Override } from '../../lib/util.ts'
+import { Override } from '#/lib/util.ts'
 
 export type HelpCardProps = Override<
   Omit<JSX.IntrinsicElements['p'], 'children'>,

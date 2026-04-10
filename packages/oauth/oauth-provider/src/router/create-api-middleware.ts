@@ -576,14 +576,14 @@ export function createApiMiddleware<
   async function authenticate(
     this: ApiContext<void, { sub: Sub }>,
     req: Req,
-    res: Res,
+    _res: Res,
   ) {
-    const authorization = req.headers.authorization?.split(' ')
-    if (authorization?.[0].toLowerCase() === 'bearer') {
+    if (req.headers.authorization?.startsWith('Bearer ')) {
       try {
         // If there is an authorization header, verify that the ephemeral token it
         // contains is a jwt bound to the right [sub, device, request].
-        const ephemeralToken = signedJwtSchema.parse(authorization[1])
+        const bearer = req.headers.authorization.slice(7)
+        const ephemeralToken = signedJwtSchema.parse(bearer)
         const { payload } =
           await server.signer.verifyEphemeralToken(ephemeralToken)
 
@@ -595,8 +595,12 @@ export function createApiMiddleware<
           return await server.accountManager.getAccount(payload.sub)
         }
       } catch (err) {
-        onError?.(req, res, err, 'Failed to authenticate ephemeral token')
-        // Fall back to session based authentication
+        throw new WWWAuthenticateError(
+          'unauthorized',
+          `Invalid or expired bearer token`,
+          { Bearer: {} },
+          err,
+        )
       }
     }
 

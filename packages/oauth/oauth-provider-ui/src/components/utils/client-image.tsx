@@ -1,6 +1,6 @@
+import { InfoIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import type { OAuthClientMetadata } from '@atproto/oauth-types'
-import { CircleInfoIcon } from './icons'
 
 export type ClientImageProps = {
   clientId: string
@@ -35,7 +35,7 @@ export function ClientImage({
       aria-hidden
       className="bg-primary flex size-8 items-center justify-center overflow-hidden rounded-full text-white"
     >
-      <CircleInfoIcon className="size-4" />
+      <InfoIcon className="size-4" />
     </div>
   )
 }
