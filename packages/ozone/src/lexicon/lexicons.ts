@@ -2766,7 +2766,7 @@ export const schemaDict = {
           image: {
             type: 'blob',
             description:
-              'The raw image file. May be up to 2mb, formerly limited to 1mb.',
+              'The raw image file. May be up to 2 MB, formerly limited to 1 MB.',
             accept: ['image/*'],
             maxSize: 2000000,
           },

@@ -1,15 +1,16 @@
-import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
+import { com } from '../src/lexicons.js'
 
 describe('getActorStoreMigrationStatus', () => {
   let network: TestNetworkNoAppView
-  let agent: AtpAgent
+  let client: Client
 
   beforeAll(async () => {
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'actor_store_migration_status',
     })
-    agent = network.pds.getClient()
+    client = network.pds.getClient()
   })
 
   afterAll(async () => {
@@ -17,17 +18,18 @@ describe('getActorStoreMigrationStatus', () => {
   })
 
   it('requires admin auth', async () => {
-    const attempt =
-      agent.api.com.atproto.unspecced.getActorStoreMigrationStatus()
+    const attempt = client.call(
+      com.atproto.unspecced.getActorStoreMigrationStatus,
+    )
     await expect(attempt).rejects.toThrow('Authentication Required')
   })
 
   it('returns migration status', async () => {
-    const { data } =
-      await agent.api.com.atproto.unspecced.getActorStoreMigrationStatus(
-        undefined,
-        { headers: network.pds.adminAuthHeaders() },
-      )
+    const data = await client.call(
+      com.atproto.unspecced.getActorStoreMigrationStatus,
+      {},
+      { headers: network.pds.adminAuthHeaders() },
+    )
     expect(data.allMigrated).toBe(true)
     expect(data.inProgressCount).toBe(0)
   })

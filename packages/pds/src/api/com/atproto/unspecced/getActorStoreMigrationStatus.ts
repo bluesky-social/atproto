@@ -1,13 +1,14 @@
+import { Server } from '@atproto/xrpc-server'
 import {
   allActorStoresMigrated,
   countInProgressMigrations,
   getVersionCounts,
 } from '../../../../account-manager/helpers/actor-store-migration'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.unspecced.getActorStoreMigrationStatus({
+  server.add(com.atproto.unspecced.getActorStoreMigrationStatus, {
     auth: ctx.authVerifier.adminToken,
     handler: async () => {
       const [allMigrated, inProgressCount, versionCounts] = await Promise.all([

@@ -1,6 +1,6 @@
 import { sql } from 'kysely'
-import { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { Client } from '@atproto/lex'
 import {
   ActorStoreMigrator,
   allActorStoresMigrated,
@@ -9,13 +9,14 @@ import {
 import migrations, {
   getLatestStoreSchemaVersion,
 } from '../dist/actor-store/db/migrations/index'
+import { com } from '../src/lexicons.js'
 // import through the dist entry point so we share the same module instance
 // as the runtime PDS code loaded by TestNetworkNoAppView
 
 describe('actor store migration', () => {
   let network: TestNetworkNoAppView
   let ctx: any
-  let agent: AtpAgent
+  let client: Client
   let aliceDid: string
   let bobDid: string
 
@@ -24,22 +25,22 @@ describe('actor store migration', () => {
       dbPostgresSchema: 'actor_store_migration',
     })
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    client = network.pds.getClient()
 
     // create accounts while latest is still '001'
-    const alice = await agent.api.com.atproto.server.createAccount({
+    const alice = await client.call(com.atproto.server.createAccount, {
       handle: 'alice.test',
       email: 'alice@test.com',
       password: 'password',
     })
-    aliceDid = alice.data.did
+    aliceDid = alice.did
 
-    const bob = await agent.api.com.atproto.server.createAccount({
+    const bob = await client.call(com.atproto.server.createAccount, {
       handle: 'bob.test',
       email: 'bob@test.com',
       password: 'password',
     })
-    bobDid = bob.data.did
+    bobDid = bob.did
   })
 
   afterAll(async () => {

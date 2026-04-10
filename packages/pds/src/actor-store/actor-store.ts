@@ -4,6 +4,7 @@ import path from 'node:path'
 import { fileExists, readIfExists, rmIfExists } from '@atproto/common'
 import * as crypto from '@atproto/crypto'
 import { ExportableKeypair, Keypair } from '@atproto/crypto'
+import { DidString } from '@atproto/lex'
 import { InternalServerError, InvalidRequestError } from '@atproto/xrpc-server'
 import { AccountDb } from '../account-manager/db'
 import { countInProgressMigrations } from '../account-manager/helpers/actor-store-migration'
@@ -104,7 +105,7 @@ export class ActorStore {
     await this.accountDb.db
       .updateTable('actor')
       .set({ storeIsMigrating: 1, storeMigratedAt: new Date().toISOString() })
-      .where('did', '=', did)
+      .where('did', '=', did as DidString)
       .where('storeIsMigrating', '=', 0) // don't bump storeMigratedAt if there's a concurrent migration
       .execute()
 
@@ -121,13 +122,13 @@ export class ActorStore {
           storeIsMigrating: 0,
           storeMigratedAt: new Date().toISOString(),
         })
-        .where('did', '=', did)
+        .where('did', '=', did as DidString)
         .execute()
     } catch (err) {
       await this.accountDb.db
         .updateTable('actor')
         .set({ storeIsMigrating: 0 })
-        .where('did', '=', did)
+        .where('did', '=', did as DidString)
         .execute()
       throw err
     }
