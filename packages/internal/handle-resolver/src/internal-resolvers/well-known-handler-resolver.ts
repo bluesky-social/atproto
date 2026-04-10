@@ -34,8 +34,15 @@ export class WellKnownHandleResolver implements HandleResolver {
       const response = await this.fetch.call(null, url, {
         cache: options?.noCache ? 'no-cache' : undefined,
         signal: options?.signal,
-        redirect: 'error',
+        redirect: 'manual',
       })
+      // Treat redirects as errors — return null when a redirect is encountered.
+      if (
+        response.type === 'opaqueredirect' ||
+        (response.status >= 300 && response.status < 400)
+      ) {
+        return null
+      }
       const text = await response.text()
       const firstLine = text.split('\n')[0]!.trim()
 
