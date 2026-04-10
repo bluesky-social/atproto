@@ -67,6 +67,12 @@ describe('JsonBytesDecoder', () => {
       expect(decoder.decode()).toStrictEqual(JSON.parse(json))
     })
 
+    test('parses object with repeated keys (last value wins, matching JSON.parse)', () => {
+      const json = '{"a":1,"b":2,"a":3}'
+      const decoder = new JsonBytesDecoder(Buffer.from(json))
+      expect(decoder.decode()).toStrictEqual(JSON.parse(json))
+    })
+
     test('handles whitespace', () => {
       const json = '  \n\t{"a" : 1 , "b" : 2}  \n'
       const decoder = new JsonBytesDecoder(Buffer.from(json))

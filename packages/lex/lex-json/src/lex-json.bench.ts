@@ -1,6 +1,6 @@
 import { bench, describe } from 'vitest'
 import { utf8FromBytes } from '@atproto/lex-data'
-import { lexParseJsonBytes, lexParse, LexParseOptions } from './lex-json.js'
+import { LexParseOptions, lexParse, lexParseJsonBytes } from './lex-json.js'
 
 /**
  * Naive implementation (baseline)
