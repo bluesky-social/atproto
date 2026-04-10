@@ -542,8 +542,8 @@ export class JsonBytesDecoder {
       throw new SyntaxError(`Unexpected character at position ${this.pos}`)
     }
 
-    // Validate in strict mode - after computing the full number
-    // (moved to after decimal/exponent parsing below)
+    // Strict mode validation is deferred until after decimal/exponent parsing
+    // so that we can include the complete number value in the error message.
 
     // Parse decimal part
     if (this.pos < this.data.length && this.data[this.pos] === CHAR_PERIOD) {
