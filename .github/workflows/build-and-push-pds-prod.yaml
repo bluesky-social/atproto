@@ -85,25 +85,46 @@ jobs:
     needs: [build, push-prod]
     runs-on: ubuntu-latest
     environment: prod
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PDS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-central-1
 
-      - name: Install Temporal CLI
-        run: |
-          curl -sSf https://temporal.download/cli.sh | sh
-          echo "${HOME}/.temporalio/bin" >> "$GITHUB_PATH"
-
-      - name: Load secrets from 1Password
-        uses: 1password/load-secrets-action@v2
+      - name: Trigger pds-control-plane update-images
         env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          TEMPORAL_API_KEY: op://Periwinkle/periwinkle-prod/TEMPORAL_API_KEY
-          TEMPORAL_ADDRESS: op://Periwinkle/periwinkle-prod/TEMPORAL_ADDRESS
-          TEMPORAL_NAMESPACE: op://Periwinkle/periwinkle-prod/TEMPORAL_NAMESPACE
-
-      - name: Trigger updateImages workflow (prod)
-        run: .github/scripts/trigger-update-images.sh "${{ needs.build.outputs.short_sha }}"
+          TASK_DEFINITION: ${{ vars.PDS_CONTROL_PLANE_TASK_DEFINITION_FAMILY }}
+          CLUSTER: ${{ vars.PDS_CONTROL_PLANE_CLUSTER_ARN }}
+          SUBNETS: ${{ vars.PDS_CONTROL_PLANE_SUBNETS }}
+          SECURITY_GROUPS: ${{ vars.PDS_CONTROL_PLANE_SECURITY_GROUPS }}
+          IMAGE_TAG: ${{ needs.build.outputs.short_sha }}
+          OPERATION_ID: ${{ github.run_id }}
+          ENVIRONMENT: prod
+          REGION: eu-central-1
+        run: |
+          SUBNETS_JSON=$(echo "$SUBNETS" | jq -R 'split(",")')
+          SGS_JSON=$(echo "$SECURITY_GROUPS" | jq -R 'split(",")')
+          aws ecs run-task \
+            --cluster "$CLUSTER" \
+            --task-definition "$TASK_DEFINITION" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=${SUBNETS_JSON},securityGroups=${SGS_JSON},assignPublicIp=DISABLED}" \
+            --overrides "{
+              \"containerOverrides\": [{
+                \"name\": \"pds-control-plane\",
+                \"command\": [\"update-images\"],
+                \"environment\": [
+                  {\"name\": \"OPERATION_ID\", \"value\": \"${OPERATION_ID}\"},
+                  {\"name\": \"REGION\", \"value\": \"${REGION}\"},
+                  {\"name\": \"ENVIRONMENT\", \"value\": \"${ENVIRONMENT}\"},
+                  {\"name\": \"IMAGE_TAG\", \"value\": \"${IMAGE_TAG}\"}
+                ]
+              }]
+            }"
 
   summary:
     needs: [build, push-prod, trigger-prod-deploy]
