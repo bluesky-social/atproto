@@ -5,10 +5,10 @@ import {
   LexMap,
   LexValue,
   isCid,
-  utf8FromBytes,
 } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
+import { JsonBytesDecoder } from './json-bytes-decoder.js'
 import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
@@ -100,41 +100,52 @@ export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: LexParseOptions = { strict: false },
 ): T {
-  return JSON.parse(input, function (key: string, value: JsonValue): LexValue {
-    switch (typeof value) {
-      case 'object':
-        if (value === null) return null
-        if (Array.isArray(value)) return value
-        return parseSpecialJsonObject(value, options) ?? value
-      case 'number':
-        if (Number.isSafeInteger(value)) return value
-        if (options.strict) {
-          throw new TypeError(`Invalid non-integer number: ${value}`)
-        }
-      // fallthrough
-      default:
-        return value
-    }
-  })
+  return JSON.parse(input, lexParseReviver.bind(options))
+}
+
+function lexParseReviver(
+  this: LexParseOptions,
+  key: string,
+  value: JsonValue,
+): LexValue {
+  switch (typeof value) {
+    case 'object':
+      if (value === null) return null
+      if (Array.isArray(value)) return value
+      return parseSpecialJsonObject(value, this) ?? value
+    case 'number':
+      if (Number.isSafeInteger(value)) return value
+      if (this.strict !== false) {
+        throw new TypeError(`Invalid non-integer number: ${value}`)
+      }
+    // fallthrough
+    default:
+      return value
+  }
 }
 
 /**
- * Parses a `Uint8Array` containing JSON data into a Lex value.
+ * Parses a JSON string from a byte array into Lex values.
+ *
+ * @note This is an optimized version of the following code that avoids
+ * intermediate string creation and parsing steps by directly decoding JSON from
+ * bytes while handling AT Protocol special types.
+ *
+ * ```typescript
+ * function lexParseJsonBytesNaive(
+ *   bytes: Uint8Array,
+ *   options?: LexParseOptions
+ * ): LexValue {
+ *   return lexParse(utf8FromBytes(bytes), options)
+ * }
+ * ```
  */
 export function lexParseJsonBytes(
-  jsonBytes: Uint8Array,
+  bytes: Uint8Array,
   options?: LexParseOptions,
 ): LexValue {
-  // @TODO optimize this to avoid intermediate string. This requires a custom
-  // JSON parser that can operate on binary data, which is non-trivial, but
-  // could be a future improvement if performance is a concern. See the link
-  // below for an example of a JSON parser that operates on binary data in
-  // @ipld/dag-json
-
-  // https://github.com/ipld/js-dag-json/blob/57912da6e9d64a179f7d2384c3b6d7b07fbfb143/src/index.js#L161
-
-  const jsonString = utf8FromBytes(jsonBytes)
-  return lexParse(jsonString, options)
+  const decoder = new JsonBytesDecoder(bytes, options?.strict)
+  return decoder.decode()
 }
 
 /**
