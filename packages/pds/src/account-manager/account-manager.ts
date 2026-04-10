@@ -22,6 +22,7 @@ import { com } from '../lexicons/index.js'
 import { AccountDb, EmailTokenPurpose, getDb, getMigrator } from './db'
 import * as account from './helpers/account'
 import { AccountStatus, ActorAccount } from './helpers/account'
+import * as actorStoreMigration from './helpers/actor-store-migration'
 import * as auth from './helpers/auth'
 import * as emailToken from './helpers/email-token'
 import * as invite from './helpers/invite'
@@ -570,5 +571,9 @@ export class AccountManager {
         auth.revokeRefreshTokensByDid(dbTxn, did),
       ]),
     )
+  }
+
+  async allActorStoresMigrated(): Promise<boolean> {
+    return actorStoreMigration.allActorStoresMigrated(this.db)
   }
 }

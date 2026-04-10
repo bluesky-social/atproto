@@ -228,6 +228,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as ComAtprotoUnspeccedGetActorStoreMigrationStatus from './types/com/atproto/unspecced/getActorStoreMigrationStatus.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
 import * as ToolsOzoneCommunicationListTemplates from './types/tools/ozone/communication/listTemplates.js'
@@ -2203,6 +2204,7 @@ export class ComAtprotoNS {
   server: ComAtprotoServerNS
   sync: ComAtprotoSyncNS
   temp: ComAtprotoTempNS
+  unspecced: ComAtprotoUnspeccedNS
 
   constructor(server: Server) {
     this._server = server
@@ -2215,6 +2217,7 @@ export class ComAtprotoNS {
     this.server = new ComAtprotoServerNS(server)
     this.sync = new ComAtprotoSyncNS(server)
     this.temp = new ComAtprotoTempNS(server)
+    this.unspecced = new ComAtprotoUnspeccedNS(server)
   }
 }
 
@@ -3316,6 +3319,26 @@ export class ComAtprotoTempNS {
     >,
   ) {
     const nsid = 'com.atproto.temp.revokeAccountCredentials' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+}
+
+export class ComAtprotoUnspeccedNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+
+  getActorStoreMigrationStatus<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoUnspeccedGetActorStoreMigrationStatus.QueryParams,
+      ComAtprotoUnspeccedGetActorStoreMigrationStatus.HandlerInput,
+      ComAtprotoUnspeccedGetActorStoreMigrationStatus.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.unspecced.getActorStoreMigrationStatus' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 }

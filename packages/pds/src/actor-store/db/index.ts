@@ -18,3 +18,15 @@ export const getDb = (
 export const getMigrator = (db: Database<DatabaseSchema>) => {
   return new Migrator(db.db, migrations)
 }
+
+export const getMigrationLevel = async (
+  db: ActorDb,
+): Promise<string | null> => {
+  const result = await db.db
+    .selectFrom('kysely_migration' as any)
+    .select('name')
+    .orderBy('name', 'desc')
+    .limit(1)
+    .executeTakeFirst()
+  return (result as { name: string } | undefined)?.name ?? null
+}
