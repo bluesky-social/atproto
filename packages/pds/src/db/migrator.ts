@@ -1,4 +1,5 @@
 import { Kysely, Migration, Migrator as KyselyMigrator } from 'kysely'
+import { retrySqlite } from './util'
 
 export class Migrator<T> extends KyselyMigrator {
   constructor(
@@ -16,24 +17,28 @@ export class Migrator<T> extends KyselyMigrator {
   }
 
   async migrateToOrThrow(migration: string) {
-    const { error, results } = await this.migrateTo(migration)
-    if (error) {
-      throw error
-    }
-    if (!results) {
-      throw new Error('An unknown failure occurred while migrating')
-    }
-    return results
+    return retrySqlite(async () => {
+      const { error, results } = await this.migrateTo(migration)
+      if (error) {
+        throw error
+      }
+      if (!results) {
+        throw new Error('An unknown failure occurred while migrating')
+      }
+      return results
+    })
   }
 
   async migrateToLatestOrThrow() {
-    const { error, results } = await this.migrateToLatest()
-    if (error) {
-      throw error
-    }
-    if (!results) {
-      throw new Error('An unknown failure occurred while migrating')
-    }
-    return results
+    return retrySqlite(async () => {
+      const { error, results } = await this.migrateToLatest()
+      if (error) {
+        throw error
+      }
+      if (!results) {
+        throw new Error('An unknown failure occurred while migrating')
+      }
+      return results
+    })
   }
 }
