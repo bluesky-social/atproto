@@ -1,4 +1,5 @@
-import { LexValue, fromBase64, isBlobRef, parseCid } from '@atproto/lex-data'
+import { LexValue, fromBase64, parseCid } from '@atproto/lex-data'
+import { parseTypedBlobRef } from './blob.js'
 
 const CHAR_TAB = 0x09
 const CHAR_NEWLINE = 0x0a
@@ -220,8 +221,8 @@ export class JsonBytesDecoder {
                 }
 
                 return result
-              } catch (err) {
-                if (this.strict) throw err
+              } catch (_err) {
+                if (this.strict) throw new TypeError('Invalid $bytes object')
                 // ignore and parse as regular object
               }
             }
@@ -243,8 +244,8 @@ export class JsonBytesDecoder {
               const cidStr = this.decodeUnescapedString(cidStart, cidEnd)
               try {
                 return parseCid(cidStr)
-              } catch (err) {
-                if (this.strict) throw err
+              } catch (_err) {
+                if (this.strict) throw new TypeError('Invalid $link object')
                 // ignore
               }
             }
@@ -275,14 +276,21 @@ export class JsonBytesDecoder {
     // Only check if we've seen a $ key (optimization)
     if (hasDollarKey && this.strict) {
       if (obj.$bytes !== undefined) {
-        throw new SyntaxError('Invalid $bytes object')
+        throw new TypeError('Invalid $bytes object')
       } else if (obj.$link !== undefined) {
-        throw new SyntaxError('Invalid $link object')
+        throw new TypeError('Invalid $link object')
       } else if (obj.$type === 'blob') {
-        if (isBlobRef(obj, { strict: this.strict })) return obj
-        throw new SyntaxError(`Invalid blob object`)
-      } else if (obj.$type !== undefined && typeof obj.$type !== 'string') {
-        throw new SyntaxError('Invalid $type value: must be a string')
+        const blob = parseTypedBlobRef(obj, { strict: this.strict })
+        if (blob) return blob
+        throw new TypeError(`Invalid blob object`)
+      } else if (obj.$type !== undefined) {
+        if (typeof obj.$type !== 'string') {
+          throw new TypeError(
+            `Invalid $type property (${typeof obj.$type})`,
+          )
+        } else if (obj.$type.length === 0) {
+          throw new TypeError(`Empty $type property`)
+        }
       }
     }
 
@@ -534,17 +542,11 @@ export class JsonBytesDecoder {
       throw new SyntaxError(`Unexpected character at position ${this.pos}`)
     }
 
-    // Validate in strict mode
-    if (this.strict && !Number.isSafeInteger(int)) {
-      throw new TypeError(`Invalid non-integer number at position ${start}`)
-    }
+    // Validate in strict mode - after computing the full number
+    // (moved to after decimal/exponent parsing below)
 
     // Parse decimal part
     if (this.pos < this.data.length && this.data[this.pos] === CHAR_PERIOD) {
-      if (this.strict) {
-        throw new TypeError(`Invalid non-integer number at position ${start}`)
-      }
-
       this.pos++
       if (
         this.pos >= this.data.length ||
@@ -571,10 +573,6 @@ export class JsonBytesDecoder {
       (this.data[this.pos] === CHAR_LOWER_E ||
         this.data[this.pos] === CHAR_UPPER_E)
     ) {
-      if (this.strict) {
-        throw new TypeError(`Invalid non-integer number at position ${start}`)
-      }
-
       this.pos++
       if (
         this.pos < this.data.length &&
@@ -603,6 +601,10 @@ export class JsonBytesDecoder {
 
     const num = sign * (int + decimal) * Math.pow(10, expSign * exp)
 
+    if (this.strict && !Number.isSafeInteger(num)) {
+      throw new TypeError(`Invalid non-integer number: ${num}`)
+    }
+
     return num
   }
 
@@ -617,7 +619,7 @@ export class JsonBytesDecoder {
       this.pos += 4
       return true
     }
-    throw new SyntaxError(`Invalid value at position ${this.pos}`)
+    throw new SyntaxError(`Unexpected token at position ${this.pos}`)
   }
 
   private parseFalse(): boolean {
@@ -632,7 +634,7 @@ export class JsonBytesDecoder {
       this.pos += 5
       return false
     }
-    throw new SyntaxError(`Invalid value at position ${this.pos}`)
+    throw new SyntaxError(`Unexpected token at position ${this.pos}`)
   }
 
   private parseNull(): null {
@@ -646,7 +648,7 @@ export class JsonBytesDecoder {
       this.pos += 4
       return null
     }
-    throw new SyntaxError(`Invalid value at position ${this.pos}`)
+    throw new SyntaxError(`Unexpected token at position ${this.pos}`)
   }
 
   private skipWhitespace(): void {
