@@ -681,9 +681,16 @@ describe('JsonBytesDecoder', () => {
       expect(() => decoder.decode()).toThrow()
     })
 
-    test('throws on number with exponent in strict mode', () => {
+    test('accepts safe integer expressed with exponent in strict mode', () => {
+      // 1e10 = 10000000000 which is a safe integer - should NOT throw
       const decoder = new JsonBytesDecoder(Buffer.from('1e10'))
-      expect(() => decoder.decode()).toThrow()
+      expect(decoder.decode()).toBe(1e10)
+    })
+
+    test('throws on large exponent that produces unsafe integer in strict mode', () => {
+      // 1e20 is much larger than MAX_SAFE_INTEGER - should throw
+      const decoder = new JsonBytesDecoder(Buffer.from('1e20'))
+      expect(() => decoder.decode()).toThrow(TypeError)
     })
 
     test('throws on unsafe integer in strict mode', () => {
