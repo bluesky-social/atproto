@@ -98,7 +98,6 @@ export class RequestManager {
     for (const k of [
       // Known unsupported OIDC parameters
       'claims',
-      'id_token_hint',
       'nonce', // note that OIDC "nonce" is redundant with PKCE
     ] as const) {
       if (parameters[k] !== undefined) {
