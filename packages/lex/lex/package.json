@@ -15,13 +15,15 @@
     "directory": "packages/lex/lex"
   },
   "files": [
+    "./skills",
     "./dist",
     "./bin",
     "./CHANGELOG.md"
   ],
   "bin": {
     "ts-lex": "./bin/lex",
-    "lex": "./bin/lex"
+    "lex": "./bin/lex",
+    "intent": "./bin/intent.mjs"
   },
   "sideEffects": false,
   "type": "commonjs",
