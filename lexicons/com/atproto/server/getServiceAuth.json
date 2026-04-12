@@ -4,15 +4,14 @@
   "defs": {
     "main": {
       "type": "query",
-      "description": "Get a signed token on behalf of the requesting DID for the requested service.",
+      "description": "Get a signed token on behalf of the requesting DID for the requested service, which can be used to make an authenticated XRPC HTTP API request. Implemented by PDS, requires authentication, and constrained by session permissions.",
       "parameters": {
         "type": "params",
         "required": ["aud"],
         "properties": {
           "aud": {
             "type": "string",
-            "format": "did",
-            "description": "The DID of the service that the token will be used to authenticate with"
+            "description": "The DID (and optional service ID as a fragment) of the recipient service for this request (the \"audience\")."
           },
           "exp": {
             "type": "integer",
