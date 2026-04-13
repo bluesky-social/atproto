@@ -3,12 +3,12 @@ import {
   allActorStoresMigrated,
   countInProgressMigrations,
   getVersionCounts,
-} from '../../../../account-manager/helpers/actor-store-migration'
-import { AppContext } from '../../../../context'
-import { com } from '../../../../lexicons/index.js'
+} from '../../../account-manager/helpers/actor-store-migration'
+import { AppContext } from '../../../context'
+import { internal } from '../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.add(com.atproto.unspecced.getActorStoreMigrationStatus, {
+  server.add(internal.pds.getActorStoreMigrationStatus, {
     auth: ctx.authVerifier.adminToken,
     handler: async () => {
       const [allMigrated, inProgressCount, versionCounts] = await Promise.all([

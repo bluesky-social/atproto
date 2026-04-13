@@ -7,7 +7,6 @@ import repo from './repo'
 import serverMethods from './server'
 import sync from './sync'
 import temp from './temp'
-import unspecced from './unspecced'
 
 export default function (server: Server, ctx: AppContext) {
   admin(server, ctx)
@@ -17,5 +16,4 @@ export default function (server: Server, ctx: AppContext) {
   serverMethods(server, ctx)
   sync(server, ctx)
   temp(server, ctx)
-  unspecced(server, ctx)
 }

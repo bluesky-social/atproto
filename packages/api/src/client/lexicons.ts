@@ -15767,55 +15767,6 @@ export const schemaDict = {
       },
     },
   },
-  ComAtprotoUnspeccedGetActorStoreMigrationStatus: {
-    lexicon: 1,
-    id: 'com.atproto.unspecced.getActorStoreMigrationStatus',
-    defs: {
-      main: {
-        type: 'query',
-        description: 'Get the status of actor store migrations.',
-        output: {
-          encoding: 'application/json',
-          schema: {
-            type: 'object',
-            required: ['allMigrated', 'inProgressCount', 'versionCounts'],
-            properties: {
-              allMigrated: {
-                type: 'boolean',
-                description:
-                  'Whether all actor stores have been migrated to the latest schema version.',
-              },
-              inProgressCount: {
-                type: 'integer',
-                description:
-                  'The number of actor store migrations currently in progress.',
-              },
-              versionCounts: {
-                type: 'array',
-                description: 'The number of actors on each schema version.',
-                items: {
-                  type: 'ref',
-                  ref: 'lex:com.atproto.unspecced.getActorStoreMigrationStatus#versionCount',
-                },
-              },
-            },
-          },
-        },
-      },
-      versionCount: {
-        type: 'object',
-        required: ['version', 'count'],
-        properties: {
-          version: {
-            type: 'string',
-          },
-          count: {
-            type: 'integer',
-          },
-        },
-      },
-    },
-  },
   ComGermnetworkDeclaration: {
     lexicon: 1,
     id: 'com.germnetwork.declaration',
@@ -21395,8 +21346,6 @@ export const ids = {
     'com.atproto.temp.requestPhoneVerification',
   ComAtprotoTempRevokeAccountCredentials:
     'com.atproto.temp.revokeAccountCredentials',
-  ComAtprotoUnspeccedGetActorStoreMigrationStatus:
-    'com.atproto.unspecced.getActorStoreMigrationStatus',
   ComGermnetworkDeclaration: 'com.germnetwork.declaration',
   ToolsOzoneCommunicationCreateTemplate:
     'tools.ozone.communication.createTemplate',

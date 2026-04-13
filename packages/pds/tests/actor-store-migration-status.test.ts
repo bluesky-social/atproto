@@ -1,6 +1,6 @@
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { Client } from '@atproto/lex'
-import { com } from '../src/lexicons.js'
+import { internal } from '../src/lexicons.js'
 
 describe('getActorStoreMigrationStatus', () => {
   let network: TestNetworkNoAppView
@@ -18,15 +18,13 @@ describe('getActorStoreMigrationStatus', () => {
   })
 
   it('requires admin auth', async () => {
-    const attempt = client.call(
-      com.atproto.unspecced.getActorStoreMigrationStatus,
-    )
+    const attempt = client.call(internal.pds.getActorStoreMigrationStatus)
     await expect(attempt).rejects.toThrow('Authentication Required')
   })
 
   it('returns migration status', async () => {
     const data = await client.call(
-      com.atproto.unspecced.getActorStoreMigrationStatus,
+      internal.pds.getActorStoreMigrationStatus,
       {},
       { headers: network.pds.adminAuthHeaders() },
     )
