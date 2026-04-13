@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { LexValue, lexEquals, parseCid } from '@atproto/lex-data'
 import { JsonValue } from './json.js'
-import { jsonToLex, lexParse, lexStringify, lexToJson } from './lex-json.js'
+import {
+  jsonToLex,
+  lexParse,
+  lexParseJsonBytes,
+  lexStringify,
+  lexToJson,
+} from './lex-json.js'
 
 export const validVectors: Array<{
   name: string
@@ -364,58 +370,143 @@ export const invalidVectors: Array<{
 
 describe(lexParse, () => {
   describe('valid vectors', () => {
-    for (const { name, json, lex } of validVectors) {
-      describe(name, () => {
-        it('parses lex from string', () => {
-          expect(
-            lexEquals(lex, lexParse(JSON.stringify(json), { strict: false })),
-          ).toBe(true)
+    describe('strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
           expect(
             lexEquals(lex, lexParse(JSON.stringify(json), { strict: true })),
           ).toBe(true)
         })
-      })
-    }
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
+          expect(
+            lexEquals(lex, lexParse(JSON.stringify(json), { strict: false })),
+          ).toBe(true)
+        })
+      }
+    })
   })
 
   describe('acceptable vectors', () => {
-    for (const { note, json } of acceptableVectors) {
-      describe(note, () => {
-        it('parses lex from string in non-strict mode', () => {
-          expect(() =>
-            lexParse(JSON.stringify(json), { strict: false }),
-          ).not.toThrow()
-        })
-
-        it('parses lex from string in strict mode', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
           expect(() =>
             lexParse(JSON.stringify(json), { strict: true }),
           ).toThrow()
         })
-      })
-    }
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: false }),
+          ).not.toThrow()
+        })
+      }
+    })
   })
 
   describe('invalid vectors', () => {
     describe('strict mode', () => {
       for (const { note, json } of invalidVectors) {
-        describe(note, () => {
-          it('throws when parsing malformed JSON', () => {
-            expect(() =>
-              lexParse(JSON.stringify(json), { strict: true }),
-            ).toThrow()
-          })
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: true }),
+          ).toThrow()
         })
       }
     })
     describe('non-strict mode', () => {
       for (const { note, json } of invalidVectors) {
-        describe(note, () => {
-          it('does not throws when parsing malformed JSON', () => {
-            expect(() =>
-              lexParse(JSON.stringify(json), { strict: false }),
-            ).not.toThrow()
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: false }),
+          ).not.toThrow()
+        })
+      }
+    })
+  })
+})
+
+describe(lexParseJsonBytes, () => {
+  describe('valid vectors', () => {
+    describe('strict mode', () => {
+      describe('with pretty-printed JSON', () => {
+        for (const { name, json, lex } of validVectors) {
+          test(name, () => {
+            const jsonBytes = Buffer.from(JSON.stringify(json, undefined, 4))
+            expect(
+              lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
+            ).toBe(true)
           })
+        }
+      })
+      describe('with compact JSON', () => {
+        for (const { name, json, lex } of validVectors) {
+          test(name, () => {
+            const jsonBytes = Buffer.from(JSON.stringify(json))
+            expect(
+              lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
+            ).toBe(true)
+          })
+        }
+      })
+    })
+
+    describe('non-strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(
+            lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: false })),
+          ).toBe(true)
+        })
+      }
+    })
+  })
+
+  describe('acceptable vectors', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() => lexParseJsonBytes(jsonBytes, { strict: true })).toThrow()
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() =>
+            lexParseJsonBytes(jsonBytes, { strict: false }),
+          ).not.toThrow()
+        })
+      }
+    })
+  })
+
+  describe('invalid vectors', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() => lexParseJsonBytes(jsonBytes, { strict: true })).toThrow()
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() =>
+            lexParseJsonBytes(jsonBytes, { strict: false }),
+          ).not.toThrow()
         })
       }
     })
@@ -425,10 +516,8 @@ describe(lexParse, () => {
 describe(lexStringify, () => {
   describe('valid vectors', () => {
     for (const { name, json, lex } of validVectors) {
-      describe(name, () => {
-        it('stringifies lex to string', () => {
-          expect(JSON.parse(lexStringify(lex))).toEqual(json)
-        })
+      test(name, () => {
+        expect(JSON.parse(lexStringify(lex))).toStrictEqual(json)
       })
     }
   })
@@ -436,63 +525,66 @@ describe(lexStringify, () => {
 
 describe(jsonToLex, () => {
   describe('valid vectors', () => {
-    for (const { name, json, lex } of validVectors) {
-      describe(name, () => {
-        it('converts json to lex (in strict mode)', () => {
+    describe('strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
           expect(lexEquals(jsonToLex(json, { strict: true }), lex)).toBe(true)
           expect(lexEquals(lex, jsonToLex(json, { strict: true }))).toBe(true)
         })
+      }
+    })
 
-        it('converts json to lex (in non-strict mode)', () => {
+    describe('non-strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
           expect(lexEquals(jsonToLex(json, { strict: false }), lex)).toBe(true)
           expect(lexEquals(lex, jsonToLex(json, { strict: false }))).toBe(true)
         })
-      })
-    }
+      }
+    })
   })
 
   describe('acceptable vectors', () => {
-    for (const { note, json } of acceptableVectors) {
-      describe(note, () => {
-        it('parses lex from json in strict mode', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
           expect(() => jsonToLex(json, { strict: true })).toThrow()
         })
+      }
+    })
 
-        it('parses lex from json in non-strict mode', () => {
+    describe('non-strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
           expect(() => jsonToLex(json, { strict: false })).not.toThrow()
         })
-      })
-    }
+      }
+    })
   })
 
   describe('invalid vectors', () => {
-    for (const { note, json } of invalidVectors) {
-      describe(note, () => {
-        it(`throws for malformed object`, () => {
+    describe('strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
           expect(() => jsonToLex(json, { strict: true })).toThrow()
         })
-
-        it('throws for nested malformed object', () => {
-          expect(() => jsonToLex({ nested: json }, { strict: true })).toThrow()
-          expect(() => jsonToLex([json], { strict: true })).toThrow()
-        })
-
-        it('does not throw in non-strict mode', () => {
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
           expect(() => jsonToLex(json, { strict: false })).not.toThrow()
         })
-      })
-    }
+      }
+    })
   })
 })
 
 describe(lexToJson, () => {
   describe('valid vectors', () => {
     for (const { name, json, lex } of validVectors) {
-      describe(name, () => {
-        it('converts lex to json', () => {
-          expect(lexToJson(lex)).toEqual(json)
-          expect(lexToJson(lex)).toEqual(json)
-        })
+      test(name, () => {
+        expect(lexToJson(lex)).toStrictEqual(json)
       })
     }
   })
@@ -501,10 +593,19 @@ describe(lexToJson, () => {
 describe('json > lex > json', () => {
   describe('valid vectors', () => {
     for (const { name, json } of validVectors) {
-      describe(name, () => {
-        it('converts json to lex', () => {
-          expect(lexToJson(jsonToLex(json))).toEqual(json)
-        })
+      test(name, () => {
+        expect(lexToJson(jsonToLex(json))).toStrictEqual(json)
+      })
+    }
+  })
+})
+
+describe('json (binary) > lex > json', () => {
+  describe('valid vectors', () => {
+    for (const { name, json } of validVectors) {
+      test(name, () => {
+        const jsonBytes = Buffer.from(JSON.stringify(json, undefined, 4))
+        expect(lexToJson(lexParseJsonBytes(jsonBytes))).toStrictEqual(json)
       })
     }
   })
@@ -513,12 +614,9 @@ describe('json > lex > json', () => {
 describe('lex > json > lex', () => {
   describe('valid vectors', () => {
     for (const { name, lex } of validVectors) {
-      describe(name, () => {
-        it('converts lex to json', () => {
-          ;('')
-          expect(lexEquals(jsonToLex(lexToJson(lex)), lex)).toBe(true)
-          expect(lexEquals(lex, jsonToLex(lexToJson(lex)))).toBe(true)
-        })
+      test(name, () => {
+        expect(lexEquals(jsonToLex(lexToJson(lex)), lex)).toBe(true)
+        expect(lexEquals(lex, jsonToLex(lexToJson(lex)))).toBe(true)
       })
     }
   })

@@ -5,8 +5,9 @@ import {
   LexMap,
   LexValue,
   isCid,
+  utf8FromBytes,
 } from '@atproto/lex-data'
-import { parseBlobRef } from './blob.js'
+import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
@@ -115,6 +116,25 @@ export function lexParse<T extends LexValue = LexValue>(
         return value
     }
   })
+}
+
+/**
+ * Parses a `Uint8Array` containing JSON data into a Lex value.
+ */
+export function lexParseJsonBytes(
+  jsonBytes: Uint8Array,
+  options?: LexParseOptions,
+): LexValue {
+  // @TODO optimize this to avoid intermediate string. This requires a custom
+  // JSON parser that can operate on binary data, which is non-trivial, but
+  // could be a future improvement if performance is a concern. See the link
+  // below for an example of a JSON parser that operates on binary data in
+  // @ipld/dag-json
+
+  // https://github.com/ipld/js-dag-json/blob/57912da6e9d64a179f7d2384c3b6d7b07fbfb143/src/index.js#L161
+
+  const jsonString = utf8FromBytes(jsonBytes)
+  return lexParse(jsonString, options)
 }
 
 /**
@@ -328,7 +348,7 @@ function parseSpecialJsonObject(
     // the strict option is enabled.
     if (options.strict) {
       if (input.$type === 'blob') {
-        const blob = parseBlobRef(input, options)
+        const blob = parseTypedBlobRef(input, options)
         if (blob) return blob
         throw new TypeError(`Invalid blob object`)
       } else if (typeof input.$type !== 'string') {

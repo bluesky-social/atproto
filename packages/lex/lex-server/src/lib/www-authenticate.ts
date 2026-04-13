@@ -39,8 +39,11 @@
 export type WWWAuthenticate = {
   [authScheme in string]?:
     | string // token68
-    | { [authParam in string]?: string }
+    | WWWAuthenticateParams
+    | (string | WWWAuthenticateParams)[]
 }
+
+export type WWWAuthenticateParams = { [authParam in string]?: string }
 
 /**
  * Formats a WWWAuthenticate object into an HTTP header string.
@@ -73,20 +76,36 @@ export type WWWAuthenticate = {
 export function formatWWWAuthenticateHeader(
   wwwAuthenticate: WWWAuthenticate,
 ): string {
-  return Object.entries(wwwAuthenticate)
-    .map(([authScheme, authParams]) => {
-      if (authParams === undefined) return null
-      const paramsEnc =
-        typeof authParams === 'string'
-          ? [authParams]
-          : Object.entries(authParams)
-              .filter(([_, val]) => val != null)
-              .map(([name, val]) => `${name}=${JSON.stringify(val)}`)
-      const authChallenge = paramsEnc?.length
-        ? `${authScheme} ${paramsEnc.join(', ')}`
-        : authScheme
-      return authChallenge
-    })
-    .filter(Boolean)
-    .join(', ')
+  const challenges: string[] = []
+  for (const [scheme, params] of Object.entries(wwwAuthenticate)) {
+    if (params == null) continue
+
+    if (typeof params === 'string') {
+      challenges.push(formatWWWAuthenticateChallenge(scheme, params))
+    } else if (Array.isArray(params)) {
+      for (const p of params) {
+        challenges.push(formatWWWAuthenticateChallenge(scheme, p))
+      }
+    } else {
+      challenges.push(formatWWWAuthenticateChallenge(scheme, params))
+    }
+  }
+  return challenges.join(', ')
+}
+
+function formatWWWAuthenticateChallenge(
+  scheme: string,
+  params: string | WWWAuthenticateParams,
+): string {
+  const paramsStr =
+    typeof params === 'string' ? params : formatWWWAuthenticateParams(params)
+  return paramsStr?.length ? `${scheme} ${paramsStr}` : scheme
+}
+
+function formatWWWAuthenticateParams(params: WWWAuthenticateParams): string {
+  const parts: string[] = []
+  for (const [name, val] of Object.entries(params)) {
+    if (val != null) parts.push(`${name}=${JSON.stringify(val)}`)
+  }
+  return parts.join(', ')
 }

@@ -303,6 +303,83 @@ describe('TypedObjectSchema', () => {
       const result = emptySchema.build(input)
       expect(result).toEqual({ $type: 'app.bsky.test' })
     })
+
+    describe('build() does not validate', () => {
+      const validationSchema = typedObject(
+        'app.bsky.test',
+        'validation',
+        object({
+          actor: string({ format: 'did' }),
+          count: integer(),
+        }),
+      )
+
+      it('does not throw for invalid data', () => {
+        const result = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.actor).toBe('not-a-did')
+        expect(result.count).toBe(123)
+      })
+
+      it('does not throw for invalid types', () => {
+        const result = validationSchema.build({
+          actor: 'did:plc:abc123',
+          // @ts-expect-error
+          count: 'not-a-number',
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.count).toBe('not-a-number')
+      })
+
+      it('does not throw for missing required fields', () => {
+        // @ts-expect-error
+        const result = validationSchema.build({})
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.actor).toBeUndefined()
+        expect(result.count).toBeUndefined()
+      })
+
+      it('does not throw for extra fields', () => {
+        const result = validationSchema.build({
+          actor: 'did:plc:abc123',
+          count: 42,
+          // @ts-expect-error
+          extra: 'unexpected',
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        // @ts-expect-error
+        expect(result.extra).toBe('unexpected')
+      })
+
+      it('parse() still validates after build()', () => {
+        const built = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(() => validationSchema.parse(built)).toThrow('Invalid DID')
+      })
+
+      it('safeParse() can detect validation errors after build()', () => {
+        const built = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        const result = validationSchema.safeParse(built)
+        expect(result.success).toBe(false)
+      })
+    })
   })
 
   describe('$build method', () => {
@@ -329,6 +406,44 @@ describe('TypedObjectSchema', () => {
       const inputCopy = { ...input }
       schema.$build(input)
       expect(input).toEqual(inputCopy)
+    })
+  })
+
+  describe('bound $ methods', () => {
+    it('$build can be used as a detached function', () => {
+      const { $build } = schema
+      const result = $build({ text: 'Hello' })
+      expect(result).toEqual({
+        text: 'Hello',
+        $type: 'app.bsky.feed.post',
+      })
+    })
+
+    it('$isTypeOf can be used as a detached function', () => {
+      const { $isTypeOf } = schema
+      expect($isTypeOf({ text: 'Hello' })).toBe(true)
+      expect($isTypeOf({ $type: 'app.bsky.feed.post', text: 'Hello' })).toBe(
+        true,
+      )
+      expect($isTypeOf({ $type: 'other.type', text: 'Hello' })).toBe(false)
+    })
+
+    it('$parse can be used as a detached function', () => {
+      const { $parse } = schema
+      const result = $parse({ text: 'Hello' })
+      expect(result).toEqual({ text: 'Hello' })
+    })
+
+    it('$matches can be used as a detached function', () => {
+      const { $matches } = schema
+      expect($matches({ text: 'Hello' })).toBe(true)
+      expect($matches(42)).toBe(false)
+    })
+
+    it('lazy property returns the same function on repeated access', () => {
+      const fn1 = schema.$build
+      const fn2 = schema.$build
+      expect(fn1).toBe(fn2)
     })
   })
 

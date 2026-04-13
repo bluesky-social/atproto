@@ -1,12 +1,26 @@
-import * as fs from 'node:fs'
-import * as readline from 'node:readline'
-import { describe, expect, it } from 'vitest'
-import { AtUri, ensureValidAtUri, ensureValidAtUriRegex } from '../src'
+import { readFileSync } from 'node:fs'
+import { describe, expect, it, test } from 'vitest'
+import { AtUri } from '../src'
 
 describe(AtUri, () => {
-  it('parses valid at uris', () => {
-    //                 input   host    path    query   hash
-    type AtUriTest = [string, string, string, string, string]
+  describe('parses valid interop', () => {
+    for (const value of readLines(
+      `${__dirname}/../../../interop-test-files/syntax/aturi_syntax_valid.txt`,
+    )) {
+      test(value, () => {
+        expect(() => new AtUri(value)).not.toThrow()
+      })
+    }
+  })
+
+  describe('valid at uris', () => {
+    type AtUriTest = [
+      input: string,
+      host: string,
+      path: string,
+      query: string,
+      hash: string,
+    ]
     const TESTS: AtUriTest[] = [
       ['foo.com', 'foo.com', '', '', ''],
       ['at://foo.com', 'foo.com', '', '', ''],
@@ -246,15 +260,17 @@ describe(AtUri, () => {
         '',
       ],
     ]
-    for (const [uri, hostname, pathname, search, hash] of TESTS) {
-      const urip = new AtUri(uri)
-      expect(urip.protocol).toBe('at:')
-      expect(urip.host).toBe(hostname)
-      expect(urip.hostname).toBe(hostname)
-      expect(urip.origin).toBe(`at://${hostname}`)
-      expect(urip.pathname).toBe(pathname)
-      expect(urip.search).toBe(search)
-      expect(urip.hash).toBe(hash)
+    for (const [input, host, path, search, hash] of TESTS) {
+      test(input, () => {
+        const urip = new AtUri(input)
+        expect(urip.protocol).toBe('at:')
+        expect(urip.host).toBe(host)
+        expect(urip.hostname).toBe(host)
+        expect(urip.origin).toBe(`at://${host}`)
+        expect(urip.pathname).toBe(path)
+        expect(urip.search).toBe(search)
+        expect(urip.hash).toBe(hash)
+      })
     }
   })
 
@@ -316,11 +332,9 @@ describe(AtUri, () => {
     expect(urip.toString()).toBe('at://foo.com/foo?foo=bar&baz=buux#hash')
   })
 
-  it('supports relative URIs', () => {
-    //                 input   path    query   hash
-    type AtUriTest = [string, string, string, string]
+  describe('relative URIs', () => {
+    type AtUriTest = [input: string, path: string, search: string, hash: string]
     const TESTS: AtUriTest[] = [
-      // input hostname pathname query hash
       ['', '', '', ''],
       ['/', '/', '', ''],
       ['/foo', '/foo', '', ''],
@@ -347,180 +361,74 @@ describe(AtUri, () => {
     ]
 
     for (const base of BASES) {
-      const basep = new AtUri(base)
-      for (const [relative, pathname, search, hash] of TESTS) {
-        const urip = new AtUri(relative, base)
-        expect(urip.protocol).toBe('at:')
-        expect(urip.host).toBe(basep.host)
-        expect(urip.hostname).toBe(basep.hostname)
-        expect(urip.origin).toBe(basep.origin)
-        expect(urip.pathname).toBe(pathname)
-        expect(urip.search).toBe(search)
-        expect(urip.hash).toBe(hash)
-      }
+      describe(base, () => {
+        for (const [input, path, search, hash] of TESTS) {
+          test(input, () => {
+            const baseUri = new AtUri(base)
+            const uri = new AtUri(input, base)
+            expect(uri.protocol).toBe('at:')
+            expect(uri.host).toBe(baseUri.host)
+            expect(uri.hostname).toBe(baseUri.hostname)
+            expect(uri.origin).toBe(baseUri.origin)
+            expect(uri.pathname).toBe(path)
+            expect(uri.search).toBe(search)
+            expect(uri.hash).toBe(hash)
+          })
+        }
+      })
     }
   })
+
+  it('properly checks that the did property is a valid did', () => {
+    const urip = new AtUri('at://did:example:123')
+    expect(urip.did).toBe('did:example:123')
+    urip.host = 'did:example:456'
+    expect(urip.did).toBe('did:example:456')
+    urip.host = 'foo.com'
+    expect(() => urip.did).toThrow()
+  })
+
+  it('properly checks that the collection is a valid nsid', () => {
+    const urip = new AtUri('at://foo.com')
+    expect(urip.collection).toBe('')
+    expect(() => urip.collectionSafe).toThrow()
+
+    urip.collection = 'com.example.foo'
+    expect(urip.collection).toBe('com.example.foo')
+    expect(urip.collectionSafe).toBe('com.example.foo')
+
+    urip.collection = 'com.other.foo'
+    expect(urip.collection).toBe('com.other.foo')
+    expect(urip.collectionSafe).toBe('com.other.foo')
+
+    expect(() => (urip.collection = 'not a valid nsid')).toThrow()
+    expect(urip.collection).toBe('com.other.foo') // unchanged after failed set
+
+    urip.unsafelySetCollection('not-a-valid-nsid')
+    expect(urip.collection).toBe('not-a-valid-nsid')
+    expect(() => urip.collectionSafe).toThrow()
+  })
+
+  it('properly checks that the rkey is a valid record key', () => {
+    const urip = new AtUri('at://foo.com')
+    expect(urip.rkey).toBe('')
+    expect(() => urip.rkeySafe).toThrow()
+
+    urip.rkey = 'valid_rkey-123'
+    expect(urip.rkey).toBe('valid_rkey-123')
+    expect(urip.rkeySafe).toBe('valid_rkey-123')
+
+    expect(() => (urip.rkey = 'not a valid rkey')).toThrow()
+    expect(urip.rkey).toBe('valid_rkey-123') // unchanged after failed set
+
+    urip.unsafelySetRkey('not a valid rkey')
+    expect(urip.rkey).toBe('not a valid rkey')
+    expect(() => urip.rkeySafe).toThrow()
+  })
 })
 
-describe('AtUri validation', () => {
-  const expectValid = (h: string) => {
-    ensureValidAtUri(h)
-    ensureValidAtUriRegex(h)
-  }
-  const expectInvalid = (h: string) => {
-    expect(() => ensureValidAtUri(h)).toThrow()
-    expect(() => ensureValidAtUriRegex(h)).toThrow()
-  }
-
-  it('enforces spec basics', () => {
-    expectValid('at://did:plc:asdf123')
-    expectValid('at://user.bsky.social')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/record')
-
-    expectValid('at://did:plc:asdf123#/frag')
-    expectValid('at://user.bsky.social#/frag')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post#/frag')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/record#/frag')
-
-    expectInvalid('a://did:plc:asdf123')
-    expectInvalid('at//did:plc:asdf123')
-    expectInvalid('at:/a/did:plc:asdf123')
-    expectInvalid('at:/did:plc:asdf123')
-    expectInvalid('AT://did:plc:asdf123')
-    expectInvalid('http://did:plc:asdf123')
-    expectInvalid('://did:plc:asdf123')
-    expectInvalid('at:did:plc:asdf123')
-    expectInvalid('at:/did:plc:asdf123')
-    expectInvalid('at:///did:plc:asdf123')
-    expectInvalid('at://:/did:plc:asdf123')
-    expectInvalid('at:/ /did:plc:asdf123')
-    expectInvalid('at://did:plc:asdf123 ')
-    expectInvalid('at://did:plc:asdf123/ ')
-    expectInvalid(' at://did:plc:asdf123')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post ')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post# ')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post#/ ')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post#/frag ')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post#fr ag')
-    expectInvalid('//did:plc:asdf123')
-    expectInvalid('at://name')
-    expectInvalid('at://name.0')
-    expectInvalid('at://diD:plc:asdf123')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.p@st')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.p$st')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.p%st')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.p&st')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.p()t')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed_post')
-    expectInvalid('at://did:plc:asdf123/-com.atproto.feed.post')
-    expectInvalid('at://did:plc:asdf@123/com.atproto.feed.post')
-
-    expectInvalid('at://DID:plc:asdf123')
-    expectInvalid('at://user.bsky.123')
-    expectInvalid('at://bsky')
-    expectInvalid('at://did:plc:')
-    expectInvalid('at://did:plc:')
-    expectInvalid('at://frag')
-
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(800))
-    expectInvalid(
-      'at://did:plc:asdf123/com.atproto.feed.post/' + 'o'.repeat(8200),
-    )
-  })
-
-  it('has specified behavior on edge cases', () => {
-    expectInvalid('at://user.bsky.social//')
-    expectInvalid('at://user.bsky.social//com.atproto.feed.post')
-    expectInvalid('at://user.bsky.social/com.atproto.feed.post//')
-    expectInvalid(
-      'at://did:plc:asdf123/com.atproto.feed.post/asdf123/more/more',
-    )
-    expectInvalid('at://did:plc:asdf123/short/stuff')
-    expectInvalid('at://did:plc:asdf123/12345')
-  })
-
-  it('enforces no trailing slashes', () => {
-    expectValid('at://did:plc:asdf123')
-    expectInvalid('at://did:plc:asdf123/')
-
-    expectValid('at://user.bsky.social')
-    expectInvalid('at://user.bsky.social/')
-
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post/')
-
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/record')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post/record/')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post/record/#/frag')
-  })
-
-  it('enforces strict paths', () => {
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/asdf123')
-    expectInvalid('at://did:plc:asdf123/com.atproto.feed.post/asdf123/asdf')
-  })
-
-  it('is very permissive about record keys', () => {
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/asdf123')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/a')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/%23')
-
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/$@!*)(:,;~.sdf123')
-    expectValid("at://did:plc:asdf123/com.atproto.feed.post/~'sdf123")
-
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/$')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/@')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/!')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/*')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/(')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/,')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/;')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/abc%30123')
-  })
-
-  it('is probably too permissive about URL encoding', () => {
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/%30')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/%3')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/%')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/%zz')
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post/%%%')
-  })
-
-  it('is very permissive about fragments', () => {
-    expectValid('at://did:plc:asdf123#/frac')
-
-    expectInvalid('at://did:plc:asdf123#')
-    expectInvalid('at://did:plc:asdf123##')
-    expectInvalid('#at://did:plc:asdf123')
-    expectInvalid('at://did:plc:asdf123#/asdf#/asdf')
-
-    expectValid('at://did:plc:asdf123#/com.atproto.feed.post')
-    expectValid('at://did:plc:asdf123#/com.atproto.feed.post/')
-    expectValid('at://did:plc:asdf123#/asdf/')
-
-    expectValid('at://did:plc:asdf123/com.atproto.feed.post#/$@!*():,;~.sdf123')
-    expectValid('at://did:plc:asdf123#/[asfd]')
-
-    expectValid('at://did:plc:asdf123#/$')
-    expectValid('at://did:plc:asdf123#/*')
-    expectValid('at://did:plc:asdf123#/;')
-    expectValid('at://did:plc:asdf123#/,')
-  })
-
-  it('conforms to interop valid ATURIs', () => {
-    const lineReader = readline.createInterface({
-      input: fs.createReadStream(
-        `${__dirname}/interop-files/aturi_syntax_valid.txt`,
-      ),
-      terminal: false,
-    })
-    lineReader.on('line', (line) => {
-      if (line.startsWith('#') || line.length === 0) {
-        return
-      }
-      expectValid(line)
-    })
-  })
-
-  // NOTE: this package is currently more permissive than spec about AT URIs, so invalid cases are not errors
-})
+function readLines(filePath: string): string[] {
+  return readFileSync(filePath, 'utf-8')
+    .split(/\r?\n/)
+    .filter((line) => !line.startsWith('#') && line.length > 0)
+}

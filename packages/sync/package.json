@@ -1,6 +1,6 @@
 {
   "name": "@atproto/sync",
-  "version": "0.1.39",
+  "version": "0.2.1",
   "license": "MIT",
   "description": "atproto sync library",
   "keywords": [
@@ -21,17 +21,18 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "codegen": "lex build --override --indexFile --lexicons ../../lexicons --include com.atproto.sync.subscribeRepos",
+    "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "test": "../dev-infra/with-test-redis-and-db.sh jest"
   },
   "dependencies": {
     "@atproto/common": "workspace:^",
     "@atproto/identity": "workspace:^",
-    "@atproto/lexicon": "workspace:^",
+    "@atproto/lex": "workspace:^",
     "@atproto/repo": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "@atproto/xrpc-server": "workspace:^",
-    "multiformats": "^9.9.0",
     "p-queue": "^6.6.2",
     "ws": "^8.12.0"
   },

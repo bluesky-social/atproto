@@ -14,7 +14,7 @@ import { pipeline } from 'node:stream/promises'
 import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
-import { FetchHandler } from './lex-server.js'
+import type { FetchHandler } from './lex-router.js'
 
 // @ts-expect-error
 Symbol.asyncDispose ??= Symbol.for('Symbol.asyncDispose')
@@ -195,7 +195,7 @@ export async function sendResponse(
 }
 
 function toRequest(req: IncomingMessage): Request {
-  const host = req.headers.host ?? req.socket?.localAddress ?? 'localhost'
+  const host = req.headers.host ?? req.socket.localAddress ?? 'localhost'
   const isEncrypted = (req.socket as any).encrypted === true
   const protocol = isEncrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)

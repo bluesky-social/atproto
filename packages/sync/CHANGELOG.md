@@ -1,5 +1,43 @@
 # @atproto/sync
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex@0.0.24
+  - @atproto/common@0.5.16
+  - @atproto/repo@0.9.1
+  - @atproto/xrpc-server@0.10.19
+
+## 0.2.0
+
+### Minor Changes
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use `Cid` from `@atproto/lex` instead of `CID` from `multiformats` to represent CIDs.
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on `multiformats`
+
+### Patch Changes
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+  - @atproto/repo@0.9.0
+  - @atproto/xrpc-server@0.10.18
+  - @atproto/lex@0.0.23
+
+## 0.1.40
+
+### Patch Changes
+
+- [#4705](https://github.com/bluesky-social/atproto/pull/4705) [`138f0a0`](https://github.com/bluesky-social/atproto/commit/138f0a0b374c0d78372d5095237061d46db75a32) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix test flakiness
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`e8969b6`](https://github.com/bluesky-social/atproto/commit/e8969b6b3d3fed8912be53fd72b4d5288ca34766), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/common@0.5.14
+  - @atproto/xrpc-server@0.10.15
+  - @atproto/lexicon@0.6.2
+
 ## 0.1.39
 
 ### Patch Changes

@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import { LexiconDoc, Lexicons, parseLexiconDoc } from '../src/index'
 import LexiconDocs from './_scaffolds/lexicons'
@@ -79,9 +80,8 @@ describe('General validation', () => {
     }
     {
       const res = lex.validate('com.example.kitchenSink#object', {})
-      expect(res.success).toBe(false)
-      if (res.success) throw new Error('Asserted')
-      expect(res.error?.message).toBe('Object must have the property "object"')
+      assert(!res.success)
+      expect(res.error.message).toBe('Object must have the property "object"')
     }
   })
   it('fails when a required property is missing', () => {

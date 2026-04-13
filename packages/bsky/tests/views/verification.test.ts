@@ -1,15 +1,13 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { AppBskyActorDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, verificationsSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { VerificationState } from '../../src/lexicon/types/app/bsky/actor/defs'
 
 interface ProfileViewTestCase {
   description: string
   // The DIDs are only set during test setup, so data that depends on those DIDs
   // needs to be lazily evaluated by using a function.
   getDid: () => string
-  getExpected: () => VerificationState | undefined
+  getExpected: () => AppBskyActorDefs.VerificationState | undefined
   getExpectedUrisPrefixes?: () => string[]
 }
 
@@ -38,7 +36,7 @@ describe('verification views', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_verification',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
 
     await verificationsSeed(sc)

@@ -1,4 +1,4 @@
-import { LexError, LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
+import { LexMap, LexValue, TypedLexMap } from '@atproto/lex-data'
 import {
   AtIdentifierString,
   CidString,
@@ -20,10 +20,24 @@ import {
 import { Agent, AgentOptions, buildAgent } from './agent.js'
 import { XrpcFailure } from './errors.js'
 import { com } from './lexicons/index.js'
-import { XrpcResponse, XrpcResponseBody } from './response.js'
-import { BinaryBodyInit, CallOptions, Service } from './types.js'
-import { buildAtprotoHeaders } from './util.js'
-import { XrpcOptions, XrpcRequestParams, xrpc, xrpcSafe } from './xrpc.js'
+import {
+  XrpcResponse,
+  XrpcResponseBody,
+  XrpcResponseOptions,
+} from './response.js'
+import { BinaryBodyInit, Service } from './types.js'
+import {
+  XrpcRequestHeadersOptions,
+  applyDefaults,
+  buildXrpcRequestHeaders,
+} from './util.js'
+import {
+  XrpcOptions,
+  XrpcRequestParams,
+  XrpcRequestProcessingOptions,
+  xrpc,
+  xrpcSafe,
+} from './xrpc.js'
 
 export type {
   AtIdentifierString,
@@ -58,13 +72,13 @@ export type {
  * }
  * ```
  */
-export type ClientOptions = {
-  /** Labeler DIDs to include in requests for content moderation. */
-  labelers?: Iterable<DidString>
-  /** Custom headers to include in all requests made by this client. */
-  headers?: HeadersInit
-  /** Service proxy identifier for routing requests through a specific service. */
-  service?: Service
+export type ClientOptions = XrpcRequestHeadersOptions &
+  Pick<XrpcRequestProcessingOptions, 'validateRequest'> &
+  XrpcResponseOptions
+
+export type ActionOptions = {
+  /** AbortSignal to cancel the request. */
+  signal?: AbortSignal
 }
 
 /**
@@ -87,7 +101,7 @@ export type ClientOptions = {
 export type Action<I = any, O = any> = (
   client: Client,
   input: I,
-  options: CallOptions,
+  options: ActionOptions,
 ) => O | Promise<O>
 
 /**
@@ -109,7 +123,10 @@ export type InferActionOutput<A extends Action> =
  *
  * @see {@link Client.createRecord}
  */
-export type CreateRecordOptions = CallOptions & {
+export type CreateRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.createRecord.main>,
+  'body'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
@@ -123,7 +140,10 @@ export type CreateRecordOptions = CallOptions & {
  *
  * @see {@link Client.deleteRecord}
  */
-export type DeleteRecordOptions = CallOptions & {
+export type DeleteRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.deleteRecord.main>,
+  'body'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
@@ -137,7 +157,10 @@ export type DeleteRecordOptions = CallOptions & {
  *
  * @see {@link Client.getRecord}
  */
-export type GetRecordOptions = CallOptions & {
+export type GetRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.getRecord.main>,
+  'params'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
 }
@@ -147,7 +170,10 @@ export type GetRecordOptions = CallOptions & {
  *
  * @see {@link Client.putRecord}
  */
-export type PutRecordOptions = CallOptions & {
+export type PutRecordOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.putRecord.main>,
+  'body'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Compare-and-swap on the repo commit. If specified, must match current commit. */
@@ -163,7 +189,10 @@ export type PutRecordOptions = CallOptions & {
  *
  * @see {@link Client.listRecords}
  */
-export type ListRecordsOptions = CallOptions & {
+export type ListRecordsOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.listRecords.main>,
+  'params'
+> & {
   /** Repository identifier (DID or handle). Defaults to authenticated user's DID. */
   repo?: AtIdentifierString
   /** Maximum number of records to return. */
@@ -173,6 +202,16 @@ export type ListRecordsOptions = CallOptions & {
   /** If true, returns records in reverse chronological order. */
   reverse?: boolean
 }
+
+export type UploadBlobOptions = Omit<
+  XrpcOptions<typeof com.atproto.repo.uploadBlob.main>,
+  'body'
+>
+
+export type GetBlobOptions = Omit<
+  XrpcOptions<typeof com.atproto.sync.getBlob.main>,
+  'params'
+>
 
 export type RecordKeyOptions<
   T extends RecordSchema,
@@ -315,11 +354,22 @@ export class Client implements Agent {
   /** Set of labeler DIDs specific to this client instance. */
   public readonly labelers: Set<DidString>
 
+  public readonly xrpcDefaults: {
+    readonly validateRequest: boolean
+    readonly validateResponse: boolean
+    readonly strictResponseProcessing: boolean
+  }
+
   constructor(agent: Agent | AgentOptions, options: ClientOptions = {}) {
     this.agent = buildAgent(agent)
     this.service = options.service
     this.labelers = new Set(options.labelers)
     this.headers = new Headers(options.headers)
+    this.xrpcDefaults = Object.freeze({
+      validateRequest: options.validateRequest ?? false,
+      validateResponse: options.validateResponse ?? true,
+      strictResponseProcessing: options.strictResponseProcessing ?? true,
+    })
   }
 
   /**
@@ -331,7 +381,7 @@ export class Client implements Agent {
 
   /**
    * The DID of the authenticated user.
-   * @throws {LexError} with code 'AuthenticationRequired' if not authenticated
+   * @throws {Error} if not authenticated
    */
   get assertDid(): DidString {
     this.assertAuthenticated()
@@ -342,7 +392,7 @@ export class Client implements Agent {
    * Asserts that the client is authenticated.
    * Use as a type guard when you need to ensure authentication.
    *
-   * @throws {LexError} with code 'AuthenticationRequired' if not authenticated
+   * @throws {Error} if not authenticated
    *
    * @example
    * ```typescript
@@ -352,7 +402,7 @@ export class Client implements Agent {
    * ```
    */
   public assertAuthenticated(): asserts this is { did: DidString } {
-    if (!this.did) throw new LexError('AuthenticationRequired')
+    if (!this.did) throw new Error('Client is not authenticated')
   }
 
   /**
@@ -392,7 +442,7 @@ export class Client implements Agent {
     path: `/${string}`,
     init: RequestInit,
   ): Promise<Response> {
-    const headers = buildAtprotoHeaders({
+    const headers = buildXrpcRequestHeaders({
       headers: init.headers,
       service: this.service,
       labelers: [
@@ -454,7 +504,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M>> {
-    return xrpc(this, ns, options)
+    return xrpc(this, ns, applyDefaults(options, this.xrpcDefaults))
   }
 
   /**
@@ -493,7 +543,7 @@ export class Client implements Agent {
     ns: Main<M>,
     options: XrpcOptions<M> = {} as XrpcOptions<M>,
   ): Promise<XrpcResponse<M> | XrpcFailure<M>> {
-    return xrpcSafe(this, ns, options)
+    return xrpcSafe(this, ns, applyDefaults(options, this.xrpcDefaults))
   }
 
   /**
@@ -649,14 +699,8 @@ export class Client implements Agent {
    * console.log(response.body.blob) // Use this ref in records
    * ```
    */
-  async uploadBlob(
-    body: BinaryBodyInit,
-    options?: CallOptions & { encoding?: `${string}/${string}` },
-  ) {
-    return this.xrpc(com.atproto.repo.uploadBlob.main, {
-      ...options,
-      body,
-    })
+  async uploadBlob(body: BinaryBodyInit, options?: UploadBlobOptions) {
+    return this.xrpc(com.atproto.repo.uploadBlob.main, { ...options, body })
   }
 
   /**
@@ -666,7 +710,7 @@ export class Client implements Agent {
    * @param cid - The CID of the blob
    * @param options - Call options
    */
-  async getBlob(did: DidString, cid: CidString, options?: CallOptions) {
+  async getBlob(did: DidString, cid: CidString, options?: GetBlobOptions) {
     return this.xrpc(com.atproto.sync.getBlob.main, {
       ...options,
       params: { did, cid },
@@ -723,7 +767,13 @@ export class Client implements Agent {
         : T extends Query
           ? XrpcRequestParams<T>
           : never,
-    options?: CallOptions,
+    options?: T extends Action
+      ? ActionOptions
+      : T extends Procedure
+        ? Omit<XrpcOptions<T>, 'body'>
+        : T extends Query
+          ? Omit<XrpcOptions<T>, 'params'>
+          : never,
   ): Promise<
     T extends Action
       ? InferActionOutput<T>
@@ -736,7 +786,7 @@ export class Client implements Agent {
   public async call(
     ns: Main<Action> | Main<Procedure> | Main<Query>,
     arg?: LexValue | Params,
-    options: CallOptions = {},
+    options: ActionOptions = {},
   ): Promise<unknown> {
     const method = getMain(ns)
 
@@ -797,6 +847,7 @@ export class Client implements Agent {
   ): Promise<CreateOutput> {
     const schema: T = getMain(ns)
     const record = schema.build(input) as TypedLexMap<NsidString>
+    if (options?.validateRequest) schema.validate(record)
     const rkey = options.rkey ?? getDefaultRecordKey(schema)
     if (rkey !== undefined) schema.keySchema.assert(rkey)
     const response = await this.createRecord(record, rkey, options)
@@ -893,6 +944,7 @@ export class Client implements Agent {
   ): Promise<PutOutput> {
     const schema: T = getMain(ns)
     const record = schema.build(input) as TypedLexMap<NsidString>
+    if (options?.validateRequest) schema.validate(record)
     const rkey = options.rkey ?? getLiteralRecordKey(schema)
     const response = await this.putRecord(record, rkey, options)
     return response.body

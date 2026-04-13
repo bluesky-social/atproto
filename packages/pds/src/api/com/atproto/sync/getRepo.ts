@@ -1,6 +1,6 @@
 import stream from 'node:stream'
 import { byteIterableToStream } from '@atproto/common'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import {
   RepoRootNotFoundError,
   SqlRepoReader,
@@ -8,11 +8,11 @@ import {
 import { AuthScope } from '../../../../auth-scope'
 import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getRepo({
+  server.add(com.atproto.sync.getRepo, {
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       additional: [AuthScope.Takendown],
       authorize: () => {
@@ -26,7 +26,7 @@ export default function (server: Server, ctx: AppContext) {
       const carStream = await getCarStream(ctx, did, since)
 
       return {
-        encoding: 'application/vnd.ipld.car',
+        encoding: 'application/vnd.ipld.car' as const,
         body: carStream,
       }
     },

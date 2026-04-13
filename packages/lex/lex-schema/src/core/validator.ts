@@ -1,6 +1,6 @@
-import { PropertyKey } from './property-key.js'
-import { ResultFailure, ResultSuccess, failure, success } from './result.js'
-import { ValidationError } from './validation-error.js'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ResultFailure, ResultSuccess, success } from './result.js'
+import { LexValidationError } from './validation-error.js'
 import {
   Issue,
   IssueInvalidFormat,
@@ -20,16 +20,20 @@ import {
 export type ValidationSuccess<Value = unknown> = ResultSuccess<Value>
 
 /**
- * Represents a failed validation result containing a {@link ValidationError}.
+ * Represents a failed validation result containing a {@link LexValidationError}.
+ *
+ * @extends ResultFailure<LexValidationError>
+ * @see {@link ResultFailure}
+ * @see {@link LexValidationError}
  */
-export type ValidationFailure = ResultFailure<ValidationError>
+export type ValidationFailure = LexValidationError
 
 /**
  * Discriminated union representing the outcome of a validation operation.
  *
  * Check the `success` property to determine if validation passed or failed:
  * - If `success` is `true`, the `value` property contains the validated data
- * - If `success` is `false`, the `reason` property contains the {@link ValidationError}
+ * - If `success` is `false`, the `reason` property contains the {@link LexValidationError}
  *
  * @typeParam Value - The type of the validated value on success
  *
@@ -39,7 +43,7 @@ export type ValidationFailure = ResultFailure<ValidationError>
  * if (result.success) {
  *   // result.value is string
  * } else {
- *   // result.reason is ValidationError
+ *   // result.reason is LexValidationError
  * }
  * ```
  */
@@ -148,11 +152,13 @@ export type ValidationOptions = {
   /**
    * The validation mode determining how transformations are handled.
    *
-   * - `"validate"` (default): Strict validation where the result must be
+   * - `"validate"`: Strict validation where the result must be
    *   strictly equal to the input value. No transformations such as applying
    *   default values are allowed.
    * - `"parse"`: Allows the schema to transform the input value, such as
    *   applying default values or performing type coercion.
+   *
+   * @default "validate"
    */
   mode?: 'validate' | 'parse'
 
@@ -169,6 +175,17 @@ export type ValidationOptions = {
    * ```
    */
   path?: readonly PropertyKey[]
+
+  /**
+   * Whether to enforce strict validation rules (e.g., MIME type matching, size
+   * limits, datetime format).
+   *
+   * This is typically useful to allow more lax validation when parsing server
+   * responses, while enforcing strict validation for user input.
+   *
+   * @default true
+   */
+  strict?: boolean
 }
 
 /**
@@ -217,6 +234,7 @@ export class ValidationContext {
       mode: 'parse'
     },
   ): ValidationResult<InferOutput<V>>
+
   /**
    * Validates input against a validator in validate mode (default).
    *
@@ -237,6 +255,7 @@ export class ValidationContext {
       mode?: 'validate'
     },
   ): ValidationResult<I & InferInput<V>>
+
   /**
    * Validates input against a validator with configurable options.
    *
@@ -258,6 +277,7 @@ export class ValidationContext {
     const context = new ValidationContext({
       path: options?.path ?? [],
       mode: options?.mode ?? 'validate',
+      strict: options?.strict ?? true,
     })
     return context.validate(input, validator)
   }
@@ -326,7 +346,7 @@ export class ValidationContext {
       if (this.issues.length > 0) {
         // Validator returned a success but issues were added via the context.
         // This means the overall validation failed.
-        return failure(new ValidationError(Array.from(this.issues)))
+        return new LexValidationError(Array.from(this.issues))
       }
 
       if (this.options.mode !== 'parse' && !Object.is(result.value, input)) {
@@ -341,7 +361,7 @@ export class ValidationContext {
         // another.
 
         // This if block comes before the next one because 'this.issues' will
-        // end-up being appended to the returned ValidationError (see the
+        // end-up being appended to the returned LexValidationError (see the
         // "failure" method below), resulting in a more complete error report.
         return this.issueInvalidValue(input, [result.value])
       }
@@ -425,8 +445,8 @@ export class ValidationContext {
    * @param reason - The validation error
    * @returns A failed validation result
    */
-  failure(reason: ValidationError): ValidationFailure {
-    return failure(reason)
+  failure(reason: LexValidationError): ValidationFailure {
+    return reason
   }
 
   /**
@@ -438,7 +458,7 @@ export class ValidationContext {
    * @returns A failed validation result
    */
   issue(issue: Issue) {
-    return this.failure(new ValidationError([...this.issues, issue]))
+    return this.failure(new LexValidationError([...this.issues, issue]))
   }
 
   /**

@@ -4,8 +4,8 @@ import { AddressInfo } from 'node:net'
 import express from 'express'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
-import { verifyJwt } from '@atproto/xrpc-server'
-import { createServer } from '../../src/lexicon'
+import { createServer, verifyJwt } from '@atproto/xrpc-server'
+import { app } from '../../src/lexicons/index.js'
 import usersSeed from '../seeds/users'
 
 describe('notif service proxy', () => {
@@ -22,7 +22,7 @@ describe('notif service proxy', () => {
     })
     network.pds.server.app.get
     const plc = network.plc.getClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     sc = network.getSeedClient()
     await usersSeed(sc)
     await network.processAll()
@@ -80,16 +80,14 @@ describe('notif service proxy', () => {
 })
 
 async function createMockNotifService(ref: { current: unknown }) {
-  const app = express()
   const svc = createServer()
-  svc.app.bsky.notification.registerPush(({ input, req }) => {
+  svc.add(app.bsky.notification.registerPush, ({ input, req }) => {
     ref.current = {
       input: input.body,
       jwt: req.headers.authorization?.replace('Bearer ', ''),
     }
   })
-  app.use(svc.xrpc.router)
-  const server = app.listen()
+  const server = express().use(svc.router).listen()
   await once(server, 'listening')
   return server
 }

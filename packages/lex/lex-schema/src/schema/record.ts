@@ -1,3 +1,4 @@
+import { LexMap } from '@atproto/lex-data'
 import {
   $Typed,
   $typed,
@@ -11,6 +12,7 @@ import {
   ValidationContext,
   Validator,
 } from '../core.js'
+import { lazyProperty } from '../util/lazy-property.js'
 import { literal } from './literal.js'
 import { string } from './string.js'
 
@@ -50,9 +52,9 @@ export type TypedRecord<
  * ```
  */
 export class RecordSchema<
-  const TKey extends LexiconRecordKey = any,
-  const TType extends NsidString = any,
-  const TShape extends Validator<{ [k: string]: unknown }> = any,
+  const TKey extends LexiconRecordKey = LexiconRecordKey,
+  const TType extends NsidString = NsidString,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
 > extends Schema<
   $Typed<InferInput<TShape>, TType>,
   $Typed<InferOutput<TShape>, TType>
@@ -70,30 +72,6 @@ export class RecordSchema<
     this.keySchema = recordKey(key)
   }
 
-  isTypeOf<TValue extends { $type?: unknown }>(
-    value: TValue,
-  ): value is TypedRecord<TType, TValue> {
-    return value.$type === this.$type
-  }
-
-  build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.parse($typed(input, this.$type))
-  }
-
-  $isTypeOf<TValue extends { $type?: unknown }>(
-    value: TValue,
-  ): value is TypedRecord<TType, TValue> {
-    return this.isTypeOf<TValue>(value)
-  }
-
-  $build(
-    input: Omit<InferInput<this>, '$type'>,
-  ): $Typed<InferOutput<this>, TType> {
-    return this.build(input)
-  }
-
   validateInContext(input: unknown, ctx: ValidationContext) {
     const result = ctx.validate(input, this.schema)
 
@@ -106,6 +84,38 @@ export class RecordSchema<
     }
 
     return result
+  }
+
+  build(
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
+  }
+
+  isTypeOf<TValue extends { $type?: unknown }>(
+    value: TValue,
+  ): value is TypedRecord<TType, TValue> {
+    return value.$type === this.$type
+  }
+
+  /**
+   * Bound alias for {@link build} for compatibility with generated utilities.
+   * @see {@link build}
+   */
+  get $build(): typeof this.build {
+    return lazyProperty(this, '$build', this.build.bind(this))
+  }
+
+  /**
+   * Bound alias for {@link isTypeOf} for compatibility with generated utilities.
+   * @see {@link isTypeOf}
+   */
+  get $isTypeOf(): typeof this.isTypeOf {
+    return lazyProperty(this, '$isTypeOf', this.isTypeOf.bind(this))
   }
 }
 
@@ -194,11 +204,11 @@ type AsNsid<T> = T extends `${string}#${string}` ? never : T
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
 export function record<
   const K extends LexiconRecordKey,
-  const V extends { $type: NsidString },
+  const V extends LexMap & { $type: NsidString },
 >(
   key: K,
   type: AsNsid<V['$type']>,
@@ -208,7 +218,7 @@ export function record<
 export function record<
   const K extends LexiconRecordKey,
   const T extends NsidString,
-  const S extends Validator<{ [k: string]: unknown }>,
+  const S extends Validator<LexMap>,
 >(key: K, type: T, validator: S) {
   return new RecordSchema<K, T, S>(key, type, validator)
 }

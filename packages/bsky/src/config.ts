@@ -1,9 +1,10 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
+import { DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
-  did: string
+  did: DidString
   domains: string[]
 }[]
 
@@ -145,6 +146,7 @@ export class ServerConfig {
       process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
     )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    // Values 0 through 16
     const etcdHosts =
       overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
@@ -567,7 +569,7 @@ export class ServerConfig {
   }
 
   get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
+    return (this.cfg.labelsFromIssuerDids ?? []) as DidString[]
   }
 
   get blobCacheLocation() {
@@ -688,6 +690,7 @@ function isLiveNowConfig(data: any): data is LiveNowConfig {
         typeof item === 'object' &&
         item !== null &&
         typeof item.did === 'string' &&
+        isDidString(item.did) &&
         Array.isArray(item.domains) &&
         item.domains.every((domain: any) => typeof domain === 'string'),
     )
