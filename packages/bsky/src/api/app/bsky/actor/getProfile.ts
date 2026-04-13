@@ -24,6 +24,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
         includeTakedowns,
         skipViewerBlocks,
+        overrideIncludeTakedownsForActor: true,
       })
 
       const result = await getProfile({ ...params, hydrateCtx }, ctx)
