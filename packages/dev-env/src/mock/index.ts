@@ -114,7 +114,7 @@ export async function generateMockSetup(env: TestNetwork) {
   await env.ozone.addAdminDid(adminMod.did)
 
   // Create report queues
-  const ozoneAgent = env.ozone.getClient()
+  const ozoneAgent = env.ozone.getAgent()
   const adminHeaders = async (nsid: string) =>
     env.ozone.modHeaders(nsid, 'admin')
 

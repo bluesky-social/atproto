@@ -463,7 +463,8 @@ describe('query-reports', () => {
     }
 
     beforeAll(async () => {
-      // Get all current non-muted reports and permanently assign the first 2 to the ozone service DID
+      // Get all current non-muted reports and permanently assign the first 2
+      // The admin caller's own DID is used as the assignee (not the ozone service DID)
       const allReports = await modClient.queryReports({ isMuted: false })
       assignedReportIds = allReports.reports.slice(0, 2).map((r) => r.id)
 
@@ -473,19 +474,19 @@ describe('query-reports', () => {
     })
 
     it('filters reports by assignedTo DID', async () => {
-      const serviceDid = network.ozone.ctx.cfg.service.did
+      const adminDid = network.ozone.adminAccnt.did
       const response = await modClient.queryReports({
-        assignedTo: serviceDid,
+        assignedTo: adminDid,
       })
 
       expect(response.reports.length).toBe(2)
       const returnedIds = response.reports.map((r) => r.id)
       expect(returnedIds).toEqual(expect.arrayContaining(assignedReportIds))
 
-      // Each returned report should have an assignment with the service DID
+      // Each returned report should have an assignment with the admin DID
       response.reports.forEach((report) => {
         expect(report.assignment).toBeDefined()
-        expect(report.assignment!.did).toBe(serviceDid)
+        expect(report.assignment!.did).toBe(adminDid)
       })
     })
 
@@ -498,28 +499,29 @@ describe('query-reports', () => {
     })
 
     it('combines assignedTo with status filter', async () => {
-      const serviceDid = network.ozone.ctx.cfg.service.did
+      const adminDid = network.ozone.adminAccnt.did
       const response = await modClient.queryReports({
-        assignedTo: serviceDid,
+        assignedTo: adminDid,
         status: 'assigned',
       })
 
       // Permanently assigned reports should have status 'assigned'
+      expect(response.reports.length).toBe(2)
       response.reports.forEach((report) => {
         expect(report.status).toBe('assigned')
         expect(report.assignment).toBeDefined()
-        expect(report.assignment!.did).toBe(serviceDid)
+        expect(report.assignment!.did).toBe(adminDid)
       })
     })
 
     it('stops returning report after unassignment', async () => {
-      const serviceDid = network.ozone.ctx.cfg.service.did
+      const adminDid = network.ozone.adminAccnt.did
       const reportIdToUnassign = assignedReportIds[0]
 
       await unassignReport({ reportId: reportIdToUnassign })
 
       const response = await modClient.queryReports({
-        assignedTo: serviceDid,
+        assignedTo: adminDid,
       })
 
       const returnedIds = response.reports.map((r) => r.id)
