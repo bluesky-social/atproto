@@ -61,14 +61,10 @@ atproto/
 
 ## Code Style
 
-**All committed files must pass `prettier --check .`** — CI will fail otherwise.
-This includes non-code files like CLAUDE.md and JSON configs. Run
-`pnpm prettier --write <file>` before committing any changed file.
-
 - **Prettier**: no semicolons, single quotes, 2-space indent, trailing commas.
   All committed files (including non-code like CLAUDE.md, JSON) must pass
-  `prettier --check .` — CI will fail otherwise. Run `pnpm prettier --write <file>`
-  before committing
+  `prettier --check .` — CI will fail otherwise. Run
+  `pnpm prettier --write <file>` before committing
 - **ESLint**: import ordering enforced (`builtin` → `external` → `@atproto` →
   `parent` → `sibling`), `no-var` error, `prefer-const` warn, `eqeqeq` enforced,
   Node protocol imports required (`node:fs`)
@@ -82,8 +78,8 @@ This includes non-code files like CLAUDE.md and JSON configs. Run
 - **Generated code is committed**: `src/lexicon/` directories contain TypeScript
   generated from `lexicons/` — regenerate with `pnpm codegen` when lexicons
   change
-- **Changesets for versioning**: run `pnpm changeset` before merging (not
-  release-please)
+- **Release-please for versioning**: Periwinkle fork uses release-please (not
+  upstream's changesets). Conventional commits on `main` drive the changelog
 - **Database migrations**: Kysely `Migrator` with timestamped files
   (`20230309T045948368Z-init.ts`), create via `pnpm migration:create`
 - **Logging**: `pino` with `subsystemLogger(name)` from `@atproto/common`
