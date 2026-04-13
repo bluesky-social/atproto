@@ -1,4 +1,4 @@
-import { CID } from 'multiformats'
+import { Cid } from '@atproto/lex-data'
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
 import { MST, MstDiffOpts, NodeEntry, mstDiff } from './mst'
@@ -77,7 +77,7 @@ export class DataDiff {
     )
   }
 
-  leafAdd(key: string, cid: CID) {
+  leafAdd(key: string, cid: Cid) {
     this.adds[key] = { key, cid }
     if (this.removedCids.has(cid)) {
       this.removedCids.delete(cid)
@@ -92,7 +92,7 @@ export class DataDiff {
     })
   }
 
-  leafUpdate(key: string, prev: CID, cid: CID) {
+  leafUpdate(key: string, prev: Cid, cid: Cid) {
     if (prev.equals(cid)) return
     this.updates[key] = { key, prev, cid }
     this.removedCids.add(prev)
@@ -103,7 +103,7 @@ export class DataDiff {
     )
   }
 
-  leafDelete(key: string, cid: CID) {
+  leafDelete(key: string, cid: Cid) {
     this.deletes[key] = { key, cid }
     if (this.newLeafCids.has(cid)) {
       this.newLeafCids.delete(cid)
@@ -113,7 +113,7 @@ export class DataDiff {
     this.preorderOps?.push({ action: 'delete', lpath: key, depth: 0 })
   }
 
-  treeAdd(cid: CID, bytes: Uint8Array) {
+  treeAdd(cid: Cid, bytes: Uint8Array) {
     if (this.removedCids.has(cid)) {
       this.removedCids.delete(cid)
     } else {
@@ -121,7 +121,7 @@ export class DataDiff {
     }
   }
 
-  treeDelete(cid: CID) {
+  treeDelete(cid: Cid) {
     if (this.newMstBlocks.has(cid)) {
       this.newMstBlocks.delete(cid)
     } else {
@@ -153,16 +153,16 @@ export class DataDiff {
 
 export type DataAdd = {
   key: string
-  cid: CID
+  cid: Cid
 }
 
 export type DataUpdate = {
   key: string
-  prev: CID
-  cid: CID
+  prev: Cid
+  cid: Cid
 }
 
 export type DataDelete = {
   key: string
-  cid: CID
+  cid: Cid
 }

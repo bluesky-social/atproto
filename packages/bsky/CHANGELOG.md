@@ -1,5 +1,105 @@
 # @atproto/bsky
 
+## 0.0.225
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4837](https://github.com/bluesky-social/atproto/pull/4837) [`7000746`](https://github.com/bluesky-social/atproto/commit/700074694157718e33c974b666f4563f9647a50c) Thanks [@devinivy](https://github.com/devinivy)! - Permit appview's mod service to see through blocks.
+
+- [#4835](https://github.com/bluesky-social/atproto/pull/4835) [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use "parse" mode when validating chat and notification declarations, as well as labels, lexicon data.
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- Updated dependencies [[`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17), [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950)]:
+  - @atproto/api@0.19.7
+  - @atproto/lex@0.0.24
+  - @atproto/common@0.5.16
+  - @atproto/repo@0.9.1
+  - @atproto/xrpc-server@0.10.19
+  - @atproto/sync@0.2.1
+
+## 0.0.224
+
+### Patch Changes
+
+- [#4830](https://github.com/bluesky-social/atproto/pull/4830) [`42232c7`](https://github.com/bluesky-social/atproto/commit/42232c7f3622f1d4a4ebe78eb1321817a8df1c96) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Register new suggested user endpoints with the router
+
+## 0.0.223
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- [#4810](https://github.com/bluesky-social/atproto/pull/4810) [`34f9ae1`](https://github.com/bluesky-social/atproto/commit/34f9ae1f6824bdd7f66c94c57e41cec757e267df) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Show suggestions to logged out users
+
+- Updated dependencies [[`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13), [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/api@0.19.6
+  - @atproto/syntax@0.5.3
+
+## 0.0.222
+
+### Patch Changes
+
+- [#4793](https://github.com/bluesky-social/atproto/pull/4793) [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Temporarily allow use of legacy `[]` syntaxt for array params
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "codegen" as part of the build
+
+- [#4756](https://github.com/bluesky-social/atproto/pull/4756) [`db795be`](https://github.com/bluesky-social/atproto/commit/db795be786ba613aa9d244cdf27a557797c7669c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Refactor `FeatureGatesClient` to add `scope()` method and docs.
+
+- [#4775](https://github.com/bluesky-social/atproto/pull/4775) [`b86dbfc`](https://github.com/bluesky-social/atproto/commit/b86dbfcbe32b80984f7049fcc3ddc3086b6feb2a) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Remove feature gate for new user onboarding
+
+- [#4780](https://github.com/bluesky-social/atproto/pull/4780) [`37b2f49`](https://github.com/bluesky-social/atproto/commit/37b2f492bb5c8c20b98e241d4a2e6e47052a9dab) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Ensure scoped `checkGates` merges outer context
+
+- [#4796](https://github.com/bluesky-social/atproto/pull/4796) [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disable strict parsing of records
+
+- [#4790](https://github.com/bluesky-social/atproto/pull/4790) [`ae22362`](https://github.com/bluesky-social/atproto/commit/ae22362c595b94f3f491d344c0a3346403395eb2) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add temp A/A test to getPostThreadV2 endpoint
+
+- [#4804](https://github.com/bluesky-social/atproto/pull/4804) [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Set loose query param parsing for `app.bsky.feed.getFeedGenerators`
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`4f11fc3`](https://github.com/bluesky-social/atproto/commit/4f11fc341a770e907b0e84ec267aafafeec5ff88), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`1479c87`](https://github.com/bluesky-social/atproto/commit/1479c87c6bf352694fdf298083e4f95287700c8e), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`3aa18f8`](https://github.com/bluesky-social/atproto/commit/3aa18f84ef80a170b572076feeb649906ffcb06c)]:
+  - @atproto/syntax@0.5.2
+  - @atproto/repo@0.9.0
+  - @atproto/api@0.19.5
+  - @atproto/sync@0.2.0
+  - @atproto/xrpc-server@0.10.18
+  - @atproto/lex@0.0.23
+
+## 0.0.221
+
+### Patch Changes
+
+- [#4747](https://github.com/bluesky-social/atproto/pull/4747) [`3b41b81`](https://github.com/bluesky-social/atproto/commit/3b41b81e27e0aba55406642c07da01c290281647) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Remove deprecated handling from `getSuggestedFollowsByActor`
+
+- [#4767](https://github.com/bluesky-social/atproto/pull/4767) [`4ecde48`](https://github.com/bluesky-social/atproto/commit/4ecde4879ffd769fe2c7a0f1d4e3275c776114f4) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add feature gate to enable social proof on `getSuggestedFollowsByActor`
+
+- Updated dependencies []:
+  - @atproto/xrpc-server@0.10.17
+  - @atproto/common@0.5.15
+
+## 0.0.220
+
+### Patch Changes
+
+- [#4712](https://github.com/bluesky-social/atproto/pull/4712) [`383e157`](https://github.com/bluesky-social/atproto/commit/383e157021564a6fb51baac584dd3e4f988f1d33) Thanks [@devinivy](https://github.com/devinivy)! - remove format from img urls by default
+
+- [#4723](https://github.com/bluesky-social/atproto/pull/4723) [`7ed5704`](https://github.com/bluesky-social/atproto/commit/7ed57043c12aedb0faf6b7dc947adfcfff570b6d) Thanks [@devinivy](https://github.com/devinivy)! - switch default image format to jpeg temporarily
+
+- [#4746](https://github.com/bluesky-social/atproto/pull/4746) [`eaee3d4`](https://github.com/bluesky-social/atproto/commit/eaee3d430554436964d45f38bbeb1132ae9b8862) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Serialize `pagerank` float values in `debug` field on profiles.
+
+- [#4753](https://github.com/bluesky-social/atproto/pull/4753) [`ff42a3a`](https://github.com/bluesky-social/atproto/commit/ff42a3afc3a0d4146a6618a910fa612c7e878ea7) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Prefer returning `undefined` over year 0001 dates on bsky views
+
+- [#4762](https://github.com/bluesky-social/atproto/pull/4762) [`bc69b03`](https://github.com/bluesky-social/atproto/commit/bc69b03f53da3ec52bc3eed0738308f320386e75) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Improve zero-date handling
+
+- [#4755](https://github.com/bluesky-social/atproto/pull/4755) [`139b294`](https://github.com/bluesky-social/atproto/commit/139b2941d640bafa1e7d3a56e0608dc42bb0006c) Thanks [@devinivy](https://github.com/devinivy)! - Remove feature gate for including format in image URLs.
+
+- Updated dependencies [[`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa), [`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f), [`192685f`](https://github.com/bluesky-social/atproto/commit/192685fca75a68c9c50a94817d3f27da7fc02f56)]:
+  - @atproto/api@0.19.4
+  - @atproto/syntax@0.5.1
+  - @atproto/repo@0.8.13
+  - @atproto/xrpc-server@0.10.16
+
 ## 0.0.219
 
 ### Patch Changes

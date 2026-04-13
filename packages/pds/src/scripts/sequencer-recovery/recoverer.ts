@@ -1,5 +1,6 @@
 import { rmIfExists } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
+import { DidString, isNsidString, isRecordKeyString } from '@atproto/lex'
 import {
   BlockMap,
   CidSet,
@@ -203,7 +204,7 @@ const trackBlobs = async (
 
 const trackFailure = async (
   recoveryDb: RecoveryDb,
-  did: string,
+  did: DidString,
   err: unknown,
 ) => {
   await recoveryDb.db
@@ -217,7 +218,7 @@ const trackFailure = async (
     .execute()
 }
 
-const trackNewAccount = async (recoveryDb: RecoveryDb, did: string) => {
+const trackNewAccount = async (recoveryDb: RecoveryDb, did: DidString) => {
   await recoveryDb.db
     .insertInto('new_account')
     .values({
@@ -239,10 +240,14 @@ const parseCommitEvt = async (
   const writesUnfiltered = await Promise.all(
     evt.ops.map(async (op) => {
       const { collection, rkey } = parseDataKey(op.path)
+      if (!isNsidString(collection)) return undefined
+      if (!isRecordKeyString(rkey)) return undefined
+
       if (op.action === 'delete') {
         return prepareDelete({ did, collection, rkey })
       }
       if (!op.cid) return undefined
+
       const recordBytes = evtCar.blocks.get(op.cid)
       if (!recordBytes) return undefined
       const record = cborToLexRecord(recordBytes)
@@ -266,16 +271,14 @@ const parseCommitEvt = async (
       }
     }),
   )
-  const writes = writesUnfiltered.filter(
-    (w) => w !== undefined,
-  ) as PreparedWrite[]
+
   return {
-    writes,
+    writes: writesUnfiltered.filter((w) => w != null),
     blocks: evtCar.blocks,
   }
 }
 
-const didFromEvt = (evt: SeqEvt): string | null => {
+const didFromEvt = (evt: SeqEvt): DidString | null => {
   if (evt.type === 'account') {
     return evt.evt.did
   } else if (evt.type === 'commit') {

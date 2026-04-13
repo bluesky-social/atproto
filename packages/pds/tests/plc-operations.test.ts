@@ -31,7 +31,7 @@ describe('plc operations', () => {
     const mailer = ctx.mailer
 
     sc = network.getSeedClient()
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
 
     await basicSeed(sc)
     alice = sc.dids.alice

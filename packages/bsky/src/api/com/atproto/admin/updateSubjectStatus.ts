@@ -1,15 +1,14 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { AuthRequiredError, InvalidRequestError } from '@atproto/xrpc-server'
-import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
 import {
-  isRepoBlobRef,
-  isRepoRef,
-} from '../../../../lexicon/types/com/atproto/admin/defs'
-import { isMain as isStrongRef } from '../../../../lexicon/types/com/atproto/repo/strongRef'
+  AuthRequiredError,
+  InvalidRequestError,
+  Server,
+} from '@atproto/xrpc-server'
+import { AppContext } from '../../../../context'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.updateSubjectStatus({
+  server.add(com.atproto.admin.updateSubjectStatus, {
     auth: ctx.authVerifier.roleOrModService,
     handler: async ({ input, auth }) => {
       const { canPerformTakedown } = ctx.authVerifier.parseCreds(auth)
@@ -21,7 +20,7 @@ export default function (server: Server, ctx: AppContext) {
       const now = new Date()
       const { subject, takedown } = input.body
       if (takedown) {
-        if (isRepoRef(subject)) {
+        if (com.atproto.admin.defs.repoRef.$isTypeOf(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownActor({
               did: subject.did,
@@ -34,7 +33,7 @@ export default function (server: Server, ctx: AppContext) {
               seen: Timestamp.fromDate(now),
             })
           }
-        } else if (isStrongRef(subject)) {
+        } else if (com.atproto.repo.strongRef.$isTypeOf(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownRecord({
               recordUri: subject.uri,
@@ -47,7 +46,7 @@ export default function (server: Server, ctx: AppContext) {
               seen: Timestamp.fromDate(now),
             })
           }
-        } else if (isRepoBlobRef(subject)) {
+        } else if (com.atproto.admin.defs.repoBlobRef.$isTypeOf(subject)) {
           if (takedown.applied) {
             await ctx.dataplane.takedownBlob({
               did: subject.did,
@@ -63,7 +62,9 @@ export default function (server: Server, ctx: AppContext) {
             })
           }
         } else {
-          throw new InvalidRequestError('Invalid subject')
+          throw new InvalidRequestError(
+            `Invalid subject type: ${subject.$type}`,
+          )
         }
       }
 

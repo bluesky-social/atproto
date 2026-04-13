@@ -1,6 +1,6 @@
 import { Kysely } from 'kysely'
-import { CID } from 'multiformats/cid'
 import { chunkArray } from '@atproto/common'
+import { Cid, parseCid } from '@atproto/lex-data'
 import {
   BlockMap,
   MST,
@@ -17,7 +17,7 @@ class MigrationBlockstore extends ReadableBlockstore {
     this.db = db as Kysely<any>
   }
 
-  async getBytes(cid: CID): Promise<Uint8Array | null> {
+  async getBytes(cid: Cid): Promise<Uint8Array | null> {
     const res = await this.db
       .selectFrom('repo_block')
       .where('cid', '=', cid.toString())
@@ -26,14 +26,14 @@ class MigrationBlockstore extends ReadableBlockstore {
     return res?.content ?? null
   }
 
-  async has(cid: CID): Promise<boolean> {
+  async has(cid: Cid): Promise<boolean> {
     const bytes = await this.getBytes(cid)
     return bytes !== null
   }
 
-  async getBlocks(cids: CID[]): Promise<{ blocks: BlockMap; missing: CID[] }> {
+  async getBlocks(cids: Cid[]): Promise<{ blocks: BlockMap; missing: Cid[] }> {
     const blocks = new BlockMap()
-    const missing: CID[] = []
+    const missing: Cid[] = []
     for (const batch of chunkArray(cids, 500)) {
       const cidStrings = batch.map((c) => c.toString())
       const res = await this.db
@@ -43,7 +43,7 @@ class MigrationBlockstore extends ReadableBlockstore {
         .execute()
       const found = new Set<string>()
       for (const row of res) {
-        const cid = CID.parse(row.cid)
+        const cid = parseCid(row.cid)
         blocks.set(cid, row.content)
         found.add(row.cid)
       }
@@ -130,7 +130,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   if (!root) return
 
   const storage = new MigrationBlockstore(db)
-  const commitCid = CID.parse(root.cid)
+  const commitCid = parseCid(root.cid)
   const commit = await storage.readObj(commitCid, def.versionedCommit)
   const mst = MST.load(storage, commit.data)
   const layer = await mst.getLayer()

@@ -1,4 +1,5 @@
 import { AtpAgent } from '@atproto/api'
+import { TID } from '@atproto/common'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { MST, PREORDER_MAX_DEPTH, def, readCarStream } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
@@ -51,7 +52,7 @@ describe('preorder map', () => {
     })
     // @ts-expect-error Error due to circular dependency with the dev-env package
     ctx = network.pds.ctx
-    agent = network.pds.getClient()
+    agent = network.pds.getAgent()
     await agent.createAccount({
       email: 'alice@test.com',
       handle: 'alice.test',
@@ -97,7 +98,7 @@ describe('preorder map', () => {
 
   it('is correct after creating records', async () => {
     for (let i = 0; i < 10; i++) {
-      await agent.api.com.atproto.repo.createRecord({
+      await agent.com.atproto.repo.createRecord({
         repo: agent.accountDid,
         collection: 'app.bsky.feed.post',
         record: {
@@ -111,13 +112,13 @@ describe('preorder map', () => {
   })
 
   it('is correct after updating records', async () => {
-    const list = await agent.api.com.atproto.repo.listRecords({
+    const list = await agent.com.atproto.repo.listRecords({
       repo: agent.accountDid,
       collection: 'app.bsky.feed.post',
       limit: 5,
     })
     for (const rec of list.data.records) {
-      await agent.api.com.atproto.repo.putRecord({
+      await agent.com.atproto.repo.putRecord({
         repo: agent.accountDid,
         collection: 'app.bsky.feed.post',
         rkey: new AtUri(rec.uri).rkey,
@@ -132,13 +133,13 @@ describe('preorder map', () => {
   })
 
   it('is correct after deleting records', async () => {
-    const list = await agent.api.com.atproto.repo.listRecords({
+    const list = await agent.com.atproto.repo.listRecords({
       repo: agent.accountDid,
       collection: 'app.bsky.feed.post',
       limit: 3,
     })
     for (const rec of list.data.records) {
-      await agent.api.com.atproto.repo.deleteRecord({
+      await agent.com.atproto.repo.deleteRecord({
         repo: agent.accountDid,
         collection: 'app.bsky.feed.post',
         rkey: new AtUri(rec.uri).rkey,
@@ -150,7 +151,7 @@ describe('preorder map', () => {
   it('is correct after mixed operations', async () => {
     // Create more records across different collections
     for (let i = 0; i < 5; i++) {
-      await agent.api.com.atproto.repo.createRecord({
+      await agent.com.atproto.repo.createRecord({
         repo: agent.accountDid,
         collection: 'app.bsky.feed.like',
         record: {
@@ -164,13 +165,13 @@ describe('preorder map', () => {
       })
     }
     // Delete some posts
-    const posts = await agent.api.com.atproto.repo.listRecords({
+    const posts = await agent.com.atproto.repo.listRecords({
       repo: agent.accountDid,
       collection: 'app.bsky.feed.post',
       limit: 2,
     })
     for (const rec of posts.data.records) {
-      await agent.api.com.atproto.repo.deleteRecord({
+      await agent.com.atproto.repo.deleteRecord({
         repo: agent.accountDid,
         collection: 'app.bsky.feed.post',
         rkey: new AtUri(rec.uri).rkey,
@@ -186,21 +187,21 @@ describe('preorder map', () => {
       text: 'duplicate content',
       createdAt: '2024-01-01T00:00:00.000Z',
     }
-    await agent.api.com.atproto.repo.createRecord({
+    await agent.com.atproto.repo.createRecord({
       repo: agent.accountDid,
       collection: 'app.bsky.feed.post',
-      rkey: 'dup-a',
+      rkey: TID.nextStr(),
       record,
     })
-    await agent.api.com.atproto.repo.createRecord({
+    await agent.com.atproto.repo.createRecord({
       repo: agent.accountDid,
       collection: 'app.bsky.feed.post',
-      rkey: 'dup-b',
+      rkey: TID.nextStr(),
       record,
     })
 
     // Export via getRepo
-    const carRes = await agent.api.com.atproto.sync.getRepo({
+    const carRes = await agent.com.atproto.sync.getRepo({
       did: agent.accountDid,
     })
 

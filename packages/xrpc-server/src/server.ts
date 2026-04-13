@@ -205,7 +205,7 @@ export class Server {
         LexMethodOutput<M>
       >(
         this.createAuthVerifier(config),
-        this.createSchemaParamsVerifier(schema),
+        this.createSchemaParamsVerifier(schema, config.opts),
         this.createSchemaInputVerifier(schema, config.opts),
         this.createRouteRateLimiter(schema.nsid, config),
         config.handler,
@@ -227,7 +227,7 @@ export class Server {
         LexMethodOutput<M>
       >(
         this.createAuthVerifier(config),
-        this.createSchemaParamsVerifier(schema),
+        this.createSchemaParamsVerifier(schema, config.opts),
         this.createSchemaInputVerifier(schema, config.opts),
         this.createRouteRateLimiter(schema.nsid, config),
         config.handler,
@@ -278,6 +278,11 @@ export class Server {
   ) {
     const config =
       typeof configOrFn === 'function' ? { handler: configOrFn } : configOrFn
+    if (config.opts && 'paramsParseLoose' in config.opts) {
+      throw new Error(
+        `paramsParseLoose is not supported with method(), use add() instead`,
+      )
+    }
     const def = this.lex.getDef(nsid)
     if (def?.type === 'query' || def?.type === 'procedure') {
       this.addRoute(nsid, def, config)
@@ -602,8 +607,11 @@ export class Server {
 
   private createSchemaParamsVerifier<
     M extends l.Procedure | l.Query | l.Subscription,
-  >(ns: l.Main<M>): ParamsVerifierInternal<LexMethodParams<M>> {
-    return createSchemaParamsVerifier<M>(ns)
+  >(
+    ns: l.Main<M>,
+    opts?: RouteOptions,
+  ): ParamsVerifierInternal<LexMethodParams<M>> {
+    return createSchemaParamsVerifier<M>(ns, opts)
   }
 
   private createSchemaInputVerifier<M extends l.Procedure | l.Query>(

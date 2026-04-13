@@ -1,5 +1,6 @@
-import { AtpAgent } from '@atproto/api'
 import { mapDefined } from '@atproto/common'
+import { AtUriString, Client } from '@atproto/lex'
+import { Server } from '@atproto/xrpc-server'
 import { ServerConfig } from '../../../../config'
 import { AppContext } from '../../../../context'
 import { DataPlaneClient } from '../../../../data-plane'
@@ -9,8 +10,7 @@ import {
 } from '../../../../data-plane/server/util'
 import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
-import { Server } from '../../../../lexicon'
-import { QueryParams } from '../../../../lexicon/types/app/bsky/feed/searchPosts'
+import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
   PresentationFnInput,
@@ -29,21 +29,22 @@ export default function (server: Server, ctx: AppContext) {
     noBlocksOrTagged,
     presentation,
   )
-  server.app.bsky.feed.searchPosts({
+  server.add(app.bsky.feed.searchPosts, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ auth, params, req }) => {
-      const { viewer, isModService } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, isModService, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
 
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
-        featureGatesMap: ctx.featureGatesClient.checkGates(
-          ['search:filtering_exploration:enable'],
-          {
+        skipViewerBlocks,
+        features: ctx.featureGatesClient.scope(
+          ctx.featureGatesClient.parseUserContextFromHandler({
             viewer,
             req,
-          },
+          }),
         ),
       })
       const results = await searchPosts(
@@ -59,16 +60,19 @@ export default function (server: Server, ctx: AppContext) {
   })
 }
 
-const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
+const skeleton = async (
+  inputs: SkeletonFnInput<Context, Params>,
+): Promise<Skeleton> => {
   const { ctx, params } = inputs
   const parsedQuery = parsePostSearchQuery(params.q, {
     author: params.author,
   })
 
-  if (ctx.searchAgent) {
+  if (ctx.searchClient) {
     // @NOTE cursors won't change on appview swap
-    const { data: res } =
-      await ctx.searchAgent.api.app.bsky.unspecced.searchPostsSkeleton({
+    const res = await ctx.searchClient.call(
+      app.bsky.unspecced.searchPostsSkeleton,
+      {
         q: params.q,
         cursor: params.cursor,
         limit: params.limit,
@@ -82,9 +86,10 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
         until: params.until,
         url: params.url,
         viewer: params.hydrateCtx.viewer ?? undefined,
-      })
+      },
+    )
     return {
-      posts: res.posts.map(({ uri }) => uri),
+      posts: res.posts.map(({ uri }) => uri as AtUriString),
       cursor: parseString(res.cursor),
       parsedQuery,
     }
@@ -96,7 +101,7 @@ const skeleton = async (inputs: SkeletonFnInput<Context, Params>) => {
     cursor: params.cursor,
   })
   return {
-    posts: res.uris,
+    posts: res.uris as AtUriString[],
     cursor: parseString(res.cursor),
     parsedQuery,
   }
@@ -111,8 +116,8 @@ const hydration = async (
     params.hydrateCtx,
     undefined,
     {
-      processDynamicTagsForView: params.hydrateCtx.featureGatesMap.get(
-        'search:filtering_exploration:enable',
+      processDynamicTagsForView: params.hydrateCtx.features?.checkGate(
+        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
         ? 'search'
         : undefined,
@@ -141,8 +146,8 @@ const noBlocksOrTagged = (inputs: RulesFnInput<Context, Params, Skeleton>) => {
 
     let tagged = false
     if (
-      params.hydrateCtx.featureGatesMap.get(
-        'search:filtering_exploration:enable',
+      params.hydrateCtx.features?.checkGate(
+        params.hydrateCtx.features.Gate.SearchFilteringExplorationEnable,
       )
     ) {
       tagged = post.tags.has(ctx.cfg.visibilityTagHide)
@@ -180,16 +185,16 @@ type Context = {
   dataplane: DataPlaneClient
   hydrator: Hydrator
   views: Views
-  searchAgent?: AtpAgent
+  searchClient?: Client
 }
 
-type Params = QueryParams & {
+type Params = app.bsky.feed.searchPosts.$Params & {
   hydrateCtx: HydrateCtx
   isModService: boolean
 }
 
 type Skeleton = {
-  posts: string[]
+  posts: AtUriString[]
   hitsTotal?: number
   cursor?: string
   parsedQuery: PostSearchQuery

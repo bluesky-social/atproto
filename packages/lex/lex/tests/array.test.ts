@@ -27,7 +27,7 @@ describe('array', () => {
         $type: 'com.example.arrayLength',
         array: [1, '2', 3],
       }),
-    ).toThrow('Expected integer value type (got string) at $.array[1]')
+    ).toThrow('Expected integer value type (got "2") at $.array[1]')
     expect(() =>
       com.example.arrayLength.$parse({
         $type: 'com.example.arrayLength',
