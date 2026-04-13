@@ -86,8 +86,14 @@ export class ActorStore {
   // already applied (no-op).
   private async ensureMigrated(did: string, db: ActorDb): Promise<void> {
     const lastMigration = await getMigrationLevel(db)
-    if (lastMigration === getLatestStoreSchemaVersion()) {
-      // already up to date
+    // Tolerate a store that's ahead of our code: during a rolling deploy, a
+    // newer container may have already migrated this store past the latest
+    // version our code knows about. Running the migrator in that case would
+    // throw a "corrupted migrations" error from kysely.
+    if (
+      lastMigration !== null &&
+      lastMigration >= getLatestStoreSchemaVersion()
+    ) {
       return
     }
 
