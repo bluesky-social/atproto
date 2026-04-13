@@ -1,6 +1,7 @@
 import { chunkArray } from '@atproto/common'
 import { Cid, parseCid } from '@atproto/lex-data'
 import { BlockMap, CommitData, PreorderOp, RepoStorage } from '@atproto/repo'
+import { sql } from 'kysely'
 import { ActorDb, RepoBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
@@ -89,13 +90,11 @@ export class SqlRepoTransactor extends SqlRepoReader implements RepoStorage {
       }
     }
     for (const batch of chunkArray(deletes, 50)) {
-      for (const del of batch) {
-        await this.db.db
-          .deleteFrom('preorder_map')
-          .where('lpath', '=', del.lpath)
-          .where('depth', '=', del.depth)
-          .execute()
-      }
+      const tuples = batch.map((d) => sql`(${d.lpath}, ${d.depth})`)
+      await this.db.db
+        .deleteFrom('preorder_map')
+        .where(sql`(lpath, depth) in (${sql.join(tuples)})`)
+        .execute()
     }
     for (const batch of chunkArray(inserts, 50)) {
       await this.db.db.insertInto('preorder_map').values(batch).execute()
