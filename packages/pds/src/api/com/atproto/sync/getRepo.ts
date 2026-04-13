@@ -25,8 +25,13 @@ export default function (server: Server, ctx: AppContext) {
 
       const carStream = await getCarStream(ctx, did, since)
 
+      // `atproto-car-block-order` acts as a hint for consumers - in the future it can be implicit/assumed
       return {
         encoding: 'application/vnd.ipld.car' as const,
+        headers:
+          since === undefined
+            ? { 'atproto-car-block-order': 'preorder-deterministic' }
+            : undefined,
         body: carStream,
       }
     },

@@ -1,7 +1,7 @@
+import { sql } from 'kysely'
 import { chunkArray } from '@atproto/common'
 import { Cid, parseCid } from '@atproto/lex-data'
 import { BlockMap, CommitData, PreorderOp, RepoStorage } from '@atproto/repo'
-import { sql } from 'kysely'
 import { ActorDb, RepoBlock } from '../db'
 import { SqlRepoReader } from './sql-repo-reader'
 
