@@ -42,6 +42,8 @@ export type QueryParams = {
   isMuted: boolean
   /** Filter by moderator who reviewed/actioned the report */
   reviewedBy?: string
+  /** Filter by the DID of the moderator permanently assigned to the report. */
+  assignedTo?: string
   sortField: 'createdAt' | 'updatedAt'
   sortDirection: 'asc' | 'desc'
   limit: number

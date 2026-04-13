@@ -1,4 +1,8 @@
-import { ComAtprotoModerationDefs } from '@atproto/api'
+import {
+  ComAtprotoModerationDefs,
+  ToolsOzoneReportAssignModerator,
+  ToolsOzoneReportUnassignModerator,
+} from '@atproto/api'
 import {
   ModeratorClient,
   SeedClient,
@@ -6,6 +10,7 @@ import {
   basicSeed,
 } from '@atproto/dev-env'
 import { AtUri } from '@atproto/syntax'
+import { ids } from '../src/lexicon/lexicons'
 import {
   REASONMISLEADING,
   REASONSPAM,
@@ -421,6 +426,106 @@ describe('query-reports', () => {
       defaultReports.reports.forEach((report) => {
         expect(report.isMuted).toBe(false)
       })
+    })
+  })
+
+  describe('assignedTo filtering', () => {
+    let assignedReportIds: number[]
+
+    const assignReport = async (
+      input: ToolsOzoneReportAssignModerator.InputSchema,
+      callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+    ) => {
+      const agent = network.ozone.getAgent()
+      const { data } = await agent.tools.ozone.report.assignModerator(input, {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneReportAssignModerator,
+          callerRole,
+        ),
+      })
+      return data
+    }
+
+    const unassignReport = async (
+      input: ToolsOzoneReportUnassignModerator.InputSchema,
+      callerRole: 'admin' | 'moderator' | 'triage' = 'admin',
+    ) => {
+      const agent = network.ozone.getAgent()
+      const { data } = await agent.tools.ozone.report.unassignModerator(input, {
+        encoding: 'application/json',
+        headers: await network.ozone.modHeaders(
+          ids.ToolsOzoneReportUnassignModerator,
+          callerRole,
+        ),
+      })
+      return data
+    }
+
+    beforeAll(async () => {
+      // Get all current non-muted reports and permanently assign the first 2 to the ozone service DID
+      const allReports = await modClient.queryReports({ isMuted: false })
+      assignedReportIds = allReports.reports.slice(0, 2).map((r) => r.id)
+
+      for (const reportId of assignedReportIds) {
+        await assignReport({ reportId, isPermanent: true })
+      }
+    })
+
+    it('filters reports by assignedTo DID', async () => {
+      const serviceDid = network.ozone.ctx.cfg.service.did
+      const response = await modClient.queryReports({
+        assignedTo: serviceDid,
+      })
+
+      expect(response.reports.length).toBe(2)
+      const returnedIds = response.reports.map((r) => r.id)
+      expect(returnedIds).toEqual(expect.arrayContaining(assignedReportIds))
+
+      // Each returned report should have an assignment with the service DID
+      response.reports.forEach((report) => {
+        expect(report.assignment).toBeDefined()
+        expect(report.assignment!.did).toBe(serviceDid)
+      })
+    })
+
+    it('returns empty when filtering by a DID with no assignments', async () => {
+      const response = await modClient.queryReports({
+        assignedTo: 'did:plc:nonexistent',
+      })
+
+      expect(response.reports.length).toBe(0)
+    })
+
+    it('combines assignedTo with status filter', async () => {
+      const serviceDid = network.ozone.ctx.cfg.service.did
+      const response = await modClient.queryReports({
+        assignedTo: serviceDid,
+        status: 'assigned',
+      })
+
+      // Permanently assigned reports should have status 'assigned'
+      response.reports.forEach((report) => {
+        expect(report.status).toBe('assigned')
+        expect(report.assignment).toBeDefined()
+        expect(report.assignment!.did).toBe(serviceDid)
+      })
+    })
+
+    it('stops returning report after unassignment', async () => {
+      const serviceDid = network.ozone.ctx.cfg.service.did
+      const reportIdToUnassign = assignedReportIds[0]
+
+      await unassignReport({ reportId: reportIdToUnassign })
+
+      const response = await modClient.queryReports({
+        assignedTo: serviceDid,
+      })
+
+      const returnedIds = response.reports.map((r) => r.id)
+      expect(returnedIds).not.toContain(reportIdToUnassign)
+      // The other assigned report should still be there
+      expect(returnedIds).toContain(assignedReportIds[1])
     })
   })
 })

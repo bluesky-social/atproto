@@ -101,6 +101,10 @@ export async function queryReports(
     )`)
   }
 
+  if (params.assignedTo) {
+    builder = builder.where('r.assignedTo', '=', params.assignedTo)
+  }
+
   const sortField = params.sortField ?? 'createdAt'
   const sortDirection = params.sortDirection ?? 'desc'
 

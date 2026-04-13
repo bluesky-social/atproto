@@ -20505,6 +20505,12 @@ export const schemaDict = {
               description:
                 'Filter by moderator who reviewed/actioned the report',
             },
+            assignedTo: {
+              type: 'string',
+              format: 'did',
+              description:
+                'Filter by the DID of the moderator permanently assigned to the report.',
+            },
             sortField: {
               type: 'string',
               default: 'createdAt',
