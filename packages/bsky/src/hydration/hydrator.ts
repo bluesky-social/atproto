@@ -99,6 +99,8 @@ export class HydrateCtx {
   }
 }
 
+export type HydrateCtxWithViewer = HydrateCtx & { viewer: string }
+
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: DidString | null

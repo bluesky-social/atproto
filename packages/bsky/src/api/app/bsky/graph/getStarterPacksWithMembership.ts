@@ -3,7 +3,7 @@ import { AtUriString, DidString } from '@atproto/syntax'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import {
-  HydrateCtx,
+  HydrateCtxWithViewer,
   Hydrator,
   mergeManyStates,
 } from '../../../../hydration/hydrator'
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
       const result = await getStarterPacksWithMembership(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        { ...params, hydrateCtx },
         ctx,
       )
 
@@ -126,7 +126,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getStarterPacksWithMembership.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

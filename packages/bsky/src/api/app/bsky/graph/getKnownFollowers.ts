@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtxWithViewer, Hydrator } from '../../../../hydration/hydrator'
 import { app } from '../../../../lexicons/index.js'
 import {
   HydrationFnInput,
@@ -31,10 +31,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
 
-      const result = await getKnownFollowers(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
-        ctx,
-      )
+      const result = await getKnownFollowers({ ...params, hydrateCtx }, ctx)
 
       return {
         encoding: 'application/json',
@@ -113,7 +110,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getKnownFollowers.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {

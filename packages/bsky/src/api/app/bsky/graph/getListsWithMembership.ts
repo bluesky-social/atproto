@@ -2,7 +2,7 @@ import { mapDefined } from '@atproto/common'
 import { AtUriString, DidString } from '@atproto/lex'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { HydrateCtx, Hydrator } from '../../../../hydration/hydrator'
+import { HydrateCtxWithViewer, Hydrator } from '../../../../hydration/hydrator'
 import { parseString } from '../../../../hydration/util'
 import { app } from '../../../../lexicons/index.js'
 import {
@@ -35,7 +35,7 @@ export default function (server: Server, ctx: AppContext) {
         viewer,
       })
       const result = await getListsWithMembership(
-        { ...params, hydrateCtx: hydrateCtx.copy({ viewer }) },
+        { ...params, hydrateCtx },
         ctx,
       )
 
@@ -133,7 +133,7 @@ type Context = {
 }
 
 type Params = app.bsky.graph.getListsWithMembership.$Params & {
-  hydrateCtx: HydrateCtx & { viewer: string }
+  hydrateCtx: HydrateCtxWithViewer
 }
 
 type SkeletonState = {
