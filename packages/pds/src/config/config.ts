@@ -46,6 +46,7 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
 
   const actorStoreCfg: ServerConfig['actorStore'] = {
     directory: env.actorStoreDirectory ?? dbLoc('actors'),
+    keyDirectory: env.actorStoreKeyDirectory ?? null,
     cacheSize: env.actorStoreCacheSize ?? 100,
     disableWalAutoCheckpoint,
   }
@@ -399,6 +400,7 @@ export type DatabaseConfig = {
 
 export type ActorStoreConfig = {
   directory: string
+  keyDirectory: string | null
   cacheSize: number
   disableWalAutoCheckpoint: boolean
 }

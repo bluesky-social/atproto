@@ -52,6 +52,7 @@ export function readEnv() {
 
     // actor store
     actorStoreDirectory: envStr('PDS_ACTOR_STORE_DIRECTORY'),
+    actorStoreKeyDirectory: envStr('PDS_ACTOR_STORE_KEY_DIRECTORY'),
     actorStoreCacheSize: envInt('PDS_ACTOR_STORE_CACHE_SIZE'),
 
     // blobstore: one required

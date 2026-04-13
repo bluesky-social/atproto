@@ -1,0 +1,144 @@
+name: build-and-push-pds-dev
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  IMAGE_NAME: periwinkle/pds
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      short_sha: ${{ steps.sha.outputs.short }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set short SHA
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./services/pds/Dockerfile
+          platforms: linux/amd64
+          outputs: type=docker,dest=/tmp/pds-image.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pds-image
+          path: /tmp/pds-image.tar
+          retention-days: 1
+
+  push-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      full_image: ${{ steps.push.outputs.full_image }}
+
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pds-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load -i /tmp/pds-image.tar
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PDS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-central-1
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag and push
+        id: push
+        run: |
+          SHA=${{ needs.build.outputs.short_sha }}
+          FULL_IMAGE=${{ steps.ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${SHA}
+          docker tag $(docker images -q | head -1) "${FULL_IMAGE}"
+          docker push "${FULL_IMAGE}"
+          echo "full_image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
+
+  trigger-dev-deploy:
+    needs: [build, push-dev]
+    runs-on: ubuntu-latest
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.PDS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-central-1
+
+      - name: Trigger pds-control-plane update-images
+        env:
+          TASK_DEFINITION: ${{ vars.PDS_CONTROL_PLANE_TASK_DEFINITION_FAMILY }}
+          CLUSTER: ${{ vars.PDS_CONTROL_PLANE_CLUSTER_ARN }}
+          SUBNETS: ${{ vars.PDS_CONTROL_PLANE_SUBNETS }}
+          SECURITY_GROUPS: ${{ vars.PDS_CONTROL_PLANE_SECURITY_GROUPS }}
+          IMAGE_TAG: ${{ needs.build.outputs.short_sha }}
+          OPERATION_ID: ${{ github.run_id }}
+          ENVIRONMENT: dev
+          REGION: eu-central-1
+        run: |
+          SUBNETS_JSON=$(echo "$SUBNETS" | jq -R 'split(",")')
+          SGS_JSON=$(echo "$SECURITY_GROUPS" | jq -R 'split(",")')
+          aws ecs run-task \
+            --cluster "$CLUSTER" \
+            --task-definition "$TASK_DEFINITION" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=${SUBNETS_JSON},securityGroups=${SGS_JSON},assignPublicIp=DISABLED}" \
+            --overrides "{
+              \"containerOverrides\": [{
+                \"name\": \"pds-control-plane\",
+                \"command\": [\"update-images\"],
+                \"environment\": [
+                  {\"name\": \"OPERATION_ID\", \"value\": \"${OPERATION_ID}\"},
+                  {\"name\": \"REGION\", \"value\": \"${REGION}\"},
+                  {\"name\": \"ENVIRONMENT\", \"value\": \"${ENVIRONMENT}\"},
+                  {\"name\": \"IMAGE_TAG\", \"value\": \"${IMAGE_TAG}\"}
+                ]
+              }]
+            }"
+
+  summary:
+    needs: [build, push-dev, trigger-dev-deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## PDS Fork Image Built & Pushed (Dev)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** \`${{ needs.build.outputs.short_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Dev" >> $GITHUB_STEP_SUMMARY
+          echo "- push-dev: \`${{ needs.push-dev.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- trigger-dev-deploy: \`${{ needs.trigger-dev-deploy.result }}\`" >> $GITHUB_STEP_SUMMARY
