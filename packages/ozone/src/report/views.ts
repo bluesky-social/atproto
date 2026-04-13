@@ -6,7 +6,7 @@ import {
   RepoView,
 } from '../lexicon/types/tools/ozone/moderation/defs'
 import { Member as TeamMember } from '../lexicon/types/tools/ozone/team/defs'
-import { ActiveReportAssignment, ReportWithEvent } from '../mod-service/report'
+import { ReportWithEvent } from '../mod-service/report'
 import { ParsedLabelers } from '../util'
 
 type ReportViews = {
@@ -28,7 +28,6 @@ export type HydratedReport = {
   accountInfo: Map<string, AccountView | null>
   recordInfo: Map<string, RecordViewDetail>
   profiles: Map<string, AppBskyActorDefs.ProfileViewDetailed>
-  assignments: Map<number, ActiveReportAssignment>
   queues: Map<number, ToolsOzoneQueueDefs.QueueView>
   memberViews: Map<string, TeamMember>
 }
@@ -37,18 +36,12 @@ export async function hydrateReportInfo(
   reports: ReportWithEvent[],
   views: ReportViews,
   getAccountInfos: (dids: string[]) => Promise<Map<string, AccountView | null>>,
-  getActiveAssignments: (
-    reportIds: number[],
-  ) => Promise<Map<number, ActiveReportAssignment>>,
   getQueues: (
     queueIds: number[],
   ) => Promise<Map<number, ToolsOzoneQueueDefs.QueueView>>,
   getTeamMembers: (dids: string[]) => Promise<Map<string, TeamMember>>,
   labelers: ParsedLabelers,
 ): Promise<HydratedReport> {
-  // Fetch assignments first to include assignee DIDs in the profile fetch
-  const assignments = await getActiveAssignments(reports.map((r) => r.id))
-
   const dids = new Set<string>()
   const uris = new Set<string>()
   const queueIds = new Set<number>()
@@ -59,10 +52,10 @@ export async function hydrateReportInfo(
     dids.add(report.reportedBy)
     if (report.subjectUri) uris.add(report.subjectUri)
     if (report.queueId && report.queueId > 0) queueIds.add(report.queueId)
-  }
-  for (const assignment of assignments.values()) {
-    dids.add(assignment.did)
-    assignmentDids.push(assignment.did)
+    if (report.assignedTo) {
+      dids.add(report.assignedTo)
+      assignmentDids.push(report.assignedTo)
+    }
   }
 
   const didsArray = Array.from(dids)
@@ -84,7 +77,6 @@ export async function hydrateReportInfo(
     accountInfo,
     recordInfo,
     profiles,
-    assignments,
     queues,
     memberViews,
   }
@@ -100,7 +92,6 @@ export function buildReportView(
     accountInfo,
     recordInfo,
     profiles,
-    assignments,
     queues,
     memberViews,
   } = hydrated
@@ -162,14 +153,14 @@ export function buildReportView(
     status: reporterStatus,
   }
 
-  const activeAssignment = assignments.get(report.id)
-  const assignmentView = activeAssignment
-    ? {
-        did: activeAssignment.did,
-        moderator: memberViews.get(activeAssignment.did),
-        assignedAt: activeAssignment.assignedAt,
-      }
-    : undefined
+  const assignmentView =
+    report.assignedTo && report.assignedAt
+      ? {
+          did: report.assignedTo,
+          moderator: memberViews.get(report.assignedTo),
+          assignedAt: report.assignedAt,
+        }
+      : undefined
 
   return {
     id: report.id,

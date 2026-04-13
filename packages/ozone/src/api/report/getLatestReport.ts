@@ -1,10 +1,7 @@
 import { InvalidRequestError } from '@atproto/xrpc-server'
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import {
-  getLatestReport,
-  getPermanentReportAssignments,
-} from '../../mod-service/report'
+import { getLatestReport } from '../../mod-service/report'
 import { buildReportView, hydrateReportInfo } from '../../report/views'
 import { getPdsAccountInfos } from '../util'
 
@@ -27,14 +24,13 @@ export default function (server: Server, ctx: AppContext) {
         [report],
         modService.views,
         (dids) => getPdsAccountInfos(ctx, dids),
-        (reportIds) => getPermanentReportAssignments(db, reportIds),
         (queueIds) => queueService.getViewsByIds(queueIds),
         (dids) => teamService.viewByDids(dids),
         labelers,
       )
 
       return {
-        encoding: 'application/json' as const,
+        encoding: 'application/json',
         body: {
           report: buildReportView(
             report,

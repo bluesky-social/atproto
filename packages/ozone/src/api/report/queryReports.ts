@@ -1,9 +1,6 @@
 import { AppContext } from '../../context'
 import { Server } from '../../lexicon'
-import {
-  getPermanentReportAssignments,
-  queryReports,
-} from '../../mod-service/report'
+import { queryReports } from '../../mod-service/report'
 import { buildReportView, hydrateReportInfo } from '../../report/views'
 import { getPdsAccountInfos } from '../util'
 
@@ -26,7 +23,6 @@ export default function (server: Server, ctx: AppContext) {
         reportsToReturn,
         modService.views,
         (dids) => getPdsAccountInfos(ctx, dids),
-        (reportIds) => getPermanentReportAssignments(db, reportIds),
         (queueIds) => queueService.getViewsByIds(queueIds),
         (dids) => teamService.viewByDids(dids),
         labelers,

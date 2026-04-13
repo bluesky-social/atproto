@@ -35,6 +35,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
     .addColumn('assignedTo', 'varchar') // DID of permanently assigned moderator
+    .addColumn('assignedAt', 'varchar') // When the permanent assignment was created
     .execute()
 
   // ─── Indexes ───

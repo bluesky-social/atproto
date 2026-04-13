@@ -1,8 +1,5 @@
-import {
-  AtpAgent,
-  COM_ATPROTO_MODERATION,
-  ToolsOzoneQueueDefs,
-} from '@atproto/api'
+import { AtpAgent, COM_ATPROTO_MODERATION } from '@atproto/api'
+import { ConflictingQueueError } from '@atproto/api/dist/client/types/tools/ozone/queue/createQueue'
 import { Database } from '@atproto/bsky'
 import { AtUri, AtUriString } from '@atproto/syntax'
 import { EXAMPLE_LABELER, RecordRef, TestNetwork } from '../index'
@@ -123,12 +120,17 @@ export async function generateMockSetup(env: TestNetwork) {
     subjectTypes: string[]
     reportTypes: string[]
     collection?: string
-  }): Promise<ToolsOzoneQueueDefs.QueueView> => {
-    const { data } = await ozoneAgent.tools.ozone.queue.createQueue(input, {
-      encoding: 'application/json',
-      headers: await adminHeaders('tools.ozone.queue.createQueue'),
-    })
-    return data.queue
+  }): Promise<void> => {
+    try {
+      await ozoneAgent.tools.ozone.queue.createQueue(input, {
+        encoding: 'application/json',
+        headers: await adminHeaders('tools.ozone.queue.createQueue'),
+      })
+    } catch (err) {
+      if (!(err instanceof ConflictingQueueError)) {
+        throw err
+      }
+    }
   }
 
   await Promise.all([

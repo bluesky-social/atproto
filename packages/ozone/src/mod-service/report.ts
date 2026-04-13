@@ -132,7 +132,7 @@ export async function queryReports(
     }
   }
 
-  const reports = await builder
+  const finalQuery = builder
     .selectAll('r')
     .select([
       'me.subjectDid',
@@ -143,7 +143,8 @@ export async function queryReports(
       'me.meta',
     ])
     .limit(limit + 1)
-    .execute()
+
+  const reports = await finalQuery.execute()
 
   let cursor: string | undefined
   const hasMore = reports.length > limit
@@ -196,34 +197,6 @@ export async function getLatestReport(
     .orderBy('r.id', 'desc')
     .limit(1)
     .executeTakeFirst()
-}
-
-export type ActiveReportAssignment = {
-  did: string
-  assignedAt: string
-}
-
-export async function getPermanentReportAssignments(
-  db: Database,
-  reportIds: number[],
-): Promise<Map<number, ActiveReportAssignment>> {
-  if (!reportIds.length) return new Map()
-
-  const rows = await db.db
-    .selectFrom('moderator_assignment')
-    .select(['reportId', 'did', 'startAt'])
-    .where('reportId', 'in', reportIds)
-    .where('endAt', 'is', null)
-    .execute()
-
-  const result = new Map<number, ActiveReportAssignment>()
-  for (const row of rows) {
-    // We already filter by reportId values so reportId will always be non-null, this check is only for ts
-    if (row.reportId !== null) {
-      result.set(row.reportId, { did: row.did, assignedAt: row.startAt })
-    }
-  }
-  return result
 }
 
 export type FindReportsForSubjectParams = {

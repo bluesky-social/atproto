@@ -101,7 +101,7 @@ describe('ozone-queues', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_queues',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)

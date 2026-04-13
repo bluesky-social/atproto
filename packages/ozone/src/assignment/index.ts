@@ -390,10 +390,10 @@ export class AssignmentService {
           }
         }
 
-        // Sync denormalized assignedTo on report table
+        // Sync denormalized assignment fields on report table
         await dbTxn.db
           .updateTable('report')
-          .set({ assignedTo: did })
+          .set({ assignedTo: did, assignedAt: now.toISOString() })
           .where('id', '=', reportId)
           .execute()
 
@@ -511,10 +511,10 @@ export class AssignmentService {
         .returningAll()
         .executeTakeFirstOrThrow()
 
-      // Clear denormalized assignedTo on report table
+      // Clear denormalized assignment fields on report table
       await dbTxn.db
         .updateTable('report')
-        .set({ assignedTo: null })
+        .set({ assignedTo: null, assignedAt: null })
         .where('id', '=', reportId)
         .execute()
 
