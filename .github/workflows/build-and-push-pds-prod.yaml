@@ -1,6 +1,8 @@
 name: build-and-push-pds-prod
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
 
 env:
@@ -101,7 +103,7 @@ jobs:
           CLUSTER: ${{ vars.PDS_CONTROL_PLANE_CLUSTER_ARN }}
           SUBNETS: ${{ vars.PDS_CONTROL_PLANE_SUBNETS }}
           SECURITY_GROUPS: ${{ vars.PDS_CONTROL_PLANE_SECURITY_GROUPS }}
-          IMAGE_TAG: ${{ needs.build.outputs.short_sha }}
+          IMAGE_TAG: ${{ github.event.release.tag_name || needs.build.outputs.short_sha }}
           OPERATION_ID: ${{ github.run_id }}
           ENVIRONMENT: prod
           REGION: eu-central-1

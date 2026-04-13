@@ -3,7 +3,7 @@ name: build-and-push-pds-dev
 on:
   push:
     branches:
-      - feat/configurable-actor-key-directory
+      - main
 
 env:
   IMAGE_NAME: periwinkle/pds
