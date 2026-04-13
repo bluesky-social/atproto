@@ -148,7 +148,9 @@ export class ModerationViews {
       modTool: row.modTool
         ? {
             name: row.modTool.name,
-            meta: row.modTool.meta,
+            meta: sanitizeUnsafeIntegers(row.modTool.meta) as
+              | Record<string, unknown>
+              | undefined,
           }
         : undefined,
     }
@@ -881,4 +883,25 @@ export function getSelfLabels(details: {
   return record.labels.values.map(({ val }) => {
     return { src, uri, cid, val, cts }
   })
+}
+
+// The atproto data model requires all integers to fit within 53 bits
+// (Number.MAX_SAFE_INTEGER). External tools may write larger numbers into
+// "unknown"-typed fields like modTool.meta, which causes lex-json parse
+// failures on the client side. This helper converts unsafe integers to strings.
+function sanitizeUnsafeIntegers(value: unknown): unknown {
+  if (typeof value === 'number') {
+    return Number.isSafeInteger(value) ? value : String(value)
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeUnsafeIntegers)
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = sanitizeUnsafeIntegers(v)
+    }
+    return out
+  }
+  return value
 }
