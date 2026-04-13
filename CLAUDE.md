@@ -21,6 +21,8 @@ pnpm build                       # build all packages (topological order)
 pnpm test                        # run all tests (requires Docker: Postgres 14 + Redis 7)
 pnpm verify                      # lint + typecheck + style check
 pnpm format                      # eslint fix + prettier write
+pnpm prettier --write <file>     # format a specific file before committing
+pnpm run style                   # check all files pass Prettier (CI runs this)
 pnpm codegen                     # regenerate TypeScript from lexicon JSON schemas
 make run-dev-env                 # start local PDS + AppView + Ozone
 ```
@@ -59,7 +61,14 @@ atproto/
 
 ## Code Style
 
-- **Prettier**: no semicolons, single quotes, 2-space indent, trailing commas
+**All committed files must pass `prettier --check .`** — CI will fail otherwise.
+This includes non-code files like CLAUDE.md and JSON configs. Run
+`pnpm prettier --write <file>` before committing any changed file.
+
+- **Prettier**: no semicolons, single quotes, 2-space indent, trailing commas.
+  All committed files (including non-code like CLAUDE.md, JSON) must pass
+  `prettier --check .` — CI will fail otherwise. Run `pnpm prettier --write <file>`
+  before committing
 - **ESLint**: import ordering enforced (`builtin` → `external` → `@atproto` →
   `parent` → `sibling`), `no-var` error, `prefer-const` warn, `eqeqeq` enforced,
   Node protocol imports required (`node:fs`)
