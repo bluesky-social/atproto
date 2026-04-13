@@ -19,15 +19,8 @@ const emitLpathFixups = async (
   }
 }
 
-export type MstDiffOpts = {
-  trackPreorder?: boolean
-}
-
-export const nullDiff = async (
-  tree: MST,
-  opts?: MstDiffOpts,
-): Promise<DataDiff> => {
-  const diff = new DataDiff({ trackPreorder: opts?.trackPreorder })
+export const nullDiff = async (tree: MST): Promise<DataDiff> => {
+  const diff = new DataDiff()
   const treeLayer = await tree.getLayer()
   const walker = new MstWalker(tree, treeLayer)
   while (!walker.status.done) {
@@ -47,15 +40,14 @@ export const nullDiff = async (
 export const mstDiff = async (
   curr: MST,
   prev: MST | null,
-  opts?: MstDiffOpts,
 ): Promise<DataDiff> => {
   await curr.getPointer()
   if (prev === null) {
-    return nullDiff(curr, opts)
+    return nullDiff(curr)
   }
 
   await prev.getPointer()
-  const diff = new DataDiff({ trackPreorder: opts?.trackPreorder })
+  const diff = new DataDiff()
 
   const currLayer = await curr.getLayer()
   const prevLayer = await prev.getLayer()
@@ -131,23 +123,21 @@ export const mstDiff = async (
     // if they're the same, step over. if they're different, step in to find the subdiff
     if (left.isTree() && right.isTree()) {
       if (left.pointer.equals(right.pointer)) {
-        if (diff.trackPreorder) {
-          // Unchanged subtree - but lpath may have changed
-          if (leftWalker.lastLeafKey !== rightWalker.lastLeafKey) {
-            await emitLpathFixups(
-              diff,
-              left,
-              leftWalker.lastLeafKey,
-              rightWalker.lastLeafKey,
-              leftWalker.layer(),
-            )
-          }
-          // Update lastLeafKey to rightmost leaf of skipped subtree
-          const rk = await rightmostLeaf(left)
-          if (rk !== null) {
-            leftWalker.lastLeafKey = rk
-            rightWalker.lastLeafKey = rk
-          }
+        // Unchanged subtree - but lpath may have changed
+        if (leftWalker.lastLeafKey !== rightWalker.lastLeafKey) {
+          await emitLpathFixups(
+            diff,
+            left,
+            leftWalker.lastLeafKey,
+            rightWalker.lastLeafKey,
+            leftWalker.layer(),
+          )
+        }
+        // Update lastLeafKey to rightmost leaf of skipped subtree
+        const rk = await rightmostLeaf(left)
+        if (rk !== null) {
+          leftWalker.lastLeafKey = rk
+          rightWalker.lastLeafKey = rk
         }
         await leftWalker.stepOver()
         await rightWalker.stepOver()

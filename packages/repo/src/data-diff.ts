@@ -1,7 +1,7 @@
 import { Cid } from '@atproto/lex-data'
 import { BlockMap } from './block-map'
 import { CidSet } from './cid-set'
-import { MST, MstDiffOpts, NodeEntry, mstDiff } from './mst'
+import { MST, NodeEntry, mstDiff } from './mst'
 import { PREORDER_MAX_DEPTH, PreorderOp } from './types'
 
 export class DataDiff {
@@ -12,22 +12,10 @@ export class DataDiff {
   newMstBlocks: BlockMap = new BlockMap()
   newLeafCids: CidSet = new CidSet()
   removedCids: CidSet = new CidSet()
-  preorderOps: PreorderOp[] | null
+  preorderOps: PreorderOp[] = []
 
-  constructor(opts?: { trackPreorder?: boolean }) {
-    this.preorderOps = opts?.trackPreorder ? [] : null
-  }
-
-  static async of(
-    curr: MST,
-    prev: MST | null,
-    opts?: MstDiffOpts,
-  ): Promise<DataDiff> {
-    return mstDiff(curr, prev, opts)
-  }
-
-  get trackPreorder(): boolean {
-    return this.preorderOps !== null
+  static async of(curr: MST, prev: MST | null): Promise<DataDiff> {
+    return mstDiff(curr, prev)
   }
 
   async nodeAdd(node: NodeEntry, lpath: string, layer: number) {
@@ -36,7 +24,7 @@ export class DataDiff {
     } else {
       const data = await node.serialize()
       this.treeAdd(data.cid, data.bytes)
-      this.preorderOps?.push({
+      this.preorderOps.push({
         action: 'insert',
         lpath,
         depth: PREORDER_MAX_DEPTH - layer,
@@ -51,7 +39,7 @@ export class DataDiff {
     } else {
       const cid = await node.getPointer()
       this.treeDelete(cid)
-      this.preorderOps?.push({
+      this.preorderOps.push({
         action: 'delete',
         lpath,
         depth: PREORDER_MAX_DEPTH - layer,
@@ -66,7 +54,7 @@ export class DataDiff {
     layer: number,
   ) {
     const depth = PREORDER_MAX_DEPTH - layer
-    this.preorderOps?.push(
+    this.preorderOps.push(
       { action: 'delete', lpath: oldLpath, depth },
       {
         action: 'insert',
@@ -84,7 +72,7 @@ export class DataDiff {
     } else {
       this.newLeafCids.add(cid)
     }
-    this.preorderOps?.push({
+    this.preorderOps.push({
       action: 'insert',
       lpath: key,
       depth: 0,
@@ -97,7 +85,7 @@ export class DataDiff {
     this.updates[key] = { key, prev, cid }
     this.removedCids.add(prev)
     this.newLeafCids.add(cid)
-    this.preorderOps?.push(
+    this.preorderOps.push(
       { action: 'delete', lpath: key, depth: 0 },
       { action: 'insert', lpath: key, depth: 0, cid: cid.toString() },
     )
@@ -110,7 +98,7 @@ export class DataDiff {
     } else {
       this.removedCids.add(cid)
     }
-    this.preorderOps?.push({ action: 'delete', lpath: key, depth: 0 })
+    this.preorderOps.push({ action: 'delete', lpath: key, depth: 0 })
   }
 
   treeAdd(cid: Cid, bytes: Uint8Array) {

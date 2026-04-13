@@ -50,7 +50,7 @@ export class Repo extends ReadableRepo {
       data = await data.add(dataKey, cid)
     }
     const dataCid = await data.getPointer()
-    const diff = await DataDiff.of(data, null, { trackPreorder: true })
+    const diff = await DataDiff.of(data, null)
     newBlocks.addMap(diff.newMstBlocks)
 
     const rev = revOverride ?? TID.nextStr()
@@ -73,7 +73,7 @@ export class Repo extends ReadableRepo {
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids: diff.removedCids,
-      preorderOps: diff.preorderOps ?? undefined,
+      preorderOps: diff.preorderOps,
     }
   }
 
@@ -140,7 +140,7 @@ export class Repo extends ReadableRepo {
     }
 
     const dataCid = await data.getPointer()
-    const diff = await DataDiff.of(data, this.data, { trackPreorder: true })
+    const diff = await DataDiff.of(data, this.data)
     const newBlocks = diff.newMstBlocks
     const removedCids = diff.removedCids
 
@@ -188,7 +188,7 @@ export class Repo extends ReadableRepo {
       newBlocks,
       relevantBlocks,
       removedCids,
-      preorderOps: diff.preorderOps ?? undefined,
+      preorderOps: diff.preorderOps,
     }
   }
 

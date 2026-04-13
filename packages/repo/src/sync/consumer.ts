@@ -68,9 +68,7 @@ export const verifyDiff = async (
     did,
     signingKey,
   )
-  const diff = await DataDiff.of(updated.data, repo?.data ?? null, {
-    trackPreorder: true,
-  })
+  const diff = await DataDiff.of(updated.data, repo?.data ?? null)
   const writes = await util.diffToWriteDescripts(diff)
   const newBlocks = diff.newMstBlocks
   const leaves = updateBlocks.getMany(diff.newLeafCids.toList())
@@ -98,7 +96,7 @@ export const verifyDiff = async (
       newBlocks,
       relevantBlocks: newBlocks,
       removedCids,
-      preorderOps: diff.preorderOps ?? undefined,
+      preorderOps: diff.preorderOps,
     },
   }
 }
