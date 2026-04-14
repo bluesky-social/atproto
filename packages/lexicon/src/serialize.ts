@@ -25,10 +25,18 @@ export type RepoRecord = Record<string, LexValue>
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
-export const lexToIpld = (val: LexValue): IpldValue => {
+const MAX_LEX_DEPTH = 128
+
+export const lexToIpld = (val: LexValue, depth = 0): IpldValue => {
+  if (depth > MAX_LEX_DEPTH) {
+    // Prevent stack overflow on pathologically nested data (e.g. malicious
+    // records with thousands of nested arrays/objects). Values beyond this
+    // depth are dropped to avoid crashing the process.
+    return undefined
+  }
   // walk arrays
   if (Array.isArray(val)) {
-    return val.map((item) => lexToIpld(item))
+    return val.map((item) => lexToIpld(item, depth + 1))
   }
   // objects
   if (val && typeof val === 'object') {
@@ -43,7 +51,7 @@ export const lexToIpld = (val: LexValue): IpldValue => {
     // walk plain objects
     const toReturn = {}
     for (const key of Object.keys(val)) {
-      toReturn[key] = lexToIpld(val[key])
+      toReturn[key] = lexToIpld(val[key], depth + 1)
     }
     return toReturn
   }
