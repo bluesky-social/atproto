@@ -1,4 +1,4 @@
-import { LexParseOptions, lexParseJsonBytes } from '@atproto/lex-json'
+import { LexParseOptions, jsonToLex } from '@atproto/lex-json'
 import {
   InferMethodOutputEncoding,
   InferOutput,
@@ -323,9 +323,9 @@ async function readPayload(
     }
 
     if (options?.parse && encoding === CONTENT_TYPE_JSON) {
-      const arrayBuffer = await response.arrayBuffer()
-      const bytes = new Uint8Array(arrayBuffer)
-      const body = lexParseJsonBytes(bytes, options.parse)
+      // @NOTE See ./response.bench.ts to comparison of different parsing approaches.
+      const json = await response.json()
+      const body = jsonToLex(json, options.parse)
       return { encoding, body }
     }
 

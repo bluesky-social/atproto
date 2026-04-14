@@ -27,6 +27,7 @@
     "dev:tsc": "tsc --build tsconfig.json --preserveWatchOutput --watch",
     "test": "LOG_ENABLED=false ./packages/dev-infra/with-test-redis-and-db.sh pnpm test --stream --recursive",
     "test:withFlags": "pnpm run test --",
+    "bench": "vitest bench --run",
     "changeset": "changeset",
     "release": "pnpm build && changeset publish",
     "version-packages": "changeset version && git add ."
