@@ -1,10 +1,10 @@
 import { sql } from 'kysely'
 import { wait } from '@atproto/common'
-import { ActorStore } from '../../actor-store/actor-store'
+import type { ActorStore } from '../../actor-store/actor-store'
 import { getMigrator } from '../../actor-store/db'
 import { getLatestStoreSchemaVersion } from '../../actor-store/db/migrations'
 import { actorStoreMigrationLogger as logger } from '../../logger'
-import { AccountDb } from '../db'
+import type { AccountDb } from '../db'
 
 export const allActorStoresMigrated = async (
   db: AccountDb,
@@ -55,7 +55,12 @@ export class ActorStoreMigrator {
   ) {}
 
   start() {
-    this.running = this.run()
+    const running = this.run().catch((err) => {
+      logger.error({ err }, 'ActorStoreMigrator crashed')
+      throw err
+    })
+    void running.catch(() => {})
+    this.running = running
   }
 
   async destroy() {
@@ -108,10 +113,13 @@ export class ActorStoreMigrator {
         const actorDb = await this.actorStore.openDb(claimed.did, {
           migrateOnOpen: false,
         })
-        // Calling migrateToLatestOrThrow expliticly lets us skip the concurrency limits and the early-exit if the db is already migrated
-        // The latter is important in the case where the actor store and account db are out-of-sync.
-        await getMigrator(actorDb).migrateToLatestOrThrow()
-        actorDb.close()
+        try {
+          // Calling migrateToLatestOrThrow expliticly lets us skip the concurrency limits and the early-exit if the db is already migrated
+          // The latter is important in the case where the actor store and account db are out-of-sync.
+          await getMigrator(actorDb).migrateToLatestOrThrow()
+        } finally {
+          actorDb.close()
+        }
 
         // record the success
         await this.db.db
