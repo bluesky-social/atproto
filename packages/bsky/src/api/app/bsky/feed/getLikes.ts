@@ -24,12 +24,14 @@ export default function (server: Server, ctx: AppContext) {
   server.add(app.bsky.feed.getLikes, {
     auth: ctx.authVerifier.standardOptional,
     handler: async ({ params, auth, req }) => {
-      const { viewer, includeTakedowns } = ctx.authVerifier.parseCreds(auth)
+      const { viewer, includeTakedowns, skipViewerBlocks } =
+        ctx.authVerifier.parseCreds(auth)
       const labelers = ctx.reqLabelers(req)
       const hydrateCtx = await ctx.hydrator.createContext({
         labelers,
         viewer,
         includeTakedowns,
+        skipViewerBlocks,
       })
       const result = await getLikes({ ...params, hydrateCtx }, ctx)
 

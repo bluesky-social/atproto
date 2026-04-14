@@ -90,7 +90,7 @@ export default function (server: Server, ctx: AppContext) {
               now,
             )
             const recordBlobs = Array.from(
-              enumBlobRefs(parsedRecord, { allowLegacy: true }),
+              enumBlobRefs(parsedRecord, { allowLegacy: true, strict: false }),
             )
             await store.repo.blob.insertBlobs(uri.toString(), recordBlobs)
           }

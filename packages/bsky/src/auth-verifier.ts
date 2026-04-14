@@ -411,6 +411,7 @@ export class AuthVerifier {
       include3pBlocks: includeTakedownsAnd3pBlocks,
       canPerformTakedown,
       isModService,
+      skipViewerBlocks: isModService && viewer !== null,
     }
   }
 }

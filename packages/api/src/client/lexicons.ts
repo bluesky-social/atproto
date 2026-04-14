@@ -871,6 +871,13 @@ export const schemaDict = {
             description: 'An optional embed associated with the status.',
             refs: ['lex:app.bsky.embed.external#view'],
           },
+          labels: {
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:com.atproto.label.defs#label',
+            },
+          },
           expiresAt: {
             type: 'string',
             description:
@@ -2758,8 +2765,10 @@ export const schemaDict = {
         properties: {
           image: {
             type: 'blob',
+            description:
+              'The raw image file. May be up to 2mb, formerly limited to 1mb.',
             accept: ['image/*'],
-            maxSize: 1000000,
+            maxSize: 2000000,
           },
           alt: {
             type: 'string',

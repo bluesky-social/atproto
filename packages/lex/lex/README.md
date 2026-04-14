@@ -194,7 +194,6 @@ Options:
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
-- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
 - `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
@@ -351,7 +350,7 @@ if (result.success) {
 }
 ```
 
-All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, and non-raw CIDs are allowed in blob references. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, non-raw CIDs are allowed in blob references, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
 
 ```typescript
 // Strict mode (default) - rejects datetime without timezone
@@ -611,7 +610,7 @@ const client = new Client(session, {
 
 - **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
 - **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
-- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob references are coerced into standard `BlobRef` objects. Default: `true`.
+- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. Default: `true`.
 
 ### Core Methods
 
@@ -932,8 +931,16 @@ import {
   ifDatetimeString, // Returns DatetimeString or undefined
 
   // Blob references
-  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
-  isBlobRef, // Type guard for BlobRef objects
+  BlobRef, // TypedBlobRef | LegacyBlobRef
+  LegacyBlobRef, // { cid: string, mimeType: string }
+  TypedBlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef (accepts both TypedBlobRef and LegacyBlobRef)
+  isLegacyBlobRef, // Type guard for LegacyBlobRef objects
+  isTypedBlobRef, // Type guard for TypedBlobRef objects
+  getBlobCid, // Extract Cid from BlobRef or LegacyBlobRef
+  getBlobCidString, // Extract CID string from BlobRef or LegacyBlobRef
+  getBlobMime, // Extract MIME type from BlobRef or LegacyBlobRef
+  getBlobSize, // Extract size from BlobRef (returns undefined for LegacyBlobRef)
 
   // Equality
   lexEquals, // Deep equality (handles CIDs and bytes)
@@ -1035,37 +1042,96 @@ This will make the generated code more easily tree-shakeable from places that im
 
 ### Blob references
 
-In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+In AT Protocol, binary data (blobs) are referenced using blob references, which include metadata like MIME type and size. These references allow PDSs to determine which binary data ("files") is referenced by records.
+
+#### TypedBlobRef: The Current Standard
+
+The current standard format for blob references is `TypedBlobRef`:
 
 ```typescript
-import { BlobRef, isBlobRef } from '@atproto/lex'
+import { TypedBlobRef } from '@atproto/lex'
 
-const blobRef: BlobRef = {
+const blobRef: TypedBlobRef = {
   $type: 'blob',
   ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
   mimeType: 'image/png',
   size: 12345,
 }
+```
 
-if (isBlobRef(blobRef)) {
-  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+**When creating new blobs**, always use the `TypedBlobRef` format. This is the format returned by `client.uploadBlob()` and expected by PDS endpoints.
+
+#### LegacyBlobRef: Historical Format
+
+Historically, blob references used a simpler format without the `$type` property:
+
+```typescript
+type LegacyBlobRef = {
+  cid: string // CID as a string (not a Cid object)
+  mimeType: string // No size property
 }
 ```
 
-> [!NOTE]
+**Legacy blob references still exist in the AT Protocol network** in older records created before the format migration. While new blobs should always be created as `TypedBlobRef`, your code must be prepared to handle both formats when reading existing data.
+
+#### Working with Both Formats
+
+The `BlobRef` type is a union that accepts both formats:
+
+```typescript
+import {
+  BlobRef,
+  isBlobRef,
+  isTypedBlobRef,
+  isLegacyBlobRef,
+} from '@atproto/lex'
+
+// When reading data, always use BlobRef to handle both formats
+function processBlobRef(blob: BlobRef) {
+  if (isTypedBlobRef(blob)) {
+    console.log('Modern blob:', blob.ref, blob.mimeType, blob.size)
+  } else if (isLegacyBlobRef(blob)) {
+    console.log('Legacy blob:', blob.cid, blob.mimeType)
+  }
+}
+
+// Or use the isBlobRef type guard which accepts both
+if (isBlobRef(value)) {
+  // value is BlobRef (either TypedBlobRef or LegacyBlobRef)
+}
+```
+
+Helper functions work with both formats:
+
+```typescript
+import {
+  getBlobCid,
+  getBlobCidString,
+  getBlobMime,
+  getBlobSize,
+} from '@atproto/lex'
+
+// These utilities work with both TypedBlobRef and LegacyBlobRef
+const cid = getBlobCid(blobRef) // Returns Cid object
+const cidStr = getBlobCidString(blobRef) // Returns string (optimized)
+const mime = getBlobMime(blobRef) // Returns mimeType
+const size = getBlobSize(blobRef) // Returns number | undefined (legacy refs lack size)
+```
+
+> [!IMPORTANT]
 >
-> Historically, references to blobs were represented as simple objects with the following structure:
+> **Validation behavior with legacy blobs:**
+>
+> - In **strict mode** (`strict: true`, the default): Legacy blob references are rejected during validation. Use this mode when you control the data source and expect only modern blobs.
+> - In **non-strict mode** (`strict: false`): Legacy blob references are accepted. This mode is used automatically when `strictResponseProcessing: false` is set on the Client, allowing your application to handle older records from the network gracefully.
 >
 > ```typescript
-> type LegacyBlobRef = {
->   cid: string
->   mimeType: string
-> }
+> // Strict mode (default) - rejects legacy blobs
+> schema.$safeParse(data) // { strict: true }
+>
+> // Non-strict mode - accepts legacy blobs
+> schema.$safeParse(data, { strict: false })
 > ```
->
-> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
->
-> When using non-strict validation (e.g. `$safeParse(data, { strict: false })`), legacy blob references are automatically coerced into standard `BlobRef` objects with `size: -1`, even without `--allowLegacyBlobs`.
 
 ### Actions
 

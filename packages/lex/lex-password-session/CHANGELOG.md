@@ -1,5 +1,13 @@
 # @atproto/lex-password-session
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [[`b6b231f`](https://github.com/bluesky-social/atproto/commit/b6b231f9c05cf90239d4a29aa0ae2592ea5ce928), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0)]:
+  - @atproto/lex-client@0.0.19
+  - @atproto/lex-schema@0.0.18
+
 ## 0.0.11
 
 ### Patch Changes

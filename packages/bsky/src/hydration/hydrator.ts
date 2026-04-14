@@ -85,6 +85,7 @@ export class HydrateCtx {
   includeTakedowns = this.vals.includeTakedowns
   overrideIncludeTakedownsForActor = this.vals.overrideIncludeTakedownsForActor
   include3pBlocks = this.vals.include3pBlocks
+  skipViewerBlocks = this.vals.skipViewerBlocks
   includeDebugField = this.vals.includeDebugField
   features = this.vals.features
   constructor(private vals: HydrateCtxVals) {}
@@ -98,12 +99,15 @@ export class HydrateCtx {
   }
 }
 
+export type HydrateCtxWithViewer = HydrateCtx & { viewer: string }
+
 export type HydrateCtxVals = {
   labelers: ParsedLabelers
   viewer: DidString | null
   includeTakedowns?: boolean
   overrideIncludeTakedownsForActor?: boolean
   include3pBlocks?: boolean
+  skipViewerBlocks?: boolean
   includeDebugField?: boolean
   features: ScopedFeatureGatesClient
 }
@@ -1357,6 +1361,7 @@ export class Hydrator {
       viewer: vals.viewer,
       includeTakedowns: vals.includeTakedowns,
       include3pBlocks: vals.include3pBlocks,
+      skipViewerBlocks: vals.skipViewerBlocks,
       includeDebugField,
       // create default anonymous scope
       features: vals.features || this.config.featureGatesClient.scope({}),
@@ -1424,6 +1429,9 @@ const labelSubjectsForDid = (dids: DidString[]) => {
     ...dids,
     ...dids.map((did) =>
       AtUri.make(did, app.bsky.actor.profile.$type, 'self').toString(),
+    ),
+    ...dids.map((did) =>
+      AtUri.make(did, app.bsky.actor.status.$type, 'self').toString(),
     ),
   ]
 }

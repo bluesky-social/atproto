@@ -1,5 +1,5 @@
 import { Selectable } from 'kysely'
-import { Cid } from '@atproto/lex'
+import { Cid, getBlobCidString } from '@atproto/lex'
 import { AtUri, normalizeDatetimeAlways } from '@atproto/syntax'
 import { app } from '../../../../lexicons'
 import { BackgroundQueue } from '../../background'
@@ -28,7 +28,7 @@ const insertFn = async (
       descriptionFacets: obj.descriptionFacets
         ? JSON.stringify(obj.descriptionFacets)
         : undefined,
-      avatarCid: obj.avatar?.ref.toString(),
+      avatarCid: getBlobCidString(obj.avatar),
       createdAt: normalizeDatetimeAlways(obj.createdAt),
       indexedAt: timestamp,
     })
