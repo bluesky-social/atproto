@@ -23,7 +23,7 @@ import {
  *   new IssueInvalidType(['user', 'age'], 'hello', ['number'])
  * ])
  * console.log(error.message)
- * // "Expected number value type at $.user.age (got string)"
+ * // "Expected integer value type (got "some-string") at $.user.age"
  *
  * console.log(error.issues.length) // 1
  * console.log(error.toJSON())
@@ -46,7 +46,7 @@ export class LexValidationError
    * Issues are aggregated when possible (e.g., multiple invalid type issues
    * at the same path are combined into a single issue listing all expected types).
    */
-  readonly issues: Issue[]
+  readonly issues: readonly Issue[]
 
   /**
    * Creates a new validation error from a list of issues.

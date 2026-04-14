@@ -1,3 +1,5 @@
+import { Result, failure, success } from './lib/result.js'
+
 /*
 Grammar:
 
@@ -81,71 +83,42 @@ export function isValidNsid<I extends string>(
   return validateNsidRegex(input).success
 }
 
-type ValidateResult<T> =
-  | { success: true; value: T }
-  | { success: false; message: string }
-
 // Human readable constraints on NSID:
 // - a valid domain in reversed notation
 // - followed by an additional period-separated name, which is camel-case letters
-export function validateNsid(input: string): ValidateResult<string[]> {
+export function validateNsid(input: string): Result<string[]> {
   if (input.length > 253 + 1 + 63) {
-    return {
-      success: false,
-      message: 'NSID is too long (317 chars max)',
-    }
+    return failure('NSID is too long (317 chars max)')
   }
   if (hasDisallowedCharacters(input)) {
-    return {
-      success: false,
-      message:
-        'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
-    }
+    return failure(
+      'Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)',
+    )
   }
   const segments = input.split('.')
   if (segments.length < 3) {
-    return {
-      success: false,
-      message: 'NSID needs at least three parts',
-    }
+    return failure('NSID needs at least three parts')
   }
   for (const l of segments) {
     if (l.length < 1) {
-      return {
-        success: false,
-        message: 'NSID parts can not be empty',
-      }
+      return failure('NSID parts can not be empty')
     }
     if (l.length > 63) {
-      return {
-        success: false,
-        message: 'NSID part too long (max 63 chars)',
-      }
+      return failure('NSID part too long (max 63 chars)')
     }
     if (startsWithHyphen(l) || endsWithHyphen(l)) {
-      return {
-        success: false,
-        message: 'NSID parts can not start or end with hyphen',
-      }
+      return failure('NSID parts can not start or end with hyphen')
     }
   }
   if (startsWithNumber(segments[0])) {
-    return {
-      success: false,
-      message: 'NSID first part may not start with a digit',
-    }
+    return failure('NSID first part may not start with a digit')
   }
   if (!isValidIdentifier(segments[segments.length - 1])) {
-    return {
-      success: false,
-      message:
-        'NSID name part must be only letters and digits (and no leading digit)',
-    }
+    return failure(
+      'NSID name part must be only letters and digits (and no leading digit)',
+    )
   }
-  return {
-    success: true,
-    value: segments,
-  }
+  return success(segments)
 }
 
 function hasDisallowedCharacters(v: string) {
@@ -188,12 +161,9 @@ export function ensureValidNsidRegex(nsid: string): asserts nsid is NsidString {
  * Regexp based validation that behaves identically to the previous code but
  * provides less detailed error messages (while being 20% to 50% faster).
  */
-export function validateNsidRegex(value: string): ValidateResult<NsidString> {
+export function validateNsidRegex(value: string): Result<NsidString> {
   if (value.length > 253 + 1 + 63) {
-    return {
-      success: false,
-      message: 'NSID is too long (317 chars max)',
-    }
+    return failure('NSID is too long (317 chars max)')
   }
 
   if (
@@ -203,16 +173,10 @@ export function validateNsidRegex(value: string): ValidateResult<NsidString> {
       value,
     )
   ) {
-    return {
-      success: false,
-      message: "NSID didn't validate via regex",
-    }
+    return failure("NSID didn't validate via regex")
   }
 
-  return {
-    success: true,
-    value: value as NsidString,
-  }
+  return success(value as NsidString)
 }
 
 export class InvalidNsidError extends Error {}

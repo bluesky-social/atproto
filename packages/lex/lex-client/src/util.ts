@@ -1,32 +1,23 @@
-import {
-  DidString,
-  InferMethodOutput,
-  InferMethodOutputBody,
-  Procedure,
-  Query,
-} from '@atproto/lex-schema'
+import type { DidString, Service } from './types.js'
 
-/**
- * The body type of an XRPC response, inferred from the method's output schema.
- *
- * For JSON responses, this is the parsed LexValue. For binary responses,
- * this is a Uint8Array.
- *
- * @typeParam M - The XRPC method type (Procedure or Query)
- */
-export type XrpcResponseBody<M extends Procedure | Query = Procedure | Query> =
-  InferMethodOutputBody<M, Uint8Array>
+export function applyDefaults<
+  TDefaults extends Record<string, unknown>,
+  TOptions extends {
+    [K in keyof TDefaults]?: TDefaults[K]
+  },
+>(options: TOptions, defaults: TDefaults): TOptions & TDefaults {
+  const combined: Partial<TDefaults> = { ...options }
 
-/**
- * The full payload type of an XRPC response, including body and encoding.
- *
- * Returns `null` for methods that have no output.
- *
- * @typeParam M - The XRPC method type (Procedure or Query)
- */
-export type XrpcResponsePayload<
-  M extends Procedure | Query = Procedure | Query,
-> = InferMethodOutput<M, Uint8Array>
+  // @NOTE We make sure that options with an explicit `undefined` value get the
+  // default, since spreading doesn't override with `undefined`.
+  for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
+    if (options[key] === undefined) {
+      combined[key] = defaults[key]
+    }
+  }
+
+  return combined as TOptions & TDefaults
+}
 
 /**
  * Type guard to check if a value is {@link Blob}-like.
@@ -64,6 +55,17 @@ export function isAsyncIterable<T>(
   )
 }
 
+export type XrpcRequestHeadersOptions = {
+  /** Additional HTTP headers to include in the request. */
+  headers?: HeadersInit
+
+  /** Labeler DIDs to request labels from for content moderation. */
+  labelers?: Iterable<DidString>
+
+  /** Service proxy identifier for routing requests through a specific service. */
+  service?: Service
+}
+
 /**
  * Builds HTTP headers for AT Protocol requests.
  *
@@ -71,17 +73,12 @@ export function isAsyncIterable<T>(
  * - `atproto-proxy`: Service routing header (if service is specified)
  * - `atproto-accept-labelers`: Comma-separated list of labeler DIDs
  *
- * @param options - Header building options
- * @param options.headers - Base headers to include
- * @param options.service - Service proxy identifier
- * @param options.labelers - Labeler DIDs to request labels from
+ * @see {@link XrpcRequestHeadersOptions}
  * @returns A new Headers object with AT Protocol headers added
  */
-export function buildAtprotoHeaders(options: {
-  headers?: HeadersInit
-  service?: `${DidString}#${string}`
-  labelers?: Iterable<DidString>
-}): Headers {
+export function buildXrpcRequestHeaders(
+  options: XrpcRequestHeadersOptions,
+): Headers {
   const headers = new Headers(options?.headers)
 
   if (options.service && !headers.has('atproto-proxy')) {

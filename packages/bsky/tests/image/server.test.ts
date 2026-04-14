@@ -1,14 +1,14 @@
 import { Readable } from 'node:stream'
-import { CID } from 'multiformats/cid'
 import { cidForCbor } from '@atproto/common'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
+import { Cid } from '@atproto/lex'
 import { getInfo } from '../../src/image/sharp'
 import { ImageUriBuilder } from '../../src/image/uri'
 
 describe('image processing server', () => {
   let network: TestNetwork
   let fileDid: string
-  let fileCid: CID
+  let fileCid: Cid
 
   beforeAll(async () => {
     network = await TestNetwork.create({
@@ -43,14 +43,14 @@ describe('image processing server', () => {
     expect(info).toEqual({
       height: 580,
       width: 1000,
-      mime: 'image/jpeg',
-      size: 127578,
+      mime: 'image/webp',
+      size: 46594,
     })
     expect(Object.fromEntries(res.headers)).toEqual(
       expect.objectContaining({
-        'content-type': 'image/jpeg',
+        'content-type': 'image/webp',
         'cache-control': 'public, max-age=31536000',
-        'content-length': '127578',
+        'content-length': '46594',
       }),
     )
   })

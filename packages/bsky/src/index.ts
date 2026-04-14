@@ -6,10 +6,11 @@ import cors from 'cors'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { HttpTerminator, createHttpTerminator } from 'http-terminator'
-import { AtpAgent } from '@atproto/api'
 import { DAY, SECOND } from '@atproto/common'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client } from '@atproto/lex'
+import { createServer } from '@atproto/xrpc-server'
 import API, { blobResolver, external, health, sitemap, wellKnown } from './api'
 import { createBlobDispatcher } from './api/blob-dispatcher'
 import { AuthVerifier, createPublicKeyObject } from './auth-verifier'
@@ -23,12 +24,11 @@ import {
   createDataPlaneClient,
 } from './data-plane/client'
 import * as error from './error'
-import { FeatureGatesClient } from './feature-gates'
+import { FeatureGatesClient } from './feature-gates/index'
 import { Hydrator } from './hydration/hydrator'
 import * as imageServer from './image/server'
 import { ImageUriBuilder } from './image/uri'
 import { createKwsClient } from './kws'
-import { createServer } from './lexicon'
 import { loggerMiddleware } from './logger'
 import { authWithApiKey as rolodexAuth, createRolodexClient } from './rolodex'
 import { createStashClient } from './stash'
@@ -70,9 +70,14 @@ export class BskyAppView {
       plcUrl: config.didPlcUrl,
       backupNameservers: config.handleResolveNameservers,
     })
-    const imgUriBuilder = new ImageUriBuilder(
-      config.cdnUrl || `${config.publicUrl}/img`,
-    )
+
+    const imgUriBuilderUrl =
+      config.cdnUrl ||
+      (config.publicUrl ? `${config.publicUrl}/img` : undefined)
+    if (!imgUriBuilderUrl) {
+      throw new Error('No image URI builder URL could be determined')
+    }
+    const imgUriBuilder = new ImageUriBuilder(imgUriBuilderUrl)
     const videoUriBuilder = new VideoUriBuilder({
       playlistUrlPattern:
         config.videoPlaylistUrlPattern ||
@@ -82,29 +87,50 @@ export class BskyAppView {
         `${config.publicUrl}/vid/%s/%s/thumbnail.jpg`,
     })
 
-    const searchAgent = config.searchUrl
-      ? new AtpAgent({ service: config.searchUrl })
+    const searchClient = config.searchUrl
+      ? new Client(
+          {
+            service: config.searchUrl,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
       : undefined
 
-    const suggestionsAgent = config.suggestionsUrl
-      ? new AtpAgent({ service: config.suggestionsUrl })
+    const suggestionsClient = config.suggestionsUrl
+      ? new Client(
+          {
+            service: config.suggestionsUrl,
+            headers: config.suggestionsApiKey
+              ? { authorization: `Bearer ${config.suggestionsApiKey}` }
+              : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
       : undefined
-    if (suggestionsAgent && config.suggestionsApiKey) {
-      suggestionsAgent.api.setHeader(
-        'authorization',
-        `Bearer ${config.suggestionsApiKey}`,
-      )
-    }
 
-    const topicsAgent = config.topicsUrl
-      ? new AtpAgent({ service: config.topicsUrl })
+    const topicsClient = config.topicsUrl
+      ? new Client(
+          {
+            service: config.topicsUrl,
+            headers: config.topicsApiKey
+              ? { authorization: `Bearer ${config.topicsApiKey}` }
+              : undefined,
+          },
+          {
+            // Trust internal services to send us well-formed responses
+            strictResponseProcessing: false,
+            validateResponse: config.debugMode,
+          },
+        )
       : undefined
-    if (topicsAgent && config.topicsApiKey) {
-      topicsAgent.api.setHeader(
-        'authorization',
-        `Bearer ${config.topicsApiKey}`,
-      )
-    }
 
     const etcd = config.etcdHosts.length
       ? new Etcd3({ hosts: config.etcdHosts })
@@ -129,14 +155,10 @@ export class BskyAppView {
       httpVersion: config.dataplaneHttpVersion,
       rejectUnauthorized: !config.dataplaneIgnoreBadTls,
     })
-    const hydrator = new Hydrator(
-      dataplane,
-      config.labelsFromIssuerDids,
-      {
-        debugFieldAllowedDids: config.debugFieldAllowedDids,
-      },
+    const hydrator = new Hydrator(dataplane, config.labelsFromIssuerDids, {
+      debugFieldAllowedDids: config.debugFieldAllowedDids,
       featureGatesClient,
-    )
+    })
     const views = new Views({
       imgUriBuilder: imgUriBuilder,
       videoUriBuilder: videoUriBuilder,
@@ -198,9 +220,9 @@ export class BskyAppView {
       etcd,
       dataplane,
       dataplaneHostList,
-      searchAgent,
-      suggestionsAgent,
-      topicsAgent,
+      searchClient,
+      suggestionsClient,
+      topicsClient,
       hydrator,
       views,
       signingKey,
@@ -215,7 +237,7 @@ export class BskyAppView {
       kwsClient,
     })
 
-    let server = createServer({
+    const server = createServer([], {
       validateResponse: config.debugMode,
       payload: {
         jsonLimit: 100 * 1024, // 100kb
@@ -224,7 +246,7 @@ export class BskyAppView {
       },
     })
 
-    server = API(server, ctx)
+    API(server, ctx)
 
     app.use(health.createRouter(ctx))
     app.use(wellKnown.createRouter(ctx))
@@ -235,7 +257,7 @@ export class BskyAppView {
       app.use(sitemap.createRouter(ctx))
     }
 
-    app.use(server.xrpc.router)
+    app.use(server.router)
     app.use(error.handler)
     app.use('/external', external.createRouter(ctx))
 

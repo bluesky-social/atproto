@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
-import { JSX, ReactNode, useState } from 'react'
-import { Override } from '../../lib/util.ts'
+import { JSX, KeyboardEvent, MouseEvent, ReactNode, useState } from 'react'
+import { Override } from '#/lib/util.ts'
 
 export type InputContainerProps = Override<
   JSX.IntrinsicElements['div'],
@@ -9,6 +9,10 @@ export type InputContainerProps = Override<
     append?: ReactNode
     bellow?: ReactNode
     actionable?: boolean
+    transparent?: boolean
+    onAction?: (
+      event: KeyboardEvent<HTMLDivElement> | MouseEvent<HTMLDivElement>,
+    ) => void
   }
 >
 
@@ -17,17 +21,23 @@ export function InputContainer({
   append,
   bellow,
   actionable,
+  transparent,
+  onAction,
 
   // div
   className,
   children,
   onFocus,
   onBlur,
+  onClick,
+  onKeyDown,
+  tabIndex,
   ...props
 }: InputContainerProps) {
   const [hasFocus, setHasFocus] = useState(false)
 
-  actionable ??= props.onClick != null
+  actionable ??= onAction != null || onClick != null
+  tabIndex ??= actionable ? 0 : -1
 
   return (
     <div
@@ -40,6 +50,25 @@ export function InputContainer({
         onBlur?.(event)
         if (!event.defaultPrevented) setHasFocus(false)
       }}
+      onKeyDown={(event) => {
+        onKeyDown?.(event)
+        if (
+          onAction &&
+          !event.defaultPrevented &&
+          event.target === event.currentTarget &&
+          (event.key === 'Enter' || event.key === ' ')
+        ) {
+          onAction?.(event)
+        }
+      }}
+      onClick={(event) => {
+        onClick?.(event)
+        if (onAction && !event.defaultPrevented) {
+          onAction?.(event)
+        }
+      }}
+      tabIndex={tabIndex}
+      role={actionable ? 'button' : undefined}
       className={clsx(
         // Layout
         'min-h-12',
@@ -53,14 +82,23 @@ export function InputContainer({
 
         // Outline
         'outline-none',
-        'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-        'has-focus:ring-primary has-focus:ring-2 has-focus:ring-offset-1 has-focus:ring-offset-white dark:has-focus:ring-offset-black',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-primary',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-2',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-1',
+        'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-white',
+        'dark:has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-black',
+        tabIndex !== -1 && [
+          'cursor-pointer',
+          'focus:ring-primary',
+          'focus:ring-2',
+          'focus:ring-offset-1',
+          'focus:ring-offset-white',
+          'dark:focus:ring-offset-black',
+        ],
 
         // Background
-        'bg-gray-100 dark:bg-gray-800',
-        actionable
-          ? 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700'
-          : undefined,
+        transparent ? 'bg-transparent' : 'bg-gray-100 dark:bg-gray-800',
+        tabIndex !== -1 && 'hover:bg-gray-200 dark:hover:bg-gray-700',
 
         className,
       )}
@@ -76,7 +114,7 @@ export function InputContainer({
           bellow ? 'rounded-bl-none rounded-br-none' : undefined,
 
           // Font
-          'text-slate-600 dark:text-slate-300',
+          'text-text-default',
         )}
       >
         {icon && (
@@ -84,7 +122,7 @@ export function InputContainer({
             className={clsx(
               'flex shrink-0 grow-0 items-center justify-center',
               'mx-2',
-              hasFocus ? 'text-primary' : 'text-slate-500',
+              hasFocus ? 'text-primary' : 'text-text-light',
             )}
           >
             {icon}
@@ -106,7 +144,7 @@ export function InputContainer({
             // Background
             'bg-gray-200 dark:bg-slate-700',
             // Font
-            'text-gray-700 dark:text-gray-300',
+            'text-text-light',
             'text-sm italic',
           )}
         >

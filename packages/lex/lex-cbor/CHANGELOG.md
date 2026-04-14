@@ -1,5 +1,19 @@
 # @atproto/lex-cbor
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex-data@0.0.15
+
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [[`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786)]:
+  - @atproto/lex-data@0.0.14
+
 ## 0.0.14
 
 ### Patch Changes

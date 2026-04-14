@@ -1,5 +1,37 @@
 # @atproto/lex-builder
 
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex-schema@0.0.18
+  - @atproto/lex-document@0.0.19
+
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies [[`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`c4df84c`](https://github.com/bluesky-social/atproto/commit/c4df84cd78df68ee8cb7289e7b61b3a032ad484e), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809), [`e5e5bcf`](https://github.com/bluesky-social/atproto/commit/e5e5bcf85fbc0d418f05724d684e7265be6a0be9), [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138), [`c5c6c7d`](https://github.com/bluesky-social/atproto/commit/c5c6c7dac3b08e5f63cc918f57705573028ad797)]:
+  - @atproto/lex-schema@0.0.17
+  - @atproto/lex-document@0.0.18
+
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies [[`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786)]:
+  - @atproto/lex-schema@0.0.16
+  - @atproto/lex-document@0.0.17
+
+## 0.0.18
+
+### Patch Changes
+
+- Updated dependencies [[`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`112b159`](https://github.com/bluesky-social/atproto/commit/112b159ec293a5c3fff41237474a3788fc47f9ca), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe), [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe)]:
+  - @atproto/lex-schema@0.0.15
+  - @atproto/lex-document@0.0.16
+
 ## 0.0.17
 
 ### Patch Changes
