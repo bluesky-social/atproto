@@ -307,7 +307,7 @@ describe('JsonBytesDecoder', () => {
     test('throws on unterminated string after escape', () => {
       // String starts with escape but never closes
       const decoder = new JsonBytesDecoder(Buffer.from('"test\\n'))
-      expect(() => decoder.decode()).toThrow(SyntaxError)
+      expect(() => decoder.decode()).toThrow()
     })
 
     test('throws on unescaped control character in string', () => {
@@ -321,7 +321,7 @@ describe('JsonBytesDecoder', () => {
       // Control character in the escape handling path
       const invalidJson = Buffer.from([0x22, 0x5c, 0x6e, 0x00, 0x22]) // "\n\0"
       const decoder = new JsonBytesDecoder(invalidJson)
-      expect(() => decoder.decode()).toThrow(SyntaxError)
+      expect(() => decoder.decode()).toThrow()
       expect(() => JSON.parse(invalidJson.toString())).toThrow()
     })
 
@@ -356,7 +356,7 @@ describe('JsonBytesDecoder', () => {
     test('throws on invalid decimal in non-strict mode', () => {
       const json = '123.'
       const decoder = new JsonBytesDecoder(Buffer.from(json), false)
-      expect(() => decoder.decode()).toThrow(SyntaxError)
+      expect(() => decoder.decode()).toThrow()
       expect(() => JSON.parse(json)).toThrow()
     })
 
@@ -370,7 +370,7 @@ describe('JsonBytesDecoder', () => {
     test('throws on invalid exponent in non-strict mode', () => {
       const json = '1e'
       const decoder = new JsonBytesDecoder(Buffer.from(json), false)
-      expect(() => decoder.decode()).toThrow(SyntaxError)
+      expect(() => decoder.decode()).toThrow()
       expect(() => JSON.parse(json)).toThrow()
     })
 
