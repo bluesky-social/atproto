@@ -158,4 +158,8 @@ export interface BskyPreferences {
   }
   postInteractionSettings: AppBskyActorDefs.PostInteractionSettingsPref
   verificationPrefs: AppBskyActorDefs.VerificationPrefs
+  liveEventPreferences: {
+    hiddenFeedIds: string[]
+    hideAllFeeds: boolean
+  }
 }

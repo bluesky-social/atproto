@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parseCid } from '@atproto/lex-data'
-import { CidSchema } from './cid.js'
+import { cid } from './cid.js'
 
 const cborCid = parseCid(
   'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
@@ -26,7 +26,7 @@ const sha512Cid = parseCid(
 
 describe('CidSchema', () => {
   describe('default mode (non-strict)', () => {
-    const schema = new CidSchema({})
+    const schema = cid({})
 
     it('validates CID v1 with DAG-CBOR codec and SHA-256', () => {
       const result = schema.safeParse(cborCid)
@@ -80,7 +80,7 @@ describe('CidSchema', () => {
   })
 
   describe('strict mode', () => {
-    const schema = new CidSchema({ flavor: 'dasl' })
+    const schema = cid({ flavor: 'dasl' })
 
     it('validates CID v1 with DAG-CBOR codec and SHA-256', () => {
       const result = schema.safeParse(cborCid)

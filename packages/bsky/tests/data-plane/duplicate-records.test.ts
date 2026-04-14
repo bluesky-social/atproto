@@ -1,10 +1,8 @@
-/* eslint-disable import/no-deprecated */
-
+import { ids } from '@atproto/api'
 import { TID, cidForCbor } from '@atproto/common'
 import { TestNetwork } from '@atproto/dev-env'
 import { WriteOpAction } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
-import * as lex from '../../src/lexicon/lexicons'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -35,9 +33,9 @@ describe('duplicate record', () => {
   }
 
   it('dedupes reposts', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedRepost
+    const coll = ids.AppBskyFeedRepost
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
       const repost = {
@@ -75,9 +73,9 @@ describe('duplicate record', () => {
   })
 
   it('dedupes like', async () => {
-    const subject = AtUri.make(did, lex.ids.AppBskyFeedPost, TID.nextStr())
+    const subject = AtUri.make(did, ids.AppBskyFeedPost, TID.nextStr())
     const subjectCid = await cidForCbor({ test: 'blah' })
-    const coll = lex.ids.AppBskyFeedLike
+    const coll = ids.AppBskyFeedLike
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
       const like = {
@@ -121,7 +119,7 @@ describe('duplicate record', () => {
   })
 
   it('dedupes follows', async () => {
-    const coll = lex.ids.AppBskyGraphFollow
+    const coll = ids.AppBskyGraphFollow
     const uris: AtUri[] = []
     for (let i = 0; i < 5; i++) {
       const follow = {

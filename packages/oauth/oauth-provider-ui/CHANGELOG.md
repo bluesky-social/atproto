@@ -1,5 +1,17 @@
 # @atproto/oauth-provider-ui
 
+## 0.4.3
+
+### Patch Changes
+
+- [#4619](https://github.com/bluesky-social/atproto/pull/4619) [`a2e4e95`](https://github.com/bluesky-social/atproto/commit/a2e4e9584730c1742aca7c1fcc59533a7c159740) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix depencies version
+
+- [#4607](https://github.com/bluesky-social/atproto/pull/4607) [`19ecf5f`](https://github.com/bluesky-social/atproto/commit/19ecf5f76ae0d88c1963211a76920e00eecdd965) Thanks [@mozzius](https://github.com/mozzius)! - Fix avatar shape in OAuth UI
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add console error logging upon client-side API request errors
+
+## 0.4.2
+
 ## 0.4.1
 
 ## 0.4.0

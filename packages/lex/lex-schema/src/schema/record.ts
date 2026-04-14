@@ -1,79 +1,121 @@
+import { LexMap } from '@atproto/lex-data'
 import {
   $Typed,
-  Infer,
+  $typed,
+  InferInput,
+  InferOutput,
   LexiconRecordKey,
   NsidString,
   Schema,
   TidString,
-  ValidationResult,
+  Unknown$TypedObject,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
-import { LiteralSchema } from './literal.js'
-import { StringSchema } from './string.js'
-import { TypedObject } from './typed-union.js'
+import { lazyProperty } from '../util/lazy-property.js'
+import { literal } from './literal.js'
+import { string } from './string.js'
 
+/**
+ * Infers the record key type from a RecordSchema.
+ *
+ * @template R - The RecordSchema type
+ */
 export type InferRecordKey<R extends RecordSchema> =
-  R extends RecordSchema<infer K> ? RecordKeySchemaOutput<K> : never
+  R extends RecordSchema<infer TKey> ? RecordKeySchemaOutput<TKey> : never
 
-export type RecordSchemaOutput<
-  T extends NsidString,
-  S extends Validator<{ [k: string]: unknown }>,
-> = $Typed<Infer<S>, T>
+export type TypedRecord<
+  TType extends NsidString,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = TValue extends { $type: TType }
+  ? TValue
+  : $Typed<Exclude<TValue, Unknown$TypedObject>, TType>
 
+/**
+ * Schema for AT Protocol records with a type identifier and key constraints.
+ *
+ * Records are the primary data unit in AT Protocol. Each record has a `$type`
+ * field identifying its Lexicon schema, and is stored at a specific key
+ * (TID, NSID, or other format) in a repository.
+ *
+ * @template TKey - The record key type ('tid', 'nsid', 'any', or 'literal:...')
+ * @template TType - The NSID string identifying this record type
+ * @template TShape - The validator type for the record's data shape
+ *
+ * @example
+ * ```ts
+ * const postSchema = new RecordSchema(
+ *   'tid',
+ *   'app.bsky.feed.post',
+ *   l.object({ text: l.string(), createdAt: l.string() })
+ * )
+ * ```
+ */
 export class RecordSchema<
-  K extends LexiconRecordKey = any,
-  T extends NsidString = any,
-  S extends Validator<{ [k: string]: unknown }> = any,
-> extends Schema<RecordSchemaOutput<T, S>> {
-  keySchema: RecordKeySchema<K>
+  const TKey extends LexiconRecordKey = LexiconRecordKey,
+  const TType extends NsidString = NsidString,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
+> extends Schema<
+  $Typed<InferInput<TShape>, TType>,
+  $Typed<InferOutput<TShape>, TType>
+> {
+  readonly type = 'record' as const
+
+  keySchema: RecordKeySchema<TKey>
 
   constructor(
-    readonly key: K,
-    readonly $type: T,
-    readonly schema: S,
+    readonly key: TKey,
+    readonly $type: TType,
+    readonly schema: TShape,
   ) {
     super()
     this.keySchema = recordKey(key)
   }
 
-  isTypeOf<X extends { $type?: unknown }>(
-    value: X,
-  ): value is Exclude<X extends { $type: T } ? X : $Typed<X, T>, TypedObject> {
-    return value.$type === this.$type
-  }
-
-  build<X extends Omit<Infer<S>, '$type'>>(
-    input: X,
-  ): $Typed<Omit<X, '$type'>, T> {
-    return input.$type === this.$type
-      ? (input as $Typed<X, T>)
-      : { ...input, $type: this.$type }
-  }
-
-  $isTypeOf<X extends { $type?: unknown }>(value: X) {
-    return this.isTypeOf<X>(value)
-  }
-
-  $build<X extends Omit<Infer<S>, '$type'>>(input: X) {
-    return this.build<X>(input)
-  }
-
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<RecordSchemaOutput<T, S>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const result = ctx.validate(input, this.schema)
 
     if (!result.success) {
       return result
     }
 
-    if (this.$type !== result.value.$type) {
+    if (result.value.$type !== this.$type) {
       return ctx.issueInvalidPropertyValue(result.value, '$type', [this.$type])
     }
 
-    return result as ValidationResult<RecordSchemaOutput<T, S>>
+    return result
+  }
+
+  build(
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
+  }
+
+  isTypeOf<TValue extends { $type?: unknown }>(
+    value: TValue,
+  ): value is TypedRecord<TType, TValue> {
+    return value.$type === this.$type
+  }
+
+  /**
+   * Bound alias for {@link build} for compatibility with generated utilities.
+   * @see {@link build}
+   */
+  get $build(): typeof this.build {
+    return lazyProperty(this, '$build', this.build.bind(this))
+  }
+
+  /**
+   * Bound alias for {@link isTypeOf} for compatibility with generated utilities.
+   * @see {@link isTypeOf}
+   */
+  get $isTypeOf(): typeof this.isTypeOf {
+    return lazyProperty(this, '$isTypeOf', this.isTypeOf.bind(this))
   }
 }
 
@@ -92,10 +134,10 @@ export type RecordKeySchema<Key extends LexiconRecordKey> = Schema<
   RecordKeySchemaOutput<Key>
 >
 
-const keySchema = new StringSchema({ minLength: 1 })
-const tidSchema = new StringSchema({ format: 'tid' })
-const nsidSchema = new StringSchema({ format: 'nsid' })
-const selfLiteralSchema = new LiteralSchema('self')
+const keySchema = string({ minLength: 1 })
+const tidSchema = string({ format: 'tid' })
+const nsidSchema = string({ format: 'nsid' })
+const selfLiteralSchema = literal('self')
 
 function recordKey<Key extends LexiconRecordKey>(
   key: Key,
@@ -107,8 +149,76 @@ function recordKey<Key extends LexiconRecordKey>(
   if (key.startsWith('literal:')) {
     const value = key.slice(8) as RecordKeySchemaOutput<Key>
     if (value === 'self') return selfLiteralSchema as any
-    return new LiteralSchema(value)
+    return literal(value)
   }
 
   throw new Error(`Unsupported record key type: ${key}`)
+}
+
+/**
+ * Ensures that a `$type` used in a record is a valid NSID (i.e. no fragment).
+ */
+type AsNsid<T> = T extends `${string}#${string}` ? never : T
+
+/**
+ * Creates a record schema for AT Protocol records.
+ *
+ * Records are the primary data unit in AT Protocol repositories. They have
+ * a `$type` field identifying their Lexicon schema, and are stored at keys
+ * following a specific format (TID, NSID, etc.).
+ *
+ * This function offers two overloads:
+ * - One that infers the output type from the provided arguments (does not
+ *   support circular references)
+ * - One with an explicitly defined interface for use with codegen and
+ *   circular references
+ *
+ * @param key - The record key type: 'tid', 'nsid', 'any', or 'literal:value'
+ * @param type - The NSID identifying this record type (e.g., 'app.bsky.feed.post')
+ * @param validator - Schema validator for the record's properties
+ * @returns A new {@link RecordSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Post record with TID key
+ * const postSchema = l.record('tid', 'app.bsky.feed.post', l.object({
+ *   text: l.string({ maxGraphemes: 300 }),
+ *   createdAt: l.string({ format: 'datetime' }),
+ *   reply: l.optional(l.object({
+ *     root: l.ref(() => strongRefSchema),
+ *     parent: l.ref(() => strongRefSchema),
+ *   })),
+ * }))
+ *
+ * // Profile record with literal 'self' key
+ * const profileSchema = l.record('literal:self', 'app.bsky.actor.profile', l.object({
+ *   displayName: l.optional(l.string({ maxGraphemes: 64 })),
+ *   description: l.optional(l.string({ maxGraphemes: 256 })),
+ *   avatar: l.optional(l.blob({ accept: ['image/*'] })),
+ * }))
+ *
+ * // Build a record with automatic $type injection
+ * const post = postSchema.build({ text: 'Hello!', createdAt: new Date().toISOString() })
+ * ```
+ */
+export function record<
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
+  const S extends Validator<LexMap>,
+>(key: K, type: AsNsid<T>, validator: S): RecordSchema<K, T, S>
+export function record<
+  const K extends LexiconRecordKey,
+  const V extends LexMap & { $type: NsidString },
+>(
+  key: K,
+  type: AsNsid<V['$type']>,
+  validator: Validator<Omit<V, '$type'>>,
+): RecordSchema<K, V['$type'], Validator<Omit<V, '$type'>>>
+/*@__NO_SIDE_EFFECTS__*/
+export function record<
+  const K extends LexiconRecordKey,
+  const T extends NsidString,
+  const S extends Validator<LexMap>,
+>(key: K, type: T, validator: S) {
+  return new RecordSchema<K, T, S>(key, type, validator)
 }

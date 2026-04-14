@@ -2,7 +2,34 @@ import { LexiconDocument } from './lexicon-document.js'
 import { LexiconIndexer } from './lexicon-indexer.js'
 
 /**
- * (Lazily) indexes lexicon documents from an iterable source.
+ * Lazily indexes Lexicon documents from an iterable source.
+ *
+ * This class implements `LexiconIndexer` by consuming documents from an
+ * iterable (sync or async) and caching them for efficient retrieval.
+ * Documents are indexed on-demand as they are requested or iterated over.
+ *
+ * @example
+ * ```ts
+ * // From an array of documents
+ * const docs = [lexiconDoc1, lexiconDoc2, lexiconDoc3]
+ * const indexer = new LexiconIterableIndexer(docs)
+ *
+ * // Documents are indexed lazily as requested
+ * const doc = await indexer.get('com.example.post')
+ * ```
+ *
+ * @example
+ * ```ts
+ * // From an async generator (e.g., reading from files)
+ * async function* loadLexicons() {
+ *   for (const file of lexiconFiles) {
+ *     yield JSON.parse(await fs.readFile(file, 'utf8'))
+ *   }
+ * }
+ *
+ * await using indexer = new LexiconIterableIndexer(loadLexicons())
+ * const schemas = await LexiconSchemaBuilder.buildAll(indexer)
+ * ```
  */
 export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
   readonly #lexicons: Map<string, LexiconDocument> = new Map()
@@ -10,6 +37,21 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
     | AsyncIterator<LexiconDocument, void, unknown>
     | Iterator<LexiconDocument, void, unknown>
 
+  /**
+   * Creates a new {@link LexiconIterableIndexer} from an iterable source.
+   *
+   * @param source - An iterable or async iterable of Lexicon documents.
+   *   The iterator is consumed lazily as documents are requested.
+   *
+   * @example
+   * ```ts
+   * // Sync iterable (array, Set, Map.values(), etc.)
+   * const indexer = new LexiconIterableIndexer(lexiconDocuments)
+   *
+   * // Async iterable (async generator, ReadableStream, etc.)
+   * const indexer = new LexiconIterableIndexer(asyncLexiconStream)
+   * ```
+   */
   constructor(
     readonly source: AsyncIterable<LexiconDocument> | Iterable<LexiconDocument>,
   ) {
@@ -19,6 +61,14 @@ export class LexiconIterableIndexer implements LexiconIndexer, AsyncDisposable {
         : source[Symbol.iterator]()
   }
 
+  /**
+   * Retrieves a Lexicon document by its NSID.
+   *
+   * If the document has already been indexed, it is returned from cache.
+   * Otherwise, the source iterator is consumed until the document is found.
+   *
+   * @see {@link LexiconIndexer.get}
+   */
   async get(id: string): Promise<LexiconDocument> {
     const cached = this.#lexicons.get(id)
     if (cached) return cached

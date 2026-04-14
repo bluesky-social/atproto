@@ -173,7 +173,7 @@ describe('LexiconSchemaBuilder', () => {
     })
   })
 
-  it('does not apply defaults when allowTransform is false', () => {
+  it('does not apply defaults when validating', () => {
     const schema = getSchema(
       'com.example.kitchenSink#object',
       l.TypedObjectSchema,
@@ -187,7 +187,7 @@ describe('LexiconSchemaBuilder', () => {
       string: 'string',
     }
 
-    expect(schema.safeParse(value, { allowTransform: false })).toStrictEqual({
+    expect(schema.safeValidate(value)).toStrictEqual({
       success: true,
       value: {
         object: { boolean: true },

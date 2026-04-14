@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { AtpAgent } from '@atproto/api'
 import { cborEncode } from '@atproto/common'
 import { Secp256k1Keypair, verifySignature } from '@atproto/crypto'
@@ -26,7 +24,7 @@ describe('ozone query labels', () => {
       dbPostgresSchema: 'ozone_query_labels',
     })
 
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
 
     const toCreate = [
       {

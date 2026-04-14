@@ -81,7 +81,6 @@
             "app.bsky.notification.putPreferences",
             "app.bsky.notification.putPreferencesV2",
             "app.bsky.notification.registerPush",
-            "app.bsky.notification.registerPush",
             "app.bsky.notification.unregisterPush",
             "app.bsky.notification.updateSeen",
             "app.bsky.unspecced.getAgeAssuranceState",

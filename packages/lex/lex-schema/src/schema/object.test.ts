@@ -1,18 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { EnumSchema } from './enum.js'
-import { IntegerSchema } from './integer.js'
-import { NullableSchema } from './nullable.js'
-import { ObjectSchema } from './object.js'
-import { OptionalSchema } from './optional.js'
-import { StringSchema } from './string.js'
+import { enumSchema } from './enum.js'
+import { integer } from './integer.js'
+import { nullable } from './nullable.js'
+import { object } from './object.js'
+import { optional } from './optional.js'
+import { string } from './string.js'
 
 describe('ObjectSchema', () => {
-  const schema = new ObjectSchema({
-    name: new StringSchema({}),
-    age: new OptionalSchema(new IntegerSchema({})),
-    gender: new OptionalSchema(
-      new NullableSchema(new EnumSchema(['male', 'female'])),
-    ),
+  const schema = object({
+    name: string(),
+    age: optional(integer()),
+    gender: optional(nullable(enumSchema(['male', 'female']))),
   })
 
   it('validates plain objects', () => {

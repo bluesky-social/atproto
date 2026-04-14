@@ -1,11 +1,5 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
-import {
-  GetOptions,
-  GetOutput,
-  LexRpcResponseError,
-  LexRpcUnexpectedError,
-  l,
-} from '@atproto/lex'
+import { GetOptions, GetOutput, XrpcError, l } from '@atproto/lex'
 import { useBskyClient } from '../providers/BskyClientProvider.tsx'
 
 export function useLexRecord<S extends l.RecordSchema>(
@@ -35,11 +29,7 @@ export function useLexRecord<S extends l.RecordSchema>(
     },
     retry: (failureCount, error) => {
       if (failureCount > 10) return false
-      return (
-        (error instanceof LexRpcUnexpectedError ||
-          error instanceof LexRpcResponseError) &&
-        error.shouldRetry()
-      )
+      return error instanceof XrpcError && error.shouldRetry()
     },
     retryDelay: (attemptIndex) => {
       return Math.min(1000 * 2 ** attemptIndex, 30000)

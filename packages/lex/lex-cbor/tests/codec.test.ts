@@ -16,8 +16,12 @@ describe('encode', () => {
     expect(() => encode({ value: 3.14 })).toThrow()
   })
 
-  it('throws when encoding "undefined" values', () => {
-    expect(() => encode({ value: undefined })).toThrow()
+  it('Supports encoding "undefined" values', () => {
+    expect(encode({ value: undefined })).toStrictEqual(encode({}))
+    expect(encode({ a: 1, value: undefined })).toStrictEqual(encode({ a: 1 }))
+    expect(encode({ foo: { bar: undefined } })).toStrictEqual(
+      encode({ foo: {} }),
+    )
   })
 
   it('throws when encoding Maps with non-string keys', () => {

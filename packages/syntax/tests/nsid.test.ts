@@ -1,4 +1,5 @@
 import * as fs from 'node:fs'
+import { describe, expect, it } from 'vitest'
 import {
   InvalidNsidError,
   NSID,

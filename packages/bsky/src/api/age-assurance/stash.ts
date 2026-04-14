@@ -1,15 +1,16 @@
 import { TID } from '@atproto/common'
+import { DatetimeString } from '@atproto/syntax'
 import { AppContext } from '../../context'
-import { Event as AgeAssuranceEvent } from '../../lexicon/types/app/bsky/ageassurance/defs'
+import { app } from '../../lexicons/index.js'
 import { Namespaces } from '../../stash'
 
 export async function createEvent(
   ctx: AppContext,
   actorDid: string,
-  event: Omit<AgeAssuranceEvent, 'createdAt'>,
+  event: Omit<app.bsky.ageassurance.defs.Event, 'createdAt'>,
 ) {
-  const payload: AgeAssuranceEvent = {
-    createdAt: new Date().toISOString(),
+  const payload: app.bsky.ageassurance.defs.Event = {
+    createdAt: new Date().toISOString() as DatetimeString,
     ...event,
   }
   await ctx.stashClient.create({

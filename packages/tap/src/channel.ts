@@ -1,5 +1,6 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable } from '@atproto/common'
+import { lexParse } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
 import { formatAdminAuthHeader, isCausedBySignal } from './util'
@@ -94,12 +95,12 @@ export class TapChannel implements AsyncDisposable {
         await this.sendAck(ack.id)
         ack.defer.resolve()
         this.bufferedAcks = this.bufferedAcks.slice(1)
-      } catch (err) {
-        this.handler.onError(
-          new Error(`failed to send ack for event ${this.bufferedAcks[0]}`, {
-            cause: err,
-          }),
+      } catch (cause) {
+        const error = new Error(
+          `failed to send ack for event ${this.bufferedAcks[0]}`,
+          { cause },
         )
+        this.handler.onError(error)
         return
       }
     }
@@ -123,10 +124,14 @@ export class TapChannel implements AsyncDisposable {
   private async processWsEvent(chunk: Uint8Array) {
     let evt: TapEvent
     try {
-      const data = chunk.toString()
-      evt = parseTapEvent(JSON.parse(data))
-    } catch (err) {
-      this.handler.onError(new Error('Failed to parse message', { cause: err }))
+      const data = lexParse(chunk.toString(), {
+        // Reject invalid CIDs and blobs
+        strict: true,
+      })
+      evt = parseTapEvent(data)
+    } catch (cause) {
+      const error = new Error(`Failed to parse message`, { cause })
+      this.handler.onError(error)
       return
     }
 
@@ -137,11 +142,10 @@ export class TapChannel implements AsyncDisposable {
           await this.ackEvent(evt.id)
         },
       })
-    } catch (err) {
+    } catch (cause) {
       // Don't ack on error - let Tap retry
-      this.handler.onError(
-        new Error(`Failed to process event ${evt.id}`, { cause: err }),
-      )
+      const error = new Error(`Failed to process event ${evt.id}`, { cause })
+      this.handler.onError(error)
       return
     }
   }

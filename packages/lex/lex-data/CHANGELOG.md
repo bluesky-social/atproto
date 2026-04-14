@@ -1,5 +1,75 @@
 # @atproto/lex-data
 
+## 0.0.15
+
+### Patch Changes
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export new utility functions for working with `BlobRef`: `getBlobCid`, `getBlobCidString`, `getBlobMime`, and `getBlobSize`.
+
+- [#4835](https://github.com/bluesky-social/atproto/pull/4835) [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `utf8FromBytes` that decodes a byte array containing a utf-8 string
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Defines `BlobRef` as a union of `TypedBlobRef` and `LegacyBlobRef` to allow for seamless handling of both types of blob references.
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client.
+
+  BREAKING: The `allowLegacy` option has been removed from the blob schema builder, and legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, and in non-strict mode they are accepted. Consumers should stop passing `allowLegacy` and rely on strictness configuration instead. Likewise, CLI consumers should stop using the removed `--allowLegacyBlobs` flag and use the default strict/non-strict behavior.
+
+## 0.0.14
+
+### Patch Changes
+
+- [#4761](https://github.com/bluesky-social/atproto/pull/4761) [`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `-1` BlobRef size in non-strict mode
+
+## 0.0.13
+
+### Patch Changes
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove concept of "downstream error response" (`toResponse()` method) from the `LexError` class
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve messaging of various errors by making them more precisely describe what happened.
+
+## 0.0.12
+
+### Patch Changes
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor code simplification
+
+## 0.0.11
+
+### Patch Changes
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `exports` field in package.json
+
+- [#4601](https://github.com/bluesky-social/atproto/pull/4601) [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add JSDoc
+
+## 0.0.10
+
+### Patch Changes
+
+- [#4589](https://github.com/bluesky-social/atproto/pull/4589) [`369bb02`](https://github.com/bluesky-social/atproto/commit/369bb02b9f80f0e15e5242e54f09bd4e01117f3a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid exposing empty string as `message` in error payloads
+
+## 0.0.9
+
+### Patch Changes
+
+- [#4562](https://github.com/bluesky-social/atproto/pull/4562) [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `ifUint8Array` utility function
+
+- [#4571](https://github.com/bluesky-social/atproto/pull/4571) [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `isLanguageString` to `validateLanguage`
+
+- [#4571](https://github.com/bluesky-social/atproto/pull/4571) [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve code coverage of tests
+
+## 0.0.8
+
+### Patch Changes
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `asMultiformatsCID` utility for improved compatibility between `Cid` interface and legacy use of multiformat's `CID`
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make the `Cid` interface stricter to allow for better futur proofing.
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `isCid`, `ifCid` and `asCid` now always return the input value instead a potentially different instance.
+
+- [#4528](https://github.com/bluesky-social/atproto/pull/4528) [`dfd4bee`](https://github.com/bluesky-social/atproto/commit/dfd4bee4abbc1a3e53531bb499a6f3169c13ed9e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `createCid` utility
+
 ## 0.0.7
 
 ### Patch Changes

@@ -1,12 +1,19 @@
 import './style.css'
 
-import { StrictMode } from 'react'
+import { msg } from '@lingui/core/macro'
+import { Trans } from '@lingui/react/macro'
+import { StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
-import type { HydrationData } from './hydration-data.d.ts'
-import { LocaleProvider } from './locales/locale-provider.tsx'
-import { AuthorizeView } from './views/authorize/authorize-view.tsx'
-import { ErrorView } from './views/error/error-view.tsx'
+import { ConsentView } from '#/components/consent-view.tsx'
+import { errorViewRender } from '#/components/error-view.tsx'
+import { LayoutTitle } from '#/components/layouts/layout-title'
+import { AuthenticationProvider } from '#/contexts/authentication.tsx'
+import { CustomizationProvider } from '#/contexts/customization.tsx'
+import { NotificationsProvider } from '#/contexts/notifications.tsx'
+import { SessionProvider, useSessionContext } from '#/contexts/session.tsx'
+import type { HydrationData } from '#/hydration-data.d.ts'
+import { LocaleProvider } from '#/locales/locale-provider.tsx'
 
 const {
   __authorizeData: authorizeData,
@@ -32,18 +39,88 @@ const container = document.getElementById('root')!
 
 createRoot(container).render(
   <StrictMode>
-    <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
-      <ErrorBoundary
-        fallbackRender={({ error }) => (
-          <ErrorView error={error} customizationData={customizationData} />
-        )}
-      >
-        <AuthorizeView
-          authorizeData={authorizeData}
-          customizationData={customizationData}
-          initialSessions={initialSessions}
-        />
-      </ErrorBoundary>
-    </LocaleProvider>
+    <CustomizationProvider value={customizationData}>
+      <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
+        <NotificationsProvider>
+          <ErrorBoundary fallbackRender={errorViewRender}>
+            <SessionProvider
+              initialSessions={initialSessions}
+              initialSelected={authorizeData.selectedSub}
+            >
+              <App />
+            </SessionProvider>
+          </ErrorBoundary>
+        </NotificationsProvider>
+      </LocaleProvider>
+    </CustomizationProvider>
   </StrictMode>,
 )
+
+// @NOTE We do not want to use a router here because we do not want any change
+// in the view to be reflected as a browser navigation.
+function App() {
+  const loginHint = authorizeData.loginHint || undefined
+
+  const { session, setSession, doConsent, doReject } = useSessionContext()
+  const [isDone, setIsDone] = useState(
+    session != null && session.consentRequired === false,
+  )
+
+  const performRedirect = useCallback((url: string) => {
+    // @TODO At this point, the request cannot be accepted/rejected anymore.
+    // We should probably change the app's state to something that indicates
+    // that in order to improve UX in case the user comes back to the app.
+    // This is currently ensured by the backend (through back-forward cache
+    // busting) but handling it here would provide a better UX since the
+    // backend will remove (and prevent access) to accepted/rejected requests
+    // data, while the back-forward cache remembers them.
+
+    window.location.href = url
+    setTimeout(() => setIsDone(true))
+  }, [])
+
+  const doConsentAndRedirect = useCallback(
+    async (...args: Parameters<typeof doConsent>) => {
+      const { url } = await doConsent(...args)
+      performRedirect(url)
+    },
+    [doConsent, performRedirect],
+  )
+
+  const doRejectAndRedirect = useCallback(
+    async (...args: Parameters<typeof doReject>) => {
+      const { url } = await doReject(...args)
+      performRedirect(url)
+    },
+    [doReject, performRedirect],
+  )
+
+  return (
+    <AuthenticationProvider
+      onCancel={doRejectAndRedirect}
+      forcedIdentifier={loginHint}
+      promptMode={authorizeData.promptMode}
+    >
+      {session && !isDone ? (
+        <ConsentView
+          clientId={authorizeData.clientId}
+          clientMetadata={authorizeData.clientMetadata}
+          clientTrusted={authorizeData.clientTrusted}
+          clientFirstParty={authorizeData.clientFirstParty}
+          permissionSets={authorizeData.permissionSets}
+          account={session.account}
+          scope={authorizeData.scope}
+          onConsent={(scope) =>
+            doConsentAndRedirect(session.account.sub, scope)
+          }
+          onReject={doRejectAndRedirect}
+          onBack={loginHint ? undefined : () => setSession(null)}
+        />
+      ) : (
+        <LayoutTitle title={msg`Login complete`}>
+          <Trans>You are being redirected...</Trans>
+        </LayoutTitle>
+      )}
+    </AuthenticationProvider>
+  )
+}

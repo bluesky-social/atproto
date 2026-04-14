@@ -58,7 +58,6 @@ import { emailSchema } from '../types/email.js'
 import { handleSchema } from '../types/handle.js'
 import { newPasswordSchema } from '../types/password.js'
 import { validateCsrfToken } from './assets/csrf.js'
-import type { MiddlewareOptions } from './middleware-options.js'
 import {
   ERROR_REDIRECT_KEYS,
   OAuthRedirectOptions,
@@ -67,7 +66,8 @@ import {
   buildRedirectMode,
   buildRedirectParams,
   buildRedirectUri,
-} from './send-redirect.js'
+} from './assets/send-redirect.js'
+import type { MiddlewareOptions } from './middleware-options.js'
 
 const verifyHandleSchema = z.object({ handle: handleSchema }).strict()
 
@@ -576,14 +576,14 @@ export function createApiMiddleware<
   async function authenticate(
     this: ApiContext<void, { sub: Sub }>,
     req: Req,
-    res: Res,
+    _res: Res,
   ) {
-    const authorization = req.headers.authorization?.split(' ')
-    if (authorization?.[0].toLowerCase() === 'bearer') {
+    if (req.headers.authorization?.startsWith('Bearer ')) {
       try {
         // If there is an authorization header, verify that the ephemeral token it
         // contains is a jwt bound to the right [sub, device, request].
-        const ephemeralToken = signedJwtSchema.parse(authorization[1])
+        const bearer = req.headers.authorization.slice(7)
+        const ephemeralToken = signedJwtSchema.parse(bearer)
         const { payload } =
           await server.signer.verifyEphemeralToken(ephemeralToken)
 
@@ -595,8 +595,12 @@ export function createApiMiddleware<
           return await server.accountManager.getAccount(payload.sub)
         }
       } catch (err) {
-        onError?.(req, res, err, 'Failed to authenticate ephemeral token')
-        // Fall back to session based authentication
+        throw new WWWAuthenticateError(
+          'unauthorized',
+          `Invalid or expired bearer token`,
+          { Bearer: {} },
+          err,
+        )
       }
     }
 

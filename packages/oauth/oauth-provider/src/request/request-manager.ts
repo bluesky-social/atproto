@@ -316,7 +316,7 @@ export class RequestManager {
     return parameters
   }
 
-  async get(requestUri: RequestUri, deviceId: DeviceId, clientId?: ClientId) {
+  async get(requestUri: RequestUri, deviceId?: DeviceId, clientId?: ClientId) {
     const requestId = decodeRequestUri(requestUri)
 
     const data = await this.store.readRequest(requestId)
@@ -349,13 +349,15 @@ export class RequestManager {
         )
       }
 
-      if (!data.deviceId) {
-        updates.deviceId = deviceId
-      } else if (data.deviceId !== deviceId) {
-        throw new AccessDeniedError(
-          data.parameters,
-          'This request was initiated from another device',
-        )
+      if (deviceId != null) {
+        if (!data.deviceId) {
+          updates.deviceId = deviceId
+        } else if (data.deviceId !== deviceId) {
+          throw new AccessDeniedError(
+            data.parameters,
+            'This request was initiated from another device',
+          )
+        }
       }
     } catch (err) {
       await this.store.deleteRequest(requestId)

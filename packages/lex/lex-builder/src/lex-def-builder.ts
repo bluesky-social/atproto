@@ -38,14 +38,41 @@ import {
 } from './ref-resolver.js'
 import { asNamespaceExport } from './ts-lang.js'
 
+/**
+ * Configuration options for the {@link LexDefBuilder} class.
+ *
+ * @see {@link RefResolverOptions} for reference resolution options
+ */
 export type LexDefBuilderOptions = RefResolverOptions & {
+  /**
+   * The module specifier to use for importing the lexicon schema library.
+   *
+   * @default '@atproto/lex-schema'
+   */
   lib?: string
-  allowLegacyBlobs?: boolean
+  /**
+   * Whether to add `#__PURE__` annotations to function calls.
+   *
+   * These annotations help bundlers with tree-shaking by marking
+   * side-effect-free function calls.
+   *
+   * @default false
+   */
   pureAnnotations?: boolean
 }
 
 /**
- * Utility class to build a TypeScript source file from a lexicon document.
+ * Builds TypeScript type definitions and runtime schemas from a single
+ * Lexicon document.
+ *
+ * This class is responsible for generating the `.defs.ts` files that contain:
+ * - Type aliases for each lexicon definition
+ * - Runtime schema validators using `@atproto/lex-schema`
+ * - Utility functions for type checking and validation
+ * - Proper import statements for cross-references
+ *
+ * Each lexicon definition type (record, object, query, procedure, etc.)
+ * is handled with specialized code generation logic.
  */
 export class LexDefBuilder {
   private readonly refResolver: RefResolver
@@ -242,7 +269,7 @@ export class LexDefBuilder {
   ) {
     this.file.addTypeAlias({
       isExported: true,
-      name: 'Params',
+      name: '$Params',
       type: `l.InferMethodParams<typeof ${ref.varName}>`,
       docs: compileDocs(def.parameters?.description),
     })
@@ -250,15 +277,15 @@ export class LexDefBuilder {
     if (def.type === 'procedure') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Input',
-        type: `l.InferMethodInput<typeof ${ref.varName}>`,
+        name: '$Input<B = l.BinaryData>',
+        type: `l.InferMethodInput<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.input?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'InputBody',
-        type: `l.InferMethodInputBody<typeof ${ref.varName}>`,
+        name: '$InputBody<B = l.BinaryData>',
+        type: `l.InferMethodInputBody<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.input?.description),
       })
     }
@@ -266,15 +293,15 @@ export class LexDefBuilder {
     if (def.type === 'procedure' || def.type === 'query') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Output',
-        type: `l.InferMethodOutput<typeof ${ref.varName}>`,
+        name: '$Output<B = l.BinaryData>',
+        type: `l.InferMethodOutput<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.output?.description),
       })
 
       this.file.addTypeAlias({
         isExported: true,
-        name: 'OutputBody',
-        type: `l.InferMethodOutputBody<typeof ${ref.varName}>`,
+        name: '$OutputBody<B = l.BinaryData>',
+        type: `l.InferMethodOutputBody<typeof ${ref.varName}, B>`,
         docs: compileDocs(def.output?.description),
       })
     }
@@ -282,7 +309,7 @@ export class LexDefBuilder {
     if (def.type === 'subscription') {
       this.file.addTypeAlias({
         isExported: true,
-        name: 'Message',
+        name: '$Message',
         type: `l.InferSubscriptionMessage<typeof ${ref.varName}>`,
         docs: compileDocs(def.message?.description),
       })
@@ -434,10 +461,16 @@ export class LexDefBuilder {
     if (hash === 'main' && validationUtils) {
       this.addUtils({
         $assert: markPure(`${ref.varName}.assert.bind(${ref.varName})`),
+        $check: markPure(`${ref.varName}.check.bind(${ref.varName})`),
+        $cast: markPure(`${ref.varName}.cast.bind(${ref.varName})`),
         $ifMatches: markPure(`${ref.varName}.ifMatches.bind(${ref.varName})`),
         $matches: markPure(`${ref.varName}.matches.bind(${ref.varName})`),
         $parse: markPure(`${ref.varName}.parse.bind(${ref.varName})`),
         $safeParse: markPure(`${ref.varName}.safeParse.bind(${ref.varName})`),
+        $validate: markPure(`${ref.varName}.validate.bind(${ref.varName})`),
+        $safeValidate: markPure(
+          `${ref.varName}.safeValidate.bind(${ref.varName})`,
+        ),
       })
     }
 
@@ -474,7 +507,11 @@ export class LexDefBuilder {
     if (!def) return this.pure(`l.params()`)
 
     const properties = await this.compilePropertiesSchemas(def)
-    return this.pure(`l.params({${properties.join(',')}})`)
+    return this.pure(
+      properties.length === 0
+        ? `l.params()`
+        : `l.params({${properties.join(',')}})`,
+    )
   }
 
   private async compileErrors(defs?: readonly LexiconError[]) {
@@ -638,20 +675,31 @@ export class LexDefBuilder {
   }
 
   private async compileUnknownSchema(_def: LexiconUnknown): Promise<string> {
-    return this.pure(`l.unknownObject()`)
+    return this.pure(`l.lexMap()`)
   }
 
   private async compileUnknownType(_def: LexiconUnknown): Promise<string> {
-    return `l.UnknownObject`
+    return `l.LexMap`
+  }
+
+  private withDefault(schema: string, defaultValue: unknown) {
+    if (defaultValue === undefined) return schema
+
+    return this.pure(
+      `l.withDefault(${schema}, ${JSON.stringify(defaultValue)})`,
+    )
   }
 
   private async compileBooleanSchema(def: LexiconBoolean): Promise<string> {
+    const schema = l.boolean()
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
+    }
+
     if (hasConst(def)) return this.compileConstSchema(def)
 
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.BooleanSchemaOptions)[])
-    return this.pure(`l.boolean(${options})`)
+    return this.withDefault(this.pure(`l.boolean()`), def.default)
   }
 
   private async compileBooleanType(def: LexiconBoolean): Promise<string> {
@@ -660,25 +708,29 @@ export class LexDefBuilder {
   }
 
   private async compileIntegerSchema(def: LexiconInteger): Promise<string> {
+    const schema = l.integer(def)
+
     if (hasConst(def)) {
-      const schema: l.IntegerSchema = l.integer(def)
-      schema.assert(def.const)
+      schema.check(def.const)
     }
 
     if (hasEnum(def)) {
-      const schema: l.IntegerSchema = l.integer(def)
-      for (const val of def.enum) schema.assert(val)
+      for (const val of def.enum) schema.check(val)
+    }
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
     const options = stringifyOptions(def, [
-      'default',
       'maximum',
       'minimum',
     ] satisfies (keyof l.IntegerSchemaOptions)[])
-    return this.pure(`l.integer(${options})`)
+
+    return this.withDefault(this.pure(`l.integer(${options})`), def.default)
   }
 
   private async compileIntegerType(def: LexiconInteger): Promise<string> {
@@ -689,26 +741,50 @@ export class LexDefBuilder {
   }
 
   private async compileStringSchema(def: LexiconString): Promise<string> {
+    const schema = l.string(def)
+
     if (hasConst(def)) {
-      const schema: l.StringSchema = l.string(def)
-      schema.assert(def.const)
-    } else if (hasEnum(def)) {
-      const schema: l.StringSchema = l.string(def)
-      for (const val of def.enum) schema.assert(val)
+      schema.check(def.const)
+    }
+
+    if (hasEnum(def)) {
+      for (const val of def.enum) schema.check(val)
+    }
+
+    if (def.default !== undefined) {
+      schema.check(def.default)
     }
 
     if (hasConst(def)) return this.compileConstSchema(def)
     if (hasEnum(def)) return this.compileEnumSchema(def)
 
-    const options = stringifyOptions(def, [
-      'default',
+    const runtimeOptions = [
       'format',
       'maxGraphemes',
       'minGraphemes',
       'maxLength',
       'minLength',
-    ] satisfies (keyof l.StringSchemaOptions)[])
-    return this.pure(`l.string(${options})`)
+      // We don't want to include knownValues in the schema options **at
+      // runtime** as it has no effect and only causes bloat:
+      // "knownValues",
+    ] as const satisfies (keyof l.StringSchemaOptions)[]
+
+    const options = stringifyOptions(def, runtimeOptions)
+
+    // We *do* however need knownValues for the inferred type, so we include it
+    // as the generic parameter. We only do this if the def has knownValues,
+    // otherwise we let TypeScript infer the options generic by not defining it.
+    const generic = def.knownValues
+      ? stringifyOptions(def, [
+          ...runtimeOptions,
+          'knownValues',
+        ] satisfies (keyof l.StringSchemaOptions)[])
+      : undefined
+
+    return this.withDefault(
+      this.pure(`l.string${generic ? `<${generic}>` : ''}(${options})`),
+      def.default,
+    )
   }
 
   private async compileStringType(def: LexiconString): Promise<string> {
@@ -767,23 +843,19 @@ export class LexDefBuilder {
   }
 
   private async compileBlobSchema(def: LexiconBlob): Promise<string> {
-    const opts = { ...def, allowLegacy: this.options.allowLegacyBlobs === true }
-    const options = stringifyOptions(opts, [
+    const options = stringifyOptions(def, [
       'maxSize',
       'accept',
-      'allowLegacy',
     ] satisfies (keyof l.BlobSchemaOptions)[])
     return this.pure(`l.blob(${options})`)
   }
 
   private async compileBlobType(_def: LexiconBlob): Promise<string> {
-    return this.options.allowLegacyBlobs
-      ? 'l.BlobRef | l.LegacyBlobRef'
-      : 'l.BlobRef'
+    return 'l.BlobRef'
   }
 
   private async compileCidLinkSchema(_def: LexiconCid): Promise<string> {
-    return this.pure(`l.cidLink()`)
+    return this.pure(`l.cid()`)
   }
 
   private async compileCidLinkType(_def: LexiconCid): Promise<string> {
@@ -825,10 +897,10 @@ export class LexDefBuilder {
     const types = await Promise.all(
       def.refs.map(async (ref) => {
         const { typeName } = await this.refResolver.resolve(ref)
-        return `l.TypedRef<${typeName}>`
+        return `l.$Typed<${typeName}>`
       }),
     )
-    if (!def.closed) types.push('l.TypedObject')
+    if (!def.closed) types.push('l.Unknown$TypedObject')
     return types.join(' | ') || 'never'
   }
 
@@ -839,10 +911,9 @@ export class LexDefBuilder {
       return this.pure(`l.never()`)
     }
 
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.LiteralSchemaOptions<any>)[])
-    return this.pure(`l.literal(${JSON.stringify(def.const)}, ${options})`)
+    const result = this.pure(`l.literal(${JSON.stringify(def.const)})`)
+
+    return this.withDefault(result, def.default)
   }
 
   private async compileConstType<
@@ -861,13 +932,13 @@ export class LexDefBuilder {
     if (def.enum.length === 0) {
       return this.pure(`l.never()`)
     }
-    if (def.enum.length === 1 && def.default === undefined) {
-      return this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
-    }
-    const options = stringifyOptions(def, [
-      'default',
-    ] satisfies (keyof l.EnumSchemaOptions<any>)[])
-    return this.pure(`l.enum(${JSON.stringify(def.enum)}, ${options})`)
+
+    const result =
+      def.enum.length === 1
+        ? this.pure(`l.literal(${JSON.stringify(def.enum[0])})`)
+        : this.pure(`l.enum(${JSON.stringify(def.enum)})`)
+
+    return this.withDefault(result, def.default)
   }
 
   private async compileEnumType<T extends null | number | string>(def: {

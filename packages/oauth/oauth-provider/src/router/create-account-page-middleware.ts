@@ -8,6 +8,7 @@ import {
   validateOrigin,
   writeRedirect,
 } from '../lib/http/index.js'
+import { SecurityHeadersOptions } from '../lib/http/security-headers.js'
 import type { OAuthProvider } from '../oauth-provider.js'
 import { sendAccountPageFactory } from './assets/send-account-page.js'
 import { sendErrorPageFactory } from './assets/send-error-page.js'
@@ -21,11 +22,21 @@ export function createAccountPageMiddleware<
   server: OAuthProvider,
   { onError }: MiddlewareOptions<Req, Res>,
 ): Middleware<Ctx, Req, Res> {
-  const sendAccountPage = sendAccountPageFactory(server.customization)
-  const sendErrorPage = sendErrorPageFactory(server.customization)
-
   const issuerUrl = new URL(server.issuer)
   const issuerOrigin = issuerUrl.origin
+
+  const securityOptions: SecurityHeadersOptions = {
+    hsts: issuerUrl.protocol === 'http:' ? false : undefined,
+  }
+
+  const sendAccountPage = sendAccountPageFactory(
+    server.customization,
+    securityOptions,
+  )
+  const sendErrorPage = sendErrorPageFactory(
+    server.customization,
+    securityOptions,
+  )
 
   const router = new Router<Ctx, Req, Res>(issuerUrl)
 
@@ -68,7 +79,7 @@ export function createAccountPageMiddleware<
       )
 
       if (!res.headersSent) {
-        sendErrorPage(req, res, err)
+        return sendErrorPage(req, res, err)
       }
     }
   })

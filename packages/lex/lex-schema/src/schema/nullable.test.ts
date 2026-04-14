@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { EnumSchema } from './enum.js'
-import { IntegerSchema } from './integer.js'
-import { NullableSchema } from './nullable.js'
-import { ObjectSchema } from './object.js'
-import { StringSchema } from './string.js'
+import { enumSchema } from './enum.js'
+import { integer } from './integer.js'
+import { nullable } from './nullable.js'
+import { object } from './object.js'
+import { string } from './string.js'
+import { withDefault } from './with-default.js'
 
 describe('NullableSchema', () => {
   describe('with StringSchema', () => {
-    const schema = new NullableSchema(new StringSchema({}))
+    const schema = nullable(string())
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -57,7 +58,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with IntegerSchema', () => {
-    const schema = new NullableSchema(new IntegerSchema({}))
+    const schema = nullable(integer())
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -102,7 +103,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with EnumSchema', () => {
-    const schema = new NullableSchema(new EnumSchema(['red', 'green', 'blue']))
+    const schema = nullable(enumSchema(['red', 'green', 'blue']))
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -135,9 +136,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with constrained StringSchema', () => {
-    const schema = new NullableSchema(
-      new StringSchema({ minLength: 3, maxLength: 10 }),
-    )
+    const schema = nullable(string({ minLength: 3, maxLength: 10 }))
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -171,9 +170,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with constrained IntegerSchema', () => {
-    const schema = new NullableSchema(
-      new IntegerSchema({ minimum: 0, maximum: 100 }),
-    )
+    const schema = nullable(integer({ minimum: 0, maximum: 100 }))
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -207,7 +204,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with StringSchema having default value', () => {
-    const schema = new NullableSchema(new StringSchema({ default: 'default' }))
+    const schema = nullable(withDefault(string(), 'default'))
 
     it('validates null explicitly', () => {
       const result = schema.safeParse(null)
@@ -235,10 +232,10 @@ describe('NullableSchema', () => {
   })
 
   describe('with ObjectSchema', () => {
-    const schema = new NullableSchema(
-      new ObjectSchema({
-        name: new StringSchema({}),
-        age: new IntegerSchema({}),
+    const schema = nullable(
+      object({
+        name: string(),
+        age: integer(),
       }),
     )
 
@@ -277,7 +274,7 @@ describe('NullableSchema', () => {
   })
 
   describe('nested nullable schemas', () => {
-    const schema = new NullableSchema(new NullableSchema(new StringSchema({})))
+    const schema = nullable(nullable(string()))
 
     it('validates null at outer level', () => {
       const result = schema.safeParse(null)
@@ -307,7 +304,7 @@ describe('NullableSchema', () => {
   })
 
   describe('with StringSchema format constraints', () => {
-    const schema = new NullableSchema(new StringSchema({ format: 'uri' }))
+    const schema = nullable(string({ format: 'uri' }))
 
     it('validates null', () => {
       const result = schema.safeParse(null)
@@ -331,7 +328,7 @@ describe('NullableSchema', () => {
   })
 
   describe('edge cases', () => {
-    const stringSchema = new NullableSchema(new StringSchema({}))
+    const stringSchema = nullable(string())
 
     it('handles null correctly without coercion', () => {
       const result = stringSchema.safeParse(null)
@@ -366,7 +363,7 @@ describe('NullableSchema', () => {
 
   describe('type preservation', () => {
     it('preserves string type for valid strings', () => {
-      const schema = new NullableSchema(new StringSchema({}))
+      const schema = nullable(string())
       const result = schema.safeParse('test')
       expect(result.success).toBe(true)
       if (result.success) {
@@ -376,7 +373,7 @@ describe('NullableSchema', () => {
     })
 
     it('preserves number type for valid integers', () => {
-      const schema = new NullableSchema(new IntegerSchema({}))
+      const schema = nullable(integer())
       const result = schema.safeParse(42)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -386,9 +383,7 @@ describe('NullableSchema', () => {
     })
 
     it('preserves object type for valid objects', () => {
-      const schema = new NullableSchema(
-        new ObjectSchema({ key: new StringSchema({}) }),
-      )
+      const schema = nullable(object({ key: string() }))
       const input = { key: 'value' }
       const result = schema.safeParse(input)
       expect(result.success).toBe(true)
@@ -399,7 +394,7 @@ describe('NullableSchema', () => {
     })
 
     it('preserves null type exactly', () => {
-      const schema = new NullableSchema(new StringSchema({}))
+      const schema = nullable(string())
       const result = schema.safeParse(null)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -412,8 +407,8 @@ describe('NullableSchema', () => {
 
   describe('with complex wrapped schemas', () => {
     it('validates nullable enum with default', () => {
-      const schema = new NullableSchema(
-        new EnumSchema(['option1', 'option2'], { default: 'option1' }),
+      const schema = nullable(
+        withDefault(enumSchema(['option1', 'option2']), 'option1'),
       )
 
       expect(schema.safeParse(null).success).toBe(true)
@@ -424,9 +419,7 @@ describe('NullableSchema', () => {
     })
 
     it('handles nullable schema with grapheme constraints', () => {
-      const schema = new NullableSchema(
-        new StringSchema({ minGraphemes: 2, maxGraphemes: 5 }),
-      )
+      const schema = nullable(string({ minGraphemes: 2, maxGraphemes: 5 }))
 
       expect(schema.safeParse(null).success).toBe(true)
       expect(schema.safeParse('ab').success).toBe(true)
@@ -436,9 +429,7 @@ describe('NullableSchema', () => {
     })
 
     it('handles nullable integer with negative range', () => {
-      const schema = new NullableSchema(
-        new IntegerSchema({ minimum: -100, maximum: -10 }),
-      )
+      const schema = nullable(integer({ minimum: -100, maximum: -10 }))
 
       expect(schema.safeParse(null).success).toBe(true)
       expect(schema.safeParse(-50).success).toBe(true)
@@ -452,27 +443,25 @@ describe('NullableSchema', () => {
 
   describe('validation error behavior', () => {
     it('returns failure for wrapped schema validation errors', () => {
-      const schema = new NullableSchema(new IntegerSchema({ minimum: 10 }))
+      const schema = nullable(integer({ minimum: 10 }))
       const result = schema.safeParse(5)
       expect(result.success).toBe(false)
     })
 
     it('returns failure for type mismatches', () => {
-      const schema = new NullableSchema(new StringSchema({}))
+      const schema = nullable(string())
       const result = schema.safeParse(123)
       expect(result.success).toBe(false)
     })
 
     it('returns success for null regardless of wrapped constraints', () => {
-      const schema = new NullableSchema(
-        new StringSchema({ minLength: 100, format: 'uri' }),
-      )
+      const schema = nullable(string({ minLength: 100, format: 'uri' }))
       const result = schema.safeParse(null)
       expect(result.success).toBe(true)
     })
 
     it('wrapped schema validation applies when value is not null', () => {
-      const schema = new NullableSchema(new StringSchema({ minLength: 5 }))
+      const schema = nullable(string({ minLength: 5 }))
       expect(schema.safeParse(null).success).toBe(true)
       expect(schema.safeParse('hello').success).toBe(true)
       expect(schema.safeParse('hi').success).toBe(false)

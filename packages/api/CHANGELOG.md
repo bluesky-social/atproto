@@ -1,5 +1,160 @@
 # @atproto/api
 
+## 0.19.8
+
+### Patch Changes
+
+- [#4841](https://github.com/bluesky-social/atproto/pull/4841) [`55c3986`](https://github.com/bluesky-social/atproto/commit/55c39860c8fbf9747a6edec415f19c67f80c597f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make sure to include did and isMe checks on decideStatus default decision
+
+## 0.19.7
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `moderateStatus` method to eval labels on actor `status` views
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.20
+
+## 0.19.6
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- Updated dependencies [[`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/syntax@0.5.3
+
+## 0.19.5
+
+### Patch Changes
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export internal `ids`
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "codegen" as part of the build
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type `did` and `assertDid` `Agent` properties to be typed as `DidString`
+
+- [#4791](https://github.com/bluesky-social/atproto/pull/4791) [`3aa18f8`](https://github.com/bluesky-social/atproto/commit/3aa18f84ef80a170b572076feeb649906ffcb06c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Codegen updated lexicons
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+
+## 0.19.4
+
+### Patch Changes
+
+- [#4709](https://github.com/bluesky-social/atproto/pull/4709) [`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a purge event to remove ozone's data on age assurance
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+
+## 0.19.3
+
+### Patch Changes
+
+- [#4717](https://github.com/bluesky-social/atproto/pull/4717) [`76ab6ea`](https://github.com/bluesky-social/atproto/commit/76ab6eaa7bfa49fc218299d09446bb339c700bb5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Trust `status` returned from `refreshSession` and do not fall back to a potentially stale value from `this.session`.
+
+## 0.19.2
+
+### Patch Changes
+
+- [#4683](https://github.com/bluesky-social/atproto/pull/4683) [`6634140`](https://github.com/bluesky-social/atproto/commit/66341400d49d1210619b000a040852d87085c32c) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Introduce recIdStr field
+
+- [#4713](https://github.com/bluesky-social/atproto/pull/4713) [`0e5df95`](https://github.com/bluesky-social/atproto/commit/0e5df95e3a8d81931524848d301cd43d1f12fb78) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make sure to always trigger a `refreshSession` when `resumeSession()` is called
+
+## 0.19.1
+
+### Patch Changes
+
+- [#4704](https://github.com/bluesky-social/atproto/pull/4704) [`137065b`](https://github.com/bluesky-social/atproto/commit/137065b333b8c9b97e6b3b2ac6147c7509a1ae42) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add feed to sendInteractions input
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/common-web@0.4.18
+  - @atproto/lexicon@0.6.2
+
+## 0.19.0
+
+### Minor Changes
+
+- [#4631](https://github.com/bluesky-social/atproto/pull/4631) [`450f085`](https://github.com/bluesky-social/atproto/commit/450f0856630fa08c20dc60fef8b5d2a07b9a2552) Thanks [@LotharieSlayer](https://github.com/LotharieSlayer)! - Updating atproto app password based session example in README
+
+## 0.18.21
+
+### Patch Changes
+
+- [#4633](https://github.com/bluesky-social/atproto/pull/4633) [`60f84eb`](https://github.com/bluesky-social/atproto/commit/60f84ebe47016828add07b143c403e331c58ee78) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Increase draft char limit from 300 to 1000
+
+- [#4632](https://github.com/bluesky-social/atproto/pull/4632) [`50dfbec`](https://github.com/bluesky-social/atproto/commit/50dfbec512682d35e8108b952e8f0533da71beef) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Add app.bsky.unspecced.getSuggestedOnboardingUser and app.bsky.unspecced.getSuggestedOnboardingUsersSkeleton
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - update germ networks lexicon
+
+- [#4594](https://github.com/bluesky-social/atproto/pull/4594) [`f8c84eb`](https://github.com/bluesky-social/atproto/commit/f8c84ebd3db960234cbd72dae6d1ab57d9361317) Thanks [@bnewbold](https://github.com/bnewbold)! - add `none` to germ declaration record
+
+## 0.18.20
+
+### Patch Changes
+
+- [#4591](https://github.com/bluesky-social/atproto/pull/4591) [`4f5c400`](https://github.com/bluesky-social/atproto/commit/4f5c4001271bbf38b30506efd30ebdabb969878f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Rename `platform` to `deviceName` on `draft` view, add maxLength.
+
+## 0.18.19
+
+### Patch Changes
+
+- [#4590](https://github.com/bluesky-social/atproto/pull/4590) [`25cea46`](https://github.com/bluesky-social/atproto/commit/25cea46aaa3d84521d1e977b67d3ac3581304ba1) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `deviceId` and `platform` to drafts as optional props
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.15
+
+## 0.18.18
+
+### Patch Changes
+
+- [#4581](https://github.com/bluesky-social/atproto/pull/4581) [`2830dae`](https://github.com/bluesky-social/atproto/commit/2830daeaa6f580fbf777a0f832d64a6579616dc7) Thanks [@mozzius](https://github.com/mozzius)! - Add `presentation` to video embed as a hint to the client about how to display the video
+
+- Updated dependencies [[`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/common-web@0.4.14
+
+## 0.18.17
+
+### Patch Changes
+
+- [#4565](https://github.com/bluesky-social/atproto/pull/4565) [`cbd5837`](https://github.com/bluesky-social/atproto/commit/cbd5837f015e6b5e098a60098faea82e7f9419f3) Thanks [@cuducos](https://github.com/cuducos)! - Re-add `recId` to suggested users (now, as string)
+
+- [#4547](https://github.com/bluesky-social/atproto/pull/4547) [`d8e5363`](https://github.com/bluesky-social/atproto/commit/d8e53636c84da6dd3dd69e1d260f4fa617f3883c) Thanks [@cuducos](https://github.com/cuducos)! - Removes `recId` from suggested users — we need it as a string, so we're gonna re-add it as string (instead of integer) later.
+
+- [#4415](https://github.com/bluesky-social/atproto/pull/4415) [`9bdd358`](https://github.com/bluesky-social/atproto/commit/9bdd35881aa7efce6595ef708ba13d99c473d114) Thanks [@bnewbold](https://github.com/bnewbold)! - support for Germ Networks chat declaration records
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`7310b97`](https://github.com/bluesky-social/atproto/commit/7310b9704de678a3b389a741784d58bb7f79b10b), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/common-web@0.4.13
+  - @atproto/lexicon@0.6.1
+
+## 0.18.16
+
+### Patch Changes
+
+- [#4552](https://github.com/bluesky-social/atproto/pull/4552) [`ccd8964`](https://github.com/bluesky-social/atproto/commit/ccd89643313799f47c2f009c5c9dca48540275f1) Thanks [@mozzius](https://github.com/mozzius)! - Add `draft` lexicons
+
+## 0.18.15
+
+### Patch Changes
+
+- [#4543](https://github.com/bluesky-social/atproto/pull/4543) [`f58029b`](https://github.com/bluesky-social/atproto/commit/f58029ba54305bed361c834a42bd96022b5b3c59) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `liveEventPreferences` to user preferences, add `updateLiveEventPreferences` to API SDK
+
+## 0.18.14
+
+### Patch Changes
+
+- [#4539](https://github.com/bluesky-social/atproto/pull/4539) [`3ffebd0`](https://github.com/bluesky-social/atproto/commit/3ffebd0bf25776308e06e4b083dc2d0e156d9ac0) Thanks [@mozzius](https://github.com/mozzius)! - Add $cashtag support to the Rich Text facet detection
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.12
+
 ## 0.18.13
 
 ### Patch Changes

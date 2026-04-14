@@ -23,7 +23,7 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/pipe": "workspace:*"
+    "@atproto-labs/pipe": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

@@ -1,63 +1,65 @@
-import { isPlainObject } from '@atproto/lex-data'
+import { LexMap, isPlainObject } from '@atproto/lex-data'
 import {
   $Type,
+  $TypeOf,
   $Typed,
   $TypedMaybe,
-  Infer,
+  $type,
+  $typed,
+  InferInput,
+  InferOutput,
+  NsidString,
   Schema,
-  ValidationResult,
+  Unknown$TypedObject,
+  ValidationContext,
   Validator,
-  ValidatorContext,
 } from '../core.js'
-import { TypedObject } from './typed-union.js'
+import { lazyProperty } from '../util/lazy-property.js'
 
-export type TypedObjectSchemaOutput<
-  T extends $Type,
-  S extends Validator<{ [k: string]: unknown }>,
-> = $TypedMaybe<Infer<S>, T>
+export type MaybeTypedObject<
+  TType extends $Type,
+  TValue extends { $type?: unknown } = { $type?: unknown },
+> = TValue extends { $type?: TType }
+  ? TValue
+  : $TypedMaybe<Exclude<TValue, Unknown$TypedObject>, TType>
 
+/**
+ * Schema for typed objects in Lexicon unions.
+ *
+ * Typed objects have a `$type` field that identifies which variant they are
+ * in a union. The `$type` can be omitted in input (it's implicit), but if
+ * present, it must match the expected value.
+ *
+ * @template TType - The $type string literal type
+ * @template TShape - The validator type for the object's shape
+ *
+ * @example
+ * ```ts
+ * const schema = new TypedObjectSchema(
+ *   'app.bsky.embed.images#view',
+ *   l.object({ images: l.array(imageSchema) })
+ * )
+ * ```
+ */
 export class TypedObjectSchema<
-  const T extends $Type = any,
-  const S extends Validator<{ [k: string]: unknown }> = any,
-> extends Schema<TypedObjectSchemaOutput<T, S>> {
+  const TType extends $Type = $Type,
+  const TShape extends Validator<LexMap> = Validator<LexMap>,
+> extends Schema<
+  $TypedMaybe<InferInput<TShape>, TType>,
+  $TypedMaybe<InferOutput<TShape>, TType>
+> {
+  readonly type = 'typedObject' as const
+
   constructor(
-    readonly $type: T,
-    readonly schema: S,
+    readonly $type: TType,
+    readonly schema: TShape,
   ) {
     super()
   }
 
-  isTypeOf<X extends Record<string, unknown>>(
-    value: X,
-  ): value is Exclude<
-    X extends { $type?: T } ? X : $TypedMaybe<X, T>,
-    TypedObject
-  > {
-    return value.$type === undefined || value.$type === this.$type
-  }
-
-  build<X extends Omit<Infer<S>, '$type'>>(
-    input: X,
-  ): $Typed<Omit<X, '$type'>, T> {
-    return input.$type === this.$type
-      ? (input as $Typed<X, T>)
-      : { ...input, $type: this.$type }
-  }
-
-  $isTypeOf<X extends Record<string, unknown>>(value: X) {
-    return this.isTypeOf(value)
-  }
-
-  $build<X extends Omit<Infer<S>, '$type'>>(input: X) {
-    return this.build<X>(input)
-  }
-
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<TypedObjectSchemaOutput<T, S>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'object')
+      return ctx.issueUnexpectedType(input, 'object')
     }
 
     if (
@@ -68,8 +70,112 @@ export class TypedObjectSchema<
       return ctx.issueInvalidPropertyValue(input, '$type', [this.$type])
     }
 
-    return ctx.validate(input, this.schema) as ValidationResult<
-      TypedObjectSchemaOutput<T, S>
-    >
+    return ctx.validate(input, this.schema)
   }
+
+  build(
+    input: Omit<InferOutput<TShape>, '$type'>,
+  ): $Typed<InferOutput<TShape>, TType>
+  build(
+    input: Omit<InferInput<TShape>, '$type'>,
+  ): $Typed<InferInput<TShape>, TType>
+  build(input: Record<string, unknown>) {
+    return $typed(input, this.$type)
+  }
+
+  isTypeOf<TValue extends Record<string, unknown>>(
+    value: TValue,
+  ): value is MaybeTypedObject<TType, TValue> {
+    return value.$type === undefined || value.$type === this.$type
+  }
+
+  /**
+   * Bound alias for {@link build} for compatibility with generated utilities.
+   * @see {@link build}
+   */
+  get $build(): typeof this.build {
+    return lazyProperty(this, '$build', this.build.bind(this))
+  }
+
+  /**
+   * Bound alias for {@link isTypeOf} for compatibility with generated utilities.
+   * @see {@link isTypeOf}
+   */
+  get $isTypeOf(): typeof this.isTypeOf {
+    return lazyProperty(this, '$isTypeOf', this.isTypeOf.bind(this))
+  }
+}
+
+/**
+ * Creates a typed object schema for use in Lexicon unions.
+ *
+ * Typed objects are identified by their `$type` field, which combines an NSID
+ * and a hash (e.g., 'app.bsky.embed.images#view'). Used for union variants.
+ *
+ * This function offers two overloads:
+ * - One that infers the type from arguments (no circular reference support)
+ * - One with explicit interface for codegen with circular references
+ *
+ * @param nsid - The NSID part of the type (e.g., 'app.bsky.embed.images')
+ * @param hash - The hash part of the type (e.g., 'view'), defaults to 'main'
+ * @param validator - Schema for validating the object properties
+ * @returns A new {@link TypedObjectSchema} instance
+ *
+ * @example
+ * ```ts
+ * // Image embed view
+ * const imageViewSchema = l.typedObject(
+ *   'app.bsky.embed.images',
+ *   'view',
+ *   l.object({
+ *     images: l.array(l.object({
+ *       thumb: l.string(),
+ *       fullsize: l.string(),
+ *       alt: l.string(),
+ *     })),
+ *   })
+ * )
+ *
+ * // Main type (hash defaults to 'main')
+ * const postViewSchema = l.typedObject(
+ *   'app.bsky.feed.defs',
+ *   'postView',
+ *   l.object({ uri: l.string(), cid: l.string(), author: authorSchema })
+ * )
+ *
+ * // Use $isTypeOf to narrow union types
+ * if (imageViewSchema.$isTypeOf(embed)) {
+ *   // embed is narrowed to image view type
+ * }
+ *
+ * // Use $build to construct typed objects
+ * const view = imageViewSchema.$build({ images: [...] })
+ * // view.$type === 'app.bsky.embed.images#view'
+ * ```
+ */
+export function typedObject<
+  const N extends NsidString,
+  const H extends string,
+  const S extends Validator<LexMap>,
+>(nsid: N, hash: H, validator: S): TypedObjectSchema<$Type<N, H>, S>
+export function typedObject<V extends { $type?: $Type }>(
+  nsid: V extends { $type?: infer T extends string }
+    ? T extends `${infer N}#${string}`
+      ? N
+      : T // (T is a "main" type, so already an NSID)
+    : never,
+  hash: V extends { $type?: infer T extends string }
+    ? T extends `${string}#${infer H}`
+      ? H
+      : 'main'
+    : never,
+  validator: Validator<Omit<V, '$type'>>,
+): TypedObjectSchema<$TypeOf<V>, Validator<V>>
+/*@__NO_SIDE_EFFECTS__*/
+export function typedObject<
+  const N extends NsidString,
+  const H extends string,
+  const S extends Validator<LexMap>,
+>(nsid: N, hash: H, validator: S) {
+  return new TypedObjectSchema<$Type<N, H>, S>($type(nsid, hash), validator)
 }

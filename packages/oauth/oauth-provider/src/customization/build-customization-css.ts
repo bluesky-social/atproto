@@ -1,4 +1,9 @@
-import { extractHue, pickContrastColor } from '../lib/util/color.js'
+import {
+  RgbColor,
+  extractHue,
+  hslToRgb,
+  pickContrastColor,
+} from '../lib/util/color.js'
 import { Branding } from './branding.js'
 import { COLOR_NAMES } from './colors.js'
 import { Customization } from './customization.js'
@@ -12,8 +17,25 @@ export function buildCustomizationCss({
 
 function* buildCustomizationVars(branding?: Branding): Generator<string> {
   if (branding?.colors) {
-    const contrastLight = branding.colors.light ?? { r: 255, g: 255, b: 255 }
-    const contrastDark = branding.colors.dark ?? { r: 0, g: 0, b: 0 }
+    const contrastSaturation = branding.colors.contrastSaturation ?? 30
+    yield `--contrast-sat: ${contrastSaturation.toFixed(2)}%;`
+
+    const contrastLight: RgbColor =
+      branding.colors.light ??
+      // Corresponds to color-contrast-975
+      hslToRgb({
+        h: branding.colors.primaryHue ?? 0,
+        s: contrastSaturation / 100,
+        l: 0.07,
+      })
+    const contrastDark: RgbColor =
+      branding.colors.dark ??
+      // Corresponds to color-contrast-25
+      hslToRgb({
+        h: branding.colors.primaryHue ?? 0,
+        s: contrastSaturation / 100,
+        l: 0.953,
+      })
 
     for (const name of COLOR_NAMES) {
       const value = branding.colors[name]

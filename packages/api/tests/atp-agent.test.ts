@@ -285,6 +285,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setAdultContentEnabled(true)
@@ -332,6 +336,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -381,6 +389,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setContentLabelPref('misinfo', 'hide')
@@ -428,6 +440,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -480,6 +496,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -536,6 +556,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -590,6 +614,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -646,6 +674,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -701,6 +733,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.addPinnedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -755,6 +791,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -817,6 +857,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.removeSavedFeed('at://bob.com/app.bsky.feed.generator/fake')
@@ -871,6 +915,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -932,6 +980,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: true })
@@ -992,6 +1044,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setFeedViewPrefs('home', { hideReplies: false })
@@ -1051,6 +1107,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1119,6 +1179,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setThreadViewPrefs({ sort: 'random' })
@@ -1185,6 +1249,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1253,6 +1321,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setInterestsPref({ tags: ['foo', 'bar'] })
@@ -1319,6 +1391,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
     })
@@ -1518,6 +1594,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setAdultContentEnabled(false)
@@ -1586,6 +1666,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1657,6 +1741,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.removeLabeler('did:plc:other')
@@ -1722,6 +1810,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1789,6 +1881,10 @@ describe('agent', () => {
         verificationPrefs: {
           hideBadges: false,
         },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        },
       })
 
       await agent.setPersonalDetails({ birthDate: '2023-09-11T18:05:42.556Z' })
@@ -1854,6 +1950,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -1931,6 +2031,10 @@ describe('agent', () => {
         },
         verificationPrefs: {
           hideBadges: false,
+        },
+        liveEventPreferences: {
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
         },
       })
 
@@ -3673,6 +3777,82 @@ describe('agent', () => {
         await agent.setVerificationPrefs(next)
         const prefs = await agent.getPreferences()
         expect(prefs.verificationPrefs).toEqual(next)
+      })
+    })
+
+    describe('updateLiveEventPreferences', () => {
+      let agent: AtpAgent
+
+      beforeAll(async () => {
+        agent = new AtpAgent({ service: network.pds.url })
+
+        await agent.createAccount({
+          handle: 'live-event-prefs.test',
+          email: 'live-event-prefs@test.com',
+          password: 'password',
+        })
+      })
+
+      it('default state', async () => {
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: [],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('hideFeed adds a feed id', async () => {
+        await agent.updateLiveEventPreferences({
+          type: 'hideFeed',
+          id: 'feed1',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed1'],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('hideFeed adds another feed id', async () => {
+        await agent.updateLiveEventPreferences({
+          type: 'hideFeed',
+          id: 'feed2',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed1', 'feed2'],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('unhideFeed removes a feed id', async () => {
+        await agent.updateLiveEventPreferences({
+          type: 'unhideFeed',
+          id: 'feed1',
+        })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed2'],
+          hideAllFeeds: false,
+        })
+      })
+
+      it('toggleHideAllFeeds toggles the flag', async () => {
+        await agent.updateLiveEventPreferences({ type: 'toggleHideAllFeeds' })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed2'],
+          hideAllFeeds: true,
+        })
+      })
+
+      it('toggleHideAllFeeds toggles back', async () => {
+        await agent.updateLiveEventPreferences({ type: 'toggleHideAllFeeds' })
+        const prefs = await agent.getPreferences()
+        expect(prefs.liveEventPreferences).toEqual({
+          hiddenFeedIds: ['feed2'],
+          hideAllFeeds: false,
+        })
       })
     })
 

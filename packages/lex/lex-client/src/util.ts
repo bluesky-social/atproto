@@ -1,10 +1,33 @@
-import { DidString } from '@atproto/lex-schema'
+import type { DidString, Service } from './types.js'
 
-export type Payload<B = unknown, E extends string = string> = {
-  body: B
-  encoding: E
+export function applyDefaults<
+  TDefaults extends Record<string, unknown>,
+  TOptions extends {
+    [K in keyof TDefaults]?: TDefaults[K]
+  },
+>(options: TOptions, defaults: TDefaults): TOptions & TDefaults {
+  const combined: Partial<TDefaults> = { ...options }
+
+  // @NOTE We make sure that options with an explicit `undefined` value get the
+  // default, since spreading doesn't override with `undefined`.
+  for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
+    if (options[key] === undefined) {
+      combined[key] = defaults[key]
+    }
+  }
+
+  return combined as TOptions & TDefaults
 }
 
+/**
+ * Type guard to check if a value is {@link Blob}-like.
+ *
+ * Handles both native Blobs and polyfilled Blob implementations
+ * (e.g., fetch-blob from node-fetch).
+ *
+ * @param value - The value to check
+ * @returns `true` if the value is a Blob or Blob-like object
+ */
 export function isBlobLike(value: unknown): value is Blob {
   if (value == null) return false
   if (typeof value !== 'object') return false
@@ -32,11 +55,30 @@ export function isAsyncIterable<T>(
   )
 }
 
-export function buildAtprotoHeaders(options: {
+export type XrpcRequestHeadersOptions = {
+  /** Additional HTTP headers to include in the request. */
   headers?: HeadersInit
-  service?: `${DidString}#${string}`
+
+  /** Labeler DIDs to request labels from for content moderation. */
   labelers?: Iterable<DidString>
-}): Headers {
+
+  /** Service proxy identifier for routing requests through a specific service. */
+  service?: Service
+}
+
+/**
+ * Builds HTTP headers for AT Protocol requests.
+ *
+ * Adds the following headers when applicable:
+ * - `atproto-proxy`: Service routing header (if service is specified)
+ * - `atproto-accept-labelers`: Comma-separated list of labeler DIDs
+ *
+ * @see {@link XrpcRequestHeadersOptions}
+ * @returns A new Headers object with AT Protocol headers added
+ */
+export function buildXrpcRequestHeaders(
+  options: XrpcRequestHeadersOptions,
+): Headers {
   const headers = new Headers(options?.headers)
 
   if (options.service && !headers.has('atproto-proxy')) {
@@ -59,10 +101,19 @@ export function toReadableStream(
   data: AsyncIterable<Uint8Array>,
 ): ReadableStream<Uint8Array> {
   // Use the native ReadableStream.from() if available.
+
+  /* v8 ignore next -- @preserve */
   if ('from' in ReadableStream && typeof ReadableStream.from === 'function') {
     return ReadableStream.from(data)
   }
 
+  /* v8 ignore next -- @preserve */
+  return toReadableStreamPonyfill(data)
+}
+
+export function toReadableStreamPonyfill(
+  data: AsyncIterable<Uint8Array>,
+): ReadableStream<Uint8Array> {
   let iterator: AsyncIterator<Uint8Array> | undefined
   return new ReadableStream({
     async pull(controller) {

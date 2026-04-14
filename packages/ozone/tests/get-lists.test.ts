@@ -24,8 +24,8 @@ describe('admin get lists', () => {
       dbPostgresSchema: 'ozone_admin_get_lists',
     })
     ozone = network.ozone
-    agent = ozone.getClient()
-    appviewAgent = network.bsky.getClient()
+    agent = ozone.getAgent()
+    appviewAgent = network.bsky.getAgent()
     sc = network.getSeedClient()
     modClient = ozone.getModClient()
     await basicSeed(sc)

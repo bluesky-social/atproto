@@ -1,6 +1,6 @@
 {
   "name": "@atproto-labs/did-resolver",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "license": "MIT",
   "description": "DID resolution and verification library",
   "keywords": [
@@ -24,11 +24,11 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/fetch": "workspace:*",
-    "@atproto-labs/pipe": "workspace:*",
-    "@atproto-labs/simple-store": "workspace:*",
-    "@atproto-labs/simple-store-memory": "workspace:*",
-    "@atproto/did": "workspace:*",
+    "@atproto-labs/fetch": "workspace:^",
+    "@atproto-labs/pipe": "workspace:^",
+    "@atproto-labs/simple-store": "workspace:^",
+    "@atproto-labs/simple-store-memory": "workspace:^",
+    "@atproto/did": "workspace:^",
     "zod": "^3.23.8"
   },
   "devDependencies": {

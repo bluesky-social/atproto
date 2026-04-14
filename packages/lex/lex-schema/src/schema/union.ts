@@ -1,38 +1,89 @@
 import {
-  Infer,
+  InferInput,
+  InferOutput,
+  LexValidationError,
   Schema,
-  ValidationError,
+  ValidationContext,
   ValidationFailure,
-  ValidationResult,
   Validator,
-  ValidatorContext,
 } from '../core.js'
 
+/**
+ * Type representing a non-empty tuple of validators for union schemas.
+ *
+ * Requires at least one validator in the tuple.
+ */
 export type UnionSchemaValidators = readonly [Validator, ...Validator[]]
-export type UnionSchemaOutput<V extends readonly Validator[]> = Infer<V[number]>
 
-export class UnionSchema<V extends UnionSchemaValidators = any> extends Schema<
-  UnionSchemaOutput<V>
+/**
+ * Schema for validating values that match one of several possible schemas.
+ *
+ * Tries each validator in order until one succeeds. If all validators fail,
+ * returns a combined error from all attempts.
+ *
+ * @template TValidators - Tuple type of the validators in the union
+ *
+ * @example
+ * ```ts
+ * const schema = new UnionSchema([l.string(), l.integer()])
+ * schema.validate('hello') // success
+ * schema.validate(42)      // success
+ * schema.validate(true)    // fails
+ * ```
+ */
+export class UnionSchema<
+  const TValidators extends UnionSchemaValidators = any,
+> extends Schema<
+  InferInput<TValidators[number]>,
+  InferOutput<TValidators[number]>
 > {
-  constructor(protected readonly validators: V) {
+  readonly type = 'union' as const
+
+  constructor(protected readonly validators: TValidators) {
     super()
   }
 
-  validateInContext(
-    input: unknown,
-    ctx: ValidatorContext,
-  ): ValidationResult<UnionSchemaOutput<V>> {
+  validateInContext(input: unknown, ctx: ValidationContext) {
     const failures: ValidationFailure[] = []
 
     for (const validator of this.validators) {
       const result = ctx.validate(input, validator)
-      if (result.success) {
-        return result as ValidationResult<UnionSchemaOutput<V>>
-      } else {
-        failures.push(result)
-      }
+      if (result.success) return result
+
+      failures.push(result)
     }
 
-    return ctx.failure(ValidationError.fromFailures(failures))
+    return ctx.failure(LexValidationError.fromFailures(failures))
   }
+}
+
+/**
+ * Creates a union schema that accepts values matching any of the provided schemas.
+ *
+ * Validators are tried in order. Use `discriminatedUnion()` for better
+ * performance when discriminating on a known property.
+ *
+ * @param validators - Non-empty array of validators to try
+ * @returns A new {@link UnionSchema} instance
+ *
+ * @example
+ * ```ts
+ * // String or number
+ * const stringOrNumber = l.union([l.string(), l.integer()])
+ *
+ * // Nullable value
+ * const nullableString = l.union([l.string(), l.null()])
+ *
+ * // Multiple object types
+ * const mediaSchema = l.union([
+ *   l.object({ type: l.literal('image'), url: l.string() }),
+ *   l.object({ type: l.literal('video'), url: l.string(), duration: l.integer() }),
+ * ])
+ * ```
+ */
+/*@__NO_SIDE_EFFECTS__*/
+export function union<const TValidators extends UnionSchemaValidators>(
+  validators: TValidators,
+) {
+  return new UnionSchema<TValidators>(validators)
 }

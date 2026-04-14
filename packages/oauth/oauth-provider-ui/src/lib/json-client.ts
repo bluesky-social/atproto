@@ -1,12 +1,10 @@
-// Using a type import to avoid bundling this lib
-import type { Json } from '@atproto-labs/fetch'
+export type JsonScalar = string | number | boolean | null
+export type Json = JsonScalar | Json[] | { [key: string]: undefined | Json }
 
-export { type Json }
 type Awaitable<T> = T | PromiseLike<T>
 
 export type Options = {
   signal?: AbortSignal
-  bearer?: string
 }
 
 export type EndpointPath = `/${string}`
@@ -21,15 +19,25 @@ export type EndpointDefinition =
       params?: Record<string, string | undefined>
       output: Json | void
     }
+export type EndpointDefinitions = { [path: EndpointPath]: EndpointDefinition }
 
-export class JsonClient<
-  Endpoints extends { [Path: EndpointPath]: EndpointDefinition },
-> {
+export type JsonClientOptions = {
+  onFetchError?: (
+    err: unknown,
+    context: {
+      method: string
+      path: string
+      input: unknown
+      options?: Options
+    },
+  ) => void
+  headers?: () => Awaitable<Record<string, string | undefined>>
+}
+
+export class JsonClient<Endpoints extends EndpointDefinitions> {
   constructor(
     protected readonly baseUrl: string,
-    protected readonly getHeaders: () => Awaitable<
-      Record<string, string | undefined>
-    >,
+    protected readonly options?: JsonClientOptions,
   ) {}
 
   public async fetch<Path extends EndpointPath & keyof Endpoints>(
@@ -42,52 +50,61 @@ export class JsonClient<
         : undefined,
     options?: Options,
   ): Promise<Endpoints[Path]['output']> {
-    const url = new URL(`${this.baseUrl}${path}`)
-    if (method === 'GET') {
-      if (input) {
-        for (const [key, value] of Object.entries(input)) {
-          url.searchParams.set(key, value)
+    try {
+      const url = new URL(`${this.baseUrl}${path}`)
+      if (method === 'GET') {
+        if (input) {
+          for (const [key, value] of Object.entries(input)) {
+            url.searchParams.set(key, value)
+          }
         }
       }
-    }
 
-    const body = method === 'POST' ? JSON.stringify(input) : undefined
+      const body = method === 'POST' ? JSON.stringify(input) : undefined
 
-    const headers = Object.entries(await this.getHeaders.call(null))
-      .filter((entry): entry is [string, string] => entry[1] != null)
-      .map(([k, v]) => [k.toLowerCase(), v] as [string, string])
+      const headersEntries = await this.options?.headers?.()
+      const headers = new Headers(
+        headersEntries
+          ? Object.entries(headersEntries).filter(
+              (entry): entry is [string, string] => entry[1] != null,
+            )
+          : undefined,
+      )
 
-    if (options?.bearer) {
-      headers.push(['authorization', `Bearer ${options.bearer}`])
-    }
+      if (body && !headers.has('content-type')) {
+        headers.set('content-type', 'application/json')
+      }
 
-    const response = await fetch(url, {
-      method,
-      headers:
-        body && !headers.some(([k]) => k === 'content-type')
-          ? headers.concat([['content-type', 'application/json']])
-          : headers,
-      mode: 'same-origin',
-      body,
-      signal: options?.signal,
-    })
-
-    if (response.status === 204) {
-      return undefined
-    }
-
-    const responseType = response.headers.get('content-type')
-    if (responseType !== 'application/json') {
-      await response.body?.cancel()
-      throw new Error(`Invalid content type "${responseType}"`, {
-        cause: response,
+      const response = await fetch(url, {
+        method,
+        headers,
+        mode: 'same-origin',
+        body,
+        signal: options?.signal,
       })
+
+      if (response.status === 204) {
+        return undefined
+      }
+
+      const responseType = response.headers.get('content-type')
+      if (responseType !== 'application/json') {
+        await response.body?.cancel()
+        throw new Error(`Invalid content type "${responseType}"`, {
+          cause: response,
+        })
+      }
+
+      const json = await response.json()
+
+      if (response.ok) return json as Endpoints[Path]['output']
+      else throw this.parseError(response, json)
+    } catch (err) {
+      const context = { method, path, input, options }
+      console.warn('API request failed', err, context)
+      this.options?.onFetchError?.(err, context)
+      throw err
     }
-
-    const json = await response.json()
-
-    if (response.ok) return json as Endpoints[Path]['output']
-    else throw this.parseError(response, json)
   }
 
   protected parseError(response: Response, json: Json): Error {

@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { UnknownString } from '@atproto/lex-schema'
 import * as com from './lexicons/com.js'
 
 describe('com.example.stringLength', () => {
@@ -27,38 +28,38 @@ describe('com.example.stringLength', () => {
 
   describe('invalid cases', () => {
     for (const { string, error } of [
-      { string: '', error: 'string too small (minimum 2) at $.string (got 0)' },
+      { string: '', error: 'string too small (minimum 2, got 0) at $.string' },
       {
         string: 'a',
-        error: 'string too small (minimum 2) at $.string (got 1)',
+        error: 'string too small (minimum 2, got 1) at $.string',
       },
       {
         string: 'abcde',
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'a\u0301\u0301', // 1 + (2 * 2) = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '\uD83D\uD83D', // Two unpaired high surrogates (3 * 2 = 6 bytes)
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: 'ééé', // 2 + 2 + 2 bytes = 6 bytes
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: '👋a', // 4 + 1 bytes = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '👨👨', // 4 + 4 = 8 bytes
-        error: 'string too big (maximum 4) at $.string (got 8)',
+        error: 'string too big (maximum 4, got 8) at $.string',
       },
       {
         string: '👨‍👩‍👧‍👧', // 4 emojis × 4 bytes + 3 ZWJs × 3 bytes = 25 bytes
-        error: 'string too big (maximum 4) at $.string (got 25)',
+        error: 'string too big (maximum 4, got 25) at $.string',
       },
     ]) {
       it(`rejects invalid ${JSON.stringify(string)}`, () => {
@@ -105,31 +106,31 @@ describe('com.example.stringLengthNoMinLength', () => {
     for (const { string, error } of [
       {
         string: 'abcde',
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'a\u0301\u0301', // 1 + (2 * 2) = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '\uD83D\uD83D', // Two unpaired high surrogates (3 * 2 = 6 bytes)
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: 'ééé', // 2 + 2 + 2 bytes = 6 bytes
-        error: 'string too big (maximum 4) at $.string (got 6)',
+        error: 'string too big (maximum 4, got 6) at $.string',
       },
       {
         string: '👋a', // 4 + 1 bytes = 5 bytes
-        error: 'string too big (maximum 4) at $.string (got 5)',
+        error: 'string too big (maximum 4, got 5) at $.string',
       },
       {
         string: '👨👨', // 4 + 4 = 8 bytes
-        error: 'string too big (maximum 4) at $.string (got 8)',
+        error: 'string too big (maximum 4, got 8) at $.string',
       },
       {
         string: '👨‍👩‍👧‍👧', // 4 emojis × 4 bytes + 3 ZWJs × 3 bytes = 25 bytes
-        error: 'string too big (maximum 4) at $.string (got 25)',
+        error: 'string too big (maximum 4, got 25) at $.string',
       },
     ]) {
       it(`rejects invalid ${JSON.stringify(string)}`, () => {
@@ -141,6 +142,30 @@ describe('com.example.stringLengthNoMinLength', () => {
         ).toThrow(error)
       })
     }
+  })
+})
+
+describe('com.example.stringKnownValues', () => {
+  it('properly types known string values', () => {
+    expectTypeOf<com.example.stringKnownValues.Main>().not.toMatchObjectType<{
+      myKey: string
+    }>()
+    expectTypeOf<com.example.stringKnownValues.Main>().not.toMatchObjectType<{
+      myKey: UnknownString
+    }>()
+    expectTypeOf<com.example.stringKnownValues.Main>().toMatchObjectType<{
+      myKey: 'foo' | 'bar' | UnknownString
+    }>()
+
+    expectTypeOf<
+      com.example.stringKnownValues.Main['myKey']
+    >().not.toEqualTypeOf<string>()
+    expectTypeOf<
+      com.example.stringKnownValues.Main['myKey']
+    >().not.toEqualTypeOf<UnknownString>()
+    expectTypeOf<com.example.stringKnownValues.Main['myKey']>().toEqualTypeOf<
+      'foo' | 'bar' | UnknownString
+    >()
   })
 })
 
@@ -169,44 +194,44 @@ describe('com.example.stringLengthGrapheme', () => {
       // Shorter than two graphemes
       {
         string: '',
-        error: 'grapheme too small (minimum 2) at $.string (got 0)',
+        error: 'grapheme too small (minimum 2, got 0) at $.string',
       },
       {
         string: '\u0301\u0301\u0301', // Three combining acute accents
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: 'a',
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: 'a\u0301\u0301\u0301\u0301', // 'á́́́' ('a' with four combining acute accents)
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: '5\uFE0F', // '5️' with emoji presentation
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       {
         string: '👨‍👩‍👧‍👧',
-        error: 'grapheme too small (minimum 2) at $.string (got 1)',
+        error: 'grapheme too small (minimum 2, got 1) at $.string',
       },
       // Longer than four graphemes
       {
         string: 'abcde',
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'a\u0301b\u0301c\u0301d\u0301e\u0301', // 'áb́ćd́é'
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
       {
         string: '😀😀😀😀😀',
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
       {
         string: 'ab😀de',
-        error: 'grapheme too big (maximum 4) at $.string (got 5)',
+        error: 'grapheme too big (maximum 4, got 5) at $.string',
       },
     ]) {
       it(`rejects invalid ${JSON.stringify(string)}`, () => {
@@ -232,7 +257,7 @@ describe('com.example.stringEnum', () => {
         $type: 'com.example.stringEnum',
         string: 'c',
       }),
-    ).toThrow('Expected one of "a" or "b" at $.string (got "c")')
+    ).toThrow('Expected one of "a" or "b" (got "c") at $.string')
   })
 })
 describe('com.example.stringConst', () => {
@@ -246,7 +271,7 @@ describe('com.example.stringConst', () => {
         $type: 'com.example.stringConst',
         string: 'b',
       }),
-    ).toThrow('Expected "a" at $.string (got "b")')
+    ).toThrow('Expected "a" (got "b") at $.string')
   })
 })
 describe('com.example.datetime', () => {
@@ -273,9 +298,7 @@ describe('com.example.datetime', () => {
         $type: 'com.example.datetime',
         datetime: 'bad date',
       }),
-    ).toThrow(
-      'Invalid datetime format (datetime did not parse as ISO 8601) at $.datetime (got "bad date")',
-    )
+    ).toThrow('Invalid datetime (got "bad date") at $.datetime')
   })
 })
 describe('com.example.uri', () => {
@@ -297,7 +320,7 @@ describe('com.example.uri', () => {
         $type: 'com.example.uri',
         uri: 'not a uri',
       }),
-    ).toThrow('Invalid uri format (Invalid URI) at $.uri (got "not a uri")')
+    ).toThrow('Invalid uri (got "not a uri") at $.uri')
   })
 })
 describe('com.example.atUri', () => {
@@ -311,9 +334,7 @@ describe('com.example.atUri', () => {
         $type: 'com.example.atUri',
         atUri: 'http://not-atproto.com',
       }),
-    ).toThrow(
-      'Invalid at-uri format (ATURI must start with "at://") at $.atUri (got "http://not-atproto.com")',
-    )
+    ).toThrow('Invalid at-uri (got "http://not-atproto.com") at $.atUri')
   })
 })
 describe('com.example.did', () => {
@@ -332,17 +353,13 @@ describe('com.example.did', () => {
         $type: 'com.example.did',
         did: 'bad did',
       }),
-    ).toThrow(
-      'Invalid DID format (DID requires "did:" prefix) at $.did (got "bad did")',
-    )
+    ).toThrow('Invalid DID (got "bad did") at $.did')
     expect(() =>
       com.example.did.$parse({
         $type: 'com.example.did',
         did: 'did:short',
       }),
-    ).toThrow(
-      'Invalid DID format (DID requires prefix, method, and method-specific content) at $.did (got "did:short")',
-    )
+    ).toThrow('Invalid DID (got "did:short") at $.did')
   })
 })
 describe('com.example.handle', () => {
@@ -361,17 +378,13 @@ describe('com.example.handle', () => {
         $type: 'com.example.handle',
         handle: 'bad handle',
       }),
-    ).toThrow(
-      'Invalid handle format (Disallowed characters in handle (ASCII letters, digits, dashes, periods only)) at $.handle (got "bad handle")',
-    )
+    ).toThrow('Invalid handle (got "bad handle") at $.handle')
     expect(() =>
       com.example.handle.$parse({
         $type: 'com.example.handle',
         handle: '-bad-.test',
       }),
-    ).toThrow(
-      'Invalid handle format (Handle parts can not start or end with hyphens) at $.handle (got "-bad-.test")',
-    )
+    ).toThrow('Invalid handle (got "-bad-.test") at $.handle')
   })
 })
 describe('com.example.atIdentifier', () => {
@@ -390,17 +403,13 @@ describe('com.example.atIdentifier', () => {
         $type: 'com.example.atIdentifier',
         atIdentifier: 'bad id',
       }),
-    ).toThrow(
-      'Invalid AT identifier format (Invalid DID or handle) at $.atIdentifier (got "bad id")',
-    )
+    ).toThrow('Invalid AT identifier (got "bad id") at $.atIdentifier')
     expect(() =>
       com.example.atIdentifier.$parse({
         $type: 'com.example.atIdentifier',
         atIdentifier: '-bad-.test',
       }),
-    ).toThrow(
-      'Invalid AT identifier format (Invalid DID or handle) at $.atIdentifier (got "-bad-.test")',
-    )
+    ).toThrow('Invalid AT identifier (got "-bad-.test") at $.atIdentifier')
   })
 })
 describe('com.example.nsid', () => {
@@ -419,17 +428,13 @@ describe('com.example.nsid', () => {
         $type: 'com.example.nsid',
         nsid: 'bad nsid',
       }),
-    ).toThrow(
-      'Invalid NSID format (Disallowed characters in NSID (ASCII letters, digits, dashes, periods only)) at $.nsid (got "bad nsid")',
-    )
+    ).toThrow('Invalid NSID (got "bad nsid") at $.nsid')
     expect(() =>
       com.example.nsid.$parse({
         $type: 'com.example.nsid',
         nsid: 'com.bad-.foo',
       }),
-    ).toThrow(
-      'Invalid NSID format (NSID parts can not start or end with hyphen) at $.nsid (got "com.bad-.foo")',
-    )
+    ).toThrow('Invalid NSID (got "com.bad-.foo") at $.nsid')
   })
 })
 describe('com.example.cid', () => {
@@ -444,7 +449,7 @@ describe('com.example.cid', () => {
         cid: 'abapsdofiuwrpoiasdfuaspdfoiu',
       }),
     ).toThrow(
-      'Invalid CID string format (Invalid CID string) at $.cid (got "abapsdofiuwrpoiasdfuaspdfoiu")',
+      'Invalid CID string (got "abapsdofiuwrpoiasdfuaspdfoiu") at $.cid',
     )
   })
 })
@@ -459,8 +464,6 @@ describe('com.example.language', () => {
         $type: 'com.example.language',
         language: 'not-a-language-',
       }),
-    ).toThrow(
-      'Invalid language format (Invalid BCP 47 string) at $.language (got "not-a-language-")',
-    )
+    ).toThrow('Invalid language (got "not-a-language-") at $.language')
   })
 })

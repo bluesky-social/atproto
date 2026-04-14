@@ -1,5 +1,145 @@
 # @atproto/oauth-provider
 
+## 0.15.16
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.5.16
+  - @atproto/lex-document@0.0.19
+  - @atproto/lex-resolver@0.0.21
+
+## 0.15.15
+
+### Patch Changes
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+  - @atproto/lex-resolver@0.0.20
+  - @atproto/lex-document@0.0.18
+
+## 0.15.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.0.19
+  - @atproto/lex-document@0.0.17
+  - @atproto/common@0.5.15
+
+## 0.15.13
+
+### Patch Changes
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+  - @atproto/lex-resolver@0.0.18
+  - @atproto/lex-document@0.0.16
+
+## 0.15.12
+
+### Patch Changes
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`e8969b6`](https://github.com/bluesky-social/atproto/commit/e8969b6b3d3fed8912be53fd72b4d5288ca34766), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/common@0.5.14
+  - @atproto/lex-document@0.0.15
+  - @atproto/lex-resolver@0.0.17
+  - @atproto/oauth-provider-frontend@0.2.9
+  - @atproto/oauth-scopes@0.3.2
+
+## 0.15.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/lex-resolver@0.0.16
+
+## 0.15.10
+
+### Patch Changes
+
+- Updated dependencies [[`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df)]:
+  - @atproto/lex-document@0.0.14
+  - @atproto/lex-resolver@0.0.15
+  - @atproto/common@0.5.12
+
+## 0.15.9
+
+### Patch Changes
+
+- [#4620](https://github.com/bluesky-social/atproto/pull/4620) [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ensure that the `client_id` query param is correct when cancelling an authentication request
+
+- Updated dependencies [[`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0), [`fdbbff8`](https://github.com/bluesky-social/atproto/commit/fdbbff854363ed3518a4039ca43cd279e69600e0)]:
+  - @atproto/oauth-types@0.6.3
+
+## 0.15.8
+
+### Patch Changes
+
+- [#4619](https://github.com/bluesky-social/atproto/pull/4619) [`a2e4e95`](https://github.com/bluesky-social/atproto/commit/a2e4e9584730c1742aca7c1fcc59533a7c159740) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix depencies version
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix development in Safari
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove `Permissions-Policy` header from Form redirect page
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Drop migrational code supporting old cookie style.
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Throw more detailed error upon CSRF login issue
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid potential conflict with `Object.prototype` when parsing cookies.
+
+- Updated dependencies [[`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`a2e4e95`](https://github.com/bluesky-social/atproto/commit/a2e4e9584730c1742aca7c1fcc59533a7c159740), [`7b9a98a`](https://github.com/bluesky-social/atproto/commit/7b9a98a763636c5f66a06da11fe6013f29dd9157), [`19ecf5f`](https://github.com/bluesky-social/atproto/commit/19ecf5f76ae0d88c1963211a76920e00eecdd965), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015), [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b), [`ed61c62`](https://github.com/bluesky-social/atproto/commit/ed61c62f3161fcde85ee9a93f8ed339c7e06c015)]:
+  - @atproto/lex-document@0.0.13
+  - @atproto/oauth-provider-frontend@0.2.9
+  - @atproto/oauth-provider-ui@0.4.3
+  - @atproto/lex-resolver@0.0.14
+  - @atproto/common@0.5.11
+
+## 0.15.7
+
+### Patch Changes
+
+- Updated dependencies [[`49b3806`](https://github.com/bluesky-social/atproto/commit/49b38069ed4b5bd1ef71e967c78e5123b1c1f6f1)]:
+  - @atproto/common@0.5.10
+  - @atproto/lex-resolver@0.0.13
+  - @atproto/lex-document@0.0.12
+
+## 0.15.6
+
+### Patch Changes
+
+- Updated dependencies [[`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/did@0.3.0
+  - @atproto/oauth-scopes@0.3.1
+  - @atproto/oauth-types@0.6.2
+  - @atproto/lex-resolver@0.0.12
+  - @atproto/oauth-provider-ui@0.4.2
+  - @atproto/oauth-provider-api@0.3.7
+  - @atproto/oauth-provider-frontend@0.2.8
+
+## 0.15.5
+
+### Patch Changes
+
+- [#4569](https://github.com/bluesky-social/atproto/pull/4569) [`fa4ef5e`](https://github.com/bluesky-social/atproto/commit/fa4ef5e8150b6ae7fabdc90b847370481e1a6b33) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix oauth response when using `prompt=select_account` and no session are available
+
+- Updated dependencies [[`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101), [`99963d0`](https://github.com/bluesky-social/atproto/commit/99963d002a9e030e79aed5fba700e0a68f31e101)]:
+  - @atproto/syntax@0.4.3
+  - @atproto/lex-document@0.0.11
+  - @atproto/lex-resolver@0.0.11
+  - @atproto/oauth-provider-frontend@0.2.7
+  - @atproto/common@0.5.9
+
+## 0.15.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/common@0.5.8
+  - @atproto/lex-document@0.0.10
+  - @atproto/lex-resolver@0.0.10
+
 ## 0.15.3
 
 ### Patch Changes

@@ -1,4 +1,9 @@
-import type { CustomizationData, Session } from '@atproto/oauth-provider-api'
+import type {
+  Account,
+  ActiveDeviceSession,
+  CustomizationData,
+  Session,
+} from '@atproto/oauth-provider-api'
 import type { LexiconPermissionSet } from '@atproto/oauth-scopes'
 import type { OAuthClientMetadata, OAuthPromptMode } from '@atproto/oauth-types'
 
@@ -13,6 +18,7 @@ export type AuthorizeData = {
   clientTrusted: boolean
   clientFirstParty: boolean
 
+  selectedSub?: Account['sub']
   scope?: string
   loginHint?: string
   uiLocales?: string
@@ -26,6 +32,11 @@ export type ErrorData = {
 }
 
 export type HydrationData = {
+  'account-page': {
+    __customizationData: CustomizationData
+    __deviceSessions: readonly ActiveDeviceSession[]
+  }
+
   /**
    * Matches the variables needed by `authorization-page.tsx`
    */
@@ -34,11 +45,18 @@ export type HydrationData = {
     __authorizeData: AuthorizeData
     __sessions: readonly Session[]
   }
+  /**
+   * Matches the variables needed by `error-page.tsx`
+   */
   'error-page': {
-    /**
-     * Matches the variables needed by `error-page.tsx`
-     */
     __customizationData: CustomizationData
     __errorData: ErrorData
+  }
+  /**
+   * Matches the variables needed by `cookie-error-page.tsx`
+   */
+  'cookie-error-page': {
+    __customizationData: CustomizationData
+    __continueUrl: string
   }
 }

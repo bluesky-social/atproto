@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { IntegerSchema } from './integer.js'
+import { integer } from './integer.js'
+import { withDefault } from './with-default.js'
 
 describe('IntegerSchema', () => {
   describe('basic validation', () => {
-    const schema = new IntegerSchema({})
+    const schema = integer()
 
     it('validates integers', () => {
       const result = schema.safeParse(42)
@@ -82,22 +83,22 @@ describe('IntegerSchema', () => {
   })
 
   describe('default value', () => {
-    const schema = new IntegerSchema({ default: 10 })
+    const schema = withDefault(integer(), 10)
 
     it('uses default when undefined is provided', () => {
       const result = schema.safeParse(undefined)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.value).toBe(10)
-      }
+      expect(result).toMatchObject({
+        success: true,
+        value: 10,
+      })
     })
 
     it('does not use default when explicit value is provided', () => {
       const result = schema.safeParse(20)
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.value).toBe(20)
-      }
+      expect(result).toMatchObject({
+        success: true,
+        value: 20,
+      })
     })
 
     it('does not use default when zero is provided', () => {
@@ -110,7 +111,7 @@ describe('IntegerSchema', () => {
   })
 
   describe('minimum constraint', () => {
-    const schema = new IntegerSchema({ minimum: 10 })
+    const schema = integer({ minimum: 10 })
 
     it('accepts values equal to minimum', () => {
       const result = schema.safeParse(10)
@@ -139,7 +140,7 @@ describe('IntegerSchema', () => {
   })
 
   describe('maximum constraint', () => {
-    const schema = new IntegerSchema({ maximum: 100 })
+    const schema = integer({ maximum: 100 })
 
     it('accepts values equal to maximum', () => {
       const result = schema.safeParse(100)
@@ -168,7 +169,7 @@ describe('IntegerSchema', () => {
   })
 
   describe('minimum and maximum constraints', () => {
-    const schema = new IntegerSchema({ minimum: 10, maximum: 100 })
+    const schema = integer({ minimum: 10, maximum: 100 })
 
     it('accepts values within range', () => {
       const result = schema.safeParse(50)
@@ -197,7 +198,7 @@ describe('IntegerSchema', () => {
   })
 
   describe('negative range constraints', () => {
-    const schema = new IntegerSchema({ minimum: -100, maximum: -10 })
+    const schema = integer({ minimum: -100, maximum: -10 })
 
     it('accepts negative values within range', () => {
       const result = schema.safeParse(-50)
@@ -236,7 +237,7 @@ describe('IntegerSchema', () => {
   })
 
   describe('zero constraints', () => {
-    const schema = new IntegerSchema({ minimum: 0, maximum: 0 })
+    const schema = integer({ minimum: 0, maximum: 0 })
 
     it('accepts zero', () => {
       const result = schema.safeParse(0)
@@ -255,7 +256,7 @@ describe('IntegerSchema', () => {
   })
 
   describe('combined with default value', () => {
-    const schema = new IntegerSchema({ default: 50, minimum: 10, maximum: 100 })
+    const schema = withDefault(integer({ minimum: 10, maximum: 100 }), 50)
 
     it('uses default when undefined is provided', () => {
       const result = schema.safeParse(undefined)
@@ -278,21 +279,21 @@ describe('IntegerSchema', () => {
 
   describe('edge cases', () => {
     it('handles minimum of 0', () => {
-      const schema = new IntegerSchema({ minimum: 0 })
+      const schema = integer({ minimum: 0 })
       expect(schema.safeParse(0).success).toBe(true)
       expect(schema.safeParse(-1).success).toBe(false)
       expect(schema.safeParse(1).success).toBe(true)
     })
 
     it('handles maximum of 0', () => {
-      const schema = new IntegerSchema({ maximum: 0 })
+      const schema = integer({ maximum: 0 })
       expect(schema.safeParse(0).success).toBe(true)
       expect(schema.safeParse(1).success).toBe(false)
       expect(schema.safeParse(-1).success).toBe(true)
     })
 
     it('handles very large ranges', () => {
-      const schema = new IntegerSchema({
+      const schema = integer({
         minimum: Number.MIN_SAFE_INTEGER,
         maximum: Number.MAX_SAFE_INTEGER,
       })
@@ -302,7 +303,7 @@ describe('IntegerSchema', () => {
     })
 
     it('allows unconstrained schema', () => {
-      const schema = new IntegerSchema({})
+      const schema = integer()
       expect(schema.safeParse(Number.MIN_SAFE_INTEGER).success).toBe(true)
       expect(schema.safeParse(Number.MAX_SAFE_INTEGER).success).toBe(true)
       expect(schema.safeParse(0).success).toBe(true)

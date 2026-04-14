@@ -36,6 +36,11 @@ import * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.j
 import * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 import * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 import * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
+import * as AppBskyDraftCreateDraft from './types/app/bsky/draft/createDraft.js'
+import * as AppBskyDraftDefs from './types/app/bsky/draft/defs.js'
+import * as AppBskyDraftDeleteDraft from './types/app/bsky/draft/deleteDraft.js'
+import * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
+import * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 import * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 import * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 import * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -119,14 +124,22 @@ import * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecce
 import * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 import * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacks from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacksSkeleton.js'
+import * as AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 import * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
 import * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 import * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 import * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/unspecced/getSuggestedOnboardingUsers.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 import * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForDiscover from './types/app/bsky/unspecced/getSuggestedUsersForDiscover.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForDiscoverSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForExplore from './types/app/bsky/unspecced/getSuggestedUsersForExplore.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForExploreSkeleton.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForSeeMore from './types/app/bsky/unspecced/getSuggestedUsersForSeeMore.js'
+import * as AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForSeeMoreSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 import * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 import * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
@@ -261,6 +274,7 @@ import * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 import * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 import * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 import * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+import * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
 import * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 import * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 import * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -343,6 +357,11 @@ export * as AppBskyContactRemoveData from './types/app/bsky/contact/removeData.j
 export * as AppBskyContactSendNotification from './types/app/bsky/contact/sendNotification.js'
 export * as AppBskyContactStartPhoneVerification from './types/app/bsky/contact/startPhoneVerification.js'
 export * as AppBskyContactVerifyPhone from './types/app/bsky/contact/verifyPhone.js'
+export * as AppBskyDraftCreateDraft from './types/app/bsky/draft/createDraft.js'
+export * as AppBskyDraftDefs from './types/app/bsky/draft/defs.js'
+export * as AppBskyDraftDeleteDraft from './types/app/bsky/draft/deleteDraft.js'
+export * as AppBskyDraftGetDrafts from './types/app/bsky/draft/getDrafts.js'
+export * as AppBskyDraftUpdateDraft from './types/app/bsky/draft/updateDraft.js'
 export * as AppBskyEmbedDefs from './types/app/bsky/embed/defs.js'
 export * as AppBskyEmbedExternal from './types/app/bsky/embed/external.js'
 export * as AppBskyEmbedImages from './types/app/bsky/embed/images.js'
@@ -426,14 +445,22 @@ export * as AppBskyUnspeccedGetAgeAssuranceState from './types/app/bsky/unspecce
 export * as AppBskyUnspeccedGetConfig from './types/app/bsky/unspecced/getConfig.js'
 export * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacks from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacks.js'
 export * as AppBskyUnspeccedGetOnboardingSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedStarterPacksSkeleton.js'
+export * as AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton from './types/app/bsky/unspecced/getOnboardingSuggestedUsersSkeleton.js'
 export * as AppBskyUnspeccedGetPopularFeedGenerators from './types/app/bsky/unspecced/getPopularFeedGenerators.js'
 export * as AppBskyUnspeccedGetPostThreadOtherV2 from './types/app/bsky/unspecced/getPostThreadOtherV2.js'
 export * as AppBskyUnspeccedGetPostThreadV2 from './types/app/bsky/unspecced/getPostThreadV2.js'
 export * as AppBskyUnspeccedGetSuggestedFeeds from './types/app/bsky/unspecced/getSuggestedFeeds.js'
 export * as AppBskyUnspeccedGetSuggestedFeedsSkeleton from './types/app/bsky/unspecced/getSuggestedFeedsSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedOnboardingUsers from './types/app/bsky/unspecced/getSuggestedOnboardingUsers.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacks from './types/app/bsky/unspecced/getSuggestedStarterPacks.js'
 export * as AppBskyUnspeccedGetSuggestedStarterPacksSkeleton from './types/app/bsky/unspecced/getSuggestedStarterPacksSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedUsers from './types/app/bsky/unspecced/getSuggestedUsers.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForDiscover from './types/app/bsky/unspecced/getSuggestedUsersForDiscover.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForDiscoverSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForExplore from './types/app/bsky/unspecced/getSuggestedUsersForExplore.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForExploreSkeleton.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForSeeMore from './types/app/bsky/unspecced/getSuggestedUsersForSeeMore.js'
+export * as AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton from './types/app/bsky/unspecced/getSuggestedUsersForSeeMoreSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestedUsersSkeleton from './types/app/bsky/unspecced/getSuggestedUsersSkeleton.js'
 export * as AppBskyUnspeccedGetSuggestionsSkeleton from './types/app/bsky/unspecced/getSuggestionsSkeleton.js'
 export * as AppBskyUnspeccedGetTaggedSuggestions from './types/app/bsky/unspecced/getTaggedSuggestions.js'
@@ -568,6 +595,7 @@ export * as ComAtprotoTempDereferenceScope from './types/com/atproto/temp/derefe
 export * as ComAtprotoTempFetchLabels from './types/com/atproto/temp/fetchLabels.js'
 export * as ComAtprotoTempRequestPhoneVerification from './types/com/atproto/temp/requestPhoneVerification.js'
 export * as ComAtprotoTempRevokeAccountCredentials from './types/com/atproto/temp/revokeAccountCredentials.js'
+export * as ComGermnetworkDeclaration from './types/com/germnetwork/declaration.js'
 export * as ToolsOzoneCommunicationCreateTemplate from './types/tools/ozone/communication/createTemplate.js'
 export * as ToolsOzoneCommunicationDefs from './types/tools/ozone/communication/defs.js'
 export * as ToolsOzoneCommunicationDeleteTemplate from './types/tools/ozone/communication/deleteTemplate.js'
@@ -767,6 +795,7 @@ export class AppBskyNS {
   ageassurance: AppBskyAgeassuranceNS
   bookmark: AppBskyBookmarkNS
   contact: AppBskyContactNS
+  draft: AppBskyDraftNS
   embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
@@ -782,6 +811,7 @@ export class AppBskyNS {
     this.ageassurance = new AppBskyAgeassuranceNS(client)
     this.bookmark = new AppBskyBookmarkNS(client)
     this.contact = new AppBskyContactNS(client)
+    this.draft = new AppBskyDraftNS(client)
     this.embed = new AppBskyEmbedNS(client)
     this.feed = new AppBskyFeedNS(client)
     this.graph = new AppBskyGraphNS(client)
@@ -1236,6 +1266,51 @@ export class AppBskyContactNS {
       .catch((e) => {
         throw AppBskyContactVerifyPhone.toKnownErr(e)
       })
+  }
+}
+
+export class AppBskyDraftNS {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  createDraft(
+    data?: AppBskyDraftCreateDraft.InputSchema,
+    opts?: AppBskyDraftCreateDraft.CallOptions,
+  ): Promise<AppBskyDraftCreateDraft.Response> {
+    return this._client
+      .call('app.bsky.draft.createDraft', opts?.qp, data, opts)
+      .catch((e) => {
+        throw AppBskyDraftCreateDraft.toKnownErr(e)
+      })
+  }
+
+  deleteDraft(
+    data?: AppBskyDraftDeleteDraft.InputSchema,
+    opts?: AppBskyDraftDeleteDraft.CallOptions,
+  ): Promise<AppBskyDraftDeleteDraft.Response> {
+    return this._client.call('app.bsky.draft.deleteDraft', opts?.qp, data, opts)
+  }
+
+  getDrafts(
+    params?: AppBskyDraftGetDrafts.QueryParams,
+    opts?: AppBskyDraftGetDrafts.CallOptions,
+  ): Promise<AppBskyDraftGetDrafts.Response> {
+    return this._client.call(
+      'app.bsky.draft.getDrafts',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  updateDraft(
+    data?: AppBskyDraftUpdateDraft.InputSchema,
+    opts?: AppBskyDraftUpdateDraft.CallOptions,
+  ): Promise<AppBskyDraftUpdateDraft.Response> {
+    return this._client.call('app.bsky.draft.updateDraft', opts?.qp, data, opts)
   }
 }
 
@@ -3162,6 +3237,18 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getOnboardingSuggestedUsersSkeleton(
+    params?: AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetOnboardingSuggestedUsersSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getOnboardingSuggestedUsersSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getPopularFeedGenerators(
     params?: AppBskyUnspeccedGetPopularFeedGenerators.QueryParams,
     opts?: AppBskyUnspeccedGetPopularFeedGenerators.CallOptions,
@@ -3222,6 +3309,18 @@ export class AppBskyUnspeccedNS {
     )
   }
 
+  getSuggestedOnboardingUsers(
+    params?: AppBskyUnspeccedGetSuggestedOnboardingUsers.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedOnboardingUsers.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedOnboardingUsers.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedOnboardingUsers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getSuggestedStarterPacks(
     params?: AppBskyUnspeccedGetSuggestedStarterPacks.QueryParams,
     opts?: AppBskyUnspeccedGetSuggestedStarterPacks.CallOptions,
@@ -3252,6 +3351,78 @@ export class AppBskyUnspeccedNS {
   ): Promise<AppBskyUnspeccedGetSuggestedUsers.Response> {
     return this._client.call(
       'app.bsky.unspecced.getSuggestedUsers',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForDiscover(
+    params?: AppBskyUnspeccedGetSuggestedUsersForDiscover.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForDiscover.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForDiscover.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForDiscover',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForDiscoverSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForDiscoverSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForDiscoverSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForExplore(
+    params?: AppBskyUnspeccedGetSuggestedUsersForExplore.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForExplore.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForExplore.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForExplore',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForExploreSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForExploreSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForExploreSkeleton',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForSeeMore(
+    params?: AppBskyUnspeccedGetSuggestedUsersForSeeMore.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForSeeMore.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForSeeMore.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForSeeMore',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
+  getSuggestedUsersForSeeMoreSkeleton(
+    params?: AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.QueryParams,
+    opts?: AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.CallOptions,
+  ): Promise<AppBskyUnspeccedGetSuggestedUsersForSeeMoreSkeleton.Response> {
+    return this._client.call(
+      'app.bsky.unspecced.getSuggestedUsersForSeeMoreSkeleton',
       params,
       undefined,
       opts,
@@ -3802,10 +3973,12 @@ export class ChatBskyModerationNS {
 export class ComNS {
   _client: XrpcClient
   atproto: ComAtprotoNS
+  germnetwork: ComGermnetworkNS
 
   constructor(client: XrpcClient) {
     this._client = client
     this.atproto = new ComAtprotoNS(client)
+    this.germnetwork = new ComGermnetworkNS(client)
   }
 }
 
@@ -4962,6 +5135,104 @@ export class ComAtprotoTempNS {
       opts?.qp,
       data,
       opts,
+    )
+  }
+}
+
+export class ComGermnetworkNS {
+  _client: XrpcClient
+  declaration: ComGermnetworkDeclarationRecord
+
+  constructor(client: XrpcClient) {
+    this._client = client
+    this.declaration = new ComGermnetworkDeclarationRecord(client)
+  }
+}
+
+export class ComGermnetworkDeclarationRecord {
+  _client: XrpcClient
+
+  constructor(client: XrpcClient) {
+    this._client = client
+  }
+
+  async list(
+    params: OmitKey<ComAtprotoRepoListRecords.QueryParams, 'collection'>,
+  ): Promise<{
+    cursor?: string
+    records: { uri: string; value: ComGermnetworkDeclaration.Record }[]
+  }> {
+    const res = await this._client.call('com.atproto.repo.listRecords', {
+      collection: 'com.germnetwork.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async get(
+    params: OmitKey<ComAtprotoRepoGetRecord.QueryParams, 'collection'>,
+  ): Promise<{
+    uri: string
+    cid: string
+    value: ComGermnetworkDeclaration.Record
+  }> {
+    const res = await this._client.call('com.atproto.repo.getRecord', {
+      collection: 'com.germnetwork.declaration',
+      ...params,
+    })
+    return res.data
+  }
+
+  async create(
+    params: OmitKey<
+      ComAtprotoRepoCreateRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComGermnetworkDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.germnetwork.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.createRecord',
+      undefined,
+      {
+        collection,
+        rkey: 'self',
+        ...params,
+        record: { ...record, $type: collection },
+      },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async put(
+    params: OmitKey<
+      ComAtprotoRepoPutRecord.InputSchema,
+      'collection' | 'record'
+    >,
+    record: Un$Typed<ComGermnetworkDeclaration.Record>,
+    headers?: Record<string, string>,
+  ): Promise<{ uri: string; cid: string }> {
+    const collection = 'com.germnetwork.declaration'
+    const res = await this._client.call(
+      'com.atproto.repo.putRecord',
+      undefined,
+      { collection, ...params, record: { ...record, $type: collection } },
+      { encoding: 'application/json', headers },
+    )
+    return res.data
+  }
+
+  async delete(
+    params: OmitKey<ComAtprotoRepoDeleteRecord.InputSchema, 'collection'>,
+    headers?: Record<string, string>,
+  ): Promise<void> {
+    await this._client.call(
+      'com.atproto.repo.deleteRecord',
+      undefined,
+      { collection: 'com.germnetwork.declaration', ...params },
+      { headers },
     )
   }
 }

@@ -1,20 +1,59 @@
-import { describe, expect, it, vi } from 'vitest'
+import { assert, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { LexValue, cidForLex } from '@atproto/lex-cbor'
-import { cidForRawBytes } from '@atproto/lex-data'
-import { lexParse, lexStringify } from '@atproto/lex-json'
-import { Action, Client } from '../src/index.js'
+import { cidForRawBytes, isTypedBlobRef, parseCid } from '@atproto/lex-data'
+import { lexParse, lexToJson } from '@atproto/lex-json'
+import {
+  $Typed,
+  LexValidationError,
+  toDatetimeString,
+} from '@atproto/lex-schema'
+import {
+  Action,
+  Client,
+  FetchHandler,
+  XrpcAuthenticationError,
+  XrpcInvalidResponseError,
+  XrpcResponseError,
+} from '../src/index.js'
 import { app, com } from './lexicons/index.js'
+
+const cborCid = parseCid(
+  'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+  { flavor: 'cbor' },
+)
 
 type Preference = app.bsky.actor.defs.Preferences[number]
 
 describe('utils', () => {
   describe('TypedObjectSchema', () => {
-    it('overrides $type when building an object', () => {
-      const _r = app.bsky.actor.defs.adultContentPref.build({
-        $type: 'foo',
-        enabled: true,
+    describe('build()', () => {
+      it('overrides $type when building an object', () => {
+        function expectAdultContentPref(
+          _: app.bsky.actor.defs.AdultContentPref,
+        ) {}
+        function expectTypedAdultContentPref(
+          _: $Typed<app.bsky.actor.defs.AdultContentPref>,
+        ) {}
+
+        const pref = app.bsky.actor.defs.adultContentPref.build({
+          // @ts-expect-error
+          $type: 'foo',
+          enabled: true,
+        })
+
+        expectAdultContentPref(pref)
+        expectTypedAdultContentPref(pref)
+
+        expect(pref).toStrictEqual({
+          $type: 'app.bsky.actor.defs#adultContentPref',
+          enabled: true,
+        })
+
+        expectTypeOf(pref).toEqualTypeOf<{
+          $type: 'app.bsky.actor.defs#adultContentPref'
+          enabled: boolean
+        }>()
       })
-      expect(_r.$type).toBe('app.bsky.actor.defs#adultContentPref')
     })
   })
 })
@@ -22,42 +61,30 @@ describe('utils', () => {
 describe('Client', () => {
   describe('actions', () => {
     it('updatePreferences', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          if (url === '/xrpc/app.bsky.actor.getPreferences') {
-            return new Response(
-              JSON.stringify({ preferences: storedPreferences }),
-              {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' },
-              },
-            )
-          } else if (url === '/xrpc/app.bsky.actor.putPreferences') {
-            expect(typeof init?.body).toBe('string')
-            const result =
-              app.bsky.actor.putPreferences.$input.schema.safeParse(
-                lexParse(init?.body as string),
-              )
-            if (result.success) {
-              storedPreferences = result.value.preferences
-              return new Response(null, { status: 204 })
-            } else {
-              return new Response(
-                JSON.stringify({
-                  error: 'InvalidRequest',
-                  message: result.reason.message,
-                }),
-                {
-                  status: 400,
-                  headers: { 'Content-Type': 'application/json' },
-                },
-              )
-            }
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        if (url === '/xrpc/app.bsky.actor.getPreferences') {
+          expect(init?.method).toBe('GET')
+          expect(init?.body).toBeUndefined()
+          return Response.json({ preferences: storedPreferences })
+        } else if (url === '/xrpc/app.bsky.actor.putPreferences') {
+          expect(init?.method).toBe('POST')
+          expect(typeof init?.body).toBe('string')
+          const result = app.bsky.actor.putPreferences.$input.schema.safeParse(
+            lexParse(init?.body as string),
+          )
+          if (result.success) {
+            storedPreferences = result.value.preferences
+            return new Response(null, { status: 204 })
           } else {
-            return new Response('Not Found', { status: 404 })
+            return Response.json(
+              { error: 'InvalidRequest', message: result.reason.message },
+              { status: 400 },
+            )
           }
-        },
-      )
+        } else {
+          return new Response('Not Found', { status: 404 })
+        }
+      })
 
       const client = new Client({ fetchHandler })
 
@@ -169,30 +196,24 @@ describe('Client', () => {
 
   describe('query', () => {
     it('allows perfoming a GET request and parsing the response', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
-          expect(init?.method).toBe('GET')
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
+        expect(init?.method).toBe('GET')
+        expect(init?.body).toBeUndefined()
 
-          const responseBody = {
-            preferences: [
-              {
-                $type: 'app.bsky.actor.defs#adultContentPref',
-                enabled: false,
-              },
-              {
-                $type: 'app.bsky.actor.defs#someOtherPref',
-                otherField: 'some value',
-              },
-            ],
-          }
-
-          return new Response(JSON.stringify(responseBody), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        },
-      )
+        return Response.json({
+          preferences: [
+            {
+              $type: 'app.bsky.actor.defs#adultContentPref',
+              enabled: false,
+            },
+            {
+              $type: 'app.bsky.actor.defs#someOtherPref',
+              otherField: 'some value',
+            },
+          ],
+        })
+      })
 
       const client = new Client({ fetchHandler })
 
@@ -224,112 +245,102 @@ describe('Client', () => {
 
   describe('errors', () => {
     it('handles invalid XRPC error payloads', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
-          expect(init?.method).toBe('GET')
-
-          const responseBody = {
-            invalidField: 'this is not a valid xrpc error payload',
-          }
-
-          return new Response(JSON.stringify(responseBody), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        },
-      )
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          { invalidField: 'this is not a valid xrpc error payload' },
+          { status: 400 },
+        )
+      })
 
       const client = new Client({ fetchHandler })
 
-      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
-        'Upstream server returned an invalid response payload',
-      )
+      await expect(
+        client.call(app.bsky.actor.getPreferences),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcResponseError)
+        expect(err.message).toMatch(
+          'Upstream server responded with a 400 error',
+        )
+        return true
+      })
     })
 
-    it('handles XRPC errors with invalid body data', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
-          expect(init?.method).toBe('GET')
-
-          return new Response('Not a JSON body', {
-            status: 400,
-            headers: { 'Content-Type': 'text/plain' },
-          })
-        },
-      )
+    it('uses the status code to construct the "error"', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(null, { status: 429 })
+      })
 
       const client = new Client({ fetchHandler })
 
-      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
-        'Upstream server returned an invalid response payload',
-      )
+      await expect(
+        client.call(app.bsky.actor.getPreferences),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcResponseError)
+        expect(err.error).toBe('RateLimitExceeded')
+        expect(err.message).toBe('Upstream server responded with a 429 error')
+        return true
+      })
     })
 
     it('handles XRPC errors with invalid status code', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
-          expect(init?.method).toBe('GET')
-
-          return new Response(null, {
-            status: 302,
-          })
-        },
-      )
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response(null, { status: 302 })
+      })
 
       const client = new Client({ fetchHandler })
 
-      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
-        'Upstream server returned an invalid status code',
-      )
+      await expect(
+        client.call(app.bsky.actor.getPreferences),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcInvalidResponseError)
+        expect(err.message).toMatch('Unexpected status code 302')
+        return true
+      })
     })
 
     it('handles XRPC server errors', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
-          expect(init?.method).toBe('GET')
-
-          return new Response('<p>Server error</p>', {
-            status: 500,
-            headers: { 'Content-Type': 'text/html' },
-          })
-        },
-      )
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return new Response('<p>Server error</p>', {
+          status: 500,
+          headers: { 'Content-Type': 'text/html' },
+        })
+      })
 
       const client = new Client({ fetchHandler })
 
-      await expect(client.call(app.bsky.actor.getPreferences)).rejects.toThrow(
-        'Upstream server encountered an error',
-      )
+      await expect(
+        client.call(app.bsky.actor.getPreferences),
+      ).rejects.toSatisfy((err) => {
+        assert(err instanceof XrpcResponseError)
+        expect(err.error).toBe('InternalServerError')
+        expect(err.message).toBe('Upstream server responded with a 500 error')
+        expect(err.payload).toEqual({
+          encoding: 'text/html',
+          body: new Uint8Array(Buffer.from('<p>Server error</p>')),
+        })
+        return true
+      })
     })
 
-    it('propatages server error messages', async () => {
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/app.bsky.actor.getPreferences')
-          expect(init?.method).toBe('GET')
-
-          const responseBody = {
+    it('propagates server error messages', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          {
             error: 'CustomError',
             message: 'This is a custom error message from the server',
-          }
-
-          return new Response(JSON.stringify(responseBody), {
+          },
+          {
             status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        },
-      )
+          },
+        )
+      })
 
       const client = new Client({ fetchHandler })
 
       await expect(
         client.call(app.bsky.actor.getPreferences),
       ).rejects.toMatchObject({
-        name: 'LexRpcResponseError',
+        name: 'XrpcResponseError',
         message: 'This is a custom error message from the server',
         payload: {
           encoding: 'application/json',
@@ -337,6 +348,44 @@ describe('Client', () => {
             error: 'CustomError',
             message: 'This is a custom error message from the server',
           },
+        },
+      })
+    })
+
+    it('turns 401 responses into XrpcAuthenticationError', async () => {
+      const fetchHandler = vi.fn<FetchHandler>(async () => {
+        return Response.json(
+          {
+            error: 'Unauthorized',
+            message: 'Unauthorized access',
+          },
+          {
+            status: 401,
+            headers: {
+              'www-authenticate':
+                'Basic realm="example", charset="UTF-8", error="invalid_token", error_description="The access token is invalid", Bearer realm="oauth"',
+            },
+          },
+        )
+      })
+
+      const client = new Client({ fetchHandler })
+
+      const response = await client.xrpcSafe(app.bsky.actor.getPreferences)
+
+      assert(response instanceof XrpcAuthenticationError)
+      expect(response.error).toBe('Unauthorized')
+      expect(response.message).toBe('Unauthorized access')
+      expect(response.name).toBe('XrpcAuthenticationError')
+      expect(response.wwwAuthenticate).toEqual({
+        Basic: {
+          realm: 'example',
+          charset: 'UTF-8',
+          error: 'invalid_token',
+          error_description: 'The access token is invalid',
+        },
+        Bearer: {
+          realm: 'oauth',
         },
       })
     })
@@ -349,35 +398,30 @@ describe('Client', () => {
       const nextTid = vi.fn(() => `2222222222${2 + currentTid++}22`)
 
       const did = 'did:plc:alice'
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(url).toBe('/xrpc/com.atproto.repo.createRecord')
-          expect(init?.method).toBe('POST')
-          expect(typeof init?.body).toBe('string')
-          const payload = com.atproto.repo.createRecord.main.input.schema.parse(
-            lexParse(init?.body as string),
-          )
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        expect(url).toBe('/xrpc/com.atproto.repo.createRecord')
+        expect(init?.method).toBe('POST')
+        expect(typeof init?.body).toBe('string')
+        const payload = com.atproto.repo.createRecord.main.input.schema.parse(
+          lexParse(init?.body as string),
+        )
 
-          expect(payload).toMatchObject({
-            repo: did,
-            collection: expect.any(String),
-            record: expect.any(Object),
-          })
+        expect(payload).toMatchObject({
+          repo: did,
+          collection: expect.any(String),
+          record: expect.any(Object),
+        })
 
-          const rkey = payload.rkey || nextTid()
-          const cid = await cidForLex(payload.record as LexValue)
+        const rkey = payload.rkey || nextTid()
+        const cid = await cidForLex(payload.record as LexValue)
 
-          const responseBody: com.atproto.repo.createRecord.OutputBody = {
-            cid: cid.toString(),
-            uri: `at://${payload.repo}/${payload.collection}/${rkey}`,
-          }
+        const responseBody: com.atproto.repo.createRecord.$OutputBody = {
+          cid: cid.toString(),
+          uri: `at://${payload.repo}/${payload.collection}/${rkey}`,
+        }
 
-          return new Response(JSON.stringify(responseBody), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        },
-      )
+        return Response.json(responseBody)
+      })
 
       const client = new Client({ fetchHandler, did })
 
@@ -395,7 +439,7 @@ describe('Client', () => {
             validateRequest: true,
           },
         )
-      }).rejects.toThrow('Invalid DID format')
+      }).rejects.toThrow('Invalid DID (got "not-a-did") at $.did')
 
       // validate performs schema validation before making the request
       expect(fetchHandler).toHaveBeenCalledTimes(0)
@@ -418,15 +462,11 @@ describe('Client', () => {
         'bafyreihx5eurnmsnj6ulfby3icl4ebh6pliwuqaze25z4ejitnt23b4vw4',
       )
 
-      const aliceGenerator = await client.create(
-        // @ts-expect-error an "rkey" option is required for feed generator records
-        app.bsky.feed.generator,
-        {
-          did: 'no-a-did',
-          displayName: 'Alice Generator',
-          createdAt: new Date().toISOString(),
-        },
-      )
+      const aliceGenerator = await client.create(app.bsky.feed.generator, {
+        did,
+        displayName: 'Alice Generator',
+        createdAt: toDatetimeString(new Date()),
+      })
 
       expect(nextTid).toHaveBeenCalledTimes(1)
       expect(aliceGenerator.uri).toBe(
@@ -445,7 +485,7 @@ describe('Client', () => {
 
       const newPost = await client.create(app.bsky.feed.post, {
         text: 'Hello, world!',
-        createdAt: new Date().toISOString(),
+        createdAt: toDatetimeString(new Date()),
       })
 
       expect(nextTid).toHaveBeenCalledTimes(2)
@@ -455,39 +495,34 @@ describe('Client', () => {
 
     it('allows fetching records', async () => {
       const did = 'did:plc:alice'
-      const fetchHandler = vi.fn(
-        async (url: string, init?: RequestInit): Promise<Response> => {
-          expect(init?.method).toBe('GET')
-          const urlObj = new URL(url, 'https://example.com')
-          expect(urlObj.pathname).toBe('/xrpc/com.atproto.repo.getRecord')
+      const fetchHandler = vi.fn<FetchHandler>(async (url, init) => {
+        expect(init?.method).toBe('GET')
+        const urlObj = new URL(url, 'https://example.com')
+        expect(urlObj.pathname).toBe('/xrpc/com.atproto.repo.getRecord')
 
-          const repo = urlObj.searchParams.get('repo')
-          const collection = urlObj.searchParams.get('collection')
-          const rkey = urlObj.searchParams.get('rkey')
+        const repo = urlObj.searchParams.get('repo')
+        const collection = urlObj.searchParams.get('collection')
+        const rkey = urlObj.searchParams.get('rkey')
 
-          expect(repo).toBe(did)
-          expect(collection).toBe(app.bsky.feed.post.$type)
-          expect(rkey).toBe('2222222222222')
+        expect(repo).toBe(did)
+        expect(collection).toBe(app.bsky.feed.post.$type)
+        expect(rkey).toBe('2222222222222')
 
-          const record = app.bsky.feed.post.$build({
-            text: 'This is an old post',
-            createdAt: '2024-01-01T00:00:00Z',
-          })
+        const record = app.bsky.feed.post.$build({
+          text: 'This is an old post',
+          createdAt: '2024-01-01T00:00:00Z',
+        })
 
-          const cid = await cidForLex(record)
+        const cid = await cidForLex(record)
 
-          const responseBody: com.atproto.repo.getRecord.OutputBody = {
-            cid: cid.toString(),
-            uri: `at://${repo!}/${collection!}/${rkey!}` as any,
-            value: record,
-          }
+        const responseBody: com.atproto.repo.getRecord.$OutputBody = {
+          cid: cid.toString(),
+          uri: `at://${repo!}/${collection!}/${rkey!}` as any,
+          value: record,
+        }
 
-          return new Response(JSON.stringify(responseBody), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          })
-        },
-      )
+        return Response.json(responseBody)
+      })
 
       const client = new Client({ fetchHandler, did })
 
@@ -526,7 +561,7 @@ describe('Client', () => {
 
         const bytes = new Uint8Array(await blob.arrayBuffer())
 
-        const responseBody: com.atproto.repo.uploadBlob.OutputBody = {
+        const responseBody: com.atproto.repo.uploadBlob.$OutputBody = {
           blob: {
             $type: 'blob',
             ref: await cidForRawBytes(bytes),
@@ -535,10 +570,7 @@ describe('Client', () => {
           },
         }
 
-        return new Response(lexStringify(responseBody), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        })
+        return Response.json(lexToJson(responseBody))
       },
     )
 
@@ -549,6 +581,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(blob)
 
       expect(fetchHandler).toHaveBeenCalledTimes(1)
+      assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('text/plain')
       expect(body.blob.size).toBe(11)
@@ -564,6 +597,7 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(data)
 
       expect(fetchHandler).toHaveBeenCalledTimes(2)
+      assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
       expect(body.blob.size).toBe(11)
@@ -579,12 +613,197 @@ describe('Client', () => {
       const { body } = await client.uploadBlob(data)
 
       expect(fetchHandler).toHaveBeenCalledTimes(3)
+      assert(isTypedBlobRef(body.blob))
       expect(body.blob.$type).toBe('blob')
       expect(body.blob.mimeType).toBe('application/octet-stream')
       expect(body.blob.size).toBe(11)
       expect(body.blob.ref).toEqual(
         await cidForRawBytes(new TextEncoder().encode('hello world')),
       )
+    })
+  })
+
+  describe('validateRequest option', () => {
+    const did = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz' as const
+
+    describe('create()', () => {
+      it('validates locally when validateRequest: true', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client({ fetchHandler, did })
+
+        await expect(
+          client.create(
+            app.bsky.feed.generator,
+            {
+              // @ts-expect-error invalid DID
+              did: 'not-a-did',
+              displayName: 'Test',
+              createdAt: toDatetimeString(new Date()),
+            },
+            { rkey: 'test', validateRequest: true },
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch('Invalid DID')
+          return true
+        })
+
+        expect(fetchHandler).not.toHaveBeenCalled()
+      })
+
+      it('skips local validation when validateRequest: false', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({
+            uri: `at://${did}/app.bsky.feed.generator/test`,
+            cid: cborCid.toString(),
+          })
+        })
+        const client = new Client({ fetchHandler, did })
+
+        await client.create(
+          app.bsky.feed.generator,
+          {
+            // @ts-expect-error invalid DID
+            did: 'not-a-did',
+            displayName: 'Test',
+            createdAt: toDatetimeString(new Date()),
+          },
+          { rkey: 'test', validateRequest: false },
+        )
+
+        expect(fetchHandler).toHaveBeenCalled()
+      })
+
+      it('defaults to not validating', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({
+            uri: `at://${did}/app.bsky.feed.generator/test`,
+            cid: cborCid.toString(),
+          })
+        })
+        const client = new Client({ fetchHandler, did })
+
+        await client.create(
+          app.bsky.feed.generator,
+          {
+            // @ts-expect-error invalid DID
+            did: 'not-a-did',
+            displayName: 'Test',
+            createdAt: toDatetimeString(new Date()),
+          },
+          { rkey: 'test' },
+        )
+
+        expect(fetchHandler).toHaveBeenCalled()
+      })
+
+      it('validates required fields when validateRequest: true', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client({ fetchHandler, did })
+
+        await expect(
+          client.create(
+            app.bsky.feed.generator,
+            // @ts-expect-error
+            {
+              displayName: 'Test',
+            },
+            { rkey: 'test', validateRequest: true },
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch('Missing required key "did"')
+          return true
+        })
+
+        expect(fetchHandler).not.toHaveBeenCalled()
+      })
+
+      it('validates types when validateRequest: true', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client({ fetchHandler, did })
+
+        await expect(
+          client.create(
+            app.bsky.feed.generator,
+            {
+              did,
+              // @ts-expect-error wrong type
+              displayName: 123,
+              createdAt: toDatetimeString(new Date()),
+            },
+            { rkey: 'test', validateRequest: true },
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch('Expected string value type (got 123)')
+          return true
+        })
+
+        expect(fetchHandler).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('put()', () => {
+      it('validates locally when validateRequest: true', async () => {
+        const fetchHandler = vi.fn<FetchHandler>()
+        const client = new Client({ fetchHandler, did })
+
+        await expect(
+          client.put(
+            app.bsky.actor.profile,
+            {
+              // @ts-expect-error invalid data
+              displayName: 123,
+            },
+            { validateRequest: true },
+          ),
+        ).rejects.toSatisfy((err) => {
+          assert(err instanceof LexValidationError)
+          expect(err.message).toMatch('Expected string value type (got 123)')
+          return true
+        })
+
+        expect(fetchHandler).not.toHaveBeenCalled()
+      })
+
+      it('skips local validation when validateRequest: false', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({
+            uri: `at://${did}/app.bsky.actor.profile/self`,
+            cid: cborCid.toString(),
+          })
+        })
+        const client = new Client({ fetchHandler, did })
+
+        await client.put(
+          app.bsky.actor.profile,
+          {
+            // @ts-expect-error invalid data
+            displayName: 123,
+          },
+          { validateRequest: false },
+        )
+
+        expect(fetchHandler).toHaveBeenCalled()
+      })
+
+      it('defaults to not validating', async () => {
+        const fetchHandler = vi.fn<FetchHandler>(async () => {
+          return Response.json({
+            uri: `at://${did}/app.bsky.actor.profile/self`,
+            cid: cborCid.toString(),
+          })
+        })
+        const client = new Client({ fetchHandler, did })
+
+        await client.put(app.bsky.actor.profile, {
+          // @ts-expect-error invalid data
+          displayName: 123,
+        })
+
+        expect(fetchHandler).toHaveBeenCalled()
+      })
     })
   })
 })

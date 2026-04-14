@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { BooleanSchema } from './boolean.js'
-import { DictSchema } from './dict.js'
-import { EnumSchema } from './enum.js'
-import { IntegerSchema } from './integer.js'
-import { StringSchema } from './string.js'
+import { boolean } from './boolean.js'
+import { dict } from './dict.js'
+import { enumSchema } from './enum.js'
+import { integer } from './integer.js'
+import { string } from './string.js'
 
 describe('DictSchema', () => {
-  const schema = new DictSchema(new StringSchema({}), new IntegerSchema({}))
+  const schema = dict(string(), integer())
 
   it('validates plain objects with valid keys and values', () => {
     const result = schema.safeParse({
@@ -59,10 +59,7 @@ describe('DictSchema', () => {
   })
 
   it('validates with enum key schema', () => {
-    const enumKeySchema = new DictSchema(
-      new EnumSchema(['tag1', 'tag2', 'tag3']),
-      new BooleanSchema({}),
-    )
+    const enumKeySchema = dict(enumSchema(['tag1', 'tag2', 'tag3']), boolean())
 
     const result = enumKeySchema.safeParse({
       tag1: true,
@@ -73,10 +70,7 @@ describe('DictSchema', () => {
   })
 
   it('rejects invalid keys with enum key schema', () => {
-    const enumKeySchema = new DictSchema(
-      new EnumSchema(['tag1', 'tag2']),
-      new BooleanSchema({}),
-    )
+    const enumKeySchema = dict(enumSchema(['tag1', 'tag2']), boolean())
 
     const result = enumKeySchema.safeParse({
       tag1: true,
@@ -86,10 +80,7 @@ describe('DictSchema', () => {
   })
 
   it('validates nested dict schemas', () => {
-    const nestedSchema = new DictSchema(
-      new StringSchema({}),
-      new DictSchema(new StringSchema({}), new IntegerSchema({})),
-    )
+    const nestedSchema = dict(string(), dict(string(), integer()))
 
     const result = nestedSchema.safeParse({
       group1: { count: 10, total: 20 },
@@ -99,9 +90,9 @@ describe('DictSchema', () => {
   })
 
   it('validates with string key schema constraints', () => {
-    const constrainedKeySchema = new DictSchema(
-      new StringSchema({ minLength: 3, maxLength: 10 }),
-      new IntegerSchema({}),
+    const constrainedKeySchema = dict(
+      string({ minLength: 3, maxLength: 10 }),
+      integer(),
     )
 
     const result = constrainedKeySchema.safeParse({
@@ -112,10 +103,7 @@ describe('DictSchema', () => {
   })
 
   it('rejects keys that do not meet key schema constraints', () => {
-    const constrainedKeySchema = new DictSchema(
-      new StringSchema({ minLength: 3 }),
-      new IntegerSchema({}),
-    )
+    const constrainedKeySchema = dict(string({ minLength: 3 }), integer())
 
     const result = constrainedKeySchema.safeParse({
       ab: 1, // too short
@@ -124,9 +112,9 @@ describe('DictSchema', () => {
   })
 
   it('validates with value schema constraints', () => {
-    const constrainedValueSchema = new DictSchema(
-      new StringSchema({}),
-      new IntegerSchema({ minimum: 0, maximum: 100 }),
+    const constrainedValueSchema = dict(
+      string(),
+      integer({ minimum: 0, maximum: 100 }),
     )
 
     const result = constrainedValueSchema.safeParse({
@@ -137,9 +125,9 @@ describe('DictSchema', () => {
   })
 
   it('rejects values that do not meet value schema constraints', () => {
-    const constrainedValueSchema = new DictSchema(
-      new StringSchema({}),
-      new IntegerSchema({ minimum: 0, maximum: 100 }),
+    const constrainedValueSchema = dict(
+      string(),
+      integer({ minimum: 0, maximum: 100 }),
     )
 
     const result = constrainedValueSchema.safeParse({
@@ -149,10 +137,7 @@ describe('DictSchema', () => {
   })
 
   it('validates dict with string values', () => {
-    const stringValueSchema = new DictSchema(
-      new StringSchema({}),
-      new StringSchema({}),
-    )
+    const stringValueSchema = dict(string(), string())
 
     const result = stringValueSchema.safeParse({
       name: 'Alice',
@@ -163,10 +148,7 @@ describe('DictSchema', () => {
   })
 
   it('validates dict with boolean values', () => {
-    const booleanValueSchema = new DictSchema(
-      new StringSchema({}),
-      new BooleanSchema({}),
-    )
+    const booleanValueSchema = dict(string(), boolean())
 
     const result = booleanValueSchema.safeParse({
       enabled: true,

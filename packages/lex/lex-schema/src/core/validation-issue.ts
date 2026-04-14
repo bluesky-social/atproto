@@ -1,24 +1,55 @@
-import { ifCid, isPlainObject } from '@atproto/lex-data'
-import { PropertyKey } from './property-key.js'
+import { ifCid, isLegacyBlobRef, isPlainObject } from '@atproto/lex-data'
 
+const STRING_PREVIEW_MAX_LENGTH = 48
+const STRING_PREVIEW_TRUNCATED_SUFFIX = '…'
+
+/**
+ * Abstract base class for all validation issues.
+ *
+ * An issue represents a single validation failure, containing:
+ * - A code identifying the type of issue
+ * - The path to the invalid value in the data structure
+ * - The actual input value that failed validation
+ *
+ * Subclasses add specific properties relevant to each issue type and implement
+ * the {@link message} property for human-readable error messages (that don't
+ * contain the error path)
+ */
 export abstract class Issue {
+  abstract readonly message: string
+
   constructor(
     readonly code: string,
     readonly path: readonly PropertyKey[],
     readonly input: unknown,
   ) {}
 
-  abstract toString(): string
+  /**
+   * Returns a human-readable description of the validation issue.
+   */
+  toString() {
+    return `${this.message}${stringifyPath(this.path)}`
+  }
 
+  /**
+   * Converts the issue to a JSON-serializable object.
+   *
+   * @returns An object containing the issue code, path, and message
+   */
   toJSON() {
     return {
       code: this.code,
       path: this.path,
-      message: this.toString(),
+      message: this.message,
     }
   }
 }
 
+/**
+ * A custom validation issue with a user-defined message.
+ *
+ * Use this for validation rules that don't fit into the standard issue categories.
+ */
 export class IssueCustom extends Issue {
   constructor(
     readonly path: readonly PropertyKey[],
@@ -27,33 +58,28 @@ export class IssueCustom extends Issue {
   ) {
     super('custom', path, input)
   }
-
-  toString() {
-    return `${this.message}${stringifyPath(this.path)}`
-  }
 }
 
+/**
+ * Issue for string values that don't match an expected format.
+ *
+ * Used for AT Protocol specific formats like DID, handle, NSID, AT-URI, etc.
+ */
 export class IssueInvalidFormat extends Issue {
   constructor(
     path: readonly PropertyKey[],
     input: unknown,
     readonly format: string,
-    readonly message?: string,
+    readonly detail?: string,
   ) {
     super('invalid_format', path, input)
   }
 
-  toString() {
-    return `Invalid ${this.formatDescription} format${this.message ? ` (${this.message})` : ''}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  override get message(): string {
+    return `Invalid ${this.formatDescription}${this.detail ? ` (${this.detail}, ` : ' ('}got ${stringifyValue(this.input)})`
   }
 
-  toJSON() {
-    return {
-      ...super.toJSON(),
-      format: this.format,
-    }
-  }
-
+  /** Returns a human-readable description of the expected format. */
   get formatDescription(): string {
     switch (this.format) {
       case 'at-identifier':
@@ -72,8 +98,21 @@ export class IssueInvalidFormat extends Issue {
         return this.format
     }
   }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      format: this.format,
+    }
+  }
 }
 
+/**
+ * Issue for values that have an unexpected type.
+ *
+ * This is one of the most common validation issues, occurring when the
+ * runtime type of a value doesn't match the expected schema type.
+ */
 export class IssueInvalidType extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -83,8 +122,8 @@ export class IssueInvalidType extends Issue {
     super('invalid_type', path, input)
   }
 
-  toString() {
-    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type${stringifyPath(this.path)} (got ${stringifyType(this.input)})`
+  override get message(): string {
+    return `Expected ${oneOf(this.expected.map(stringifyExpectedType))} value type (got ${stringifyValue(this.input)})`
   }
 
   toJSON() {
@@ -95,6 +134,12 @@ export class IssueInvalidType extends Issue {
   }
 }
 
+/**
+ * Issue for values that don't match any of the expected literal values.
+ *
+ * Used when a value must be one of a specific set of allowed values
+ * (e.g., enum-like constraints).
+ */
 export class IssueInvalidValue extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -104,8 +149,8 @@ export class IssueInvalidValue extends Issue {
     super('invalid_value', path, input)
   }
 
-  toString() {
-    return `Expected ${oneOf(this.values.map(stringifyValue))}${stringifyPath(this.path)} (got ${stringifyValue(this.input)})`
+  override get message(): string {
+    return `Expected ${oneOf(this.values.map(stringifyValue))} (got ${stringifyValue(this.input)})`
   }
 
   toJSON() {
@@ -116,6 +161,9 @@ export class IssueInvalidValue extends Issue {
   }
 }
 
+/**
+ * Issue for missing required object properties.
+ */
 export class IssueRequiredKey extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -125,8 +173,8 @@ export class IssueRequiredKey extends Issue {
     super('required_key', path, input)
   }
 
-  toString() {
-    return `Missing required key "${String(this.key)}"${stringifyPath(this.path)}`
+  override get message(): string {
+    return `Missing required key "${String(this.key)}"`
   }
 
   toJSON() {
@@ -137,6 +185,16 @@ export class IssueRequiredKey extends Issue {
   }
 }
 
+/**
+ * The type of measurement for size constraint issues.
+ *
+ * - `'array'` - Array length
+ * - `'string'` - String length in characters
+ * - `'integer'` - Numeric value
+ * - `'grapheme'` - String length in grapheme clusters
+ * - `'bytes'` - Byte length
+ * - `'blob'` - Blob size
+ */
 export type MeasurableType =
   | 'array'
   | 'string'
@@ -145,6 +203,9 @@ export type MeasurableType =
   | 'bytes'
   | 'blob'
 
+/**
+ * Issue for values that exceed a maximum constraint.
+ */
 export class IssueTooBig extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -156,8 +217,8 @@ export class IssueTooBig extends Issue {
     super('too_big', path, input)
   }
 
-  toString() {
-    return `${this.type} too big (maximum ${this.maximum})${stringifyPath(this.path)} (got ${this.actual})`
+  override get message(): string {
+    return `${this.type} too big (maximum ${this.maximum}, got ${this.actual})`
   }
 
   toJSON() {
@@ -169,6 +230,9 @@ export class IssueTooBig extends Issue {
   }
 }
 
+/**
+ * Issue for values that are below a minimum constraint.
+ */
 export class IssueTooSmall extends Issue {
   constructor(
     path: readonly PropertyKey[],
@@ -180,8 +244,8 @@ export class IssueTooSmall extends Issue {
     super('too_small', path, input)
   }
 
-  toString() {
-    return `${this.type} too small (minimum ${this.minimum})${stringifyPath(this.path)} (got ${this.actual})`
+  override get message(): string {
+    return `${this.type} too small (minimum ${this.minimum}, got ${this.actual})`
   }
 
   toJSON() {
@@ -193,9 +257,13 @@ export class IssueTooSmall extends Issue {
   }
 }
 
+// -----------------------------------------------------------------------------
+// Helper functions for formatting error messages
+// -----------------------------------------------------------------------------
+
 function stringifyExpectedType(expected: string): string {
   if (expected === '$typed') {
-    return 'an object or record which includes a "$type" property'
+    return 'an object which includes the "$type" property'
   }
   return expected
 }
@@ -209,9 +277,9 @@ function buildJsonPath(path: readonly PropertyKey[]): string {
 }
 
 function toJsonPathSegment(segment: PropertyKey): string {
-  if (typeof segment === 'number') {
-    return `[${segment}]`
-  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment as string)) {
+  if (typeof segment === 'number' || typeof segment === 'symbol') {
+    return `[${String(segment)}]`
+  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(segment)) {
     return `.${segment}`
   } else {
     return `[${JSON.stringify(segment)}]`
@@ -224,54 +292,36 @@ function oneOf(arr: readonly string[]): string {
   return `one of ${arr.slice(0, -1).join(', ')} or ${arr.at(-1)}`
 }
 
-function stringifyType(value: unknown): string {
-  switch (typeof value) {
-    case 'object':
-      if (value === null) return 'null'
-      if (Array.isArray(value)) return 'array'
-      if (ifCid(value)) return 'cid'
-      if (value instanceof Date) return 'date'
-      if (value instanceof RegExp) return 'regexp'
-      if (value instanceof Map) return 'map'
-      if (value instanceof Set) return 'set'
-      return 'object'
-    case 'number':
-      if (Number.isInteger(value) && Number.isSafeInteger(value)) {
-        return 'integer'
-      }
-      if (Number.isNaN(value)) {
-        return 'NaN'
-      }
-      if (value === Infinity) {
-        return 'Infinity'
-      }
-      if (value === -Infinity) {
-        return '-Infinity'
-      }
-      return 'float'
-    default:
-      return typeof value
-  }
-}
-
 function stringifyValue(value: unknown): string {
   switch (typeof value) {
     case 'bigint':
       return `${value}n`
     case 'number':
-    case 'string':
     case 'boolean':
-      return JSON.stringify(value)
+      return String(value)
+    case 'string':
+      return JSON.stringify(
+        value.length < STRING_PREVIEW_MAX_LENGTH
+          ? value
+          : `${value.slice(0, STRING_PREVIEW_MAX_LENGTH - STRING_PREVIEW_TRUNCATED_SUFFIX.length)}${STRING_PREVIEW_TRUNCATED_SUFFIX}`,
+      )
     case 'object':
+      if (value === null) return 'null'
       if (Array.isArray(value)) {
         return `[${stringifyArray(value, stringifyValue)}]`
       }
       if (isPlainObject(value)) {
         return `{${stringifyArray(Object.entries(value), stringifyObjectEntry)}}`
       }
-    // fallthrough
+      if (ifCid(value)) return 'cid'
+      if (isLegacyBlobRef(value)) return 'legacy-blob'
+      if (value instanceof Date) return 'date'
+      if (value instanceof RegExp) return 'regexp'
+      if (value instanceof Map) return 'map'
+      if (value instanceof Set) return 'set'
+      return 'object'
     default:
-      return stringifyType(value)
+      return typeof value
   }
 }
 

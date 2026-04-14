@@ -23,8 +23,10 @@ const main = l.subscription(
   nsid,
   l.params({
     message: l.string({ minLength: 1 }),
-    cursor: l.optional(l.integer({ minimum: 0, default: 0 })),
-    limit: l.optional(l.integer({ minimum: 1, maximum: 100, default: 10 })),
+    cursor: l.optional(l.withDefault(l.integer({ minimum: 0 }), 0)),
+    limit: l.optional(
+      l.withDefault(l.integer({ minimum: 1, maximum: 100 }), 10),
+    ),
   }),
   l.typedUnion([l.typedRef(() => message)], false),
   ['LimitReached'],
@@ -33,14 +35,14 @@ const com = { example: { echo: { main, message } } }
 
 const router = new LexRouter({
   upgradeWebSocket,
-  onHandlerError: ({ error }) => {
-    console.error('Handler error:', error)
+  fallback: indexHtml,
+  onHandlerError: ({ error, method }) => {
+    console.error(`Handler error in method ${method.nsid}:`, error)
   },
 })
   //
-  .add(com.example.echo, async function* ({ request, params }) {
-    const { message, cursor = 0, limit = 10 } = params
-    const { signal } = request
+  .add(com.example.echo, async function* ({ signal, params }) {
+    const { message, cursor, limit } = params
 
     for (let i = 0; i < limit; i++) {
       yield com.example.echo.message.$build({
@@ -55,27 +57,16 @@ const router = new LexRouter({
     throw new LexError('LimitReached', `Limit of ${limit} messages reached`)
   })
 
-serve(
-  async (request, info) => {
-    const url = new URL(request.url)
+serve(router.fetch, { port: 8080 })
 
-    if (url.pathname.startsWith('/xrpc/')) {
-      return router.handle(request, info)
-    }
-
-    return indexHtml()
-  },
-  { port: 8080 },
-)
-
-function indexHtml() {
+async function indexHtml() {
   return new Response(
     html`
       <h1>Open dev tools and look at the console</h1>
       <script type="module">
         import { decodeMultiple } from 'https://cdn.jsdelivr.net/npm/cbor-x@1.6.0/+esm'
 
-        const host = 'localhost:8080'
+        const host = window.location.host
         const nsid = 'com.example.echo'
         const params = new URLSearchParams(window.location.search)
         if (!params.has('message')) {

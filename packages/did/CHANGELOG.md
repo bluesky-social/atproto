@@ -1,5 +1,13 @@
 # @atproto/did
 
+## 0.3.0
+
+### Minor Changes
+
+- [#4580](https://github.com/bluesky-social/atproto/pull/4580) [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow DID document to omit the `@context` root property
+
+- [#4580](https://github.com/bluesky-social/atproto/pull/4580) [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Disallow string values in `verificationMethod` array (as per spec)
+
 ## 0.2.4
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @atproto/oauth-client-browser
 
+## 0.3.41
+
+### Patch Changes
+
+- [#4642](https://github.com/bluesky-social/atproto/pull/4642) [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly await disposal of underlying indexed db when disposing a `BrowserOAuthClient`
+
+- Updated dependencies [[`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df)]:
+  - @atproto/oauth-client@0.6.0
+
+## 0.3.40
+
+### Patch Changes
+
+- Updated dependencies [[`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e), [`d54d707`](https://github.com/bluesky-social/atproto/commit/d54d7077eb32041e1f61c312efa1dd0d768c774e)]:
+  - @atproto/did@0.3.0
+  - @atproto-labs/did-resolver@0.2.6
+  - @atproto-labs/handle-resolver@0.3.6
+  - @atproto/oauth-client@0.5.14
+  - @atproto/oauth-types@0.6.2
+
 ## 0.3.39
 
 ### Patch Changes

@@ -1,7 +1,8 @@
-import getPort from 'get-port'
-import { WebSocketServer } from 'ws'
+import { describe, expect, it } from 'vitest'
+import { AddressInfo } from 'ws'
 import { TapChannel, TapHandler } from '../src/channel'
 import { TapEvent } from '../src/types'
+import { createWebSocketServer } from './_util'
 
 const createRecordEvent = (id: number) => ({
   id,
@@ -13,7 +14,7 @@ const createRecordEvent = (id: number) => ({
     rkey: 'abc123',
     action: 'create' as const,
     record: { text: 'hello' },
-    cid: 'bafyabc',
+    cid: 'bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq',
     live: true,
   },
 })
@@ -32,8 +33,9 @@ const createIdentityEvent = (id: number) => ({
 describe('TapChannel', () => {
   describe('receiving events', () => {
     it('receives and parses record events', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedEvents: TapEvent[] = []
 
@@ -57,7 +59,7 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(receivedEvents).toHaveLength(1)
@@ -67,13 +69,12 @@ describe('TapChannel', () => {
         expect(receivedEvents[0].collection).toBe('com.example.post')
         expect(receivedEvents[0].action).toBe('create')
       }
-
-      server.close()
     })
 
     it('receives and parses identity events', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedEvents: TapEvent[] = []
 
@@ -97,7 +98,7 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(receivedEvents).toHaveLength(1)
@@ -107,15 +108,14 @@ describe('TapChannel', () => {
         expect(receivedEvents[0].handle).toBe('alice.test')
         expect(receivedEvents[0].status).toBe('active')
       }
-
-      server.close()
     })
   })
 
   describe('ack behavior', () => {
     it('sends ack when handler calls ack()', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedAcks: number[] = []
 
@@ -139,17 +139,16 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(receivedAcks).toEqual([42])
-
-      server.close()
     })
 
     it('does not send ack if handler throws', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedAcks: number[] = []
       const errors: Error[] = []
@@ -175,19 +174,18 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(receivedAcks).toHaveLength(0)
       expect(errors).toHaveLength(1)
       expect(errors[0].message).toContain('Failed to process event')
-
-      server.close()
     })
 
     it('does not send ack if handler does not call ack()', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedAcks: number[] = []
 
@@ -212,17 +210,16 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(receivedAcks).toHaveLength(0)
-
-      server.close()
     })
 
     it('handles reconnection and receives events from new connection', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedEvents: TapEvent[] = []
       const receivedAcks: number[] = []
@@ -256,7 +253,7 @@ describe('TapChannel', () => {
         onError: () => {},
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler, {
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler, {
         maxReconnectSeconds: 1,
       })
 
@@ -269,15 +266,14 @@ describe('TapChannel', () => {
       expect(receivedEvents[1].id).toBe(2)
       expect(receivedAcks).toContain(1)
       expect(receivedAcks).toContain(2)
-
-      server.close()
     })
   })
 
   describe('multiple events', () => {
     it('processes multiple events in sequence', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const receivedEvents: TapEvent[] = []
       const receivedAcks: number[] = []
@@ -307,7 +303,7 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(receivedEvents).toHaveLength(3)
@@ -315,15 +311,14 @@ describe('TapChannel', () => {
       expect(receivedEvents[1].id).toBe(2)
       expect(receivedEvents[2].id).toBe(3)
       expect(receivedAcks).toEqual([1, 2, 3])
-
-      server.close()
     })
   })
 
   describe('auth', () => {
     it('includes auth header when adminPassword is provided', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       let receivedAuthHeader: string | undefined
 
@@ -337,21 +332,20 @@ describe('TapChannel', () => {
         onError: () => {},
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler, {
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler, {
         adminPassword: 'secret',
       })
       await channel.start()
 
       expect(receivedAuthHeader).toBe('Basic YWRtaW46c2VjcmV0')
-
-      server.close()
     })
   })
 
   describe('error handling', () => {
     it('calls onError for malformed messages', async () => {
-      const port = await getPort()
-      const server = new WebSocketServer({ port })
+      await using server = await createWebSocketServer()
+
+      const { port } = server.address() as AddressInfo
 
       const errors: Error[] = []
 
@@ -367,13 +361,11 @@ describe('TapChannel', () => {
         },
       }
 
-      const channel = new TapChannel(`ws://localhost:${port}`, handler)
+      await using channel = new TapChannel(`ws://localhost:${port}`, handler)
       await channel.start()
 
       expect(errors).toHaveLength(1)
       expect(errors[0].message).toBe('Failed to parse message')
-
-      server.close()
     })
   })
 })

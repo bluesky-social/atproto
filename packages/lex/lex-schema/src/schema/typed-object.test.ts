@@ -1,20 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { EnumSchema } from './enum.js'
-import { IntegerSchema } from './integer.js'
-import { NullableSchema } from './nullable.js'
-import { ObjectSchema } from './object.js'
-import { OptionalSchema } from './optional.js'
-import { StringSchema } from './string.js'
-import { TypedObjectSchema } from './typed-object.js'
+import { Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import { enumSchema } from './enum.js'
+import { integer } from './integer.js'
+import { nullable } from './nullable.js'
+import { object } from './object.js'
+import { optional } from './optional.js'
+import { string } from './string.js'
+import { typedObject } from './typed-object.js'
 
 describe('TypedObjectSchema', () => {
-  const schema = new TypedObjectSchema(
-    'app.bsky.feed.post#main',
-    new ObjectSchema({
-      text: new StringSchema({}),
-      likes: new OptionalSchema(new IntegerSchema({})),
+  const schema = typedObject(
+    'app.bsky.feed.post',
+    'main',
+    object({
+      text: string(),
+      likes: optional(integer()),
     }),
   )
+  type Schema = Infer<typeof schema>
 
   describe('basic validation', () => {
     it('validates plain objects without $type', () => {
@@ -27,7 +30,7 @@ describe('TypedObjectSchema', () => {
 
     it('validates plain objects with matching $type', () => {
       const result = schema.safeParse({
-        $type: 'app.bsky.feed.post#main',
+        $type: 'app.bsky.feed.post',
         text: 'Hello world',
         likes: 5,
       })
@@ -36,7 +39,7 @@ describe('TypedObjectSchema', () => {
 
     it('rejects objects with non-matching $type', () => {
       const result = schema.safeParse({
-        $type: 'app.bsky.feed.like#main',
+        $type: 'app.bsky.feed.like',
         text: 'Hello world',
         likes: 5,
       })
@@ -142,15 +145,15 @@ describe('TypedObjectSchema', () => {
 
     it('rejects object $type', () => {
       const result = schema.safeParse({
-        $type: { type: 'app.bsky.feed.post#main' },
+        $type: { type: 'app.bsky.feed.post' },
         text: 'Hello world',
       })
       expect(result.success).toBe(false)
     })
 
-    it('rejects partial match $type', () => {
+    it('rejects non-normalized $type', () => {
       const result = schema.safeParse({
-        $type: 'app.bsky.feed.post',
+        $type: 'app.bsky.feed.post#main',
         text: 'Hello world',
       })
       expect(result.success).toBe(false)
@@ -185,12 +188,12 @@ describe('TypedObjectSchema', () => {
     })
 
     it('returns true for objects with matching $type', () => {
-      const obj = { $type: 'app.bsky.feed.post#main', text: 'Hello' }
+      const obj = { $type: 'app.bsky.feed.post', text: 'Hello' }
       expect(schema.isTypeOf(obj)).toBe(true)
     })
 
     it('returns false for objects with non-matching $type', () => {
-      const obj = { $type: 'app.bsky.feed.like#main', text: 'Hello' }
+      const obj = { $type: 'app.bsky.feed.like', text: 'Hello' }
       expect(schema.isTypeOf(obj)).toBe(false)
     })
 
@@ -203,6 +206,30 @@ describe('TypedObjectSchema', () => {
       const obj = { $type: 123, text: 'Hello' }
       expect(schema.isTypeOf(obj)).toBe(false)
     })
+
+    it('properly discriminates Unknown$TypeObject', () => {
+      function foo(value: Unknown$TypedObject | Schema) {
+        if (schema.isTypeOf(value)) {
+          value.text
+        } else {
+          // @ts-expect-error
+          value.text
+        }
+      }
+
+      foo({
+        $type: 'app.bsky.feed.post',
+        text: 'aze',
+        // @ts-expect-error
+        unknownProperty: 'should not be allowed !',
+      })
+
+      foo({
+        $type: 'blah' as Unknown$Type,
+        // @ts-expect-error
+        unknownProperty: 'should not be allowed !',
+      })
+    })
   })
 
   describe('$isTypeOf method', () => {
@@ -212,19 +239,19 @@ describe('TypedObjectSchema', () => {
     })
 
     it('returns true for objects with matching $type', () => {
-      const obj = { $type: 'app.bsky.feed.post#main', text: 'Hello' }
+      const obj = { $type: 'app.bsky.feed.post', text: 'Hello' }
       expect(schema.$isTypeOf(obj)).toBe(true)
     })
 
     it('returns false for objects with non-matching $type', () => {
-      const obj = { $type: 'app.bsky.feed.like#main', text: 'Hello' }
+      const obj = { $type: 'app.bsky.feed.like', text: 'Hello' }
       expect(schema.$isTypeOf(obj)).toBe(false)
     })
 
     it('behaves identically to isTypeOf', () => {
       const obj1 = { text: 'Hello' }
-      const obj2 = { $type: 'app.bsky.feed.post#main', text: 'Hello' }
-      const obj3 = { $type: 'app.bsky.feed.like#main', text: 'Hello' }
+      const obj2 = { $type: 'app.bsky.feed.post', text: 'Hello' }
+      const obj3 = { $type: 'app.bsky.feed.like', text: 'Hello' }
 
       expect(schema.$isTypeOf(obj1)).toBe(schema.isTypeOf(obj1))
       expect(schema.$isTypeOf(obj2)).toBe(schema.isTypeOf(obj2))
@@ -239,7 +266,7 @@ describe('TypedObjectSchema', () => {
       expect(result).toEqual({
         text: 'Hello world',
         likes: 5,
-        $type: 'app.bsky.feed.post#main',
+        $type: 'app.bsky.feed.post',
       })
     })
 
@@ -248,7 +275,7 @@ describe('TypedObjectSchema', () => {
       const result = schema.build(input)
       expect(result).toEqual({
         text: 'Hello world',
-        $type: 'app.bsky.feed.post#main',
+        $type: 'app.bsky.feed.post',
       })
     })
 
@@ -259,7 +286,7 @@ describe('TypedObjectSchema', () => {
         text: 'Hello',
         likes: 10,
         extra: 'value',
-        $type: 'app.bsky.feed.post#main',
+        $type: 'app.bsky.feed.post',
       })
     })
 
@@ -271,13 +298,87 @@ describe('TypedObjectSchema', () => {
     })
 
     it('adds $type to empty object', () => {
-      const emptySchema = new TypedObjectSchema(
-        'app.bsky.test#main',
-        new ObjectSchema({}),
-      )
+      const emptySchema = typedObject('app.bsky.test', 'main', object({}))
       const input = {}
       const result = emptySchema.build(input)
-      expect(result).toEqual({ $type: 'app.bsky.test#main' })
+      expect(result).toEqual({ $type: 'app.bsky.test' })
+    })
+
+    describe('build() does not validate', () => {
+      const validationSchema = typedObject(
+        'app.bsky.test',
+        'validation',
+        object({
+          actor: string({ format: 'did' }),
+          count: integer(),
+        }),
+      )
+
+      it('does not throw for invalid data', () => {
+        const result = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.actor).toBe('not-a-did')
+        expect(result.count).toBe(123)
+      })
+
+      it('does not throw for invalid types', () => {
+        const result = validationSchema.build({
+          actor: 'did:plc:abc123',
+          // @ts-expect-error
+          count: 'not-a-number',
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.count).toBe('not-a-number')
+      })
+
+      it('does not throw for missing required fields', () => {
+        // @ts-expect-error
+        const result = validationSchema.build({})
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        expect(result.actor).toBeUndefined()
+        expect(result.count).toBeUndefined()
+      })
+
+      it('does not throw for extra fields', () => {
+        const result = validationSchema.build({
+          actor: 'did:plc:abc123',
+          count: 42,
+          // @ts-expect-error
+          extra: 'unexpected',
+        })
+
+        expect(result.$type).toBe('app.bsky.test#validation')
+        // @ts-expect-error
+        expect(result.extra).toBe('unexpected')
+      })
+
+      it('parse() still validates after build()', () => {
+        const built = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(() => validationSchema.parse(built)).toThrow('Invalid DID')
+      })
+
+      it('safeParse() can detect validation errors after build()', () => {
+        const built = validationSchema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        const result = validationSchema.safeParse(built)
+        expect(result.success).toBe(false)
+      })
     })
   })
 
@@ -288,7 +389,7 @@ describe('TypedObjectSchema', () => {
       expect(result).toEqual({
         text: 'Hello world',
         likes: 5,
-        $type: 'app.bsky.feed.post#main',
+        $type: 'app.bsky.feed.post',
       })
     })
 
@@ -308,16 +409,53 @@ describe('TypedObjectSchema', () => {
     })
   })
 
+  describe('bound $ methods', () => {
+    it('$build can be used as a detached function', () => {
+      const { $build } = schema
+      const result = $build({ text: 'Hello' })
+      expect(result).toEqual({
+        text: 'Hello',
+        $type: 'app.bsky.feed.post',
+      })
+    })
+
+    it('$isTypeOf can be used as a detached function', () => {
+      const { $isTypeOf } = schema
+      expect($isTypeOf({ text: 'Hello' })).toBe(true)
+      expect($isTypeOf({ $type: 'app.bsky.feed.post', text: 'Hello' })).toBe(
+        true,
+      )
+      expect($isTypeOf({ $type: 'other.type', text: 'Hello' })).toBe(false)
+    })
+
+    it('$parse can be used as a detached function', () => {
+      const { $parse } = schema
+      const result = $parse({ text: 'Hello' })
+      expect(result).toEqual({ text: 'Hello' })
+    })
+
+    it('$matches can be used as a detached function', () => {
+      const { $matches } = schema
+      expect($matches({ text: 'Hello' })).toBe(true)
+      expect($matches(42)).toBe(false)
+    })
+
+    it('lazy property returns the same function on repeated access', () => {
+      const fn1 = schema.$build
+      const fn2 = schema.$build
+      expect(fn1).toBe(fn2)
+    })
+  })
+
   describe('with complex nested schemas', () => {
-    const complexSchema = new TypedObjectSchema(
-      'app.bsky.actor.profile#main',
-      new ObjectSchema({
-        displayName: new StringSchema({}),
-        bio: new OptionalSchema(new StringSchema({ maxLength: 256 })),
-        followerCount: new OptionalSchema(new IntegerSchema({ minimum: 0 })),
-        verified: new OptionalSchema(
-          new NullableSchema(new EnumSchema([true, false])),
-        ),
+    const complexSchema = typedObject(
+      'app.bsky.actor.profile',
+      'main',
+      object({
+        displayName: string(),
+        bio: optional(string({ maxLength: 256 })),
+        followerCount: optional(integer({ minimum: 0 })),
+        verified: optional(nullable(enumSchema([true, false]))),
       }),
     )
 
@@ -357,7 +495,7 @@ describe('TypedObjectSchema', () => {
 
     it('validates with matching $type', () => {
       const result = complexSchema.safeParse({
-        $type: 'app.bsky.actor.profile#main',
+        $type: 'app.bsky.actor.profile',
         displayName: 'John Doe',
       })
       expect(result.success).toBe(true)
@@ -365,7 +503,7 @@ describe('TypedObjectSchema', () => {
 
     it('rejects with non-matching $type', () => {
       const result = complexSchema.safeParse({
-        $type: 'app.bsky.feed.post#main',
+        $type: 'app.bsky.feed.post',
         displayName: 'John Doe',
       })
       expect(result.success).toBe(false)
@@ -374,18 +512,20 @@ describe('TypedObjectSchema', () => {
 
   describe('with different $type formats', () => {
     it('validates with main type', () => {
-      const mainSchema = new TypedObjectSchema(
-        'app.bsky.feed.post#main',
-        new ObjectSchema({ text: new StringSchema({}) }),
+      const mainSchema = typedObject(
+        'app.bsky.feed.post',
+        'main',
+        object({ text: string() }),
       )
       const result = mainSchema.safeParse({ text: 'Hello' })
       expect(result.success).toBe(true)
     })
 
     it('validates with custom fragment', () => {
-      const fragmentSchema = new TypedObjectSchema(
-        'app.bsky.feed.post#reply',
-        new ObjectSchema({ text: new StringSchema({}) }),
+      const fragmentSchema = typedObject(
+        'app.bsky.feed.post',
+        'reply',
+        object({ text: string() }),
       )
       const result = fragmentSchema.safeParse({
         $type: 'app.bsky.feed.post#reply',
@@ -395,9 +535,10 @@ describe('TypedObjectSchema', () => {
     })
 
     it('distinguishes between different fragments', () => {
-      const replySchema = new TypedObjectSchema(
-        'app.bsky.feed.post#reply',
-        new ObjectSchema({ text: new StringSchema({}) }),
+      const replySchema = typedObject(
+        'app.bsky.feed.post',
+        'reply',
+        object({ text: string() }),
       )
       const result = replySchema.safeParse({
         $type: 'app.bsky.feed.post#quote',
@@ -407,9 +548,10 @@ describe('TypedObjectSchema', () => {
     })
 
     it('validates with long NSID', () => {
-      const longSchema = new TypedObjectSchema(
-        'com.example.app.feature.action.detail#variant',
-        new ObjectSchema({ value: new StringSchema({}) }),
+      const longSchema = typedObject(
+        'com.example.app.feature.action.detail',
+        'variant',
+        object({ value: string() }),
       )
       const result = longSchema.safeParse({
         $type: 'com.example.app.feature.action.detail#variant',
@@ -421,10 +563,7 @@ describe('TypedObjectSchema', () => {
 
   describe('edge cases', () => {
     it('validates object with only extra properties', () => {
-      const minimalSchema = new TypedObjectSchema(
-        'app.bsky.test#main',
-        new ObjectSchema({}),
-      )
+      const minimalSchema = typedObject('app.bsky.test', 'main', object({}))
       const result = minimalSchema.safeParse({
         extra1: 'value1',
         extra2: 'value2',
@@ -433,21 +572,15 @@ describe('TypedObjectSchema', () => {
     })
 
     it('validates empty object with no required properties', () => {
-      const minimalSchema = new TypedObjectSchema(
-        'app.bsky.test#main',
-        new ObjectSchema({}),
-      )
+      const minimalSchema = typedObject('app.bsky.test', 'main', object({}))
       const result = minimalSchema.safeParse({})
       expect(result.success).toBe(true)
     })
 
     it('validates with $type as only property', () => {
-      const minimalSchema = new TypedObjectSchema(
-        'app.bsky.test#main',
-        new ObjectSchema({}),
-      )
+      const minimalSchema = typedObject('app.bsky.test', 'main', object({}))
       const result = minimalSchema.safeParse({
-        $type: 'app.bsky.test#main',
+        $type: 'app.bsky.test',
       })
       expect(result.success).toBe(true)
     })
@@ -494,15 +627,14 @@ describe('TypedObjectSchema', () => {
   })
 
   describe('integration with all property types', () => {
-    const fullSchema = new TypedObjectSchema(
-      'app.bsky.test#full',
-      new ObjectSchema({
-        required: new StringSchema({}),
-        optional: new OptionalSchema(new StringSchema({})),
-        nullable: new NullableSchema(new StringSchema({})),
-        optionalNullable: new OptionalSchema(
-          new NullableSchema(new StringSchema({})),
-        ),
+    const fullSchema = typedObject(
+      'app.bsky.test',
+      'full',
+      object({
+        required: string(),
+        optional: optional(string()),
+        nullable: nullable(string()),
+        optionalNullable: optional(nullable(string())),
       }),
     )
 
@@ -576,9 +708,9 @@ describe('TypedObjectSchema', () => {
   })
 
   describe('comparison with plain ObjectSchema', () => {
-    const plainSchema = new ObjectSchema({
-      text: new StringSchema({}),
-      likes: new OptionalSchema(new IntegerSchema({})),
+    const plainSchema = object({
+      text: string(),
+      likes: optional(integer()),
     })
 
     it('typed schema accepts same input as plain schema', () => {
@@ -605,7 +737,7 @@ describe('TypedObjectSchema', () => {
     })
 
     it('typed schema accepts matching $type', () => {
-      const input = { $type: 'app.bsky.feed.post#main', text: 'Hello' }
+      const input = { $type: 'app.bsky.feed.post', text: 'Hello' }
       const typedResult = schema.safeParse(input)
       expect(typedResult.success).toBe(true)
     })

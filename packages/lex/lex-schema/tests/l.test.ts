@@ -9,7 +9,7 @@ const blobCid = parseCid(
 
 describe('simple schemas', () => {
   describe('l.integer', () => {
-    const schema = l.integer({})
+    const schema = l.integer()
 
     it('validates integers', () => {
       expect(schema.matches(42)).toBe(true)
@@ -24,7 +24,6 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.integer({})).toBe(schema)
       expect(l.integer()).toBe(schema)
     })
 
@@ -38,7 +37,7 @@ describe('simple schemas', () => {
   })
 
   describe('l.string', () => {
-    const schema = l.string({})
+    const schema = l.string()
 
     it('validates strings', () => {
       expect(schema.matches('hello')).toBe(true)
@@ -53,13 +52,12 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.string({})).toBe(schema)
       expect(l.string()).toBe(schema)
     })
   })
 
   describe('l.boolean', () => {
-    const schema = l.boolean({})
+    const schema = l.boolean()
 
     it('validates true', () => {
       expect(schema.matches(true)).toBe(true)
@@ -74,16 +72,15 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.boolean({})).toBe(schema)
       expect(l.boolean()).toBe(schema)
 
-      expect(l.boolean({ default: true })).toBe(l.boolean({ default: true }))
-      expect(l.boolean({ default: false })).toBe(l.boolean({ default: false }))
+      expect(l.optional(l.boolean())).toBe(l.optional(l.boolean()))
+      expect(l.nullable(l.boolean())).toBe(l.nullable(l.boolean()))
     })
   })
 
   describe('l.blob', () => {
-    const schema = l.blob({})
+    const schema = l.blob()
 
     it('validates valid blob references', () => {
       expect(
@@ -111,7 +108,6 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.blob({})).toBe(schema)
       expect(l.blob()).toBe(schema)
     })
   })
@@ -163,7 +159,7 @@ describe('simple schemas', () => {
   })
 
   describe('l.array', () => {
-    const schema = l.array(l.string({}))
+    const schema = l.array(l.string())
 
     it('validates arrays of strings', () => {
       expect(schema.matches(['hello', 'world'])).toBe(true)
@@ -184,8 +180,8 @@ describe('simple schemas', () => {
 
   describe('l.object', () => {
     const schema = l.object({
-      name: l.string({}),
-      age: l.integer({}),
+      name: l.string(),
+      age: l.integer(),
     })
 
     it('validates valid objects', () => {
@@ -217,12 +213,12 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.nullable(l.string({}))).toBe(schema)
+      expect(l.nullable(l.string())).toBe(schema)
     })
   })
 
   describe('l.optional', () => {
-    const schema = l.optional(l.string({}))
+    const schema = l.optional(l.string())
 
     it('validates undefined', () => {
       expect(schema.matches(undefined)).toBe(true)
@@ -237,7 +233,7 @@ describe('simple schemas', () => {
     })
 
     it('memoizes instances', () => {
-      expect(l.optional(l.string({}))).toBe(schema)
+      expect(l.optional(l.string())).toBe(schema)
     })
   })
 
@@ -276,29 +272,29 @@ describe('simple schemas', () => {
 
 describe('complex schemas', () => {
   const addressSchema = l.object({
-    street: l.string({}),
-    city: l.string({}),
-    zipCode: l.integer({}),
+    street: l.string(),
+    city: l.string(),
+    zipCode: l.integer(),
   })
 
   const mobilityPreferenceSchema = l.discriminatedUnion('type', [
     l.object({
       type: l.literal('car'),
-      carModel: l.string({}),
+      carModel: l.string(),
     }),
     l.object({
       type: l.literal('bike'),
-      bikeType: l.string({}),
+      bikeType: l.string(),
     }),
     l.object({
       type: l.literal('public_transport'),
-      preferredLines: l.array(l.string({})),
+      preferredLines: l.array(l.string()),
     }),
   ])
 
   const userSchema = l.object({
-    id: l.integer({}),
-    name: l.string({}),
+    id: l.integer(),
+    name: l.string(),
     gender: l.optional(l.nullable(l.enum(['male', 'female']))),
     address: addressSchema,
     mobilityPreferences: l.optional(l.array(mobilityPreferenceSchema)),

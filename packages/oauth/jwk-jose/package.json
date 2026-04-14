@@ -24,7 +24,7 @@
     }
   },
   "dependencies": {
-    "@atproto/jwk": "workspace:*",
+    "@atproto/jwk": "workspace:^",
     "jose": "^5.2.0"
   },
   "devDependencies": {

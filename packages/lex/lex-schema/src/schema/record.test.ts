@@ -1,16 +1,19 @@
-import { describe, expect, it } from 'vitest'
-import { ObjectSchema } from './object.js'
-import { RecordSchema } from './record.js'
-import { StringSchema } from './string.js'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { DidString, Infer, Unknown$Type, Unknown$TypedObject } from '../core.js'
+import { integer } from './integer.js'
+import { object } from './object.js'
+import { optional } from './optional.js'
+import { record } from './record.js'
+import { string } from './string.js'
 
 describe('RecordSchema', () => {
   describe('basic validation', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -63,14 +66,14 @@ describe('RecordSchema', () => {
   })
 
   describe('isTypeOf method', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        text: string(),
       }),
     )
+    type Schema = Infer<typeof schema>
 
     it('returns true for matching $type', () => {
       const result = schema.isTypeOf({ $type: 'app.bsky.feed.post' })
@@ -96,50 +99,193 @@ describe('RecordSchema', () => {
       const result = schema.isTypeOf({ $type: null })
       expect(result).toBe(false)
     })
+
+    it('properly discriminates Unknown$TypeObject', () => {
+      function foo(value: Unknown$TypedObject | Schema) {
+        if (schema.isTypeOf(value)) {
+          value.text
+        } else {
+          // @ts-expect-error
+          value.text
+        }
+      }
+
+      foo({
+        $type: 'app.bsky.feed.post',
+        text: 'aze',
+        // @ts-expect-error
+        unknownProperty: 'should not be allowed !',
+      })
+
+      foo({
+        $type: 'blah' as Unknown$Type,
+        // @ts-expect-error
+        unknownProperty: 'should not be allowed !',
+      })
+    })
   })
 
-  describe('build method', () => {
-    const schema = new RecordSchema(
+  describe('build() method', () => {
+    const schema = record(
       'any',
-      'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      'io.example.record',
+      object({
+        actor: string({ format: 'did' }),
+        text: optional(string()),
       }),
     )
 
-    it('adds correct $type to input', () => {
-      const result = schema.build({ text: 'Hello world' })
-      expect(result.$type).toBe('app.bsky.feed.post')
-      expect(result.text).toBe('Hello world')
+    it('adds $type to input', () => {
+      const result = schema.build({
+        actor: 'did:foo:bar',
+        text: 'Hello',
+      })
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+        text: 'Hello',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
+    })
+
+    it('causes a type error for invalid values', () => {
+      const result = schema.build({
+        // @ts-expect-error
+        actor: 3,
+        text: 'Hello',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
     })
 
     it('preserves existing properties', () => {
       const result = schema.build({
-        text: 'Hello world',
+        actor: 'did:foo:bar',
+        // @ts-expect-error
         extra: 'value',
       })
-      expect(result.$type).toBe('app.bsky.feed.post')
-      expect(result.text).toBe('Hello world')
-      expect(result.extra).toBe('value')
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+        extra: 'value',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        actor: `did:${string}:${string}`
+        text?: string | undefined
+        $type: 'io.example.record'
+      }>()
     })
 
     it('overwrites existing $type', () => {
       const result = schema.build({
+        // @ts-expect-error
         $type: 'wrong.type',
-        text: 'Hello world',
+        actor: 'did:foo:bar',
       })
-      expect(result.$type).toBe('app.bsky.feed.post')
+      expect(result).toStrictEqual({
+        $type: 'io.example.record',
+        actor: 'did:foo:bar',
+      })
+      expectTypeOf(result).toEqualTypeOf<{
+        $type: 'io.example.record'
+        actor: DidString
+        text?: string
+      }>()
+    })
+
+    describe('build() does not validate', () => {
+      const schema = record(
+        'any',
+        'io.example.record',
+        object({
+          actor: string({ format: 'did' }),
+          count: integer(),
+        }),
+      )
+
+      it('does not throw for invalid data', () => {
+        const result = schema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(result.$type).toBe('io.example.record')
+        expect(result.actor).toBe('not-a-did')
+        expect(result.count).toBe(123)
+      })
+
+      it('does not throw for invalid types', () => {
+        const result = schema.build({
+          actor: 'did:plc:abc123',
+          // @ts-expect-error
+          count: 'not-a-number',
+        })
+
+        expect(result.$type).toBe('io.example.record')
+        expect(result.count).toBe('not-a-number')
+      })
+
+      it('does not throw for missing required fields', () => {
+        // @ts-expect-error
+        const result = schema.build({})
+
+        expect(result.$type).toBe('io.example.record')
+        expect(result.actor).toBeUndefined()
+        expect(result.count).toBeUndefined()
+      })
+
+      it('does not throw for extra fields', () => {
+        const result = schema.build({
+          actor: 'did:plc:abc123',
+          count: 42,
+          // @ts-expect-error
+          extra: 'unexpected',
+        })
+
+        expect(result.$type).toBe('io.example.record')
+
+        // @ts-expect-error
+        expect(result.extra).toBe('unexpected')
+      })
+
+      it('parse() still validates after build()', () => {
+        const built = schema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        expect(() => schema.parse(built)).toThrow('Invalid DID')
+      })
+
+      it('safeParse() can detect validation errors after build()', () => {
+        const built = schema.build({
+          // @ts-expect-error
+          actor: 'not-a-did',
+          count: 123,
+        })
+
+        const result = schema.safeParse(built)
+        expect(result.success).toBe(false)
+      })
     })
   })
 
   describe('key type: any', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -170,12 +316,12 @@ describe('RecordSchema', () => {
   })
 
   describe('key type: tid', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'tid',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -206,12 +352,12 @@ describe('RecordSchema', () => {
   })
 
   describe('key type: nsid', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'nsid',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -245,12 +391,12 @@ describe('RecordSchema', () => {
 
   describe('key type: literal', () => {
     describe('literal:self', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'literal:self',
         'app.bsky.feed.post',
-        new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+        object({
+          $type: string(),
+          text: string(),
         }),
       )
 
@@ -276,12 +422,12 @@ describe('RecordSchema', () => {
     })
 
     describe('literal:customKey', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'literal:customKey',
         'app.bsky.feed.post',
-        new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+        object({
+          $type: string(),
+          text: string(),
         }),
       )
 
@@ -303,12 +449,12 @@ describe('RecordSchema', () => {
   })
 
   describe('$type with hash fragment', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post#main',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -338,13 +484,13 @@ describe('RecordSchema', () => {
   })
 
   describe('complex nested schema', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({ maxLength: 300 }),
-        createdAt: new StringSchema({ format: 'datetime' }),
+      object({
+        $type: string(),
+        text: string({ maxLength: 300 }),
+        createdAt: string({ format: 'datetime' }),
       }),
     )
 
@@ -377,12 +523,12 @@ describe('RecordSchema', () => {
   })
 
   describe('edge cases', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -442,14 +588,14 @@ describe('RecordSchema', () => {
     })
 
     it('handles deeply nested structures', () => {
-      const complexSchema = new RecordSchema(
+      const complexSchema = record(
         'any',
         'app.bsky.complex',
-        new ObjectSchema({
-          $type: new StringSchema({}),
-          nested: new ObjectSchema({
-            deep: new ObjectSchema({
-              value: new StringSchema({}),
+        object({
+          $type: string(),
+          nested: object({
+            deep: object({
+              value: string(),
             }),
           }),
         }),
@@ -468,12 +614,12 @@ describe('RecordSchema', () => {
   })
 
   describe('$isTypeOf method', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -489,12 +635,12 @@ describe('RecordSchema', () => {
   })
 
   describe('$build method', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -506,13 +652,13 @@ describe('RecordSchema', () => {
   })
 
   describe('validation with missing required fields', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
-        author: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
+        author: string(),
       }),
     )
 
@@ -536,40 +682,32 @@ describe('RecordSchema', () => {
 
   describe('different record key types', () => {
     it('constructs with key type "any"', () => {
-      const schema = new RecordSchema(
-        'any',
-        'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
-      )
+      const schema = record('any', 'app.bsky.test', object({ $type: string() }))
       expect(schema.key).toBe('any')
       expect(schema.keySchema).toBeDefined()
     })
 
     it('constructs with key type "tid"', () => {
-      const schema = new RecordSchema(
-        'tid',
-        'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
-      )
+      const schema = record('tid', 'app.bsky.test', object({ $type: string() }))
       expect(schema.key).toBe('tid')
       expect(schema.keySchema).toBeDefined()
     })
 
     it('constructs with key type "nsid"', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'nsid',
         'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
+        object({ $type: string() }),
       )
       expect(schema.key).toBe('nsid')
       expect(schema.keySchema).toBeDefined()
     })
 
     it('constructs with literal key type', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'literal:custom',
         'app.bsky.test',
-        new ObjectSchema({ $type: new StringSchema({}) }),
+        object({ $type: string() }),
       )
       expect(schema.key).toBe('literal:custom')
       expect(schema.keySchema).toBeDefined()
@@ -577,12 +715,12 @@ describe('RecordSchema', () => {
   })
 
   describe('validation with undefined vs missing fields', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 
@@ -613,12 +751,12 @@ describe('RecordSchema', () => {
 
   describe('record with empty $type string', () => {
     it('rejects empty $type string', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'any',
         'app.bsky.feed.post',
-        new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+        object({
+          $type: string(),
+          text: string(),
         }),
       )
 
@@ -632,12 +770,12 @@ describe('RecordSchema', () => {
 
   describe('special characters in $type', () => {
     it('validates $type with dots', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'any',
         'app.bsky.feed.post',
-        new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+        object({
+          $type: string(),
+          text: string(),
         }),
       )
 
@@ -649,12 +787,12 @@ describe('RecordSchema', () => {
     })
 
     it('validates $type with hash and alphanumeric fragment', () => {
-      const schema = new RecordSchema(
+      const schema = record(
         'any',
         'app.bsky.feed.post#reply123',
-        new ObjectSchema({
-          $type: new StringSchema({}),
-          text: new StringSchema({}),
+        object({
+          $type: string(),
+          text: string(),
         }),
       )
 
@@ -667,12 +805,12 @@ describe('RecordSchema', () => {
   })
 
   describe('case sensitivity', () => {
-    const schema = new RecordSchema(
+    const schema = record(
       'any',
       'app.bsky.feed.post',
-      new ObjectSchema({
-        $type: new StringSchema({}),
-        text: new StringSchema({}),
+      object({
+        $type: string(),
+        text: string(),
       }),
     )
 

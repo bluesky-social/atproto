@@ -64,14 +64,16 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+::bafy/)) {
       return constantKeysetCursor
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls, stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, did, cid] = match
-      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+      return str
+        .replace(did, take(users, did))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
     // decent check for 64-byte base64 encoded signatures
     if (str.length === 86 && !str.includes(' ')) {

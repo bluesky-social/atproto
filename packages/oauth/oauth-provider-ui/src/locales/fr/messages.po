@@ -13,23 +13,100 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:221
+#: src/hooks/use-date-ago.ts:35
+msgid "{deltaDays} days ago"
+msgstr "il y a {deltaDays} jours"
+
+#: src/hooks/use-date-ago.ts:27
+msgid "{deltaHours} hours ago"
+msgstr "il y a {deltaHours} heures"
+
+#: src/hooks/use-date-ago.ts:19
+msgid "{deltaMinutes} minutes ago"
+msgstr "il y a {deltaMinutes} minutes"
+
+#: src/routes/account/about/page.tsx:136
+msgid "<0>AT Protocol</0> — Technical documentation for developers"
+msgstr "<0>AT Protocol</0> — Documentation technique pour les développeurs"
+
+#: src/routes/account/about/page.tsx:128
+msgid "<0>Bluesky Social</0> — General information about the network"
+msgstr "<0>Bluesky Social</0> — Informations générales sur le réseau"
+
+#: src/routes/account/about/page.tsx:119
+msgid "<0>Learn more</0><1>Want to learn more about the technology and network behind your Atmosphere account?</1>"
+msgstr "<0>En savoir plus</0><1>Vous voulez en savoir plus sur la technologie et le réseau derrière votre compte Atmosphère ?</1>"
+
+#: src/routes/account/about/page.tsx:84
+msgid "<0>This website: your account control center</0><1>The website you're on right now is your <2>account management hub</2>. Here you can:</1><3><4>Update your email address and password</4><5>Manage your personal data and security settings</5><6>View and manage active sessions across devices (browsers where you're signed in)</6></3><7>This place is where you control the fundamental aspects of your Atmosphere identity, independently of any app-specific details like the profile you have on the <8>Bluesky social app</8>.</7><9>Your Atmosphere account is currently hosted by <10/>, one of many hosting providers in the Atmosphere network. You can switch to a different one at any time without losing your account, identity, or data.</9>"
+msgstr "<0>Ce site web : le centre de contrôle de votre compte</0><1>Le site web sur lequel vous êtes actuellement est votre <2>centre de gestion de compte</2>. Ici, vous pouvez :</1><3><4>Mettre à jour votre adresse e-mail et votre mot de passe</4><5>Gérer vos données personnelles et les paramètres de sécurité</5><6>Afficher et gérer les sessions actives sur tous les appareils (navigateurs où vous êtes connecté)</6></3><7>C'est ici que vous pouvez contrôler les aspects fondamentaux de votre identité Atmosphère, indépendamment des aspects spécifiques liés à une application, comme par exemple le profil que vous avez sur <8>Bluesky</8>.</7><9>Votre compte Atmosphère est actuellement hébergé par <10/>, l'un des nombreux fournisseurs d'hébergement du réseau Atmosphère. Vous pouvez à tout moment changer de fournisseur sans perdre votre compte, votre identité ou vos données.</9>"
+
+#: src/routes/account/about/page.tsx:24
+msgid "<0>Use it across multiple apps</0><1>Your Atmosphere account works with the <2>Bluesky Social App</2> and any other social apps built on the same network.</1><3>Just like you can use the same email address to sign into different websites, your Atmosphere account lets you sign into different social apps while keeping the same identity, connections, and content.</3><4>When you see options to log in with an Atmosphere account or \"internet handle\" on other apps, you can use your existing account <5><6/></5> instead of creating a new one.</4>"
+msgstr "<0>Utilisez-le avec plusieurs applications</0><1>Votre compte Atmosphère fonctionne avec le réseau social <2>Bluesky</2> ainsi que toutes les autres applications sociales construites sur le même réseau.</1><3>De la même manière que vous pouvez utiliser la même adresse e-mail pour vous connecter à différents sites web, votre compte Atmosphère vous permet de vous connecter à différentes applications sociales tout en conservant la même identité, les mêmes connexions et le même contenu.</3><4>Lorsque vous voyez des options pour vous connecter avec un \"compte Atmosphère\" ou un \"pseudo Internet\" sur d'autres applications, vous pouvez utiliser votre compte existant <5><6/></5> plutôt que d'en créer un nouveau.</4>"
+
+#: src/routes/account/about/page.tsx:13
+msgid "<0>What is an Atmosphere account?</0><1>An <2>Atmosphere account</2> is your personal identity on the Atmosphere. Think of it as a digital passport that you truly own, not locked to any single app or company.</1>"
+msgstr "<0>Qu'est-ce qu'un compte Atmosphère ?</0><1>Un <2>compte Atmosphère</2> est votre identité personnelle sur l'Atmosphère. Pensez-y comme à un passeport numérique que vous possédez vraiment, pas lié à une seule application ou entreprise.</1>"
+
+#: src/routes/account/about/page.tsx:51
+msgid "<0>What makes it special</0><1>The key difference: your data isn't trapped in any one app. Unlike traditional social media accounts, where your data belongs to the platform, with an Atmosphere account you genuinely own your identity and data:</1><2><3><4>You own your identity</4>: Your username (handle) and permanent ID belong to you</3><5><6>Your data is portable</6>: Posts, follows, and content live in your personal data storage, not locked in an app's database</5><7><8>You can move freely</8>: Switch hosting providers without losing your followers, posts, or connections. This also lets you choose a provider in your country if it matters where your data is stored.</7><9><10>Multiple apps, one identity</10>: Use the same account across different apps built on the same network</9></2>"
+msgstr "<0>Qu'est-ce qui le rend spécial</0><1>La grande différence : vos données ne sont pas enfermées dans une seule application. Contrairement aux comptes de médias sociaux traditionnels, où vos données appartiennent à la plateforme, avec un compte Atmosphère, vous possédez véritablement votre identité et vos données :</1><2><3><4>Vous possédez votre identité</4> : Votre identifiant permanent vous appartient, et vous pouvez utiliser un nom de domaine que vous possédez comme pseudo si vous le souhaitez</3><5><6>Vos données sont portables</6> : Les publications, abonnements (\"follows\"), \"likes\" et autres contenus vivent dans votre stockage de données personnel</5><7><8>Vous pouvez vous déplacer librement</8> : Changez de fournisseur d'hébergement sans perdre vos abonnés, publications ou connexions. Cela vous permet également de choisir un fournisseur dans votre pays si l'emplacement de vos données est important.</7><9><10>Plusieurs applications, une identité</10> : Utilisez le même compte sur différentes applications construites sur le même réseau</9></2>"
+
+#: src/hooks/use-date-ago.ts:24
+msgid "1 hour ago"
+msgstr "il y a 1 heure"
+
+#: src/hooks/use-date-ago.ts:16
+msgid "1 minute ago"
+msgstr "il y a 1 minute"
+
+#: src/components/sign-in-form.tsx:248
 msgid "2FA Confirmation"
 msgstr "Confirmation 2FA"
 
-#: src/components/utils/error-message.tsx:27
+#: src/hooks/use-oauth-client-name.ts:18
+msgid "A local app"
+msgstr "Une application locale"
+
+#: src/hooks/use-error-message.ts:22
 msgid "A second authentication factor is required"
 msgstr "Un second facteur d'authentification est requis"
 
-#: src/components/utils/scope-description.tsx:851
+#: src/components/utils/scope-description.tsx:801
 msgid "A service controlled by <0>{domain}</0>"
 msgstr "Un service contrôlé par <0>{domain}</0>"
 
-#: src/components/utils/scope-description.tsx:282
+#: src/account-page.tsx:89
+msgid "About"
+msgstr "À propos"
+
+#: src/account-page.tsx:55
+#: src/components/utils/scope-description.tsx:266
 msgid "Account"
 msgstr "Compte utilisateur"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:71
+#: src/components/utils/account-image.tsx:40
+msgid "Account avatar"
+msgstr "Avatar du compte"
+
+#: src/components/utils/account-identifier.tsx:22
+msgid "Account identifier"
+msgstr "Identifiant du compte"
+
+#: src/components/utils/account-name.tsx:22
+msgid "Account name"
+msgstr "Nom du compte"
+
+#: src/components/utils/account-selector.tsx:45
+msgid "Account overview"
+msgstr "Aperçu du compte"
+
+#: src/components/utils/account-selector.tsx:25
+msgid "Account selector"
+msgstr "Sélecteur de compte"
+
+#: src/components/reset-password-view.tsx:66
 msgid "Already have a code?"
 msgstr "Vous avez déjà un code ?"
 
@@ -37,167 +114,217 @@ msgstr "Vous avez déjà un code ?"
 msgid "An application on your device"
 msgstr "Une application sur votre appareil"
 
-#: src/components/utils/error-message.tsx:87
+#: src/components/error-view.tsx:20
+msgid "An error occurred"
+msgstr "Une erreur s'est produite"
+
+#: src/hooks/use-error-message.ts:75
 msgid "An unknown error occurred"
 msgstr "Une erreur inconnue s'est produite"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:113
+#: src/components/sign-in-picker.tsx:86
 msgid "Another account"
 msgstr "Un autre compte"
 
-#: src/components/utils/scope-description.tsx:879
+#: src/components/utils/scope-description.tsx:829
 msgid "Any collection"
 msgstr "N'importe quelle collection"
 
-#: src/components/utils/scope-description.tsx:821
+#: src/components/utils/scope-description.tsx:771
 msgid "Any method"
 msgstr "N'importe quelle action"
 
-#: src/components/utils/scope-description.tsx:860
+#: src/components/utils/scope-description.tsx:810
 msgid "Any service"
 msgstr "N'importe quel service"
 
-#: src/views/authorize/welcome/welcome-view.tsx:28
-#: src/components/utils/scope-description.tsx:458
-#: src/components/utils/scope-description.tsx:478
+#: src/account-page.tsx:68
+msgid "Apps"
+msgstr "Applications"
+
+#: src/routes/account/apps/page.tsx:56
+msgid "Apps may access your account in the background (to check notifications, sync data, etc.) even when you're not actively using them. This is normal behavior and will update the \"last accessed\" time shown above."
+msgstr "Les applications peuvent accéder à votre compte en arrière-plan (pour vérifier les notifications, synchroniser les données, etc.) même lorsque vous ne les utilisez pas activement. C'est un comportement normal qui sera reflété dans l'heure de \"dernier accès\" affichée ci-dessus."
+
+#: src/components/authenticate-welcome-view.tsx:19
+msgctxt "AuthenticationPage"
 msgid "Authenticate"
-msgstr "Authentification"
+msgstr "S'identifier"
 
-#: src/views/authorize/consent/consent-view.tsx:60
-#: src/views/authorize/consent/consent-form.tsx:105
-#: src/views/authorize/consent/consent-form.tsx:174
+#: src/components/utils/scope-description.tsx:442
+#: src/components/utils/scope-description.tsx:458
+msgctxt "OAuthScope"
+msgid "Authenticate"
+msgstr "Vous authentifier"
+
+#: src/components/consent-view.tsx:39
+#: src/components/consent-form.tsx:85
+msgctxt "OAuthConsent"
 msgid "Authorize"
-msgstr "Authoriser l'accès"
+msgstr "Autoriser"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:79
-msgid "Avatar"
-msgstr "Photo de profile"
+#. placeholder {0}: i18n.date(createdAt, { year: 'numeric', month: 'short', day: 'numeric', })
+#: src/routes/account/apps/page.tsx:128
+msgctxt "OAuthApp"
+msgid "Authorized on {0}"
+msgstr "Autorisé le {0}"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:59
-#: src/views/authorize/sign-in/sign-in-form.tsx:132
-#: src/views/authorize/reset-password/reset-password-view.tsx:65
-#: src/views/authorize/reset-password/reset-password-view.tsx:95
-#: src/views/authorize/consent/consent-form.tsx:99
+#: src/components/sign-in-picker.tsx:54
+#: src/components/sign-in-form.tsx:138
+#: src/components/reset-password-view.tsx:60
+#: src/components/reset-password-view.tsx:94
+#: src/components/consent-form.tsx:81
 #: src/components/forms/wizard-card.tsx:93
 msgid "Back"
 msgstr "Retour"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:152
+#: src/components/sign-up-handle-form.tsx:125
 msgid "Between {minLength} and {maxLength} characters"
 msgstr "Entre {minLength} et {maxLength} caractères"
 
-#: src/components/utils/scope-description.tsx:745
+#: src/components/utils/scope-description.tsx:695
 msgid "Blob storage"
-msgstr "Stockage"
+msgstr "Stockage de fichiers"
 
-#: src/components/utils/scope-description.tsx:836
+#: src/components/utils/scope-description.tsx:786
 msgid "Bluesky App services"
 msgstr "Services de l'application Bluesky"
 
-#: src/components/utils/scope-description.tsx:843
+#: src/components/utils/scope-description.tsx:793
 msgid "Bluesky Chat services"
 msgstr "Services de discussion de Bluesky"
 
-#. placeholder {0}: consentLabel || <Trans>Authorize</Trans>
-#: src/views/authorize/consent/consent-form.tsx:173
-msgid "By clicking <0>{0}</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
-msgstr "En cliquant sur <0>{0}</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et à sa <2>politique de confidentialité</2>."
+#: src/account-page.tsx:83
+msgid "Branding"
+msgstr "Personnalisation"
+
+#: src/components/consent-form.tsx:151
+msgid "By clicking <0>Authorize</0>, you will grant this application access to your account in accordance with its <1>terms of service</1> and <2>privacy policy</2>."
+msgstr "En cliquant sur <0>Autoriser</0>, vous accorderez à cette application l'accès à votre compte conformément à ses <1>conditions d'utilisation</1> et sa <2>politique de confidentialité</2>."
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
-#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:30
+#: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "En créant un compte, vous acceptez les {0} et la {1} de ce service."
 
-#: src/components/utils/scope-description.tsx:553
+#: src/components/utils/scope-description.tsx:521
 msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Appeler"
 
-#: src/views/authorize/authorize-view.tsx:151
-#: src/views/authorize/welcome/welcome-view.tsx:51
-#: src/components/forms/form-card-async.tsx:85
+#: src/contexts/authentication.tsx:173
+#: src/components/authenticate-welcome-view.tsx:57
+#: src/components/forms/form-card-async.tsx:44
 msgid "Cancel"
 msgstr "Annuler"
 
-#: src/components/utils/scope-description.tsx:434
+#: src/routes/account/devices/page.tsx:117
+msgid "Cannot remove current device"
+msgstr "Impossible de supprimer l'appareil en cours d'utilisation"
+
+#: src/components/utils/scope-description.tsx:418
 msgid "Change your <0>@handle</0>"
 msgstr "Modifier votre <0>@pseudo</0>"
 
-#: src/components/utils/scope-description.tsx:394
+#: src/account-page.tsx:76
+msgid "Change your account password"
+msgstr "Changer le mot de passe de votre compte"
+
+#: src/components/utils/scope-description.tsx:378
 msgid "Chat"
 msgstr "Discussions"
 
 #. placeholder {0}: secondFactor.hint
-#: src/views/authorize/sign-in/sign-in-form.tsx:234
+#: src/components/sign-in-form.tsx:261
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Vérifiez vos emails {0} pour un code de connexion et saisissez-le ici."
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:99
+#: src/data/password.ts:29
+msgid "Check your inbox."
+msgstr "Vérifiez votre boîte de réception."
+
+#: src/components/sign-up-view.tsx:81
 msgid "Choose a username"
 msgstr "Choisissez un nom d'utilisateur"
 
-#: src/components/utils/error-card.tsx:76
+#: src/components/utils/account-selector.tsx:65
+msgid "Close account selector"
+msgstr "Fermer le sélecteur de compte"
+
+#: src/components/utils/description-card.tsx:83
+msgid "Close details"
+msgstr "Fermer les détails"
+
+#: src/components/utils/error-card.tsx:65
 msgid "Code"
 msgstr "Code"
 
-#: src/components/utils/description-card.tsx:74
-#: src/components/utils/description-card.tsx:76
-msgid "Collapse details"
-msgstr "Réduire les détails"
-
-#: src/components/utils/scope-description.tsx:713
-msgid "Collection"
-msgstr "Collection"
-
-#: src/views/authorize/sign-in/sign-in-form.tsx:139
+#: src/components/sign-in-form.tsx:145
 msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirmer"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:69
+#: src/components/sign-in-view.tsx:58
 msgid "Confirm your password to continue"
 msgstr "Confirmez votre mot de passe pour continuer"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:225
+#: src/components/sign-in-form.tsx:252
 msgid "Confirmation code"
 msgstr "Code de confirmation"
 
-#: src/components/utils/scope-description.tsx:714
+#: src/cookie-error-page.tsx:43
+msgid "Continue"
+msgstr "Continuer"
+
+#: src/cookie-error-page.tsx:37
+msgid "Cookie Error"
+msgstr "Erreur de cookies"
+
+#: src/components/utils/scope-description.tsx:664
 msgid "Create"
 msgstr "Créer"
 
-#: src/views/authorize/welcome/welcome-view.tsx:35
+#: src/components/authenticate-welcome-view.tsx:38
 msgid "Create a new account"
 msgstr "Créer un nouveau compte"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:82
-msgid "Create Account"
-msgstr "Créer un compte"
+#: src/components/utils/scope-description.tsx:568
+msgid "Create, update, and delete any public data linked to your account"
+msgstr "Créer, mettre à jour et supprimer toutes les données publiques de votre compte"
 
-#: src/components/utils/scope-description.tsx:599
-msgid "Create, update, and delete any public record"
-msgstr "Créer, modifier et supprimer tout contenu public"
+#: src/components/utils/scope-description.tsx:663
+msgid "Data"
+msgstr "Données"
 
-#: src/components/utils/scope-description.tsx:716
+#: src/components/utils/scope-description.tsx:666
 msgid "Delete"
 msgstr "Supprimer"
 
-#: src/views/authorize/consent/consent-form.tsx:109
+#: src/components/consent-form.tsx:89
+msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Refuser l'accès"
 
-#: src/components/utils/error-card.tsx:83
+#: src/components/utils/error-card.tsx:72
 msgid "Description"
 msgstr "Description"
 
-#: src/views/authorize/sign-up/sign-up-account-form.tsx:114
-#: src/components/utils/scope-description.tsx:242
+#: src/components/utils/description-card.tsx:70
+msgid "Details"
+msgstr "Détails"
+
+#: src/account-page.tsx:61
+msgid "Devices"
+msgstr "Appareils"
+
+#: src/components/sign-up-account-form.tsx:114
+#: src/components/utils/scope-description.tsx:226
 msgid "Email"
 msgstr "Email"
 
-#: src/views/authorize/reset-password/reset-password-request-form.tsx:55
-#: src/views/authorize/reset-password/reset-password-request-form.tsx:60
+#: src/components/reset-password-request-form.tsx:52
+#: src/components/reset-password-request-form.tsx:56
 #: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
 msgstr "Adresse email"
@@ -206,15 +333,15 @@ msgstr "Adresse email"
 msgid "Enter a password"
 msgstr "Saisissez un mot de passe"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:85
+#: src/components/reset-password-view.tsx:78
 msgid "Enter the code you received to reset your password."
 msgstr "Saisissez le code que vous avez reçu pour réinitialiser votre mot de passe."
 
-#: src/views/authorize/reset-password/reset-password-request-form.tsx:70
+#: src/components/reset-password-view.tsx:47
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Saisissez l'email que vous avez utilisé pour créer votre compte. Nous vous enverrons un \"code de réinitialisation\" pour que vous puissiez définir un nouveau mot de passe."
 
-#: src/views/authorize/reset-password/reset-password-request-form.tsx:58
+#: src/components/reset-password-request-form.tsx:55
 msgid "Enter your email address"
 msgstr "Saisissez votre adresse email"
 
@@ -222,25 +349,20 @@ msgstr "Saisissez votre adresse email"
 msgid "Enter your new password"
 msgstr "Saisissez votre nouveau mot de passe"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:90
+#: src/components/sign-in-view.tsx:78
 msgid "Enter your password"
 msgstr "Saisissez votre mot de passe"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:109
-#: src/views/authorize/sign-in/sign-in-view.tsx:126
+#: src/components/sign-in-view.tsx:97
+#: src/components/sign-in-view.tsx:115
 msgid "Enter your username and password"
 msgstr "Saisissez votre nom d'utilisateur et votre mot de passe"
 
-#: src/views/error/error-view.tsx:27
-msgid "Error"
-msgstr "Erreur"
-
-#: src/views/authorize/sign-up/sign-up-account-form.tsx:102
+#: src/components/sign-up-account-form.tsx:102
 msgid "example-com-xxxxx-xxxxx"
 msgstr "exemple-com-xxxxx-xxxxx"
 
-#: src/components/utils/description-card.tsx:74
-#: src/components/utils/description-card.tsx:76
+#: src/components/utils/description-card.tsx:57
 msgid "Expand details"
 msgstr "Développer les détails"
 
@@ -248,20 +370,40 @@ msgstr "Développer les détails"
 msgid "Extra"
 msgstr "Extra"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:53
+#: src/routes/account/devices/page.tsx:31
+#: src/routes/account/apps/page.tsx:32
+msgid "Failed to load connected apps"
+msgstr "Échec du chargement des applications connectées"
+
+#: src/routes/account/devices/page.tsx:91
+msgid "Failed to remove device"
+msgstr "Échec de la suppression de l'appareil"
+
+#: src/data/password.ts:36
+msgid "Failed to request password reset"
+msgstr "Échec de la demande de réinitialisation du mot de passe"
+
+#: src/data/password.ts:64
+msgid "Failed to reset password"
+msgstr "Échec de la réinitialisation du mot de passe"
+
+#: src/routes/account/apps/page.tsx:113
+msgid "Failed to revoke access"
+msgstr "Échec de la révocation de l'accès"
+
+#: src/components/reset-password-view.tsx:43
 msgid "Forgot Password"
 msgstr "Mot de passe oublié"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:189
+#: src/components/sign-in-form.tsx:214
 msgid "Forgot?"
 msgstr "Oublié ?"
 
-#. placeholder {0}: account.preferred_username || account.email || account.sub
-#: src/views/authorize/consent/consent-view.tsx:45
-msgid "Grant access to your <0>{0}</0> account"
-msgstr "Accorder l'accès à votre compte <0>{0}</0>"
+#: src/components/consent-view.tsx:41
+msgid "Grant access to your <0/> account"
+msgstr "Accorder l'accès à votre compte <0/>"
 
-#: src/components/utils/help-card.tsx:32
+#: src/components/utils/help-card.tsx:33
 msgid "Having trouble? <0>Contact support</0>"
 msgstr "Vous rencontrez des difficultés ? <0>Contactez le support</0>"
 
@@ -269,65 +411,99 @@ msgstr "Vous rencontrez des difficultés ? <0>Contactez le support</0>"
 msgid "Hide"
 msgstr "Cacher"
 
-#: src/components/utils/link-title.tsx:17
+#: src/components/utils/link-title.tsx:16
 msgid "Home"
 msgstr "Accueil"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:91
-#: src/views/authorize/sign-in/sign-in-form.tsx:146
+#: src/components/sign-in-form.tsx:152
 msgid "Identifier"
 msgstr "Identifiant"
 
-#: src/components/utils/scope-description.tsx:427
+#: src/components/utils/scope-description.tsx:411
 msgid "Identity"
 msgstr "Identité"
 
-#: src/locales/locale-selector.tsx:46
+#: src/locales/locale-selector.tsx:47
 msgid "Interface language selector"
 msgstr "Sélecteur de langue"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:286
+#: src/components/sign-up-handle-form.tsx:254
 msgid "Invalid"
 msgstr "Invalide"
 
-#: src/views/authorize/sign-up/sign-up-account-form.tsx:96
-#: src/views/authorize/sign-up/sign-up-account-form.tsx:101
+#: src/components/sign-up-account-form.tsx:96
+#: src/components/sign-up-account-form.tsx:101
 msgid "Invite code"
 msgstr "Code d'invitation"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:55
+#: src/routes/account/apps/page.tsx:66
+msgid "It appears that you haven’t used this account to sign in to any apps yet."
+msgstr "Il semble que vous n'ayez pas encore utilisé ce compte pour vous connecter à des applications."
+
+#. placeholder {0}: url.hostname
+#: src/cookie-error-page.tsx:52
+msgid "It seems that your browser is not accepting cookies. Press \"Continue\" to try again. If the error persists, please ensure that your privacy settings allow cookies for the \"{0}\" website."
+msgstr "Il semble que votre navigateur n'accepte pas les cookies. Appuyez sur \"Continuer\" pour réessayer. Si l'erreur persiste, veuillez vous assurer que vos paramètres de confidentialité autorisent les cookies pour le site \"{0}\"."
+
+#: src/hooks/use-date-ago.ts:11
+msgid "just now"
+msgstr "à l'instant"
+
+#: src/routes/account/apps/page.tsx:137
+msgctxt "OAuthApp"
+msgid "Last accessed <0/>"
+msgstr "Dernier accès <0/>"
+
+#: src/routes/account/devices/page.tsx:107
+msgctxt "device list"
+msgid "Last seen {lastUsedAgo}"
+msgstr "Dernière connexion {lastUsedAgo}"
+
+#: src/components/reset-password-view.tsx:44
 msgid "Let's get your password reset!"
 msgstr "Réinitialisons votre mot de passe !"
 
-#: src/views/authorize/authorize-view.tsx:190
+#: src/authorization-page.tsx:120
 msgid "Login complete"
 msgstr "Connexion terminée"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:107
+#: src/components/sign-in-picker.tsx:81
 msgid "Login to account that is not listed"
 msgstr "Se connecter à un compte qui n'est pas listé"
 
-#: src/components/layouts/layout-welcome.tsx:50
+#: src/components/layouts/layout-app.tsx:29
 msgid "Logo"
 msgstr "Logo"
 
-#: src/components/forms/input-token.tsx:59
-msgid "Looks like {example}"
-msgstr "Ressemble à {example}"
+#: src/routes/account/devices/page.tsx:60
+msgid "Looks like you aren't logged in on any other devices."
+msgstr "Il semble que vous ne soyez connecté sur aucun autre appareil."
+
+#: src/hooks/use-oauth-client-identifier.ts:15
+msgid "loopback"
+msgstr "loopback"
 
 #: src/components/forms/button-toggle-visibility.tsx:34
 msgid "Make visible"
 msgstr "Rendre visible"
 
-#: src/components/utils/scope-description.tsx:430
+#: src/account-page.tsx:69
+msgid "Manage applications that have access to your account"
+msgstr "Gérer les applications qui ont accès à votre compte"
+
+#: src/components/utils/scope-description.tsx:414
 msgid "Manage your <0>full identity</0> including your <1>@handle</1>"
 msgstr "Gérer votre <0>identité complète</0> y compris votre <1>@pseudo</1>"
 
-#: src/components/utils/scope-description.tsx:365
+#: src/account-page.tsx:62
+msgid "Manage your active sessions"
+msgstr "Gérer vos sessions actives"
+
+#: src/components/utils/scope-description.tsx:349
 msgid "Manage your profile, posts, likes and follows"
 msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements"
 
-#: src/components/utils/scope-description.tsx:360
+#: src/components/utils/scope-description.tsx:344
 msgid "Manage your profile, posts, likes and follows as well as read your private preferences"
 msgstr "Gérer votre profil, vos posts, vos likes et vos abonnements ainsi que lire vos préférences privées"
 
@@ -339,33 +515,47 @@ msgstr "Manquant"
 msgid "Moderate"
 msgstr "Modéré"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:84
-msgid "Name"
-msgstr "Nom"
+#: src/account-page.tsx:50
+msgid "My Atmosphere account"
+msgstr "Mon compte Atmosphère"
 
-#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:74
+#: src/components/reset-password-confirm-form.tsx:60
 msgid "New password"
 msgstr "Nouveau mot de passe"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:60
-#: src/views/authorize/reset-password/reset-password-view.tsx:90
+#: src/components/reset-password-view.tsx:55
+#: src/components/reset-password-view.tsx:89
 #: src/components/forms/wizard-card.tsx:96
 msgid "Next"
 msgstr "Suivant"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:119
+#: src/routes/account/password/page.tsx:19
+msgctxt "PasswordReset"
+msgid "No email associated with this account. Password reset is unavailable."
+msgstr "Aucun email associé à ce compte. La réinitialisation du mot de passe n'est pas disponible."
+
+#: src/components/reset-password-view.tsx:115
 msgid "Okay"
 msgstr "OK"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:157
+#: src/components/sign-up-handle-form.tsx:130
 msgid "Only letters, numbers, and hyphens"
 msgstr "Uniquement des lettres, des chiffres et des traits d'union"
 
-#: src/views/authorize/sign-up/sign-up-account-form.tsx:128
-#: src/views/authorize/sign-in/sign-in-form.tsx:170
+#: src/account-page.tsx:75
+#: src/components/sign-up-account-form.tsx:128
+#: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr "Mot de passe"
+
+#: src/data/password.ts:28
+msgid "Password reset email sent"
+msgstr "E-mail de réinitialisation du mot de passe envoyé"
+
+#: src/data/password.ts:56
+msgid "Password reset successful"
+msgstr "Réinitialisation du mot de passe réussie"
 
 #: src/components/utils/password-strength-label.tsx:23
 msgid "Password strength"
@@ -375,11 +565,11 @@ msgstr "Complexité du mot de passe"
 msgid "Password strength indicator"
 msgstr "Indicateur de complexité du mot de passe"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:106
+#: src/components/reset-password-view.tsx:104
 msgid "Password Updated"
 msgstr "Mot de passe mis à jour"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:113
+#: src/components/reset-password-view.tsx:109
 msgid "Password updated!"
 msgstr "Mot de passe mis à jour !"
 
@@ -387,92 +577,138 @@ msgstr "Mot de passe mis à jour !"
 msgid "Password with at least {MIN_PASSWORD_LENGTH} characters"
 msgstr "Mot de passe d'au moins {MIN_PASSWORD_LENGTH} caractères"
 
-#: src/components/utils/scope-description.tsx:479
+#: src/components/utils/scope-description.tsx:459
 msgid "Perform actions on your behalf"
 msgstr "Effectuer des actions en votre nom"
 
-#: src/components/utils/scope-description.tsx:460
+#: src/components/utils/scope-description.tsx:444
 msgid "Perform authenticated actions towards <0>any service</0> on your behalf"
 msgstr "Effectuer des actions authentifiées vers <0>n'importe quel service</0> en votre nom"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:201
-msgid "Please verify the domain name of the website before entering your password. Never enter your password on a domain you do not trust."
-msgstr "Veuillez vérifier le nom de domaine du site web avant de saisir votre mot de passe. N'entrez jamais votre mot de passe sur un domaine auquel vous ne faites pas confiance."
+#: src/components/authenticate-welcome-view.tsx:27
+msgid "Please authenticate to continue"
+msgstr "Veuillez vous identifier pour continuer"
 
-#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:42
-#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:45
-#: src/components/utils/link-title.tsx:18
+#: src/data/password.ts:37
+msgid "Please check the email address and try again."
+msgstr "Veuillez vérifier l'adresse e-mail et réessayer."
+
+#: src/data/password.ts:65
+msgid "Please check your reset code and try again."
+msgstr "Veuillez vérifier votre code de réinitialisation et réessayer."
+
+#: src/components/forms/button-cooldown.tsx:48
+msgid "Please wait {remainingSeconds} seconds before trying again."
+msgstr "Veuillez attendre {remainingSeconds} secondes avant de réessayer."
+
+#: src/components/sign-up-disclaimer.tsx:39
+#: src/components/sign-up-disclaimer.tsx:42
+#: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Politique de Confidentialité"
 
-#: src/components/utils/scope-description.tsx:620
+#: src/components/utils/scope-description.tsx:582
 msgid "Publish changes"
 msgstr "Publier des modifications"
 
-#: src/components/utils/scope-description.tsx:395
+#: src/components/utils/scope-description.tsx:379
 msgid "Read and send messages"
 msgstr "Lire et envoyer des messages"
 
-#: src/components/utils/scope-description.tsx:245
+#: src/components/utils/scope-description.tsx:229
 msgid "Read and update your account's email address"
 msgstr "Lire et mettre à jour l'adresse e-mail de votre compte"
 
-#: src/components/utils/scope-description.tsx:247
+#: src/components/utils/scope-description.tsx:231
 msgid "Read your account's email address"
 msgstr "Lire l'adresse e-mail de votre compte"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:209
-#: src/views/authorize/sign-in/sign-in-form.tsx:214
+#: src/components/sign-in-form.tsx:235
+#: src/components/sign-in-form.tsx:240
 msgid "Remember this account on this device"
 msgstr "Se souvenir de ce compte sur cet appareil"
 
-#: src/components/utils/scope-description.tsx:598
-#: src/components/utils/scope-description.tsx:619
+#: src/components/utils/scope-description.tsx:566
+#: src/components/utils/scope-description.tsx:581
 msgid "Repository"
 msgstr "Données publiques"
 
-#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:59
+#: src/components/reset-password-confirm-form.tsx:46
 msgid "Reset code"
 msgstr "Code de réinitialisation"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:82
+#: src/components/reset-password-view.tsx:76
 msgid "Reset Password"
 msgstr "Réinitialiser le mot de passe"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:187
+#: src/components/sign-in-form.tsx:212
 msgid "Reset your password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:196
+#: src/routes/account/devices/page.tsx:29
+#: src/routes/account/apps/page.tsx:30
+#: src/components/utils/error-card.tsx:50
+msgid "Retry"
+msgstr "Réessayer"
+
+#: src/components/forms/button-cooldown.tsx:71
+msgid "Retry in {remainingSeconds}s"
+msgstr "Réessayer dans {remainingSeconds}s"
+
+#: src/routes/account/apps/page.tsx:148
+msgctxt "OAuthApp"
+msgid "Revoke access"
+msgstr "Révoquer l'accès"
+
+#: src/components/utils/account-selector.tsx:58
+msgid "Select another account"
+msgstr "Sélectionner un autre compte"
+
+#: src/components/sign-up-handle-form.tsx:169
 msgid "Select domain"
 msgstr "Sélectionner le domaine"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:141
+#: src/components/sign-in-view.tsx:131
 msgid "Select from an existing account"
 msgstr "Sélectionner un compte"
 
-#: src/views/authorize/welcome/welcome-view.tsx:45
-#: src/views/authorize/sign-in/sign-in-form.tsx:141
+#: src/routes/account/password/page.tsx:48
+msgctxt "PasswordReset"
+msgid "Send reset code"
+msgstr "Envoyer le code"
+
+#: src/components/sign-in-view.tsx:45
+msgctxt "AuthenticationPage"
+msgid "Sign in"
+msgstr "Connexion"
+
+#: src/components/sign-in-form.tsx:147
+#: src/components/authenticate-welcome-view.tsx:48
 msgctxt "verb"
 msgid "Sign in"
 msgstr "Se connecter"
 
-#: src/views/authorize/sign-in/sign-in-view.tsx:52
-msgctxt "noun"
-msgid "Sign in"
-msgstr "Connexion"
-
-#. placeholder {0}: account.name
-#: src/views/authorize/sign-in/sign-in-picker.tsx:78
+#. placeholder {0}: session.account.name ?? getAccountHandle(session.account) ?? session.account.sub
+#: src/components/sign-in-picker.tsx:73
 msgid "Sign in as {0}"
 msgstr "Se connecter en tant que {0}"
 
-#: src/views/authorize/sign-in/sign-in-picker.tsx:64
+#: src/components/sign-in-picker.tsx:59
 msgid "Sign in as..."
 msgstr "Se connecter en tant que..."
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:88
-#: src/views/authorize/sign-in/sign-in-picker.tsx:53
+#: src/routes/account/devices/page.tsx:120
+msgctxt "device list"
+msgid "Sign out"
+msgstr "Déconnecter"
+
+#: src/components/utils/account-selector.tsx:53
+msgid "Sign out"
+msgstr "Se déconnecter"
+
+#: src/components/sign-up-view.tsx:66
+#: src/components/sign-up-view.tsx:70
+#: src/components/sign-in-picker.tsx:48
 msgid "Sign up"
 msgstr "S'inscrire"
 
@@ -484,140 +720,164 @@ msgstr "Étape {currentPosition} sur {count}"
 msgid "Strong"
 msgstr "Fort"
 
-#: src/components/forms/form-card-async.tsx:96
+#: src/components/forms/form-card-async.tsx:41
 msgid "Submit"
 msgstr "Soumettre"
 
-#: src/components/utils/link-title.tsx:20
+#: src/routes/account/devices/page.tsx:85
+msgid "Successfully removed device"
+msgstr "Appareil supprimé avec succès"
+
+#: src/routes/account/apps/page.tsx:106
+msgid "Successfully revoked access"
+msgstr "Accès révoqué avec succès"
+
+#: src/components/utils/link-title.tsx:19
 msgid "Support"
 msgstr "Support"
 
-#: src/views/authorize/consent/consent-form.tsx:142
+#: src/components/consent-form.tsx:124
 msgid "Technical details"
 msgstr "Détails techniques"
 
-#: src/components/utils/scope-description.tsx:283
+#: src/components/utils/scope-description.tsx:267
 msgid "Temporarily activate or deactivate your account"
 msgstr "Activer ou désactiver temporairement votre compte"
 
-#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:34
-#: src/views/authorize/sign-up/sign-up-disclaimer.tsx:37
-#: src/components/utils/link-title.tsx:19
+#: src/components/sign-up-disclaimer.tsx:31
+#: src/components/sign-up-disclaimer.tsx:34
+#: src/components/utils/link-title.tsx:18
 msgid "Terms of Service"
 msgstr "Conditions d'Utilisation"
 
-#: src/components/utils/error-message.tsx:52
+#: src/hooks/use-error-message.ts:47
 msgid "That handle cannot be used"
 msgstr "Ce pseudonyme ne peut pas être utilisé"
 
-#: src/components/utils/scope-description.tsx:205
+#: src/components/utils/scope-description.tsx:190
 msgid "The application is asking for full control over your network identity, meaning that it could <0>permanently break</0>, or even <1>steal</1>, your account. Only grant this permission to applications you really trust."
 msgstr "L'application demande un contrôle total sur votre identité, ce qui signifie qu'elle pourrait <0>casser de façon permanente</0>, ou même <1>usurper</1>, votre compte. N'authorisez l'accès qu'aux applications auxquelles vous faites vraiment confiance."
 
-#: src/components/utils/scope-description.tsx:605
-msgid "The application is asking to be able to create, update, and delete <0>any data</0> from your repository."
-msgstr "L'application demande à pouvoir créer, modifier et supprimer <0>tout contenu public</0> de votre dépôt."
-
-#: src/components/utils/scope-description.tsx:172
-#: src/components/utils/scope-description.tsx:485
-#: src/components/utils/scope-description.tsx:626
+#: src/components/utils/scope-description.tsx:170
 msgid "The application requests the permissions necessary to perform the following actions on your behalf:"
 msgstr "L'application demande les autorisations nécessaires pour effectuer les actions suivantes en votre nom :"
 
-#: src/components/utils/scope-description.tsx:500
-msgid "The ATProto network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as feed or moderation content."
-msgstr "Le réseau ATProto utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que le contenu du fil d'actualité ou de modération."
+#: src/components/utils/scope-description.tsx:462
+msgid "The AT Protocol network uses an authentication mechanism that allows to uniquely identify users when communicating with external services. This is typically used to retrieve or update data linked to your account, such as chat messages, feeds or moderation content. The application requests the permissions necessary to perform the following authenticated actions on your behalf:"
+msgstr "Le réseau AT Protocol utilise un mécanisme d'authentification qui permet d'identifier de manière unique les utilisateurs lors de la communication avec des services externes. Cela est généralement utilisé pour récupérer ou mettre à jour des données liées à votre compte, telles que les messages de chat, les flux ou le contenu de modération. L'application demande les autorisations nécessaires pour effectuer les actions authentifiées suivantes en votre nom :"
 
-#: src/components/utils/error-message.tsx:69
+#: src/hooks/use-error-message.ts:64
 msgid "The data you submitted is invalid. Please check the form and try again."
 msgstr "Les données que vous avez soumises sont invalides. Veuillez vérifier le formulaire et réessayer."
 
-#: src/components/utils/error-message.tsx:43
+#: src/hooks/use-error-message.ts:38
 msgid "The domain name is not allowed"
 msgstr "Le nom de domaine n'est pas autorisé"
 
-#: src/components/utils/error-message.tsx:45
+#: src/hooks/use-error-message.ts:40
 msgid "The handle contains inappropriate language"
 msgstr "Le pseudonyme contient un langage inapproprié"
 
-#: src/components/utils/error-message.tsx:50
+#: src/hooks/use-error-message.ts:45
 msgid "The handle is already in use"
 msgstr "Ce pseudonyme est déjà utilisé"
 
-#: src/components/utils/error-message.tsx:41
+#: src/hooks/use-error-message.ts:36
 msgid "The handle is invalid"
 msgstr "Le pseudonyme est invalide"
 
-#: src/components/utils/error-message.tsx:35
+#: src/hooks/use-error-message.ts:30
 msgid "The invite code is not valid"
 msgstr "Le code d'invitation n'est pas valide"
 
-#: src/views/authorize/consent/consent-form.tsx:147
-msgid "This application is requesting the following list of technical permissions, summarized hereafter:"
-msgstr "Cette application demande la liste suivante de permissions techniques, résumées ci-après :"
+#: src/routes/account/apps/page.tsx:40
+msgid "These apps have access to your account. An app may appear multiple times if you use it on different devices. You can revoke access to log out the app until you sign in again."
+msgstr "Ces applications ont accès à votre compte. Une application peut apparaître plusieurs fois si vous l'utilisez sur différents appareils. Vous pouvez révoquer l'accès pour déconnecter l'application jusqu'à ce que vous vous reconnectiez."
 
-#: src/components/utils/error-message.tsx:77
+#: src/components/consent-form.tsx:129
+msgid "This application is requesting the following permissions (scopes) to access your account:"
+msgstr "Cette application demande les autorisations (scopes) suivantes pour accéder à votre compte :"
+
+#: src/hooks/use-error-message.ts:68
 msgid "This authorization request has been denied. Please try again."
 msgstr "Cette demande d'autorisation a été refusée. Veuillez réessayer."
 
-#: src/components/utils/error-message.tsx:57
+#: src/hooks/use-error-message.ts:52
 msgid "This email is already used"
 msgstr "Cet email est déjà utilisé"
 
-#: src/components/utils/error-message.tsx:48
+#: src/hooks/use-error-message.ts:43
 msgid "This handle is reserved"
 msgstr "Ce pseudonyme est réservé"
 
-#: src/components/utils/error-message.tsx:64
+#: src/hooks/use-error-message.ts:60
 msgid "This sign-in session has expired"
 msgstr "Cette session de connexion a expiré"
 
-#: src/components/utils/scope-description.tsx:556
+#: src/routes/account/password/page.tsx:32
+msgctxt "PasswordReset"
+msgid "To reset your password, we'll send a verification code to <0>{email}</0>. Enter the code below to set a new password."
+msgstr "Pour réinitialiser votre mot de passe, nous enverrons un code de vérification à <0>{email}</0>. Saisissez le code ci-dessous pour définir un nouveau mot de passe."
+
+#: src/components/utils/scope-description.tsx:524
 msgctxt "RPC aud"
 msgid "Towards"
 msgstr "Auprès de"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:166
+#: src/components/sign-up-handle-form.tsx:139
 msgid "Type your desired username"
 msgstr "Saisissez le nom d'utilisateur souhaité"
 
-#: src/components/utils/error-message.tsx:84
+#: src/contexts/session.tsx:152
+msgid "Unauthorized"
+msgstr "Déconnecté"
+
+#: src/hooks/use-error-message.ts:72
 msgid "Unexpected server response"
 msgstr "Réponse inattendue du serveur"
 
-#: src/components/utils/scope-description.tsx:715
+#: src/routes/account/devices/page.tsx:102
+msgctxt "device list"
+msgid "Unknown user agent"
+msgstr "Agent utilisateur inconnu"
+
+#: src/components/utils/scope-description.tsx:665
 msgid "Update"
 msgstr "Modifier"
 
-#: src/components/utils/scope-description.tsx:748
+#: src/components/utils/scope-description.tsx:698
 msgid "Upload files"
 msgstr "Envoyer des fichiers"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:151
+#: src/components/sign-in-form.tsx:157
 msgid "Username or email address"
 msgstr "Nom d'utilisateur ou adresse email"
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:281
+#: src/components/sign-up-handle-form.tsx:249
 msgid "Valid"
 msgstr "Valide"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:140
+#: src/components/sign-in-form.tsx:226
+msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
+msgstr "Vérifiez l'adresse du site avant de saisir votre mot de passe. N'entrez votre mot de passe que sur des sites que vous reconnaissez et en lesquels vous avez confiance."
+
+#: src/components/sign-up-view.tsx:122
 msgid "Verify you are human"
 msgstr "Vérifiez que vous êtes humain"
 
-#: src/views/authorize/consent/consent-form.tsx:136
+#: src/components/consent-form.tsx:117
 msgid "wants to access your <0/> account"
 msgstr "veut accéder à votre compte <0/>"
 
-#: src/views/authorize/consent/consent-form.tsx:131
+#: src/components/consent-form.tsx:111
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "veut vous identifier de manière unique via votre compte <0/>"
 
-#: src/views/authorize/sign-in/sign-in-form.tsx:200
+#: src/components/sign-in-form.tsx:225
 msgid "Warning"
 msgstr "Avertissement"
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:84
+#: src/components/sign-up-view.tsx:67
 msgid "We're so excited to have you join us!"
 msgstr "Nous sommes ravis de vous accueillir parmi nous !"
 
@@ -625,39 +885,68 @@ msgstr "Nous sommes ravis de vous accueillir parmi nous !"
 msgid "Weak"
 msgstr "Faible"
 
-#: src/components/utils/error-message.tsx:31
+#: src/components/authenticate-welcome-view.tsx:24
+msgid "Welcome"
+msgstr "Bienvenue"
+
+#: src/routes/account/page.tsx:30
+msgid "What does this mean?"
+msgstr "Qu'est-ce que ça signifie ?"
+
+#: src/account-page.tsx:91
+msgid "What is an Atmosphere Account?"
+msgstr "Qu'est-ce qu'un compte Atmosphère ?"
+
+#: src/hooks/use-error-message.ts:26
 msgid "Wrong identifier or password"
 msgstr "Identifiant ou mot de passe incorrect"
 
-#: src/views/authorize/authorize-view.tsx:191
+#: src/hooks/use-date-ago.ts:31
+msgid "yesterday"
+msgstr "hier"
+
+#: src/authorization-page.tsx:121
 msgid "You are being redirected..."
 msgstr "Vous êtes redirigé..."
 
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:247
+#: src/components/sign-up-handle-form.tsx:215
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "Vous pourrez changer ce nom d'utilisateur pour n'importe quel nom de domaine sous votre contrôle une fois votre compte créé."
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:116
+#: src/data/password.ts:57
+#: src/components/reset-password-view.tsx:112
 msgid "You can now sign in with your new password."
 msgstr "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe."
 
-#: src/views/authorize/reset-password/reset-password-confirm-form.tsx:53
+#: src/components/reset-password-view.tsx:82
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
-msgstr "Vous aver reçu un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
+msgstr "Vous avez reçu un email avec un \"code de réinitialisation\". Saisissez ce code ici puis entrez votre nouveau mot de passe."
 
-#: src/views/authorize/sign-up/sign-up-view.tsx:121
+#: src/components/sign-up-view.tsx:103
 msgid "Your account"
 msgstr "Votre compte"
 
-#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
-#: src/views/authorize/sign-up/sign-up-handle-form.tsx:230
+#: src/routes/account/devices/page.tsx:39
+msgid "Your account is signed in on the devices listed below. If your account was compromised, sign out all devices, change your password, and check your connected <0>apps</0>."
+msgstr "Votre compte est connecté sur les appareils listés ci-dessous. Si votre compte a été compromis, déconnectez tous les appareils, changez votre mot de passe et vérifiez vos <0>applications</0> connectées."
+
+#: src/routes/account/page.tsx:23
+msgid "Your Atmosphere account is hosted by <0/>."
+msgstr "Votre compte Atmosphère est hébergé chez <0/>."
+
+#. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
+#: src/components/sign-up-handle-form.tsx:203
 msgid "Your full username will be: {0}"
 msgstr "Votre nom d'utilisateur complet sera : {0}"
 
-#: src/views/authorize/reset-password/reset-password-view.tsx:108
+#: src/components/reset-password-view.tsx:105
 msgid "Your password has been updated!"
 msgstr "Votre mot de passe a été mis à jour !"
 
-#: src/components/utils/scope-description.tsx:641
-msgid "Your repository contains all the data publicly available on the ATProto network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account."
-msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau ATProto, telles que les publications, les likes et les abonnements Bluesky. Il contient également des données créées via d'autres applications auxquelles vous vous êtes connecté avec ce compte."
+#: src/components/utils/scope-description.tsx:585
+msgid "Your repository contains all the data publicly available on the AT Protocol network, such as Bluesky posts, likes, and follows. It also contains data created through other apps you've signed into using this account. The application requests the permissions necessary to publish the following changes to your repository:"
+msgstr "Votre dépôt contient toutes les données publiquement disponibles sur le réseau AT Protocol, telles que les publications, les likes et les suivis de Bluesky. Il contient également les données créées via d'autres applications auxquelles vous vous êtes connecté en utilisant ce compte. L'application demande les autorisations nécessaires pour publier les modifications suivantes sur votre dépôt :"
+
+#: src/contexts/session.tsx:153
+msgid "Your session has expired. Please sign in again."
+msgstr "Votre session a expiré. Veuillez vous reconnecter."

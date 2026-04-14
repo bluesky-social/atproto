@@ -24,7 +24,7 @@
     }
   },
   "dependencies": {
-    "@atproto-labs/simple-store": "workspace:*"
+    "@atproto-labs/simple-store": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

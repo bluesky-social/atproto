@@ -1,5 +1,5 @@
+import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../context'
-import { Server } from '../lexicon'
 import getProfile from './app/bsky/actor/getProfile'
 import getProfiles from './app/bsky/actor/getProfiles'
 import getSuggestions from './app/bsky/actor/getSuggestions'
@@ -19,6 +19,10 @@ import removeData from './app/bsky/contact/removeData'
 import sendNotification from './app/bsky/contact/sendNotification'
 import startPhoneVerification from './app/bsky/contact/startPhoneVerification'
 import verifyPhone from './app/bsky/contact/verifyPhone'
+import createDraft from './app/bsky/draft/createDraft'
+import deleteDraft from './app/bsky/draft/deleteDraft'
+import getDrafts from './app/bsky/draft/getDrafts'
+import updateDraft from './app/bsky/draft/updateDraft'
 import getActorFeeds from './app/bsky/feed/getActorFeeds'
 import getActorLikes from './app/bsky/feed/getActorLikes'
 import getAuthorFeed from './app/bsky/feed/getAuthorFeed'
@@ -75,8 +79,12 @@ import getPopularFeedGenerators from './app/bsky/unspecced/getPopularFeedGenerat
 import getPostThreadOtherV2 from './app/bsky/unspecced/getPostThreadOtherV2'
 import getPostThreadV2 from './app/bsky/unspecced/getPostThreadV2'
 import getUnspeccedSuggestedFeeds from './app/bsky/unspecced/getSuggestedFeeds'
+import getSuggestedOnboardingUsers from './app/bsky/unspecced/getSuggestedOnboardingUsers'
 import getSuggestedStarterPacks from './app/bsky/unspecced/getSuggestedStarterPacks'
 import getSuggestedUsers from './app/bsky/unspecced/getSuggestedUsers'
+import getSuggestedUsersForDiscover from './app/bsky/unspecced/getSuggestedUsersForDiscover'
+import getSuggestedUsersForExplore from './app/bsky/unspecced/getSuggestedUsersForExplore'
+import getSuggestedUsersForSeeMore from './app/bsky/unspecced/getSuggestedUsersForSeeMore'
 import getTaggedSuggestions from './app/bsky/unspecced/getTaggedSuggestions'
 import getTrendingTopics from './app/bsky/unspecced/getTrendingTopics'
 import getTrends from './app/bsky/unspecced/getTrends'
@@ -105,6 +113,10 @@ export default function (server: Server, ctx: AppContext) {
   createBookmark(server, ctx)
   deleteBookmark(server, ctx)
   getBookmarks(server, ctx)
+  createDraft(server, ctx)
+  deleteDraft(server, ctx)
+  getDrafts(server, ctx)
+  updateDraft(server, ctx)
   dismissMatch(server, ctx)
   getMatches(server, ctx)
   getSyncStatus(server, ctx)
@@ -157,8 +169,12 @@ export default function (server: Server, ctx: AppContext) {
   getTrendingTopics(server, ctx)
   getTrends(server, ctx)
   getOnboardingSuggestedStarterPacks(server, ctx)
+  getSuggestedOnboardingUsers(server, ctx)
   getSuggestedStarterPacks(server, ctx)
   getSuggestedUsers(server, ctx)
+  getSuggestedUsersForDiscover(server, ctx)
+  getSuggestedUsersForExplore(server, ctx)
+  getSuggestedUsersForSeeMore(server, ctx)
   getUnspeccedSuggestedFeeds(server, ctx)
   getLabelerServices(server, ctx)
   searchActors(server, ctx)
@@ -190,5 +206,4 @@ export default function (server: Server, ctx: AppContext) {
   getRecord(server, ctx)
   fetchLabels(server, ctx)
   queryLabels(server, ctx)
-  return server
 }

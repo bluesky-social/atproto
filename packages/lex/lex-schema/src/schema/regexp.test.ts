@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { RegexpSchema } from './regexp.js'
+import { regexp } from './regexp.js'
 
 describe('RegexpSchema', () => {
   describe('basic validation', () => {
-    const schema = new RegexpSchema(/^[a-z]+$/)
+    const schema = regexp(/^[a-z]+$/)
 
     it('validates strings matching the pattern', () => {
       const result = schema.safeParse('hello')
@@ -57,7 +57,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('numeric patterns', () => {
-    const schema = new RegexpSchema(/^\d+$/)
+    const schema = regexp(/^\d+$/)
 
     it('validates numeric strings', () => {
       const result = schema.safeParse('12345')
@@ -81,9 +81,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('email pattern', () => {
-    const schema = new RegexpSchema(
-      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    )
+    const schema = regexp(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
 
     it('validates simple email addresses', () => {
       const result = schema.safeParse('user@example.com')
@@ -117,7 +115,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('URL pattern', () => {
-    const schema = new RegexpSchema(/^https?:\/\/[^\s/$.?#].[^\s]*$/)
+    const schema = regexp(/^https?:\/\/[^\s/$.?#].[^\s]*$/)
 
     it('validates HTTP URLs', () => {
       const result = schema.safeParse('http://example.com')
@@ -151,7 +149,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('phone number pattern', () => {
-    const schema = new RegexpSchema(/^\+?[1-9]\d{1,14}$/)
+    const schema = regexp(/^\+?[1-9]\d{1,14}$/)
 
     it('validates simple phone numbers', () => {
       const result = schema.safeParse('1234567890')
@@ -185,7 +183,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('hex color pattern', () => {
-    const schema = new RegexpSchema(/^#[0-9A-Fa-f]{6}$/)
+    const schema = regexp(/^#[0-9A-Fa-f]{6}$/)
 
     it('validates 6-digit hex colors', () => {
       const result = schema.safeParse('#FF5733')
@@ -219,7 +217,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('alphanumeric pattern', () => {
-    const schema = new RegexpSchema(/^[a-zA-Z0-9]+$/)
+    const schema = regexp(/^[a-zA-Z0-9]+$/)
 
     it('validates alphanumeric strings', () => {
       const result = schema.safeParse('abc123')
@@ -253,7 +251,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('case-insensitive pattern', () => {
-    const schema = new RegexpSchema(/^hello$/i)
+    const schema = regexp(/^hello$/i)
 
     it('validates lowercase match', () => {
       const result = schema.safeParse('hello')
@@ -277,7 +275,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('multiline pattern', () => {
-    const schema = new RegexpSchema(/^line\d+$/m)
+    const schema = regexp(/^line\d+$/m)
 
     it('validates single line matching pattern', () => {
       const result = schema.safeParse('line1')
@@ -296,7 +294,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('optional character pattern', () => {
-    const schema = new RegexpSchema(/^colou?r$/)
+    const schema = regexp(/^colou?r$/)
 
     it('validates with optional character present', () => {
       const result = schema.safeParse('colour')
@@ -315,7 +313,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('character range pattern', () => {
-    const schema = new RegexpSchema(/^[0-5]+$/)
+    const schema = regexp(/^[0-5]+$/)
 
     it('validates strings within range', () => {
       const result = schema.safeParse('012345')
@@ -334,7 +332,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('quantifier pattern', () => {
-    const schema = new RegexpSchema(/^a{3}$/)
+    const schema = regexp(/^a{3}$/)
 
     it('validates exact repetition count', () => {
       const result = schema.safeParse('aaa')
@@ -353,7 +351,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('range quantifier pattern', () => {
-    const schema = new RegexpSchema(/^a{2,4}$/)
+    const schema = regexp(/^a{2,4}$/)
 
     it('validates minimum repetition count', () => {
       const result = schema.safeParse('aa')
@@ -382,7 +380,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('alternation pattern', () => {
-    const schema = new RegexpSchema(/^(cat|dog|bird)$/)
+    const schema = regexp(/^(cat|dog|bird)$/)
 
     it('validates first alternative', () => {
       const result = schema.safeParse('cat')
@@ -406,7 +404,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('word boundary pattern', () => {
-    const schema = new RegexpSchema(/\bword\b/)
+    const schema = regexp(/\bword\b/)
 
     it('validates word with boundaries', () => {
       const result = schema.safeParse('word')
@@ -425,7 +423,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('lookahead pattern', () => {
-    const schema = new RegexpSchema(/^(?=.*[A-Z])(?=.*[0-9]).{8,}$/)
+    const schema = regexp(/^(?=.*[A-Z])(?=.*[0-9]).{8,}$/)
 
     it('validates string meeting all lookahead conditions', () => {
       const result = schema.safeParse('Password1')
@@ -454,7 +452,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('unicode pattern', () => {
-    const schema = new RegexpSchema(/^[\u4e00-\u9fa5]+$/)
+    const schema = regexp(/^[\u4e00-\u9fa5]+$/)
 
     it('validates Chinese characters', () => {
       const result = schema.safeParse('你好')
@@ -478,7 +476,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('empty string pattern', () => {
-    const schema = new RegexpSchema(/^$/)
+    const schema = regexp(/^$/)
 
     it('validates empty strings', () => {
       const result = schema.safeParse('')
@@ -497,7 +495,7 @@ describe('RegexpSchema', () => {
   })
 
   describe('wildcard pattern', () => {
-    const schema = new RegexpSchema(/^.*$/)
+    const schema = regexp(/^.*$/)
 
     it('validates empty strings', () => {
       const result = schema.safeParse('')
@@ -522,58 +520,56 @@ describe('RegexpSchema', () => {
 
   describe('edge cases', () => {
     it('handles pattern with escape sequences', () => {
-      const schema = new RegexpSchema(/^\d{3}\.\d{3}\.\d{3}\.\d{3}$/)
+      const schema = regexp(/^\d{3}\.\d{3}\.\d{3}\.\d{3}$/)
       const result = schema.safeParse('192.168.001.001')
       expect(result.success).toBe(true)
     })
 
     it('handles pattern with special regex characters', () => {
-      const schema = new RegexpSchema(/^\$\d+\.\d{2}$/)
+      const schema = regexp(/^\$\d+\.\d{2}$/)
       const result = schema.safeParse('$99.99')
       expect(result.success).toBe(true)
     })
 
     it('handles very long strings', () => {
-      const schema = new RegexpSchema(/^[a-z]+$/)
+      const schema = regexp(/^[a-z]+$/)
       const longString = 'a'.repeat(10000)
       const result = schema.safeParse(longString)
       expect(result.success).toBe(true)
     })
 
     it('handles strings with newlines', () => {
-      const schema = new RegexpSchema(/^hello\nworld$/)
+      const schema = regexp(/^hello\nworld$/)
       const result = schema.safeParse('hello\nworld')
       expect(result.success).toBe(true)
     })
 
     it('handles strings with tabs', () => {
-      const schema = new RegexpSchema(/^hello\tworld$/)
+      const schema = regexp(/^hello\tworld$/)
       const result = schema.safeParse('hello\tworld')
       expect(result.success).toBe(true)
     })
 
     it('handles emoji patterns', () => {
-      const schema = new RegexpSchema(/^[\u{1F600}-\u{1F64F}]+$/u)
+      const schema = regexp(/^[\u{1F600}-\u{1F64F}]+$/u)
       const result = schema.safeParse('😀😃😄')
       expect(result.success).toBe(true)
     })
 
     it('handles global flag in pattern', () => {
-      const schema = new RegexpSchema(/test/g)
+      const schema = regexp(/test/g)
       const result = schema.safeParse('test')
       expect(result.success).toBe(true)
     })
 
     it('handles pattern matching anywhere in string', () => {
-      const schema = new RegexpSchema(/test/)
+      const schema = regexp(/test/)
       const result = schema.safeParse('this is a test string')
       expect(result.success).toBe(true)
     })
 
     it('handles complex nested groups', () => {
-      const schema = new RegexpSchema(
-        /^((https?|ftp):\/\/)?([a-z0-9]+\.)+[a-z]{2,}$/,
-      )
+      const schema = regexp(/^((https?|ftp):\/\/)?([a-z0-9]+\.)+[a-z]{2,}$/)
       const result = schema.safeParse('https://example.com')
       expect(result.success).toBe(true)
     })

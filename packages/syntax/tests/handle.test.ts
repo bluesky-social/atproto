@@ -1,5 +1,6 @@
 import * as fs from 'node:fs'
 import * as readline from 'node:readline'
+import { describe, expect, it } from 'vitest'
 import {
   InvalidHandleError,
   ensureValidHandle,

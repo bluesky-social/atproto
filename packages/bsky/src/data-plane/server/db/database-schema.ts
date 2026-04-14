@@ -8,6 +8,7 @@ import * as algo from './tables/algo'
 import * as blobTakedown from './tables/blob-takedown'
 import * as bookmark from './tables/bookmark'
 import * as didCache from './tables/did-cache'
+import * as draft from './tables/draft'
 import * as duplicateRecord from './tables/duplicate-record'
 import * as feedGenerator from './tables/feed-generator'
 import * as feedItem from './tables/feed-item'
@@ -83,6 +84,7 @@ export type DatabaseSchemaType = duplicateRecord.PartialDB &
   verification.PartialDB &
   privateData.PartialDB &
   activitySubscription.PartialDB &
-  bookmark.PartialDB
+  bookmark.PartialDB &
+  draft.PartialDB
 
 export type DatabaseSchema = Kysely<DatabaseSchemaType>

@@ -13,7 +13,6 @@ import {
   OAuthAuthorizationRequestQuery,
   OAuthAuthorizationServerMetadata,
   OAuthClientCredentials,
-  OAuthClientCredentialsNone,
   OAuthClientMetadata,
   OAuthParResponse,
   OAuthRefreshTokenGrantTokenRequest,
@@ -59,9 +58,9 @@ import {
 } from './customization/customization.js'
 import { DeviceId } from './device/device-id.js'
 import {
+  DeviceInfo,
   DeviceManager,
   DeviceManagerOptions,
-  deviceManagerOptionsSchema,
 } from './device/device-manager.js'
 import { DeviceStore, asDeviceStore } from './device/device-store.js'
 import { AccountSelectionRequiredError } from './errors/account-selection-required-error.js'
@@ -91,7 +90,7 @@ import { ReplayStore, ifReplayStore } from './replay/replay-store.js'
 import { codeSchema } from './request/code.js'
 import { RequestManager } from './request/request-manager.js'
 import { RequestStore, asRequestStore } from './request/request-store.js'
-import { requestUriSchema } from './request/request-uri.js'
+import { parseRequestUri } from './request/request-uri.js'
 import { AuthorizationRedirectParameters } from './result/authorization-redirect-parameters.js'
 import { AuthorizationResultAuthorizePage } from './result/authorization-result-authorize-page.js'
 import { AuthorizationResultRedirect } from './result/authorization-result-redirect.js'
@@ -291,9 +290,6 @@ export class OAuthProvider extends OAuthVerifier {
     // Customization
     ...rest
   }: OAuthProviderOptions) {
-    const deviceManagerOptions: DeviceManagerOptions =
-      deviceManagerOptionsSchema.parse(rest)
-
     super({ replayStore, ...rest })
 
     // @NOTE: hooks don't really need a type parser, as all zod can actually
@@ -308,7 +304,17 @@ export class OAuthProvider extends OAuthVerifier {
     this.metadata = buildMetadata(this.issuer, this.keyset, metadata)
     this.customization = customizationSchema.parse(rest)
 
-    this.deviceManager = new DeviceManager(deviceStore, deviceManagerOptions)
+    this.deviceManager = new DeviceManager(deviceStore, {
+      ...rest,
+      cookie: {
+        ...rest.cookie,
+        // "secure" defaults to "true" in DeviceManager. For the oauth routes to
+        // work from localhost on Safari, we need to explicitly set secure to
+        // false for localhost usage. This is not really an issue with Chrome
+        // and Firefox, but Safari enforces it strictly.
+        secure: !this.issuer.startsWith('http:'),
+      },
+    })
     this.accountManager = new AccountManager(
       this.issuer,
       accountStore,
@@ -431,7 +437,7 @@ export class OAuthProvider extends OAuthVerifier {
     return { client, clientAuth }
   }
 
-  protected async decodeJAR(
+  async decodeJAR(
     client: Client,
     input: OAuthAuthorizationRequestJar,
   ): Promise<OAuthAuthorizationRequestParameters> {
@@ -538,13 +544,9 @@ export class OAuthProvider extends OAuthVerifier {
   ) {
     // PAR
     if ('request_uri' in query) {
-      const requestUri = await requestUriSchema
-        .parseAsync(query.request_uri, { path: ['query', 'request_uri'] })
-        .catch((err) => {
-          const msg = formatError(err, 'Invalid "request_uri" query parameter')
-          throw new InvalidRequestError(msg, err)
-        })
-
+      const requestUri = parseRequestUri(query.request_uri, {
+        path: ['query', 'request_uri'],
+      })
       return this.requestManager.get(requestUri, deviceId, client.id)
     }
 
@@ -584,10 +586,8 @@ export class OAuthProvider extends OAuthVerifier {
    * @see {@link https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-11#section-4.1.1}
    */
   public async authorize(
-    clientCredentials: OAuthClientCredentialsNone,
     query: OAuthAuthorizationRequestQuery,
-    deviceId: DeviceId,
-    deviceMetadata: RequestMetadata,
+    { deviceId, deviceMetadata }: DeviceInfo,
   ): Promise<AuthorizationResultRedirect | AuthorizationResultAuthorizePage> {
     const { issuer } = this
 
@@ -602,7 +602,7 @@ export class OAuthProvider extends OAuthVerifier {
         : null
 
     const client = await this.clientManager
-      .getClient(clientCredentials.client_id)
+      .getClient(query.client_id)
       .catch(throwAuthorizationError)
 
     const { parameters, requestUri } = await this.processAuthorizationRequest(
@@ -612,10 +612,48 @@ export class OAuthProvider extends OAuthVerifier {
     ).catch(throwAuthorizationError)
 
     try {
-      const sessions = await this.getSessions(client.id, deviceId, parameters)
+      const sessions = (
+        await this.accountManager.listDeviceAccounts(deviceId)
+      ).map((deviceAccount) => ({
+        account: deviceAccount.account,
 
+        // @TODO Return the session expiration date instead of a boolean to
+        // avoid having to rely on a leeway when "accepting" the request.
+        loginRequired:
+          parameters.prompt === 'login' ||
+          this.checkLoginRequired(deviceAccount),
+        consentRequired: this.checkConsentRequired(
+          parameters,
+          deviceAccount.authorizedClients.get(client.id),
+        ),
+      }))
+
+      // https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+
+      // prompt=select_account
+      //
+      // > The Authorization Server SHOULD prompt the End-User to select a user
+      // > account. This enables an End-User who has multiple accounts at the
+      // > Authorization Server to select amongst the multiple accounts that
+      // > they might have current sessions for. If it cannot obtain an account
+      // > selection choice made by the End-User, it MUST return an error,
+      // > typically account_selection_required.
+      if (parameters.prompt === 'select_account' && !sessions.length) {
+        throw new AccountSelectionRequiredError(parameters)
+      }
+
+      // prompt=none
+      //
+      // > The Authorization Server MUST NOT display any authentication or
+      // > consent user interface pages. An error is returned if an End-User is
+      // > not already authenticated or the Client does not have pre-configured
+      // > consent for the requested Claims or does not fulfill other conditions
+      // > for processing the request. The error code will typically be
+      // > login_required, interaction_required, or another code defined in
+      // > Section 3.1.2.6. This can be used as a method to check for existing
+      // > authentication and/or consent.
       if (parameters.prompt === 'none') {
-        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length > 1) {
           throw new AccountSelectionRequiredError(parameters)
         }
@@ -642,9 +680,9 @@ export class OAuthProvider extends OAuthVerifier {
         return { issuer, parameters, redirect: { code } }
       }
 
-      // Automatic SSO when a did was provided
+      // Automatic SSO when a hint was provided that matches a single session
       if (parameters.prompt == null && parameters.login_hint != null) {
-        const ssoSessions = sessions.filter((s) => s.matchesHint)
+        const ssoSessions = sessions.filter(matchesHint, parameters)
         if (ssoSessions.length === 1) {
           const ssoSession = ssoSessions[0]!
           if (!ssoSession.loginRequired && !ssoSession.consentRequired) {
@@ -666,13 +704,13 @@ export class OAuthProvider extends OAuthVerifier {
         client,
         parameters,
         requestUri,
-        sessions: sessions.map((session) => ({
-          // Map to avoid leaking other data that might be present in the session
-          account: session.account,
-          selected: session.selected,
-          loginRequired: session.loginRequired,
-          consentRequired: session.consentRequired,
-        })),
+        sessions,
+        selectedSub:
+          parameters.prompt == null ||
+          parameters.prompt === 'login' ||
+          parameters.prompt === 'consent'
+            ? sessions.find(matchesHint, parameters)?.account.sub
+            : undefined,
         permissionSets: await this.lexiconManager
           .getPermissionSetsFromScope(parameters.scope)
           .catch((cause) => {
@@ -696,48 +734,6 @@ export class OAuthProvider extends OAuthVerifier {
 
       throw AuthorizationError.from(parameters, err)
     }
-  }
-
-  protected async getSessions(
-    clientId: ClientId,
-    deviceId: DeviceId,
-    parameters: OAuthAuthorizationRequestParameters,
-  ): Promise<
-    {
-      account: Account
-
-      selected: boolean
-      loginRequired: boolean
-      consentRequired: boolean
-
-      matchesHint: boolean
-    }[]
-  > {
-    const deviceAccounts =
-      await this.accountManager.listDeviceAccounts(deviceId)
-
-    const hint = parameters.login_hint
-    const matchesHint = (account: Account): boolean =>
-      (!!account.sub && account.sub === hint) ||
-      (!!account.preferred_username && account.preferred_username === hint)
-
-    return deviceAccounts.map((deviceAccount) => ({
-      account: deviceAccount.account,
-
-      selected:
-        parameters.prompt !== 'select_account' &&
-        matchesHint(deviceAccount.account),
-      // @TODO Return the session expiration date instead of a boolean to
-      // avoid having to rely on a leeway when "accepting" the request.
-      loginRequired:
-        parameters.prompt === 'login' || this.checkLoginRequired(deviceAccount),
-      consentRequired: this.checkConsentRequired(
-        parameters,
-        deviceAccount.authorizedClients.get(clientId),
-      ),
-
-      matchesHint: hint == null || matchesHint(deviceAccount.account),
-    }))
   }
 
   public async token(
@@ -1093,4 +1089,14 @@ export class OAuthProvider extends OAuthVerifier {
 
     return tokenPayload
   }
+}
+
+function matchesHint(
+  this: OAuthAuthorizationRequestParameters,
+  { account }: { account: Account },
+): boolean {
+  const hint = this.login_hint
+  if (!hint) return false
+
+  return account.sub === hint || account.preferred_username === hint
 }

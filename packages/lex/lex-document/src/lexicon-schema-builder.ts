@@ -1,3 +1,4 @@
+import { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import {
   LexiconArray,
@@ -13,23 +14,63 @@ import {
 import { LexiconIndexer } from './lexicon-indexer.js'
 
 /**
- * Builds a validator for a given lexicon "ref" from a lexicon indexer.
+ * Builds validators for Lexicon documents.
+ *
+ * This class converts Lexicon type definitions into runtime validators
+ * that can validate data against the schema. It handles reference resolution,
+ * supporting both local (`#defName`) and cross-document (`nsid#defName`) refs.
  *
  * @example
- *
  * ```ts
- * import { LexiconSchemaBuilder } from '@atproto/lex/doc'
- * import { LexiconStreamIndexer } from '@atproto/lex/doc'
+ * import { LexiconSchemaBuilder, LexiconIterableIndexer } from '@atproto/lex-document'
  *
- * const indexer = new LexiconStreamIndexer(lexiconDocs)
- * const validator = await LexiconSchemaBuilder.build(indexer, 'com.example.foo#bar')
+ * // Build a single validator
+ * const indexer = new LexiconIterableIndexer(lexiconDocs)
+ * const validator = await LexiconSchemaBuilder.build(indexer, 'com.example.post#main')
+ *
+ * // Validate data
+ * const result = validator.safeParse(myPostData)
+ * if (result.success) {
+ *   console.log('Valid:', result.value)
+ * } else {
+ *   console.log('Invalid:', result.error)
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Build all validators from an iterable indexer
+ * const indexer = new LexiconIterableIndexer(lexiconDocs)
+ * const allSchemas = await LexiconSchemaBuilder.buildAll(indexer)
+ *
+ * for (const [ref, schema] of allSchemas) {
+ *   console.log(`Built validator for ${ref}`)
+ * }
  * ```
  */
-export class LexiconSchemaBuilder {
+export class LexiconSchemaBuilder implements AsyncDisposable {
+  /**
+   * Builds a validator for a single Lexicon definition reference.
+   *
+   * @param indexer - The Lexicon indexer to resolve documents from
+   * @param fullRef - The full reference to build, in format "nsid#defName"
+   * @returns A promise resolving to a validator for the referenced definition
+   * @throws Error if the reference does not point to a schema type
+   *
+   * @example
+   * ```ts
+   * const validator = await LexiconSchemaBuilder.build(
+   *   indexer,
+   *   'app.bsky.feed.post#main'
+   * )
+   *
+   * validator.parse(postRecord) // Throws if invalid
+   * ```
+   */
   static async build(
     indexer: LexiconIndexer,
     fullRef: string,
-  ): Promise<l.Validator<unknown>> {
+  ): Promise<l.Schema<LexValue>> {
     const ctx = new LexiconSchemaBuilder(indexer)
     try {
       const result = await ctx.buildFullRef(fullRef)
@@ -42,11 +83,36 @@ export class LexiconSchemaBuilder {
     }
   }
 
+  /**
+   * Builds validators for all definitions in all documents from an iterable indexer.
+   *
+   * This method iterates over all Lexicon documents available in the indexer
+   * and builds validators for every definition in each document.
+   *
+   * @param indexer - An iterable Lexicon indexer (must implement `Symbol.asyncIterator`)
+   * @returns A promise resolving to a Map of full references to their validators.
+   *   The map values can be validators, Query, Subscription, Procedure, or PermissionSet.
+   * @throws Error if the indexer does not support iteration
+   *
+   * @example
+   * ```ts
+   * const indexer = new LexiconIterableIndexer(allLexiconDocs)
+   * const schemas = await LexiconSchemaBuilder.buildAll(indexer)
+   *
+   * // Access a specific schema
+   * const postSchema = schemas.get('app.bsky.feed.post#main')
+   *
+   * // Iterate all schemas
+   * for (const [ref, schema] of schemas) {
+   *   console.log(ref, schema)
+   * }
+   * ```
+   */
   static async buildAll(indexer: LexiconIndexer) {
     const builder = new LexiconSchemaBuilder(indexer)
     const schemas = new Map<
       string,
-      | l.Validator<unknown>
+      | l.Schema<LexValue>
       | l.Query
       | l.Subscription
       | l.Procedure
@@ -71,12 +137,43 @@ export class LexiconSchemaBuilder {
 
   #asyncTasks = new AsyncTasks()
 
+  /**
+   * Creates a new LexiconSchemaBuilder instance.
+   *
+   * Note: For most use cases, prefer using the static `build()` or `buildAll()`
+   * methods instead of instantiating directly.
+   *
+   * @param indexer - The Lexicon indexer to resolve documents from
+   */
   constructor(protected indexer: LexiconIndexer) {}
 
+  /**
+   * Waits for all pending reference resolution tasks to complete.
+   *
+   * When building schemas with cross-references, the builder schedules
+   * async tasks to resolve those references. This method must be called
+   * to ensure all references are fully resolved before using the validators.
+   *
+   * @returns A promise that resolves when all pending tasks are complete
+   * @throws Rethrows any errors from failed reference resolution
+   */
   async done(): Promise<void> {
     await this.#asyncTasks.done()
   }
 
+  async [Symbol.asyncDispose]() {
+    await this.done()
+  }
+
+  /**
+   * Builds a validator for a full reference (memoized).
+   *
+   * Results are cached, so calling with the same reference returns
+   * the same promise/result.
+   *
+   * @param fullRef - The full reference in format "nsid#defName"
+   * @returns A promise resolving to the built schema or method definition
+   */
   buildFullRef = memoize(async (fullRef: string) => {
     const { nsid, hash } = parseRef(fullRef)
 
@@ -85,20 +182,20 @@ export class LexiconSchemaBuilder {
     return this.compileDef(doc, hash)
   })
 
-  protected buildRefGetter(fullRef: string): () => l.Validator<unknown> {
-    let validator: l.Validator<unknown>
+  protected buildRefGetter(fullRef: string): () => l.Schema<LexValue> {
+    let schema: l.Schema<LexValue>
 
     this.#asyncTasks.add(
       this.buildFullRef(fullRef).then((v) => {
         if (!(v instanceof l.Schema)) {
           throw new Error(`Only refs to schema types are allowed`)
         }
-        validator = v
+        schema = v
       }),
     )
 
     return () => {
-      if (validator) return validator
+      if (schema) return schema
       throw new Error('Validator not yet built. Did you await done()?')
     }
   }
@@ -178,7 +275,7 @@ export class LexiconSchemaBuilder {
   protected compileLeaf(
     doc: LexiconDocument,
     def: LexiconArray | LexiconArrayItems,
-  ): l.Validator<unknown> {
+  ): l.Schema<LexValue> {
     if (
       'const' in def &&
       'enum' in def &&
@@ -198,13 +295,12 @@ export class LexiconSchemaBuilder {
 
         const result =
           def.const != null
-            ? l.literal(def.const, def)
+            ? l.literal(def.const)
             : def.enum != null
-              ? l.enum(def.enum, def)
+              ? l.enum(def.enum)
               : schema
 
-        if (def.default != null) result.check(def.default)
-        return result
+        return def.default != null ? l.withDefault(result, def.default) : result
       }
       case 'integer': {
         const schema = l.integer(def)
@@ -214,29 +310,26 @@ export class LexiconSchemaBuilder {
 
         const result =
           def.const != null
-            ? l.literal(def.const, def)
+            ? l.literal(def.const)
             : def.enum != null
-              ? l.enum(def.enum, def)
+              ? l.enum(def.enum)
               : schema
 
-        if (def.default != null) result.check(def.default)
-        return result
+        return def.default != null ? l.withDefault(result, def.default) : result
       }
       case 'boolean': {
-        const result =
-          def.const != null ? l.literal(def.const, def) : l.boolean(def)
+        const result = def.const != null ? l.literal(def.const) : l.boolean()
 
-        if (def.default != null) result.check(def.default)
-        return result
+        return def.default != null ? l.withDefault(result, def.default) : result
       }
       case 'blob':
         return l.blob(def)
       case 'cid-link':
-        return l.cidLink()
+        return l.cid()
       case 'bytes':
         return l.bytes(def)
       case 'unknown':
-        return l.unknown()
+        return l.lexMap()
       case 'array':
         return l.array(this.compileLeaf(doc, def.items), def)
       default:
@@ -247,7 +340,7 @@ export class LexiconSchemaBuilder {
   protected compileRef(
     doc: LexiconDocument,
     def: LexiconRef | LexiconRefUnion,
-  ) {
+  ): l.Schema<LexValue> {
     switch (def.type) {
       case 'ref':
         return l.ref(this.buildRefGetter(buildFullRef(doc, def.ref)))
@@ -264,18 +357,18 @@ export class LexiconSchemaBuilder {
     }
   }
 
-  protected compileObject(
-    doc: LexiconDocument,
-    def: LexiconObject,
-  ): l.ObjectSchema {
-    const props: Record<string, l.Validator> = {}
+  protected compileObject(doc: LexiconDocument, def: LexiconObject) {
+    const props: Record<string, l.Schema<undefined | LexValue>> = {}
     for (const [key, propDef] of Object.entries(def.properties)) {
       if (propDef === undefined) continue
 
       const isNullable = def.nullable?.includes(key)
       const isRequired = def.required?.includes(key)
 
-      let schema = this.compileLeaf(doc, propDef)
+      let schema: l.Schema<undefined | LexValue> = this.compileLeaf(
+        doc,
+        propDef,
+      )
 
       if (isNullable) {
         schema = l.nullable(schema)
@@ -293,7 +386,7 @@ export class LexiconSchemaBuilder {
   protected compilePayload(
     doc: LexiconDocument,
     def: LexiconPayload | undefined,
-  ): l.Payload {
+  ) {
     return l.payload(
       def?.encoding,
       def?.schema ? this.compilePayloadSchema(doc, def.schema) : undefined,
@@ -310,7 +403,7 @@ export class LexiconSchemaBuilder {
   protected compilePayloadSchema(
     doc: LexiconDocument,
     def: LexiconObject | LexiconRef | LexiconRefUnion,
-  ) {
+  ): l.Schema<LexValue, LexValue> {
     switch (def.type) {
       case 'object':
         return this.compileObject(doc, def)
@@ -322,21 +415,24 @@ export class LexiconSchemaBuilder {
   protected compileParams(doc: LexiconDocument, def?: LexiconParameters) {
     if (!def) return l.params()
 
-    const props: Record<string, l.Validator> = {}
-    for (const [key, propDef] of Object.entries(def.properties)) {
-      if (propDef === undefined) continue
+    const shape: l.ParamsShape = {}
+    for (const [paramName, paramDef] of Object.entries(def.properties)) {
+      if (paramDef === undefined) continue
 
-      const isRequired = def.required?.includes(key)
+      const isRequired = def.required?.includes(paramName)
 
-      let schema = this.compileLeaf(doc, propDef)
+      const propSchema = this.compileLeaf(doc, paramDef) as
+        | l.StringSchema
+        | l.BooleanSchema
+        | l.IntegerSchema
+        | l.ArraySchema<l.StringSchema>
+        | l.ArraySchema<l.BooleanSchema>
+        | l.ArraySchema<l.IntegerSchema>
 
-      if (!isRequired) {
-        schema = l.optional(schema)
-      }
-
-      props[key] = schema
+      shape[paramName] = isRequired ? propSchema : l.optional(propSchema)
     }
-    return l.params(props)
+
+    return l.params(shape)
   }
 }
 

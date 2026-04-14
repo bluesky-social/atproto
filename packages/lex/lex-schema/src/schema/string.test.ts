@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { StringSchema } from './string.js'
-import { TokenSchema } from './token.js'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { Infer, UnknownString } from '../core.js'
+import { StringSchemaOptions, string } from './string.js'
+import { token } from './token.js'
+import { withDefault } from './with-default.js'
 
 describe('StringSchema', () => {
   describe('basic validation', () => {
-    const schema = new StringSchema({})
+    const schema = string()
 
     it('validates plain strings', () => {
       const result = schema.safeParse('hello world')
@@ -49,7 +51,7 @@ describe('StringSchema', () => {
 
   describe('default values', () => {
     it('uses default value when no input provided', () => {
-      const schema = new StringSchema({ default: 'default value' })
+      const schema = withDefault(string(), 'default value')
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(true)
       if (result.success) {
@@ -58,14 +60,14 @@ describe('StringSchema', () => {
     })
 
     it('validates default value against constraints', () => {
-      const schema = new StringSchema({ default: 'hi', minLength: 5 })
+      const schema = string({ default: 'hi', minLength: 5 })
       const result = schema.safeParse(undefined)
       expect(result.success).toBe(false)
     })
   })
 
   describe('minLength constraint', () => {
-    const schema = new StringSchema({ minLength: 5 })
+    const schema = string({ minLength: 5 })
 
     it('accepts strings meeting minimum length', () => {
       const result = schema.safeParse('hello')
@@ -89,7 +91,7 @@ describe('StringSchema', () => {
   })
 
   describe('maxLength constraint', () => {
-    const schema = new StringSchema({ maxLength: 10 })
+    const schema = string({ maxLength: 10 })
 
     it('accepts strings meeting maximum length', () => {
       const result = schema.safeParse('1234567890')
@@ -113,20 +115,20 @@ describe('StringSchema', () => {
 
     it('correctly handles UTF-8 multi-byte characters', () => {
       // Emoji takes 4 bytes in UTF-8
-      const schema = new StringSchema({ maxLength: 4 })
+      const schema = string({ maxLength: 4 })
       const result = schema.safeParse('😀')
       expect(result.success).toBe(true)
     })
 
     it('rejects when multi-byte characters exceed maxLength', () => {
-      const schema = new StringSchema({ maxLength: 3 })
+      const schema = string({ maxLength: 3 })
       const result = schema.safeParse('😀')
       expect(result.success).toBe(false)
     })
   })
 
   describe('combined min and max length', () => {
-    const schema = new StringSchema({ minLength: 3, maxLength: 10 })
+    const schema = string({ minLength: 3, maxLength: 10 })
 
     it('accepts strings within range', () => {
       const result = schema.safeParse('hello')
@@ -155,7 +157,7 @@ describe('StringSchema', () => {
   })
 
   describe('minGraphemes constraint', () => {
-    const schema = new StringSchema({ minGraphemes: 3 })
+    const schema = string({ minGraphemes: 3 })
 
     it('accepts strings meeting minimum graphemes', () => {
       const result = schema.safeParse('abc')
@@ -184,7 +186,7 @@ describe('StringSchema', () => {
   })
 
   describe('maxGraphemes constraint', () => {
-    const schema = new StringSchema({ maxGraphemes: 5 })
+    const schema = string({ maxGraphemes: 5 })
 
     it('accepts strings meeting maximum graphemes', () => {
       const result = schema.safeParse('hello')
@@ -213,7 +215,7 @@ describe('StringSchema', () => {
   })
 
   describe('combined grapheme constraints', () => {
-    const schema = new StringSchema({ minGraphemes: 2, maxGraphemes: 5 })
+    const schema = string({ minGraphemes: 2, maxGraphemes: 5 })
 
     it('accepts strings within grapheme range', () => {
       const result = schema.safeParse('hello')
@@ -242,7 +244,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: datetime', () => {
-    const schema = new StringSchema({ format: 'datetime' })
+    const schema = string({ format: 'datetime' })
 
     it('accepts valid ISO datetime strings', () => {
       const result = schema.safeParse('2023-12-25T12:00:00Z')
@@ -263,10 +265,73 @@ describe('StringSchema', () => {
       const result = schema.safeParse('12/25/2023')
       expect(result.success).toBe(false)
     })
+
+    it('rejects datetime without timezone', () => {
+      const result = schema.safeParse('2023-12-25T12:00:00')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects date-only strings', () => {
+      // Date-only is not a valid datetime in either strict or loose mode
+      const result = schema.safeParse('2023-12-25')
+      expect(result.success).toBe(false)
+    })
+
+    describe('loose validation', () => {
+      it('accepts datetime without timezone', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts datetime without separator', () => {
+        const result = schema.safeParse('20231225T120000', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('rejects datetime with "-00:00" timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00-00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects date-only strings', () => {
+        const result = schema.safeParse('2023-12-25', { strict: false })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts datetime with timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00+05:30', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('still rejects completely invalid strings', () => {
+        expect(schema.safeParse('not a date', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('12/25/2023', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('', { strict: false }).success).toBe(false)
+      })
+
+      it('uses strict mode by default', () => {
+        // Datetime without timezone is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25T12:00:00').success).toBe(false)
+        // Date-only is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25').success).toBe(false)
+        // With timezone offset (AT Protocol compliant)
+        expect(schema.safeParse('2023-12-25T12:00:00+05:30').success).toBe(true)
+      })
+    })
   })
 
   describe('format: uri', () => {
-    const schema = new StringSchema({ format: 'uri' })
+    const schema = string({ format: 'uri' })
 
     it('accepts valid HTTP URIs', () => {
       const result = schema.safeParse('https://example.com')
@@ -295,7 +360,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: at-uri', () => {
-    const schema = new StringSchema({ format: 'at-uri' })
+    const schema = string({ format: 'at-uri' })
 
     it('accepts valid AT URI', () => {
       const result = schema.safeParse(
@@ -316,7 +381,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: did', () => {
-    const schema = new StringSchema({ format: 'did' })
+    const schema = string({ format: 'did' })
 
     it('accepts valid DID with plc method', () => {
       const result = schema.safeParse('did:plc:abc123')
@@ -340,7 +405,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: handle', () => {
-    const schema = new StringSchema({ format: 'handle' })
+    const schema = string({ format: 'handle' })
 
     it('accepts valid handle', () => {
       const result = schema.safeParse('user.bsky.social')
@@ -364,7 +429,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: at-identifier', () => {
-    const schema = new StringSchema({ format: 'at-identifier' })
+    const schema = string({ format: 'at-identifier' })
 
     it('accepts valid DID as at-identifier', () => {
       const result = schema.safeParse('did:plc:abc123')
@@ -383,7 +448,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: nsid', () => {
-    const schema = new StringSchema({ format: 'nsid' })
+    const schema = string({ format: 'nsid' })
 
     it('accepts valid NSID', () => {
       const result = schema.safeParse('app.bsky.feed.post')
@@ -407,7 +472,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: cid', () => {
-    const schema = new StringSchema({ format: 'cid' })
+    const schema = string({ format: 'cid' })
 
     it('accepts valid CID v1', () => {
       const result = schema.safeParse(
@@ -428,7 +493,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: language', () => {
-    const schema = new StringSchema({ format: 'language' })
+    const schema = string({ format: 'language' })
 
     it('accepts valid BCP 47 language code', () => {
       const result = schema.safeParse('en')
@@ -452,7 +517,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: tid', () => {
-    const schema = new StringSchema({ format: 'tid' })
+    const schema = string({ format: 'tid' })
 
     it('accepts valid TID', () => {
       const result = schema.safeParse('3jzfcijpj2z2a')
@@ -471,7 +536,7 @@ describe('StringSchema', () => {
   })
 
   describe('format: record-key', () => {
-    const schema = new StringSchema({ format: 'record-key' })
+    const schema = string({ format: 'record-key' })
 
     it('accepts valid record key', () => {
       const result = schema.safeParse('3jzfcijpj2z2a')
@@ -495,7 +560,7 @@ describe('StringSchema', () => {
   })
 
   describe('type coercion', () => {
-    const schema = new StringSchema({})
+    const schema = string()
 
     it('coerces Date objects to ISO strings', () => {
       const date = new Date('2023-12-25T12:00:00Z')
@@ -531,17 +596,16 @@ describe('StringSchema', () => {
     })
 
     it('coerces TokenSchema instances to strings', () => {
-      const token = new TokenSchema('mytoken')
-      const result = schema.safeParse(token)
+      const result = schema.safeParse(token('my.to.ken', 'main'))
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.value).toBe('mytoken')
+        expect(result.value).toBe('my.to.ken')
       }
     })
   })
 
   describe('combined constraints and format', () => {
-    const schema = new StringSchema({
+    const schema = string({
       format: 'handle',
       minLength: 5,
       maxLength: 50,
@@ -572,42 +636,138 @@ describe('StringSchema', () => {
 
   describe('edge cases', () => {
     it('handles strings with special characters', () => {
-      const schema = new StringSchema({})
+      const schema = string()
       const result = schema.safeParse('hello\nworld\ttab')
       expect(result.success).toBe(true)
     })
 
     it('handles strings with unicode characters', () => {
-      const schema = new StringSchema({})
+      const schema = string()
       const result = schema.safeParse('Hello 世界 🌍')
       expect(result.success).toBe(true)
     })
 
     it('handles very long strings', () => {
-      const schema = new StringSchema({ maxLength: 10000 })
+      const schema = string({ maxLength: 10000 })
       const longString = 'a'.repeat(10000)
       const result = schema.safeParse(longString)
       expect(result.success).toBe(true)
     })
 
     it('rejects very long strings exceeding maxLength', () => {
-      const schema = new StringSchema({ maxLength: 100 })
+      const schema = string({ maxLength: 100 })
       const longString = 'a'.repeat(101)
       const result = schema.safeParse(longString)
       expect(result.success).toBe(false)
     })
 
     it('handles zero as minLength', () => {
-      const schema = new StringSchema({ minLength: 0 })
+      const schema = string({ minLength: 0 })
       const result = schema.safeParse('')
       expect(result.success).toBe(true)
     })
 
     it('handles complex emoji sequences', () => {
-      const schema = new StringSchema({ maxGraphemes: 5 })
+      const schema = string({ maxGraphemes: 5 })
       // Family emoji is a single grapheme cluster
       const result = schema.safeParse('👨‍👩‍👧‍👦')
       expect(result.success).toBe(true)
     })
+  })
+
+  describe('knownValues option', () => {
+    it('allows omitting knownValues at runtime', () => {
+      string<{ knownValues: ['active', 'inactive'] }>()
+
+      // @ts-expect-error format requires options to be set
+      string<{ knownValues: ['active', 'inactive']; format: 'did' }>()
+
+      // @ts-expect-error any options, besides knownValues, must be provided
+      string<{ knownValues: ['active', 'inactive']; minLength: 5 }>()
+
+      string<{
+        knownValues: ['john.doe', 'someone.else']
+        format: 'handle'
+      }>({
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['john.doe', 'someone.else']
+      }>({
+        // Being *more* precise than the generic if fine
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['did', 'inactive']
+        format: 'did'
+      }>({
+        // @ts-expect-error does not match format form generic constraint
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['active', 'inactive']
+        minLength: 10
+      }>({
+        minLength: 10,
+      })
+
+      string<{
+        knownValues: ['active', 'inactive']
+        minLength: 5
+      }>({
+        // @ts-expect-error mismatch
+        minLength: 10,
+      })
+    })
+  })
+
+  it('properly types knownValues in parameters', () => {
+    const schema = string({
+      knownValues: ['active', 'inactive'],
+    })
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: 'active' | 'inactive' | UnknownString
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: string
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: 'active' | 'inactive'
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: UnknownString
+    }>()
+  })
+
+  it('type string<any>() as string', () => {
+    const schema = string<any>()
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: string
+    }>()
+  })
+
+  it('type string<StringSchemaOptions>({}) as string', () => {
+    const schema = string<StringSchemaOptions>({})
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: string
+    }>()
   })
 })

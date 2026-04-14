@@ -47,3 +47,6 @@ export const isValidThreadViewPref = asPredicate(
 export const isValidVerificationPrefs = asPredicate(
   AppBskyActorDefs.validateVerificationPrefs,
 )
+export const isValidLiveEventPreferences = asPredicate(
+  AppBskyActorDefs.validateLiveEventPreferences,
+)

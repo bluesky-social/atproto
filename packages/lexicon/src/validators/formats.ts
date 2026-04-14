@@ -1,5 +1,3 @@
-/* eslint-disable import/no-deprecated */
-
 import { isValidISODateString } from 'iso-datestring-validator'
 import { CID } from 'multiformats/cid'
 import { validateLanguage } from '@atproto/common-web'
@@ -10,6 +8,7 @@ import {
   ensureValidRecordKey,
   isValidNsid,
   isValidTid,
+  isValidUri,
 } from '@atproto/syntax'
 import { ValidationError, ValidationResult } from '../types'
 
@@ -30,8 +29,7 @@ export function datetime(path: string, value: string): ValidationResult {
 }
 
 export function uri(path: string, value: string): ValidationResult {
-  const isUri = value.match(/^\w+:(?:\/\/)?[^\s/][^\s]*$/) !== null
-  if (!isUri) {
+  if (!isValidUri(value)) {
     return {
       success: false,
       error: new ValidationError(`${path} must be a uri`),

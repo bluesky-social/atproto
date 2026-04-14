@@ -54,7 +54,7 @@ describe('com.example.query', () => {
           boolean: true,
           integer: undefined,
         }),
-      ).toThrow('Expected integer value type at $.integer (got undefined)')
+      ).toThrow('Expected integer value type (got undefined) at $.integer')
     })
 
     it('rejects invalid parameter value', () => {
@@ -64,7 +64,7 @@ describe('com.example.query', () => {
           integer: 123,
           string: 'string',
         }),
-      ).toThrow('Expected boolean value type at $.boolean (got string)')
+      ).toThrow('Expected boolean value type (got "string") at $.boolean')
     })
 
     it('rejects invalid parameter type', () => {
@@ -75,7 +75,7 @@ describe('com.example.query', () => {
           float: 123.45,
         }),
       ).toThrow(
-        'Expected one of boolean, integer, string or array value type at $.float (got float)',
+        'Expected one of boolean, integer, string or array value type (got 123.45) at $.float',
       )
 
       expect(() =>
@@ -84,7 +84,7 @@ describe('com.example.query', () => {
           integer: 123,
           array: 'x',
         }),
-      ).toThrow('Expected array value type at $.array (got string)')
+      ).toThrow('Expected array value type (got "x") at $.array')
 
       expect(() =>
         com.example.query.$params.$parse({
@@ -92,7 +92,7 @@ describe('com.example.query', () => {
           integer: 123,
           array: 3,
         }),
-      ).toThrow('Expected array value type at $.array (got integer)')
+      ).toThrow('Expected array value type (got 3) at $.array')
 
       expect(() =>
         com.example.query.$params.$parse({
@@ -100,7 +100,22 @@ describe('com.example.query', () => {
           integer: 123,
           array: NaN,
         }),
-      ).toThrow('Expected array value type at $.array (got NaN)')
+      ).toThrow('Expected array value type (got NaN) at $.array')
+    })
+
+    it('properly infers the type of default parameters', () => {
+      function returnDef(params: com.example.query.$Params): number {
+        return params.def
+      }
+
+      const parsed = com.example.query.$params.parse({
+        boolean: true,
+        integer: 123,
+        string: 'string',
+        array: ['x', 'y'],
+      })
+
+      expect(returnDef(parsed)).toBe(0)
     })
   })
 
@@ -126,7 +141,9 @@ describe('com.example.query', () => {
           integer: 123,
           string: 'string',
         })
-      }).toThrow('Expected boolean value type at $.object.boolean (got string)')
+      }).toThrow(
+        'Expected boolean value type (got "string") at $.object.boolean',
+      )
     })
   })
 })

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { HandlerOpts } from '../src/channel'
 import { SimpleIndexer } from '../src/simple-indexer'
 import { IdentityEvent, RecordEvent } from '../src/types'

@@ -1,5 +1,31 @@
 # @atproto/oauth-client-expo
 
+## 0.0.10
+
+### Patch Changes
+
+- [#4642](https://github.com/bluesky-social/atproto/pull/4642) [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on `event-target-polyfill`
+
+- Updated dependencies [[`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df), [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df)]:
+  - @atproto/oauth-client@0.6.0
+  - @atproto/oauth-client-browser@0.3.41
+
+## 0.0.9
+
+### Patch Changes
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add iOS specific options on authentication web-view
+
+- [#4606](https://github.com/bluesky-social/atproto/pull/4606) [`78fee14`](https://github.com/bluesky-social/atproto/commit/78fee144ff46ffc4585f318c72eea98e4357ba7b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dev logs
+
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @atproto/oauth-client@0.5.14
+  - @atproto/oauth-client-browser@0.3.40
+
 ## 0.0.7
 
 ### Patch Changes
