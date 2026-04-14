@@ -238,6 +238,10 @@ function benchData(data: unknown, options?: LexParseOptions) {
     return lexParse(jsonString, options)
   }
 
+  bench('current', () => {
+    lexParseJsonBytes(bytes, options)
+  })
+
   bench(lexParseJsonBytesDecoder, () => {
     lexParseJsonBytesDecoder(bytes, options)
   })

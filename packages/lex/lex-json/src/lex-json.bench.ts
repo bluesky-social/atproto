@@ -111,11 +111,15 @@ function benchData(data: unknown, options?: LexParseOptions) {
     return jsonToLex(JSON.parse(input), options) as any
   }
 
-  bench('withReviver()', () => {
+  bench('current', () => {
+    lexParse(jsonString, options)
+  })
+
+  bench('with-reviver', () => {
     withReviver(jsonString, options)
   })
 
-  bench('jsonToLex(JSON.parse())', () => {
+  bench('naive', () => {
     naiveParse(jsonString, options)
   })
 }

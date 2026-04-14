@@ -8,14 +8,14 @@ import {
 
 // This benchmark compares the performance of three approaches to parsing JSON
 // responses in the Lex client:
-// 1. lexParse(await response.text()): The current approach used in the client,
-//    which reads the response as text and then parses it with lexParse.
+// 1. lexParse(await response.text()): An approach that reads the response as
+//    text and directly parses it with lexParse.
 // 2. jsonToLex(await response.json()): An approach that first parses the
 //    response as JSON to a plain JS object and then converts it to LexValue
 //    using jsonToLex.
 // 3. lexParseJsonBytes(await response.bytes()): An approach that reads the
-//    response as bytes and uses a custom function that first decodes bytes to
-//    string and then parses JSON with lexParse.
+//    response as bytes and uses a specialized function to parse JSON directly
+//    from bytes.
 
 describe('small object', () => {
   benchData({
