@@ -1,6 +1,6 @@
 import { useLingui } from '@lingui/react/macro'
+import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react'
 import { Override } from '../../lib/util.ts'
-import { EyeIcon, EyeSlashIcon } from '../utils/icons.tsx'
 import { Button, ButtonProps } from './button.tsx'
 
 export type ButtonToggleVisibilityProps = Override<
@@ -34,9 +34,9 @@ export function ButtonToggleVisibility({
       aria-label={visible ? t`Hide` : t`Make visible`}
     >
       {visible ? (
-        <EyeIcon className="w-5" aria-hidden />
+        <EyeIcon aria-hidden weight="regular" className="size-5" />
       ) : (
-        <EyeSlashIcon className="w-5" aria-hidden />
+        <EyeSlashIcon aria-hidden weight="regular" className="size-5" />
       )}
     </Button>
   )

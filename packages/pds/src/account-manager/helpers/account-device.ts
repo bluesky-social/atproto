@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import { DeviceId } from '@atproto/oauth-provider'
+import { DidString } from '@atproto/syntax'
 import { toDateISO } from '../../db'
 import { AccountDb } from '../db'
 import { selectAccountQB } from './account'
@@ -51,7 +52,9 @@ export function selectQB(
         'device.ipAddress',
         'device.lastSeenAt',
       ])
-      .if(filter.sub != null, (qb) => qb.where('actor.did', '=', filter.sub!))
+      .if(filter.sub != null, (qb) =>
+        qb.where('actor.did', '=', filter.sub! as DidString),
+      )
       .if(filter.deviceId != null, (qb) =>
         qb.where('account_device.deviceId', '=', filter.deviceId!),
       )

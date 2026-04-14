@@ -1,5 +1,25 @@
 # @atproto/lex-data
 
+## 0.0.15
+
+### Patch Changes
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export new utility functions for working with `BlobRef`: `getBlobCid`, `getBlobCidString`, `getBlobMime`, and `getBlobSize`.
+
+- [#4835](https://github.com/bluesky-social/atproto/pull/4835) [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `utf8FromBytes` that decodes a byte array containing a utf-8 string
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Defines `BlobRef` as a union of `TypedBlobRef` and `LegacyBlobRef` to allow for seamless handling of both types of blob references.
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client.
+
+  BREAKING: The `allowLegacy` option has been removed from the blob schema builder, and legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, and in non-strict mode they are accepted. Consumers should stop passing `allowLegacy` and rely on strictness configuration instead. Likewise, CLI consumers should stop using the removed `--allowLegacyBlobs` flag and use the default strict/non-strict behavior.
+
+## 0.0.14
+
+### Patch Changes
+
+- [#4761](https://github.com/bluesky-social/atproto/pull/4761) [`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `-1` BlobRef size in non-strict mode
+
 ## 0.0.13
 
 ### Patch Changes

@@ -764,6 +764,86 @@ export class ScanOperationsResponse extends Message<ScanOperationsResponse> {
 }
 
 /**
+ * @generated from message bsync.DeleteOperationsByActorAndNamespaceRequest
+ */
+export class DeleteOperationsByActorAndNamespaceRequest extends Message<DeleteOperationsByActorAndNamespaceRequest> {
+  /**
+   * @generated from field: string actor_did = 1;
+   */
+  actorDid = "";
+
+  /**
+   * @generated from field: string namespace = 2;
+   */
+  namespace = "";
+
+  constructor(data?: PartialMessage<DeleteOperationsByActorAndNamespaceRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsync.DeleteOperationsByActorAndNamespaceRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "actor_did", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "namespace", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeleteOperationsByActorAndNamespaceRequest {
+    return new DeleteOperationsByActorAndNamespaceRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeleteOperationsByActorAndNamespaceRequest {
+    return new DeleteOperationsByActorAndNamespaceRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeleteOperationsByActorAndNamespaceRequest {
+    return new DeleteOperationsByActorAndNamespaceRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeleteOperationsByActorAndNamespaceRequest | PlainMessage<DeleteOperationsByActorAndNamespaceRequest> | undefined, b: DeleteOperationsByActorAndNamespaceRequest | PlainMessage<DeleteOperationsByActorAndNamespaceRequest> | undefined): boolean {
+    return proto3.util.equals(DeleteOperationsByActorAndNamespaceRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message bsync.DeleteOperationsByActorAndNamespaceResponse
+ */
+export class DeleteOperationsByActorAndNamespaceResponse extends Message<DeleteOperationsByActorAndNamespaceResponse> {
+  /**
+   * @generated from field: int32 deleted_count = 1;
+   */
+  deletedCount = 0;
+
+  constructor(data?: PartialMessage<DeleteOperationsByActorAndNamespaceResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "bsync.DeleteOperationsByActorAndNamespaceResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "deleted_count", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeleteOperationsByActorAndNamespaceResponse {
+    return new DeleteOperationsByActorAndNamespaceResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeleteOperationsByActorAndNamespaceResponse {
+    return new DeleteOperationsByActorAndNamespaceResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeleteOperationsByActorAndNamespaceResponse {
+    return new DeleteOperationsByActorAndNamespaceResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeleteOperationsByActorAndNamespaceResponse | PlainMessage<DeleteOperationsByActorAndNamespaceResponse> | undefined, b: DeleteOperationsByActorAndNamespaceResponse | PlainMessage<DeleteOperationsByActorAndNamespaceResponse> | undefined): boolean {
+    return proto3.util.equals(DeleteOperationsByActorAndNamespaceResponse, a, b);
+  }
+}
+
+/**
  * Ping
  *
  * @generated from message bsync.PingRequest

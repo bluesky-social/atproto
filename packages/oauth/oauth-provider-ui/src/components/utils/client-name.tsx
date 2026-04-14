@@ -4,7 +4,7 @@ import {
   OAuthClientMetadata,
   isConventionalOAuthClientId,
 } from '#/lib/oauth-client.ts'
-import { Override } from '../../lib/util.ts'
+import { Override } from '#/lib/util.ts'
 import { UrlViewer } from './url-viewer.tsx'
 
 export type ClientNameProps = Override<

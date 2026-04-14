@@ -1,13 +1,33 @@
+import { useLingui } from '@lingui/react/macro'
+import { UserIcon } from '@phosphor-icons/react'
+import { clsx } from 'clsx'
 import { useEffect, useState } from 'react'
-import { AccountIcon } from './icons.tsx'
+import type { Account } from '@atproto/oauth-provider-api'
 
-export type AccountIconProps = {
-  src?: string
-  alt: string
+export type AccountImageProps = {
+  account?: Account
+  size?: keyof typeof sizeMap
+  className?: string
 }
 
-export function AccountImage({ src, alt }: AccountIconProps) {
+const sizeMap = {
+  sm: 'size-5',
+  md: 'size-6',
+  lg: 'size-8',
+  xl: 'size-12',
+  '2xl': 'size-16',
+  '3xl': 'size-24',
+}
+
+export function AccountImage({
+  className = '',
+  account,
+  size = 'md',
+}: AccountImageProps) {
   const [errored, setErrored] = useState(false)
+  const { t } = useLingui()
+
+  const src = account?.picture
 
   useEffect(() => {
     setErrored(false)
@@ -17,16 +37,20 @@ export function AccountImage({ src, alt }: AccountIconProps) {
     <img
       aria-hidden
       src={src}
-      alt={alt}
-      className="h-6 w-6 rounded-full"
+      alt={t`Account avatar`}
+      className={clsx(`rounded-full`, sizeMap[size], className)}
       onError={() => setErrored(true)}
     />
   ) : (
     <div
       aria-hidden
-      className="bg-primary border-primary h-6 w-6 overflow-hidden rounded-full border-2 border-solid text-white"
+      className={clsx(
+        'bg-primary border-primary overflow-hidden rounded-full border-2 border-solid text-white',
+        sizeMap[size],
+        className,
+      )}
     >
-      <AccountIcon className="-mx-1 -mb-1" />
+      <UserIcon className="size-full" />
     </div>
   )
 }

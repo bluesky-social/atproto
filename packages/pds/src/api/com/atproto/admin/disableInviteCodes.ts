@@ -1,9 +1,9 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.admin.disableInviteCodes({
+  server.add(com.atproto.admin.disableInviteCodes, {
     auth: ctx.authVerifier.moderator,
     handler: async ({ input }) => {
       if (ctx.cfg.entryway) {

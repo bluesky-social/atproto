@@ -99,12 +99,15 @@ export class StringSchema<
       }
     }
 
+    // Optimization: count graphemes once
     let lazyGraphLen: number
 
     const minGraphemes = this.options.minGraphemes
     if (minGraphemes != null) {
-      // Optimization: avoid counting graphemes if the length check already fails
       if (str.length < minGraphemes) {
+        // If the JavaScript string length (UTF-16) is below the minimal limit,
+        // its grapheme length (which <= .length) will also be below.
+        // Fail early.
         return ctx.issueTooSmall(str, 'grapheme', minGraphemes, str.length)
       } else if ((lazyGraphLen ??= graphemeLen(str)) < minGraphemes) {
         return ctx.issueTooSmall(str, 'grapheme', minGraphemes, lazyGraphLen)
@@ -113,13 +116,16 @@ export class StringSchema<
 
     const maxGraphemes = this.options.maxGraphemes
     if (maxGraphemes != null) {
-      if ((lazyGraphLen ??= graphemeLen(str)) > maxGraphemes) {
+      if (str.length <= maxGraphemes) {
+        // If the JavaScript string length (UTF-16) is within the maximum limit,
+        // its grapheme length (which <= .length) will also be within.
+      } else if ((lazyGraphLen ??= graphemeLen(str)) > maxGraphemes) {
         return ctx.issueTooBig(str, 'grapheme', maxGraphemes, lazyGraphLen)
       }
     }
 
     const format = this.options.format
-    if (format != null && !isStringFormat(str, format)) {
+    if (format != null && !isStringFormat(str, format, ctx.options)) {
       return ctx.issueInvalidFormat(str, format)
     }
 

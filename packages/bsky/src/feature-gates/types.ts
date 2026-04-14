@@ -1,30 +1,22 @@
-import type express from 'express'
-import { FeatureGate } from './gates'
+import { Gate } from './gates'
 
 /**
  * The user context passed to the feature gates client for evaluation and
  * tracking purposes.
  */
-export type RawUserContext = {
-  /**
-   * The user's DID
-   */
-  viewer: string | null
-  /**
-   * The express request object, used to extract analytics headers for the user context
-   */
-  // TODO: remove optional after image migration.
-  req?: express.Request
+export type UserContext = {
+  did?: string | null
+  deviceId?: string | null
+  sessionId?: string | null
 }
 
 /**
- * Extracted values from the `RawUserContext`. These values should match the
- * `attributes` we've configured for GrowthBook in our GB dashboard. We also
- * send these same values as properties in our analytics events, so we want to
- * make sure they are consistent.
+ * User context that has been normalized to ensure all required properties are
+ * present and have fallback values. This is the format that we expect to use
+ * for all feature gate evaluations and analytics tracking.
  */
-export type ParsedUserContext = {
-  did?: string | null
+export type NormalizedUserContext = {
+  did?: string
   deviceId: string
   sessionId: string
 }
@@ -50,4 +42,21 @@ export type TrackingMetadata = {
  * Pre-evaluated feature gates map, the result of
  * `ctx.FeatureGatesClient.checkGates()`
  */
-export type CheckedFeatureGatesMap = Map<FeatureGate, boolean>
+export type CheckedFeatureGatesMap = Map<Gate, boolean>
+
+/**
+ * The primary interface for interacting with feature gates in the system. This
+ * client is designed to be used in the context of an XRPC handler, where we
+ * can parse the user context from the request and then create a scoped client
+ * for that request lifecycle. The client provides methods for checking multiple
+ * gates at once, as well as checking individual gates with optional user
+ * context overrides.
+ */
+export type ScopedFeatureGatesClient = {
+  Gate: typeof Gate
+  checkGates(
+    gates: Gate[],
+    userContextOverrides?: UserContext,
+  ): CheckedFeatureGatesMap
+  checkGate(gate: Gate, userContextOverrides?: UserContext): boolean
+}
