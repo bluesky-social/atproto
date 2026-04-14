@@ -22,8 +22,13 @@
     "./tsconfig.json",
     "./dist",
     "./nodejs.js",
+    "./skills",
+    "./bin",
     "./CHANGELOG.md"
   ],
+  "bin": {
+    "intent": "./bin/intent.mjs"
+  },
   "sideEffects": false,
   "type": "commonjs",
   "main": "./dist/index.js",
