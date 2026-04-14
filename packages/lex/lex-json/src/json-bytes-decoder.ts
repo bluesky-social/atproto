@@ -80,9 +80,7 @@ export class JsonBytesDecoder {
     this.skipWhitespace()
 
     if (this.pos < this.data.length) {
-      throw new SyntaxError(
-        `Unexpected data after JSON at position ${this.pos}`,
-      )
+      throw new TypeError(`Unexpected data after JSON at position ${this.pos}`)
     }
 
     return value
@@ -129,7 +127,7 @@ export class JsonBytesDecoder {
 
       // Parse key
       if (this.data[this.pos] !== CHAR_DOUBLE_QUOTE) {
-        throw new SyntaxError(`Expected string key at position ${this.pos}`)
+        throw new TypeError(`Expected string key at position ${this.pos}`)
       }
 
       // Track special keys for later validation
@@ -141,14 +139,14 @@ export class JsonBytesDecoder {
 
       // Prevent prototype pollution
       if (key === '__proto__') {
-        throw new SyntaxError('JSON object keys cannot be "__proto__"')
+        throw new TypeError('JSON object keys cannot be "__proto__"')
       }
 
       this.skipWhitespace()
 
       // Parse colon
       if (this.data[this.pos] !== CHAR_COLON) {
-        throw new SyntaxError(`Expected ':' at position ${this.pos}`)
+        throw new TypeError(`Expected ':' at position ${this.pos}`)
       }
       this.pos++
       this.skipWhitespace()
@@ -221,8 +219,10 @@ export class JsonBytesDecoder {
                 }
 
                 return result
-              } catch (_err) {
-                if (this.strict) throw new TypeError('Invalid $bytes object')
+              } catch (cause) {
+                if (this.strict) {
+                  throw new TypeError('Invalid $bytes object', { cause })
+                }
                 // ignore and parse as regular object
               }
             }
@@ -244,8 +244,10 @@ export class JsonBytesDecoder {
               const cidStr = this.decodeUnescapedString(cidStart, cidEnd)
               try {
                 return parseCid(cidStr)
-              } catch (_err) {
-                if (this.strict) throw new TypeError('Invalid $link object')
+              } catch (cause) {
+                if (this.strict) {
+                  throw new TypeError('Invalid $link object', { cause })
+                }
                 // ignore
               }
             }
@@ -268,7 +270,7 @@ export class JsonBytesDecoder {
       } else if (next === CHAR_COMMA) {
         this.pos++
       } else {
-        throw new SyntaxError(`Expected ',' or '}' at position ${this.pos}`)
+        throw new TypeError(`Expected ',' or '}' at position ${this.pos}`)
       }
     }
 
@@ -285,9 +287,7 @@ export class JsonBytesDecoder {
         throw new TypeError(`Invalid blob object`)
       } else if (obj.$type !== undefined) {
         if (typeof obj.$type !== 'string') {
-          throw new TypeError(
-            `Invalid $type property (${typeof obj.$type})`,
-          )
+          throw new TypeError(`Invalid $type property (${typeof obj.$type})`)
         } else if (obj.$type.length === 0) {
           throw new TypeError(`Empty $type property`)
         }
@@ -321,7 +321,7 @@ export class JsonBytesDecoder {
       } else if (next === CHAR_COMMA) {
         this.pos++
       } else {
-        throw new SyntaxError(`Expected ',' or ']' at position ${this.pos}`)
+        throw new TypeError(`Expected ',' or ']' at position ${this.pos}`)
       }
     }
 
@@ -346,14 +346,14 @@ export class JsonBytesDecoder {
         // Found escape or control character - need slow path
         break
       } else if (ch < 0x20) {
-        throw new SyntaxError(`Unescaped control character at position ${i}`)
+        throw new TypeError(`Unescaped control character at position ${i}`)
       }
       i++
     }
 
     // Slow path: handle escapes or control characters
     if (i >= this.data.length) {
-      throw new SyntaxError('Unterminated string')
+      throw new TypeError('Unterminated string')
     }
 
     // We hit a backslash - need to process escape sequences
@@ -380,7 +380,7 @@ export class JsonBytesDecoder {
         result += this.parseEscapeSequence()
         segmentStart = this.pos
       } else if (ch < 0x20) {
-        throw new SyntaxError(
+        throw new TypeError(
           `Unescaped control character at position ${this.pos}`,
         )
       } else {
@@ -388,7 +388,7 @@ export class JsonBytesDecoder {
       }
     }
 
-    throw new SyntaxError('Unterminated string')
+    throw new TypeError('Unterminated string')
   }
 
   private parseEscapeSequence(): string {
@@ -414,7 +414,7 @@ export class JsonBytesDecoder {
       case CHAR_LOWER_U:
         return this.parseUnicodeEscape()
       default:
-        throw new SyntaxError(`Invalid escape sequence at position ${this.pos}`)
+        throw new TypeError(`Invalid escape sequence at position ${this.pos}`)
     }
   }
 
@@ -461,13 +461,13 @@ export class JsonBytesDecoder {
   private hexValue(ch: number): number {
     const value = HEX_LOOKUP[ch]
     if (value !== -1) return value
-    throw new SyntaxError(`Invalid unicode escape at position ${this.pos}`)
+    throw new TypeError(`Invalid unicode escape at position ${this.pos}`)
   }
 
   private base64Value(ch: number): number {
     const value = BASE64_LOOKUP[ch]
     if (value !== -1) return value
-    throw new SyntaxError(
+    throw new TypeError(
       `Invalid base64 character: ${String.fromCharCode(ch)} at position ${this.pos}`,
     )
   }
@@ -497,7 +497,7 @@ export class JsonBytesDecoder {
       return result
     }
 
-    // For longer strings, use TextDecoder directly (it's highly optimized)
+    // For longer strings, use utf8FromBytes directly (it's highly optimized)
     const subView = new Uint8Array(
       this.data.buffer,
       this.data.byteOffset + start,
@@ -539,7 +539,7 @@ export class JsonBytesDecoder {
         this.data[this.pos] <= CHAR_DIGIT_9
       )
     } else {
-      throw new SyntaxError(`Unexpected character at position ${this.pos}`)
+      throw new TypeError(`Unexpected character at position ${this.pos}`)
     }
 
     // Strict mode validation is deferred until after decimal/exponent parsing
@@ -553,7 +553,7 @@ export class JsonBytesDecoder {
         this.data[this.pos] < CHAR_DIGIT_0 ||
         this.data[this.pos] > CHAR_DIGIT_9
       ) {
-        throw new SyntaxError(`Invalid number at position ${start}`)
+        throw new TypeError(`Invalid number at position ${start}`)
       }
       let decimalPlace = 0.1
       do {
@@ -587,7 +587,7 @@ export class JsonBytesDecoder {
         this.data[this.pos] < CHAR_DIGIT_0 ||
         this.data[this.pos] > CHAR_DIGIT_9
       ) {
-        throw new SyntaxError(`Invalid number at position ${start}`)
+        throw new TypeError(`Invalid number at position ${start}`)
       }
       do {
         exp = exp * 10 + (this.data[this.pos] - CHAR_DIGIT_0)
@@ -619,7 +619,7 @@ export class JsonBytesDecoder {
       this.pos += 4
       return true
     }
-    throw new SyntaxError(`Unexpected token at position ${this.pos}`)
+    throw new TypeError(`Unexpected token at position ${this.pos}`)
   }
 
   private parseFalse(): boolean {
@@ -634,7 +634,7 @@ export class JsonBytesDecoder {
       this.pos += 5
       return false
     }
-    throw new SyntaxError(`Unexpected token at position ${this.pos}`)
+    throw new TypeError(`Unexpected token at position ${this.pos}`)
   }
 
   private parseNull(): null {
@@ -648,7 +648,7 @@ export class JsonBytesDecoder {
       this.pos += 4
       return null
     }
-    throw new SyntaxError(`Unexpected token at position ${this.pos}`)
+    throw new TypeError(`Unexpected token at position ${this.pos}`)
   }
 
   private skipWhitespace(): void {

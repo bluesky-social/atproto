@@ -5,10 +5,10 @@ import {
   LexMap,
   LexValue,
   isCid,
+  utf8FromBytes,
 } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { JsonBytesDecoder } from './json-bytes-decoder.js'
 import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
@@ -100,52 +100,26 @@ export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: LexParseOptions = { strict: false },
 ): T {
-  return JSON.parse(input, lexParseReviver.bind(options))
-}
-
-function lexParseReviver(
-  this: LexParseOptions,
-  key: string,
-  value: JsonValue,
-): LexValue {
-  switch (typeof value) {
-    case 'object':
-      if (value === null) return null
-      if (Array.isArray(value)) return value
-      return parseSpecialJsonObject(value, this) ?? value
-    case 'number':
-      if (Number.isSafeInteger(value)) return value
-      if (this.strict !== false) {
-        throw new TypeError(`Invalid non-integer number: ${value}`)
-      }
-    // fallthrough
-    default:
-      return value
-  }
+  // @NOTE see ./lex-json.bench.ts for performance comparison of implementation
+  // that uses a reviver function in JSON.parse vs. the current implementation.
+  return jsonToLex(JSON.parse(input), options) as T
 }
 
 /**
  * Parses a JSON string from a byte array into Lex values.
- *
- * @note This is an optimized version of the following code that avoids
- * intermediate string creation and parsing steps by directly decoding JSON from
- * bytes while handling AT Protocol special types.
- *
- * ```typescript
- * function lexParseJsonBytesNaive(
- *   bytes: Uint8Array,
- *   options?: LexParseOptions
- * ): LexValue {
- *   return lexParse(utf8FromBytes(bytes), options)
- * }
- * ```
  */
 export function lexParseJsonBytes(
   bytes: Uint8Array,
   options?: LexParseOptions,
 ): LexValue {
-  const decoder = new JsonBytesDecoder(bytes, options?.strict)
-  return decoder.decode()
+  // @NOTE see ./json-bytes-decoder.bench.ts for performance comparison of
+  // implementation that uses a decoder class that operates directly on bytes
+  // vs. the current implementation that first decodes bytes to string and then
+  // parses JSON. For more common cases, it seems that the trivial
+  // implementation works better than the decoder based solution, while having a
+  // small overhead for slower cases (~2% difference). Because of this, we keep
+  // the trivial implementation:
+  return lexParse(utf8FromBytes(bytes), options)
 }
 
 /**
@@ -192,10 +166,8 @@ export function jsonToLex(
     }
     case 'number':
       if (Number.isSafeInteger(value)) return value
-      if (options.strict) {
-        throw new TypeError(`Invalid non-integer number: ${value}`)
-      }
-    // fallthrough
+      if (options.strict === false) return value
+      throw new TypeError(`Invalid non-integer number: ${value}`)
     case 'boolean':
     case 'string':
       return value
@@ -338,7 +310,10 @@ function encodeLexMap(input: LexMap): JsonObject {
   return copy ?? (input as JsonObject)
 }
 
-function parseSpecialJsonObject(
+/**
+ * @internal
+ */
+export function parseSpecialJsonObject(
   input: LexMap,
   options: LexParseOptions,
 ): Cid | Uint8Array | BlobRef | undefined {

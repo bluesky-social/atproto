@@ -812,9 +812,7 @@ describe('lexParseJsonBytes strict mode error parity with lexParse', () => {
     })
 
     test('lexParse non-strict returns plain object', () => {
-      expect(() =>
-        lexParse(invalidLinkJson, { strict: false }),
-      ).not.toThrow()
+      expect(() => lexParse(invalidLinkJson, { strict: false })).not.toThrow()
     })
 
     test('lexParseJsonBytes non-strict returns plain object', () => {
@@ -848,9 +846,7 @@ describe('lexParseJsonBytes strict mode error parity with lexParse', () => {
     })
 
     test('lexParse non-strict returns plain object', () => {
-      expect(() =>
-        lexParse(linkWithExtraJson, { strict: false }),
-      ).not.toThrow()
+      expect(() => lexParse(linkWithExtraJson, { strict: false })).not.toThrow()
     })
 
     test('lexParseJsonBytes non-strict returns plain object', () => {
@@ -883,9 +879,7 @@ describe('lexParseJsonBytes strict mode error parity with lexParse', () => {
     })
 
     test('lexParse non-strict returns plain object', () => {
-      expect(() =>
-        lexParse(invalidBytesJson, { strict: false }),
-      ).not.toThrow()
+      expect(() => lexParse(invalidBytesJson, { strict: false })).not.toThrow()
     })
 
     test('lexParseJsonBytes non-strict returns plain object', () => {
@@ -985,9 +979,7 @@ describe('lexParseJsonBytes strict mode error parity with lexParse', () => {
     })
 
     test('lexParse non-strict returns plain object', () => {
-      expect(() =>
-        lexParse(nonStringTypeJson, { strict: false }),
-      ).not.toThrow()
+      expect(() => lexParse(nonStringTypeJson, { strict: false })).not.toThrow()
     })
 
     test('lexParseJsonBytes non-strict returns plain object', () => {
