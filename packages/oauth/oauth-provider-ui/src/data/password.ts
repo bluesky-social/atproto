@@ -47,13 +47,14 @@ export function useResetPasswordConfirm() {
 
   return useMutation({
     async mutationFn({ token, password }: ConfirmResetPasswordInput) {
+      if (token) return Promise.reject(new Error('AAA'))
       return api.fetch('POST', '/reset-password-confirm', { token, password })
     },
     onSuccess(_data, _variables, _context) {
       notify({
         variant: 'success',
         title: t`Password reset successful`,
-        description: t`Your password has been reset successfully. You can now sign in with your new password.`,
+        description: t`You can now sign in with your new password.`,
       })
     },
     onError(error, _variables, _context) {

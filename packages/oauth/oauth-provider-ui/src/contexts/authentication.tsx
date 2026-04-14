@@ -111,26 +111,17 @@ export function AuthenticationProvider({
 
   // Fool-proofing
   useEffect(() => {
-    if (view === View.SignUp && !canSignUp) setView(homeView)
-  }, [view, homeView, !canSignUp])
-  useEffect(() => {
     if (view === View.Authenticated) {
-      if (!session) setView(homeView)
-      else if (session.loginRequired) setView(View.SignIn)
+      if (session && session.loginRequired) setView(View.SignIn)
+      else if (!session) setView(homeView)
+    } else if (view === View.Welcome) {
+      if (homeView !== View.Welcome) setView(homeView)
+    } else if (view === View.SignUp) {
+      if (!canSignUp) setView(homeView)
+    } else if (view === View.SignIn) {
+      if (session && !session.loginRequired) setView(View.Authenticated)
     }
-  }, [view, homeView, !session])
-  useEffect(() => {
-    if (view === View.Welcome && homeView !== View.Welcome) setView(homeView)
-  }, [view, homeView])
-  useEffect(() => {
-    if (
-      view === View.SignIn &&
-      session != null &&
-      session.loginRequired === false
-    ) {
-      setView(View.Authenticated)
-    }
-  }, [view, session])
+  }, [view, canSignUp, homeView, session])
 
   const value = useMemo<AuthenticationContextType | null>(() => {
     if (!session || session.loginRequired) return null

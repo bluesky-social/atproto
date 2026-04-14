@@ -114,7 +114,7 @@ export function InputContainer({
           bellow ? 'rounded-bl-none rounded-br-none' : undefined,
 
           // Font
-          'text-text-light',
+          'text-text-default',
         )}
       >
         {icon && (
@@ -122,7 +122,7 @@ export function InputContainer({
             className={clsx(
               'flex shrink-0 grow-0 items-center justify-center',
               'mx-2',
-              hasFocus ? 'text-primary' : 'text-inherit',
+              hasFocus ? 'text-primary' : 'text-text-light',
             )}
           >
             {icon}

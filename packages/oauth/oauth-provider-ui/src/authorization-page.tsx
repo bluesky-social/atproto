@@ -6,7 +6,7 @@ import { StrictMode, useCallback, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ConsentView } from '#/components/consent-view.tsx'
-import { ErrorView } from '#/components/error-view.tsx'
+import { errorViewRender } from '#/components/error-view.tsx'
 import { LayoutTitle } from '#/components/layouts/layout-title'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
@@ -42,7 +42,7 @@ createRoot(container).render(
     <CustomizationProvider value={customizationData}>
       <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
         <NotificationsProvider>
-          <ErrorBoundary fallbackRender={ErrorView}>
+          <ErrorBoundary fallbackRender={errorViewRender}>
             <SessionProvider
               initialSessions={initialSessions}
               initialSelected={authorizeData.selectedSub}

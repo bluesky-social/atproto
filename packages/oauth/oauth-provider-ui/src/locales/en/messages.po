@@ -61,7 +61,7 @@ msgstr "1 hour ago"
 msgid "1 minute ago"
 msgstr "1 minute ago"
 
-#: src/components/sign-in-form.tsx:247
+#: src/components/sign-in-form.tsx:248
 msgid "2FA Confirmation"
 msgstr "2FA Confirmation"
 
@@ -106,7 +106,7 @@ msgstr "Account overview"
 msgid "Account selector"
 msgstr "Account selector"
 
-#: src/components/reset-password-view.tsx:60
+#: src/components/reset-password-view.tsx:66
 msgid "Already have a code?"
 msgstr "Already have a code?"
 
@@ -114,7 +114,7 @@ msgstr "Already have a code?"
 msgid "An application on your device"
 msgstr "An application on your device"
 
-#: src/components/error-view.tsx:13
+#: src/components/error-view.tsx:20
 msgid "An error occurred"
 msgstr "An error occurred"
 
@@ -171,8 +171,8 @@ msgstr "Authorized on {0}"
 
 #: src/components/sign-in-picker.tsx:54
 #: src/components/sign-in-form.tsx:138
-#: src/components/reset-password-view.tsx:54
-#: src/components/reset-password-view.tsx:88
+#: src/components/reset-password-view.tsx:60
+#: src/components/reset-password-view.tsx:94
 #: src/components/consent-form.tsx:81
 #: src/components/forms/wizard-card.tsx:93
 msgid "Back"
@@ -204,7 +204,7 @@ msgstr "By clicking <0>Authorize</0>, you will grant this application access to 
 
 #. placeholder {0}: tosLink ? ( <LinkAnchor className="text-primary underline" link={tosLink}> <Trans>Terms of Service</Trans> </LinkAnchor> ) : ( <Trans>Terms of Service</Trans> )
 #. placeholder {1}: ppLink ? ( <LinkAnchor className="text-primary underline" link={ppLink}> <Trans>Privacy Policy</Trans> </LinkAnchor> ) : ( <Trans>Privacy Policy</Trans> )
-#: src/components/sign-up-disclaimer.tsx:30
+#: src/components/sign-up-disclaimer.tsx:27
 msgid "By creating an account you agree to the {0} and the {1} of this service."
 msgstr "By creating an account you agree to the {0} and the {1} of this service."
 
@@ -213,9 +213,9 @@ msgctxt "RPC lxm"
 msgid "Call"
 msgstr "Call"
 
-#: src/contexts/authentication.tsx:181
+#: src/contexts/authentication.tsx:173
 #: src/components/authenticate-welcome-view.tsx:57
-#: src/components/forms/form-card-async.tsx:46
+#: src/components/forms/form-card-async.tsx:44
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -236,7 +236,7 @@ msgid "Chat"
 msgstr "Chat"
 
 #. placeholder {0}: secondFactor.hint
-#: src/components/sign-in-form.tsx:260
+#: src/components/sign-in-form.tsx:261
 msgid "Check your {0} email for a login code and enter it here."
 msgstr "Check your {0} email for a login code and enter it here."
 
@@ -256,7 +256,7 @@ msgstr "Close account selector"
 msgid "Close details"
 msgstr "Close details"
 
-#: src/components/utils/error-card.tsx:60
+#: src/components/utils/error-card.tsx:65
 msgid "Code"
 msgstr "Code"
 
@@ -265,11 +265,11 @@ msgctxt "verb"
 msgid "Confirm"
 msgstr "Confirm"
 
-#: src/components/sign-in-view.tsx:61
+#: src/components/sign-in-view.tsx:58
 msgid "Confirm your password to continue"
 msgstr "Confirm your password to continue"
 
-#: src/components/sign-in-form.tsx:251
+#: src/components/sign-in-form.tsx:252
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
@@ -306,7 +306,7 @@ msgctxt "OAuthConsent"
 msgid "Deny access"
 msgstr "Deny access"
 
-#: src/components/utils/error-card.tsx:67
+#: src/components/utils/error-card.tsx:72
 msgid "Description"
 msgstr "Description"
 
@@ -323,8 +323,8 @@ msgstr "Devices"
 msgid "Email"
 msgstr "Email"
 
-#: src/components/reset-password-request-form.tsx:55
-#: src/components/reset-password-request-form.tsx:60
+#: src/components/reset-password-request-form.tsx:52
+#: src/components/reset-password-request-form.tsx:56
 #: src/components/forms/input-email-address.tsx:51
 msgid "Email address"
 msgstr "Email address"
@@ -333,15 +333,15 @@ msgstr "Email address"
 msgid "Enter a password"
 msgstr "Enter a password"
 
-#: src/components/reset-password-view.tsx:72
+#: src/components/reset-password-view.tsx:78
 msgid "Enter the code you received to reset your password."
 msgstr "Enter the code you received to reset your password."
 
-#: src/components/reset-password-request-form.tsx:70
+#: src/components/reset-password-view.tsx:47
 msgid "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 msgstr "Enter the email you used to create your account. We'll send you a \"reset code\" so you can set a new password."
 
-#: src/components/reset-password-request-form.tsx:58
+#: src/components/reset-password-request-form.tsx:55
 msgid "Enter your email address"
 msgstr "Enter your email address"
 
@@ -349,12 +349,12 @@ msgstr "Enter your email address"
 msgid "Enter your new password"
 msgstr "Enter your new password"
 
-#: src/components/sign-in-view.tsx:81
+#: src/components/sign-in-view.tsx:78
 msgid "Enter your password"
 msgstr "Enter your password"
 
-#: src/components/sign-in-view.tsx:100
-#: src/components/sign-in-view.tsx:118
+#: src/components/sign-in-view.tsx:97
+#: src/components/sign-in-view.tsx:115
 msgid "Enter your username and password"
 msgstr "Enter your username and password"
 
@@ -383,7 +383,7 @@ msgstr "Failed to remove device"
 msgid "Failed to request password reset"
 msgstr "Failed to request password reset"
 
-#: src/data/password.ts:63
+#: src/data/password.ts:64
 msgid "Failed to reset password"
 msgstr "Failed to reset password"
 
@@ -391,11 +391,11 @@ msgstr "Failed to reset password"
 msgid "Failed to revoke access"
 msgstr "Failed to revoke access"
 
-#: src/components/reset-password-view.tsx:44
+#: src/components/reset-password-view.tsx:43
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/sign-in-form.tsx:213
+#: src/components/sign-in-form.tsx:214
 msgid "Forgot?"
 msgstr "Forgot?"
 
@@ -427,7 +427,7 @@ msgstr "Identity"
 msgid "Interface language selector"
 msgstr "Interface language selector"
 
-#: src/components/sign-up-handle-form.tsx:259
+#: src/components/sign-up-handle-form.tsx:254
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -459,7 +459,7 @@ msgctxt "device list"
 msgid "Last seen {lastUsedAgo}"
 msgstr "Last seen {lastUsedAgo}"
 
-#: src/components/reset-password-view.tsx:45
+#: src/components/reset-password-view.tsx:44
 msgid "Let's get your password reset!"
 msgstr "Let's get your password reset!"
 
@@ -519,12 +519,12 @@ msgstr "Moderate"
 msgid "My Atmosphere account"
 msgstr "My Atmosphere account"
 
-#: src/components/reset-password-confirm-form.tsx:59
+#: src/components/reset-password-confirm-form.tsx:60
 msgid "New password"
 msgstr "New password"
 
-#: src/components/reset-password-view.tsx:49
-#: src/components/reset-password-view.tsx:83
+#: src/components/reset-password-view.tsx:55
+#: src/components/reset-password-view.tsx:89
 #: src/components/forms/wizard-card.tsx:96
 msgid "Next"
 msgstr "Next"
@@ -534,7 +534,7 @@ msgctxt "PasswordReset"
 msgid "No email associated with this account. Password reset is unavailable."
 msgstr "No email associated with this account. Password reset is unavailable."
 
-#: src/components/reset-password-view.tsx:109
+#: src/components/reset-password-view.tsx:115
 msgid "Okay"
 msgstr "Okay"
 
@@ -544,7 +544,7 @@ msgstr "Only letters, numbers, and hyphens"
 
 #: src/account-page.tsx:75
 #: src/components/sign-up-account-form.tsx:128
-#: src/components/sign-in-form.tsx:193
+#: src/components/sign-in-form.tsx:194
 #: src/components/forms/input-password.tsx:53
 msgid "Password"
 msgstr "Password"
@@ -553,7 +553,7 @@ msgstr "Password"
 msgid "Password reset email sent"
 msgstr "Password reset email sent"
 
-#: src/data/password.ts:55
+#: src/data/password.ts:56
 msgid "Password reset successful"
 msgstr "Password reset successful"
 
@@ -565,11 +565,11 @@ msgstr "Password strength"
 msgid "Password strength indicator"
 msgstr "Password strength indicator"
 
-#: src/components/reset-password-view.tsx:98
+#: src/components/reset-password-view.tsx:104
 msgid "Password Updated"
 msgstr "Password Updated"
 
-#: src/components/reset-password-view.tsx:103
+#: src/components/reset-password-view.tsx:109
 msgid "Password updated!"
 msgstr "Password updated!"
 
@@ -593,7 +593,7 @@ msgstr "Please authenticate to continue"
 msgid "Please check the email address and try again."
 msgstr "Please check the email address and try again."
 
-#: src/data/password.ts:64
+#: src/data/password.ts:65
 msgid "Please check your reset code and try again."
 msgstr "Please check your reset code and try again."
 
@@ -601,8 +601,8 @@ msgstr "Please check your reset code and try again."
 msgid "Please wait {remainingSeconds} seconds before trying again."
 msgstr "Please wait {remainingSeconds} seconds before trying again."
 
+#: src/components/sign-up-disclaimer.tsx:39
 #: src/components/sign-up-disclaimer.tsx:42
-#: src/components/sign-up-disclaimer.tsx:45
 #: src/components/utils/link-title.tsx:17
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
@@ -623,8 +623,8 @@ msgstr "Read and update your account's email address"
 msgid "Read your account's email address"
 msgstr "Read your account's email address"
 
-#: src/components/sign-in-form.tsx:234
-#: src/components/sign-in-form.tsx:239
+#: src/components/sign-in-form.tsx:235
+#: src/components/sign-in-form.tsx:240
 msgid "Remember this account on this device"
 msgstr "Remember this account on this device"
 
@@ -633,24 +633,21 @@ msgstr "Remember this account on this device"
 msgid "Repository"
 msgstr "Repository"
 
-#: src/components/utils/error-card.tsx:50
-msgid "Reset"
-msgstr "Reset"
-
-#: src/components/reset-password-confirm-form.tsx:45
+#: src/components/reset-password-confirm-form.tsx:46
 msgid "Reset code"
 msgstr "Reset code"
 
-#: src/components/reset-password-view.tsx:70
+#: src/components/reset-password-view.tsx:76
 msgid "Reset Password"
 msgstr "Reset Password"
 
-#: src/components/sign-in-form.tsx:211
+#: src/components/sign-in-form.tsx:212
 msgid "Reset your password"
 msgstr "Reset your password"
 
 #: src/routes/account/devices/page.tsx:29
 #: src/routes/account/apps/page.tsx:30
+#: src/components/utils/error-card.tsx:50
 msgid "Retry"
 msgstr "Retry"
 
@@ -671,7 +668,7 @@ msgstr "Select another account"
 msgid "Select domain"
 msgstr "Select domain"
 
-#: src/components/sign-in-view.tsx:134
+#: src/components/sign-in-view.tsx:131
 msgid "Select from an existing account"
 msgstr "Select from an existing account"
 
@@ -723,7 +720,7 @@ msgstr "Step {currentPosition} of {count}"
 msgid "Strong"
 msgstr "Strong"
 
-#: src/components/forms/form-card-async.tsx:43
+#: src/components/forms/form-card-async.tsx:41
 msgid "Submit"
 msgstr "Submit"
 
@@ -747,8 +744,8 @@ msgstr "Technical details"
 msgid "Temporarily activate or deactivate your account"
 msgstr "Temporarily activate or deactivate your account"
 
+#: src/components/sign-up-disclaimer.tsx:31
 #: src/components/sign-up-disclaimer.tsx:34
-#: src/components/sign-up-disclaimer.tsx:37
 #: src/components/utils/link-title.tsx:18
 msgid "Terms of Service"
 msgstr "Terms of Service"
@@ -856,11 +853,11 @@ msgstr "Upload files"
 msgid "Username or email address"
 msgstr "Username or email address"
 
-#: src/components/sign-up-handle-form.tsx:254
+#: src/components/sign-up-handle-form.tsx:249
 msgid "Valid"
 msgstr "Valid"
 
-#: src/components/sign-in-form.tsx:225
+#: src/components/sign-in-form.tsx:226
 msgid "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 msgstr "Verify the website address before entering your password. Only sign in on sites you recognize and trust."
 
@@ -876,7 +873,7 @@ msgstr "wants to access your <0/> account"
 msgid "wants to uniquely identify you through your <0/> account"
 msgstr "wants to uniquely identify you through your <0/> account"
 
-#: src/components/sign-in-form.tsx:224
+#: src/components/sign-in-form.tsx:225
 msgid "Warning"
 msgstr "Warning"
 
@@ -912,15 +909,16 @@ msgstr "yesterday"
 msgid "You are being redirected..."
 msgstr "You are being redirected..."
 
-#: src/components/sign-up-handle-form.tsx:220
+#: src/components/sign-up-handle-form.tsx:215
 msgid "You can change this username to any domain name you control after your account is set up."
 msgstr "You can change this username to any domain name you control after your account is set up."
 
-#: src/components/reset-password-view.tsx:106
+#: src/data/password.ts:57
+#: src/components/reset-password-view.tsx:112
 msgid "You can now sign in with your new password."
 msgstr "You can now sign in with your new password."
 
-#: src/components/reset-password-view.tsx:76
+#: src/components/reset-password-view.tsx:82
 msgid "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 msgstr "You will receive an email with a \"reset code\". Enter that code here then enter your new password."
 
@@ -936,16 +934,12 @@ msgstr "Your account is signed in on the devices listed below. If your account w
 msgid "Your Atmosphere account is hosted by <0/>."
 msgstr "Your Atmosphere account is hosted by <0/>."
 
-#. placeholder {0}: segment.length ? ( <strong className="text-gray-800 dark:text-gray-200"> {preview} </strong> ) : ( <span aria-hidden className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600" /> )
+#. placeholder {0}: segment.length ? ( <strong className="text-text-default">{preview}</strong> ) : ( <span aria-hidden className="bg-text-light w-24 rounded-md p-2" /> )
 #: src/components/sign-up-handle-form.tsx:203
 msgid "Your full username will be: {0}"
 msgstr "Your full username will be: {0}"
 
-#: src/data/password.ts:56
-msgid "Your password has been reset successfully. You can now sign in with your new password."
-msgstr "Your password has been reset successfully. You can now sign in with your new password."
-
-#: src/components/reset-password-view.tsx:99
+#: src/components/reset-password-view.tsx:105
 msgid "Your password has been updated!"
 msgstr "Your password has been updated!"
 

@@ -30,6 +30,7 @@ export function readEnv() {
     // branding
     lightColor: envStr('PDS_LIGHT_COLOR'),
     darkColor: envStr('PDS_DARK_COLOR'),
+    contrastSaturation: envInt('PDS_CONTRAST_SATURATION'),
     primaryColor: envStr('PDS_PRIMARY_COLOR'),
     primaryColorContrast: envStr('PDS_PRIMARY_COLOR_CONTRAST'),
     primaryColorHue: envInt('PDS_PRIMARY_COLOR_HUE'),

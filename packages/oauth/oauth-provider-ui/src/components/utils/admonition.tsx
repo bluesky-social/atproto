@@ -58,7 +58,7 @@ export function Card({ children, role, className, ...props }: CardProps) {
       className={clsx(
         'border-contrast-25 dark:border-contrast-50 flex items-start space-x-3 rounded-md border py-3 pl-3 pr-4',
         'shadow-contrast-500/20 dark:shadow-contrast-0/50 shadow-md',
-        'text-text-light',
+        'text-gray-900 dark:text-gray-100',
         cardColors[role],
         className,
       )}
@@ -109,6 +109,7 @@ export type AdmonitionProps = Override<
   {
     title?: ReactNode
     action?: ButtonProps
+    append?: ReactNode
   }
 >
 
@@ -116,6 +117,7 @@ export function Admonition({
   role = 'note',
   title,
   action,
+  append,
   children,
   ...props
 }: AdmonitionProps) {
@@ -125,6 +127,7 @@ export function Admonition({
       <Content>
         {title && <Title>{title}</Title>}
         {children && <Text>{children}</Text>}
+        {append}
       </Content>
       {action && <Action {...action} color={buttonColors[role]} />}
     </Card>

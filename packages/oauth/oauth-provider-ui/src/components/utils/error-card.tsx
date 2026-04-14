@@ -7,10 +7,10 @@ import { Admonition } from './admonition.tsx'
 
 export type ErrorCardProps = {
   error: unknown
-  resetErrorBoundary?: () => void
+  reset?: () => void
 }
 
-export function ErrorCard({ error, resetErrorBoundary }: ErrorCardProps) {
+export function ErrorCard({ error, reset }: ErrorCardProps) {
   const [inputCount, setInputCount] = useState(0)
   // Every 5th input will toggle showing the details
   const showDetails = ((inputCount / 5) | 0) % 2 === 1
@@ -45,15 +45,20 @@ export function ErrorCard({ error, resetErrorBoundary }: ErrorCardProps) {
       role="alert"
       title={errorMessage}
       action={
-        process.env.NODE_ENV === 'development' && resetErrorBoundary != null
+        reset != null
           ? {
-              children: <Trans>Reset</Trans>,
-              onClick: resetErrorBoundary,
+              children: <Trans>Retry</Trans>,
+              onClick: (event) => {
+                if (!event.defaultPrevented) {
+                  event.preventDefault()
+                  reset()
+                }
+              },
             }
           : undefined
       }
-    >
-      {showDetails &&
+      append={
+        showDetails &&
         (parsedError instanceof JsonErrorResponse ? (
           <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-2 text-sm">
             <dt className="font-semibold">
@@ -70,7 +75,8 @@ export function ErrorCard({ error, resetErrorBoundary }: ErrorCardProps) {
           </dl>
         ) : (
           <pre className="text-xs">{JSON.stringify(parsedError, null, 2)}</pre>
-        ))}
-    </Admonition>
+        ))
+      }
+    />
   )
 }

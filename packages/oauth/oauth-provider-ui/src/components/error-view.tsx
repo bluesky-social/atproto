@@ -1,23 +1,32 @@
 import { msg } from '@lingui/core/macro'
 import { Override } from '#/lib/util.ts'
 import { LayoutApp, LayoutAppProps } from './layouts/layout-app.tsx'
-import { ErrorCard, ErrorCardProps } from './utils/error-card.tsx'
+import { ErrorCard } from './utils/error-card.tsx'
 
 export type ErrorViewProps = Override<
-  ErrorCardProps,
-  Pick<LayoutAppProps, 'header' | 'title'>
+  LayoutAppProps,
+  {
+    error: unknown
+    reset?: () => void
+    children?: never
+  }
 >
 
 export function ErrorView({
+  // FallbackProps
+  error,
+  reset,
   // LayoutAppProps
   title = msg`An error occurred`,
-  header,
-  // ErrorCardProps
   ...props
 }: ErrorViewProps) {
   return (
-    <LayoutApp title={title} header={header}>
-      <ErrorCard {...props} />
+    <LayoutApp title={title} {...props}>
+      <ErrorCard error={error} reset={reset} />
     </LayoutApp>
   )
+}
+
+export function errorViewRender(props: ErrorViewProps) {
+  return <ErrorView {...props} />
 }

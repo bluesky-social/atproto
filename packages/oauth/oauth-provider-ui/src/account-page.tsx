@@ -14,7 +14,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { StrictMode, useEffect, useMemo, useRef } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from 'react-error-boundary'
-import { ErrorView } from '#/components/error-view.tsx'
+import { errorViewRender } from '#/components/error-view.tsx'
 import { Palette } from '#/components/utils/palette.tsx'
 import { AuthenticationProvider } from '#/contexts/authentication.tsx'
 import { CustomizationProvider } from '#/contexts/customization.tsx'
@@ -111,7 +111,7 @@ createRoot(container).render(
     <CustomizationProvider value={customizationData}>
       <LocaleProvider>
         <NotificationsProvider>
-          <ErrorBoundary fallbackRender={ErrorView}>
+          <ErrorBoundary fallbackRender={errorViewRender}>
             <SessionProvider
               initialSessions={deviceSessions}
               initialSelected={InitialSelectedSession.Only}
@@ -135,40 +135,56 @@ function App() {
   // actions that signal the user is done with the page (like logging out, or
   // explicitly "canceling" the sign-in).
 
+  // @NOTE The VERY EXPERIMENTAL API used here **WILL** change in the future as
+  // it gets specified (or not) in the AT Protocol specification. It MUST NOT be
+  // used in places where security is a concern and is ONLY there for testing
+  // and experimentation purposes. DO NOT USE.
+
   const { session } = useSessionContext()
   const hasSession = useRef(session != null)
 
   const isPopup = initialUrl.searchParams.get('display') === 'popup'
-  const sub = initialUrl.searchParams.get('sub') || undefined
+  const identifier = initialUrl.searchParams.get('login_hint') || undefined
+  const nonce = initialUrl.searchParams.get('nonce') || undefined
+  const callbackUrl = initialUrl.searchParams.get('redirect_uri') || undefined
 
-  const closeWindow = useMemo<undefined | (() => void)>(() => {
-    if (isPopup) {
+  const done = useMemo<undefined | (() => void)>(() => {
+    if (callbackUrl && nonce) {
+      return () => {
+        const url = new URL(callbackUrl)
+        window.location.href = url.toString()
+      }
+    } else if (isPopup) {
       return () => {
         // Due to the various ways this page can be embedded (e.g. webview in a
         // mobile app, a popup in a browser), and the fact that the opener might
         // be on a different origin, we post the message on various targets to
-        // ensure it is received.
-        window.opener?.postMessage({ type: 'done' }, '*')
-        window.postMessage({ type: 'done' }, '*')
+        // ensure it is received. We might want to configure this based on
+        // query params.
+
+        // @NOTE We might want to restrict the targetOrigin based on the client
+        // metadata.
+        window.opener?.postMessage({ nonce, event: 'done' }, '*')
+        window.postMessage({ nonce, event: 'done' }, '*')
         window.close()
       }
     }
-  }, [isPopup])
+  }, [isPopup, callbackUrl, nonce])
 
   useEffect(() => {
     if (session && !hasSession.current) {
       hasSession.current = true
     } else if (!session && hasSession.current) {
       hasSession.current = false
-      closeWindow?.()
+      done?.()
     }
-  }, [session, closeWindow])
+  }, [session, done])
 
   return (
     <AuthenticationProvider
-      forcedIdentifier={sub}
+      forcedIdentifier={identifier}
       disableRemember={isPopup}
-      onCancel={closeWindow}
+      onCancel={done}
     >
       <RouterProvider router={router} />
     </AuthenticationProvider>

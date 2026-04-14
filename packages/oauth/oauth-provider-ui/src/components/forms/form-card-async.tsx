@@ -12,18 +12,16 @@ import { FormCard, FormCardProps } from './form-card.tsx'
 export type { AsyncActionController } from '#/hooks/use-async-action.ts'
 
 export type ErrorRender = (data: { error: Error }) => ReactNode
-export const errorRenderDefault: ErrorRender = ({ error }) => (
-  <ErrorCard error={error} />
-)
 
 export type FormCardAsyncProps = Override<
   Override<
-    Omit<FormCardProps, 'cancel' | 'prepend'>,
+    Omit<FormCardProps, 'cancel'>,
     Pick<UseAsyncActionOptions, 'ref' | 'onLoading' | 'onError'>
   >,
   {
     invalid?: boolean
     disabled?: boolean
+    append?: ReactNode
 
     onSubmit: (signal: AbortSignal) => void | PromiseLike<void>
     submitLabel?: ReactNode
@@ -45,7 +43,7 @@ export function FormCardAsync({
   onCancel = undefined,
   cancelLabel = <Trans>Cancel</Trans>,
 
-  errorRender = errorRenderDefault,
+  errorRender = ({ error }) => <ErrorCard error={error} />,
 
   // UseAsyncActionOptions
   ref,
@@ -55,6 +53,7 @@ export function FormCardAsync({
   // FormCardProps
   children,
   actions,
+  append,
   ...props
 }: FormCardAsyncProps) {
   const { run, loading, error } = useAsyncAction(onSubmit, {
@@ -79,7 +78,7 @@ export function FormCardAsync({
       {...props}
       onSubmit={doSubmit}
       disabled={disabled || loading}
-      prepend={error != null ? errorRender({ error }) : undefined}
+      append={[append, error != null ? errorRender({ error }) : undefined]}
       cancel={onCancel && <Button onClick={onCancel}>{cancelLabel}</Button>}
       actions={
         <>
