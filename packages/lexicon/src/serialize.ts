@@ -32,7 +32,7 @@ export const lexToIpld = (val: LexValue, depth = 0): IpldValue => {
     // Prevent stack overflow on pathologically nested data (e.g. malicious
     // records with thousands of nested arrays/objects). Values beyond this
     // depth are dropped to avoid crashing the process.
-    return undefined
+    return null
   }
   // walk arrays
   if (Array.isArray(val)) {
