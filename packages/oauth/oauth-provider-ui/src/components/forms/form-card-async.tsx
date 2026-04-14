@@ -40,10 +40,10 @@ export function FormCardAsync({
   disabled,
 
   onSubmit,
-  submitLabel,
+  submitLabel = <Trans>Submit</Trans>,
 
   onCancel = undefined,
-  cancelLabel,
+  cancelLabel = <Trans>Cancel</Trans>,
 
   errorRender = errorRenderDefault,
 
@@ -80,13 +80,7 @@ export function FormCardAsync({
       onSubmit={doSubmit}
       disabled={disabled || loading}
       prepend={error != null ? errorRender({ error }) : undefined}
-      cancel={
-        onCancel && (
-          <Button onClick={onCancel}>
-            {cancelLabel || <Trans>Cancel</Trans>}
-          </Button>
-        )
-      }
+      cancel={onCancel && <Button onClick={onCancel}>{cancelLabel}</Button>}
       actions={
         <>
           <Button
@@ -95,7 +89,7 @@ export function FormCardAsync({
             loading={loading}
             disabled={disabled}
           >
-            {submitLabel || <Trans>Submit</Trans>}
+            {submitLabel}
           </Button>
           {actions}
         </>

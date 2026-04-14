@@ -7,7 +7,7 @@ import { Button } from './forms/button.tsx'
 import { FormCard, FormCardProps } from './forms/form-card.tsx'
 import { InputContainer } from './forms/input-container.tsx'
 import { AccountCard } from './utils/account-card.tsx'
-import { accountHandle } from './utils/account-handle.tsx'
+import { getAccountHandle } from './utils/account-handle.tsx'
 
 export type SignInPickerProps = Override<
   Omit<FormCardProps, 'cancel' | 'actions' | 'append'>,
@@ -55,7 +55,7 @@ export function SignInPicker({
         )
       }
     >
-      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+      <p className="text-text-light text-sm font-medium">
         <Trans>Sign in as...</Trans>
       </p>
 
@@ -70,7 +70,7 @@ export function SignInPicker({
 
             onSession(session)
           }}
-          aria-label={t`Sign in as ${session.account.name ?? accountHandle(session.account) ?? session.account.sub}`}
+          aria-label={t`Sign in as ${session.account.name ?? getAccountHandle(session.account) ?? session.account.sub}`}
         />
       ))}
 
@@ -80,9 +80,9 @@ export function SignInPicker({
           onAction={onOther}
           aria-label={t`Login to account that is not listed`}
           append={<CaretRightIcon aria-hidden className="h-4" />}
-          icon={<AtIcon aria-hidden className="h-4 w-6" />}
+          icon={<AtIcon aria-hidden weight="bold" className="h-4 w-6" />}
         >
-          <span className="flex-1 truncate text-slate-700 dark:text-slate-400">
+          <span className="text-text-light flex-1 truncate">
             <Trans>Another account</Trans>
           </span>
         </InputContainer>

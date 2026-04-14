@@ -29,6 +29,14 @@ export function useResetPasswordRequest() {
         description: t`Check your inbox.`,
       })
     },
+    onError(error, _variables, _context) {
+      console.error('Failed to request password reset', error)
+      notify({
+        variant: 'error',
+        title: t`Failed to request password reset`,
+        description: t`Please check the email address and try again.`,
+      })
+    },
   })
 }
 
@@ -46,6 +54,14 @@ export function useResetPasswordConfirm() {
         variant: 'success',
         title: t`Password reset successful`,
         description: t`Your password has been reset successfully. You can now sign in with your new password.`,
+      })
+    },
+    onError(error, _variables, _context) {
+      console.error('Failed to reset password', error)
+      notify({
+        variant: 'error',
+        title: t`Failed to reset password`,
+        description: t`Please check your reset code and try again.`,
       })
     },
   })

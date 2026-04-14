@@ -52,7 +52,7 @@ export function InputNewPassword({
         <>
           <PasswordStrengthMeter password={password} />
           <PasswordStrengthLabel
-            className="grow-1 min-w-max text-xs text-gray-500 dark:text-gray-400"
+            className="grow-1 text-text-light min-w-max text-xs"
             password={password}
           />
         </>

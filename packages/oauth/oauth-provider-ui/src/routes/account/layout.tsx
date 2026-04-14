@@ -9,6 +9,7 @@ import {
   useRouter,
   useRouterState,
 } from '@tanstack/react-router'
+import { clsx } from 'clsx'
 import { FunctionComponent, useEffect, useMemo } from 'react'
 import { LayoutApp } from '#/components/layouts/layout-app.tsx'
 import { AccountSelector } from '#/components/utils/account-selector.tsx'
@@ -81,14 +82,17 @@ function Layout({ path, pages, title }: LayoutProps) {
 
   const pageEntries = useMemo(() => {
     return Object.entries(pages)
-      .filter(([, page]) => !page.hidden)
+      .filter(
+        ([subPath, page]) =>
+          !page.hidden || location.pathname === `${path}${subPath}`,
+      )
       .sort(([, a], [, b]) => {
         if (a.position != null && b.position != null) {
           return a.position - b.position
         }
         return 0
       })
-  }, [pages])
+  }, [pages, location.pathname, path])
 
   const currentPage = useMemo<LayoutPage | null>(() => {
     const currentSubPath = Object.keys(pages).find(
@@ -120,7 +124,18 @@ function Layout({ path, pages, title }: LayoutProps) {
               <Link
                 to={`${path}${subPath}`}
                 key={subPath}
-                className={`flex min-h-12 items-center justify-start whitespace-nowrap rounded-3xl px-4 font-medium text-slate-600 transition-colors hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 md:whitespace-normal dark:text-slate-400 dark:hover:bg-slate-800 [&.active]:bg-slate-100 [&.active]:text-slate-900 dark:[&.active]:bg-slate-800 dark:[&.active]:text-slate-100 ${subPath === '/' && isHome ? 'hidden md:flex' : ''}`}
+                className={clsx(
+                  'flex items-center justify-start',
+                  'min-h-12 px-4',
+                  'rounded-3xl transition-colors',
+                  'whitespace-nowrap font-medium md:whitespace-normal',
+                  'focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
+                  'text-text-default',
+                  'md:text-text-light md:[&.active]:text-text-default',
+                  'hover:bg-slate-100 dark:hover:bg-slate-800',
+                  '[&.active]:bg-slate-100 dark:[&.active]:bg-slate-800',
+                  isHome && subPath === '/' && 'hidden md:flex',
+                )}
                 activeOptions={{ exact: true }}
                 activeProps={{
                   className: 'active',
@@ -136,9 +151,7 @@ function Layout({ path, pages, title }: LayoutProps) {
                   </span>
                 )}
                 <span className="my-1 min-w-0 flex-1">
-                  <span className="block whitespace-pre-wrap md:truncate">
-                    {_(page.title)}
-                  </span>
+                  <span className="block truncate">{_(page.title)}</span>
                   {page.description && (
                     <span className="block whitespace-pre-wrap text-xs md:hidden">
                       {_(page.description)}
@@ -159,13 +172,13 @@ function Layout({ path, pages, title }: LayoutProps) {
               <Link
                 to={path}
                 key="back"
-                className="rounded-full p-2 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 md:hidden dark:text-slate-400 dark:hover:bg-slate-800"
+                className="text-text-light rounded-full p-2 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 md:hidden dark:hover:bg-slate-800"
               >
                 <ArrowLeftIcon className="size-6" />
               </Link>
             )}
             {currentPage?.title && (
-              <h2 className="text-2xl font-light text-slate-900 dark:text-white">
+              <h2 className="text-text-default text-2xl font-light">
                 <title>{_(currentPage.title)}</title>
                 <b>{_(currentPage.title)}</b>
               </h2>

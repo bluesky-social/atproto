@@ -1,5 +1,4 @@
-import { useLingui } from '@lingui/react/macro'
-import { NumpadIcon } from '@phosphor-icons/react'
+import { TicketIcon } from '@phosphor-icons/react'
 import { ChangeEvent, useState } from 'react'
 import { Override } from '#/lib/util.ts'
 import { InputText, InputTextProps } from './input-text.tsx'
@@ -31,14 +30,13 @@ export function InputToken({
   onToken,
 
   // InputTextProps
-  icon = <NumpadIcon className="w-5" />,
+  icon = <TicketIcon className="w-5" weight="bold" />,
   title = example,
   onChange,
   value,
   defaultValue = value,
   ...props
 }: InputTokenProps) {
-  const { t } = useLingui()
   const [token, setToken] = useState<string>(
     typeof defaultValue === 'string' ? defaultValue : '',
   )
@@ -56,7 +54,7 @@ export function InputToken({
       dir="auto"
       icon={icon}
       pattern="^[A-Z2-7]{5}-[A-Z2-7]{5}$"
-      placeholder={t`Looks like ${example}`}
+      placeholder={example}
       title={title}
       value={token}
       onChange={(event: ChangeEvent<HTMLInputElement>) => {

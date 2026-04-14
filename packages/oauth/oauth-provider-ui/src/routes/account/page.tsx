@@ -1,29 +1,34 @@
 import { Trans } from '@lingui/react/macro'
+import { Link } from '@tanstack/react-router'
 import { ReactNode } from 'react'
+import { JSX } from 'react/jsx-runtime'
+import { CustomizationName } from '#/components/customization-name'
 import { AccountOverview } from '#/components/utils/account-overview'
 import { useAuthenticatedSession } from '#/contexts/authentication.tsx'
-import { useCustomizationData } from '#/contexts/customization.tsx'
 
 export function Page(): ReactNode {
   const { account } = useAuthenticatedSession()
-  const { name, logo } = useCustomizationData()
 
   return (
     <div className="flex min-h-full flex-col items-center justify-start gap-4 py-4 md:pt-24">
       <AccountOverview account={account} />
-      <p className="mt-4 text-center text-sm text-slate-600 dark:text-slate-400">
-        <Trans>
-          Your atmosphere account hosted by{' '}
-          {logo && (
-            <img
-              src={logo}
-              alt={name}
-              className="vertical-middle mr-1 inline-block h-3 select-none object-contain"
-            />
-          )}
-          <b>{name}</b>.
-        </Trans>
-      </p>
+      <HostedByParagraph className="text-text-light text-center text-sm" />
     </div>
+  )
+}
+
+function HostedByParagraph(props: JSX.IntrinsicElements['p']): ReactNode {
+  return (
+    <p {...props}>
+      <Trans>
+        Your Atmosphere account is hosted by <CustomizationName />.
+      </Trans>{' '}
+      <Link
+        to="/account/about"
+        className="text-sm text-blue-600 hover:underline"
+      >
+        <Trans>What does this mean?</Trans>
+      </Link>
+    </p>
   )
 }

@@ -1,7 +1,7 @@
 import { msg } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { useState } from 'react'
-import { Button } from '#/components/forms/button.tsx'
+import { Button } from './forms/button.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
 import { ResetPasswordConfirmForm } from './reset-password-confirm-form.tsx'
 import { ResetPasswordRequestForm } from './reset-password-request-form.tsx'
@@ -43,6 +43,13 @@ export function ResetPasswordView({
         title={t`Forgot Password`}
         subtitle={<Trans>Let's get your password reset!</Trans>}
       >
+        <p className="mb-4">
+          <Trans>
+            Enter the email you used to create your account. We'll send you a
+            "reset code" so you can set a new password.
+          </Trans>
+        </p>
+
         <ResetPasswordRequestForm
           emailDefault={emailDefault}
           submitLabel={<Trans>Next</Trans>}
@@ -71,6 +78,13 @@ export function ResetPasswordView({
           <Trans>Enter the code you received to reset your password.</Trans>
         }
       >
+        <p className="mb-4">
+          <Trans>
+            You will receive an email with a "reset code". Enter that code here
+            then enter your new password.
+          </Trans>
+        </p>
+
         <ResetPasswordConfirmForm
           submitLabel={<Trans>Next</Trans>}
           onSubmit={async (data, signal) => {

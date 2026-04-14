@@ -10,7 +10,7 @@ export type ErrorViewProps = Override<
 
 export function ErrorView({
   // LayoutAppProps
-  title = msg`Error`,
+  title = msg`An error occurred`,
   header,
   // ErrorCardProps
   ...props

@@ -2,7 +2,7 @@ import { useLingui } from '@lingui/react/macro'
 import { JSX } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import { Override } from '#/lib/util.ts'
-import { accountHandle } from './account-handle'
+import { getAccountHandle } from './account-handle'
 
 export type AccountNameProps = Override<
   Omit<JSX.IntrinsicElements['span'], 'children'>,
@@ -20,7 +20,7 @@ export function AccountName({
   const { t } = useLingui()
   return (
     <span {...props} aria-label={t`Account name`}>
-      {account.name || accountHandle(account) || account.sub}
+      {account.name || getAccountHandle(account) || account.sub}
     </span>
   )
 }

@@ -49,7 +49,7 @@ export function LayoutTitle({
           'md:px-4 md:py-2',
           'md:text-right',
           'md:dark:border-r md:dark:border-slate-700',
-          'md:bg-slate-100 md:dark:bg-slate-800',
+          'md:bg-contrast-25',
         )}
       >
         <div className="grid grow content-center md:justify-items-end">
@@ -66,7 +66,7 @@ export function LayoutTitle({
           {subtitle && (
             <p
               key="subtitle"
-              className="hidden max-w-xs text-slate-600 md:block dark:text-slate-400"
+              className="text-text-light hidden max-w-xs md:block"
             >
               {subtitle}
             </p>
@@ -76,7 +76,9 @@ export function LayoutTitle({
         <LocaleSelector key="localeSelector" className="mr-auto text-sm" />
       </div>
 
-      <main className="w-full p-6 md:max-w-3xl md:px-12">{children}</main>
+      <main className="w-full p-6 md:max-h-screen md:max-w-3xl md:overflow-y-auto md:px-12">
+        {children}
+      </main>
     </div>
   )
 }

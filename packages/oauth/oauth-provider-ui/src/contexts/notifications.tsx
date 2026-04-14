@@ -3,7 +3,7 @@ import * as ToastBase from '@radix-ui/react-toast'
 import { clsx } from 'clsx'
 import { createContext, useContext, useMemo, useRef, useState } from 'react'
 
-type Variant = 'success' | 'warning' | 'error'
+type Variant = 'success' | 'warning' | 'error' | 'info'
 
 export type NotificationOptions = {
   variant: Variant
@@ -34,16 +34,19 @@ const borderColors: Record<Variant, string> = {
   success: 'border-success-200 dark:border-success-900',
   warning: 'border-warning-200 dark:border-warning-900',
   error: 'border-error-200 dark:border-error-900',
+  info: 'border-info-200 dark:border-info-900',
 }
 const bgColors: Record<Variant, string> = {
   success: 'bg-success-50 dark:bg-success-975',
   warning: 'bg-warning-100 dark:bg-warning-975',
   error: 'bg-error-50 dark:bg-error-975',
+  info: 'bg-info-50 dark:bg-info-975',
 }
 const textColors: Record<Variant, string> = {
   success: 'text-success-900 dark:text-success-400',
   warning: 'text-warning-800 dark:text-warning-400',
   error: 'text-error-800 dark:text-error-50',
+  info: 'text-info-900 dark:text-info-400',
 }
 
 export function NotificationsProvider({

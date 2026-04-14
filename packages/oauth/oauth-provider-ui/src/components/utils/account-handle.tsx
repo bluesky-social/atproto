@@ -1,7 +1,12 @@
+import { ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 
-export function accountHandle(account?: Account): string | undefined {
+export function getAccountHandle(account?: Account): string | undefined {
   return sanitizeHandle(account?.preferred_username)
+}
+
+export function AccountHandle({ account }: { account?: Account }): ReactNode {
+  return getAccountHandle(account)
 }
 
 export function isInvalidHandle(handle: string): boolean {

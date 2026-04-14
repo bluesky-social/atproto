@@ -34,9 +34,9 @@ export function ButtonToggleVisibility({
       aria-label={visible ? t`Hide` : t`Make visible`}
     >
       {visible ? (
-        <EyeIcon className="size-5" aria-hidden />
+        <EyeIcon aria-hidden weight="regular" className="size-5" />
       ) : (
-        <EyeSlashIcon className="size-5" aria-hidden />
+        <EyeSlashIcon aria-hidden weight="regular" className="size-5" />
       )}
     </Button>
   )

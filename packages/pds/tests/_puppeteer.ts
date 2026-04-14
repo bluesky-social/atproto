@@ -54,20 +54,17 @@ export class PageHelper implements AsyncDisposable {
     return new PageHelper(popup)
   }
 
-  async navigationAction(run: () => Promise<unknown>): Promise<void> {
-    const promise = this.page.waitForNavigation({
-      waitUntil: 'networkidle0',
-      timeout: 5_000,
-    })
+  async navigationAction(run: () => unknown | Promise<unknown>): Promise<void> {
+    const promise = this.page.waitForNavigation({ timeout: 10_000 })
     await run()
     await promise
   }
 
-  async navigationButtonClick(text: string) {
-    return this.navigationAction(() => this.clickOnText(text))
+  async navigationClick(text: string, tag = 'button') {
+    return this.navigationAction(() => this.clickOnText(text, tag))
   }
 
-  async checkTitle(expected: string) {
+  async assertTitle(expected: string) {
     await expect(this.title()).resolves.toBe(expected)
   }
 

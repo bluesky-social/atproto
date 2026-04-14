@@ -9,38 +9,15 @@ import {
 } from '#/components/forms/form-card-async.tsx'
 import { InputText } from '#/components/forms/input-text.tsx'
 import { Admonition } from '#/components/utils/admonition.tsx'
+import {
+  MAX_FULL_LENGTH,
+  MAX_LENGTH,
+  MIN_LENGTH,
+  ValidDomain,
+  isValidDomain,
+} from '#/lib/handle'
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
-
-/**
- * Spec limit is 63, but in practice, we've limited it to 18 in our implementations.
- *
- * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
- */
-const MAX_LENGTH = 18
-
-/**
- * Spec limit is 1, but in practice, we've targeted at least 3 characters in handles.
- *
- * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
- */
-const MIN_LENGTH = 3
-
-/**
- * Spec limit is 253, but in practice, we've targeted 30 characters in handles.
- *
- * @see {@link https://atproto.com/specs/handle | ATProto Handle Spec}
- */
-const MAX_FULL_LENGTH = 30
-
-type ValidDomain = `.${string}`
-const isValidDomain = (domain: string): domain is ValidDomain =>
-  // Ignore domains that are so long that they would make the handle smaller
-  // than MIN_LENGTH characters
-  MIN_LENGTH + domain.length <= MAX_FULL_LENGTH &&
-  // Basic validation here
-  domain.startsWith('.') &&
-  !domain.endsWith('.')
 
 function useSegmentValidator(domain: ValidDomain) {
   const minLen = MIN_LENGTH
@@ -156,7 +133,7 @@ export function SignUpHandleForm({
 
       <InputText
         ref={inputRef}
-        icon={<AtIcon className="w-5" />}
+        icon={<AtIcon aria-hidden weight="bold" className="size-5" />}
         name="handle"
         type="text"
         title={t`Type your desired username`}
@@ -195,23 +172,23 @@ export function SignUpHandleForm({
                 inputRef.current?.focus()
               }}
               className={clsx(
-                'block w-full',
-                'text-sm',
-
-                'accent-primary',
-                'cursor-pointer',
-                // Background
-                'bg-gray-100 dark:bg-gray-800',
-                'hover:bg-gray-200 dark:hover:bg-gray-700',
-                // Border
-                'transition duration-300 ease-in-out',
-                'outline-none',
-                'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-                // Font
-                'text-slate-600 dark:text-slate-300',
                 // Layout
+                'block w-full',
                 'rounded-lg',
                 'p-2 pr-1',
+                'text-sm',
+
+                'cursor-pointer',
+                // Transitions
+                'transition duration-300 ease-in-out',
+                // Border
+                'outline-none',
+                'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
+                // Color
+                'accent-primary',
+                'text-text-light',
+                'hover:bg-gray-300 dark:hover:bg-gray-600',
+                'bg-gray-200 dark:bg-gray-700',
               )}
             >
               {domains.map((domain, idx) => (
@@ -226,20 +203,15 @@ export function SignUpHandleForm({
           <Trans>
             Your full username will be:{' '}
             {segment.length ? (
-              <strong className="text-gray-800 dark:text-gray-200">
-                {preview}
-              </strong>
+              <strong className="text-text-default">{preview}</strong>
             ) : (
-              <span
-                aria-hidden
-                className="w-24 rounded-md bg-gray-300 p-2 dark:bg-slate-600"
-              />
+              <span aria-hidden className="bg-text-light w-24 rounded-md p-2" />
             )}
           </Trans>
         }
       />
 
-      <Admonition type="status">
+      <Admonition role="note">
         <Trans>
           You can change this username to any domain name you control after your
           account is set up.

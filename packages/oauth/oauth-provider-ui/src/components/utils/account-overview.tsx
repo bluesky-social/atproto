@@ -23,19 +23,21 @@ export function AccountOverview({
   return (
     <div
       className={clsx(
-        'flex min-h-full max-w-full flex-col items-center justify-start gap-4',
+        'flex min-h-full max-w-full flex-col items-center justify-start gap-1',
         className,
       )}
       {...props}
     >
-      <AccountImage account={account} size="3xl" className="max-w-full" />
-      <AccountName
-        account={account}
-        className="max-w-full truncate text-lg font-medium text-slate-900 dark:text-white"
-      />
+      <AccountImage account={account} size="3xl" className="mb-4 max-w-full" />
+      {account.name && (
+        <AccountName
+          account={account}
+          className="text-text-default max-w-full truncate text-xl font-medium"
+        />
+      )}
       <AccountIdentifier
         account={account}
-        className="text-md max-w-full truncate text-slate-700 dark:text-slate-300"
+        className="text-md text-text-light max-w-full truncate"
       />
     </div>
   )

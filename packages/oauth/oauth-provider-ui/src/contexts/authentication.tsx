@@ -41,8 +41,10 @@ export type AuthenticationProviderProps = {
   children: ReactNode
 }
 
-// @NOTE We do not want to use a router here because we do not want any change
-// in the view to be reflected as a browser navigation.
+/**
+ * Gates the inner content (children) behind an authentication flow. Provides
+ * the authenticated session via context to its children.
+ */
 export function AuthenticationProvider({
   disableRemember = false,
   promptMode,
@@ -104,6 +106,7 @@ export function AuthenticationProvider({
   })
 
   const showHome = () => setView(homeView)
+  const showSignIn = () => setView(View.SignIn)
   const showSignUpIfAllowed = canSignUp ? () => setView(View.SignUp) : undefined
 
   // Fool-proofing
@@ -138,7 +141,7 @@ export function AuthenticationProvider({
     if (view === View.Welcome) {
       return (
         <AuthenticateWelcomeView
-          onSignIn={() => setView(View.SignIn)}
+          onSignIn={showSignIn}
           onSignUp={showSignUpIfAllowed}
           onCancel={onCancel}
         />
@@ -161,7 +164,7 @@ export function AuthenticationProvider({
           emailDefault={resetPasswordHint}
           onResetPasswordRequest={doInitiatePasswordReset}
           onResetPasswordConfirm={doConfirmResetPassword}
-          onBack={showHome}
+          onBack={showSignIn}
         />
       )
     }
@@ -169,7 +172,7 @@ export function AuthenticationProvider({
     return (
       <SignInView
         disableRemember={disableRemember}
-        loginHint={forcedIdentifier}
+        forcedIdentifier={forcedIdentifier}
         sessions={sessions}
         session={session}
         setSession={setSession}

@@ -127,17 +127,13 @@ export function ConsentForm({
           <>
             <p>
               <Trans>
-                This application is requesting the following list of technical
-                permissions, summarized hereafter:
+                This application is requesting the following permissions
+                (scopes) to access your account:
               </Trans>
             </p>
-            <ul className="mt-2">
-              {scope.split(' ').map((scope) => (
-                <li key={scope}>
-                  <code>{scope}</code>
-                </li>
-              ))}
-            </ul>
+            <pre className="bg-light mt-2 overflow-x-auto whitespace-pre-wrap rounded border p-2 text-sm">
+              {scope}
+            </pre>
           </>
         ) : null}
       </DescriptionCard>

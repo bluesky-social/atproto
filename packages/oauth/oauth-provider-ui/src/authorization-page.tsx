@@ -35,15 +35,12 @@ if (
   window.history.replaceState(history.state, '', url.pathname + url.search)
 }
 
-const userLocales =
-  authorizeData.uiLocales?.split(' ') ?? window.navigator.languages
-
 const container = document.getElementById('root')!
 
 createRoot(container).render(
   <StrictMode>
     <CustomizationProvider value={customizationData}>
-      <LocaleProvider userLocales={userLocales}>
+      <LocaleProvider userLocales={authorizeData.uiLocales?.split(' ')}>
         <NotificationsProvider>
           <ErrorBoundary fallbackRender={ErrorView}>
             <SessionProvider

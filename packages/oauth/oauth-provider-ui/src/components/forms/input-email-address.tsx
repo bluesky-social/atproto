@@ -19,7 +19,7 @@ export function InputEmailAddress({
   autoComplete = 'email',
   autoCorrect = 'off',
   dir = 'auto',
-  icon = <AtIcon className="w-5" />,
+  icon = <AtIcon aria-hidden weight="bold" className="w-5" />,
   onBlur,
   onChange,
   pattern = '^[^@]+@[^@]+\\.[^@]+$',

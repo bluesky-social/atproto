@@ -5,7 +5,7 @@ import { Override } from '#/lib/util.ts'
 export type ButtonProps = Override<
   JSX.IntrinsicElements['button'],
   {
-    color?: 'primary' | 'grey' | 'darkGrey' | 'error'
+    color?: 'primary' | 'gray' | 'darkGrey' | 'error' | 'warning' | 'info'
     loading?: boolean
     transparent?: boolean
     shape?: 'padded' | 'rounded' | 'circle'
@@ -38,7 +38,7 @@ const PADDING_SIZES = {
 } as const
 
 export function Button({
-  color = 'grey',
+  color = 'gray',
   transparent = false,
   loading = undefined,
   shape = 'rounded',
@@ -86,28 +86,44 @@ export function Button({
                 : 'bg-primary text-primary-contrast',
             )
           : null,
-        color === 'grey'
+        color === 'gray'
           ? clsx(
+              'text-text-light',
               'accent-primary',
-              'text-slate-600 dark:text-slate-300',
               'hover:bg-gray-200 dark:hover:bg-gray-700',
               transparent ? 'bg-transparent' : 'bg-gray-100 dark:bg-gray-800',
             )
           : undefined,
         color === 'darkGrey'
           ? clsx(
+              'text-text-light',
               'accent-primary',
-              'text-slate-600 dark:text-slate-300',
               'hover:bg-gray-300 dark:hover:bg-gray-600',
               transparent ? 'bg-transparent' : 'bg-gray-200 dark:bg-gray-700',
             )
           : undefined,
         color === 'error'
           ? clsx(
-              'accent-red-100',
+              'accent-error-100',
               transparent
                 ? 'text-error bg-transparent'
-                : 'bg-error text-error-contrast',
+                : 'bg-error-500 dark:bg-error-700 text-error-contrast',
+            )
+          : undefined,
+        color === 'warning'
+          ? clsx(
+              'accent-warning-100',
+              transparent
+                ? 'text-warning bg-transparent'
+                : 'bg-warning-500 dark:bg-warning-700 text-warning-contrast',
+            )
+          : undefined,
+        color === 'info'
+          ? clsx(
+              'accent-info-100',
+              transparent
+                ? 'text-info bg-transparent'
+                : 'bg-info-500 dark:bg-info-700 text-info-contrast',
             )
           : undefined,
         'disabled:opacity-50',

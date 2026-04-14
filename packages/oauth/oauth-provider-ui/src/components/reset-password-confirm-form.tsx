@@ -7,8 +7,6 @@ import {
 import { FormField } from '#/components/forms/form-field'
 import { InputNewPassword } from '#/components/forms/input-new-password.tsx'
 import { InputToken } from '#/components/forms/input-token.tsx'
-import { Admonition } from '#/components/utils/admonition.tsx'
-import { useRandomString } from '#/hooks/use-random-string.ts'
 import { Override } from '#/lib/util.ts'
 
 export type ResetPasswordConfirmFormProps = Override<
@@ -31,7 +29,6 @@ export function ResetPasswordConfirmForm({
   invalid,
   ...props
 }: ResetPasswordConfirmFormProps) {
-  const tokenAriaId = useRandomString({ prefix: 'reset-pwd-email-' })
   const passwordRef = useRef<HTMLInputElement>(null)
 
   const [token, setToken] = useState<string | null>(null)
@@ -45,17 +42,9 @@ export function ResetPasswordConfirmForm({
       }}
       invalid={invalid || !token || !password}
     >
-      <Admonition id={tokenAriaId} type="status">
-        <Trans>
-          You will receive an email with a "reset code". Enter that code here
-          then enter your new password.
-        </Trans>
-      </Admonition>
-
       <FormField label={<Trans>Reset code</Trans>}>
         <InputToken
           name="code"
-          aria-labelledby={tokenAriaId}
           enterKeyHint="next"
           required
           autoFocus={true}

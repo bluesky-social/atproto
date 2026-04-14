@@ -41,7 +41,7 @@ export function FormField({
         <legend
           id={labelId}
           key="title"
-          className="mb-1 text-sm font-medium text-slate-600 dark:text-slate-400"
+          className="text-text-light mb-1 text-sm font-medium"
         >
           {label}
         </legend>

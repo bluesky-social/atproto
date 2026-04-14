@@ -25,7 +25,7 @@ export function AccountSelector(props: AccountSelectorProps): ReactNode {
           aria-label={t`Account selector`}
           shape="circle"
           transparent
-          color="grey"
+          color="gray"
           {...props}
         >
           <AccountImage account={session.account} size={props.size} />

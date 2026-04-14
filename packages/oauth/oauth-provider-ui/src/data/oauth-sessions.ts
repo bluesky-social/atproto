@@ -13,8 +13,10 @@ export function useOAuthSessionsQuery({ sub }: OAuthSessionsInput) {
   const api = useApi()
   return useQuery<ActiveOAuthSession[]>({
     refetchOnWindowFocus: 'always',
-    staleTime: 15e3, // 15s
+    // staleTime: 15e3, // 15s
     queryKey: oauthSessionsQueryKey({ sub }),
+    retry: 0,
+    staleTime: 5e3,
     queryFn: async (options) => {
       return await api.fetch('GET', '/oauth-sessions', { sub }, options)
     },

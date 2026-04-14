@@ -4,7 +4,7 @@ import { useLingui } from '@lingui/react'
 import { ReactNode } from 'react'
 import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LocaleSelector } from '#/locales/locale-selector.tsx'
-import { ExternalLinkTitle } from '../utils/external-link-title.tsx'
+import { LinkAnchor } from '../utils/link-anchor.tsx'
 
 export type LayoutAppProps = {
   children?: ReactNode
@@ -23,7 +23,7 @@ export function LayoutApp({ children, header, title }: LayoutAppProps) {
       <header className="flex items-center justify-between gap-4 p-4">
         {titleString && <title>{titleString}</title>}
         {logo && (
-          <h1 className="flex min-w-0 truncate text-xl font-light text-slate-900 dark:text-white">
+          <h1 className="text-text-default flex min-w-0 truncate text-xl font-light capitalize">
             <img
               src={logo}
               alt={name || _(msg`Logo`)}
@@ -40,23 +40,16 @@ export function LayoutApp({ children, header, title }: LayoutAppProps) {
         {children}
       </div>
 
-      <footer className="flex flex-wrap items-center justify-center gap-4 p-4 text-xs">
-        <LocaleSelector className="text-sm" />
+      <footer className="flex flex-wrap items-center justify-center gap-4 px-6 py-4 text-xs md:px-8">
+        <LocaleSelector className="mr-auto text-sm" />
 
-        <nav className="grow-1 flex flex-wrap items-center justify-center gap-4">
-          {links?.map((link) => (
-            <a
-              href={link.href}
-              className="text-light whitespace-nowrap hover:underline focus:underline focus:outline-none"
-              key={link.href}
-              role="link"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLinkTitle link={link} />
-            </a>
-          ))}
-        </nav>
+        {links?.map((link) => (
+          <LinkAnchor
+            key={link.href}
+            link={link}
+            className="text-text-light hover:underline focus:underline focus:outline-none"
+          />
+        ))}
       </footer>
     </div>
   )

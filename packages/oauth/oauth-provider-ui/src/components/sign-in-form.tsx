@@ -17,6 +17,7 @@ import {
   InvalidCredentialsError,
   SecondAuthenticationFactorRequiredError,
 } from '#/lib/api.ts'
+import { isValidDomain } from '#/lib/handle'
 import { mergeRefs } from '#/lib/ref.ts'
 import { Override } from '#/lib/util.ts'
 
@@ -33,6 +34,7 @@ export type SignInFormProps = Override<
     usernameReadonly?: boolean
     rememberDefault?: boolean
     disableRemember?: boolean
+    domains?: readonly string[]
 
     onBack?: () => void
     backLabel?: ReactNode
@@ -49,6 +51,7 @@ export function SignInForm({
   usernameReadonly = false,
   rememberDefault = false,
   disableRemember = false,
+  domains: availableDomains = [],
 
   onSubmit,
   onBack,
@@ -62,6 +65,7 @@ export function SignInForm({
   ...props
 }: SignInFormProps) {
   const { t } = useLingui()
+  const domains = availableDomains.filter(isValidDomain)
 
   const [username, setUsername] = useState<string>(usernameDefault)
   const [password, setPassword] = useState<string>('')
@@ -147,7 +151,7 @@ export function SignInForm({
     >
       <FormField disabled={loading} label={<Trans>Identifier</Trans>}>
         <InputText
-          icon={<AtIcon className="w-5" />}
+          icon={<AtIcon aria-hidden weight="bold" className="w-5" />}
           name="username"
           type="text"
           title={t`Username or email address`}
@@ -161,10 +165,28 @@ export function SignInForm({
           readOnly={usernameReadonly}
           disabled={usernameReadonly}
           autoFocus={!usernameReadonly}
+          // email, handle (full domain), or DID
+          pattern="([^@]+@[^@]+|[^.@]+(\.[^.@]+)+)|did:[a-z0-9]+:.+"
           value={username}
           onChange={(event) => {
             resetState()
             setUsername(event.target.value)
+          }}
+          onBlur={(event) => {
+            if (usernameReadonly) return
+            let value = event.target.value.trim().toLowerCase()
+            if (value.startsWith('@')) {
+              value = value.slice(1)
+            }
+            if (
+              value.length > 0 &&
+              !value.startsWith('did:') &&
+              !value.includes('@') &&
+              !value.includes('.') &&
+              domains.length > 0
+            ) {
+              setUsername(`${value}${domains[0]}`)
+            }
           }}
         />
       </FormField>
@@ -200,10 +222,10 @@ export function SignInForm({
         />
       </FormField>
 
-      <Admonition role="alert" title={<Trans>Warning</Trans>}>
+      <Admonition role="status" title={<Trans>Warning</Trans>}>
         <Trans>
-          Please verify the domain name of the website before entering your
-          password. Never enter your password on a domain you do not trust.
+          Verify the website address before entering your password. Only sign in
+          on sites you recognize and trust.
         </Trans>
       </Admonition>
 
@@ -235,7 +257,7 @@ export function SignInForm({
               onToken={setOtp}
             />
 
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-text-light text-sm">
               <Trans>
                 Check your {secondFactor.hint} email for a login code and enter
                 it here.

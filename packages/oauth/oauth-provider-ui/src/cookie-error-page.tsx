@@ -2,7 +2,7 @@ import './style.css'
 
 import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
-import { StrictMode, useMemo } from 'react'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Button } from '#/components/forms/button.tsx'
 import { FormCard } from '#/components/forms/form-card.tsx'
@@ -31,7 +31,7 @@ createRoot(container).render(
 )
 
 function CookieErrorView() {
-  const url = useMemo(() => new URL(continueUrl), [continueUrl])
+  const url = new URL(continueUrl)
 
   return (
     <LayoutApp title={msg`Cookie Error`}>
@@ -45,10 +45,10 @@ function CookieErrorView() {
         }
         className="w-xl"
       >
-        {Array.from(url.searchParams).map(([key, value]) => (
+        {Array.from(new Map(url.searchParams)).map(([key, value]) => (
           <input key={key} type="hidden" name={key} value={value} />
         ))}
-        <Admonition>
+        <Admonition role="status">
           <Trans>
             It seems that your browser is not accepting cookies. Press
             "Continue" to try again. If the error persists, please ensure that

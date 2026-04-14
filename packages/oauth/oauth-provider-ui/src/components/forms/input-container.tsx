@@ -37,6 +37,7 @@ export function InputContainer({
   const [hasFocus, setHasFocus] = useState(false)
 
   actionable ??= onAction != null || onClick != null
+  tabIndex ??= actionable ? 0 : -1
 
   return (
     <div
@@ -66,7 +67,7 @@ export function InputContainer({
           onAction?.(event)
         }
       }}
-      tabIndex={tabIndex ?? (actionable ? 0 : -1)}
+      tabIndex={tabIndex}
       role={actionable ? 'button' : undefined}
       className={clsx(
         // Layout
@@ -81,22 +82,23 @@ export function InputContainer({
 
         // Outline
         'outline-none',
-        'focus:ring-primary',
-        'focus:ring-2',
-        'focus:ring-offset-1',
-        'focus:ring-offset-white',
-        'dark:focus:ring-offset-black',
         'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-primary',
         'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-2',
         'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-1',
         'has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-white',
         'dark:has-[input[type="text"]:focus,input[type="password"]:focus]:ring-offset-black',
+        tabIndex !== -1 && [
+          'cursor-pointer',
+          'focus:ring-primary',
+          'focus:ring-2',
+          'focus:ring-offset-1',
+          'focus:ring-offset-white',
+          'dark:focus:ring-offset-black',
+        ],
 
         // Background
         transparent ? 'bg-transparent' : 'bg-gray-100 dark:bg-gray-800',
-        actionable
-          ? 'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700'
-          : undefined,
+        tabIndex !== -1 && 'hover:bg-gray-200 dark:hover:bg-gray-700',
 
         className,
       )}
@@ -112,7 +114,7 @@ export function InputContainer({
           bellow ? 'rounded-bl-none rounded-br-none' : undefined,
 
           // Font
-          'text-slate-600 dark:text-slate-300',
+          'text-text-light',
         )}
       >
         {icon && (
@@ -120,7 +122,7 @@ export function InputContainer({
             className={clsx(
               'flex shrink-0 grow-0 items-center justify-center',
               'mx-2',
-              hasFocus ? 'text-primary' : 'text-slate-500',
+              hasFocus ? 'text-primary' : 'text-inherit',
             )}
           >
             {icon}
@@ -142,7 +144,7 @@ export function InputContainer({
             // Background
             'bg-gray-200 dark:bg-slate-700',
             // Font
-            'text-gray-700 dark:text-gray-300',
+            'text-text-light',
             'text-sm italic',
           )}
         >

@@ -68,6 +68,22 @@ export function Palette() {
       </div>
 
       <div className="flex items-center justify-center">
+        <div className="bg-info-25 p-5" />
+        <div className="bg-info-50 p-5" />
+        <div className="bg-info-100 p-5" />
+        <div className="bg-info-200 p-5" />
+        <div className="bg-info-300 p-5" />
+        <div className="bg-info-400 p-5" />
+        <div className="bg-info-500 p-5" />
+        <div className="bg-info-600 p-5" />
+        <div className="bg-info-700 p-5" />
+        <div className="bg-info-800 p-5" />
+        <div className="bg-info-900 p-5" />
+        <div className="bg-info-950 p-5" />
+        <div className="bg-info-975 p-5" />
+      </div>
+
+      <div className="flex items-center justify-center">
         <div className="bg-success-25 p-5" />
         <div className="bg-success-50 p-5" />
         <div className="bg-success-100 p-5" />

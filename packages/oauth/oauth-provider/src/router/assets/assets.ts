@@ -93,10 +93,7 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
     return writeHtml(
       res,
       mergeDefaults<WriteHtmlOptions>(defaults, options, {
-        bodyAttrs: {
-          class:
-            'bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100',
-        },
+        bodyAttrs: { class: 'text-text-default bg-contrast-0' },
         csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
         coep: options?.coep ?? CrossOriginEmbedderPolicy.credentialless,
         meta: [{ name: 'robots', content: 'noindex' }],

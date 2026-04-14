@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { Account } from '@atproto/oauth-provider-api'
 import type { Override } from '#/lib/util'
 import { InputContainer, InputContainerProps } from '../forms/input-container'
@@ -10,15 +9,15 @@ export type AccountCardProps = Override<
   InputContainerProps,
   {
     account: Account
-    icon?: ReactNode
+    icon?: never
   }
 >
 
-export function AccountCard({ account, icon, ...props }: AccountCardProps) {
+export function AccountCard({ account, ...props }: AccountCardProps) {
   return (
     <InputContainer
       key={account.sub}
-      icon={icon ?? <AccountImage account={account} />}
+      icon={<AccountImage account={account} />}
       {...props}
     >
       <div className="min-w-0 flex-1">

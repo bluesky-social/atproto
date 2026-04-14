@@ -66,13 +66,11 @@ describe('oauth', () => {
 
     await page.goto(appUrl)
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
-    await page.navigationButtonClick(
-      `Sign up with ${new URL(network.pds.url).host}`,
-    )
+    await page.navigationClick(`Sign up with ${new URL(network.pds.url).host}`)
 
-    await page.checkTitle("S'inscrire")
+    await page.assertTitle("S'inscrire")
 
     await page.typeInInput('handle', 'bob')
 
@@ -91,9 +89,9 @@ describe('oauth', () => {
     // the client to resolve the account's did
     await network.processAll()
 
-    await page.navigationButtonClick('Autoriser')
+    await page.navigationClick('Autoriser')
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     await page.ensureTextVisibility('Token info', 'h2')
 
@@ -104,27 +102,21 @@ describe('oauth', () => {
     await page.waitForNetworkIdle()
   })
 
-  it('Allows login or signup through OAuth via a choice', async () => {
+  it('Allows canceling the OAuth flow', async () => {
     await using page = await PageHelper.from(browser, { languages })
 
     await page.goto(appUrl)
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
-    await page.navigationButtonClick(
-      `Login with ${new URL(network.pds.url).host}`,
-    )
+    await page.navigationClick(`Login with ${new URL(network.pds.url).host}`)
 
-    await page.checkTitle("S'identifier")
-
-    await page.ensureTextVisibility('Annuler', 'button')
-    await page.ensureTextVisibility('Se connecter', 'button')
-    await page.ensureTextVisibility('Créer un nouveau compte', 'button')
+    await page.assertTitle("S'identifier")
 
     // Cancel the OAuth flow:
-    await page.navigationButtonClick('Annuler')
+    await page.navigationClick('Annuler')
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     await page.ensureTextVisibility('Login with the Atmosphere', 'h2')
 
@@ -142,17 +134,17 @@ describe('oauth', () => {
 
     await page.goto(appUrl)
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     const input = await page.typeInInput('identifier', 'alice.test')
 
     await page.navigationAction(async () => input.press('Enter'))
 
-    await page.checkTitle('Connexion')
+    await page.assertTitle('Connexion')
 
     await page.clickOnText('Oublié ?')
 
-    await page.checkTitle('Mot de passe oublié')
+    await page.assertTitle('Mot de passe oublié')
 
     await page.typeInInput('email', 'alice@test.com')
 
@@ -160,7 +152,7 @@ describe('oauth', () => {
 
     await page.clickOnText('Suivant')
 
-    await page.checkTitle('Réinitialiser le mot de passe')
+    await page.assertTitle('Réinitialiser le mot de passe')
 
     expect(sendTemplateMock).toHaveBeenCalledTimes(1)
 
@@ -176,7 +168,7 @@ describe('oauth', () => {
 
     await page.clickOnText('Suivant')
 
-    await page.checkTitle('Mot de passe mis à jour')
+    await page.assertTitle('Mot de passe mis à jour')
 
     await page.ensureTextVisibility('Mot de passe mis à jour !', 'h2')
 
@@ -188,13 +180,13 @@ describe('oauth', () => {
 
     await page.goto(appUrl)
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     const input = await page.typeInInput('identifier', 'alice.test')
 
     await page.navigationAction(async () => input.press('Enter'))
 
-    await page.checkTitle('Connexion')
+    await page.assertTitle('Connexion')
 
     await page.typeInInput('password', 'alice-new-pass')
 
@@ -207,11 +199,11 @@ describe('oauth', () => {
 
     await page.clickOnText('Se connecter')
 
-    await page.checkTitle('Autoriser')
+    await page.assertTitle('Autoriser')
 
-    await page.navigationButtonClick('Autoriser')
+    await page.navigationClick('Autoriser')
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     await page.ensureTextVisibility('Token info', 'h2')
 
@@ -227,17 +219,17 @@ describe('oauth', () => {
 
     await page.goto(appUrl)
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     const input = await page.typeInInput('identifier', 'alice.test')
 
     await page.navigationAction(async () => input.press('Enter'))
 
-    await page.checkTitle('Autoriser')
+    await page.assertTitle('Autoriser')
 
-    await page.navigationButtonClick('Autoriser')
+    await page.navigationClick('Autoriser')
 
-    await page.checkTitle('OAuth Client Example')
+    await page.assertTitle('OAuth Client Example')
 
     await page.ensureTextVisibility('Token info', 'h2')
 

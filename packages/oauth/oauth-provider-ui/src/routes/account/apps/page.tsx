@@ -14,44 +14,60 @@ import { useOAuthClientIdentifier } from '#/hooks/use-oauth-client-identifier.ts
 import { useOauthClientName } from '#/hooks/use-oauth-client-name.ts'
 
 export function Page() {
+  const { t } = useLingui()
   const { account } = useAuthenticatedSession()
   const { sub } = account
-  const { data, error, isLoading } = useOAuthSessionsQuery({ sub })
+  const { data, isLoading, refetch } = useOAuthSessionsQuery({ sub })
 
-  return (
-    <div className="space-y-4">
+  if (!data) {
+    if (isLoading) {
+      return <CircularProgress className="text-primary" size={28} />
+    }
+
+    return (
+      <Admonition
+        role="status"
+        action={{ children: t`Retry`, onClick: () => refetch() }}
+      >
+        <Trans>Failed to load connected apps</Trans>
+      </Admonition>
+    )
+  }
+
+  return data.length > 0 ? (
+    <div className="space-y-2">
       <p>
         <Trans>
-          This is a list of all the applications you have authorized to access
-          your account.
+          These apps have access to your account. An app may appear multiple
+          times if you use it on different devices. You can revoke access to log
+          out the app until you sign in again.
         </Trans>
       </p>
 
-      {isLoading ? (
-        <CircularProgress className="text-primary" size={28} />
-      ) : error || !data ? (
-        <Admonition type="alert">
-          <Trans>Failed to load connected apps</Trans>
-        </Admonition>
-      ) : data.length > 0 ? (
-        <div className="space-y-2">
-          {data.map((session) => (
-            <ApplicationSessionCard
-              key={session.tokenId}
-              sub={sub}
-              session={session}
-            />
-          ))}
-        </div>
-      ) : (
-        <Admonition type="status" title={<Trans>No connected apps</Trans>}>
-          <Trans>
-            It appears that you haven’t used this account to sign in to any apps
-            yet.
-          </Trans>
-        </Admonition>
-      )}
+      {data.map((session) => (
+        <ApplicationSessionCard
+          key={session.tokenId}
+          sub={sub}
+          session={session}
+        />
+      ))}
+
+      <p className="text-text-light mt-4 text-sm">
+        <Trans>
+          Apps may access your account in the background (to check
+          notifications, sync data, etc.) even when you're not actively using
+          them. This is normal behavior and will update the "last accessed" time
+          shown above.
+        </Trans>
+      </p>
     </div>
+  ) : (
+    <p>
+      <Trans>
+        It appears that you haven’t used this account to sign in to any apps
+        yet.
+      </Trans>
+    </p>
   )
 }
 
@@ -107,12 +123,8 @@ function ApplicationSessionCard({
     <div className="border-contrast-50 dark:border-contrast-100 flex flex-wrap items-center justify-between space-x-4 border-t px-2 pt-3">
       <div className="flex min-w-36 flex-1 flex-col space-x-2 truncate">
         <p className="truncate font-semibold">{clientName}</p>
-        <p className="font-mono text-xs"> {friendlyClientId}</p>
-        <p className="text-text-light truncate text-sm">
-          <Trans context="OAuthApp">
-            Last accessed <DateAgo date={updatedAt} />
-          </Trans>
-          {' • '}
+        <p className="font-mono text-xs">{friendlyClientId}</p>
+        <p className="text-text-light truncate text-xs">
           <Trans context="OAuthApp">
             Authorized on{' '}
             {i18n.date(createdAt, {
@@ -120,6 +132,10 @@ function ApplicationSessionCard({
               month: 'short',
               day: 'numeric',
             })}
+          </Trans>
+          {' • '}
+          <Trans context="OAuthApp">
+            Last accessed <DateAgo date={updatedAt} />
           </Trans>
         </p>
       </div>

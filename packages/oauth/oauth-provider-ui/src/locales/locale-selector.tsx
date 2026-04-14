@@ -29,9 +29,9 @@ export function LocaleSelector({
         'transition duration-300 ease-in-out',
         'outline-none',
         'focus:ring-primary focus:ring-2 focus:ring-offset-1 focus:ring-offset-white dark:focus:ring-offset-black',
-        'border border-gray-300 dark:border-gray-600',
+        'border-contrast-300 border',
         // Font
-        'text-slate-600 dark:text-slate-300',
+        'text-text-default',
         // Layout
         'rounded-full',
         'px-2 py-1',

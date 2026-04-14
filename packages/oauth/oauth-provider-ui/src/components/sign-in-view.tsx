@@ -2,6 +2,7 @@ import { msg } from '@lingui/core/macro'
 import { Trans } from '@lingui/react/macro'
 import { ReactNode, useCallback, useEffect, useState } from 'react'
 import type { Session } from '@atproto/oauth-provider-api'
+import { useCustomizationData } from '#/contexts/customization.tsx'
 import { LayoutTitle } from './layouts/layout-title.tsx'
 import { SignInForm, SignInFormOutput } from './sign-in-form.tsx'
 import { SignInPicker } from './sign-in-picker.tsx'
@@ -11,7 +12,7 @@ export type SignInViewProps = {
   sessions: readonly Session[]
   session: Session | null
   setSession: (session: Session | null) => void
-  loginHint?: string
+  forcedIdentifier?: string
 
   onSignIn: (
     credentials: SignInFormOutput,
@@ -25,7 +26,7 @@ export type SignInViewProps = {
 
 export function SignInView({
   disableRemember,
-  loginHint,
+  forcedIdentifier,
   sessions,
   session,
   setSession,
@@ -37,6 +38,7 @@ export function SignInView({
   backLabel,
 }: SignInViewProps) {
   const clearSession = useCallback(() => setSession(null), [setSession])
+  const { availableUserDomains = [] } = useCustomizationData()
 
   const [showSignInForm, setShowSignInForm] = useState(sessions.length === 0)
 
@@ -50,15 +52,13 @@ export function SignInView({
   }, [session])
 
   if (session) {
-    // All set (parent view will handle the redirect)
-    if (!session.loginRequired) return null
-
     return (
       <LayoutTitle
         title={title}
         subtitle={<Trans>Confirm your password to continue</Trans>}
       >
         <SignInForm
+          domains={availableUserDomains}
           disableRemember={disableRemember}
           onSubmit={onSignIn}
           onForgotPassword={onForgotPassword}
@@ -73,16 +73,17 @@ export function SignInView({
     )
   }
 
-  if (loginHint) {
+  if (forcedIdentifier) {
     return (
       <LayoutTitle title={title} subtitle={<Trans>Enter your password</Trans>}>
         <SignInForm
+          domains={availableUserDomains}
           disableRemember={disableRemember}
           onSubmit={onSignIn}
           onForgotPassword={onForgotPassword}
           onBack={onBack}
           backLabel={backLabel}
-          usernameDefault={loginHint}
+          usernameDefault={forcedIdentifier}
           usernameReadonly={true}
         />
       </LayoutTitle>
@@ -96,6 +97,7 @@ export function SignInView({
         subtitle={<Trans>Enter your username and password</Trans>}
       >
         <SignInForm
+          domains={availableUserDomains}
           disableRemember={disableRemember}
           onSubmit={onSignIn}
           onForgotPassword={onForgotPassword}
@@ -113,6 +115,7 @@ export function SignInView({
         subtitle={<Trans>Enter your username and password</Trans>}
       >
         <SignInForm
+          domains={availableUserDomains}
           disableRemember={disableRemember}
           onSubmit={onSignIn}
           onForgotPassword={onForgotPassword}

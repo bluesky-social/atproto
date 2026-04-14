@@ -3,6 +3,7 @@ import { clsx } from 'clsx'
 import { JSX } from 'react'
 import type { LinkDefinition } from '@atproto/oauth-provider-api'
 import { Override } from '#/lib/util.ts'
+import { LinkAnchor } from './link-anchor'
 
 export type HelpCardProps = Override<
   Omit<JSX.IntrinsicElements['p'], 'children'>,
@@ -25,21 +26,15 @@ export function HelpCard({
     <p
       {...props}
       className={clsx(
-        'rounded-md bg-slate-100 p-3 text-sm text-slate-800 dark:bg-slate-800 dark:text-slate-400',
+        'text-text-default rounded-md bg-slate-100 p-3 text-sm dark:bg-slate-800',
         className,
       )}
     >
       <Trans>
         Having trouble?{' '}
-        <a
-          role="link"
-          href={helpLink.href}
-          rel={helpLink.rel}
-          target="_blank"
-          className="text-primary"
-        >
+        <LinkAnchor link={helpLink} className="text-primary underline">
           <Trans>Contact support</Trans>
-        </a>
+        </LinkAnchor>
       </Trans>
     </p>
   )

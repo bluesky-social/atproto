@@ -6,7 +6,8 @@ import {
   GlobeIcon,
   HouseSimpleIcon,
   KeyIcon,
-  ShieldIcon,
+  PaintBucketIcon,
+  QuestionIcon,
 } from '@phosphor-icons/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
@@ -25,6 +26,7 @@ import {
 } from '#/contexts/session.tsx'
 import type { HydrationData } from '#/hydration-data.d.ts'
 import { LocaleProvider } from '#/locales/locale-provider.tsx'
+import { Page as AccountAboutPage } from '#/routes/account/about/page.tsx'
 import { Page as AccountOAuthPage } from '#/routes/account/apps/page'
 import { Page as AccountDevicesPage } from '#/routes/account/devices/page.tsx'
 import { createLayoutRoute } from '#/routes/account/layout.tsx'
@@ -45,7 +47,7 @@ const childRoutes = createLayoutRoute({
   getParentRoute: () => RootRoute,
 
   path: '/account',
-  title: msg`My Account`,
+  title: msg`My Atmosphere account`,
   pages: {
     '/': {
       icon: HouseSimpleIcon,
@@ -53,19 +55,19 @@ const childRoutes = createLayoutRoute({
       title: msg`Account`,
       component: AccountIndexPage,
     },
-    '/apps': {
-      icon: GlobeIcon,
-      position: 10,
-      title: msg`Applications`,
-      description: msg`Manage applications that have access to your account`,
-      component: AccountOAuthPage,
-    },
     '/devices': {
       icon: DevicesIcon,
-      position: 20,
+      position: 10,
       title: msg`Devices`,
       description: msg`Manage your active sessions`,
       component: AccountDevicesPage,
+    },
+    '/apps': {
+      icon: GlobeIcon,
+      position: 20,
+      title: msg`Apps`,
+      description: msg`Manage applications that have access to your account`,
+      component: AccountOAuthPage,
     },
     '/password': {
       icon: KeyIcon,
@@ -75,11 +77,18 @@ const childRoutes = createLayoutRoute({
       component: AccountPasswordPage,
     },
     '/branding': {
-      icon: ShieldIcon,
+      icon: PaintBucketIcon,
       hidden: true,
       position: 40,
       title: msg`Branding`,
       component: Palette,
+    },
+    '/about': {
+      icon: QuestionIcon,
+      position: 50,
+      title: msg`About`,
+      component: AccountAboutPage,
+      description: msg`What is an Atmosphere Account?`,
     },
   },
 })
@@ -100,7 +109,7 @@ const container = document.getElementById('root')!
 createRoot(container).render(
   <StrictMode>
     <CustomizationProvider value={customizationData}>
-      <LocaleProvider userLocales={window.navigator.languages}>
+      <LocaleProvider>
         <NotificationsProvider>
           <ErrorBoundary fallbackRender={ErrorView}>
             <SessionProvider

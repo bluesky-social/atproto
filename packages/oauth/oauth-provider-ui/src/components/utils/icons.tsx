@@ -11,7 +11,7 @@ export type IconProps = Override<
   }
 >
 
-const makeSvgComponent = (path: string, displayName: string) => {
+export function makeSvgComponent(path: string, displayName?: string) {
   const SvgComponent: FunctionComponent<IconProps> = forwardRef(
     ({ title, ...props }, ref) => (
       <svg
@@ -31,7 +31,7 @@ const makeSvgComponent = (path: string, displayName: string) => {
       </svg>
     ),
   )
-  SvgComponent.displayName = displayName
+  if (displayName) SvgComponent.displayName = displayName
   return SvgComponent
 }
 

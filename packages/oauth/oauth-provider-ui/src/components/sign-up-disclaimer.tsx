@@ -23,10 +23,7 @@ export function SignUpDisclaimer({
   const ppLink = links?.find((l) => l.rel === 'privacy-policy')
 
   return (
-    <p
-      className={clsx('text-sm text-slate-500 dark:text-slate-400', className)}
-      {...attrs}
-    >
+    <p className={clsx('text-text-light text-sm', className)} {...attrs}>
       <Trans>
         By creating an account you agree to the{' '}
         {tosLink ? (

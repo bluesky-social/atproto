@@ -102,7 +102,7 @@ export function WizardCard<TDone extends DoneFn>({
 
   return (
     <div className={clsx(className, 'flex flex-col')} {...props}>
-      <p className="text-slate-500 dark:text-slate-400">
+      <p className="text-contrast-500">
         <Trans>
           Step {currentPosition} of {count}
         </Trans>
