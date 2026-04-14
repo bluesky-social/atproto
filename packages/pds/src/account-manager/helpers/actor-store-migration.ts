@@ -114,7 +114,7 @@ export class ActorStoreMigrator {
           migrateOnOpen: false,
         })
         try {
-          // Calling migrateToLatestOrThrow expliticly lets us skip the concurrency limits and the early-exit if the db is already migrated
+          // Calling migrateToLatestOrThrow explicitly lets us skip the concurrency limits and the early-exit if the db is already migrated
           // The latter is important in the case where the actor store and account db are out-of-sync.
           await getMigrator(actorDb).migrateToLatestOrThrow()
         } finally {
@@ -144,7 +144,7 @@ export class ActorStoreMigrator {
         if (this.throwOnError) {
           throw e
         }
-        await wait(1000) // avoid tight error loops
+        await wait(5000) // avoid tight error loops
       }
     }
   }
