@@ -105,8 +105,8 @@ export function assertDidString<I>(input: I): asserts input is I & DidString {
     throw new InvalidDidError('DID is too long (2048 chars max)')
   }
 
-  if (input.endsWith(':')) {
-    throw new InvalidDidError('DID can not end with ":"')
+  if (input.endsWith(':') || input.endsWith('%')) {
+    throw new InvalidDidError('DID can not end with ":" or "%"')
   }
 
   // check that all chars are boring ASCII

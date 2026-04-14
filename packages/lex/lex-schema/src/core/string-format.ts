@@ -88,14 +88,6 @@ export {
   ifAtUriString,
   isAtUriString,
 } from '@atproto/syntax'
-export type {
-  /**
-   * A handle string - a human-readable identifier for users.
-   *
-   * @example `"alice.bsky.social"` or `"bob.example.com"`
-   */
-  HandleString,
-}
 
 /**
  * Lenient version of {@link isAtUriString} that does not enforce the validity
@@ -130,6 +122,14 @@ export type CidString = string
  * @returns `true` if the value is a valid handle string
  */
 export const isHandleString: CheckFn<HandleString> = isValidHandle
+export type {
+  /**
+   * A handle string - a human-readable identifier for users.
+   *
+   * @example `"alice.bsky.social"` or `"bob.example.com"`
+   */
+  HandleString,
+}
 
 /**
  * Type guard that checks if a value is a valid BCP-47 language tag.
