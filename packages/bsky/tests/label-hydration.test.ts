@@ -18,7 +18,7 @@ describe('label hydration', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_label_hydration',
     })
-    pdsAgent = network.pds.getClient()
+    pdsAgent = network.pds.getAgent()
     sc = network.getSeedClient()
     await basicSeed(sc)
     alice = sc.dids.alice

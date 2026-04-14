@@ -47,7 +47,7 @@ export interface SchemaInternals<out TInput = unknown, out TOutput = TInput> {
  * - **Assertion methods**: `assert()`, `check()` - throw on invalid input
  * - **Type guard methods**: `matches()`, `ifMatches()` - return boolean or optional value
  * - **Parse methods**: `parse()`, `safeParse()` - allow value transformation/coercion
- * - **Validate methods**: `validate()`, `safeValidate()` - strict validation without coercion
+ * - **Validate methods**: `validate()`, `safeValidate()` - validation without coercion
  *
  * All methods are also available with a `$` prefix (e.g., `$parse()`, `$validate()`)
  * for consistent access in generated lexicon namespaces.
@@ -120,8 +120,11 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    * will typically arise in generic contexts, where the narrowed type is not
    * needed.
    */
-  assert(input: unknown): asserts input is InferInput<this> {
-    const result = ValidationContext.validate(input, this)
+  assert(
+    input: unknown,
+    options?: ValidateOptions,
+  ): asserts input is InferInput<this> {
+    const result = this.safeValidate(input, options)
     if (!result.success) throw result.reason
   }
 
@@ -131,8 +134,8 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    * every name in the call target to be declared with an explicit type
    * annotation. ts(2775)_" errors.
    */
-  check(input: unknown): void {
-    this.assert(input)
+  check(input: unknown, options?: ValidateOptions): void {
+    this.assert(input, options)
   }
 
   /**
@@ -140,17 +143,14 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    * schema, otherwise throws. This is the same as calling {@link parse}() with
    * `mode: "validate"`.
    */
-  cast<I>(input: I): I & InferInput<this> {
-    const result = ValidationContext.validate(input, this)
+  cast<I>(input: I, options?: ValidateOptions): I & InferInput<this> {
+    const result = this.safeValidate(input, options)
     if (result.success) return result.value
     throw result.reason
   }
 
   /**
    * Type guard that checks if the input matches this schema.
-   *
-   * @param input - The value to check
-   * @returns `true` if the input is valid according to this schema
    *
    * @example
    * ```typescript
@@ -160,8 +160,11 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    * }
    * ```
    */
-  matches<I>(input: I): input is I & InferInput<this> {
-    const result = ValidationContext.validate(input, this)
+  matches<I>(
+    input: I,
+    options?: ValidateOptions,
+  ): input is I & InferInput<this> {
+    const result = this.safeValidate(input, options)
     return result.success
   }
 
@@ -170,9 +173,6 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    *
    * This is useful for optional filtering operations where you want to
    * conditionally extract values that match a schema.
-   *
-   * @param input - The value to check
-   * @returns The input value with narrowed type if valid, otherwise `undefined`
    *
    * @example
    * ```typescript
@@ -183,8 +183,11 @@ export abstract class Schema<out TInput = unknown, out TOutput = TInput>
    * }
    * ```
    */
-  ifMatches<I>(input: I): (I & InferInput<this>) | undefined {
-    return this.matches(input) ? input : undefined
+  ifMatches<I>(
+    input: I,
+    options?: ValidateOptions,
+  ): (I & InferInput<this>) | undefined {
+    return this.matches(input, options) ? input : undefined
   }
 
   /**

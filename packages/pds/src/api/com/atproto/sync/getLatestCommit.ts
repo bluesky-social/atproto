@@ -1,11 +1,11 @@
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { isUserOrAdmin } from '../../../../auth-verifier'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 import { assertRepoAvailability } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.sync.getLatestCommit({
+  server.add(com.atproto.sync.getLatestCommit, {
     auth: ctx.authVerifier.authorizationOrAdminTokenOptional({
       authorize: () => {
         // always allow
@@ -25,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         )
       }
       return {
-        encoding: 'application/json',
+        encoding: 'application/json' as const,
         body: { cid: root.cid.toString(), rev: root.rev },
       }
     },

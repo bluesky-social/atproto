@@ -113,7 +113,10 @@ export function decodeQueryParam(
   }
 }
 
-export function getSearchParams(url?: string): URLSearchParams | undefined {
+function getSearchParams(
+  url?: string,
+  opts?: { parseLoose?: boolean },
+): URLSearchParams | undefined {
   if (!url) return undefined
 
   const queryStringIdx = url.indexOf('?')
@@ -122,17 +125,46 @@ export function getSearchParams(url?: string): URLSearchParams | undefined {
   const queryString = url.slice(queryStringIdx + 1)
   if (queryString.length === 0) return undefined
 
-  return new URLSearchParams(queryString)
+  const urlSearchParams = new URLSearchParams(queryString)
+
+  if (opts?.parseLoose) {
+    // @NOTE this is non-standard and should only be used for limited backwards-compatibility purposes.
+    // Converts "foo[]=bar&foo[0]=baz" syntax into "foo=bar&foo=baz"
+
+    // We cannot "delete()" while iterating. SO we'll first collect all keys
+    // that need to be changed, then apply the changes after
+    const toAppend = new URLSearchParams()
+    const toDelete = new Set<string>()
+
+    for (const [key, value] of urlSearchParams) {
+      const match = key.endsWith(']') ? key.match(/^([^[]*)\[\d*\]$/) : null
+      if (match) {
+        toAppend.append(match[1], value)
+        toDelete.add(key)
+      }
+    }
+
+    for (const key of toDelete) {
+      urlSearchParams.delete(key)
+    }
+
+    for (const [key, value] of toAppend) {
+      urlSearchParams.append(key, value)
+    }
+  }
+
+  return urlSearchParams
 }
 
 export function getQueryParams(
   req: IncomingMessage | ExpressRequest,
+  opts?: { parseLoose?: boolean },
 ): UndecodedParams {
   if ('query' in req) return req.query
 
   const result: UndecodedParams = Object.create(null)
 
-  const searchParams = getSearchParams(req.url)
+  const searchParams = getSearchParams(req.url, opts)
   if (!searchParams) return result
 
   if (searchParams.has('__proto__')) {
@@ -161,27 +193,35 @@ export function createLexiconParamsVerifier<P extends Params = Params>(
     const params = decodeQueryParams(def, queryParams)
     try {
       return lexicons.assertValidXrpcParams(nsid, params) as P
-    } catch (e) {
+    } catch (cause) {
       // @NOTE WE historically did not check for specific error types here,
-      throw new InvalidRequestError(String(e))
+      throw new InvalidRequestError(String(cause), undefined, { cause })
     }
   }
 }
 
 export function createSchemaParamsVerifier<
   M extends l.Procedure | l.Query | l.Subscription,
->(ns: l.Main<M>): ParamsVerifierInternal<LexMethodParams<M>> {
+>(
+  ns: l.Main<M>,
+  options?: RouteOptions,
+): ParamsVerifierInternal<LexMethodParams<M>> {
   const schema = l.getMain(ns)
+  const queryOpts = { parseLoose: options?.paramsParseLoose }
   return (req) => {
-    const urlSearchParams = getSearchParams(req.url) ?? new URLSearchParams()
+    const urlSearchParams =
+      getSearchParams(req.url, queryOpts) ?? new URLSearchParams()
     try {
       const params = schema.parameters.fromURLSearchParams(urlSearchParams)
       return params as LexMethodParams<M>
-    } catch (err) {
-      if (err instanceof l.LexValidationError) {
-        throw new InvalidRequestError(err.message)
+    } catch (cause) {
+      if (cause instanceof l.LexValidationError) {
+        const message = `Invalid ${schema.nsid} params: ${cause.issues
+          .map((issue) => issue.message)
+          .join(', ')}`
+        throw new InvalidRequestError(message, undefined, { cause })
       }
-      throw err
+      throw cause
     }
   }
 }
@@ -270,6 +310,7 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
     //
     return async (req) => {
       if (getBodyPresence(req) === 'present') {
+        // @NOTE we *could* also discard the body here instead of throwing an error
         throw new InvalidRequestError(
           `A request body was provided when none was expected`,
         )

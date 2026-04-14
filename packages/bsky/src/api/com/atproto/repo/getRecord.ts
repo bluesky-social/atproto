@@ -1,10 +1,10 @@
 import { AtUri } from '@atproto/syntax'
-import { InvalidRequestError } from '@atproto/xrpc-server'
+import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-  server.com.atproto.repo.getRecord({
+  server.add(com.atproto.repo.getRecord, {
     auth: ctx.authVerifier.optionalStandardOrRole,
     handler: async ({ auth, params }) => {
       const { repo, collection, rkey, cid } = params

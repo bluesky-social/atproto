@@ -1,5 +1,5 @@
 import { LexValue } from '@atproto/lex-data'
-import { Infer, Schema, Validator } from '../core.js'
+import { InferInput, Schema, Validator } from '../core.js'
 import { ObjectSchema, object } from './object.js'
 
 export type { LexValue }
@@ -15,7 +15,7 @@ type ToBodyType<
   TSchema,
   TBinary,
 > = TSchema extends Schema
-  ? Infer<TSchema>
+  ? InferInput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
     : TBinary
@@ -109,10 +109,9 @@ export class Payload<
   matchesEncoding(contentType: string | undefined): boolean {
     const { encoding } = this
 
-    // Handle undefined cases
     if (encoding === undefined) {
-      // Expecting no body
-      return contentType == null
+      // When the output is not defined, we don't enforce any rule on the payload.
+      return true
     } else if (contentType == null) {
       // Expecting a body, but got no content-type
       return false

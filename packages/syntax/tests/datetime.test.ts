@@ -150,6 +150,37 @@ describe(normalizeDatetime, () => {
         'Fri, 02 Jan 1999 12:34:56 (Central European Standard Time)',
       ),
     ).toEqual('1999-01-02T12:34:56.000Z')
+    expect(normalizeDatetime('0001-01-01T00:00:00+01:00')).toEqual(
+      '0000-12-31T23:00:00.000Z',
+    )
+  })
+
+  it('accepts years 1-9', () => {
+    expect(normalizeDatetime('0009-12-31T23:59:59Z')).toEqual(
+      '0009-12-31T23:59:59.000Z',
+    )
+    expect(normalizeDatetime('0005-06-15T12:00:00Z')).toEqual(
+      '0005-06-15T12:00:00.000Z',
+    )
+    expect(normalizeDatetime('0001-01-01T00:00:00Z')).toEqual(
+      '0001-01-01T00:00:00.000Z',
+    )
+    expect(normalizeDatetime('0002-03-04T05:06:07.890Z')).toEqual(
+      '0002-03-04T05:06:07.890Z',
+    )
+  })
+
+  it('accepts single-digit years with leading zeros', () => {
+    expect(normalizeDatetime('0007-01-01T00:00:00Z')).toEqual(
+      '0007-01-01T00:00:00.000Z',
+    )
+  })
+
+  it('accepts year 1 with timezone offsets', () => {
+    // Year 1 with negative offset stays in valid range
+    expect(normalizeDatetime('0001-12-31T23:00:00-01:00')).toEqual(
+      '0002-01-01T00:00:00.000Z',
+    )
   })
 
   it('throws on invalid input', () => {
@@ -165,9 +196,6 @@ describe(normalizeDatetime, () => {
       InvalidDatetimeError,
     )
     expect(() => normalizeDatetime('0000-01-01T00:00:00+01:00')).toThrow(
-      InvalidDatetimeError,
-    )
-    expect(() => normalizeDatetime('0001-01-01T00:00:00+01:00')).toThrow(
       InvalidDatetimeError,
     )
     // 9999-12-31T23:59:00-00:01 is syntactically valid, but normalizing to

@@ -1,7 +1,7 @@
 import { Trans, useLingui } from '@lingui/react/macro'
 import { JSX } from 'react'
-import { PasswordStrength, getPasswordStrength } from '../../lib/password.ts'
-import { Override } from '../../lib/util.ts'
+import { PasswordStrength, getPasswordStrength } from '#/lib/password.ts'
+import { Override } from '#/lib/util.ts'
 
 export type PasswordStrengthLabelProps = Override<
   Omit<JSX.IntrinsicElements['span'], 'children' | 'aria-label'>,

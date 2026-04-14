@@ -330,8 +330,5 @@ function parseDate(date: Date): Result<AtprotoDate> {
   if (fullYear > 9999) {
     return failure('datetime year is too far in the future')
   }
-  if (fullYear < 10) {
-    return failure('datetime so close to year zero not allowed')
-  }
   return success(date as AtprotoDate)
 }
