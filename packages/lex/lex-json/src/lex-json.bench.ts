@@ -7,16 +7,12 @@ import {
   parseSpecialJsonObject,
 } from './lex-json.js'
 
-/**
- * This benchmark compares the performance of two implementations of
- * lexParseJsonBytes:
- * 1. lexParseJsonBytesDecoder: An implementation that uses a custom decoder
- *    class that operates directly on bytes to parse JSON and handle AT Protocol
- *    special types.
- * 2. lexParseJsonBytesNaive: A simpler implementation that first decodes bytes
- *    to a UTF-8 string and then uses the existing lexParse function to parse
- *    the JSON.
- */
+// This benchmark compares the performance of two implementations of
+// lexParse:
+// - One that uses a reviver function with JSON.parse to directly parse special
+//   objects and handle numbers (lexParse with reviver)
+// - One that first parses JSON to a plain JS object and then converts it to
+//   LexValue using jsonToLex (lexParse with jsonToLex)
 
 describe('small object', () => {
   benchData({
