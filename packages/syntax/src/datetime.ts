@@ -1,3 +1,5 @@
+import { Result, failure, success } from './lib/result.js'
+
 /**
  * Indicates a date or string is not a valid representation of a datetime
  * according to the atproto
@@ -300,16 +302,6 @@ export {
 // -----------------------------------------------------------------------------
 // ------------------------- Internal validation logic -------------------------
 // -----------------------------------------------------------------------------
-
-// Validation utils that allow avoiding try/catch for control flow (performance
-// optimization). Other syntax formats should also use this pattern to avoid
-// try/catch in their validation logic, at which point these utils can be moved
-// to a common internal utils.
-type FailureResult = { success: false; message: string }
-const failure = (m: string): FailureResult => ({ success: false, message: m })
-type SuccessResult<V> = { success: true; value: V }
-const success = <V>(v: V): SuccessResult<V> => ({ success: true, value: v })
-type Result<V> = FailureResult | SuccessResult<V>
 
 /**
  * @see {@link https://www.rfc-editor.org/rfc/rfc3339#section-5.6 Internet Date/Time Format}
