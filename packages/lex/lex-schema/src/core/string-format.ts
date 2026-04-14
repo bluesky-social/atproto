@@ -56,7 +56,7 @@ export {
  * the strict {@link isDatetimeString} guard, which only allows datetimes that
  * fully conform to the AT Protocol specification (e.g. must include timezone).
  */
-export function isDatetimeStringLoose<I>(
+export function isDatetimeStringLenient<I>(
   input: I,
 ): input is I & DatetimeString {
   // @NOTE the returned type assertion is inaccurate wrt. the DatetimeString
@@ -83,12 +83,12 @@ export {
 } from '@atproto/syntax'
 
 /**
- * Loose version of {@link isAtUriString} that does not enforce the validity of
- * the record key (rkey) path component (if present).
+ * Lenient version of {@link isAtUriString} that does not enforce the validity
+ * of the record key (rkey) path component (if present).
  *
  * @see {@link isAtUriString}
  */
-export function isAtUriStringLoose<I>(input: I): input is I & AtUriString {
+export function isAtUriStringLenient<I>(input: I): input is I & AtUriString {
   return isAtUriString(input, { strict: false })
 }
 
@@ -250,15 +250,15 @@ export type StringFormat = Extract<keyof StringFormats, string>
 const stringFormatVerifiers: {
   readonly [K in StringFormat]: readonly [
     strict: CheckFn<StringFormats[K]>,
-    loose?: CheckFn<StringFormats[K]>,
+    lenient?: CheckFn<StringFormats[K]>,
   ]
 } = /*#__PURE__*/ Object.freeze({
   __proto__: null,
 
   'at-identifier': [isAtIdentifierString],
-  'at-uri': [isAtUriString, isAtUriStringLoose],
+  'at-uri': [isAtUriString, isAtUriStringLenient],
   cid: [isCidString],
-  datetime: [isDatetimeString, isDatetimeStringLoose],
+  datetime: [isDatetimeString, isDatetimeStringLenient],
   did: [isDidString],
   handle: [isHandleString],
   language: [isLanguageString],
@@ -270,8 +270,8 @@ const stringFormatVerifiers: {
 
 export type StringFormatValidationOptions = {
   /**
-   * Allows to be more lenient in validation by using a "loose" verification
-   * function, if available. The behavior of the loose verifier depends on the
+   * Allows to be more lenient in validation by using a "lenient" verification
+   * function, if available. The behavior of the lenient verifier depends on the
    * specific format, but generally it may allow for a wider range of valid
    * inputs, including values that are not compliant with the AT Protocol
    * specification.
@@ -325,8 +325,8 @@ export function isStringFormat<I extends string, F extends StringFormat>(
   if (!formatVerifier) throw new TypeError(`Unknown string format: ${format}`)
 
   const check: CheckFn<StringFormats[F]> =
-    options?.strict === false
-      ? formatVerifier[1] ?? formatVerifier[0]
+    options?.strict === false && formatVerifier.length > 1
+      ? formatVerifier[1]!
       : formatVerifier[0]
 
   return check(input)

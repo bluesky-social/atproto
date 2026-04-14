@@ -65,6 +65,16 @@ describe('custom cases', () => {
     testInvalid('at://did:plc:asdf123/-com.atproto.feed.post')
     testInvalid('at://did:plc:asdf@123/com.atproto.feed.post')
 
+    testInvalid('at://did:plc:asdf123?a')
+    testInvalid('at://user.bsky.social?a=B')
+    testInvalid('at://did:plc:asdf123/com.atproto.feed.post?foo=bar')
+    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/record?q=3')
+
+    testInvalid('at://did:plc:asdf123?a=b#/frag')
+    testInvalid('at://user.bsky.social?a=b#/frag')
+    testInvalid('at://did:plc:asdf123/com.atproto.feed.post?a=b#/frag')
+    testInvalid('at://did:plc:asdf123/com.atproto.feed.post/record?a=b#/frag')
+
     testInvalid('at://DID:plc:asdf123')
     testInvalid('at://user.bsky.123')
     testInvalid('at://bsky')

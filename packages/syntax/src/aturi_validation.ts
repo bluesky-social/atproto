@@ -63,9 +63,9 @@ export type AtUriString =
  */
 export function isAtUriString<I>(
   input: I,
-  options?: Omit<ParseUriStringOptions, 'detailed'>,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
 ): input is I & AtUriString {
-  return parseUriString(input, options).success
+  return parseAtUriString(input, options).success
 }
 
 /**
@@ -76,7 +76,7 @@ export function isAtUriString<I>(
  */
 export function ifAtUriString<I>(
   input: I,
-  options?: Omit<ParseUriStringOptions, 'detailed'>,
+  options?: Omit<ParseAtUriStringOptions, 'detailed'>,
 ): undefined | (I & AtUriString) {
   return isAtUriString(input, options) ? input : undefined
 }
@@ -90,7 +90,7 @@ export function ifAtUriString<I>(
  */
 export function asAtUriString<I>(
   input: I,
-  options?: ParseUriStringOptions,
+  options?: ParseAtUriStringOptions,
 ): I & AtUriString {
   assertAtUriString(input, options)
   return input
@@ -104,13 +104,13 @@ export function asAtUriString<I>(
  */
 export function assertAtUriString<I>(
   input: I,
-  options?: ParseUriStringOptions,
+  options?: ParseAtUriStringOptions,
 ): asserts input is I & AtUriString {
   // Optimistically use faster isAtUriString(), throwing a detailed error only
   // in case of failure. This check, and the fact that the code after it always
   // throws, also ensures that isAtUriString() and assertAtUriString()'s
   // behavior are always consistent.
-  const result = parseUriString(input, options)
+  const result = parseAtUriString(input, options)
   if (!result.success) {
     throw new InvalidAtUriError(result.message)
   }
@@ -156,7 +156,7 @@ export function isValidAtUri<I>(input: I): input is I & AtUriString {
 
 export class InvalidAtUriError extends Error {}
 
-export type ParseUriStringOptions = {
+export type ParseAtUriStringOptions = {
   /**
    * If true, the parser will enforce that the record key (rkey) part of the URI
    * is a valid record key (validated by {@link isValidRecordKey}). If false,
@@ -195,9 +195,9 @@ const AT_URI_REGEXP =
  * returns a failure with a detailed error message if the string is not a valid
  * {@link AtUriString}.
  */
-export function parseUriString(
+export function parseAtUriString(
   input: unknown,
-  options?: ParseUriStringOptions,
+  options?: ParseAtUriStringOptions,
 ): Result<AtUriParts> {
   if (typeof input !== 'string') {
     return failure('ATURI must be a string')
@@ -272,6 +272,10 @@ export function parseUriString(
   if (options?.strict !== false) {
     if (groups.trailingSlash != null) {
       return failure('ATURI can not have a trailing slash')
+    }
+
+    if (groups.query != null) {
+      return failure('ATURI query part is not allowed')
     }
 
     if (groups.rkey != null && !isValidRecordKey(groups.rkey)) {
