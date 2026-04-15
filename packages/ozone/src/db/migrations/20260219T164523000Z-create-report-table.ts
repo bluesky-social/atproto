@@ -34,6 +34,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     // Timestamps
     .addColumn('createdAt', 'varchar', (col) => col.notNull())
     .addColumn('updatedAt', 'varchar', (col) => col.notNull())
+    .addColumn('assignedTo', 'varchar') // DID of permanently assigned moderator
+    .addColumn('assignedAt', 'varchar') // When the permanent assignment was created
     .addColumn('closedAt', 'varchar')
     .execute()
 
@@ -54,22 +56,30 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   // Queue + status + muted, sorted by createdAt (most common query pattern)
   await sql`CREATE INDEX idx_report_queue_status_created ON report
     ("queueId", status, "isMuted", "createdAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId")`.execute(db)
+    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
+    db,
+  )
 
   // Queue + status + muted, sorted by updatedAt
   await sql`CREATE INDEX idx_report_queue_status_updated ON report
     ("queueId", status, "isMuted", "updatedAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId")`.execute(db)
+    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
+    db,
+  )
 
   // Status + muted, sorted by createdAt (when queueId not specified)
   await sql`CREATE INDEX idx_report_status_created ON report
     (status, "isMuted", "createdAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId")`.execute(db)
+    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
+    db,
+  )
 
   // Status + muted, sorted by updatedAt (when queueId not specified)
   await sql`CREATE INDEX idx_report_status_updated ON report
     (status, "isMuted", "updatedAt", id)
-    INCLUDE (did, "recordPath", "reportType", "subjectMessageId")`.execute(db)
+    INCLUDE (did, "recordPath", "reportType", "subjectMessageId", "assignedTo")`.execute(
+    db,
+  )
 
   // Subject-specific lookups (findReportsForSubject, queryReports with subject filter).
   // did + recordPath identify the subject; status enables open/escalated filtering.

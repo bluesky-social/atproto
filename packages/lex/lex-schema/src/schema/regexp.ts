@@ -20,7 +20,10 @@ export class RegexpSchema<
 > extends Schema<TValue> {
   readonly type = 'regexp' as const
 
-  constructor(public readonly pattern: RegExp) {
+  constructor(
+    public readonly pattern: RegExp,
+    public readonly message?: string,
+  ) {
     super()
   }
 
@@ -30,7 +33,11 @@ export class RegexpSchema<
     }
 
     if (!this.pattern.test(input)) {
-      return ctx.issueInvalidFormat(input, this.pattern.toString())
+      return ctx.issueInvalidFormat(
+        input,
+        this.pattern.toString(),
+        this.message,
+      )
     }
 
     return ctx.success(input as TValue)
@@ -67,6 +74,9 @@ export class RegexpSchema<
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function regexp<TInput extends string = string>(pattern: RegExp) {
-  return new RegexpSchema<TInput>(pattern)
+export function regexp<TInput extends string = string>(
+  pattern: RegExp,
+  message?: string,
+): RegexpSchema<TInput> {
+  return new RegexpSchema<TInput>(pattern, message)
 }

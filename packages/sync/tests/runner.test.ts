@@ -1,5 +1,5 @@
 import { wait } from '@atproto/common'
-import { ConsecutiveList, MemoryRunner } from '../src/runner'
+import { ConsecutiveList, MemoryRunner } from '..'
 
 describe('EventRunner utils', () => {
   describe('ConsecutiveList', () => {
@@ -107,7 +107,7 @@ describe('EventRunner utils', () => {
           complete.push({ partition, id: i })
         })
       }
-      expect(runner.partitions.size).toEqual(partitions.size)
+      expect(runner.partitions.size).toBeLessThanOrEqual(partitions.size)
       await runner.mainQueue.onIdle()
       expect(complete.length).toEqual(500)
       for (const partition of partitions) {

@@ -338,6 +338,8 @@ export class AssignmentService {
           .where('endAt', 'is', null)
           .executeTakeFirst()
 
+        let result: Selectable<ModeratorAssignment>
+
         if (permanentExisting) {
           if (permanentExisting.did !== did) {
             throw new InvalidRequestError(
@@ -346,47 +348,56 @@ export class AssignmentService {
             )
           }
           // Same user — update queueId if provided
-          return dbTxn.db
+          result = await dbTxn.db
             .updateTable('moderator_assignment')
             .set({ queueId: queueId ?? permanentExisting.queueId ?? null })
             .where('id', '=', permanentExisting.id)
             .returningAll()
             .executeTakeFirstOrThrow()
+        } else {
+          // Upgrade an existing active (non-permanent) assignment to permanent
+          const activeExisting = await dbTxn.db
+            .selectFrom('moderator_assignment')
+            .selectAll()
+            .where('reportId', '=', reportId)
+            .where('endAt', '>', now.toISOString())
+            .executeTakeFirst()
+
+          if (activeExisting) {
+            result = await dbTxn.db
+              .updateTable('moderator_assignment')
+              .set({
+                did,
+                endAt: null,
+                queueId: queueId ?? activeExisting.queueId ?? null,
+              })
+              .where('id', '=', activeExisting.id)
+              .returningAll()
+              .executeTakeFirstOrThrow()
+          } else {
+            // Create new permanent assignment
+            result = await dbTxn.db
+              .insertInto('moderator_assignment')
+              .values({
+                did,
+                reportId,
+                queueId: queueId,
+                startAt: now.toISOString(),
+                endAt: null,
+              })
+              .returningAll()
+              .executeTakeFirstOrThrow()
+          }
         }
 
-        // Upgrade an existing active (non-permanent) assignment to permanent
-        const activeExisting = await dbTxn.db
-          .selectFrom('moderator_assignment')
-          .selectAll()
-          .where('reportId', '=', reportId)
-          .where('endAt', '>', now.toISOString())
-          .executeTakeFirst()
+        // Sync denormalized assignment fields on report table
+        await dbTxn.db
+          .updateTable('report')
+          .set({ assignedTo: did, assignedAt: now.toISOString() })
+          .where('id', '=', reportId)
+          .execute()
 
-        if (activeExisting) {
-          return dbTxn.db
-            .updateTable('moderator_assignment')
-            .set({
-              did,
-              endAt: null,
-              queueId: queueId ?? activeExisting.queueId ?? null,
-            })
-            .where('id', '=', activeExisting.id)
-            .returningAll()
-            .executeTakeFirstOrThrow()
-        }
-
-        // Create new permanent assignment
-        return dbTxn.db
-          .insertInto('moderator_assignment')
-          .values({
-            did,
-            reportId,
-            queueId: queueId,
-            startAt: now.toISOString(),
-            endAt: null,
-          })
-          .returningAll()
-          .executeTakeFirstOrThrow()
+        return result
       }
 
       // Non-permanent: find any active or permanent assignment
@@ -499,6 +510,14 @@ export class AssignmentService {
         .where('id', '=', existing.id)
         .returningAll()
         .executeTakeFirstOrThrow()
+
+      // Clear denormalized assignment fields on report table
+      await dbTxn.db
+        .updateTable('report')
+        .set({ assignedTo: null, assignedAt: null })
+        .where('id', '=', reportId)
+        .execute()
+
       return updated
     })
 

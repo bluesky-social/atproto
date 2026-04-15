@@ -18,6 +18,7 @@ const id = 'app.bsky.feed.sendInteractions'
 export type QueryParams = {}
 
 export interface InputSchema {
+  feed?: string
   interactions: AppBskyFeedDefs.Interaction[]
 }
 

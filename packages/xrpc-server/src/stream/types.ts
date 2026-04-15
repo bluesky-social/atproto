@@ -1,27 +1,27 @@
-import { z } from 'zod'
+import { l } from '@atproto/lex-schema'
 
 export enum FrameType {
   Message = 1,
   Error = -1,
 }
 
-export const messageFrameHeader = z.object({
-  op: z.literal(FrameType.Message), // Frame op
-  t: z.string().optional(), // Message body type discriminator
+export const messageFrameHeader = l.object({
+  op: l.literal(FrameType.Message), // Frame op
+  t: l.optional(l.string()), // Message body type discriminator
 })
-export type MessageFrameHeader = z.infer<typeof messageFrameHeader>
+export type MessageFrameHeader = l.Infer<typeof messageFrameHeader>
 
-export const errorFrameHeader = z.object({
-  op: z.literal(FrameType.Error),
+export const errorFrameHeader = l.object({
+  op: l.literal(FrameType.Error),
 })
-export const errorFrameBody = z.object({
-  error: z.string(), // Error code
-  message: z.string().optional(), // Error message
+export const errorFrameBody = l.object({
+  error: l.string(), // Error code
+  message: l.optional(l.string()), // Error message
 })
-export type ErrorFrameHeader = z.infer<typeof errorFrameHeader>
-export type ErrorFrameBody<T extends string = string> = { error: T } & z.infer<
+export type ErrorFrameHeader = l.Infer<typeof errorFrameHeader>
+export type ErrorFrameBody<T extends string = string> = { error: T } & l.Infer<
   typeof errorFrameBody
 >
 
-export const frameHeader = z.union([messageFrameHeader, errorFrameHeader])
-export type FrameHeader = z.infer<typeof frameHeader>
+export const frameHeader = l.union([messageFrameHeader, errorFrameHeader])
+export type FrameHeader = l.Infer<typeof frameHeader>

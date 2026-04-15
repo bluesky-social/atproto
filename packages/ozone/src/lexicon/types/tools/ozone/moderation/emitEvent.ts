@@ -42,6 +42,7 @@ export interface InputSchema {
     | $Typed<ToolsOzoneModerationDefs.ModEventPriorityScore>
     | $Typed<ToolsOzoneModerationDefs.AgeAssuranceEvent>
     | $Typed<ToolsOzoneModerationDefs.AgeAssuranceOverrideEvent>
+    | $Typed<ToolsOzoneModerationDefs.AgeAssurancePurgeEvent>
     | $Typed<ToolsOzoneModerationDefs.RevokeAccountCredentialsEvent>
     | $Typed<ToolsOzoneModerationDefs.ScheduleTakedownEvent>
     | $Typed<ToolsOzoneModerationDefs.CancelScheduledTakedownEvent>

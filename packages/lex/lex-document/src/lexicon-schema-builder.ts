@@ -48,7 +48,7 @@ import { LexiconIndexer } from './lexicon-indexer.js'
  * }
  * ```
  */
-export class LexiconSchemaBuilder {
+export class LexiconSchemaBuilder implements AsyncDisposable {
   /**
    * Builds a validator for a single Lexicon definition reference.
    *
@@ -159,6 +159,10 @@ export class LexiconSchemaBuilder {
    */
   async done(): Promise<void> {
     await this.#asyncTasks.done()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.done()
   }
 
   /**

@@ -1,5 +1,5 @@
-import { MINUTE } from '@atproto/common'
 import { sql } from 'kysely'
+import { MINUTE } from '@atproto/common'
 import { Database } from '../db'
 import { dbLogger } from '../logger'
 import { ReportStatsServiceCreator } from '../report/stats'
@@ -40,7 +40,9 @@ export class StatsComputer {
     )
     const acquired = lockResult.rows[0]?.locked === true
     if (!acquired) {
-      dbLogger.info('stats materialization skipped, another instance holds lock')
+      dbLogger.info(
+        'stats materialization skipped, another instance holds lock',
+      )
       return
     }
 

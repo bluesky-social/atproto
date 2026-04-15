@@ -24,8 +24,10 @@ export type InputSchema = undefined
 export interface OutputSchema {
   cursor?: string
   actors: AppBskyActorDefs.ProfileView[]
-  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  /** DEPRECATED: use recIdStr instead. */
   recId?: number
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recIdStr?: string
 }
 
 export type HandlerInput = void

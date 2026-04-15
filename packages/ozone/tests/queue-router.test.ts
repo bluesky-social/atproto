@@ -79,7 +79,7 @@ describe('queue-router', () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_queue_router',
     })
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     sc = network.getSeedClient()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)

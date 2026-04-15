@@ -17,6 +17,8 @@ export interface Report {
   subjectMessageId: string | null // Denormalized from moderation_event.subjectMessageId
   createdAt: string
   updatedAt: string
+  assignedTo: string | null // DID of permanently assigned moderator, null if unassigned
+  assignedAt: string | null // When the permanent assignment was created
   closedAt: string | null
 }
 
