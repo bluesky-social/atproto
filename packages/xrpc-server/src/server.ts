@@ -9,6 +9,7 @@ import express, {
   RequestHandler,
   Router,
 } from 'express'
+import { stringify } from 'safe-stable-stringify'
 import { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import {
@@ -484,7 +485,8 @@ export class Server {
             await pipeline(output.body, res)
           } else if (encoding === 'application/json') {
             const json = lexToJson(output.body)
-            res.json(json)
+            res.header('Content-Type', encoding)
+            res.send(stringify(json))
           } else {
             res.send(
               Buffer.isBuffer(output.body)

@@ -2150,6 +2150,9 @@ importers:
       rate-limiter-flexible:
         specifier: ^2.4.1
         version: 2.4.1
+      safe-stable-stringify:
+        specifier: ^2.5.0
+        version: 2.5.0
       ws:
         specifier: ^8.12.0
         version: 8.12.0
@@ -17252,7 +17255,7 @@ packages:
       fast-json-stringify: 5.8.0
       fast-printf: 1.6.9
       globalthis: 1.0.3
-      safe-stable-stringify: 2.4.3
+      safe-stable-stringify: 2.5.0
       semver-compare: 1.0.0
 
   /rollup@4.34.9:
@@ -17361,6 +17364,10 @@ packages:
 
   /safe-stable-stringify@2.4.3:
     resolution: {integrity: sha512-e2bDA2WJT0wxseVd4lsDP4+3ONX6HpMXQa1ZhFQ7SU+GjvORCmShbCMltrtIDfkYhVHrOcPtj+KhmDBdPdZD1g==}
+    engines: {node: '>=10'}
+
+  /safe-stable-stringify@2.5.0:
+    resolution: {integrity: sha512-b3rppTKm9T+PsVCBEOUR46GWI7fdOs00VKZ1+9c1EWDaDMvjQc6tUwuFyIprgGgTcWoVHSKrU8H31ZHA2e0RHA==}
     engines: {node: '>=10'}
 
   /safer-buffer@2.1.2:
