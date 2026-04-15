@@ -186,11 +186,12 @@ export class AccountManager {
         // sign-ins" and do not trigger the hook.
         if (err instanceof InvalidRequestError) {
           // Stores that throw the more specific `InvalidCredentialsError`
-          // can attach the matched account to distinguish "identifier known,
-          // password wrong" from "identifier unknown". This information is
-          // only exposed to the hook and is never surfaced to the client.
-          const account =
-            err instanceof InvalidCredentialsError ? err.account ?? null : null
+          // can attach the matched subject identifier to distinguish
+          // "identifier known, password wrong" from "identifier unknown".
+          // This information is only exposed to the hook and is never
+          // surfaced to the client.
+          const sub =
+            err instanceof InvalidCredentialsError ? err.sub ?? null : null
 
           // Swallow any error from the hook itself so that it does not mask
           // the underlying authentication failure being reported.
@@ -198,7 +199,7 @@ export class AccountManager {
             await this.hooks.onSignInFailed?.call(null, {
               data,
               error: err,
-              account,
+              sub,
               deviceId,
               deviceMetadata,
               clientId,

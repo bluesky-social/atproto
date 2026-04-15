@@ -33,6 +33,7 @@ import {
 } from './lib/hcaptcha.js'
 import { RequestMetadata } from './lib/http/request.js'
 import { Awaitable, OmitKey } from './lib/util/type.js'
+import { Sub } from './oidc/sub.js'
 import { RequestId } from './request/request-id.js'
 import { AccessTokenPayload } from './signer/access-token-payload.js'
 import { TokenClaims } from './token/token-claims.js'
@@ -69,6 +70,7 @@ export {
   type SignInData,
   type SignUpData,
   type SignUpInput,
+  type Sub,
   type TokenClaims,
 }
 
@@ -196,10 +198,10 @@ export type OAuthHooks = {
    * password). It is *not* called for unexpected server errors, nor for flows
    * that require an additional authentication factor.
    *
-   * `account` is populated when the store throws an
-   * {@link InvalidCredentialsError} that carries the matched account
-   * (i.e. identifier known, credentials wrong). It is `null` when the
-   * identifier was unknown or when the store threw a plain
+   * `sub` is populated when the store throws an
+   * {@link InvalidCredentialsError} that carries the matched subject
+   * identifier (i.e. identifier known, credentials wrong). It is `null` when
+   * the identifier was unknown or when the store threw a plain
    * {@link InvalidRequestError} without distinguishing the two cases.
    *
    * `clientId` is populated when the sign-in is submitted in the context of
@@ -211,7 +213,7 @@ export type OAuthHooks = {
   onSignInFailed?: (data: {
     data: SignInData
     error: InvalidRequestError
-    account: Account | null
+    sub: Sub | null
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
     clientId?: ClientId
