@@ -484,8 +484,7 @@ export class Server {
             await pipeline(output.body, res)
           } else if (encoding === 'application/json') {
             const json = lexToJson(output.body)
-            res.header('Content-Type', encoding)
-            res.send(stringify(json))
+            res.json(json)
           } else {
             res.send(
               Buffer.isBuffer(output.body)
