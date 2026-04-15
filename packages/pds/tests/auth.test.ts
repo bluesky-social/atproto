@@ -1,4 +1,5 @@
 import * as jose from 'jose'
+import { request as undiciRequest } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
@@ -156,13 +157,17 @@ describe('auth', () => {
 
   it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password in the OAuth sign-in flow.', async () => {
     const issuer = new URL(network.pds.url)
-    // CSRF check only requires that the cookie and header values match.
-    const csrfToken = 'test-csrf-token'
+    const csrfToken = 'a'.repeat(24)
     const probe = async (credentials: {
       username: string
       password: string
     }) => {
-      const res = await fetch(
+      // @NOTE We use undici's low-level `request` rather than fetch(),
+      // because the WHATWG fetch API treats `sec-fetch-*` as forbidden
+      // request headers and silently overwrites them with its own values
+      // (notably `sec-fetch-mode: cors` in Node). The endpoint requires
+      // `same-origin` here, so we need raw header control.
+      const res = await undiciRequest(
         `${issuer.origin}/@atproto/oauth-provider/~api/sign-in`,
         {
           method: 'POST',
@@ -182,7 +187,7 @@ describe('auth', () => {
           body: JSON.stringify({ locale: 'en', ...credentials }),
         },
       )
-      return { status: res.status, body: await res.json() }
+      return { status: res.statusCode, body: await res.body.json() }
     }
 
     // bob.test was created above with password 'password'.
