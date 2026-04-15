@@ -1,8 +1,23 @@
-import { AtIdentifierString, ensureValidAtIdentifier } from './at-identifier.js'
+import {
+  AtIdentifierString,
+  ensureValidAtIdentifier,
+  isDidIdentifier,
+} from './at-identifier.js'
 import { AtUriString } from './aturi_validation.js'
-import { ensureValidNsid } from './nsid.js'
+import { DidString, InvalidDidError } from './did.js'
+import { NsidString, ensureValidNsid } from './nsid.js'
+import { RecordKeyString, ensureValidRecordKey } from './recordkey.js'
 
 export * from './aturi_validation.js'
+
+// Re-export types used in public interface
+export type {
+  AtIdentifierString,
+  AtUriString,
+  DidString,
+  NsidString,
+  RecordKeyString,
+}
 
 export const ATP_URI_REGEX =
   // proto-    --did--------------   --name----------------   --path----   --query--   --hash--
@@ -47,7 +62,13 @@ export class AtUri {
     return `at://${this.host}` as const
   }
 
-  get hostname() {
+  get did(): DidString {
+    const { host } = this
+    if (isDidIdentifier(host)) return host
+    throw new InvalidDidError(`AtUri "${this}" does not have a DID hostname`)
+  }
+
+  get hostname(): AtIdentifierString {
     return this.host
   }
 
@@ -68,8 +89,18 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[0] || ''
   }
 
+  get collectionSafe(): NsidString {
+    const { collection } = this
+    ensureValidNsid(collection)
+    return collection
+  }
+
   set collection(v: string) {
     ensureValidNsid(v)
+    this.unsafelySetCollection(v)
+  }
+
+  unsafelySetCollection(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     parts[0] = v
     this.pathname = parts.join('/')
@@ -79,7 +110,18 @@ export class AtUri {
     return this.pathname.split('/').filter(Boolean)[1] || ''
   }
 
+  get rkeySafe(): RecordKeyString {
+    const { rkey } = this
+    ensureValidRecordKey(rkey)
+    return rkey
+  }
+
   set rkey(v: string) {
+    ensureValidRecordKey(v)
+    this.unsafelySetRkey(v)
+  }
+
+  unsafelySetRkey(v: string) {
     const parts = this.pathname.split('/').filter(Boolean)
     parts[0] ||= 'undefined'
     parts[1] = v
@@ -91,19 +133,25 @@ export class AtUri {
   }
 
   toString(): AtUriString {
-    let path = this.pathname || '/'
-    if (!path.startsWith('/')) {
-      path = `/${path}`
+    let pathname = this.pathname
+    if (pathname && !pathname.startsWith('/')) {
+      pathname = `/${pathname}`
+    }
+    while (pathname.endsWith('/')) {
+      pathname = pathname.slice(0, -1)
     }
     let qs = ''
     if (this.searchParams.size) {
       qs = `?${this.searchParams.toString()}`
     }
-    let hash = this.hash
-    if (hash && !hash.startsWith('#')) {
-      hash = `#${hash}`
+    // @NOTE We keep the hash as-is, even if it doesn't start with a '/'.
+    let fragment = this.hash
+    if (fragment === '#') {
+      fragment = ''
+    } else if (fragment && !fragment.startsWith('#')) {
+      fragment = `#${fragment}`
     }
-    return `at://${this.host}${path}${qs}${hash}` as AtUriString
+    return `at://${this.host}${pathname}${qs}${fragment}` as AtUriString
   }
 }
 

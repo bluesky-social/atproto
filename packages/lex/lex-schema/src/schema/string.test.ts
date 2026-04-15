@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { string } from './string.js'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { Infer, UnknownString } from '../core.js'
+import { StringSchemaOptions, string } from './string.js'
 import { token } from './token.js'
 import { withDefault } from './with-default.js'
 
@@ -263,6 +264,69 @@ describe('StringSchema', () => {
     it('rejects invalid date format', () => {
       const result = schema.safeParse('12/25/2023')
       expect(result.success).toBe(false)
+    })
+
+    it('rejects datetime without timezone', () => {
+      const result = schema.safeParse('2023-12-25T12:00:00')
+      expect(result.success).toBe(false)
+    })
+
+    it('rejects date-only strings', () => {
+      // Date-only is not a valid datetime in either strict or loose mode
+      const result = schema.safeParse('2023-12-25')
+      expect(result.success).toBe(false)
+    })
+
+    describe('loose validation', () => {
+      it('accepts datetime without timezone', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('accepts datetime without separator', () => {
+        const result = schema.safeParse('20231225T120000', { strict: false })
+        expect(result.success).toBe(true)
+      })
+
+      it('rejects datetime with "-00:00" timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00-00:00', {
+          strict: false,
+        })
+        expect(result.success).toBe(false)
+      })
+
+      it('rejects date-only strings', () => {
+        const result = schema.safeParse('2023-12-25', { strict: false })
+        expect(result.success).toBe(false)
+      })
+
+      it('accepts datetime with timezone offset', () => {
+        const result = schema.safeParse('2023-12-25T12:00:00+05:30', {
+          strict: false,
+        })
+        expect(result.success).toBe(true)
+      })
+
+      it('still rejects completely invalid strings', () => {
+        expect(schema.safeParse('not a date', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('12/25/2023', { strict: false }).success).toBe(
+          false,
+        )
+        expect(schema.safeParse('', { strict: false }).success).toBe(false)
+      })
+
+      it('uses strict mode by default', () => {
+        // Datetime without timezone is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25T12:00:00').success).toBe(false)
+        // Date-only is not AT Protocol compliant
+        expect(schema.safeParse('2023-12-25').success).toBe(false)
+        // With timezone offset (AT Protocol compliant)
+        expect(schema.safeParse('2023-12-25T12:00:00+05:30').success).toBe(true)
+      })
     })
   })
 
@@ -609,5 +673,101 @@ describe('StringSchema', () => {
       const result = schema.safeParse('👨‍👩‍👧‍👦')
       expect(result.success).toBe(true)
     })
+  })
+
+  describe('knownValues option', () => {
+    it('allows omitting knownValues at runtime', () => {
+      string<{ knownValues: ['active', 'inactive'] }>()
+
+      // @ts-expect-error format requires options to be set
+      string<{ knownValues: ['active', 'inactive']; format: 'did' }>()
+
+      // @ts-expect-error any options, besides knownValues, must be provided
+      string<{ knownValues: ['active', 'inactive']; minLength: 5 }>()
+
+      string<{
+        knownValues: ['john.doe', 'someone.else']
+        format: 'handle'
+      }>({
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['john.doe', 'someone.else']
+      }>({
+        // Being *more* precise than the generic if fine
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['did', 'inactive']
+        format: 'did'
+      }>({
+        // @ts-expect-error does not match format form generic constraint
+        format: 'handle',
+      })
+
+      string<{
+        knownValues: ['active', 'inactive']
+        minLength: 10
+      }>({
+        minLength: 10,
+      })
+
+      string<{
+        knownValues: ['active', 'inactive']
+        minLength: 5
+      }>({
+        // @ts-expect-error mismatch
+        minLength: 10,
+      })
+    })
+  })
+
+  it('properly types knownValues in parameters', () => {
+    const schema = string({
+      knownValues: ['active', 'inactive'],
+    })
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: 'active' | 'inactive' | UnknownString
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: string
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: 'active' | 'inactive'
+    }>()
+    expectTypeOf<{
+      foo: SchemaType
+    }>().not.toMatchObjectType<{
+      foo: UnknownString
+    }>()
+  })
+
+  it('type string<any>() as string', () => {
+    const schema = string<any>()
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: string
+    }>()
+  })
+
+  it('type string<StringSchemaOptions>({}) as string', () => {
+    const schema = string<StringSchemaOptions>({})
+    type SchemaType = Infer<typeof schema>
+    expectTypeOf<{
+      foo: SchemaType
+    }>().toMatchObjectType<{
+      foo: string
+    }>()
   })
 })

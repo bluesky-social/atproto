@@ -5,8 +5,9 @@ import {
   LexMap,
   LexValue,
   isCid,
+  utf8FromBytes,
 } from '@atproto/lex-data'
-import { parseBlobRef } from './blob.js'
+import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { JsonObject, JsonValue } from './json.js'
 import { encodeLexLink, parseLexLink } from './link.js'
@@ -99,22 +100,26 @@ export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: LexParseOptions = { strict: false },
 ): T {
-  return JSON.parse(input, function (key: string, value: JsonValue): LexValue {
-    switch (typeof value) {
-      case 'object':
-        if (value === null) return null
-        if (Array.isArray(value)) return value
-        return parseSpecialJsonObject(value, options) ?? value
-      case 'number':
-        if (Number.isSafeInteger(value)) return value
-        if (options.strict) {
-          throw new TypeError(`Invalid non-integer number: ${value}`)
-        }
-      // fallthrough
-      default:
-        return value
-    }
-  })
+  // @NOTE see ./lex-json.bench.ts for performance comparison of implementation
+  // that uses a reviver function in JSON.parse vs. the current implementation.
+  return jsonToLex(JSON.parse(input), options) as T
+}
+
+/**
+ * Parses a JSON string from a byte array into Lex values.
+ */
+export function lexParseJsonBytes(
+  bytes: Uint8Array,
+  options?: LexParseOptions,
+): LexValue {
+  // @NOTE see ./json-bytes-decoder.bench.ts for performance comparison of
+  // implementation that uses a decoder class that operates directly on bytes
+  // vs. the current implementation that first decodes bytes to string and then
+  // parses JSON. For more common cases, it seems that the trivial
+  // implementation works better than the decoder based solution, while having a
+  // small overhead for slower cases (~2% difference). Because of this, we keep
+  // the trivial implementation:
+  return lexParse(utf8FromBytes(bytes), options)
 }
 
 /**
@@ -161,10 +166,8 @@ export function jsonToLex(
     }
     case 'number':
       if (Number.isSafeInteger(value)) return value
-      if (options.strict) {
-        throw new TypeError(`Invalid non-integer number: ${value}`)
-      }
-    // fallthrough
+      if (options.strict === false) return value
+      throw new TypeError(`Invalid non-integer number: ${value}`)
     case 'boolean':
     case 'string':
       return value
@@ -307,7 +310,10 @@ function encodeLexMap(input: LexMap): JsonObject {
   return copy ?? (input as JsonObject)
 }
 
-function parseSpecialJsonObject(
+/**
+ * @internal
+ */
+export function parseSpecialJsonObject(
   input: LexMap,
   options: LexParseOptions,
 ): Cid | Uint8Array | BlobRef | undefined {
@@ -328,7 +334,7 @@ function parseSpecialJsonObject(
     // the strict option is enabled.
     if (options.strict) {
       if (input.$type === 'blob') {
-        const blob = parseBlobRef(input, options)
+        const blob = parseTypedBlobRef(input, options)
         if (blob) return blob
         throw new TypeError(`Invalid blob object`)
       } else if (typeof input.$type !== 'string') {

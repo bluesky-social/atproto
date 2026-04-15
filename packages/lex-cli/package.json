@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex-cli",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "license": "MIT",
   "description": "TypeScript codegen tool for atproto Lexicon schemas",
   "keywords": [
@@ -14,7 +14,7 @@
     "directory": "packages/lex-cli"
   },
   "bin": {
-    "lex": "dist/index.js"
+    "lex": "bin.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

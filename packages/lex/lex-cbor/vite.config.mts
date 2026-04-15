@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { defineConfig } from 'vite'
-import pkg from './package.json' assert { type: 'json' }
+import pkg from './package.json' with { type: 'json' }
 
 // We rely on a bundler to handle bundling of the "cborg" package. This is
 // required because "cborg" is an ESM-only package that uses "exports" fields

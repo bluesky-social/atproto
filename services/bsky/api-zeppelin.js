@@ -45,7 +45,6 @@ dd.tracer._tracer.startSpan = function (name, options) {
 // Tracer code above must come before anything else
 const path = require('node:path')
 const assert = require('node:assert')
-const cluster = require('node:cluster')
 const { Secp256k1Keypair } = require('@atproto/crypto')
 const bsky = require('@atproto/bsky') // import all bsky features
 
@@ -66,7 +65,6 @@ const appview = async () => {
 
   assert(env.bsyncPort, 'must set BSKY_BSYNC_PORT')
   assert(env.dataplanePort, 'must set BSKY_DATAPLANE_PORT')
-
 
   const bsync = await bsky.MockBsync.create(db, env.bsyncPort)
 
@@ -93,9 +91,8 @@ const appview = async () => {
     idResolver: dataplane.idResolver,
   })
 
-
   await server.start()
-  
+
   sub.start()
   // Graceful shutdown (see also https://aws.amazon.com/blogs/containers/graceful-shutdowns-with-ecs/)
   const shutdown = async () => {

@@ -1,5 +1,39 @@
 # @atproto/lex-cbor
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex-data@0.0.15
+
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies [[`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786)]:
+  - @atproto/lex-data@0.0.14
+
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [[`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7)]:
+  - @atproto/lex-data@0.0.13
+
+## 0.0.13
+
+### Patch Changes
+
+- [#4667](https://github.com/bluesky-social/atproto/pull/4667) [`66b7295`](https://github.com/bluesky-social/atproto/commit/66b72950e8bcb39cac3382116bd282b3bb692f16) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use import `with` instead of deprecated import `assert` (fixing build warning)
+
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [[`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df)]:
+  - @atproto/lex-data@0.0.12
+
 ## 0.0.11
 
 ### Patch Changes

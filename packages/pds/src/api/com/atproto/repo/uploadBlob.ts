@@ -1,12 +1,15 @@
 import { DAY } from '@atproto/common'
-import { UpstreamTimeoutError, parseReqEncoding } from '@atproto/xrpc-server'
-import { BlobMetadata } from '../../../../actor-store/blob/transactor'
+import {
+  Server,
+  UpstreamTimeoutError,
+  parseReqEncoding,
+} from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
+import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
   const rateLimits = ctx.cfg.rateLimits
-  server.com.atproto.repo.uploadBlob({
+  server.add(com.atproto.repo.uploadBlob, {
     auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
       authorize: (permissions, { req }) => {
@@ -15,8 +18,12 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
-      durationMs: rateLimits.enabled ? rateLimits.repoUploadBlobRateLimitDuration : DAY,
-      points: rateLimits.enabled ? rateLimits.repoUploadBlobRateLimitPoints : 1000,
+      durationMs: rateLimits.enabled
+        ? rateLimits.repoUploadBlobRateLimitDuration
+        : DAY,
+      points: rateLimits.enabled
+        ? rateLimits.repoUploadBlobRateLimitPoints
+        : 1000,
     },
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did
@@ -24,36 +31,17 @@ export default function (server: Server, ctx: AppContext) {
       const blob = await ctx.actorStore.writeNoTransaction(
         requester,
         async (store) => {
-          let metadata: BlobMetadata
-          try {
-            metadata = await store.repo.blob.uploadBlobAndGetMetadata(
-              input.encoding,
-              input.body,
-            )
-          } catch (err) {
-            if (err?.['name'] === 'AbortError') {
-              throw new UpstreamTimeoutError(
-                'Upload timed out, please try again.',
-              )
-            }
-            throw err
-          }
+          const metadata = await store.repo.blob
+            .uploadBlobAndGetMetadata(input.encoding, input.body)
+            .catch(throwAbortAsUpstreamError)
 
           return store.transact(async (actorTxn) => {
             const blobRef =
               await actorTxn.repo.blob.trackUntetheredBlob(metadata)
 
             // make the blob permanent if an associated record is already indexed
-            const recordsForBlob = await actorTxn.repo.blob.getRecordsForBlob(
-              blobRef.ref,
-            )
-            if (recordsForBlob.length > 0) {
-              await actorTxn.repo.blob.verifyBlobAndMakePermanent({
-                cid: blobRef.ref,
-                mimeType: blobRef.mimeType,
-                size: blobRef.size,
-                constraints: {},
-              })
+            if (await actorTxn.repo.blob.hasRecordsForBlob(blobRef.ref)) {
+              await actorTxn.repo.blob.verifyBlobAndMakePermanent(blobRef)
             }
 
             return blobRef
@@ -62,11 +50,16 @@ export default function (server: Server, ctx: AppContext) {
       )
 
       return {
-        encoding: 'application/json',
-        body: {
-          blob,
-        },
+        encoding: 'application/json' as const,
+        body: { blob },
       }
     },
   })
+}
+
+function throwAbortAsUpstreamError(err: unknown): never {
+  if (err?.['name'] === 'AbortError') {
+    throw new UpstreamTimeoutError('Operation timed out, please try again.')
+  }
+  throw err
 }

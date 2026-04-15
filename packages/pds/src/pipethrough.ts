@@ -9,13 +9,13 @@ import {
   streamToNodeBuffer,
 } from '@atproto/common'
 import { RpcPermissionMatch } from '@atproto/oauth-scopes'
-import { ResponseType, XRPCError as XRPCClientError } from '@atproto/xrpc'
 import {
   CatchallHandler,
   HandlerPipeThroughBuffer,
   HandlerPipeThroughStream,
   InternalServerError,
   InvalidRequestError,
+  ResponseType,
   XRPCError as XRPCServerError,
   excludeErrorResult,
   parseReqNsid,
@@ -23,7 +23,7 @@ import {
 import { buildProxiedContentEncoding } from '@atproto-labs/xrpc-utils'
 import { isAccessPrivileged } from './auth-scope'
 import { AppContext } from './context'
-import { ids } from './lexicon/lexicons'
+import { chat, com, tools } from './lexicons/index.js'
 import { httpLogger } from './logger'
 
 export const proxyHandler = (ctx: AppContext): CatchallHandler => {
@@ -91,7 +91,7 @@ export const proxyHandler = (ctx: AppContext): CatchallHandler => {
         headers,
       }
 
-      await pipethroughStream(ctx, dispatchOptions, (upstream) => {
+      await pipethroughStream(ctx, req, dispatchOptions, (upstream) => {
         res.status(upstream.statusCode)
 
         for (const [name, val] of responseHeaders(upstream.headers)) {
@@ -188,7 +188,7 @@ export async function pipethrough(
     highWaterMark: 2 * 65536, // twice the default (64KiB)
   }
 
-  const { headers, body } = await pipethroughRequest(ctx, dispatchOptions)
+  const { headers, body } = await pipethroughRequest(ctx, req, dispatchOptions)
 
   return {
     encoding: safeString(headers['content-type']) ?? 'application/json',
@@ -291,6 +291,7 @@ export const parseProxyHeader = async (
  */
 async function pipethroughStream(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
   successStreamFactory: Dispatcher.StreamFactory,
 ): Promise<void> {
@@ -301,15 +302,9 @@ async function pipethroughStream(
           const passThrough = new PassThrough()
 
           void tryParsingError(upstream.headers, passThrough).then((parsed) => {
-            const xrpcError = new XRPCClientError(
-              upstream.statusCode === 500
-                ? ResponseType.UpstreamFailure
-                : upstream.statusCode,
-              parsed.error,
-              parsed.message,
-              Object.fromEntries(responseHeaders(upstream.headers, false)),
-              { cause: dispatchOptions },
-            )
+            const xrpcError = new PipethroughUpstreamError(upstream, parsed, {
+              cause: dispatchOptions,
+            })
 
             reject(xrpcError)
           }, reject)
@@ -333,7 +328,7 @@ async function pipethroughStream(
       // or writable stream errors. In the latter case, the promise will already
       // be resolved, and reject()ing it there after will have no effect. Those
       // error would still be logged by the successStreamFactory() function.
-      .catch(handleUpstreamRequestError)
+      .catch(handleUpstreamRequestError.bind(req))
       .catch(reject)
   })
 }
@@ -344,6 +339,7 @@ async function pipethroughStream(
  */
 async function pipethroughRequest(
   ctx: AppContext,
+  req: Request,
   dispatchOptions: Dispatcher.RequestOptions,
 ) {
   // HandlerPipeThroughStream requires a readable stream to be returned, so we
@@ -351,36 +347,35 @@ async function pipethroughRequest(
 
   const upstream = await ctx.proxyAgent
     .request(dispatchOptions)
-    .catch(handleUpstreamRequestError)
+    .catch(handleUpstreamRequestError.bind(req))
 
   if (upstream.statusCode >= 400) {
     const parsed = await tryParsingError(upstream.headers, upstream.body)
 
-    // Note "XRPCClientError" is used instead of "XRPCServerError" in order to
-    // allow users of this function to capture & handle these errors (namely in
-    // "app.bsky.feed.getPostThread").
-    throw new XRPCClientError(
-      upstream.statusCode === 500
-        ? ResponseType.UpstreamFailure
-        : upstream.statusCode,
-      parsed.error,
-      parsed.message,
-      Object.fromEntries(responseHeaders(upstream.headers, false)),
-      { cause: dispatchOptions },
-    )
+    throw new PipethroughUpstreamError(upstream, parsed, {
+      cause: dispatchOptions,
+    })
   }
 
   return upstream
 }
 
 function handleUpstreamRequestError(
+  this: Request,
   err: unknown,
   message = 'Upstream service unreachable',
 ): never {
-  httpLogger.error({ err }, message)
+  const logger = isPinoHttpRequest(this) ? this.log : httpLogger
+  logger.error({ err }, message)
   throw new XRPCServerError(ResponseType.UpstreamFailure, message, undefined, {
     cause: err,
   })
+}
+
+function isPinoHttpRequest(req: Request): req is Request & {
+  log: { error: (obj: unknown, msg: string) => void }
+} {
+  return typeof (req as { log?: any }).log?.error === 'function'
 }
 
 // Request parsing/forwarding
@@ -509,48 +504,71 @@ function* responseHeaders(
 // Utils
 // -------------------
 
-export const CHAT_BSKY_METHODS = new Set<string>([
-  ids.ChatBskyActorDeleteAccount,
-  ids.ChatBskyActorExportAccountData,
-  ids.ChatBskyConvoDeleteMessageForSelf,
-  ids.ChatBskyConvoGetConvo,
-  ids.ChatBskyConvoGetConvoForMembers,
-  ids.ChatBskyConvoGetLog,
-  ids.ChatBskyConvoGetMessages,
-  ids.ChatBskyConvoLeaveConvo,
-  ids.ChatBskyConvoListConvos,
-  ids.ChatBskyConvoMuteConvo,
-  ids.ChatBskyConvoSendMessage,
-  ids.ChatBskyConvoSendMessageBatch,
-  ids.ChatBskyConvoUnmuteConvo,
-  ids.ChatBskyConvoUpdateRead,
+/**
+ * Performs lexicon method matching on a set of methods,
+ * taking into account that they are treated case-insensitively.
+ */
+export class LxmSet {
+  private inner: Set<string>
+  private original: Iterable<string>
+  constructor(items: Iterable<string>) {
+    this.inner = new Set(Array.from(items, normalizeLxm))
+    this.original = items
+  }
+  has(lxm: string) {
+    return this.inner.has(normalizeLxm(lxm))
+  }
+  *[Symbol.iterator](): Iterator<string> {
+    yield* this.original
+  }
+}
+
+export function normalizeLxm(lxm: string) {
+  return lxm.toLowerCase()
+}
+
+export const CHAT_BSKY_METHODS = new LxmSet([
+  chat.bsky.actor.deleteAccount.$lxm,
+  chat.bsky.actor.exportAccountData.$lxm,
+  chat.bsky.convo.deleteMessageForSelf.$lxm,
+  chat.bsky.convo.getConvo.$lxm,
+  chat.bsky.convo.getConvoForMembers.$lxm,
+  chat.bsky.convo.getLog.$lxm,
+  chat.bsky.convo.getMessages.$lxm,
+  chat.bsky.convo.leaveConvo.$lxm,
+  chat.bsky.convo.listConvos.$lxm,
+  chat.bsky.convo.muteConvo.$lxm,
+  chat.bsky.convo.sendMessage.$lxm,
+  chat.bsky.convo.sendMessageBatch.$lxm,
+  chat.bsky.convo.unmuteConvo.$lxm,
+  chat.bsky.convo.updateRead.$lxm,
 ])
 
-export const PRIVILEGED_METHODS = new Set<string>([
+export const PRIVILEGED_METHODS = new LxmSet([
   ...CHAT_BSKY_METHODS,
-  ids.ComAtprotoServerCreateAccount,
+  com.atproto.server.createAccount.$lxm,
 ])
 
 // These endpoints are related to account management and must be used directly,
 // not proxied or service-authed. Service auth may be utilized between PDS and
 // entryway for these methods.
-export const PROTECTED_METHODS = new Set<string>([
-  ids.ComAtprotoAdminSendEmail,
-  ids.ComAtprotoIdentityRequestPlcOperationSignature,
-  ids.ComAtprotoIdentitySignPlcOperation,
-  ids.ComAtprotoIdentityUpdateHandle,
-  ids.ComAtprotoServerActivateAccount,
-  ids.ComAtprotoServerConfirmEmail,
-  ids.ComAtprotoServerCreateAppPassword,
-  ids.ComAtprotoServerDeactivateAccount,
-  ids.ComAtprotoServerGetAccountInviteCodes,
-  ids.ComAtprotoServerGetSession,
-  ids.ComAtprotoServerListAppPasswords,
-  ids.ComAtprotoServerRequestAccountDelete,
-  ids.ComAtprotoServerRequestEmailConfirmation,
-  ids.ComAtprotoServerRequestEmailUpdate,
-  ids.ComAtprotoServerRevokeAppPassword,
-  ids.ComAtprotoServerUpdateEmail,
+export const PROTECTED_METHODS = new LxmSet([
+  com.atproto.admin.sendEmail.$lxm,
+  com.atproto.identity.requestPlcOperationSignature.$lxm,
+  com.atproto.identity.signPlcOperation.$lxm,
+  com.atproto.identity.updateHandle.$lxm,
+  com.atproto.server.activateAccount.$lxm,
+  com.atproto.server.confirmEmail.$lxm,
+  com.atproto.server.createAppPassword.$lxm,
+  com.atproto.server.deactivateAccount.$lxm,
+  com.atproto.server.getAccountInviteCodes.$lxm,
+  com.atproto.server.getSession.$lxm,
+  com.atproto.server.listAppPasswords.$lxm,
+  com.atproto.server.requestAccountDelete.$lxm,
+  com.atproto.server.requestEmailConfirmation.$lxm,
+  com.atproto.server.requestEmailUpdate.$lxm,
+  com.atproto.server.revokeAppPassword.$lxm,
+  com.atproto.server.updateEmail.$lxm,
 ])
 
 const defaultService = (
@@ -561,38 +579,38 @@ const defaultService = (
   serviceInfo: { url: string; did: string } | null
 } => {
   switch (nsid) {
-    case ids.ToolsOzoneTeamAddMember:
-    case ids.ToolsOzoneTeamDeleteMember:
-    case ids.ToolsOzoneTeamUpdateMember:
-    case ids.ToolsOzoneTeamListMembers:
-    case ids.ToolsOzoneCommunicationCreateTemplate:
-    case ids.ToolsOzoneCommunicationDeleteTemplate:
-    case ids.ToolsOzoneCommunicationUpdateTemplate:
-    case ids.ToolsOzoneCommunicationListTemplates:
-    case ids.ToolsOzoneModerationEmitEvent:
-    case ids.ToolsOzoneModerationGetEvent:
-    case ids.ToolsOzoneModerationGetRecord:
-    case ids.ToolsOzoneModerationGetRepo:
-    case ids.ToolsOzoneModerationQueryEvents:
-    case ids.ToolsOzoneModerationQueryStatuses:
-    case ids.ToolsOzoneModerationSearchRepos:
-    case ids.ToolsOzoneModerationGetAccountTimeline:
-    case ids.ToolsOzoneVerificationListVerifications:
-    case ids.ToolsOzoneVerificationGrantVerifications:
-    case ids.ToolsOzoneVerificationRevokeVerifications:
-    case ids.ToolsOzoneSafelinkAddRule:
-    case ids.ToolsOzoneSafelinkUpdateRule:
-    case ids.ToolsOzoneSafelinkRemoveRule:
-    case ids.ToolsOzoneSafelinkQueryEvents:
-    case ids.ToolsOzoneSafelinkQueryRules:
-    case ids.ToolsOzoneModerationListScheduledActions:
-    case ids.ToolsOzoneModerationCancelScheduledActions:
-    case ids.ToolsOzoneModerationScheduleAction:
+    case tools.ozone.communication.createTemplate.$lxm:
+    case tools.ozone.communication.deleteTemplate.$lxm:
+    case tools.ozone.communication.listTemplates.$lxm:
+    case tools.ozone.communication.updateTemplate.$lxm:
+    case tools.ozone.moderation.cancelScheduledActions.$lxm:
+    case tools.ozone.moderation.emitEvent.$lxm:
+    case tools.ozone.moderation.getAccountTimeline.$lxm:
+    case tools.ozone.moderation.getEvent.$lxm:
+    case tools.ozone.moderation.getRecord.$lxm:
+    case tools.ozone.moderation.getRepo.$lxm:
+    case tools.ozone.moderation.listScheduledActions.$lxm:
+    case tools.ozone.moderation.queryEvents.$lxm:
+    case tools.ozone.moderation.queryStatuses.$lxm:
+    case tools.ozone.moderation.scheduleAction.$lxm:
+    case tools.ozone.moderation.searchRepos.$lxm:
+    case tools.ozone.safelink.addRule.$lxm:
+    case tools.ozone.safelink.queryEvents.$lxm:
+    case tools.ozone.safelink.queryRules.$lxm:
+    case tools.ozone.safelink.removeRule.$lxm:
+    case tools.ozone.safelink.updateRule.$lxm:
+    case tools.ozone.team.addMember.$lxm:
+    case tools.ozone.team.deleteMember.$lxm:
+    case tools.ozone.team.listMembers.$lxm:
+    case tools.ozone.team.updateMember.$lxm:
+    case tools.ozone.verification.grantVerifications.$lxm:
+    case tools.ozone.verification.listVerifications.$lxm:
+    case tools.ozone.verification.revokeVerifications.$lxm:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.modService,
       }
-    case ids.ComAtprotoModerationCreateReport:
+    case com.atproto.moderation.createReport.$lxm:
       return {
         serviceId: 'atproto_labeler',
         serviceInfo: ctx.cfg.reportService,
@@ -611,4 +629,30 @@ const safeString = (str: unknown): string | undefined => {
 
 function logResponseError(this: ServerResponse, err: unknown): void {
   httpLogger.warn({ err }, 'error forwarding upstream response')
+}
+
+export class PipethroughUpstreamError extends XRPCServerError {
+  constructor(
+    readonly upstream: {
+      statusCode: number
+      headers: IncomingHttpHeaders
+    },
+    payload: { message?: string; error?: string },
+    options?: ErrorOptions,
+  ) {
+    const status =
+      upstream.statusCode === 500
+        ? ResponseType.UpstreamFailure
+        : upstream.statusCode
+
+    super(status, payload.message, payload.error, options)
+  }
+
+  get headers(): Record<string, string> {
+    return Object.fromEntries(responseHeaders(this.upstream.headers, false))
+  }
+
+  get error() {
+    return this.customErrorName ?? this.typeName
+  }
 }

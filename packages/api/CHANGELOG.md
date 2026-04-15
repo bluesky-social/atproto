@@ -1,5 +1,88 @@
 # @atproto/api
 
+## 0.19.8
+
+### Patch Changes
+
+- [#4841](https://github.com/bluesky-social/atproto/pull/4841) [`55c3986`](https://github.com/bluesky-social/atproto/commit/55c39860c8fbf9747a6edec415f19c67f80c597f) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Make sure to include did and isMe checks on decideStatus default decision
+
+## 0.19.7
+
+### Patch Changes
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Hydrate mod labels on actor `status` record views
+
+- [#4823](https://github.com/bluesky-social/atproto/pull/4823) [`d8801e2`](https://github.com/bluesky-social/atproto/commit/d8801e2a17fe7062b7aa674475b384ead7518a17) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Increase max image upload size to 2 MB from 1 MB
+
+- [#4555](https://github.com/bluesky-social/atproto/pull/4555) [`aa1763d`](https://github.com/bluesky-social/atproto/commit/aa1763df0f1bb46014ba6a416646a08c61d97950) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Add `moderateStatus` method to eval labels on actor `status` views
+
+- Updated dependencies []:
+  - @atproto/common-web@0.4.20
+
+## 0.19.6
+
+### Patch Changes
+
+- [#4809](https://github.com/bluesky-social/atproto/pull/4809) [`2a5e2c2`](https://github.com/bluesky-social/atproto/commit/2a5e2c267f130df8eed87c9bdcb26e97841abc13) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Create new endpoints for suggested users
+
+- Updated dependencies [[`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592)]:
+  - @atproto/syntax@0.5.3
+
+## 0.19.5
+
+### Patch Changes
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export internal `ids`
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add "codegen" as part of the build
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Type `did` and `assertDid` `Agent` properties to be typed as `DidString`
+
+- [#4791](https://github.com/bluesky-social/atproto/pull/4791) [`3aa18f8`](https://github.com/bluesky-social/atproto/commit/3aa18f84ef80a170b572076feeb649906ffcb06c) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Codegen updated lexicons
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+
+## 0.19.4
+
+### Patch Changes
+
+- [#4709](https://github.com/bluesky-social/atproto/pull/4709) [`9f9f71a`](https://github.com/bluesky-social/atproto/commit/9f9f71a6a3e58ccbd5e6d3ee079b570096cb11fa) Thanks [@foysalit](https://github.com/foysalit)! - Introduce a purge event to remove ozone's data on age assurance
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+
+## 0.19.3
+
+### Patch Changes
+
+- [#4717](https://github.com/bluesky-social/atproto/pull/4717) [`76ab6ea`](https://github.com/bluesky-social/atproto/commit/76ab6eaa7bfa49fc218299d09446bb339c700bb5) Thanks [@estrattonbailey](https://github.com/estrattonbailey)! - Trust `status` returned from `refreshSession` and do not fall back to a potentially stale value from `this.session`.
+
+## 0.19.2
+
+### Patch Changes
+
+- [#4683](https://github.com/bluesky-social/atproto/pull/4683) [`6634140`](https://github.com/bluesky-social/atproto/commit/66341400d49d1210619b000a040852d87085c32c) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Introduce recIdStr field
+
+- [#4713](https://github.com/bluesky-social/atproto/pull/4713) [`0e5df95`](https://github.com/bluesky-social/atproto/commit/0e5df95e3a8d81931524848d301cd43d1f12fb78) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make sure to always trigger a `refreshSession` when `resumeSession()` is called
+
+## 0.19.1
+
+### Patch Changes
+
+- [#4704](https://github.com/bluesky-social/atproto/pull/4704) [`137065b`](https://github.com/bluesky-social/atproto/commit/137065b333b8c9b97e6b3b2ac6147c7509a1ae42) Thanks [@ds-boyce](https://github.com/ds-boyce)! - Add feed to sendInteractions input
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/common-web@0.4.18
+  - @atproto/lexicon@0.6.2
+
+## 0.19.0
+
+### Minor Changes
+
+- [#4631](https://github.com/bluesky-social/atproto/pull/4631) [`450f085`](https://github.com/bluesky-social/atproto/commit/450f0856630fa08c20dc60fef8b5d2a07b9a2552) Thanks [@LotharieSlayer](https://github.com/LotharieSlayer)! - Updating atproto app password based session example in README
+
 ## 0.18.21
 
 ### Patch Changes

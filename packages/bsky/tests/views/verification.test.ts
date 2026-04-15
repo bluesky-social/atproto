@@ -1,15 +1,13 @@
 import assert from 'node:assert'
-import { AtpAgent } from '@atproto/api'
+import { AppBskyActorDefs, AtpAgent, ids } from '@atproto/api'
 import { SeedClient, TestNetwork, verificationsSeed } from '@atproto/dev-env'
-import { ids } from '../../src/lexicon/lexicons'
-import { VerificationState } from '../../src/lexicon/types/app/bsky/actor/defs'
 
 interface ProfileViewTestCase {
   description: string
   // The DIDs are only set during test setup, so data that depends on those DIDs
   // needs to be lazily evaluated by using a function.
   getDid: () => string
-  getExpected: () => VerificationState | undefined
+  getExpected: () => AppBskyActorDefs.VerificationState | undefined
   getExpectedUrisPrefixes?: () => string[]
 }
 
@@ -17,7 +15,7 @@ describe('verification views', () => {
   let network: TestNetwork
   let agent: AtpAgent
   let labelerDid: string
-  let sc: SeedClient
+  let sc: SeedClient<TestNetwork>
 
   // account dids, for convenience
   let alice: string
@@ -31,31 +29,20 @@ describe('verification views', () => {
   let verifier1: string
   let verifier2: string
   let verifier3: string
+  let handleinvalid: string
+  let handleempty: string
 
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'bsky_views_verification',
     })
-    agent = network.bsky.getClient()
+    agent = network.bsky.getAgent()
     sc = network.getSeedClient()
+
     await verificationsSeed(sc)
-
-    labelerDid = network.bsky.ctx.cfg.modServiceDid
-    await createLabel({
-      src: labelerDid,
-      uri: sc.dids.impersonator,
-      cid: '',
-      val: 'impersonation',
-    })
-    await createLabel({
-      src: labelerDid,
-      uri: sc.dids.verifier3,
-      cid: '',
-      val: 'impersonation',
-    })
-
     await network.processAll()
 
+    labelerDid = network.bsky.ctx.cfg.modServiceDid
     alice = sc.dids.alice
     bob = sc.dids.bob
     carol = sc.dids.carol
@@ -67,6 +54,8 @@ describe('verification views', () => {
     verifier1 = sc.dids.verifier1
     verifier2 = sc.dids.verifier2
     verifier3 = sc.dids.verifier3
+    handleinvalid = sc.dids.handleinvalid
+    handleempty = sc.dids.handleempty
 
     await network.bsky.db.db
       .updateTable('actor')
@@ -241,6 +230,18 @@ describe('verification views', () => {
           `at://${verifier1}/app.bsky.graph.verification/`,
         ],
       },
+      {
+        description:
+          'returns undefined for user with invalid handle even if they have verifications',
+        getDid: () => handleinvalid,
+        getExpected: () => undefined,
+      },
+      {
+        description:
+          'returns undefined for user with empty handle even if they have verifications',
+        getDid: () => handleempty,
+        getExpected: () => undefined,
+      },
     ]
 
     it.each(testCases)(
@@ -276,26 +277,5 @@ describe('verification views', () => {
       },
     )
     return res.data
-  }
-
-  const createLabel = async (opts: {
-    src?: string
-    uri: string
-    cid: string
-    val: string
-    exp?: string
-  }) => {
-    await network.bsky.db.db
-      .insertInto('label')
-      .values({
-        uri: opts.uri,
-        cid: opts.cid,
-        val: opts.val,
-        cts: new Date().toISOString(),
-        exp: opts.exp ?? null,
-        neg: false,
-        src: opts.src ?? labelerDid,
-      })
-      .execute()
   }
 })

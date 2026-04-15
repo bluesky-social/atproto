@@ -1,5 +1,11 @@
 # @atproto/identity
 
+## 0.4.12
+
+### Patch Changes
+
+- [#4669](https://github.com/bluesky-social/atproto/pull/4669) [`dc9644b`](https://github.com/bluesky-social/atproto/commit/dc9644bbeb1892931809568895162d823e4743d2) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix lint warning
+
 ## 0.4.11
 
 ### Patch Changes

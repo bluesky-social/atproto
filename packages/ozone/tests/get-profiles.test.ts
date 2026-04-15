@@ -54,7 +54,7 @@ describe('get profiles through ozone', () => {
       sc.dids.carol,
     ])
 
-    const appviewAgent = network.bsky.getClient()
+    const appviewAgent = network.bsky.getAgent()
     const {
       data: { profiles: profilesFromAppview },
     } = await appviewAgent.app.bsky.actor.getProfiles({

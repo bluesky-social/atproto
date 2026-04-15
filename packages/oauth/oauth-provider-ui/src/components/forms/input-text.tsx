@@ -1,8 +1,8 @@
 import { clsx } from 'clsx'
 import { JSX, ReactNode, useContext, useRef } from 'react'
-import { mergeRefs } from '../../lib/ref.ts'
-import { Override } from '../../lib/util.ts'
-import { FieldsetContext } from './fieldset.tsx'
+import { mergeRefs } from '#/lib/ref.ts'
+import { Override } from '#/lib/util.ts'
+import { FieldsetContext } from './form-field.tsx'
 import { InputContainer } from './input-container.tsx'
 
 export type InputTextProps = Override<
@@ -68,7 +68,7 @@ export function InputText({
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy ?? ctx.labelId}
         ref={mergeRefs([ref, inputRef])}
-        className="outline-hidden w-full text-ellipsis bg-transparent bg-clip-padding text-base text-inherit dark:placeholder-gray-500"
+        className="outline-hidden w-full text-ellipsis bg-transparent bg-clip-padding text-base text-inherit dark:placeholder-gray-400"
         onFocus={(event) => {
           onFocus?.(event)
           if (!event.defaultPrevented) focusedRef.current = true

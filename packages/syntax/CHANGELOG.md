@@ -1,5 +1,61 @@
 # @atproto/syntax
 
+## 0.5.4
+
+### Patch Changes
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid trailing slashes when stringifying an AtUri
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Align implementation of `ensureValidAtUri` and `ensureValidAtUriRegex`: consistently apply length and fragment charset restrictions
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of `AtUriString` validation
+
+- [#4760](https://github.com/bluesky-social/atproto/pull/4760) [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes a bug where `normalizeDatetime` would return different results for the same input depending on the timezone of the machine it was run on. This caused tests to fail when run in different environments. The fix consists of attempting more consistent parsing strategies first (appending "Z" or " UTC" to the input) before falling back to parsing "as is", which can yield different results depending on the local timezone. The function's documentation has also been updated to reflect this behavior.
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing fragment to `AtUriString` template literal type
+
+## 0.5.3
+
+### Patch Changes
+
+- [#4815](https://github.com/bluesky-social/atproto/pull/4815) [`3711454`](https://github.com/bluesky-social/atproto/commit/371145432178b6c8c411f1289c266314cc7ec592) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rewrite of tests
+
+## 0.5.2
+
+### Patch Changes
+
+- [#4792](https://github.com/bluesky-social/atproto/pull/4792) [`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make AT-uri validation faster
+
+- [#4408](https://github.com/bluesky-social/atproto/pull/4408) [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add `isHandleIdentifier` and `isDidIdentifier` utilities to discriminate `AtIdentifierString` variants
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove year 10 limit on `DatetimeString` and `AtprotoDate`
+
+## 0.5.1
+
+### Patch Changes
+
+- [`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve efficiency of `AtUri` `did` getter and typing of `hostname` property
+
+## 0.5.0
+
+### Minor Changes
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove global `Date.toISOString()` overload and replace with more accurate, less permissive, `AtprotoDate` interface. This change prevent using any `Date` instance to generate a `DatetimeString`, since some JS dates can actually not be safely stringified to a `DatetimeString`.
+
+### Patch Changes
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add type safe accessors to read and write `AtUri`'s `did`, `collection` and `rkey` properties
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Test `ensureValidDatetime`, `isValidDatetime` and `normalizeDatetime` individually, for expected failures.
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow calling `DatetimeString` validation utilities with `unknown` values (instead of only `string`)
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Preserve input type when normalizing a valid `HandleString`
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor optimization in regex based NSID string validation
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve type strictness of `NSID`'s `authority` and `toString()` properties
+
 ## 0.4.3
 
 ### Patch Changes

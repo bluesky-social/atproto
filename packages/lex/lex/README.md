@@ -1,48 +1,47 @@
-# @atproto/lex
-
-Type-safe Lexicon tooling for creating great API clients. See the [Changelog](./CHANGELOG.md) for version history.
-
-```bash
-npm install -g @atproto/lex
-lex --help
-```
-
-- Install and manage Lexicon schemas
-- Generate TypeScript client and data validators
-- Handle common tasks like OAuth
-
 > [!IMPORTANT]
 >
-> This package is currently in **preview**. The API and features are subject to change before the stable release.
+> This package is currently in **preview**. The API and features are subject to change before the stable release. See the [Changelog](./CHANGELOG.md) for version history.
 
-**What is this?**
+Type-safe Lexicon tooling for AT Protocol data.
 
-Working directly with XRPC endpoints requires manually tracking schema definitions, validation data structures, and managing authentication. `@atproto/lex` automates this by:
-
-1. Fetching lexicons from the network and generating TypeScript types
-2. Providing runtime validation to ensure data matches schemas
-3. Offering a type-safe client that knows which parameters each endpoint expects
-4. Support modern patterns like tree-shaking and composition
+- Fetch and manage Lexicon schemas, generate TypeScript validators
+- Compile-time and runtime type safety for AT Protocol data structures
+- Fully typed XRPC client with authentication support
+- Tree-shaking and composition friendly
 
 ```typescript
-const profile = await client.call(app.bsky.actor.getProfile, {
-  actor: 'atproto.com',
+// Build and validate data with generated utilities
+
+const newPost = app.bsky.feed.post.$build({
+  text: 'Hello, world!',
+  createdAt: new Date().toISOString(),
 })
+
+app.bsky.actor.profile.$validate({
+  $type: 'app.bsky.actor.profile',
+  displayName: 'Ha'.repeat(32) + '!',
+}) // Error: grapheme too big (maximum 64, got 65) at $.displayName
+```
+
+```typescript
+// Trivially make type-safe XRPC requests towards a service
+
+const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
+  params: { actor: 'pfrazee.com' },
+})
+```
+
+```typescript
+// Manipulate records with the Client API in the context of an authenticated session
+
+const client = new Client(oauthSession)
 
 await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
   createdAt: new Date().toISOString(),
 })
 
-const posts = await client.list(app.bsky.feed.post, {
-  limit: 10,
-  repo: 'atproto.com',
-})
-
-app.bsky.actor.profile.$validate({
-  $type: 'app.bsky.actor.profile',
-  displayName: 'Ha'.repeat(32) + '!',
-}) // { success: false, error: Error: grapheme too big (maximum 64) at $.displayName (got 65) }
+const posts = await client.list(app.bsky.feed.post, { limit: 10 })
 ```
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -59,6 +58,7 @@ app.bsky.actor.profile.$validate({
   - [Types](#types)
   - [JSON Encoding](#json-encoding)
   - [CBOR Encoding](#cbor-encoding)
+- [Making simple XRPC Requests](#making-simple-xrpc-requests)
 - [Client API](#client-api)
   - [Creating a Client](#creating-a-client)
   - [Core Methods](#core-methods)
@@ -67,6 +67,7 @@ app.bsky.actor.profile.$validate({
   - [Labeler Configuration](#labeler-configuration)
   - [Low-Level XRPC](#low-level-xrpc)
 - [Utilities](#utilities)
+  - [Datetime Strings](#datetime-strings)
 - [Advanced Usage](#advanced-usage)
   - [Workflow Integration](#workflow-integration)
   - [Tree-Shaking](#tree-shaking)
@@ -74,6 +75,7 @@ app.bsky.actor.profile.$validate({
   - [Actions](#actions)
   - [Creating a Client from Another Client](#creating-a-client-from-another-client)
   - [Building Library-Style APIs with Actions](#building-library-style-apis-with-actions)
+  - [Standard Schema Compatibility](#standard-schema-compatibility)
 - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -135,15 +137,11 @@ This generates TypeScript files in `./src/lexicons` (by default) with type-safe 
 **4. Use in your code**
 
 ```typescript
-import { Client } from '@atproto/lex'
-import * as app from './lexicons/app.js'
+import { xrpc } from '@atproto/lex'
+import { app } from './lexicons/index.js'
 
-// Create a client instance
-const client = new Client('https://public.api.bsky.app')
-
-// Start making requests using generated schemas
-const response = await client.call(app.bsky.actor.getProfile, {
-  actor: 'pfrazee.com',
+const profile = await xrpc('https://api.bsky.app', app.bsky.actor.getProfile, {
+  params: { actor: 'pfrazee.com' },
 })
 ```
 
@@ -196,7 +194,6 @@ Options:
 - `--exclude <patterns...>` - List of strings or regex patterns to exclude lexicon documents by their IDs
 - `--include <patterns...>` - List of strings or regex patterns to include lexicon documents by their IDs
 - `--lib <package>` - Package name of the library to import the lex schema utility "l" from (default: `@atproto/lex`)
-- `--allowLegacyBlobs` - Allow generating schemas that accept legacy blob references (disabled by default; enable this if you encounter issues while processing records created a long time ago)
 - `--importExt <ext>` - File extension to use for import statements in generated files (default: `.js`). Use `--importExt ""` to generate extension-less imports
 - `--fileExt <ext>` - File extension to use for generated files (default: `.ts`)
 - `--indexFile` - Generate an "index" file that re-exports all root-level namespaces (disabled by default)
@@ -224,17 +221,22 @@ function renderPost(p: app.bsky.feed.post.Main) {
 
 ### Building data
 
-It is recommended to use the generated builders to create data that conforms to the schema. This ensures that all required fields are present.
+It is recommended to use the generated builders to create data that conforms to the schema. TypeScript ensures that all required fields are present at compile time.
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // variable type will be inferred as "app.bsky.feed.post.Main"
 const post = app.bsky.feed.post.$build({
   // No need to specify $type when using $build
   text: 'Hello, world!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
+
+// For runtime validation, use $parse()/$validate() instead
+const postWithDefaults = app.bsky.feed.post.$parse(post)
+app.bsky.feed.post.$validate(post)
 ```
 
 ### Validation Helpers
@@ -267,12 +269,13 @@ console.log(app.bsky.actor.defs.profileViewBasic.$type) // 'app.bsky.actor.defs#
 Returns `true` if data matches the schema, `false` otherwise. Acts as a TypeScript type guard:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const data = {
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 }
 
 if (app.bsky.feed.post.$check(data)) {
@@ -286,13 +289,14 @@ if (app.bsky.feed.post.$check(data)) {
 Validates and returns typed data, throwing an error if validation fails:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 try {
   const post = app.bsky.feed.post.$main.$parse({
     $type: 'app.bsky.feed.post',
     text: 'Hello!',
-    createdAt: new Date().toISOString(),
+    createdAt: l.toDatetimeString(new Date()),
   })
   // post is now typed and validated
   console.log(post.text)
@@ -310,12 +314,13 @@ try {
 Validates an existing value against a schema, returning the value itself if, and only if, it already matches the schema (ie. without applying defaults or coercion).
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const value = {
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 }
 
 // Throws if no valid
@@ -324,17 +329,18 @@ const result = app.bsky.feed.post.$validate(value)
 value === result // true
 ```
 
-#### `$safeParse(data)` - Parse a value against a schema and get the resulting value
+#### `$safeParse(data, options?)` - Parse a value against a schema and get the resulting value
 
 Returns a detailed validation result object without throwing:
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const result = app.bsky.feed.post.$safeParse({
   $type: 'app.bsky.feed.post',
   text: 'Hello!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 
 if (result.success) {
@@ -344,11 +350,22 @@ if (result.success) {
 }
 ```
 
-#### `$build(data)` - Build with Defaults
-
-Builds data without needing to specify the `$type` property, and properly types the result:
+All schema methods that perform validation (`$parse`, `$safeParse`, `$validate`, `$safeValidate`) accept an optional `{ strict }` option. When `strict` is `false`, validation becomes more lenient: datetime string format checks are relaxed (e.g. datetimes without timezones are accepted; other string formats remain strict), blob MIME type and size constraints are not enforced, non-raw CIDs are allowed in blob references, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. This is primarily used internally by the XRPC client when `strictResponseProcessing` is disabled, but can also be used directly:
 
 ```typescript
+// Strict mode (default) - rejects datetime without timezone
+app.bsky.feed.post.$safeParse(data) // { strict: true } is the default
+
+// Non-strict mode - accepts more lenient data
+app.bsky.feed.post.$safeParse(data, { strict: false })
+```
+
+#### `$build(data)` - Build with Defaults
+
+Builds data by adding the `$type` property and properly types the result. Note that `$build()` does not perform validation - use `$parse()` if you need validation:
+
+```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // The type of the "like" variable will be "app.bsky.feed.like.Main"
@@ -357,7 +374,7 @@ const like = app.bsky.feed.like.$build({
     uri: 'at://did:plc:abc/app.bsky.feed.post/123',
     cid: 'bafyrei...',
   },
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 ```
 
@@ -414,7 +431,7 @@ if (isTypedLexMap(data)) {
 In JSON, CIDs are represented as `{"$link": "bafyrei..."}` and bytes as `{"$bytes": "base64..."}`. This package provides utilities to parse and stringify data model values to/from JSON:
 
 ```typescript
-import { lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
+import { Cid, lexParse, lexStringify, jsonToLex, lexToJson } from '@atproto/lex'
 
 // Parse JSON string → data model (decodes $link and $bytes)
 const parsed = lexParse<{
@@ -424,6 +441,9 @@ const parsed = lexParse<{
   "ref": { "$link": "bafyrei..." },
   "data": { "$bytes": "SGVsbG8sIHdvcmxkIQ==" }
 }`)
+
+assert(isCid(parsed.ref))
+assert(parsed.data instanceof Uint8Array)
 
 const someCid = lexParse<Cid>('{"$link": "bafyrei..."}')
 const someBytes = lexParse<Uint8Array>('{"$bytes": "SGVsbG8sIHdvcmxkIQ=="}')
@@ -458,7 +478,54 @@ const cborBytes = encode(someLexValue)
 const lexValue: LexValue = decode(cborBytes)
 ```
 
+## Making simple XRPC Requests
+
+[XRPC](https://atproto.com/specs/xrpc) (short for "Lexicon RPC") is the set of HTTP conventions used by AT Protocol for client-server and server-server communication. Endpoints follow the pattern `/xrpc/<nsid>`, where the NSID maps to a Lexicon schema that defines the request and response types. XRPC has three method types: **queries** (HTTP GET) for read operations, **procedures** (HTTP POST) for mutations and **subscriptions** (WebSockets) for real-time updates.
+
+The `xrpc()` and `xrpcSafe()` functions can be used to make simple XRPC requests. They are typically used in places that don't require an authenticated session, or when more granular control over the request/response is needed. For most use cases, the `Client` API provides a more ergonomic way to work with XRPC in the context of an authenticated session.
+
+```typescript
+import { xrpc, xrpcSafe } from '@atproto/lex'
+import * as com from './lexicons/com.js'
+
+const response = await xrpc(
+  'https://bsky.network',
+  com.atproto.identity.resolveHandle,
+  {
+    params: { handle: 'atproto.com' },
+    headers: { 'user-agent': 'MyApp/1.0.0' },
+  },
+)
+
+response.status // number
+response.headers // Headers
+response.body.did // `did:${string}:${string}`
+
+// Or use the safe variant (returns errors instead of throwing)
+const result = await xrpcSafe(
+  'https://bsky.network',
+  com.atproto.identity.resolveHandle,
+  {
+    params: { handle: 'atproto.com' },
+    signal: AbortSignal.timeout(5000), // Abort after 5 seconds
+  },
+)
+
+if (result.success) {
+  console.log(result.body)
+} else {
+  console.error(result.error) // XRPC error code
+  console.error(result.message) // Error message
+}
+```
+
+Both `xrpc()` and `xrpcSafe()` accept `validateRequest`, `validateResponse`, and `strictResponseProcessing` options to control validation and strictness per-call. See [Validation and Strictness Options](#validation-and-strictness-options) for details.
+
 ## Client API
+
+The `Client` class provides high-level helpers for common AT Protocol "repo" operations: `create()`, `get()`, `put()`, `delete()`, `list()`, `uploadBlob()`, and more. A `Client` instance is typically useful for making requests in the context of an authenticated user session, as it automatically handles headers and provides default values based on the authenticated user's DID.
+
+A `Client` instance is also useful to encapsulate configuration for a specific service, by specifying the `service` option (for proxying) and `labelers` option (for content labeling). Additionally, a `Client` can be used as an `Agent` for another `Client`, allowing you to compose headers and configuration across multiple services.
 
 ### Creating a Client
 
@@ -522,6 +589,29 @@ const client = new Client(session, {
 })
 ```
 
+#### Validation and Strictness Options
+
+The `Client` constructor accepts options to control request/response validation and how invalid Lex data is handled. These defaults apply to all XRPC calls made through the client, and can be overridden per-call via `client.call()`, `client.xrpc()` or `client.xrpcSafe()`.
+
+```typescript
+const client = new Client(session, {
+  // Validate requests against the method's input schema (default: false)
+  validateRequest: true,
+
+  // Validate responses against the method's output schema (default: true)
+  validateResponse: true,
+
+  // Strictly process responses according to Lex encoding rules. When set to
+  // false, accepts responses containing invalid Lex data such as floats or
+  // malformed $bytes/$link objects (default: true)
+  strictResponseProcessing: false,
+})
+```
+
+- **`validateRequest`** — When `true`, outgoing request bodies are validated against the Lexicon input schema before sending. Useful in development to catch errors early. Default: `false`.
+- **`validateResponse`** — When `true`, incoming response bodies are validated against the Lexicon output schema. Disabling this can improve performance when you trust the upstream service. Default: `true`.
+- **`strictResponseProcessing`** — When `true` (default), the client will strictly process responses according to Lex encoding rules, rejecting responses containing invalid Lex data (e.g. floating-point numbers, malformed `$bytes` or `$link` objects). When `false`, the client accepts such responses in a lenient mode: invalid values are returned as-is rather than being rejected or converted, `datetime` string format checks become more lenient (e.g. datetimes without timezones are accepted) while other string formats remain strict, blob MIME type and size constraints are not enforced, and legacy blob reference format (objects with `cid` and `mimeType` properties) is accepted. Default: `true`.
+
 ### Core Methods
 
 #### `client.call()`
@@ -551,21 +641,21 @@ const timeline = await client.call(
   },
   {
     signal: abortSignal,
-    headers: { 'custom-header': 'value' },
   },
 )
 ```
 
 #### `client.create()`
 
-Create a new record.
+Create a new record un the authenticated user's repo.
 
 ```typescript
+import { l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 const result = await client.create(app.bsky.feed.post, {
   text: 'Hello, world!',
-  createdAt: new Date().toISOString(),
+  createdAt: l.toDatetimeString(new Date()),
 })
 
 console.log(result.uri) // at://did:plc:...
@@ -575,7 +665,8 @@ console.log(result.cid)
 Options:
 
 - `rkey` - Custom record key (auto-generated if not provided)
-- `validate` - Validate record against schema before creating
+- `validate` - Asks the PDS to validate the record against schema when processing the request
+- `validateRequest` - Validate the record locally against schema before submitting the request
 - `swapCommit` - CID for optimistic concurrency control
 
 #### `client.get()`
@@ -585,6 +676,7 @@ Retrieve a record.
 ```typescript
 import * as app from './lexicons/app.js'
 
+// No need to specify the "rkey" for records with literal keys (e.g. profile)
 const profile = await client.get(app.bsky.actor.profile)
 
 console.log(profile.displayName)
@@ -615,6 +707,8 @@ await client.put(app.bsky.actor.profile, {
 Options:
 
 - `rkey` - Record key (required for non-literal keys)
+- `validate` - Validate record against schema before updating (falls back to `validateRequest` option if not specified)
+- `validateRequest` - Alternative way to enable validation (used if `validate` is not specified)
 - `swapCommit` - Expected repo commit CID
 - `swapRecord` - Expected record CID
 
@@ -671,7 +765,7 @@ The `xrpcSafe()` method returns a union type that includes the success case (`Xr
 import {
   Client,
   XrpcResponseError,
-  XrpcUpstreamError,
+  XrpcInvalidResponseError,
   XrpcInternalError,
 } from '@atproto/lex'
 import * as com from './lexicons/com.js'
@@ -689,20 +783,26 @@ if (result.success) {
 } else {
   // Handle failure - result is an XrpcFailure
   if (result instanceof XrpcResponseError) {
-    // The server returned a valid XRPC error response
-    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", etc.)
+    // The server responded with an error status code (4xx or 5xx).
+    // This is used for all error responses, whether or not they have a valid XRPC error payload.
+
+    result.error // string (e.g. "HandleNotFound", "AuthenticationRequired", "UpstreamFailure", etc.)
     result.message // string
     result.response.status // number
     result.response.headers // Headers
-    result.payload // { body: { error: string, message?: string }; encoding: string }
-  } else if (result instanceof XrpcUpstreamError) {
-    // The response was not a valid XRPC response (e.g. malformed JSON,
-    // data does not match schema, connection dropped)
+    result.payload // undefined | { body: unknown; encoding: string }
+
+    // Coerce to a valid XRPC error payload using toJSON():
+    result.toJSON() // { error: string, message?: string }
+  } else if (result instanceof XrpcInvalidResponseError) {
+    // The response was truly invalid (3xx redirect, malformed JSON, schema mismatch, etc.).
+    // This is a more specific error for responses that are not processable.
+
     result.error // "UpstreamFailure"
     result.message // string
     result.response.status // number
     result.response.headers // Headers
-    result.payload // null | { body: unknown; encoding: string }
+    result.payload // undefined | { body: unknown; encoding: string }
   } else if (result instanceof XrpcInternalError) {
     // Something went wrong on the client side (network error, etc.)
     result.error // "InternalServerError"
@@ -712,7 +812,7 @@ if (result.success) {
   // All XrpcFailure types have these properties:
   result.shouldRetry() // boolean - whether the error is transient
 
-  if (result.matchesSchema()) {
+  if (result.matchesSchemaErrors()) {
     // Check if the error matches a declared error in the schema.
     // TypeScript knows this is a declared error for the method.
     result.error // "HandleNotFound"
@@ -722,9 +822,9 @@ if (result.success) {
 
 The `XrpcFailure<M>` type is a union of three error classes:
 
-1. **`XrpcResponseError`** - The server returned a valid XRPC error response (non-2xx with proper error payload)
+1. **`XrpcResponseError`** - The server responded with a 4xx/5xx error status code. This is used for all error responses from the upstream server.
 
-2. **`XrpcUpstreamError`** - The response was invalid or unprocessable (malformed JSON, schema mismatch, incomplete response)
+2. **`XrpcInvalidResponseError`** - The upstream server returned a 2xx/3xx that does not comply with XRPC specifications for successful responses. A sub-class, `XrpcResponseValidationError`, is used for payload schema validation failures specifically.
 
 3. **`XrpcInternalError`** - Client-side errors (network failures, timeouts, etc.)
 
@@ -803,9 +903,19 @@ console.log(response.headers)
 console.log(response.body)
 ```
 
+Validation and strictness options (`validateRequest`, `validateResponse`, `strictResponseProcessing`) can also be passed per-call to override the client defaults:
+
+```typescript
+const response = await client.xrpc(app.bsky.feed.getTimeline, {
+  params: { limit: 50 },
+  strictResponseProcessing: false, // Accept non-strict Lex data for this call
+  validateResponse: false, // Skip schema validation for this call
+})
+```
+
 ## Utilities
 
-Various utilities for working with CIDs, string lengths, language tags, and low-level JSON encoding are exported from the package:
+Various utilities for working with CIDs, datetime strings, string lengths, language tags, and low-level JSON encoding are exported from the package:
 
 ```typescript
 import {
@@ -814,9 +924,23 @@ import {
   ifCid, // Coerce to Cid or null
   isCid, // Type guard for Cid values
 
+  // Datetime string utilities
+  toDatetimeString, // Convert Date to DatetimeString (throws on invalid)
+  asDatetimeString, // Cast string to DatetimeString (throws on invalid)
+  isDatetimeString, // Type guard for DatetimeString
+  ifDatetimeString, // Returns DatetimeString or undefined
+
   // Blob references
-  BlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
-  isBlobRef, // Type guard for BlobRef objects
+  BlobRef, // TypedBlobRef | LegacyBlobRef
+  LegacyBlobRef, // { cid: string, mimeType: string }
+  TypedBlobRef, // { $type: 'blob', ref: Cid, mimeType: string, size: number }
+  isBlobRef, // Type guard for BlobRef (accepts both TypedBlobRef and LegacyBlobRef)
+  isLegacyBlobRef, // Type guard for LegacyBlobRef objects
+  isTypedBlobRef, // Type guard for TypedBlobRef objects
+  getBlobCid, // Extract Cid from BlobRef or LegacyBlobRef
+  getBlobCidString, // Extract CID string from BlobRef or LegacyBlobRef
+  getBlobMime, // Extract MIME type from BlobRef or LegacyBlobRef
+  getBlobSize, // Extract size from BlobRef (returns undefined for LegacyBlobRef)
 
   // Equality
   lexEquals, // Deep equality (handles CIDs and bytes)
@@ -839,6 +963,35 @@ const cid = parseCid('bafyreiabc...')
 graphemeLen('👨‍👩‍👧‍👦') // 1
 utf8Len('👨‍👩‍👧‍👦') // 25
 isLanguageString('en-US') // true
+```
+
+### Datetime Strings
+
+Many AT Protocol records (such as posts, likes, and follows) include a `createdAt` field that expects a valid `DatetimeString`. While `new Date().toISOString()` produces a string that looks like a valid datetime, it is not guaranteed to always conform to the AT Protocol's [datetime format requirements](https://atproto.com/specs/lexicon#datetime) (for example, `Date` objects representing dates before year 0 or after year 9999 will produce non-conforming strings). To ensure correctness and type safety, use the `DatetimeString` utilities exported from `@atproto/lex`:
+
+- **`toDatetimeString(date: Date)`** - Converts a `Date` object into a valid `DatetimeString`, throwing an `InvalidDatetimeError` if the date cannot be represented as a valid AT Protocol datetime.
+- **`asDatetimeString(input: string)`** - Validates and casts an arbitrary string to `DatetimeString`, throwing an `InvalidDatetimeError` if the string does not conform.
+- **`isDatetimeString(input)`** - Type guard that returns `true` if the input is a valid `DatetimeString`.
+- **`ifDatetimeString(input)`** - Returns the input as a `DatetimeString` if valid, or `undefined` otherwise.
+- **`currentDatetimeString()`** - Returns the current date and time as `DatetimeString`.
+
+```typescript
+import { l } from '@atproto/lex'
+
+// Convert a Date object to a DatetimeString (or throws)
+const someDate = new Date('2024-01-15T12:30:00Z')
+const now = l.toDatetimeString(someDate)
+
+// Get the current datetime as a DatetimeString
+const now = l.currentDatetimeString()
+
+// Validate and cast an existing string
+const dt = l.asDatetimeString('2024-01-15T12:30:00.000Z')
+
+// Type guard for conditional checks
+if (l.isDatetimeString(someString)) {
+  // someString is now typed as DatetimeString
+}
 ```
 
 ## Advanced Usage
@@ -889,35 +1042,96 @@ This will make the generated code more easily tree-shakeable from places that im
 
 ### Blob references
 
-In AT Protocol, binary data (blobs) are referenced using `BlobRef`, which include metadata like MIME type and size. These references are what allow PDSs to determine which binary data ("files") is referenced by records.
+In AT Protocol, binary data (blobs) are referenced using blob references, which include metadata like MIME type and size. These references allow PDSs to determine which binary data ("files") is referenced by records.
+
+#### TypedBlobRef: The Current Standard
+
+The current standard format for blob references is `TypedBlobRef`:
 
 ```typescript
-import { BlobRef, isBlobRef } from '@atproto/lex'
+import { TypedBlobRef } from '@atproto/lex'
 
-const blobRef: BlobRef = {
+const blobRef: TypedBlobRef = {
   $type: 'blob',
   ref: parseCid('bafybeihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku'),
   mimeType: 'image/png',
   size: 12345,
 }
+```
 
-if (isBlobRef(blobRef)) {
-  console.log('Valid BlobRef:', blobRef.mimeType, blobRef.size)
+**When creating new blobs**, always use the `TypedBlobRef` format. This is the format returned by `client.uploadBlob()` and expected by PDS endpoints.
+
+#### LegacyBlobRef: Historical Format
+
+Historically, blob references used a simpler format without the `$type` property:
+
+```typescript
+type LegacyBlobRef = {
+  cid: string // CID as a string (not a Cid object)
+  mimeType: string // No size property
 }
 ```
 
-> [!NOTE]
+**Legacy blob references still exist in the AT Protocol network** in older records created before the format migration. While new blobs should always be created as `TypedBlobRef`, your code must be prepared to handle both formats when reading existing data.
+
+#### Working with Both Formats
+
+The `BlobRef` type is a union that accepts both formats:
+
+```typescript
+import {
+  BlobRef,
+  isBlobRef,
+  isTypedBlobRef,
+  isLegacyBlobRef,
+} from '@atproto/lex'
+
+// When reading data, always use BlobRef to handle both formats
+function processBlobRef(blob: BlobRef) {
+  if (isTypedBlobRef(blob)) {
+    console.log('Modern blob:', blob.ref, blob.mimeType, blob.size)
+  } else if (isLegacyBlobRef(blob)) {
+    console.log('Legacy blob:', blob.cid, blob.mimeType)
+  }
+}
+
+// Or use the isBlobRef type guard which accepts both
+if (isBlobRef(value)) {
+  // value is BlobRef (either TypedBlobRef or LegacyBlobRef)
+}
+```
+
+Helper functions work with both formats:
+
+```typescript
+import {
+  getBlobCid,
+  getBlobCidString,
+  getBlobMime,
+  getBlobSize,
+} from '@atproto/lex'
+
+// These utilities work with both TypedBlobRef and LegacyBlobRef
+const cid = getBlobCid(blobRef) // Returns Cid object
+const cidStr = getBlobCidString(blobRef) // Returns string (optimized)
+const mime = getBlobMime(blobRef) // Returns mimeType
+const size = getBlobSize(blobRef) // Returns number | undefined (legacy refs lack size)
+```
+
+> [!IMPORTANT]
 >
-> Historically, references to blobs were represented as simple objects with the following structure:
+> **Validation behavior with legacy blobs:**
+>
+> - In **strict mode** (`strict: true`, the default): Legacy blob references are rejected during validation. Use this mode when you control the data source and expect only modern blobs.
+> - In **non-strict mode** (`strict: false`): Legacy blob references are accepted. This mode is used automatically when `strictResponseProcessing: false` is set on the Client, allowing your application to handle older records from the network gracefully.
 >
 > ```typescript
-> type LegacyBlobRef = {
->   ref: string
->   mimeType: string
-> }
-> ```
+> // Strict mode (default) - rejects legacy blobs
+> schema.$safeParse(data) // { strict: true }
 >
-> These should no longer be used for new records, but existing records using this format might still be encountered. To handle legacy blob references when validating data, enable the `--allowLegacyBlobs` flag when generating TypeScript schemas with `lex build`. You can use `isLegacyBlobRef()` from `@atproto/lex` to discriminate legacy blob references.
+> // Non-strict mode - accepts legacy blobs
+> schema.$safeParse(data, { strict: false })
+> ```
 
 ### Actions
 
@@ -939,14 +1153,14 @@ Actions receive:
 
 - `client` - The Client instance (to make XRPC calls)
 - `input` - The input data for the action
-- `options` - Call options (signal, headers)
+- `options` - Call options (signal)
 
 #### Using Actions
 
 Actions are called using `client.call()`, the same method used for XRPC queries and procedures:
 
 ```typescript
-import { Action, Client } from '@atproto/lex'
+import { Action, Client, l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 // Define an action
@@ -960,7 +1174,7 @@ export const likePost: Action<
     app.bsky.feed.like,
     {
       subject: { uri, cid },
-      createdAt: new Date().toISOString(),
+      createdAt: l.toDatetimeString(new Date()),
     },
     options,
   )
@@ -1161,7 +1375,7 @@ Actions enable you to create high-level, convenience APIs similar to [@atproto/a
 #### Creating Posts
 
 ```typescript
-import { Action } from '@atproto/lex'
+import { Action, l } from '@atproto/lex'
 import * as app from './lexicons/app.js'
 
 type PostInput = Partial<app.bsky.feed.post.Main> &
@@ -1176,7 +1390,7 @@ export const post: Action<PostInput, { uri: string; cid: string }> = async (
     app.bsky.feed.post,
     {
       ...record,
-      createdAt: record.createdAt || new Date().toISOString(),
+      createdAt: record.createdAt || l.currentDatetimeString(),
     },
     options,
   )
@@ -1192,7 +1406,7 @@ await client.call(post, {
 #### Following Users
 
 ```typescript
-import { Action } from '@atproto/lex'
+import { Action, l } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import * as app from './lexicons/app.js'
 
@@ -1204,7 +1418,7 @@ export const follow: Action<
     app.bsky.graph.follow,
     {
       subject: did,
-      createdAt: new Date().toISOString(),
+      createdAt: l.currentDatetimeString(),
     },
     options,
   )
@@ -1334,6 +1548,33 @@ await client.call(actions.post, { text: 'Hello!' })
 4. **Composition**: Build complex actions from simpler ones
 5. **Retries**: Implement retry logic for operations with optimistic concurrency control
 6. **Tree-shaking**: Export actions individually to allow tree-shaking (instead of bundling them in a single class)
+
+### Standard Schema Compatibility
+
+All generated schemas implement the [Standard Schema](https://standardschema.dev/) interface (`StandardSchemaV1`), which means they can be used with any library or framework that supports Standard Schema, such as form validation libraries, API frameworks, and more.
+
+Every `Schema` instance exposes a `~standard` property conforming to the spec:
+
+```typescript
+import * as app from './lexicons/app.js'
+
+// Use with any Standard Schema-compatible library
+const schema = app.bsky.feed.post
+
+schema['~standard'].version // 1
+schema['~standard'].vendor // '@atproto/lex-schema'
+
+// Validate using the Standard Schema interface
+const result = schema['~standard'].validate(someData)
+
+if ('value' in result) {
+  console.log(result.value) // Parsed and validated data
+} else {
+  console.error(result.issues)
+}
+```
+
+When validated through the Standard Schema interface, schemas operate in "parse" mode, meaning transformations like defaults and coercions are applied to the output.
 
 ## License
 

@@ -1,6 +1,6 @@
 {
   "name": "@atproto/lex",
-  "version": "0.0.16",
+  "version": "0.0.25",
   "license": "MIT",
   "description": "Lexicon tooling for AT",
   "keywords": [
@@ -50,7 +50,8 @@
     "vitest": "^4.0.16"
   },
   "scripts": {
-    "prebuild": "./bin/lex build --clear --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema -- ignore additional npm args",
+    "codegen": "./bin/lex build --override --indexFile --lexicons ./lexicons --out ./tests/lexicons --lib @atproto/lex-schema",
+    "prebuild": "pnpm run codegen",
     "build": "tsc --build tsconfig.build.json",
     "test": "vitest run"
   }

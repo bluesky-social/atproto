@@ -231,8 +231,12 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
         bypassIps: env.rateLimitBypassIps?.map((ipOrCidr) =>
           ipOrCidr.split('/')[0]?.trim(),
         ),
-        repoUploadBlobRateLimitDuration: env.rateLimitRepoUploadBlobTimeDuration ? env.rateLimitRepoUploadBlobTimeDuration : DAY,
-        repoUploadBlobRateLimitPoints: env.rateLimitRepoUploadBlobPoints ? env.rateLimitRepoUploadBlobPoints : 1000,
+        repoUploadBlobRateLimitDuration: env.rateLimitRepoUploadBlobTimeDuration
+          ? env.rateLimitRepoUploadBlobTimeDuration
+          : DAY,
+        repoUploadBlobRateLimitPoints: env.rateLimitRepoUploadBlobPoints
+          ? env.rateLimitRepoUploadBlobPoints
+          : 1000,
       }
     : { enabled: false }
 
@@ -280,18 +284,28 @@ export const envToCfg = (env: ServerEnvironment): ServerConfig => {
             colors: {
               light: env.lightColor,
               dark: env.darkColor,
+
+              contrastSaturation: env.contrastSaturation,
+
               primary: env.primaryColor,
               primaryContrast: env.primaryColorContrast,
               primaryHue: env.primaryColorHue,
+
               error: env.errorColor,
               errorContrast: env.errorColorContrast,
               errorHue: env.errorColorHue,
-              success: env.successColor,
-              successContrast: env.successColorContrast,
-              successHue: env.successColorHue,
+
               warning: env.warningColor,
               warningContrast: env.warningColorContrast,
               warningHue: env.warningColorHue,
+
+              info: env.infoColor,
+              infoContrast: env.infoColorContrast,
+              infoHue: env.infoColorHue,
+
+              success: env.successColor,
+              successContrast: env.successColorContrast,
+              successHue: env.successColorHue,
             },
             links: [
               {

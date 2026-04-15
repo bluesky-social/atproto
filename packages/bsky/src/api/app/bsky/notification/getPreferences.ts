@@ -1,14 +1,13 @@
 import assert from 'node:assert'
-import { Un$Typed } from '@atproto/api'
-import { UpstreamFailureError } from '@atproto/xrpc-server'
+import { Un$Typed } from '@atproto/lex'
+import { Server, UpstreamFailureError } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
-import { Server } from '../../../../lexicon'
-import { Preferences } from '../../../../lexicon/types/app/bsky/notification/defs'
+import { app } from '../../../../lexicons/index.js'
 import { GetNotificationPreferencesResponse } from '../../../../proto/bsky_pb'
 import { protobufToLex } from './util'
 
 export default function (server: Server, ctx: AppContext) {
-  server.app.bsky.notification.getPreferences({
+  server.add(app.bsky.notification.getPreferences, {
     auth: ctx.authVerifier.standard,
     handler: async ({ auth }) => {
       const actorDid = auth.credentials.iss
@@ -26,7 +25,7 @@ export default function (server: Server, ctx: AppContext) {
 const computePreferences = async (
   ctx: AppContext,
   actorDid: string,
-): Promise<Un$Typed<Preferences>> => {
+): Promise<Un$Typed<app.bsky.notification.defs.Preferences>> => {
   let res: GetNotificationPreferencesResponse
   try {
     res = await ctx.dataplane.getNotificationPreferences({

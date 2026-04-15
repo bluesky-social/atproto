@@ -14,8 +14,10 @@ import { memoizedOptions } from '../util/memoize.js'
  * ```
  */
 export class NeverSchema extends Schema<never> {
+  readonly type = 'never' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
-    return ctx.issueInvalidType(input, 'never')
+    return ctx.issueUnexpectedType(input, 'never')
   }
 }
 

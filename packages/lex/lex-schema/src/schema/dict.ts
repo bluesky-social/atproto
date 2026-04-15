@@ -34,6 +34,8 @@ export class DictSchema<
   Record<InferInput<TKey>, InferInput<TValue>>,
   Record<InferInput<TKey>, InferOutput<TValue>>
 > {
+  readonly type = 'dict' as const
+
   constructor(
     readonly keySchema: TKey,
     readonly valueSchema: TValue,
@@ -47,7 +49,7 @@ export class DictSchema<
     options?: { ignoredKeys?: { has(k: string): boolean } },
   ) {
     if (!isPlainObject(input)) {
-      return ctx.issueInvalidType(input, 'dict')
+      return ctx.issueUnexpectedType(input, 'dict')
     }
 
     let copy: undefined | Record<string, unknown>

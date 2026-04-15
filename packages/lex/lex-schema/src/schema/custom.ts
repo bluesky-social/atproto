@@ -1,10 +1,4 @@
-import {
-  Issue,
-  IssueCustom,
-  PropertyKey,
-  Schema,
-  ValidationContext,
-} from '../core.js'
+import { Issue, IssueCustom, Schema, ValidationContext } from '../core.js'
 
 /**
  * Context object provided to custom assertion functions.
@@ -46,6 +40,8 @@ export type CustomAssertion<TValue> = (
  * ```
  */
 export class CustomSchema<out TValue = unknown> extends Schema<TValue> {
+  readonly type = 'custom' as const
+
   constructor(
     private readonly assertion: CustomAssertion<TValue>,
     private readonly message: string,

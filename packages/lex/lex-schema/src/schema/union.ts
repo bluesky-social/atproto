@@ -1,9 +1,9 @@
 import {
   InferInput,
   InferOutput,
+  LexValidationError,
   Schema,
   ValidationContext,
-  ValidationError,
   ValidationFailure,
   Validator,
 } from '../core.js'
@@ -37,6 +37,8 @@ export class UnionSchema<
   InferInput<TValidators[number]>,
   InferOutput<TValidators[number]>
 > {
+  readonly type = 'union' as const
+
   constructor(protected readonly validators: TValidators) {
     super()
   }
@@ -51,7 +53,7 @@ export class UnionSchema<
       failures.push(result)
     }
 
-    return ctx.failure(ValidationError.fromFailures(failures))
+    return ctx.failure(LexValidationError.fromFailures(failures))
   }
 }
 

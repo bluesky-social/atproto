@@ -18,6 +18,8 @@ import { $type, NsidString, Schema, ValidationContext } from '../core.js'
 export class TokenSchema<
   const TValue extends string = string,
 > extends Schema<TValue> {
+  readonly type = 'token' as const
+
   constructor(readonly value: TValue) {
     super()
   }
@@ -34,7 +36,7 @@ export class TokenSchema<
     }
 
     if (typeof input !== 'string') {
-      return ctx.issueInvalidType(input, 'token')
+      return ctx.issueUnexpectedType(input, 'token')
     }
 
     return ctx.issueInvalidValue(input, [this.value])

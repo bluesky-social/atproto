@@ -1,5 +1,5 @@
 import { LexValue } from '@atproto/lex-data'
-import { Infer, Schema, Validator } from '../core.js'
+import { InferInput, Schema, Validator } from '../core.js'
 import { ObjectSchema, object } from './object.js'
 
 export type { LexValue }
@@ -15,7 +15,7 @@ type ToBodyType<
   TSchema,
   TBinary,
 > = TSchema extends Schema
-  ? Infer<TSchema>
+  ? InferInput<TSchema>
   : TEncoding extends `application/json`
     ? LexValue
     : TBinary
@@ -107,15 +107,12 @@ export class Payload<
    * encoding.
    */
   matchesEncoding(contentType: string | undefined): boolean {
-    const mime = contentType?.split(';', 1)[0].trim()
-
     const { encoding } = this
 
-    // Handle undefined cases
     if (encoding === undefined) {
-      // Expecting no body
-      return mime === undefined
-    } else if (mime === undefined) {
+      // When the output is not defined, we don't enforce any rule on the payload.
+      return true
+    } else if (contentType == null) {
       // Expecting a body, but got no content-type
       return false
     }
@@ -124,6 +121,7 @@ export class Payload<
       return true
     }
 
+    const mime = contentType?.split(';', 1)[0].trim()
     if (encoding.endsWith('/*')) {
       return mime.startsWith(encoding.slice(0, -1))
     }
