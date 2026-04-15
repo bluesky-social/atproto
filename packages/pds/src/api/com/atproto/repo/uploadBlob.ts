@@ -8,12 +8,8 @@ import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
 
 export default function (server: Server, ctx: AppContext) {
-<<<<<<< HEAD
   const rateLimits = ctx.cfg.rateLimits
-  server.com.atproto.repo.uploadBlob({
-=======
   server.add(com.atproto.repo.uploadBlob, {
->>>>>>> main
     auth: ctx.authVerifier.authorizationOrUserServiceAuth({
       checkTakedown: true,
       authorize: (permissions, { req }) => {
@@ -22,8 +18,12 @@ export default function (server: Server, ctx: AppContext) {
       },
     }),
     rateLimit: {
-      durationMs: rateLimits.enabled ? rateLimits.repoUploadBlobRateLimitDuration : DAY,
-      points: rateLimits.enabled ? rateLimits.repoUploadBlobRateLimitPoints : 1000,
+      durationMs: rateLimits.enabled
+        ? rateLimits.repoUploadBlobRateLimitDuration
+        : DAY,
+      points: rateLimits.enabled
+        ? rateLimits.repoUploadBlobRateLimitPoints
+        : 1000,
     },
     handler: async ({ auth, input }) => {
       const requester = auth.credentials.did

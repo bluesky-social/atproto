@@ -48,27 +48,16 @@ COPY ./packages/xrpc ./packages/xrpc
 COPY ./services/bsky ./services/bsky
 
 # install all deps
-<<<<<<< HEAD
 RUN --mount=type=cache,target=/root/.pnpm-store \
-    pnpm install --frozen-lockfile > /dev/null
+    PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile > /dev/null
 # build all packages with external node_modules
 RUN --mount=type=cache,target=/root/.pnpm-store \
     pnpm run --recursive --stream --filter '@atproto/crypto...' build > /dev/null
 RUN --mount=type=cache,target=/root/.pnpm-store \
     pnpm run --recursive --stream --filter '@atproto/bsky...' build > /dev/null
-# clean up
-RUN rm -rf node_modules
 # install only prod deps, hoisted to root node_modules dir
 RUN --mount=type=cache,target=/root/.pnpm-store \
-    pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline > /dev/null
-=======
-RUN PUPPETEER_SKIP_DOWNLOAD=true pnpm install --frozen-lockfile
-# build all packages with external node_modules
-RUN pnpm run --recursive --stream --filter '@atproto/crypto...' build
-RUN pnpm run --recursive --stream --filter '@atproto/bsky...' build
-# install only prod deps, hoisted to root node_modules dir
-RUN pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false
->>>>>>> main
+    pnpm install --prod --shamefully-hoist --frozen-lockfile --prefer-offline --config.confirmModulesPurge=false > /dev/null
 
 WORKDIR services/bsky
 
