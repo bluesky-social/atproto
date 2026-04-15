@@ -1,5 +1,19 @@
 # @atproto/oauth-client
 
+## 0.6.0
+
+### Minor Changes
+
+- [#4642](https://github.com/bluesky-social/atproto/pull/4642) [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove support for legacy session data that does not contain `authMethod`.
+
+- [#4642](https://github.com/bluesky-social/atproto/pull/4642) [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Remove dependency on `EventTarget` (missing in some environments)
+
+### Patch Changes
+
+- [#4642](https://github.com/bluesky-social/atproto/pull/4642) [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Delete any pre-existing OAuth session when a new one is created (for a given `sub`)
+
+- [#4642](https://github.com/bluesky-social/atproto/pull/4642) [`a23d132`](https://github.com/bluesky-social/atproto/commit/a23d13268ccfd51a54d21256469b8cb43f7b07df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid throwing errors when trying to revoke a missing or invalid session
+
 ## 0.5.14
 
 ### Patch Changes

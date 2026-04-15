@@ -31,8 +31,10 @@ export interface OutputSchema {
   actors: AppBskyUnspeccedDefs.SkeletonSearchActor[]
   /** DID of the account these suggestions are relative to. If this is returned undefined, suggestions are based on the viewer. */
   relativeToDid?: string
-  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  /** DEPRECATED: use recIdStr instead. */
   recId?: number
+  /** Snowflake for this recommendation, use when submitting recommendation events. */
+  recIdStr?: string
 }
 
 export interface CallOptions {

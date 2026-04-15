@@ -15,9 +15,11 @@ import { memoizedOptions } from '../util/memoize.js'
  * ```
  */
 export class NullSchema extends Schema<null> {
+  readonly type = 'null' as const
+
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (input !== null) {
-      return ctx.issueInvalidType(input, 'null')
+      return ctx.issueUnexpectedType(input, 'null')
     }
 
     return ctx.success(null)

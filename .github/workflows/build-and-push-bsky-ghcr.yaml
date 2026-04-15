@@ -4,7 +4,11 @@ on:
   push:
     branches:
       - main
+<<<<<<< HEAD
       - flashes-appview
+=======
+      - msi/pds-lexification
+>>>>>>> main
 
 env:
   REGISTRY: ghcr.io

@@ -105,6 +105,15 @@ message ScanOperationsResponse {
   string cursor = 2;
 }
 
+message DeleteOperationsByActorAndNamespaceRequest {
+  string actor_did = 1;
+  string namespace = 2;
+}
+
+message DeleteOperationsByActorAndNamespaceResponse {
+  int32 deleted_count = 1;
+}
+
 
 // Ping
 message PingRequest {}
@@ -119,6 +128,7 @@ service Service {
   rpc ScanNotifOperations(ScanNotifOperationsRequest) returns (ScanNotifOperationsResponse);
   rpc PutOperation(PutOperationRequest) returns (PutOperationResponse);
   rpc ScanOperations(ScanOperationsRequest) returns (ScanOperationsResponse);
+  rpc DeleteOperationsByActorAndNamespace(DeleteOperationsByActorAndNamespaceRequest) returns (DeleteOperationsByActorAndNamespaceResponse);
   // Ping
   rpc Ping(PingRequest) returns (PingResponse);
 }

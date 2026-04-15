@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+<<<<<<< HEAD
+=======
+      - msi/pds-lexification
+>>>>>>> main
 
 env:
   REGISTRY: ghcr.io

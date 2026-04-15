@@ -2,15 +2,15 @@ import * as plc from '@did-plc/lib'
 import { Etcd3 } from 'etcd3'
 import express from 'express'
 import { Dispatcher } from 'undici'
-import { AtpAgent } from '@atproto/api'
 import { Keypair } from '@atproto/crypto'
 import { IdResolver } from '@atproto/identity'
+import { Client } from '@atproto/lex'
 import { AuthVerifier } from './auth-verifier'
 import { BsyncClient } from './bsync'
 import { ServerConfig } from './config'
 import { CourierClient } from './courier'
 import { DataPlaneClient, HostList } from './data-plane/client'
-import { FeatureGates } from './feature-gates'
+import { FeatureGatesClient } from './feature-gates'
 import { Hydrator } from './hydration/hydrator'
 import { KwsClient } from './kws'
 import { httpLogger as log } from './logger'
@@ -30,9 +30,9 @@ export class AppContext {
       etcd: Etcd3 | undefined
       dataplane: DataPlaneClient
       dataplaneHostList: HostList
-      searchAgent: AtpAgent | undefined
-      suggestionsAgent: AtpAgent | undefined
-      topicsAgent: AtpAgent | undefined
+      searchClient: Client | undefined
+      suggestionsClient: Client | undefined
+      topicsClient: Client | undefined
       hydrator: Hydrator
       views: Views
       signingKey: Keypair
@@ -42,7 +42,7 @@ export class AppContext {
       courierClient: CourierClient | undefined
       rolodexClient: RolodexClient | undefined
       authVerifier: AuthVerifier
-      featureGates: FeatureGates
+      featureGatesClient: FeatureGatesClient
       blobDispatcher: Dispatcher
       kwsClient: KwsClient | undefined
     },
@@ -64,16 +64,16 @@ export class AppContext {
     return this.opts.dataplaneHostList
   }
 
-  get searchAgent(): AtpAgent | undefined {
-    return this.opts.searchAgent
+  get searchClient(): Client | undefined {
+    return this.opts.searchClient
   }
 
-  get suggestionsAgent(): AtpAgent | undefined {
-    return this.opts.suggestionsAgent
+  get suggestionsClient(): Client | undefined {
+    return this.opts.suggestionsClient
   }
 
-  get topicsAgent(): AtpAgent | undefined {
-    return this.opts.topicsAgent
+  get topicsClient(): Client | undefined {
+    return this.opts.topicsClient
   }
 
   get hydrator(): Hydrator {
@@ -116,8 +116,8 @@ export class AppContext {
     return this.opts.authVerifier
   }
 
-  get featureGates(): FeatureGates {
-    return this.opts.featureGates
+  get featureGatesClient(): FeatureGatesClient {
+    return this.opts.featureGatesClient
   }
 
   get blobDispatcher(): Dispatcher {

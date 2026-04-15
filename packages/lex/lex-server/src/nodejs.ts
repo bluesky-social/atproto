@@ -11,9 +11,10 @@ import {
 import { ListenOptions } from 'node:net'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
+import type { ReadableStream as NodeReadableStream } from 'node:stream/web'
 import { createHttpTerminator } from 'http-terminator'
 import { WebSocket as WebSocketPonyfill, WebSocketServer } from 'ws'
-import { FetchHandler } from './lex-server.js'
+import type { FetchHandler } from './lex-router.js'
 
 // @ts-expect-error
 Symbol.asyncDispose ??= Symbol.for('Symbol.asyncDispose')
@@ -185,7 +186,7 @@ export async function sendResponse(
   }
 
   if (response.body != null && req.method !== 'HEAD') {
-    const stream = Readable.fromWeb(response.body as any)
+    const stream = Readable.fromWeb(response.body as NodeReadableStream)
     await pipeline(stream, res)
   } else {
     await response.body?.cancel()
@@ -194,7 +195,7 @@ export async function sendResponse(
 }
 
 function toRequest(req: IncomingMessage): Request {
-  const host = req.headers.host ?? req.socket?.localAddress ?? 'localhost'
+  const host = req.headers.host ?? req.socket.localAddress ?? 'localhost'
   const isEncrypted = (req.socket as any).encrypted === true
   const protocol = isEncrypted ? 'https' : 'http'
   const url = new URL(req.url ?? '/', `${protocol}://${host}`)
@@ -279,7 +280,7 @@ function toHeaders(headers: IncomingHttpHeaders): Headers {
   return result
 }
 
-function toBody(req: IncomingMessage): null | ReadableStream<Uint8Array> {
+function toBody(req: IncomingMessage): null | ReadableStream {
   if (
     req.method === 'GET' ||
     req.method === 'HEAD' ||
@@ -296,7 +297,7 @@ function toBody(req: IncomingMessage): null | ReadableStream<Uint8Array> {
     return null
   }
 
-  return Readable.toWeb(req) as ReadableStream<Uint8Array>
+  return Readable.toWeb(req) as ReadableStream
 }
 
 /**

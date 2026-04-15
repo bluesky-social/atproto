@@ -1,14 +1,10 @@
 import { Server } from 'node:http'
 import { AddressInfo } from 'node:net'
 import { type Express } from 'express'
-import { CID } from 'multiformats/cid'
-import { ToolsOzoneModerationDefs } from '@atproto/api'
-import { lexToJson } from '@atproto/lexicon'
+import { ToolsOzoneModerationDefs, lexToJson } from '@atproto/api'
+import { isCidString } from '@atproto/lex'
+import { isCid, isPlainObject } from '@atproto/lex-data'
 import { AtUri } from '@atproto/syntax'
-import {
-  FeedViewPost,
-  isReasonRepost,
-} from '../src/lexicon/types/app/bsky/feed/defs'
 
 // Swap out identifiers and dates with stable
 // values for the purpose of snapshot testing
@@ -20,9 +16,8 @@ export const forSnapshot = (obj: unknown) => {
   const unknown = { [kTake]: 'unknown' }
   const toWalk = lexToJson(obj as any) // remove any blobrefs/cids
   return mapLeafValues(toWalk, (item) => {
-    const asCid = CID.asCID(item)
-    if (asCid !== null) {
-      return take(cids, asCid.toString())
+    if (isCid(item)) {
+      return take(cids, item.toString())
     }
     if (typeof item !== 'string') {
       return item
@@ -57,26 +52,28 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+(?:__|::)did:plc/)) {
       return constantDidCursor
     }
-    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls (pds)
+    if (str.match(/\/image\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls (pds), stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/image\/([^/]+)\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, sig, did, cid] = match
       return str
         .replace(sig, 'sig()')
         .replace(did, take(users, did))
-        .replace(cid, take(cids, cid))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
-    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/]+@[\w]+$/)) {
-      // Match image urls (bsky w/ presets)
+    if (str.match(/\/img\/[^/]+\/.+\/did:plc:[^/]+\/[^/@]+(?:@[\w]+)?$/)) {
+      // Match image urls (bsky w/ presets), stripping optional format suffix (e.g. @webp) for stable snapshots
       const match = str.match(
-        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/]+)@[\w]+$/,
+        /\/img\/[^/]+\/.+\/(did:plc:[^/]+)\/([^/@]+)(?:@[\w]+)?$/,
       )
       if (!match) return str
       const [, did, cid] = match
-      return str.replace(did, take(users, did)).replace(cid, take(cids, cid))
+      return str
+        .replace(did, take(users, did))
+        .replace(new RegExp(`${cid}(?:@\\w+)?`), take(cids, cid))
     }
     if (str.startsWith('localhost-')) {
       return 'invite-code'
@@ -84,14 +81,7 @@ export const forSnapshot = (obj: unknown) => {
     if (str.match(/^\d+::pds-public-url-/)) {
       return '0000000000000::invite-code'
     }
-    let isCid: boolean
-    try {
-      CID.parse(str)
-      isCid = true
-    } catch (_err) {
-      isCid = false
-    }
-    if (isCid) {
+    if (isCidString(str)) {
       return take(cids, str)
     }
     return item
@@ -99,14 +89,6 @@ export const forSnapshot = (obj: unknown) => {
 }
 
 // Feed testing utils
-
-export const getOriginator = (item: FeedViewPost) => {
-  if (isReasonRepost(item.reason)) {
-    return item.reason.by.did
-  } else {
-    return item.post.author.did
-  }
-}
 
 // Useful for remapping ids in snapshot testing, to make snapshots deterministic.
 // E.g. you may use this to map this:
@@ -140,7 +122,7 @@ const mapLeafValues = (obj: unknown, fn: (val: unknown) => unknown) => {
   if (Array.isArray(obj)) {
     return obj.map((item) => mapLeafValues(item, fn))
   }
-  if (obj && typeof obj === 'object') {
+  if (isPlainObject(obj)) {
     return Object.entries(obj).reduce(
       (collect, [name, value]) =>
         Object.assign(collect, { [name]: mapLeafValues(value, fn) }),

@@ -62,7 +62,7 @@ describe(PasswordSession, () => {
       .add(com.atproto.server.createSession, async ({ input }) => {
         const session = await authVerifier.create(input.body)
 
-        const body: com.atproto.server.createSession.OutputBody = {
+        const body: com.atproto.server.createSession.$OutputBody = {
           accessJwt: session.accessJwt,
           refreshJwt: session.refreshJwt,
 
@@ -86,7 +86,7 @@ describe(PasswordSession, () => {
       .add(com.atproto.server.getSession, {
         auth: authVerifier.accessStrategy,
         handler: async ({ credentials: { session } }) => {
-          const body: com.atproto.server.getSession.OutputBody = {
+          const body: com.atproto.server.getSession.$OutputBody = {
             did: session.did,
             didDoc: {
               '@context': 'https://w3.org/ns/did/v1',
@@ -117,7 +117,7 @@ describe(PasswordSession, () => {
 
           // Note, we omit email and didDoc here to test that they are properly
           // fetched via getSession in the agent
-          const body: com.atproto.server.refreshSession.OutputBody = {
+          const body: com.atproto.server.refreshSession.$OutputBody = {
             accessJwt: session.accessJwt,
             refreshJwt: session.refreshJwt,
 

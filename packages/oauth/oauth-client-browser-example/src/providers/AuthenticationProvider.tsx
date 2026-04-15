@@ -13,7 +13,6 @@ import { Spinner } from '../components/Spinner.tsx'
 import { SIGN_UP_URL } from '../constants.ts'
 import * as app from '../lexicons/app.ts'
 import { useAbortableEffect } from '../lib/use-abortable-effect.ts'
-import { oauthClient } from '../oauthClient.ts'
 import { OAuthProvider, useOAuthContext } from './OAuthProvider.tsx'
 
 export type AuthenticatedClient = Client & { did: DidString }
@@ -27,7 +26,7 @@ AuthenticationContext.displayName = 'AuthenticationContext'
 
 export function AuthenticationProvider({ children }: { children?: ReactNode }) {
   return (
-    <OAuthProvider client={oauthClient}>
+    <OAuthProvider>
       <AuthenticationProviderInternal>
         {children}
       </AuthenticationProviderInternal>

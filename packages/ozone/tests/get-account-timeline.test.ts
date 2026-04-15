@@ -20,7 +20,7 @@ describe('account timeline', () => {
       dbPostgresSchema: 'ozone_account_timeline_test',
     })
     sc = network.getSeedClient()
-    agent = network.ozone.getClient()
+    agent = network.ozone.getAgent()
     modClient = network.ozone.getModClient()
     await basicSeed(sc)
 

@@ -1,124 +1,334 @@
-/** An ISO 8601 formatted datetime string (YYYY-MM-DDTHH:mm:ss.sssZ) */
-export type DatetimeString =
-  `${string}-${string}-${string}T${string}:${string}:${string}${'Z' | `+${string}` | `-${string}`}`
+/**
+ * Indicates a date or string is not a valid representation of a datetime
+ * according to the atproto
+ * {@link https://atproto.com/specs/lexicon#datetime specification}.
+ */
+export class InvalidDatetimeError extends Error {}
 
-// Allow date.toISOString() to be used where datetime format is expected
-declare global {
-  interface Date {
-    toISOString(): `${string}-${string}-${string}T${string}:${string}:${string}Z`
+/**
+ * A subset of {@link DatetimeString} that represent valid datetime strings with
+ * the format: `YYYY-MM-DDTHH:mm:ss.sssZ`, as returned by `Date.toISOString()
+ * for dates between the years 0000 and 9999.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString}
+ */
+export type ISODatetimeString =
+  // @TODO Switch to branded types for more accurate type safety.
+  `${string}-${string}-${string}T${string}:${string}:${string}.${string}Z`
+
+/**
+ * Represents a {@link Date} that can be safely stringified into a valid atproto
+ * {@link DatetimeString} using the {@link Date.toISOString toISOString()}
+ * method.
+ */
+export interface AtprotoDate extends Date {
+  toISOString(): ISODatetimeString
+}
+
+/**
+ * @see {@link AtprotoDate}
+ */
+export function assertAtprotoDate(date: Date): asserts date is AtprotoDate {
+  const res = parseDate(date)
+  if (!res.success) {
+    throw new InvalidDatetimeError(res.message)
   }
 }
 
-/* Validates datetime string against atproto Lexicon 'datetime' format.
- * Syntax is described at: https://atproto.com/specs/lexicon#datetime
+/**
+ * @see {@link AtprotoDate}
  */
-export function ensureValidDatetime<I extends string>(
+export function asAtprotoDate(date: Date): AtprotoDate {
+  assertAtprotoDate(date)
+  return date
+}
+
+/**
+ * @see {@link AtprotoDate}
+ */
+export function isAtprotoDate(date: Date): date is AtprotoDate {
+  return parseDate(date).success
+}
+
+/**
+ * @see {@link AtprotoDate}
+ */
+export function ifAtprotoDate(date: Date): AtprotoDate | undefined {
+  return isAtprotoDate(date) ? date : undefined
+}
+
+/**
+ * Datetime strings in atproto data structures and API calls should meet the
+ * {@link https://ijmacd.github.io/rfc3339-iso8601/ intersecting} requirements
+ * of the RFC 3339, ISO 8601, and WHATWG HTML datetime standards.
+ *
+ * @note This literal template type is not accurate enough to ensure that a
+ * string is a valid atproto datetime. The {@link DatetimeString} validation
+ * functions ({@link assertDatetimeString}, {@link isDatetimeString}, etc)
+ * should be used to validate that a string meets the atproto datetime
+ * requirements, and the {@link toDatetimeString} function should be used to
+ * convert a {@link Date} object into a valid {@link DatetimeString} string.
+ *
+ * @example "2024-01-15T12:30:00Z"
+ * @example "2024-01-15T12:30:00.000Z"
+ * @example "2024-01-15T12:30:00+00:00"
+ * @example "2024-01-15T11:30:00-01:00"
+ * @see {@link https://atproto.com/specs/lexicon#datetime atproto Lexicon datetime format}
+ * @see {@link https://www.rfc-editor.org/rfc/rfc3339 RFC 3339}
+ * @see {@link https://www.iso.org/iso-8601-date-and-time-format.html ISO 8601}
+ */
+export type DatetimeString =
+  // @TODO Switch to branded types for more accurate type safety?
+  | `${string}-${string}-${string}T${string}:${string}:${string}Z`
+  | `${string}-${string}-${string}T${string}:${string}:${string}${'+' | '-'}${string}:${string}`
+
+/**
+ * Validates that a string is a valid {@link DatetimeString} format string,
+ * throwing an error if it is not.
+ *
+ * @throws InvalidDatetimeError if the input string does not meet the atproto 'datetime' format requirements.
+ * @see {@link DatetimeString}
+ */
+export function assertDatetimeString<I>(
   input: I,
 ): asserts input is I & DatetimeString {
-  const date = new Date(input)
-  // must parse as ISO 8601; this also verifies semantics like month is not 13 or 00
-  if (isNaN(date.getTime())) {
-    throw new InvalidDatetimeError('datetime did not parse as ISO 8601')
-  }
-  if (date.toISOString().startsWith('-')) {
-    throw new InvalidDatetimeError('datetime normalized to a negative time')
-  }
-  // regex and other checks for RFC-3339
-  if (
-    !/^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-6][0-9]:[0-6][0-9](.[0-9]{1,20})?(Z|([+-][0-2][0-9]:[0-5][0-9]))$/.test(
-      input,
-    )
-  ) {
-    throw new InvalidDatetimeError("datetime didn't validate via regex")
-  }
-  if (input.length > 64) {
-    throw new InvalidDatetimeError('datetime is too long (64 chars max)')
-  }
-  if (input.endsWith('-00:00')) {
-    throw new InvalidDatetimeError(
-      'datetime can not use "-00:00" for UTC timezone',
-    )
-  }
-  if (input.startsWith('000')) {
-    throw new InvalidDatetimeError('datetime so close to year zero not allowed')
+  const result = parseString(input)
+  if (!result.success) {
+    throw new InvalidDatetimeError(result.message)
   }
 }
 
-/* Same logic as ensureValidDatetime(), but returns a boolean instead of throwing an exception.
+/**
+ * Casts a string to a {@link DatetimeString} if it is a valid datetime format
+ * string, throwing an error if it is not.
+ *
+ * @throws InvalidDatetimeError if the input string does not meet the atproto 'datetime' format requirements.
+ * @see {@link DatetimeString}
  */
-export function isValidDatetime<I extends string>(
+export function asDatetimeString<I>(input: I): I & DatetimeString {
+  assertDatetimeString(input)
+  return input
+}
+
+/**
+ * Checks if a string is a valid {@link DatetimeString} format string.
+ *
+ * @see {@link DatetimeString}
+ */
+export function isDatetimeString<I>(input: I): input is I & DatetimeString {
+  return parseString(input).success
+}
+
+/**
+ * Returns the input if it is a valid {@link DatetimeString} format string, or
+ * `undefined` if it is not.
+ *
+ * @see {@link DatetimeString}
+ */
+export function ifDatetimeString<I>(
   input: I,
-): input is I & DatetimeString {
-  try {
-    ensureValidDatetime(input)
-  } catch (err) {
-    return false
-  }
-
-  return true
+): undefined | (I & DatetimeString) {
+  return isDatetimeString(input) ? input : undefined
 }
 
-/* Takes a flexible datetime string and normalizes representation.
+/**
+ * Returns the current date and time as a {@link DatetimeString}.
  *
- * This function will work with any valid atproto datetime (eg, anything which isValidDatetime() is true for). It *additionally* is more flexible about accepting datetimes that don't comply to RFC 3339, or are missing timezone information, and normalizing them to a valid datetime.
- *
- * One use-case is a consistent, sortable string. Another is to work with older invalid createdAt datetimes.
- *
- * Successful output will be a valid atproto datetime with millisecond precision (3 sub-second digits) and UTC timezone with trailing 'Z' syntax. Throws `InvalidDatetimeError` if the input string could not be parsed as a datetime, even with permissive parsing.
- *
- * Expected output format: YYYY-MM-DDTHH:mm:ss.sssZ
+ * @see {@link DatetimeString}
  */
-export function normalizeDatetime(dtStr: string): DatetimeString {
-  if (isValidDatetime(dtStr)) {
-    const outStr = new Date(dtStr).toISOString()
-    if (isValidDatetime(outStr)) {
-      return outStr
-    }
-  }
+export function currentDatetimeString(): DatetimeString {
+  return toDatetimeString(new Date())
+}
 
-  // check if this permissive datetime is missing a timezone
-  if (!/.*(([+-]\d\d:?\d\d)|[a-zA-Z])$/.test(dtStr)) {
-    const date = new Date(dtStr + 'Z')
-    if (!isNaN(date.getTime())) {
-      const tzStr = date.toISOString()
-      if (isValidDatetime(tzStr)) {
-        return tzStr
-      }
-    }
-  }
+/**
+ * Converts any {@link Date} into a {@link DatetimeString} if possible, throwing
+ * an error if the date is not a valid atproto datetime.
+ *
+ * This is short-hand for `asAtprotoDate(date).toISOString()`.
+ *
+ * @throws InvalidDatetimeError if the input date is not a valid atproto datetime (eg, it is too far in the future or past, or it normalizes to a negative year).
+ * @see {@link DatetimeString}
+ */
+export function toDatetimeString(date: Date): DatetimeString {
+  return asAtprotoDate(date).toISOString()
+}
 
-  // finally try parsing as simple datetime
-  const date = new Date(dtStr)
-  if (isNaN(date.getTime())) {
-    throw new InvalidDatetimeError(
-      'datetime did not parse as any timestamp format',
-    )
-  }
-  const isoStr = date.toISOString()
-  if (isValidDatetime(isoStr)) {
-    return isoStr
+/**
+ * Takes a flexible datetime string and normalizes its representation.
+ *
+ * This function will work with any valid value that can be parsed as a date. It
+ * *additionally* is more flexible about accepting datetimes that are missing
+ * timezone information, and normalizing them to a valid atproto datetime.
+ *
+ * One use-case is a consistent, sortable string. Another is to work with older
+ * invalid createdAt datetimes.
+ *
+ * @note This function might return different normalized strings for the same
+ * input depending on the timezone of the machine it is run on, since it will
+ * attempt to parse the input "as is" if it fails to parse with an explicit
+ * timezone.
+ *
+ * @returns ISODatetimeString - a valid atproto datetime with millisecond precision (3 sub-second digits) and UTC timezone with trailing 'Z' syntax.
+ * @throws InvalidDatetimeError - if the input string could not be parsed as a datetime, even with permissive parsing.
+ */
+export function normalizeDatetime(dtStr: string): ISODatetimeString {
+  if (
+    // Explicit timezone offset
+    /[+-]\d\d:?\d\d/.test(dtStr) ||
+    // 'Z' timezone designator
+    /\dZ\b/.test(dtStr) ||
+    // Timezone abbreviation (eg. "EST", "PST", "UTC", "GMT", etc), as in:
+    // > Tue Mar 17 2026 16:38:44 PST (Pacific Standard Time)
+    /\b[A-Z]{3,4}\b/.test(dtStr)
+  ) {
+    // Since we do have a timezone designator, we can try parsing "as is" and
+    // should get consistent results regardless of local timezone.
+
+    // @NOTE NodeJS will reject dates with an un-recognized timezone designator
+    // (like "AFT"), even if we add a well-known timezone abbreviation like
+    // "UTC" or "Z".
+    const date = new Date(dtStr)
+    if (isAtprotoDate(date)) {
+      return date.toISOString()
+    }
   } else {
-    throw new InvalidDatetimeError(
-      'datetime normalized to invalid timestamp string',
-    )
+    // If there is no timezone information, try parsing as UTC using two
+    // different syntaxes, falling back to parsing "as is".
+
+    const dateZ = new Date(`${dtStr}Z`)
+    if (isAtprotoDate(dateZ)) {
+      return dateZ.toISOString()
+    }
+
+    const dateUTC = new Date(`${dtStr} UTC`)
+    if (isAtprotoDate(dateUTC)) {
+      return dateUTC.toISOString()
+    }
+
+    // Despite our best efforts to parse as a consistent value, appending "Z" or
+    // " UTC" did not work, so we will try parsing "as is", which may yield
+    // different results depending on the local timezone of the machine.
+    const date = new Date(dtStr)
+    if (isAtprotoDate(date)) {
+      return date.toISOString()
+    }
   }
+
+  throw new InvalidDatetimeError(
+    'datetime did not parse as any timestamp format',
+  )
 }
 
-/* Variant of normalizeDatetime() which always returns a valid datetime strings.
+/**
+ * Variant of {@link normalizeDatetime} which always returns a valid datetime
+ * string.
  *
- * If a InvalidDatetimeError is encountered, returns the UNIX epoch time as a UTC datetime (1970-01-01T00:00:00.000Z).
+ * If a {@link InvalidDatetimeError} is encountered, returns the UNIX epoch time
+ * as a UTC datetime (`1970-01-01T00:00:00.000Z`).
+ *
+ * @see {@link normalizeDatetime}
  */
-export const normalizeDatetimeAlways = (dtStr: string): DatetimeString => {
+export function normalizeDatetimeAlways(dtStr: string): ISODatetimeString {
   try {
     return normalizeDatetime(dtStr)
   } catch (err) {
-    if (err instanceof InvalidDatetimeError) {
-      return new Date(0).toISOString()
-    }
-    throw err
+    return '1970-01-01T00:00:00.000Z'
   }
 }
 
-/* Indicates a datetime string did not pass full atproto Lexicon datetime string format checks.
+// Legacy exports (should we deprecate these ?)
+export {
+  assertDatetimeString as ensureValidDatetime,
+  isDatetimeString as isValidDatetime,
+}
+
+// -----------------------------------------------------------------------------
+// ------------------------- Internal validation logic -------------------------
+// -----------------------------------------------------------------------------
+
+// Validation utils that allow avoiding try/catch for control flow (performance
+// optimization). Other syntax formats should also use this pattern to avoid
+// try/catch in their validation logic, at which point these utils can be moved
+// to a common internal utils.
+type FailureResult = { success: false; message: string }
+const failure = (m: string): FailureResult => ({ success: false, message: m })
+type SuccessResult<V> = { success: true; value: V }
+const success = <V>(v: V): SuccessResult<V> => ({ success: true, value: v })
+type Result<V> = FailureResult | SuccessResult<V>
+
+/**
+ * @see {@link https://www.rfc-editor.org/rfc/rfc3339#section-5.6 Internet Date/Time Format}
+ *
+ * @example
+ * ```abnf
+ * date-fullyear   = 4DIGIT
+ * date-month      = 2DIGIT  ; 01-12
+ * date-mday       = 2DIGIT  ; 01-28, 01-29, 01-30, 01-31 based on
+ *                           ; month/year
+ * time-hour       = 2DIGIT  ; 00-23
+ * time-minute     = 2DIGIT  ; 00-59
+ * time-second     = 2DIGIT  ; 00-58, 00-59, 00-60 based on leap second
+ *                           ; rules
+ * time-secfrac    = "." 1*DIGIT
+ * time-numoffset  = ("+" / "-") time-hour ":" time-minute
+ * time-offset     = "Z" / time-numoffset
+ * partial-time    = time-hour ":" time-minute ":" time-second
+ *                   [time-secfrac]
+ * full-date       = date-fullyear "-" date-month "-" date-mday
+ * full-time       = partial-time time-offset
+ * date-time       = full-date "T" full-time
+ * ```
  */
-export class InvalidDatetimeError extends Error {}
+const DATETIME_REGEX =
+  /^(?<full_year>[0-9]{4})-(?<date_month>0[1-9]|1[012])-(?<date_mday>[0-2][0-9]|3[01])T(?<time_hour>[0-1][0-9]|2[0-3]):(?<time_minute>[0-5][0-9]):(?<time_second>[0-5][0-9]|60)(?<time_secfrac>\.[0-9]+)?(?<time_offset>Z|(?<time_numoffset>[+-](?:[0-1][0-9]|2[0-3]):[0-5][0-9]))$/
+
+/**
+ * Validates that the input is a datetime string according to atproto Lexicon
+ * rules, and parses it into a Date object.
+ */
+function parseString(input: unknown): Result<AtprotoDate> {
+  // @NOTE Performing cheap tests first
+  if (typeof input !== 'string') {
+    return failure('datetime must be a string')
+  }
+  if (input.length > 64) {
+    return failure('datetime is too long (64 chars max)')
+  }
+  if (input.endsWith('-00:00')) {
+    return failure('datetime can not use "-00:00" for UTC timezone')
+  }
+  if (!DATETIME_REGEX.test(input)) {
+    return failure(
+      "datetime is not in a valid format (must match RFC 3339 & ISO 8601 with 'Z' or ±hh:mm timezone)",
+    )
+  }
+
+  // must parse as ISO 8601; this also verifies semantics like leap seconds and
+  // correct number of days in month, which the regex does not check for
+  const date = new Date(input)
+
+  return parseDate(date)
+}
+
+/**
+ * Ensures that a Date object represents a valid datetime according to atproto
+ * Lexicon rules. This ensures that `date.toISOString()` will produce a valid
+ * datetime string that can be used where {@link DatetimeString} is expected.
+ */
+function parseDate(date: Date): Result<AtprotoDate> {
+  const fullYear = date.getUTCFullYear()
+  // Ensures that the date is valid. We could check isNaN(date.getTime()) here
+  // but since we'll check the year anyway, we just use that for the validity
+  // check since an invalid date will have NaN year.
+  if (Number.isNaN(fullYear)) {
+    return failure('datetime did not parse as ISO 8601')
+  }
+  // Ensure that the ISO string representation does not start with ±YYYYYY
+  if (fullYear < 0) {
+    return failure('datetime normalized to a negative time')
+  }
+  if (fullYear > 9999) {
+    return failure('datetime year is too far in the future')
+  }
+  return success(date as AtprotoDate)
+}

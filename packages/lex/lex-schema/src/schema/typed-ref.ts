@@ -51,6 +51,8 @@ export class TypedRefSchema<
   $Typed<InferInput<TValidator>>,
   $Typed<InferOutput<TValidator>>
 > {
+  readonly type = 'typedRef' as const
+
   #getter: TypedRefGetter<TValidator>
 
   constructor(getter: TypedRefGetter<TValidator>) {

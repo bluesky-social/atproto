@@ -1,0 +1,20 @@
+{
+  "lexicon": 1,
+  "id": "com.example.stringKnownValues",
+  "defs": {
+    "main": {
+      "type": "record",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "properties": {
+          "myKey": {
+            "type": "string",
+            "knownValues": ["foo", "bar"]
+          }
+        },
+        "required": ["myKey"]
+      }
+    }
+  }
+}

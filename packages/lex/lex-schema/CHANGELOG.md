@@ -1,5 +1,127 @@
 # @atproto/lex-schema
 
+## 0.0.19
+
+### Patch Changes
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export `AtUriString` utilities from `@atproto/syntax`
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+
+## 0.0.18
+
+### Patch Changes
+
+- [#4828](https://github.com/bluesky-social/atproto/pull/4828) [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Accept legacy blob references in non-strict mode. Legacy blob references (objects with `cid` and `mimeType` properties) are now accepted when `strict: false`, which is the default behavior when `strictResponseProcessing` is disabled on the Client.
+
+  BREAKING: The `allowLegacy` option has been removed from the blob schema builder, and legacy blobs are now handled automatically based on the strictness mode: in strict mode they are rejected, and in non-strict mode they are accepted. Consumers should stop passing `allowLegacy` and rely on strictness configuration instead. Likewise, CLI consumers should stop using the removed `--allowLegacyBlobs` flag and use the default strict/non-strict behavior.
+
+- Updated dependencies [[`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`f6f100c`](https://github.com/bluesky-social/atproto/commit/f6f100c33700a7ff58a1458109cc7420131feed0), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856), [`c62651d`](https://github.com/bluesky-social/atproto/commit/c62651dd69f1e18bd854b66e499b91fee9eaa856)]:
+  - @atproto/lex-data@0.0.15
+
+## 0.0.17
+
+### Patch Changes
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update `lexErrorDataSchema` to match spec (rejecting `error` constants with whitespace)
+
+- [#4787](https://github.com/bluesky-social/atproto/pull/4787) [`c4df84c`](https://github.com/bluesky-social/atproto/commit/c4df84cd78df68ee8cb7289e7b61b3a032ad484e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Optimize counting of graphemes when validating strings
+
+- [#4779](https://github.com/bluesky-social/atproto/pull/4779) [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix `build()` method of record and typed object to not perform validation.
+
+- [#4784](https://github.com/bluesky-social/atproto/pull/4784) [`e5e5bcf`](https://github.com/bluesky-social/atproto/commit/e5e5bcf85fbc0d418f05724d684e7265be6a0be9) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Show invalid values in issue description (when stringifiable in reasonably small string)
+
+- [#4796](https://github.com/bluesky-social/atproto/pull/4796) [`ac6bd18`](https://github.com/bluesky-social/atproto/commit/ac6bd18f1dc3397dd29008eff2a1e40702a4e138) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow specifying `ValidateOptions` to `matches()` and `ifMathces()` method, allowing disabling "strict" mode
+
+- [#4799](https://github.com/bluesky-social/atproto/pull/4799) [`c5c6c7d`](https://github.com/bluesky-social/atproto/commit/c5c6c7dac3b08e5f63cc918f57705573028ad797) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow any encoding to match payload that don't expect any particular encoding
+
+- Updated dependencies [[`0dbea15`](https://github.com/bluesky-social/atproto/commit/0dbea15da48a6ca913cc3a3a2d8c0ffe64d7c69a), [`d0c136c`](https://github.com/bluesky-social/atproto/commit/d0c136cba2ec8fa97017849b1023d5af5d2cc60c), [`527f5d4`](https://github.com/bluesky-social/atproto/commit/527f5d4c5d0c9264c2ff6f23ad06a41163fc6809)]:
+  - @atproto/syntax@0.5.2
+
+## 0.0.16
+
+### Patch Changes
+
+- [#4761](https://github.com/bluesky-social/atproto/pull/4761) [`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow using a dynamic non-strict validation mode
+
+- Updated dependencies [[`6a88461`](https://github.com/bluesky-social/atproto/commit/6a88461c5aa9486269f0769b7a3d52f384581786)]:
+  - @atproto/lex-data@0.0.14
+
+## 0.0.15
+
+### Patch Changes
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Rename `IssueInvalidFormat`'s `message` property to `detail`
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add a read-only `message` property to the `Issue` class
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `LexValidationError` class now implements `ResultFailure` allowing it to be used as validation return value directly (without the need to be wrapped)
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update stringification of issues (`toString()`) to consistently display the error path at the end.
+
+- [`112b159`](https://github.com/bluesky-social/atproto/commit/112b159ec293a5c3fff41237474a3788fc47f9ca) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export more string format type assertion utilities
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - `PropertyKey` is no longer exported. Use the global value instead.
+
+- [#4734](https://github.com/bluesky-social/atproto/pull/4734) [`3dc3791`](https://github.com/bluesky-social/atproto/commit/3dc37915436dec7e18c7dc9dcf01b72cad53fdbe) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add [Standard Schema](https://standardschema.dev/) compatibility
+
+- Updated dependencies [[`67eb0c1`](https://github.com/bluesky-social/atproto/commit/67eb0c19ac415e762e221b2ccda9f0bcf7b3dd6f)]:
+  - @atproto/syntax@0.5.1
+
+## 0.0.14
+
+### Patch Changes
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow `WWWAuthenticate` to have multiple challenges for the same scheme
+
+- [#4689](https://github.com/bluesky-social/atproto/pull/4689) [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Export more `DatetimeString` utilities from `@atproto/syntax`
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `$` utility function bound to the instance, allowing to use them without the schema as `this` context
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Ignore empty strings from `params` parsing
+
+- [#4688](https://github.com/bluesky-social/atproto/pull/4688) [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Renaming `ValidationError` to `LexValidationError` for consistency with `LexError` & sub-classes
+
+- Updated dependencies [[`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7), [`f7c2610`](https://github.com/bluesky-social/atproto/commit/f7c26103a6d4e24e5bedbb6fd908be140420e0dd), [`52834ab`](https://github.com/bluesky-social/atproto/commit/52834aba182da8df3611fd9dff924e6c6a3973a7)]:
+  - @atproto/syntax@0.5.0
+  - @atproto/lex-data@0.0.13
+
+## 0.0.13
+
+### Patch Changes
+
+- [#4654](https://github.com/bluesky-social/atproto/pull/4654) [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Params cannot be arrays of mixed string, number and booleans (items can only be of one type)
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve typeing of `string()` schemas
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix import statement
+
+- [#4654](https://github.com/bluesky-social/atproto/pull/4654) [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Schemas now define a `type` property that allows to better discriminate them
+
+- [#4654](https://github.com/bluesky-social/atproto/pull/4654) [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add support for `knownValues` in string schemas
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `MaybeTypedObject` type utility (retrun type of `TypedObjectSchema.isTypeOf` method)
+
+- [#4654](https://github.com/bluesky-social/atproto/pull/4654) [`39dea03`](https://github.com/bluesky-social/atproto/commit/39dea03c417a1da069962560505427a7aa25ad7a) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Properly support "enum" and "const" schemas in params
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Allow using `InferMethod*` type helpers without any argument
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Minor optimization when checking payload encoding
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve error messages when encountering an unexpected legacy blob
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add new `issueUnexpectedType` method on `ValidationContext` to better allow creation issues with multiple allowed types
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Update validation message for $typed object to match working of `@atproto/lexicon`
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Replace `UnknownObject` with `LexMap` to improve consistency with underlying data structure being validated
+
+- [#4660](https://github.com/bluesky-social/atproto/pull/4660) [`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Expose `TypedRecord` type utility (result of `RecordSchema.isTypeOf` methid
+
+- Updated dependencies [[`ea5df64`](https://github.com/bluesky-social/atproto/commit/ea5df64db9e408d2b320f5f75eb2878aef6bc6df)]:
+  - @atproto/lex-data@0.0.12
+
 ## 0.0.12
 
 ### Patch Changes

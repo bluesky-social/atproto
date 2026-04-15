@@ -42,6 +42,8 @@ export class TypedUnionSchema<
     ? InferOutput<TValidators[number]>
     : InferOutput<TValidators[number]> | Unknown$TypedObject
 > {
+  readonly type = 'typedUnion' as const
+
   constructor(
     protected readonly validators: TValidators,
     public readonly closed: TClosed,
@@ -67,7 +69,7 @@ export class TypedUnionSchema<
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (!isPlainObject(input) || !('$type' in input)) {
-      return ctx.issueInvalidType(input, '$typed')
+      return ctx.issueUnexpectedType(input, '$typed')
     }
 
     const { $type } = input

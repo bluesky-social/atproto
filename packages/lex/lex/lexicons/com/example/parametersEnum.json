@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.example.parametersEnum",
+  "defs": {
+    "main": {
+      "type": "query",
+      "parameters": {
+        "type": "params",
+        "required": ["booleanCst", "integerCst"],
+        "properties": {
+          "booleanCst": { "type": "boolean", "const": true },
+          "integerCst": { "type": "integer", "const": 42 },
+          "integerEnum": { "type": "integer", "enum": [1, 2, 3] },
+          "stringCst": { "type": "string", "const": "foo" },
+          "stringEnum": { "type": "string", "enum": ["foo", "bar", "baz"] },
+
+          "arrayFalse": {
+            "type": "array",
+            "items": { "type": "boolean", "const": false }
+          },
+          "arrayIntCst": {
+            "type": "array",
+            "items": { "type": "integer", "const": 42 }
+          },
+          "arrayIntEnum": {
+            "type": "array",
+            "items": { "type": "integer", "enum": [4, 5, 6] }
+          }
+        }
+      }
+    }
+  }
+}

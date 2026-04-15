@@ -18,17 +18,26 @@ import { Schema, ValidationContext } from '../core.js'
 export class RegexpSchema<
   TValue extends string = string,
 > extends Schema<TValue> {
-  constructor(public readonly pattern: RegExp) {
+  readonly type = 'regexp' as const
+
+  constructor(
+    public readonly pattern: RegExp,
+    public readonly message?: string,
+  ) {
     super()
   }
 
   validateInContext(input: unknown, ctx: ValidationContext) {
     if (typeof input !== 'string') {
-      return ctx.issueInvalidType(input, 'string')
+      return ctx.issueUnexpectedType(input, 'string')
     }
 
     if (!this.pattern.test(input)) {
-      return ctx.issueInvalidFormat(input, this.pattern.toString())
+      return ctx.issueInvalidFormat(
+        input,
+        this.pattern.toString(),
+        this.message,
+      )
     }
 
     return ctx.success(input as TValue)
@@ -65,6 +74,9 @@ export class RegexpSchema<
  * ```
  */
 /*@__NO_SIDE_EFFECTS__*/
-export function regexp<TInput extends string = string>(pattern: RegExp) {
-  return new RegexpSchema<TInput>(pattern)
+export function regexp<TInput extends string = string>(
+  pattern: RegExp,
+  message?: string,
+): RegexpSchema<TInput> {
+  return new RegexpSchema<TInput>(pattern, message)
 }

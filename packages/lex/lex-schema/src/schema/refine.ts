@@ -1,7 +1,6 @@
 import {
   InferInput,
   IssueCustom,
-  PropertyKey,
   ValidationContext,
   ValidationResult,
   Validator,

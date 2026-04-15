@@ -26,6 +26,8 @@ export class NullableSchema<const TValidator extends Validator> extends Schema<
   InferInput<TValidator> | null,
   InferOutput<TValidator> | null
 > {
+  readonly type = 'nullable' as const
+
   constructor(readonly validator: TValidator) {
     super()
   }

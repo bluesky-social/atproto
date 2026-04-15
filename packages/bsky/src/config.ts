@@ -1,9 +1,10 @@
 import assert from 'node:assert'
 import { noUndefinedVals } from '@atproto/common'
+import { DidString, isDidString } from '@atproto/lex'
 import { subLogger as log } from './logger'
 
 type LiveNowConfig = {
-  did: string
+  did: DidString
   domains: string[]
 }[]
 
@@ -81,6 +82,7 @@ export interface ServerConfigValues {
   indexedAtEpoch?: Date
   // misc/dev
   blobCacheLocation?: string
+  eventProxyTrackingEndpoint?: string
   growthBookApiHost?: string
   growthBookClientKey?: string
   // threads
@@ -144,6 +146,7 @@ export class ServerConfig {
       process.env.BSKY_HANDLE_RESOLVE_NAMESERVERS,
     )
     const cdnUrl = process.env.BSKY_CDN_URL || process.env.BSKY_IMG_URI_ENDPOINT
+    // Values 0 through 16
     const etcdHosts =
       overrides?.etcdHosts ?? envList(process.env.BSKY_ETCD_HOSTS)
     // e.g. https://video.invalid/watch/%s/%s/playlist.m3u8
@@ -213,6 +216,8 @@ export class ServerConfig {
     const modServiceDid = process.env.MOD_SERVICE_DID
     assert(modServiceDid)
 
+    const eventProxyTrackingEndpoint =
+      process.env.BSKY_EVENT_PROXY_TRACKING_ENDPOINT || undefined
     const growthBookApiHost = process.env.BSKY_GROWTHBOOK_API_HOST || undefined
     const growthBookClientKey =
       process.env.NODE_ENV === 'test'
@@ -369,6 +374,7 @@ export class ServerConfig {
       blobRateLimitBypassHostname,
       adminPasswords,
       modServiceDid,
+      eventProxyTrackingEndpoint,
       growthBookApiHost,
       growthBookClientKey,
       clientCheckEmailConfirmed,
@@ -563,11 +569,15 @@ export class ServerConfig {
   }
 
   get labelsFromIssuerDids() {
-    return this.cfg.labelsFromIssuerDids ?? []
+    return (this.cfg.labelsFromIssuerDids ?? []) as DidString[]
   }
 
   get blobCacheLocation() {
     return this.cfg.blobCacheLocation
+  }
+
+  get eventProxyTrackingEndpoint() {
+    return this.cfg.eventProxyTrackingEndpoint
   }
 
   get growthBookApiHost() {
@@ -680,6 +690,7 @@ function isLiveNowConfig(data: any): data is LiveNowConfig {
         typeof item === 'object' &&
         item !== null &&
         typeof item.did === 'string' &&
+        isDidString(item.did) &&
         Array.isArray(item.domains) &&
         item.domains.every((domain: any) => typeof domain === 'string'),
     )

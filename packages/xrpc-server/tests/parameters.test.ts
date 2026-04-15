@@ -3,7 +3,12 @@ import { AddressInfo } from 'node:net'
 import { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src'
-import { closeServer, createServer } from './_util'
+import {
+  buildAddLexicons,
+  buildMethodLexicons,
+  closeServer,
+  createServer,
+} from './_util'
 
 const LEXICONS: LexiconDoc[] = [
   {
@@ -43,7 +48,10 @@ describe('Parameters', () => {
   beforeAll(async () => {
     s = await createServer(server)
     const { port } = s.address() as AddressInfo
-    client = new XrpcClient(`http://localhost:${port}`, LEXICONS)
+    client = new XrpcClient(
+      `http://localhost:${port}`,
+      structuredClone(LEXICONS),
+    )
   })
   afterAll(async () => {
     await closeServer(s)
@@ -150,5 +158,174 @@ describe('Parameters', () => {
         arr: [1, 2, 3],
       }),
     ).rejects.toThrow('Error: arr must not have more than 2 elements')
+  })
+})
+
+const LOOSE_PARAMS_LEXICONS = [
+  {
+    lexicon: 1,
+    id: 'io.example.looseParamsTest',
+    defs: {
+      main: {
+        type: 'query',
+        parameters: {
+          type: 'params',
+          required: ['str'],
+          properties: {
+            str: { type: 'string' },
+            arr: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+        },
+      },
+    },
+  },
+] as const satisfies LexiconDoc[]
+
+for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
+  describe(buildServer, () => {
+    let s: http.Server
+    let url: string
+
+    beforeAll(async () => {
+      const server = await buildServer(LOOSE_PARAMS_LEXICONS, {
+        'io.example.looseParamsTest': {
+          opts:
+            buildServer === buildAddLexicons
+              ? { paramsParseLoose: true }
+              : undefined,
+          handler: (ctx: xrpcServer.HandlerContext) => ({
+            encoding: 'application/json',
+            body: ctx.params,
+          }),
+        },
+      })
+      s = await createServer(server)
+      const { port } = s.address() as AddressInfo
+      url = `http://localhost:${port}`
+    })
+
+    afterAll(async () => {
+      await closeServer(s)
+    })
+
+    it('converts bracket[] array syntax to standard params', async () => {
+      const res = await fetch(
+        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[]=one&arr[]=two`,
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.str).toBe('hello')
+      expect(body.arr).toEqual(['one', 'two'])
+    })
+
+    it('converts bracket[n] array syntax to standard params', async () => {
+      const res = await fetch(
+        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[0]=one&arr[1]=two`,
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.str).toBe('hello')
+      expect(body.arr).toEqual(['one', 'two'])
+    })
+
+    it('ignores empty indices when using bracket[n] syntax', async () => {
+      const res = await fetch(
+        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[4]=one&arr[9]=two`,
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.str).toBe('hello')
+      expect(body.arr).toEqual(['one', 'two'])
+    })
+
+    it('still handles standard array syntax', async () => {
+      const res = await fetch(
+        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr=one&arr=two`,
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.str).toBe('hello')
+      expect(body.arr).toEqual(['one', 'two'])
+    })
+
+    it('handles single bracket value', async () => {
+      const res = await fetch(
+        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[]=only`,
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.str).toBe('hello')
+      expect(body.arr).toEqual(['only'])
+    })
+
+    it('handles single indexed bracket value', async () => {
+      const res = await fetch(
+        `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[0]=only`,
+      )
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.str).toBe('hello')
+      expect(body.arr).toEqual(['only'])
+    })
+  })
+}
+
+describe('paramsParseLoose option', () => {
+  it('throws when used with method()', () => {
+    const server = xrpcServer.createServer(
+      structuredClone(LOOSE_PARAMS_LEXICONS),
+    )
+    expect(() => {
+      server.method('io.example.looseParamsTest', {
+        opts: { paramsParseLoose: true },
+        handler: () => ({
+          encoding: 'application/json',
+          body: {},
+        }),
+      })
+    }).toThrow('paramsParseLoose is not supported with method()')
+    expect(() => {
+      server.method('io.example.looseParamsTest', {
+        opts: { paramsParseLoose: false },
+        handler: () => ({
+          encoding: 'application/json',
+          body: {},
+        }),
+      })
+    }).toThrow('paramsParseLoose is not supported with method()')
+  })
+})
+
+describe(buildAddLexicons, () => {
+  it('does not use loose parsing by default', async () => {
+    const server = await buildAddLexicons(LOOSE_PARAMS_LEXICONS, {
+      'io.example.looseParamsTest': (ctx: xrpcServer.HandlerContext) => ({
+        encoding: 'application/json',
+        body: ctx.params,
+      }),
+    })
+
+    await using httpServer = await createServer(server)
+    const { port } = httpServer.address() as AddressInfo
+    const url = `http://localhost:${port}`
+
+    // standard array syntax works
+    const res = await fetch(
+      `${url}/xrpc/io.example.looseParamsTest?str=hello&arr=one&arr=two`,
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.arr).toEqual(['one', 'two'])
+
+    // bracket syntax is not converted without paramsParseLoose
+    const bracketRes = await fetch(
+      `${url}/xrpc/io.example.looseParamsTest?str=hello&arr[]=one&arr[]=two`,
+    )
+    expect(bracketRes.status).toBe(200)
+    const bracketBody = await bracketRes.json()
+    expect(bracketBody.arr).toBeUndefined()
   })
 })
