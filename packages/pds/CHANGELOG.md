@@ -1,5 +1,19 @@
 # @atproto/pds
 
+## 0.4.219
+
+### Patch Changes
+
+- [#4816](https://github.com/bluesky-social/atproto/pull/4816) [`61e75af`](https://github.com/bluesky-social/atproto/commit/61e75af39e63217d915850b2f8ac8db5f92eed0b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Use request logger instead of global one when performing service proxying
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55), [`0cfb16b`](https://github.com/bluesky-social/atproto/commit/0cfb16b2bfead81284317f2f893838384070d219), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`b3ce11a`](https://github.com/bluesky-social/atproto/commit/b3ce11ae2e965f239db6aec6054f069d557f4d55), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`952354c`](https://github.com/bluesky-social/atproto/commit/952354c1dd458251f8b643d02f4b227d40c5df17), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+  - @atproto/oauth-provider@0.16.0
+  - @atproto/lex-json@0.0.16
+  - @atproto/lex@0.0.25
+  - @atproto/xrpc-server@0.10.20
+  - @atproto/lex-cbor@0.0.16
+
 ## 0.4.218
 
 ### Patch Changes

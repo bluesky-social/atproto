@@ -1,5 +1,15 @@
 # @atproto/lex-client
 
+## 0.0.20
+
+### Patch Changes
+
+- [#4816](https://github.com/bluesky-social/atproto/pull/4816) [`61e75af`](https://github.com/bluesky-social/atproto/commit/61e75af39e63217d915850b2f8ac8db5f92eed0b) Thanks [@matthieusieben](https://github.com/matthieusieben)! - On NodeJS, improve error reporting by unwrapping undici errors
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`952354c`](https://github.com/bluesky-social/atproto/commit/952354c1dd458251f8b643d02f4b227d40c5df17)]:
+  - @atproto/lex-schema@0.0.19
+  - @atproto/lex-json@0.0.16
+
 ## 0.0.19
 
 ### Patch Changes
