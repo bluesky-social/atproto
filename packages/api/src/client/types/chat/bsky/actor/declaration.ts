@@ -17,6 +17,7 @@ const id = 'chat.bsky.actor.declaration'
 export interface Main {
   $type: 'chat.bsky.actor.declaration'
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
+  allowGroupInvites?: 'all' | 'none' | 'following' | (string & {})
   [k: string]: unknown
 }
 

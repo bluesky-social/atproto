@@ -35,6 +35,12 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?:
+    | 'AccountSuspended'
+    | 'BlockedActor'
+    | 'MessagesDisabled'
+    | 'NotFollowedBySender'
+    | 'RecipientNotFound'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

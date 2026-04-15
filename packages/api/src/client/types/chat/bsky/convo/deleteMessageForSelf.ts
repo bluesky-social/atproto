@@ -38,6 +38,24 @@ export interface Response {
   data: OutputSchema
 }
 
+export class InvalidConvoError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
+export class MessageDeleteNotAllowedError extends XRPCError {
+  constructor(src: XRPCError) {
+    super(src.status, src.error, src.message, src.headers, { cause: src })
+  }
+}
+
 export function toKnownErr(e: any) {
+  if (e instanceof XRPCError) {
+    if (e.error === 'InvalidConvo') return new InvalidConvoError(e)
+    if (e.error === 'MessageDeleteNotAllowed')
+      return new MessageDeleteNotAllowedError(e)
+  }
+
   return e
 }

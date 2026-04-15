@@ -32,7 +32,7 @@ export function validateMain<V>(v: V) {
 
 export interface Image {
   $type?: 'app.bsky.embed.images#image'
-  /** The raw image file. May be up to 2mb, formerly limited to 1mb. */
+  /** The raw image file. May be up to 2 MB, formerly limited to 1 MB. */
   image: BlobRef
   /** Alt text description of the image, for accessibility. */
   alt: string

@@ -39,6 +39,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidConvo' | 'OwnerCannotLeave'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
