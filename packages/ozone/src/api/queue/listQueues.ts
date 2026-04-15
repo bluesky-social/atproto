@@ -25,9 +25,7 @@ export default function (server: Server, ctx: AppContext) {
         reportTypes,
       })
 
-      const queues = await Promise.all(
-        result.queues.map((q) => queueService.viewWithStats(q)),
-      )
+      const queues = await queueService.viewsWithStats(result.queues)
 
       return {
         encoding: 'application/json',

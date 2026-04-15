@@ -18907,7 +18907,7 @@ export const schemaDict = {
             type: 'integer',
             description: "Number of reports in 'closed' status",
           },
-          escalatedPendingCount: {
+          escalatedCount: {
             type: 'integer',
             description: "Number of reports in 'escalated' status",
           },
@@ -19883,7 +19883,7 @@ export const schemaDict = {
             type: 'integer',
             description: "Number of reports in 'closed' status.",
           },
-          escalatedPendingCount: {
+          escalatedCount: {
             type: 'integer',
             description: "Number of reports in 'escalated' status.",
           },
@@ -19926,7 +19926,7 @@ export const schemaDict = {
             type: 'integer',
             description: "Number of reports in 'closed' status within the day.",
           },
-          escalatedPendingCount: {
+          escalatedCount: {
             type: 'integer',
             description:
               "Number of reports in 'escalated' status within the day.",

@@ -24,7 +24,7 @@ export interface ReportStat {
   actionedCount: number | null // Reports with status = 'closed' in last 24h
   escalatedCount: number | null // Reports with status = 'escalated' in last 24h
   actionRate: number | null // actionedCount / inboundCount * 100
-  avgHandlingTimeSec: number | null // Average time from open/assigned to closed, in milliseconds
+  avgHandlingTimeSec: number | null // Average time from open/assigned to closed, in seconds
 }
 
 export type PartialDB = {

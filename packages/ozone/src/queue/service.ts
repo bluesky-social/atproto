@@ -4,9 +4,9 @@ import { InvalidRequestError } from '@atproto/xrpc-server'
 import { Database } from '../db'
 import { TimeIdKeyset, paginate } from '../db/pagination'
 import { ReportQueue } from '../db/schema/report_queue'
-import { ReportStat } from '../db/schema/report_stat'
 import { jsonb } from '../db/types'
 import { handleReportUpdate } from '../report/handle-report-update'
+import { ReportStatsService } from '../report/stats'
 import { viewQueueStats } from '../report/views'
 
 export type QueueServiceCreator = (db: Database) => QueueService
@@ -211,22 +211,7 @@ export class QueueService {
     }
   }
 
-  async getStatsForQueue(
-    queueId: number,
-  ): Promise<Selectable<ReportStat> | undefined> {
-    const row = await this.db.db
-      .selectFrom('report_stat')
-      .selectAll()
-      .where('queueId', '=', queueId)
-      .where('mode', '=', 'live')
-      .where('timeframe', '=', 'day')
-      .executeTakeFirst()
-
-    return row
-  }
-
   view(queue: Selectable<ReportQueue>): ToolsOzoneQueueDefs.QueueView {
-    // Synchronous view — stats will be populated via viewAsync when needed
     return {
       id: queue.id,
       name: queue.name,
@@ -242,20 +227,25 @@ export class QueueService {
       stats: {
         pendingCount: 0,
         actionedCount: 0,
-        escalatedPendingCount: 0,
+        escalatedCount: 0,
         inboundCount: 0,
         actionRate: 0,
       },
     }
   }
 
-  async viewWithStats(
-    queue: Selectable<ReportQueue>,
-  ): Promise<ToolsOzoneQueueDefs.QueueView> {
-    const view = this.view(queue)
-    const stats = await this.getStatsForQueue(queue.id)
-    view.stats = viewQueueStats(stats)
-    return view
+  async viewsWithStats(
+    queues: Selectable<ReportQueue>[],
+  ): Promise<ToolsOzoneQueueDefs.QueueView[]> {
+    const statsService = new ReportStatsService(this.db)
+    const queueIds = queues.map((q) => q.id)
+    const statsMap = await statsService.getLiveStatsForQueues(queueIds)
+
+    return queues.map((queue) => {
+      const view = this.view(queue)
+      view.stats = viewQueueStats(statsMap.get(queue.id))
+      return view
+    })
   }
 
   /**

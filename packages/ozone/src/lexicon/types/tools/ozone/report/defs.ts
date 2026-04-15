@@ -392,7 +392,7 @@ export interface LiveStats {
   /** Number of reports in 'closed' status. */
   actionedCount?: number
   /** Number of reports in 'escalated' status. */
-  escalatedPendingCount?: number
+  escalatedCount?: number
   /** Reports received in the last 24 hours. */
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
@@ -423,7 +423,7 @@ export interface HistoricalStats {
   /** Number of reports in 'closed' status within the day. */
   actionedCount?: number
   /** Number of reports in 'escalated' status within the day. */
-  escalatedPendingCount?: number
+  escalatedCount?: number
   /** Reports received within the day. */
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */

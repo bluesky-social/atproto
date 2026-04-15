@@ -209,7 +209,7 @@ export function viewQueueStats(
   return {
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
-    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    escalatedCount: row?.escalatedCount ?? undefined,
     inboundCount: row?.inboundCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
@@ -223,7 +223,7 @@ export function viewLiveStats(
   return {
     pendingCount: row?.pendingCount ?? undefined,
     actionedCount: row?.actionedCount ?? undefined,
-    escalatedPendingCount: row?.escalatedCount ?? undefined,
+    escalatedCount: row?.escalatedCount ?? undefined,
     inboundCount: row?.inboundCount ?? undefined,
     actionRate: row?.actionRate ?? undefined,
     avgHandlingTimeSec: row?.avgHandlingTimeSec ?? undefined,
@@ -238,7 +238,7 @@ export function viewHistoricalStats(
     computedAt: row.computedAt,
     pendingCount: row.pendingCount ?? undefined,
     actionedCount: row.actionedCount ?? undefined,
-    escalatedPendingCount: row.escalatedCount ?? undefined,
+    escalatedCount: row.escalatedCount ?? undefined,
     inboundCount: row.inboundCount ?? undefined,
     actionRate: row.actionRate ?? undefined,
     avgHandlingTimeSec: row.avgHandlingTimeSec ?? undefined,

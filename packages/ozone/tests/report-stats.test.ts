@@ -47,6 +47,24 @@ describe('report-stats', () => {
     return data.stats
   }
 
+  const getHistoricalStats = async (params?: {
+    queueId?: number
+    moderatorDid?: string
+    reportTypes?: string[]
+    startDate?: string
+    endDate?: string
+    limit?: number
+    cursor?: string
+  }) => {
+    const { data } = await agent.tools.ozone.report.getHistoricalStats(params, {
+      headers: await network.ozone.modHeaders(
+        ids.ToolsOzoneReportGetHistoricalStats,
+        'admin',
+      ),
+    })
+    return data
+  }
+
   beforeAll(async () => {
     network = await TestNetwork.create({
       dbPostgresSchema: 'ozone_report_stats',
@@ -337,7 +355,7 @@ describe('report-stats', () => {
 
       expect(stats.actionedCount).toBe(0)
       expect(stats.inboundCount).toBe(0)
-      expect(stats.escalatedPendingCount).toBeUndefined()
+      expect(stats.escalatedCount).toBeUndefined()
       expect(stats.pendingCount).toBeUndefined()
     })
   })
@@ -402,7 +420,7 @@ describe('report-stats', () => {
       const stats = await getLiveStats({
         reportTypes: REPORT_TYPE_GROUPS['Legacy'],
       })
-      expect(stats.escalatedPendingCount).toBeGreaterThanOrEqual(1)
+      expect(stats.escalatedCount).toBeGreaterThanOrEqual(1)
     })
 
     it('returns zeroed stats for unused report type group', async () => {
@@ -457,6 +475,68 @@ describe('report-stats', () => {
       expect(stats.avgHandlingTimeSec).toBeDefined()
       // Group includes all legacy types; avg is diluted by other closed reports
       expect(stats.avgHandlingTimeSec).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  describe('historical stats', () => {
+    it('returns historical aggregate stats', async () => {
+      await modClient.computeStats()
+
+      const result = await getHistoricalStats()
+      expect(result.stats.length).toBeGreaterThanOrEqual(1)
+
+      const first = result.stats[0]
+      expect(first.computedAt).toBeDefined()
+      expect(first.inboundCount).toBeGreaterThanOrEqual(0)
+    })
+
+    it('returns historical per-queue stats', async () => {
+      await modClient.computeStats()
+
+      const result = await getHistoricalStats({ queueId: spamQueueId })
+      expect(result.stats.length).toBeGreaterThanOrEqual(1)
+      expect(result.stats[0].inboundCount).toBeGreaterThanOrEqual(0)
+    })
+
+    it('supports pagination with limit and cursor', async () => {
+      await modClient.computeStats()
+
+      const page1 = await getHistoricalStats({ limit: 1 })
+      expect(page1.stats.length).toBe(1)
+
+      if (page1.cursor) {
+        const page2 = await getHistoricalStats({
+          limit: 1,
+          cursor: page1.cursor,
+        })
+        expect(page2.stats.length).toBeLessThanOrEqual(1)
+        if (page2.stats.length > 0) {
+          // Entries should be ordered desc by computedAt
+          expect(page1.stats[0].computedAt >= page2.stats[0].computedAt).toBe(
+            true,
+          )
+        }
+      }
+    })
+
+    it('supports date range filtering', async () => {
+      await modClient.computeStats()
+
+      const now = new Date()
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+      const result = await getHistoricalStats({
+        startDate: yesterday.toISOString(),
+        endDate: now.toISOString(),
+      })
+      for (const stat of result.stats) {
+        expect(new Date(stat.computedAt).getTime()).toBeGreaterThanOrEqual(
+          yesterday.getTime(),
+        )
+        expect(new Date(stat.computedAt).getTime()).toBeLessThanOrEqual(
+          now.getTime() + 1000,
+        )
+      }
     })
   })
 })

@@ -91,7 +91,7 @@
           "type": "integer",
           "description": "Number of reports in 'closed' status"
         },
-        "escalatedPendingCount": {
+        "escalatedCount": {
           "type": "integer",
           "description": "Number of reports in 'escalated' status"
         },
