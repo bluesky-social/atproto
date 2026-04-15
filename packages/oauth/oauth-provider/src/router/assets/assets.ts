@@ -73,8 +73,24 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
 
   const csp = mergeCsp(
     SPA_CSP,
-    customization?.hcaptcha ? HCAPTCHA_CSP : undefined,
+    customization.hcaptcha ? HCAPTCHA_CSP : undefined,
   )
+
+  const coep = customization.hcaptcha
+    ? // hCaptcha's implementation of COEP is currently broken. Let's disable it
+      // to avoid breaking the entire page.
+      //
+      // https://github.com/hCaptcha/react-hcaptcha/issues/259
+      // https://github.com/hCaptcha/react-hcaptcha/issues/380
+      CrossOriginEmbedderPolicy.unsafeNone
+    : // Since we are loading avatars form other origins, which might not have
+      // CORP headers, we need to use the "credentialless" value, which allows
+      // loading cross-origin resources without credentials (cookies, client
+      // certificates, etc.). This is a more secure alternative to
+      // "unsafe-none". Ideally, we would want to set COEP to "require-corp" and
+      // ensure that all cross-origin resources have the appropriate CORP
+      // headers.
+      CrossOriginEmbedderPolicy.credentialless
 
   return async function sendWebApp(
     req: IncomingMessage,
@@ -95,7 +111,7 @@ export function sendWebAppFactory<P extends keyof HydrationData>(
       mergeDefaults<WriteHtmlOptions>(defaults, options, {
         bodyAttrs: { class: 'text-text-default bg-contrast-0' },
         csp: options?.csp ? mergeCsp(csp, options.csp) : csp,
-        coep: options?.coep ?? CrossOriginEmbedderPolicy.credentialless,
+        coep: options?.coep ?? coep,
         meta: [{ name: 'robots', content: 'noindex' }],
         body: html`<div id="root"></div>`,
         scripts: [script, ...scripts],
