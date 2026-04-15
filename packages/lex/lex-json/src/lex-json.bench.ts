@@ -1,4 +1,5 @@
 import { bench, describe } from 'vitest'
+import { JsonBytesDecoder } from './json-bytes-decoder.js'
 import { JsonValue } from './json.js'
 import {
   LexParseOptions,
@@ -87,9 +88,15 @@ describe('large payload', () => {
   })
 })
 
-function benchData(data: unknown, options?: LexParseOptions) {
-  const jsonString = JSON.stringify(data)
+describe('deeply nested structure', () => {
+  benchJson('[{"e":'.repeat(100_000) + '"deep"' + '}]'.repeat(100_000))
+})
 
+function benchData(data: unknown, options?: LexParseOptions) {
+  return benchJson(JSON.stringify(data), options)
+}
+
+function benchJson(jsonString: string, options?: LexParseOptions) {
   const withReviver: typeof lexParse = (input, options = { strict: true }) => {
     return JSON.parse(input, (key: string, value: JsonValue) => {
       switch (typeof value) {
@@ -111,12 +118,22 @@ function benchData(data: unknown, options?: LexParseOptions) {
     return jsonToLex(JSON.parse(input), options) as any
   }
 
+  const lexParseJsonBytesDecoder: typeof lexParse = (jsonString, options) => {
+    const bytes = Buffer.from(jsonString, 'utf-8')
+    const decoder = new JsonBytesDecoder(bytes, options?.strict)
+    return decoder.decode() as any
+  }
+
   bench('current', () => {
     lexParse(jsonString, options)
   })
 
   bench('with-reviver', () => {
     withReviver(jsonString, options)
+  })
+
+  bench('json-bytes-decoder', () => {
+    lexParseJsonBytesDecoder(jsonString, options)
   })
 
   bench('naive', () => {
