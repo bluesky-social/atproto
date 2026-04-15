@@ -20349,11 +20349,13 @@ export const schemaDict = {
             },
             startDate: {
               type: 'string',
-              description: 'Earliest date to include, inclusive (YYYY-MM-DD).',
+              format: 'datetime',
+              description: 'Earliest date to include (inclusive).',
             },
             endDate: {
               type: 'string',
-              description: 'Latest date to include, inclusive (YYYY-MM-DD).',
+              format: 'datetime',
+              description: 'Latest date to include (inclusive).',
             },
             limit: {
               type: 'integer',

@@ -728,10 +728,10 @@ export class ReportStatsService {
       qb = qb.where('reportTypes', 'is', null)
     }
     if (startDate) {
-      qb = qb.where('date', '>=', startDate)
+      qb = qb.where('date', '>=', toDateString(new Date(startDate)))
     }
     if (endDate) {
-      qb = qb.where('date', '<=', endDate)
+      qb = qb.where('date', '<=', toDateString(new Date(endDate)))
     }
 
     const keyset = new ComputedAtIdKeyset(ref('computedAt'), ref('id'))

@@ -22,9 +22,9 @@ export type QueryParams = {
   moderatorDid?: string
   /** Filter stats by report types. */
   reportTypes?: string[]
-  /** Earliest date to include, inclusive (YYYY-MM-DD). */
+  /** Earliest date to include (inclusive). */
   startDate?: string
-  /** Latest date to include, inclusive (YYYY-MM-DD). */
+  /** Latest date to include (inclusive). */
   endDate?: string
   /** Maximum number of entries to return. */
   limit: number
