@@ -9,7 +9,6 @@ import express, {
   RequestHandler,
   Router,
 } from 'express'
-import { stringify } from 'safe-stable-stringify'
 import { LexValue } from '@atproto/lex-data'
 import { l } from '@atproto/lex-schema'
 import {
