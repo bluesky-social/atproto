@@ -2,6 +2,7 @@ import {
   OAuthIssuerIdentifier,
   isOAuthClientIdLoopback,
 } from '@atproto/oauth-types'
+import { ClientId } from '../client/client-id.js'
 import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
 import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
@@ -160,12 +161,14 @@ export class AccountManager {
     deviceId: DeviceId,
     deviceMetadata: RequestMetadata,
     data: SignInData,
+    clientId?: ClientId,
   ): Promise<Account> {
     try {
       await this.hooks.onSignInAttempt?.call(null, {
         data,
         deviceId,
         deviceMetadata,
+        clientId,
       })
 
       let account: Account
@@ -198,6 +201,7 @@ export class AccountManager {
               account,
               deviceId,
               deviceMetadata,
+              clientId,
             })
           } catch {
             // noop
@@ -211,6 +215,7 @@ export class AccountManager {
         account,
         deviceId,
         deviceMetadata,
+        clientId,
       })
 
       return account

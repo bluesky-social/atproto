@@ -161,14 +161,24 @@ export type OAuthHooks = {
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>
 
+  /**
+   * `clientId` is populated when the sign-in is submitted in the context of
+   * an OAuth authorization request (i.e. the user is logging in to approve a
+   * client); it is omitted for first-party sign-ins that happen outside any
+   * authorization flow.
+   */
   onSignInAttempt?: (data: {
     data: SignInData
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId?: ClientId
   }) => Awaitable<void>
 
   /**
    * This hook is called when a user successfully signs in.
+   *
+   * `clientId` is populated when the sign-in is submitted in the context of
+   * an OAuth authorization request; see {@link OAuthHooks.onSignInAttempt}.
    *
    * @throws {InvalidRequestError} when the sing-in should be denied
    */
@@ -177,6 +187,7 @@ export type OAuthHooks = {
     account: Account
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId?: ClientId
   }) => Awaitable<void>
 
   /**
@@ -191,6 +202,9 @@ export type OAuthHooks = {
    * identifier was unknown or when the store threw a plain
    * {@link InvalidRequestError} without distinguishing the two cases.
    *
+   * `clientId` is populated when the sign-in is submitted in the context of
+   * an OAuth authorization request; see {@link OAuthHooks.onSignInAttempt}.
+   *
    * Errors thrown from this hook are caught and ignored so that they do not
    * mask the original authentication failure.
    */
@@ -200,6 +214,7 @@ export type OAuthHooks = {
     account: Account | null
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
+    clientId?: ClientId
   }) => Awaitable<void>
 
   /**
