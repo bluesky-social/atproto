@@ -17,6 +17,7 @@ const id = 'chat.bsky.actor.declaration'
 export interface Main {
   $type: 'chat.bsky.actor.declaration'
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
+  /** [NOTE: This is under active development and should be considered unstable while this note is here]. Declaration about group chat invitation preferences for the record owner. */
   allowGroupInvites?: 'all' | 'none' | 'following' | (string & {})
   [k: string]: unknown
 }

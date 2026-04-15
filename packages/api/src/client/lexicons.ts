@@ -9661,6 +9661,8 @@ export const schemaDict = {
               knownValues: ['all', 'none', 'following'],
             },
             allowGroupInvites: {
+              description:
+                '[NOTE: This is under active development and should be considered unstable while this note is here]. Declaration about group chat invitation preferences for the record owner.',
               type: 'string',
               knownValues: ['all', 'none', 'following'],
             },
@@ -9738,10 +9740,14 @@ export const schemaDict = {
         },
       },
       directConvoMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here].',
         type: 'object',
         properties: {},
       },
       groupConvoMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here].',
         type: 'object',
         required: ['role'],
         properties: {

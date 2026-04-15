@@ -15,6 +15,7 @@
             "knownValues": ["all", "none", "following"]
           },
           "allowGroupInvites": {
+            "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Declaration about group chat invitation preferences for the record owner.",
             "type": "string",
             "knownValues": ["all", "none", "following"]
           }

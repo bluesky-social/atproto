@@ -44,10 +44,12 @@
       }
     },
     "directConvoMember": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
       "properties": {}
     },
     "groupConvoMember": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
       "required": ["role"],
       "properties": {

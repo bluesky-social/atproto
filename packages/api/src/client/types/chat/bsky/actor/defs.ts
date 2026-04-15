@@ -47,6 +47,7 @@ export function validateProfileViewBasic<V>(v: V) {
   return validate<ProfileViewBasic & V>(v, id, hashProfileViewBasic)
 }
 
+/** [NOTE: This is under active development and should be considered unstable while this note is here]. */
 export interface DirectConvoMember {
   $type?: 'chat.bsky.actor.defs#directConvoMember'
 }
@@ -61,6 +62,7 @@ export function validateDirectConvoMember<V>(v: V) {
   return validate<DirectConvoMember & V>(v, id, hashDirectConvoMember)
 }
 
+/** [NOTE: This is under active development and should be considered unstable while this note is here]. */
 export interface GroupConvoMember {
   $type?: 'chat.bsky.actor.defs#groupConvoMember'
   addedBy?: ProfileViewBasic
