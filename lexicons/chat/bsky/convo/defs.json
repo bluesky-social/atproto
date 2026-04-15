@@ -121,7 +121,7 @@
       }
     },
     "systemMessageDataRemoveMember": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user was removed the group convo.",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user was removed from the group convo.",
       "type": "object",
       "required": ["member", "removedBy"],
       "properties": {
@@ -152,7 +152,7 @@
           "ref": "chat.bsky.actor.defs#memberRole"
         },
         "approvedBy": {
-          "describe": "If join link was configured to require approval, this will be set to who approved the request. Undefined if approval was not required.",
+          "description": "If join link was configured to require approval, this will be set to who approved the request. Undefined if approval was not required.",
           "type": "ref",
           "ref": "chat.bsky.actor.defs#profileViewBasic"
         }
