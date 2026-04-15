@@ -190,8 +190,8 @@ export class AccountManager {
           // "identifier known, password wrong" from "identifier unknown".
           // This information is only exposed to the hook and is never
           // surfaced to the client.
-          const sub =
-            err instanceof InvalidCredentialsError ? err.sub ?? null : null
+          const isCredentialsError = err instanceof InvalidCredentialsError
+          const sub = isCredentialsError ? err.sub ?? null : null
 
           // Swallow any error from the hook itself so that it does not mask
           // the underlying authentication failure being reported.
@@ -206,6 +206,11 @@ export class AccountManager {
             })
           } catch {
             // noop
+          }
+
+          if (isCredentialsError) {
+            // Defensively downgrade to a plain InvalidRequestError
+            throw new InvalidRequestError(err.error_description)
           }
         }
         throw err
