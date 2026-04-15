@@ -121,6 +121,90 @@ describe('auth', () => {
     )
   })
 
+  it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password.', async () => {
+    const probe = async (info: { identifier: string; password: string }) => {
+      const res = await fetch(
+        `${network.pds.url}/xrpc/com.atproto.server.createSession`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(info),
+        },
+      )
+      return { status: res.status, body: await res.json() }
+    }
+
+    // bob.test was created above with password 'password'.
+    const unknownIdentifier = await probe({
+      identifier: 'no-such-user.test',
+      password: 'any-password',
+    })
+    const knownIdentifierWrongPassword = await probe({
+      identifier: 'bob.test',
+      password: 'wrong-password',
+    })
+
+    expect(knownIdentifierWrongPassword).toEqual(unknownIdentifier)
+    expect(unknownIdentifier).toEqual({
+      status: 401,
+      body: {
+        error: 'AuthenticationRequired',
+        message: 'Invalid identifier or password',
+      },
+    })
+  })
+
+  it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password in the OAuth sign-in flow.', async () => {
+    const issuer = new URL(network.pds.url)
+    // CSRF check only requires that the cookie and header values match.
+    const csrfToken = 'test-csrf-token'
+    const probe = async (credentials: {
+      username: string
+      password: string
+    }) => {
+      const res = await fetch(
+        `${issuer.origin}/@atproto/oauth-provider/~api/sign-in`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            // The endpoint restricts fetches to same-origin navigations
+            // from either `/oauth/authorize` or `/account[/*]`. Use the
+            // first-party `/account` path so we don't need a live OAuth
+            // authorization request to exist in the request store.
+            'sec-fetch-mode': 'same-origin',
+            'sec-fetch-site': 'same-origin',
+            origin: issuer.origin,
+            referer: `${issuer.origin}/account`,
+            'x-csrf-token': csrfToken,
+            cookie: `csrf-token=${csrfToken}`,
+          },
+          body: JSON.stringify({ locale: 'en', ...credentials }),
+        },
+      )
+      return { status: res.status, body: await res.json() }
+    }
+
+    // bob.test was created above with password 'password'.
+    const unknownIdentifier = await probe({
+      username: 'no-such-user.test',
+      password: 'any-password',
+    })
+    const knownIdentifierWrongPassword = await probe({
+      username: 'bob.test',
+      password: 'wrong-password',
+    })
+
+    expect(knownIdentifierWrongPassword).toEqual(unknownIdentifier)
+    expect(unknownIdentifier).toEqual({
+      status: 400,
+      body: {
+        error: 'invalid_request',
+        error_description: 'Invalid identifier or password',
+      },
+    })
+  })
+
   it('provides valid access and refresh token on session refresh.', async () => {
     const email = 'carol@test.com'
     const account = await createAccount({
