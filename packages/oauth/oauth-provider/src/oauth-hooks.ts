@@ -178,6 +178,21 @@ export type OAuthHooks = {
   }) => Awaitable<void>
 
   /**
+   * This hook is called when a sign-in attempt is rejected by the account
+   * store due to invalid credentials (e.g. unknown identifier, wrong
+   * password).
+   *
+   * Errors thrown from this hook are caught and ignored so that they do not
+   * mask the original authentication failure.
+   */
+  onSignInFailed?: (data: {
+    data: SignInData
+    error: InvalidRequestError
+    deviceId: DeviceId
+    deviceMetadata: RequestMetadata
+  }) => Awaitable<void>
+
+  /**
    * Allows validating an authorization request (typically the requested scopes)
    * before it is created. Note that the validity against the client metadata is
    * already enforced by the OAuth provider.

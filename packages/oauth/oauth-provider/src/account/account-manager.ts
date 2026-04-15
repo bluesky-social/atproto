@@ -167,12 +167,35 @@ export class AccountManager {
         deviceMetadata,
       })
 
-      const account = await constantTime(
-        TIMING_ATTACK_MITIGATION_DELAY,
-        async () => {
-          return this.store.authenticateAccount(data)
-        },
-      )
+      let account: Account
+      try {
+        account = await constantTime(
+          TIMING_ATTACK_MITIGATION_DELAY,
+          async () => {
+            return this.store.authenticateAccount(data)
+          },
+        )
+      } catch (err) {
+        // Only notify for credential failures (e.g. unknown identifier, wrong
+        // password). Server errors and flows that require an additional factor
+        // (e.g. SecondAuthenticationFactorRequiredError) are not "failed
+        // sign-ins" and do not trigger the hook.
+        if (err instanceof InvalidRequestError) {
+          // Swallow any error from the hook itself so that it does not mask
+          // the underlying authentication failure being reported.
+          try {
+            await this.hooks.onSignInFailed?.call(null, {
+              data,
+              error: err,
+              deviceId,
+              deviceMetadata,
+            })
+          } catch {
+            // noop
+          }
+        }
+        throw err
+      }
 
       await this.hooks.onSignedIn?.call(null, {
         data,
