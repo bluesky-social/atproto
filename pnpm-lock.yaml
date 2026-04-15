@@ -1121,6 +1121,9 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
+      '@atproto/lex-json':
+        specifier: workspace:^
+        version: link:../lex/lex-json
       '@atproto/syntax':
         specifier: workspace:^
         version: link:../syntax
@@ -2150,9 +2153,6 @@ importers:
       rate-limiter-flexible:
         specifier: ^2.4.1
         version: 2.4.1
-      safe-stable-stringify:
-        specifier: ^2.5.0
-        version: 2.5.0
       ws:
         specifier: ^8.12.0
         version: 8.12.0

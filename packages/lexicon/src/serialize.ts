@@ -6,11 +6,12 @@ import {
   ipldToJson,
   jsonToIpld,
 } from '@atproto/common-web'
-import { BlobRef, jsonBlobRef } from './blob-refs'
+import { lexTransform } from '@atproto/lex-json'
+import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './blob-refs'
 
 /**
  * @note this is equivalent to `unknown` because of {@link IpldValue} being `unknown`.
- * @deprecated Use {@link Lex} from `@atproto/lex-data` instead.
+ * @deprecated Use {@link LexValue} from `@atproto/lex-data` instead.
  */
 export type LexValue = unknown
 
@@ -25,64 +26,41 @@ export type RepoRecord = Record<string, LexValue>
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
-export const lexToIpld = (val: LexValue): IpldValue => {
-  // walk arrays
-  if (Array.isArray(val)) {
-    return val.map((item) => lexToIpld(item))
+export const lexToIpld = (input: LexValue): IpldValue => {
+  return lexTransform(input, lexObjectToIpld)
+}
+
+/**
+ * @internal
+ */
+function lexObjectToIpld(value: object): IpldValue | void {
+  // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
+  if (value instanceof BlobRef) {
+    return value.original
   }
-  // objects
-  if (val && typeof val === 'object') {
-    // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
-    if (val instanceof BlobRef) {
-      return val.original
-    }
-    // retain cids & bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
-      return val
-    }
-    // walk plain objects
-    const toReturn = {}
-    for (const key of Object.keys(val)) {
-      toReturn[key] = lexToIpld(val[key])
-    }
-    return toReturn
-  }
-  // pass through
-  return val
 }
 
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
  */
-export const ipldToLex = (val: IpldValue): LexValue => {
-  // map arrays
-  if (Array.isArray(val)) {
-    return val.map((item) => ipldToLex(item))
+export const ipldToLex = (input: IpldValue): LexValue => {
+  return lexTransform(input, ipldObjectToLex)
+}
+
+/**
+ * @internal
+ */
+function ipldObjectToLex(value: object): LexValue | void {
+  // convert blobs, using hints to avoid expensive is() check
+  if ('$type' in value && value.$type !== undefined) {
+    if (check.is(value, typedJsonBlobRef)) {
+      return new BlobRef(value.ref, value.mimeType, value.size, value)
+    }
+  } else if ('cid' in value && 'mimeType' in value) {
+    if (check.is(value, untypedJsonBlobRef)) {
+      return new BlobRef(CID.parse(value.cid), value.mimeType, -1, value)
+    }
   }
-  // objects
-  if (val && typeof val === 'object') {
-    // convert blobs, using hints to avoid expensive is() check
-    if (
-      (val['$type'] === 'blob' ||
-        (typeof val['cid'] === 'string' &&
-          typeof val['mimeType'] === 'string')) &&
-      check.is(val, jsonBlobRef)
-    ) {
-      return BlobRef.fromJsonRef(val)
-    }
-    // retain cids, bytes
-    if (CID.asCID(val) || val instanceof Uint8Array) {
-      return val
-    }
-    // map plain objects
-    const toReturn = {}
-    for (const key of Object.keys(val)) {
-      toReturn[key] = ipldToLex(val[key])
-    }
-    return toReturn
-  }
-  // pass through
-  return val
 }
 
 export const lexToJson = (val: LexValue): JsonValue => {

@@ -1,7 +1,6 @@
 import {
   BlobRef,
   Cid,
-  LexArray,
   LexMap,
   LexValue,
   isCid,
@@ -9,7 +8,8 @@ import {
 } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
-import { JsonObject, JsonValue } from './json.js'
+import { JsonValue } from './json.js'
+import { lexTransform } from './lex-transform.js'
 import { encodeLexLink, parseLexLink } from './link.js'
 
 /**
@@ -134,7 +134,7 @@ export function lexParseJsonBytes(
  * need to convert it to the Lex data model. For parsing JSON strings directly,
  * use {@link lexParse} instead.
  *
- * @param value - The JSON value to convert
+ * @param input - The JSON value to convert
  * @param options - Parsing options (e.g., strict mode)
  * @returns The converted Lex value
  * @throws {TypeError} If strict mode is enabled and invalid Lex values are found
@@ -152,73 +152,14 @@ export function lexParseJsonBytes(
  * ```
  */
 export function jsonToLex(
-  value: JsonValue,
+  input: JsonValue,
   options: LexParseOptions = { strict: false },
 ): LexValue {
-  switch (typeof value) {
-    case 'object': {
-      if (value === null) return null
-      if (Array.isArray(value)) return jsonArrayToLex(value, options)
-      return (
-        parseSpecialJsonObject(value, options) ??
-        jsonObjectToLexMap(value, options)
-      )
-    }
-    case 'number':
-      if (Number.isSafeInteger(value)) return value
-      if (options.strict === false) return value
-      throw new TypeError(`Invalid non-integer number: ${value}`)
-    case 'boolean':
-    case 'string':
-      return value
-    default:
-      throw new TypeError(`Invalid JSON value: ${typeof value}`)
-  }
-}
-
-function jsonArrayToLex(
-  input: JsonValue[],
-  options: LexParseOptions,
-): LexValue[] {
-  // Lazily copy value
-  let copy: LexValue[] | undefined
-  for (let i = 0; i < input.length; i++) {
-    const inputItem = input[i]
-    const item = jsonToLex(inputItem, options)
-    if (item !== inputItem) {
-      copy ??= Array.from(input)
-      copy[i] = item
-    }
-  }
-  return copy ?? input
-}
-
-function jsonObjectToLexMap(
-  input: JsonObject,
-  options: LexParseOptions,
-): LexMap {
-  // Lazily copy value
-  let copy: LexMap | undefined = undefined
-  for (const [key, jsonValue] of Object.entries(input)) {
-    // Prevent prototype pollution
-    if (key === '__proto__') {
-      throw new TypeError('Invalid key: __proto__')
-    }
-
-    // Ignore (strip) undefined values
-    if (jsonValue === undefined) {
-      copy ??= { ...input }
-      delete copy[key]
-      continue
-    }
-
-    const value = jsonToLex(jsonValue!, options)
-    if (value !== jsonValue) {
-      copy ??= { ...input }
-      copy[key] = value
-    }
-  }
-  return copy ?? input
+  return lexTransform(
+    input,
+    (value) => parseSpecialJsonObject(value, options),
+    options.strict,
+  ) as LexValue
 }
 
 /**
@@ -233,7 +174,7 @@ function jsonObjectToLexMap(
  * custom serialization or inspection). For direct JSON string output, use
  * {@link lexStringify} instead.
  *
- * @param value - The Lex value to convert
+ * @param input - The Lex value to convert
  * @returns The JSON-compatible value
  * @throws {TypeError} If the value contains unsupported types
  *
@@ -248,66 +189,19 @@ function jsonObjectToLexMap(
  * })
  * ```
  */
-export function lexToJson(value: LexValue): JsonValue {
-  switch (typeof value) {
-    case 'object':
-      if (value === null) {
-        return value
-      } else if (Array.isArray(value)) {
-        return lexArrayToJson(value)
-      } else if (isCid(value)) {
-        return encodeLexLink(value)
-      } else if (ArrayBuffer.isView(value)) {
-        return encodeLexBytes(value)
-      } else {
-        return encodeLexMap(value)
-      }
-    case 'boolean':
-    case 'string':
-    case 'number':
-      return value
-    default:
-      throw new TypeError(`Invalid Lex value: ${typeof value}`)
-  }
+export function lexToJson(input: LexValue): JsonValue {
+  return lexTransform(input, encodeSpecialJsonObject) as JsonValue
 }
 
-function lexArrayToJson(input: LexArray): JsonValue[] {
-  // Lazily copy value
-  let copy: JsonValue[] | undefined
-  for (let i = 0; i < input.length; i++) {
-    const inputItem = input[i]
-    const item = lexToJson(inputItem)
-    if (item !== inputItem) {
-      copy ??= Array.from(input) as JsonValue[]
-      copy[i] = item
-    }
+/**
+ * @internal
+ */
+export function encodeSpecialJsonObject(input: LexValue): JsonValue | void {
+  if (isCid(input)) {
+    return encodeLexLink(input)
+  } else if (ArrayBuffer.isView(input)) {
+    return encodeLexBytes(input)
   }
-  return copy ?? (input as JsonValue[])
-}
-
-function encodeLexMap(input: LexMap): JsonObject {
-  // Lazily copy value
-  let copy: JsonObject | undefined = undefined
-  for (const [key, lexValue] of Object.entries(input)) {
-    // Prevent prototype pollution
-    if (key === '__proto__') {
-      throw new TypeError('Invalid key: __proto__')
-    }
-
-    // Ignore (strip) undefined values
-    if (lexValue === undefined) {
-      copy ??= { ...input } as JsonObject
-      delete copy[key]
-      continue
-    }
-
-    const jsonValue = lexToJson(lexValue!)
-    if (jsonValue !== lexValue) {
-      copy ??= { ...input } as JsonObject
-      copy[key] = jsonValue
-    }
-  }
-  return copy ?? (input as JsonObject)
 }
 
 /**
@@ -316,7 +210,7 @@ function encodeLexMap(input: LexMap): JsonObject {
 export function parseSpecialJsonObject(
   input: LexMap,
   options: LexParseOptions,
-): Cid | Uint8Array | BlobRef | undefined {
+): Cid | Uint8Array | BlobRef | void {
   // Hot path: use hints to avoid parsing when possible
 
   if (input.$link !== undefined) {
