@@ -23,6 +23,7 @@ import { DeviceId } from './device/device-id.js'
 import { DpopProof } from './dpop/dpop-proof.js'
 import { AccessDeniedError } from './errors/access-denied-error.js'
 import { AuthorizationError } from './errors/authorization-error.js'
+import { InvalidCredentialsError } from './errors/invalid-credentials-error.js'
 import { InvalidRequestError } from './errors/invalid-request-error.js'
 import { OAuthError } from './errors/oauth-error.js'
 import {
@@ -52,6 +53,7 @@ export {
   type HcaptchaClientTokens,
   type HcaptchaConfig,
   type HcaptchaVerifyResult,
+  InvalidCredentialsError,
   InvalidRequestError,
   type Jwks,
   type OAuthAccessToken,
@@ -180,7 +182,14 @@ export type OAuthHooks = {
   /**
    * This hook is called when a sign-in attempt is rejected by the account
    * store due to invalid credentials (e.g. unknown identifier, wrong
-   * password).
+   * password). It is *not* called for unexpected server errors, nor for flows
+   * that require an additional authentication factor.
+   *
+   * `account` is populated when the store throws an
+   * {@link InvalidCredentialsError} that carries the matched account
+   * (i.e. identifier known, credentials wrong). It is `null` when the
+   * identifier was unknown or when the store threw a plain
+   * {@link InvalidRequestError} without distinguishing the two cases.
    *
    * Errors thrown from this hook are caught and ignored so that they do not
    * mask the original authentication failure.
@@ -188,6 +197,7 @@ export type OAuthHooks = {
   onSignInFailed?: (data: {
     data: SignInData
     error: InvalidRequestError
+    account: Account | null
     deviceId: DeviceId
     deviceMetadata: RequestMetadata
   }) => Awaitable<void>

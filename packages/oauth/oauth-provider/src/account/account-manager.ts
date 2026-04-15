@@ -4,6 +4,7 @@ import {
 } from '@atproto/oauth-types'
 import { Client } from '../client/client.js'
 import { DeviceId } from '../device/device-id.js'
+import { InvalidCredentialsError } from '../errors/invalid-credentials-error.js'
 import { InvalidRequestError } from '../errors/invalid-request-error.js'
 import { HCaptchaClient, HcaptchaVerifyResult } from '../lib/hcaptcha.js'
 import { constantTime } from '../lib/util/time.js'
@@ -181,12 +182,20 @@ export class AccountManager {
         // (e.g. SecondAuthenticationFactorRequiredError) are not "failed
         // sign-ins" and do not trigger the hook.
         if (err instanceof InvalidRequestError) {
+          // Stores that throw the more specific `InvalidCredentialsError`
+          // can attach the matched account to distinguish "identifier known,
+          // password wrong" from "identifier unknown". This information is
+          // only exposed to the hook and is never surfaced to the client.
+          const account =
+            err instanceof InvalidCredentialsError ? err.account ?? null : null
+
           // Swallow any error from the hook itself so that it does not mask
           // the underlying authentication failure being reported.
           try {
             await this.hooks.onSignInFailed?.call(null, {
               data,
               error: err,
+              account,
               deviceId,
               deviceMetadata,
             })
