@@ -1121,6 +1121,9 @@ importers:
       '@atproto/common-web':
         specifier: workspace:^
         version: link:../common-web
+      '@atproto/lex-data':
+        specifier: workspace:^
+        version: link:../lex/lex-data
       '@atproto/lex-json':
         specifier: workspace:^
         version: link:../lex/lex-json

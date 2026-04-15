@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@atproto/common-web": "workspace:^",
+    "@atproto/lex-data": "workspace:^",
     "@atproto/lex-json": "workspace:^",
     "@atproto/syntax": "workspace:^",
     "iso-datestring-validator": "^2.2.2",

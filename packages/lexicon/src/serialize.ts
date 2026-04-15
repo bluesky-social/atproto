@@ -1,24 +1,34 @@
 import { CID } from 'multiformats/cid'
 import {
   IpldValue,
-  JsonValue,
+  LegacyJsonValue,
   check,
   ipldToJson,
-  jsonToIpld,
 } from '@atproto/common-web'
-import { lexTransform } from '@atproto/lex-json'
+import { LexValue } from '@atproto/lex-data'
+import {
+  JsonValue,
+  jsonToLex,
+  lexParse,
+  lexStringify,
+  lexTransform,
+} from '@atproto/lex-json'
 import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './blob-refs'
 
 /**
- * @note this is equivalent to `unknown` because of {@link IpldValue} being `unknown`.
+ * @note this is equivalent to `unknown` because of {@link IpldValue}
+ * historically being `unknown`.
+ *
  * @deprecated Use {@link LexValue} from `@atproto/lex-data` instead.
  */
-export type LexValue = unknown
+export type LegacyLexValue = IpldValue | BlobRef
+
+export type { LegacyLexValue as LexValue }
 
 /**
  * @deprecated Use {@link TypedLexMap} from `@atproto/lex-data` instead.
  */
-export type RepoRecord = Record<string, LexValue>
+export type RepoRecord = Record<string, LegacyLexValue>
 
 // @NOTE avoiding use of check.is() here only because it makes
 // these implementations slow, and they often live in hot paths.
@@ -26,7 +36,7 @@ export type RepoRecord = Record<string, LexValue>
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
-export const lexToIpld = (input: LexValue): IpldValue => {
+export const lexToIpld = (input: LegacyLexValue): IpldValue => {
   return lexTransform(input, lexObjectToIpld)
 }
 
@@ -43,14 +53,14 @@ function lexObjectToIpld(value: object): IpldValue | void {
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
  */
-export const ipldToLex = (input: IpldValue): LexValue => {
+export const ipldToLex = (input: IpldValue): LegacyLexValue => {
   return lexTransform(input, ipldObjectToLex)
 }
 
 /**
  * @internal
  */
-function ipldObjectToLex(value: object): LexValue | void {
+function ipldObjectToLex(value: object): LegacyLexValue | void {
   // convert blobs, using hints to avoid expensive is() check
   if ('$type' in value && value.$type !== undefined) {
     if (check.is(value, typedJsonBlobRef)) {
@@ -63,18 +73,32 @@ function ipldObjectToLex(value: object): LexValue | void {
   }
 }
 
-export const lexToJson = (val: LexValue): JsonValue => {
+/**
+ * @deprecated use {@link lexToJson} from `@atproto/lex-json` instead
+ */
+export const lexToJson = (val: LegacyLexValue): LegacyJsonValue => {
   return ipldToJson(lexToIpld(val))
 }
 
-export const stringifyLex = (val: LexValue): string => {
-  return JSON.stringify(lexToJson(val))
+/**
+ * @deprecated use {@link lexStringify} from `@atproto/lex-json` instead
+ */
+export const stringifyLex = (val: LegacyLexValue): string => {
+  return lexStringify(lexToIpld(val) as LexValue)
 }
 
-export const jsonToLex = (val: JsonValue): LexValue => {
-  return ipldToLex(jsonToIpld(val))
+/**
+ * @deprecated use {@link jsonToLex} from `@atproto/lex-json` instead
+ */
+export const jsonToLexLegacy = (val: LegacyJsonValue): LegacyLexValue => {
+  return ipldToLex(jsonToLex(val as JsonValue, { strict: false }))
 }
 
-export const jsonStringToLex = (val: string): LexValue => {
-  return jsonToLex(JSON.parse(val))
+export { jsonToLexLegacy as jsonToLex }
+
+/**
+ * @deprecated use {@link lexParse} from `@atproto/lex-json` instead
+ */
+export const jsonStringToLex = (val: string): LegacyLexValue => {
+  return ipldToLex(lexParse(val))
 }
