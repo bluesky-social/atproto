@@ -10,7 +10,6 @@ export default function (server: Server, ctx: AppContext) {
 
       const reportStatsService = ctx.reportStatsService(ctx.db)
       const row = await reportStatsService.getLiveStats({
-        timeframe: 'day',
         queueId: queueId ?? null,
         moderatorDid: moderatorDid ?? null,
         reportTypes: reportTypes?.length ? reportTypes : null,

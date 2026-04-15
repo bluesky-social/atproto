@@ -384,16 +384,16 @@ export function validateReportActivityView<V>(v: V) {
   return validate<ReportActivityView & V>(v, id, hashReportActivityView)
 }
 
-/** Live statistics for reports, filterable by queue, moderator, or report type. */
+/** Live statistics for reports for the current calendar day, filterable by queue, moderator, or report type. */
 export interface LiveStats {
   $type?: 'tools.ozone.report.defs#liveStats'
-  /** Number of reports in 'open' status. */
+  /** Number of reports currently not closed. */
   pendingCount?: number
-  /** Number of reports in 'closed' status. */
+  /** Number of reports closed today. */
   actionedCount?: number
-  /** Number of reports in 'escalated' status. */
+  /** Number of reports escalated today. */
   escalatedCount?: number
-  /** Reports received in the last 24 hours. */
+  /** Reports received today. */
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
   actionRate?: number
@@ -413,18 +413,20 @@ export function validateLiveStats<V>(v: V) {
   return validate<LiveStats & V>(v, id, hashLiveStats)
 }
 
-/** A single daily snapshot of historical report statistics. */
+/** A single daily snapshot of report statistics for a calendar date. */
 export interface HistoricalStats {
   $type?: 'tools.ozone.report.defs#historicalStats'
-  /** When this snapshot was computed. */
-  computedAt: string
-  /** Number of reports in 'open' status. */
+  /** The calendar date this snapshot covers (YYYY-MM-DD). */
+  date: string
+  /** When this snapshot was last computed. */
+  computedAt?: string
+  /** Number of reports not closed at time of computation. */
   pendingCount?: number
-  /** Number of reports in 'closed' status within the day. */
+  /** Number of reports closed during this day. */
   actionedCount?: number
-  /** Number of reports in 'escalated' status within the day. */
+  /** Number of reports escalated during this day. */
   escalatedCount?: number
-  /** Reports received within the day. */
+  /** Reports received during this day. */
   inboundCount?: number
   /** Percentage of reports actioned (actionedCount / inboundCount * 100), rounded to nearest integer. */
   actionRate?: number

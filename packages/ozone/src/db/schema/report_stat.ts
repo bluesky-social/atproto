@@ -5,26 +5,21 @@ export const reportStatTableName = 'report_stat'
 export interface ReportStat {
   // metadata
   id: Generated<number>
-  computedAt: string
+  computedAt: string // When this snapshot was last computed
 
   // group
-  /** The expiration policy for the statistic.
-   * 'live' expires in 15 minutes
-   * 'historical' expires based on its timeframe (e.g. each day).
-   * */
-  mode: string
-  timeframe: string // 'day' or 'week'
+  date: string // ISO date e.g. '2026-04-15' — the calendar day this snapshot covers
   queueId: number | null // NULL = aggregate across all queues
   reportTypes: string[] | null // NULL = aggregate across all report types
   moderatorDid: string | null // NULL = aggregate, non-null = per-moderator
 
   // stats
-  inboundCount: number | null // Reports received in the last 24 hours
-  pendingCount: number | null // Reports with status = 'open' (all time)
-  actionedCount: number | null // Reports with status = 'closed' in last 24h
-  escalatedCount: number | null // Reports with status = 'escalated' in last 24h
+  inboundCount: number | null // Reports received during this calendar day
+  pendingCount: number | null // Reports with status != 'closed' at time of computation
+  actionedCount: number | null // Reports closed during this calendar day
+  escalatedCount: number | null // Reports escalated during this calendar day
   actionRate: number | null // actionedCount / inboundCount * 100
-  avgHandlingTimeSec: number | null // Average time from open/assigned to closed, in seconds
+  avgHandlingTimeSec: number | null // Average time from creation/assignment to close, in seconds
 }
 
 export type PartialDB = {

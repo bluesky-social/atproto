@@ -226,6 +226,7 @@ export function viewHistoricalStats(
   row: Selectable<ReportStat>,
 ): ToolsOzoneReportDefs.HistoricalStats {
   return {
+    date: row.date,
     computedAt: row.computedAt,
     pendingCount: row.pendingCount ?? undefined,
     actionedCount: row.actionedCount ?? undefined,

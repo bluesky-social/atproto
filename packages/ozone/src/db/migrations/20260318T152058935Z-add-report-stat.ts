@@ -1,4 +1,4 @@
-import { Kysely } from 'kysely'
+import { Kysely, sql } from 'kysely'
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
@@ -9,8 +9,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('computedAt', 'varchar', (col) => col.notNull())
 
     // group
-    .addColumn('mode', 'varchar', (col) => col.notNull()) // 'live' or 'historical'
-    .addColumn('timeframe', 'varchar', (col) => col.notNull()) // 'day' or 'week'
+    .addColumn('date', 'varchar', (col) => col.notNull()) // ISO date e.g. '2026-04-15'
     .addColumn('queueId', 'integer') // NULL = aggregate across all queues
     .addColumn('reportTypes', 'jsonb') // NULL = aggregate across all report types
     .addColumn('moderatorDid', 'varchar') // NULL = aggregate across all moderators
@@ -24,23 +23,13 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('avgHandlingTimeSec', 'integer')
     .execute()
 
-  // queue/aggregate statistics
-  await db.schema
-    .createIndex('idx_report_stat_queue')
-    .on('report_stat')
-    .columns(['mode', 'timeframe', 'queueId', 'reportTypes', 'computedAt'])
-    .execute()
-
-  // moderator statistics
-  await db.schema
-    .createIndex('idx_report_stat_moderator')
-    .on('report_stat')
-    .columns(['mode', 'timeframe', 'moderatorDid', 'reportTypes', 'computedAt'])
-    .execute()
+  // Lookup by date + group dimensions (covers getLiveStats and getHistoricalStats queries)
+  await sql`CREATE INDEX idx_report_stat_lookup ON report_stat (
+    date, "queueId", "moderatorDid", "reportTypes", "computedAt"
+  )`.execute(db)
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {
-  await db.schema.dropIndex('idx_report_stat_queue').ifExists().execute()
-  await db.schema.dropIndex('idx_report_stat_moderator').ifExists().execute()
+  await db.schema.dropIndex('idx_report_stat_lookup').ifExists().execute()
   await db.schema.dropTable('report_stat').ifExists().execute()
 }

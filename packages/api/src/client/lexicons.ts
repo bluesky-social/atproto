@@ -20207,24 +20207,24 @@ export const schemaDict = {
       },
       liveStats: {
         description:
-          'Live statistics for reports, filterable by queue, moderator, or report type.',
+          'Live statistics for reports for the current calendar day, filterable by queue, moderator, or report type.',
         type: 'object',
         properties: {
           pendingCount: {
             type: 'integer',
-            description: "Number of reports in 'open' status.",
+            description: 'Number of reports currently not closed.',
           },
           actionedCount: {
             type: 'integer',
-            description: "Number of reports in 'closed' status.",
+            description: 'Number of reports closed today.',
           },
           escalatedCount: {
             type: 'integer',
-            description: "Number of reports in 'escalated' status.",
+            description: 'Number of reports escalated today.',
           },
           inboundCount: {
             type: 'integer',
-            description: 'Reports received in the last 24 hours.',
+            description: 'Reports received today.',
           },
           actionRate: {
             type: 'integer',
@@ -20244,31 +20244,35 @@ export const schemaDict = {
         },
       },
       historicalStats: {
-        description: 'A single daily snapshot of historical report statistics.',
+        description:
+          'A single daily snapshot of report statistics for a calendar date.',
         type: 'object',
-        required: ['computedAt'],
+        required: ['date'],
         properties: {
+          date: {
+            type: 'string',
+            description: 'The calendar date this snapshot covers (YYYY-MM-DD).',
+          },
           computedAt: {
             type: 'string',
             format: 'datetime',
-            description: 'When this snapshot was computed.',
+            description: 'When this snapshot was last computed.',
           },
           pendingCount: {
             type: 'integer',
-            description: "Number of reports in 'open' status.",
+            description: 'Number of reports not closed at time of computation.',
           },
           actionedCount: {
             type: 'integer',
-            description: "Number of reports in 'closed' status within the day.",
+            description: 'Number of reports closed during this day.',
           },
           escalatedCount: {
             type: 'integer',
-            description:
-              "Number of reports in 'escalated' status within the day.",
+            description: 'Number of reports escalated during this day.',
           },
           inboundCount: {
             type: 'integer',
-            description: 'Reports received within the day.',
+            description: 'Reports received during this day.',
           },
           actionRate: {
             type: 'integer',
@@ -20414,13 +20418,11 @@ export const schemaDict = {
             },
             startDate: {
               type: 'string',
-              format: 'datetime',
-              description: 'Earliest date to include (inclusive).',
+              description: 'Earliest date to include, inclusive (YYYY-MM-DD).',
             },
             endDate: {
               type: 'string',
-              format: 'datetime',
-              description: 'Latest date to include (inclusive).',
+              description: 'Latest date to include, inclusive (YYYY-MM-DD).',
             },
             limit: {
               type: 'integer',
@@ -20781,6 +20783,51 @@ export const schemaDict = {
                 ref: 'lex:tools.ozone.report.defs#reportView',
               },
             },
+          },
+        },
+      },
+    },
+  },
+  ToolsOzoneReportRefreshStats: {
+    lexicon: 1,
+    id: 'tools.ozone.report.refreshStats',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Recompute report statistics for a date range. Useful for backfilling after failures or data corrections.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['startDate', 'endDate'],
+            properties: {
+              startDate: {
+                type: 'string',
+                description:
+                  'Start date for recomputation, inclusive (YYYY-MM-DD).',
+              },
+              endDate: {
+                type: 'string',
+                description:
+                  'End date for recomputation, inclusive (YYYY-MM-DD).',
+              },
+              queueIds: {
+                type: 'array',
+                items: {
+                  type: 'integer',
+                },
+                description:
+                  'Optional list of queue IDs to recompute. Omit to recompute all groups.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {},
           },
         },
       },
@@ -23005,6 +23052,7 @@ export const ids = {
   ToolsOzoneReportListActivities: 'tools.ozone.report.listActivities',
   ToolsOzoneReportQueryReports: 'tools.ozone.report.queryReports',
   ToolsOzoneReportReassignQueue: 'tools.ozone.report.reassignQueue',
+  ToolsOzoneReportRefreshStats: 'tools.ozone.report.refreshStats',
   ToolsOzoneReportUnassignModerator: 'tools.ozone.report.unassignModerator',
   ToolsOzoneSafelinkAddRule: 'tools.ozone.safelink.addRule',
   ToolsOzoneSafelinkDefs: 'tools.ozone.safelink.defs',

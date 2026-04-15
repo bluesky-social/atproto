@@ -19,7 +19,6 @@ export default function (server: Server, ctx: AppContext) {
       const reportStatsService = ctx.reportStatsService(ctx.db)
       const result = await reportStatsService.getHistoricalStats({
         group: {
-          timeframe: 'day',
           queueId: queueId ?? null,
           moderatorDid: moderatorDid ?? null,
           reportTypes: reportTypes?.length ? reportTypes : null,

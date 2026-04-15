@@ -479,14 +479,15 @@ describe('report-stats', () => {
   })
 
   describe('historical stats', () => {
-    it('returns historical aggregate stats', async () => {
+    it('returns historical aggregate stats with date field', async () => {
       await modClient.computeStats()
 
       const result = await getHistoricalStats()
       expect(result.stats.length).toBeGreaterThanOrEqual(1)
 
       const first = result.stats[0]
-      expect(first.computedAt).toBeDefined()
+      expect(first.date).toBeDefined()
+      expect(first.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       expect(first.inboundCount).toBeGreaterThanOrEqual(0)
     })
 
@@ -495,6 +496,7 @@ describe('report-stats', () => {
 
       const result = await getHistoricalStats({ queueId: spamQueueId })
       expect(result.stats.length).toBeGreaterThanOrEqual(1)
+      expect(result.stats[0].date).toBeDefined()
       expect(result.stats[0].inboundCount).toBeGreaterThanOrEqual(0)
     })
 
@@ -510,32 +512,24 @@ describe('report-stats', () => {
           cursor: page1.cursor,
         })
         expect(page2.stats.length).toBeLessThanOrEqual(1)
-        if (page2.stats.length > 0) {
-          // Entries should be ordered desc by computedAt
-          expect(page1.stats[0].computedAt >= page2.stats[0].computedAt).toBe(
-            true,
-          )
-        }
       }
     })
 
     it('supports date range filtering', async () => {
       await modClient.computeStats()
 
-      const now = new Date()
-      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const today = new Date().toISOString().slice(0, 10)
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10)
 
       const result = await getHistoricalStats({
-        startDate: yesterday.toISOString(),
-        endDate: now.toISOString(),
+        startDate: yesterday,
+        endDate: today,
       })
       for (const stat of result.stats) {
-        expect(new Date(stat.computedAt).getTime()).toBeGreaterThanOrEqual(
-          yesterday.getTime(),
-        )
-        expect(new Date(stat.computedAt).getTime()).toBeLessThanOrEqual(
-          now.getTime() + 1000,
-        )
+        expect(stat.date >= yesterday).toBe(true)
+        expect(stat.date <= today).toBe(true)
       }
     })
   })

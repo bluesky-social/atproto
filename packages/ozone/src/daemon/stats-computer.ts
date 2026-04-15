@@ -7,6 +7,29 @@ import { ReportStatsServiceCreator } from '../report/stats'
 // Stable lock ID for pg_try_advisory_lock across all instances
 const ADVISORY_LOCK_ID = 7_239_401
 
+/**
+ * Background daemon that materializes report statistics every 15 minutes.
+ *
+ * Each cycle computes calendar-day snapshots: today's stats are recomputed (in-progress day),
+ * and yesterday's snapshot is finalized if it wasn't already. Historical snapshots (completed
+ * days) are write-once and never recomputed unless explicitly refreshed via the API.
+ *
+ * Query profile per cycle (assuming ~10K reports/day, 10 queues, 20 moderators, 9 type groups):
+ * - 7 batched GROUP BY queries against the report table for today's date window
+ *   (+ 7 more for yesterday if finalization is needed).
+ *   Day-window queries scan ~10K rows. Pending-count queries use partial indexes
+ *   (WHERE status != 'closed') so only scan open reports, not the full table.
+ *   Expected: ~10-50ms per query, ~100-350ms total report-table time.
+ * - ~40 lightweight reads against report_stat for freshness checks (small indexed table).
+ * - ~40 lightweight writes to report_stat for upserts.
+ *
+ * Locking: Uses pg_try_advisory_lock to ensure only one instance materializes at a time
+ * when running multiple containers. Advisory locks are cooperative, session-level locks —
+ * they do NOT block any table reads, writes, row locks, or transactions from other sessions.
+ * Normal application queries (report creation, moderation actions, API reads) are completely
+ * unaffected. If another instance already holds the lock, this instance skips the cycle
+ * immediately without blocking.
+ */
 export class StatsComputer {
   destroyed = false
   processingPromise: Promise<void> = Promise.resolve()
@@ -31,8 +54,6 @@ export class StatsComputer {
   }
 
   private async materializeStats() {
-    // Acquire a session-level advisory lock so only one instance materializes at a time.
-    // pg_try_advisory_lock returns false immediately if another session holds the lock.
     const lockResult = await sql<{
       locked: boolean
     }>`SELECT pg_try_advisory_lock(${ADVISORY_LOCK_ID}) as locked`.execute(

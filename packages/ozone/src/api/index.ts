@@ -41,6 +41,7 @@ import getLiveStats from './report/getLiveStats'
 import getReport from './report/getReport'
 import listActivities from './report/listActivities'
 import queryReports from './report/queryReports'
+import refreshStats from './report/refreshStats'
 import unassignReportModerator from './report/unassignModerator'
 import addSafelinkRule from './safelink/addRule'
 import querySafelinkEvents from './safelink/queryEvents'
@@ -126,6 +127,7 @@ export default function (server: Server, ctx: AppContext) {
   routeReports(server, ctx)
   getLiveStats(server, ctx)
   getHistoricalStats(server, ctx)
+  refreshStats(server, ctx)
   assignQueueModerator(server, ctx)
   getQueueAssignments(server, ctx)
   getLatestReport(server, ctx)

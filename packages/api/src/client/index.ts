@@ -316,6 +316,7 @@ import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport
 import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+import * as ToolsOzoneReportRefreshStats from './types/tools/ozone/report/refreshStats.js'
 import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -656,6 +657,7 @@ export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport
 export * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+export * as ToolsOzoneReportRefreshStats from './types/tools/ozone/report/refreshStats.js'
 export * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -5786,6 +5788,18 @@ export class ToolsOzoneReportNS {
   ): Promise<ToolsOzoneReportReassignQueue.Response> {
     return this._client.call(
       'tools.ozone.report.reassignQueue',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  refreshStats(
+    data?: ToolsOzoneReportRefreshStats.InputSchema,
+    opts?: ToolsOzoneReportRefreshStats.CallOptions,
+  ): Promise<ToolsOzoneReportRefreshStats.Response> {
+    return this._client.call(
+      'tools.ozone.report.refreshStats',
       opts?.qp,
       data,
       opts,

@@ -26,13 +26,11 @@
           },
           "startDate": {
             "type": "string",
-            "format": "datetime",
-            "description": "Earliest date to include (inclusive)."
+            "description": "Earliest date to include, inclusive (YYYY-MM-DD)."
           },
           "endDate": {
             "type": "string",
-            "format": "datetime",
-            "description": "Latest date to include (inclusive)."
+            "description": "Latest date to include, inclusive (YYYY-MM-DD)."
           },
           "limit": {
             "type": "integer",

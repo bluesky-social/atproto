@@ -265,6 +265,7 @@ import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport
 import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+import * as ToolsOzoneReportRefreshStats from './types/tools/ozone/report/refreshStats.js'
 import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkQueryEvents from './types/tools/ozone/safelink/queryEvents.js'
@@ -3860,6 +3861,18 @@ export class ToolsOzoneReportNS {
     >,
   ) {
     const nsid = 'tools.ozone.report.reassignQueue' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  refreshStats<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ToolsOzoneReportRefreshStats.QueryParams,
+      ToolsOzoneReportRefreshStats.HandlerInput,
+      ToolsOzoneReportRefreshStats.HandlerOutput
+    >,
+  ) {
+    const nsid = 'tools.ozone.report.refreshStats' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
