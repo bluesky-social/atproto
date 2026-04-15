@@ -1,4 +1,7 @@
-export const MAX_NESTING_DEPTH = 250
+const STRICT_DEPTH_LIMIT = 250
+const LENIENT_DEPTH_LIMIT = 5000
+
+const ERROR_PATH_MAX_DEPTH = 10
 
 /**
  * Recursively transforms a value by applying a transformation function to all
@@ -25,24 +28,24 @@ export const MAX_NESTING_DEPTH = 250
  *
  * @internal
  */
-export function lexTransform(
+export function lexTransform<T>(
   input: unknown,
   transform: (child: object) => any,
   strict = false,
-): unknown {
+): T {
   const scalar = transformPrimitive(input, transform, strict)
   if (scalar !== undefined) return scalar
 
   const root: StackFrame = Array.isArray(input)
-    ? { depth: 0, type: 'array', copy: null, input }
-    : { depth: 0, type: 'object', copy: null, input: input as object }
+    ? { type: 'array', depth: 0, copy: null, input }
+    : { type: 'object', depth: 0, copy: null, input: input as object }
   const stack: StackFrame[] = [root]
 
   while (stack.length > 0) {
     const frame = stack.pop()!
 
     if (frame.type === 'array') {
-      const { depth, input, parent } = frame
+      const { depth, input, parent } = frame // ArrayFrame
 
       for (let index = 0; index < input.length; index++) {
         const child = input[index]
@@ -58,7 +61,7 @@ export function lexTransform(
         }
       }
     } else {
-      const { depth, input, parent } = frame
+      const { depth, input, parent } = frame // ObjectFrame
 
       for (const [key, child] of Object.entries(input) as [string, unknown][]) {
         const result = transformPrimitive(child, transform, strict)
@@ -74,7 +77,7 @@ export function lexTransform(
     }
   }
 
-  return root.copy ?? root.input
+  return (root.copy ?? root.input) as T
 }
 
 type ArrayFrame = {
@@ -106,7 +109,10 @@ function addToStack(
   parent: ParentRef,
   strictMode: boolean,
 ) {
-  if (strictMode && depth > MAX_NESTING_DEPTH) {
+  if (
+    depth >= STRICT_DEPTH_LIMIT &&
+    (strictMode || depth >= LENIENT_DEPTH_LIMIT)
+  ) {
     throw new TypeError(
       `Input is too deeply nested at ${stringifyPath(parent)}`,
     )
@@ -203,14 +209,25 @@ function transformPrimitive(
 }
 
 function stringifyPath(parent?: ParentRef): string {
-  let path = '$'
+  const segments: string[] = []
+
   while (parent) {
-    if (isArrayParent(parent)) {
-      path += `[${parent.index}]`
-    } else {
-      path += `.${parent.key}`
+    const segment = isArrayParent(parent)
+      ? `[${parent.index}]`
+      : /^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(parent.key)
+        ? `.${parent.key}`
+        : `[${JSON.stringify(parent.key)}]`
+
+    segments.push(segment)
+
+    // Truncate long paths to avoid excessively long error messages
+    if (segments.length > ERROR_PATH_MAX_DEPTH) {
+      segments.push('[...]')
+      break
     }
+
     parent = parent.frame.parent
   }
-  return path
+
+  return `$${segments.reverse().join('')}`
 }

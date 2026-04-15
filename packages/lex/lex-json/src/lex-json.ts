@@ -155,11 +155,11 @@ export function jsonToLex(
   input: JsonValue,
   options: LexParseOptions = { strict: false },
 ): LexValue {
-  return lexTransform(
+  return lexTransform<LexValue>(
     input,
     (value) => parseSpecialJsonObject(value, options),
     options.strict,
-  ) as LexValue
+  )
 }
 
 /**
@@ -190,7 +190,7 @@ export function jsonToLex(
  * ```
  */
 export function lexToJson(input: LexValue): JsonValue {
-  return lexTransform(input, encodeSpecialJsonObject) as JsonValue
+  return lexTransform<JsonValue>(input, encodeSpecialJsonObject)
 }
 
 /**
