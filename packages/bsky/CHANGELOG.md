@@ -1,5 +1,19 @@
 # @atproto/bsky
 
+## 0.0.226
+
+### Patch Changes
+
+- [#4852](https://github.com/bluesky-social/atproto/pull/4852) [`b704c52`](https://github.com/bluesky-social/atproto/commit/b704c523270e82075e2ed4f38ee54d84a9baed88) Thanks [@jcalabro](https://github.com/jcalabro)! - Add interceptor to dataplane GRPC client
+
+- [#4849](https://github.com/bluesky-social/atproto/pull/4849) [`7c61f19`](https://github.com/bluesky-social/atproto/commit/7c61f196c374a8a0d54c055722c501467ffaca4f) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - Refactor hydrationCtx type
+
+- Updated dependencies [[`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676), [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797), [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676)]:
+  - @atproto/syntax@0.5.4
+  - @atproto/lex@0.0.25
+  - @atproto/xrpc-server@0.10.20
+  - @atproto/sync@0.2.2
+
 ## 0.0.225
 
 ### Patch Changes

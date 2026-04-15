@@ -1,5 +1,19 @@
 # @atproto/syntax
 
+## 0.5.4
+
+### Patch Changes
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Avoid trailing slashes when stringifying an AtUri
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Align implementation of `ensureValidAtUri` and `ensureValidAtUriRegex`: consistently apply length and fragment charset restrictions
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Improve performances of `AtUriString` validation
+
+- [#4760](https://github.com/bluesky-social/atproto/pull/4760) [`55d06de`](https://github.com/bluesky-social/atproto/commit/55d06de80a1506908a04ed5c0834986cb5783797) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fixes a bug where `normalizeDatetime` would return different results for the same input depending on the timezone of the machine it was run on. This caused tests to fail when run in different environments. The fix consists of attempting more consistent parsing strategies first (appending "Z" or " UTC" to the input) before falling back to parsing "as is", which can yield different results depending on the local timezone. The function's documentation has also been updated to reflect this behavior.
+
+- [#4806](https://github.com/bluesky-social/atproto/pull/4806) [`26d793a`](https://github.com/bluesky-social/atproto/commit/26d793af95a6fb3a50f9b2a97187d8ac4fecf676) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Add missing fragment to `AtUriString` template literal type
+
 ## 0.5.3
 
 ### Patch Changes
