@@ -1,0 +1,52 @@
+{
+  "lexicon": 1,
+  "id": "chat.bsky.moderation.subscribeModEvents",
+  "defs": {
+    "main": {
+      "type": "subscription",
+      "description": "Subscribe to stream of chat events targeted to moderation. Private endpoint.",
+      "parameters": {
+        "type": "params",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "description": "The last known event seq number to backfill from. Use '2222222222222' to backfill from the beginning. Don't specify a cursor to listen only for new events."
+          }
+        }
+      },
+      "message": {
+        "schema": {
+          "type": "union",
+          "refs": ["#eventConvoFirstMessage"]
+        }
+      },
+      "errors": [
+        { "name": "FutureCursor" },
+        {
+          "name": "ConsumerTooSlow",
+          "description": "If the consumer of the stream can not keep up with events, and a backlog gets too large, the server will drop the connection."
+        }
+      ]
+    },
+    "eventConvoFirstMessage": {
+      "type": "object",
+      "required": ["createdAt", "rev", "convoId", "user", "recipients"],
+      "properties": {
+        "convoId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "datetime" },
+        "messageId": { "type": "string" },
+        "recipients": {
+          "description": "The list of DIDs message recipients. Does not include the sender, which is in the `user` field",
+          "type": "array",
+          "items": { "type": "string", "format": "did" }
+        },
+        "rev": { "type": "string" },
+        "user": {
+          "description": "The DID of the message author.",
+          "type": "string",
+          "format": "did"
+        }
+      }
+    }
+  }
+}

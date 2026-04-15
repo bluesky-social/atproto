@@ -1,11 +1,11 @@
 {
   "lexicon": 1,
-  "id": "chat.bsky.convo.unmuteConvo",
+  "id": "chat.bsky.convo.unlockConvo",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Unmutes a conversation, allowing notifications related to it.",
-      "errors": [{ "name": "InvalidConvo" }],
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Unlocks a group convo so it is able to receive new content.",
+      "errors": [{ "name": "InvalidConvo" }, { "name": "InsufficientRole" }],
       "input": {
         "encoding": "application/json",
         "schema": {

@@ -4,6 +4,7 @@
   "defs": {
     "main": {
       "type": "query",
+      "description": "Returns a page of conversations (direct or group) for the user.",
       "parameters": {
         "type": "params",
         "properties": {
@@ -19,8 +20,14 @@
             "knownValues": ["unread"]
           },
           "status": {
+            "description": "Filter convos by their status. It is discouraged to call with \"request\" and preferred to call chat.bsky.convo.listConvoRequests, which also includes group join requests made by the user.",
             "type": "string",
             "knownValues": ["request", "accepted"]
+          },
+          "kind": {
+            "type": "string",
+            "description": "Filter by conversation kind.",
+            "knownValues": ["direct", "group"]
           }
         }
       },

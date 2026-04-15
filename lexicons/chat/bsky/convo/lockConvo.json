@@ -1,11 +1,15 @@
 {
   "lexicon": 1,
-  "id": "chat.bsky.convo.unmuteConvo",
+  "id": "chat.bsky.convo.lockConvo",
   "defs": {
     "main": {
       "type": "procedure",
-      "description": "Unmutes a conversation, allowing notifications related to it.",
-      "errors": [{ "name": "InvalidConvo" }],
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Locks a group convo so no more content (messages, reactions) can be added to it.",
+      "errors": [
+        { "name": "ConvoLocked" },
+        { "name": "InvalidConvo" },
+        { "name": "InsufficientRole" }
+      ],
       "input": {
         "encoding": "application/json",
         "schema": {

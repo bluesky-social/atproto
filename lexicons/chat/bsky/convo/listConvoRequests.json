@@ -1,16 +1,13 @@
 {
   "lexicon": 1,
-  "id": "chat.bsky.convo.getMessages",
+  "id": "chat.bsky.convo.listConvoRequests",
   "defs": {
     "main": {
       "type": "query",
-      "description": "Returns a page of messages from a conversation.",
-      "errors": [{ "name": "InvalidConvo" }],
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. Returns a page of incoming conversation requests for the user. Direct convo requests are returned as convoView; group join requests are returned as joinRequestView.",
       "parameters": {
         "type": "params",
-        "required": ["convoId"],
         "properties": {
-          "convoId": { "type": "string" },
           "limit": {
             "type": "integer",
             "minimum": 1,
@@ -24,17 +21,16 @@
         "encoding": "application/json",
         "schema": {
           "type": "object",
-          "required": ["messages"],
+          "required": ["requests"],
           "properties": {
             "cursor": { "type": "string" },
-            "messages": {
+            "requests": {
               "type": "array",
               "items": {
                 "type": "union",
                 "refs": [
-                  "chat.bsky.convo.defs#messageView",
-                  "chat.bsky.convo.defs#deletedMessageView",
-                  "chat.bsky.convo.defs#systemMessageView"
+                  "chat.bsky.convo.defs#convoView",
+                  "chat.bsky.group.defs#joinRequestView"
                 ]
               }
             }
