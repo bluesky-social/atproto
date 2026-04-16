@@ -10281,6 +10281,8 @@ export const schemaDict = {
             type: 'string',
           },
           members: {
+            description:
+              'Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. NOTE: TBD an endpoint to list all members.',
             type: 'array',
             items: {
               type: 'ref',
