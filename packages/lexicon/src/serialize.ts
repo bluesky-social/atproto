@@ -9,9 +9,9 @@ import { LexValue } from '@atproto/lex-data'
 import {
   JsonValue,
   jsonToLex,
+  jsonTransform,
   lexParse,
   lexStringify,
-  jsonTransform,
 } from '@atproto/lex-json'
 import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './blob-refs'
 
