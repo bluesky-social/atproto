@@ -23,6 +23,7 @@ import {
   DeviceStore,
   FoundRequestResult,
   HandleUnavailableError,
+  InvalidCredentialsError,
   InvalidInviteCodeError,
   InvalidRequestError,
   LexiconData,
@@ -53,7 +54,7 @@ import { ImageUrlBuilder } from '../image/image-url-builder'
 import { dbLogger } from '../logger'
 import { ServerMailer } from '../mailer'
 import { Sequencer, syncEvtDataFromCommit } from '../sequencer'
-import { AccountManager } from './account-manager'
+import { AccountManager, InvalidPasswordError } from './account-manager'
 import * as schemas from './db/schema'
 import * as accountHelper from './helpers/account'
 import { AccountStatus } from './helpers/account'
@@ -236,8 +237,15 @@ export class OAuthStore
 
       return this.buildAccount(user)
     } catch (err) {
+      // `InvalidPasswordError` is a subclass of `XrpcAuthRequiredError`,
+      // so it must be checked first. Surfacing the matched `did` as the
+      // `sub` lets the oauth-provider's `onSignInFailed` hook distinguish
+      // "identifier known, credentials wrong" from "identifier unknown".
+      if (err instanceof InvalidPasswordError) {
+        throw new InvalidCredentialsError(err.message, err.did, err)
+      }
       if (err instanceof XrpcAuthRequiredError) {
-        throw new InvalidRequestError(err.message, err)
+        throw new InvalidCredentialsError(err.message, undefined, err)
       }
       throw err
     }
