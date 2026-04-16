@@ -11,7 +11,7 @@
         "properties": {
           "aud": {
             "type": "string",
-            "description": "The DID (and optional service ID as a fragment) of the recipient service for this request (the \"audience\")."
+            "description": "The \"audience\" DID service reference for the intended recipient of the request. Syntax is a DID with a service endpoint id, separated by a hash (eg 'did:web:example.com#app_svc'). For OAuth clients, this field must exactly match the 'aud' granted via permission. Use of a bare DID (with no hash or service id) is deprecated, and does not work with OAuth clients."
           },
           "exp": {
             "type": "integer",
@@ -20,7 +20,7 @@
           "lxm": {
             "type": "string",
             "format": "nsid",
-            "description": "Lexicon (XRPC) method to bind the requested token to"
+            "description": "Lexicon (XRPC) method to bind the requested token to. This field is effectively required."
           }
         }
       },
