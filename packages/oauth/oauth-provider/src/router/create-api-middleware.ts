@@ -148,7 +148,7 @@ export function createApiMiddleware<
         // Look up the client identifier associated with the pending OAuth
         // request, if any, so it can be surfaced to the sign-in hooks.
         const clientId = requestUri
-          ? (await server.requestManager.peekClientId(requestUri)) ?? undefined
+          ? await server.requestManager.peekClientId(requestUri)
           : undefined
 
         const account = await server.accountManager.authenticateAccount(
