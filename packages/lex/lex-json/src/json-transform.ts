@@ -1,5 +1,7 @@
 const STRICT_DEPTH_LIMIT = 250
-const LENIENT_DEPTH_LIMIT = 5000
+const LENIENT_DEPTH_LIMIT = 5_000
+
+const MAX_ARRAY_LENGTH = 10_000
 
 const ERROR_PATH_MAX_DEPTH = 10
 
@@ -56,6 +58,13 @@ export function jsonTransform<T>(
 
     if (frame.type === 'array') {
       const { depth, input, parent } = frame // ArrayFrame
+
+      // Avoid CodeQL / Loop bound injection
+      if (input.length > MAX_ARRAY_LENGTH) {
+        throw new TypeError(
+          `Array is too long (length ${input.length}) at ${stringifyPath(parent)}`,
+        )
+      }
 
       for (let index = 0; index < input.length; index++) {
         const child = input[index]
