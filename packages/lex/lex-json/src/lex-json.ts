@@ -1,11 +1,19 @@
 import { LexValue } from '@atproto/lex-data'
-import { jsonTransform } from './json-transform.js'
+import { JsonTransformOptions, jsonTransform } from './json-transform.js'
 import { JsonValue } from './json.js'
 import { LexParseOptions } from './lex-parse-options.js'
 import {
   encodeSpecialJsonObject,
   parseSpecialJsonObject,
 } from './special-objects.js'
+
+/**
+ * Options for {@link jsonToLex} function
+ *
+ * @see {@link LexParseOptions}
+ * @see {@link JsonTransformOptions}
+ */
+export type JsonToLexOptions = LexParseOptions & JsonTransformOptions
 
 /**
  * Converts a parsed JSON representation of Lexicon value to a {@link LexValue}.
@@ -38,14 +46,21 @@ import {
  */
 export function jsonToLex(
   input: JsonValue,
-  options: LexParseOptions = { strict: false },
+  options?: JsonToLexOptions,
 ): LexValue {
   return jsonTransform<LexValue>(
     input,
     (value) => parseSpecialJsonObject(value, options),
-    options.strict,
+    options,
   )
 }
+
+/**
+ * Options for {@link lexToJson} function.
+ *
+ * @see {@link JsonTransformOptions}
+ */
+export type LexToJsonOptions = JsonTransformOptions
 
 /**
  * Converts a Lex value to a JSON-compatible value.
@@ -74,6 +89,9 @@ export function jsonToLex(
  * })
  * ```
  */
-export function lexToJson(input: LexValue): JsonValue {
-  return jsonTransform<JsonValue>(input, encodeSpecialJsonObject)
+export function lexToJson(
+  input: LexValue,
+  options?: LexToJsonOptions,
+): JsonValue {
+  return jsonTransform<JsonValue>(input, encodeSpecialJsonObject, options)
 }

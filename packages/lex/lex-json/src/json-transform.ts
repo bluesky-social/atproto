@@ -3,6 +3,11 @@ const LENIENT_DEPTH_LIMIT = 5000
 
 const ERROR_PATH_MAX_DEPTH = 10
 
+export type JsonTransformOptions = {
+  strict?: boolean
+  maxDepth?: number
+}
+
 /**
  * Recursively transforms a value by applying a transformation function to all
  * nested *objects*. If the transform function returns a non-undefined value,
@@ -22,19 +27,24 @@ const ERROR_PATH_MAX_DEPTH = 10
  *
  * The main purpose of this function if to transform lex-data structures, which
  * can be deeply nested, but should always be bound in size and should never
- * contain cyclic references. The `strict` option can be used to enforce certain
- * constraints on the input data (namely disallowing numbers that are not safe
- * integers).
+ * contain cyclic references.
+ *
+ * The `strict` option can be used to enforce certain constraints on the input
+ * data (namely disallowing numbers that are not safe integers, and forcing a
+ * maximum depth limit), which can help catch errors in the input data.
  *
  * @internal
  */
 export function jsonTransform<T>(
   input: unknown,
   transform: (child: object) => any,
-  strict = false,
+  {
+    strict = false,
+    maxDepth = strict ? STRICT_DEPTH_LIMIT : LENIENT_DEPTH_LIMIT,
+  }: JsonTransformOptions = {},
 ): T {
   const scalar = transformPrimitive(input, transform, strict)
-  if (scalar !== undefined) return scalar
+  if (scalar !== undefined) return scalar as T
 
   const root: StackFrame = Array.isArray(input)
     ? { type: 'array', depth: 0, copy: null, input }
@@ -57,7 +67,7 @@ export function jsonTransform<T>(
             frame.copy[index] = result
           }
         } else {
-          addToStack(stack, depth, child as object, { frame, index }, strict)
+          addToStack(stack, depth, child as object, { frame, index }, maxDepth)
         }
       }
     } else {
@@ -71,7 +81,7 @@ export function jsonTransform<T>(
             frame.copy[key] = result
           }
         } else {
-          addToStack(stack, depth, child as object, { frame, key }, strict)
+          addToStack(stack, depth, child as object, { frame, key }, maxDepth)
         }
       }
     }
@@ -107,12 +117,9 @@ function addToStack(
   depth: number,
   child: object,
   parent: ParentRef,
-  strictMode: boolean,
+  maxDepth: number,
 ) {
-  if (
-    depth >= STRICT_DEPTH_LIMIT &&
-    (strictMode || depth >= LENIENT_DEPTH_LIMIT)
-  ) {
+  if (depth >= maxDepth) {
     throw new TypeError(
       `Input is too deeply nested at ${stringifyPath(parent)}`,
     )
@@ -192,15 +199,15 @@ function transformPrimitive(
   transform: (child: object) => any,
   strictMode: boolean,
   parent?: ParentRef,
-): any {
+): unknown {
   switch (typeof input) {
     case 'object':
-      if (input === null) return input as any
+      if (input === null) return input
       if (!Array.isArray(input)) return transform(input)
       return undefined
     case 'number': {
-      if (!strictMode) return input as any
-      if (Number.isSafeInteger(input)) return input as any
+      if (!strictMode) return input
+      if (Number.isSafeInteger(input)) return input
 
       throw new TypeError(
         `Invalid number (got ${input}) at ${stringifyPath(parent)}`,
@@ -208,7 +215,7 @@ function transformPrimitive(
     }
     case 'boolean':
     case 'string':
-      return input as any
+      return input
     default:
       throw new TypeError(`Invalid ${typeof input} at ${stringifyPath(parent)}`)
   }
