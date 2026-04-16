@@ -1,12 +1,10 @@
 import { bench, describe } from 'vitest'
 import { JsonBytesDecoder } from './json-bytes-decoder.js'
 import { JsonValue } from './json.js'
-import {
-  LexParseOptions,
-  jsonToLex,
-  lexParse,
-  parseSpecialJsonObject,
-} from './lex-json.js'
+import { jsonToLex } from './lex-json.js'
+import { LexParseOptions } from './lex-parse-options.js'
+import { lexParse } from './lex-parse.js'
+import { parseSpecialJsonObject } from './special-objects.js'
 
 // This benchmark compares the performance of two implementations of
 // lexParse:

@@ -11,7 +11,7 @@ import {
   jsonToLex,
   lexParse,
   lexStringify,
-  lexTransform,
+  jsonTransform,
 } from '@atproto/lex-json'
 import { BlobRef, typedJsonBlobRef, untypedJsonBlobRef } from './blob-refs'
 
@@ -37,7 +37,7 @@ export type RepoRecord = Record<string, LegacyLexValue>
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
 export const lexToIpld = (input: LegacyLexValue): IpldValue => {
-  return lexTransform(input, lexObjectToIpld)
+  return jsonTransform(input, lexObjectToIpld)
 }
 
 /**
@@ -54,7 +54,7 @@ function lexObjectToIpld(value: object): IpldValue | void {
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
  */
 export const ipldToLex = (input: IpldValue): LegacyLexValue => {
-  return lexTransform(input, ipldObjectToLex)
+  return jsonTransform(input, ipldObjectToLex)
 }
 
 /**

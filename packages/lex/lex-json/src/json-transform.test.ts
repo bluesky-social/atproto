@@ -1,55 +1,55 @@
 import { describe, expect, test } from 'vitest'
-import { lexTransform } from './lex-transform.js'
+import { jsonTransform } from './json-transform.js'
 
-describe('lexTransform', () => {
+describe('jsonTransform', () => {
   test('handles primitives', () => {
-    expect(lexTransform(null, () => {})).toBe(null)
-    expect(lexTransform(true, () => {})).toBe(true)
-    expect(lexTransform(false, () => {})).toBe(false)
-    expect(lexTransform('hello', () => {})).toBe('hello')
-    expect(lexTransform(123, () => {})).toBe(123)
+    expect(jsonTransform(null, () => {})).toBe(null)
+    expect(jsonTransform(true, () => {})).toBe(true)
+    expect(jsonTransform(false, () => {})).toBe(false)
+    expect(jsonTransform('hello', () => {})).toBe('hello')
+    expect(jsonTransform(123, () => {})).toBe(123)
   })
 
   test('rejects invalid numbers in strict mode', () => {
-    expect(() => lexTransform(123.456, () => {}, true)).toThrow(
+    expect(() => jsonTransform(123.456, () => {}, true)).toThrow(
       'Invalid number',
     )
     expect(() =>
-      lexTransform(Number.MAX_SAFE_INTEGER + 1, () => {}, true),
+      jsonTransform(Number.MAX_SAFE_INTEGER + 1, () => {}, true),
     ).toThrow('Invalid number')
   })
 
   test('allows non-integer numbers in non-strict mode', () => {
-    expect(lexTransform(123.456, () => {}, false)).toBe(123.456)
+    expect(jsonTransform(123.456, () => {}, false)).toBe(123.456)
   })
 
   test('handles empty arrays', () => {
     const input: unknown[] = []
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
     expect(result).toBe(input) // No copy needed
   })
 
   test('handles empty objects', () => {
     const input = {}
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
     expect(result).toBe(input) // No copy needed
   })
 
   test('handles arrays with primitives', () => {
     const input = [1, 2, 3]
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
     expect(result).toBe(input) // No transformation, no copy
   })
 
   test('handles objects with primitives', () => {
     const input = { a: 1, b: 'hello', c: true }
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
     expect(result).toBe(input) // No transformation, no copy
   })
 
   test('applies transformation to root object', () => {
     const input = { type: 'test', value: 123 }
-    const result = lexTransform(input, (obj) => {
+    const result = jsonTransform(input, (obj) => {
       if ('type' in obj && obj.type === 'test') {
         return { transformed: true }
       }
@@ -62,7 +62,7 @@ describe('lexTransform', () => {
       outer: { type: 'special', value: 1 },
       regular: 'data',
     }
-    const result = lexTransform(input, (obj) => {
+    const result = jsonTransform(input, (obj) => {
       if ('type' in obj && obj.type === 'special') {
         return { replaced: true }
       }
@@ -77,7 +77,7 @@ describe('lexTransform', () => {
     const inner = { value: 1 }
     const input = [inner, { value: 2 }, { value: 3 }]
 
-    const result = lexTransform(input, (obj) => {
+    const result = jsonTransform(input, (obj) => {
       if ('value' in obj && obj.value === 2) {
         return { transformed: 2 }
       }
@@ -98,7 +98,7 @@ describe('lexTransform', () => {
       toChange: { type: 'special' },
     }
 
-    const result = lexTransform(input, (obj) => {
+    const result = jsonTransform(input, (obj) => {
       if ('type' in obj && obj.type === 'special') {
         return { changed: true }
       }
@@ -117,7 +117,7 @@ describe('lexTransform', () => {
     }
 
     const input = { nested }
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
 
     // Verify structure
     let check = (result as any).nested
@@ -135,7 +135,7 @@ describe('lexTransform', () => {
     }
 
     const input = { nested }
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
 
     // Verify structure
     let check = (result as any).nested
@@ -158,7 +158,7 @@ describe('lexTransform', () => {
       nested = [{ level: i, child: nested }]
     }
 
-    const result = lexTransform(nested, (obj) => {
+    const result = jsonTransform(nested, (obj) => {
       if (isNested(obj) && obj.level === 50) {
         return { transformed: true, child: obj.child }
       }
@@ -189,13 +189,13 @@ describe('lexTransform', () => {
       },
     }
 
-    const result = lexTransform(input, () => {})
+    const result = jsonTransform(input, () => {})
     expect(result).toBe(input) // No transformation
   })
 
   test('handles transformation that returns primitives', () => {
     const input = { wrapper: { type: 'number', value: 42 } }
-    const result = lexTransform(input, (obj) => {
+    const result = jsonTransform(input, (obj) => {
       if ('type' in obj && obj.type === 'number') {
         return 42 as any
       }
@@ -207,7 +207,7 @@ describe('lexTransform', () => {
     const input = [1, 2, 3]
     let transformCalled = false
 
-    const result = lexTransform(input, () => {
+    const result = jsonTransform(input, () => {
       transformCalled = true
       return { should: 'not happen' }
     })
@@ -221,7 +221,7 @@ describe('lexTransform', () => {
       items: [{ id: 1 }, { id: 2 }],
     }
 
-    const result = lexTransform(input, (obj) => {
+    const result = jsonTransform(input, (obj) => {
       if ('id' in obj && obj.id === 1) {
         return { id: 1, transformed: true }
       }

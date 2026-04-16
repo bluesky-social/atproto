@@ -28,7 +28,7 @@ const ERROR_PATH_MAX_DEPTH = 10
  *
  * @internal
  */
-export function lexTransform<T>(
+export function jsonTransform<T>(
   input: unknown,
   transform: (child: object) => any,
   strict = false,
@@ -137,6 +137,12 @@ function addToStack(
   }
 }
 
+// When a transformation is applied to a value, we need to create a copy of all
+// of its ancestors in the input structure, so that the transformation is
+// applied immutably. This function performs that copying and returns the new
+// value to use in place of the original transformed value. The `parent`
+// argument is a reference to the parent frame in the stack, which contains the
+// input object and the key/index of the current value being transformed.
 function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
   let currentCopy: unknown = newValue
   let currentParent: ParentRef | undefined = parent
@@ -209,25 +215,26 @@ function transformPrimitive(
 }
 
 function stringifyPath(parent?: ParentRef): string {
-  const segments: string[] = []
+  const segments: ParentRef[] = []
 
   while (parent) {
-    const segment = isArrayParent(parent)
-      ? `[${parent.index}]`
-      : /^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(parent.key)
-        ? `.${parent.key}`
-        : `[${JSON.stringify(parent.key)}]`
-
-    segments.push(segment)
-
-    // Truncate long paths to avoid excessively long error messages
-    if (segments.length > ERROR_PATH_MAX_DEPTH) {
-      segments.push('[...]')
-      break
-    }
-
+    segments.push(parent)
     parent = parent.frame.parent
   }
 
-  return `$${segments.reverse().join('')}`
+  if (segments.length > ERROR_PATH_MAX_DEPTH) {
+    return `$${segments.slice(-ERROR_PATH_MAX_DEPTH).reverse().map(stringifyParentRefIndex).join('')}(...)`
+  }
+
+  return `$${segments.reverse().map(stringifyParentRefIndex).join('')}`
+}
+
+function stringifyParentRefIndex(parent: ParentRef): string {
+  if (isArrayParent(parent)) {
+    return `[${parent.index}]`
+  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(parent.key)) {
+    return `.${parent.key}`
+  } else {
+    return `[${JSON.stringify(parent.key)}]`
+  }
 }

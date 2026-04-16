@@ -1,13 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import { LexValue, lexEquals, parseCid } from '@atproto/lex-data'
 import { JsonValue } from './json.js'
-import {
-  jsonToLex,
-  lexParse,
-  lexParseJsonBytes,
-  lexStringify,
-  lexToJson,
-} from './lex-json.js'
+import { jsonToLex, lexToJson } from './lex-json.js'
+import { lexParse, lexParseJsonBytes } from './lex-parse.js'
+import { lexStringify } from './lex-stringify.js'
 
 export const validVectors: Array<{
   name: string
@@ -980,6 +976,141 @@ describe('lexParseJsonBytes strict mode error parity with lexParse', () => {
       expect(() =>
         lexParseJsonBytes(Buffer.from(nonStringTypeJson), { strict: false }),
       ).not.toThrow()
+    })
+  })
+})
+
+describe('deeply nested structures', () => {
+  describe('lexStringify handles deep nesting without recursion errors', () => {
+    test('stringify deeply nested objects (4000 levels)', () => {
+      // Create a deeply nested structure using iteration to avoid recursion
+      let deepData: any = {
+        value: 'leaf',
+        cid: parseCid(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
+        bytes: new Uint8Array([1, 2, 3, 4, 5]),
+      }
+
+      for (let i = 0; i < 4000; i++) {
+        deepData = { nested: deepData }
+      }
+
+      // This should not throw a "Maximum call stack size exceeded" error
+      expect(() => lexStringify(deepData)).not.toThrow()
+
+      const jsonString = lexStringify(deepData)
+      expect(jsonString.startsWith('{"nested":')).toBe(true)
+      expect(jsonString.length).toBeGreaterThan(40000)
+    })
+
+    test('stringify deeply nested arrays (4000 levels)', () => {
+      // Create a deeply nested array structure using iteration
+      let deepData: any = [
+        'leaf',
+        parseCid('bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a'),
+        new Uint8Array([1, 2, 3]),
+      ]
+
+      for (let i = 0; i < 4000; i++) {
+        deepData = [deepData]
+      }
+
+      // This should not throw a "Maximum call stack size exceeded" error
+      expect(() => lexStringify(deepData)).not.toThrow()
+
+      const jsonString = lexStringify(deepData)
+      expect(jsonString.startsWith('[[[')).toBe(true)
+    })
+
+    test('lexStringify output matches JSON.stringify(lexToJson(input))', () => {
+      const testData = {
+        string: 'test',
+        number: 42,
+        bool: true,
+        null: null,
+        cid: parseCid(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
+        bytes: new Uint8Array([10, 20, 30]),
+        nested: {
+          array: [
+            1,
+            2,
+            parseCid(
+              'bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q',
+            ),
+          ],
+        },
+      }
+
+      const result1 = lexStringify(testData)
+      const result2 = JSON.stringify(lexToJson(testData))
+
+      expect(JSON.parse(result1)).toStrictEqual(JSON.parse(result2))
+    })
+  })
+
+  describe('lexParse handles deep nesting without recursion errors', () => {
+    test('parse deeply nested arrays (4000 levels)', () => {
+      // Generate JSON manually using string repetition to avoid recursion
+      const jsonString = '['.repeat(4000) + '1' + ']'.repeat(4000)
+
+      // This should not throw a "Maximum call stack size exceeded" error
+      expect(() => lexParse(jsonString)).not.toThrow()
+
+      const parsed = lexParse(jsonString)
+      expect(Array.isArray(parsed)).toBe(true)
+    })
+
+    test('parse deeply nested objects (4000 levels)', () => {
+      // Generate JSON manually using string repetition to avoid recursion
+      const jsonString = '{"a":'.repeat(4000) + '42' + '}'.repeat(4000)
+
+      // This should not throw a "Maximum call stack size exceeded" error
+      expect(() => lexParse(jsonString)).not.toThrow()
+
+      const parsed = lexParse(jsonString)
+      expect(typeof parsed).toBe('object')
+    })
+  })
+
+  describe('round-trip deeply nested structures', () => {
+    test('stringify and parse deeply nested structure with special types', () => {
+      // Create a moderately deep structure (500 levels) with special types
+      let deepData: any = {
+        leaf: 'value',
+        cid: parseCid(
+          'bafyreidfayvfuwqa7qlnopdjiqrxzs6blmoeu4rujcjtnci5beludirz2a',
+        ),
+        bytes: new Uint8Array([100, 101, 102]),
+      }
+
+      for (let i = 0; i < 500; i++) {
+        deepData = {
+          level: i,
+          nested: deepData,
+          extraCid: parseCid(
+            'bafyreigoxt64qghytzkr6ik7qvtzc7lyytiq5xbbrokbxjows2wp7vmo6q',
+          ),
+        }
+      }
+
+      const jsonString = lexStringify(deepData)
+      const parsed = lexParse(jsonString)
+
+      // Navigate to the leaf level using iteration
+      let current: any = parsed
+      for (let i = 499; i >= 0; i--) {
+        expect(current.level).toBe(i)
+        expect(current.extraCid).toBeInstanceOf(Object)
+        current = current.nested
+      }
+
+      expect(current.leaf).toBe('value')
+      expect(current.cid).toBeInstanceOf(Object)
+      expect(current.bytes).toBeInstanceOf(Uint8Array)
+      expect(Array.from(current.bytes)).toStrictEqual([100, 101, 102])
     })
   })
 })
