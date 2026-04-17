@@ -1,6 +1,5 @@
 import { bench, describe } from 'vitest'
 import { JsonValue } from './json.js'
-import { jsonToLex } from './lex-json.js'
 import { LexParseOptions } from './lex-parse-options.js'
 import { lexParse } from './lex-parse.js'
 import { parseSpecialJsonObject } from './special-objects.js'
@@ -111,19 +110,11 @@ function benchJson(jsonString: string, options?: LexParseOptions) {
     })
   }
 
-  const naiveParse: typeof lexParse = (input, options) => {
-    return jsonToLex(JSON.parse(input), options) as any
-  }
-
   bench('current', () => {
     lexParse(jsonString, options)
   })
 
   bench('with-reviver', () => {
     withReviver(jsonString, options)
-  })
-
-  bench('naive', () => {
-    naiveParse(jsonString, options)
   })
 }
