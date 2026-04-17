@@ -613,6 +613,70 @@ describe('pds profile views', () => {
     })
   })
 
+  describe('chat', () => {
+    it('omits chat if no declaration exists', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: alice },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toBeUndefined()
+    })
+
+    it('returns allowIncoming when only that field is set', async () => {
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: dan },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'none',
+      })
+    })
+
+    it('returns both allowIncoming and allowGroupInvites when both are set', async () => {
+      await sc.agent.com.atproto.repo.putRecord(
+        {
+          repo: eve,
+          collection: ids.ChatBskyActorDeclaration,
+          rkey: 'self',
+          record: {
+            $type: ids.ChatBskyActorDeclaration,
+            allowIncoming: 'following',
+            allowGroupInvites: 'all',
+          },
+        },
+        {
+          headers: sc.getHeaders(eve),
+          encoding: 'application/json',
+        },
+      )
+      await network.processAll()
+
+      const { data } = await agent.api.app.bsky.actor.getProfile(
+        { actor: eve },
+        {
+          headers: await network.serviceHeaders(
+            alice,
+            ids.AppBskyActorGetProfile,
+          ),
+        },
+      )
+      expect(data.associated?.chat).toEqual({
+        allowIncoming: 'following',
+        allowGroupInvites: 'all',
+      })
+    })
+  })
+
   describe('germ', () => {
     const germDeclaration: ComGermnetworkDeclaration.Main = {
       $type: ids.ComGermnetworkDeclaration,
