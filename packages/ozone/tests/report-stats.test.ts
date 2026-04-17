@@ -518,18 +518,18 @@ describe('report-stats', () => {
     it('supports date range filtering', async () => {
       await modClient.computeStats()
 
-      const today = new Date().toISOString().slice(0, 10)
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10)
+      const now = new Date()
+      const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const todayStr = now.toISOString().slice(0, 10)
+      const yesterdayStr = yesterday.toISOString().slice(0, 10)
 
       const result = await getHistoricalStats({
-        startDate: yesterday,
-        endDate: today,
+        startDate: yesterday.toISOString(),
+        endDate: now.toISOString(),
       })
       for (const stat of result.stats) {
-        expect(stat.date >= yesterday).toBe(true)
-        expect(stat.date <= today).toBe(true)
+        expect(stat.date >= yesterdayStr).toBe(true)
+        expect(stat.date <= todayStr).toBe(true)
       }
     })
   })
