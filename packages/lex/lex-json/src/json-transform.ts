@@ -277,7 +277,7 @@ function stringifyPath(parent?: ParentRef): string {
   }
 
   if (segments.length > ERROR_PATH_MAX_DEPTH) {
-    return `$${segments.slice(-ERROR_PATH_MAX_DEPTH).reverse().map(stringifyParentRefIndex).join('')}(...)`
+    return `$${segments.slice(-ERROR_PATH_MAX_DEPTH).reverse().map(stringifyParentRefIndex).join('')}\u2026`
   }
 
   return `$${segments.reverse().map(stringifyParentRefIndex).join('')}`
