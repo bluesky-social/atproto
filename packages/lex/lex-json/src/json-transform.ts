@@ -5,6 +5,18 @@ const MAX_ARRAY_LENGTH = 10_000
 
 const ERROR_PATH_MAX_DEPTH = 10
 
+/**
+ * Sentinel value to indicate that a property should be omitted from the output.
+ * This is used when we encounter `undefined` values in objects, which should be
+ * omitted to match JSON.stringify() behavior.
+ */
+const OMIT = Symbol('OMIT')
+
+/**
+ *
+ */
+const OBJECT = Symbol('object')
+
 export type JsonTransformOptions = {
   strict?: boolean
   maxDepth?: number
@@ -39,14 +51,23 @@ export type JsonTransformOptions = {
  */
 export function jsonTransform<T>(
   input: unknown,
-  transform: (child: object) => any,
+  transform: (child: object) => unknown,
   {
     strict = false,
     maxDepth = strict ? STRICT_DEPTH_LIMIT : LENIENT_DEPTH_LIMIT,
   }: JsonTransformOptions = {},
 ): T {
   const scalar = transformPrimitive(input, transform, strict)
-  if (scalar !== undefined) return scalar as T
+  if (scalar === OMIT) {
+    // @NOTE That JSON.stringify(undefined) returns undefined (although it is
+    // not typed as such in TypeScript, and not valid JSON). We disallow this
+    // since it is not a valid JSON value and is likely an error in the input
+    // data.
+    throw new TypeError('Invalid undefined value at $')
+  }
+  if (scalar !== OBJECT) {
+    return scalar as T
+  }
 
   const root: StackFrame = Array.isArray(input)
     ? { type: 'array', depth: 0, copy: null, input }
@@ -70,13 +91,17 @@ export function jsonTransform<T>(
         const child = input[index]
 
         const result = transformPrimitive(child, transform, strict)
-        if (result !== undefined) {
+        if (result === OMIT) {
+          // In arrays, undefined becomes null (matching JSON.stringify behavior)
+          frame.copy ??= performCopy(parent, input.slice())
+          frame.copy[index] = null
+        } else if (result === OBJECT) {
+          addToStack(stack, depth, child as object, { frame, index }, maxDepth)
+        } else {
           if (result !== child) {
             frame.copy ??= performCopy(parent, input.slice())
             frame.copy[index] = result
           }
-        } else {
-          addToStack(stack, depth, child as object, { frame, index }, maxDepth)
         }
       }
     } else {
@@ -84,13 +109,17 @@ export function jsonTransform<T>(
 
       for (const [key, child] of Object.entries(input) as [string, unknown][]) {
         const result = transformPrimitive(child, transform, strict)
-        if (result !== undefined) {
+        if (result === OMIT) {
+          // Omit this property (undefined values should be removed)
+          frame.copy ??= performCopy(parent, { ...input })
+          delete frame.copy[key]
+        } else if (result === OBJECT) {
+          addToStack(stack, depth, child as object, { frame, key }, maxDepth)
+        } else {
           if (result !== child) {
             frame.copy ??= performCopy(parent, { ...input })
             frame.copy[key] = result
           }
-        } else {
-          addToStack(stack, depth, child as object, { frame, key }, maxDepth)
         }
       }
     }
@@ -203,17 +232,22 @@ function isArrayParent<T extends { frame: { type: string } }>(
   return ref.frame.type === 'array'
 }
 
-function transformPrimitive(
-  input: unknown,
-  transform: (child: object) => any,
+function transformPrimitive<I, T extends (child: I & object) => any>(
+  input: I,
+  transform: T,
   strictMode: boolean,
   parent?: ParentRef,
-): unknown {
+): typeof OBJECT | typeof OMIT | I | ReturnType<T> {
   switch (typeof input) {
     case 'object':
       if (input === null) return input
-      if (!Array.isArray(input)) return transform(input)
-      return undefined
+      if (!Array.isArray(input)) {
+        const transformed = transform(input)
+        if (transformed !== undefined) return transformed
+        // We return a sentinel value to indicate that this is an object that
+        // should be traversed
+      }
+      return OBJECT
     case 'number': {
       if (!strictMode) return input
       if (Number.isSafeInteger(input)) return input
@@ -225,6 +259,10 @@ function transformPrimitive(
     case 'boolean':
     case 'string':
       return input
+    case 'undefined':
+      // Return sentinel to indicate this property should be omitted
+      // (matching JSON.stringify behavior for object properties)
+      return OMIT
     default:
       throw new TypeError(`Invalid ${typeof input} at ${stringifyPath(parent)}`)
   }

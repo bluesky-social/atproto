@@ -1,6 +1,5 @@
 import { LexValue, utf8FromBytes } from '@atproto/lex-data'
-import { jsonToLex } from './lex-json.js'
-import { LexParseOptions } from './lex-parse-options.js'
+import { JsonToLexOptions, jsonToLex } from './lex-json.js'
 
 /**
  * Parses a JSON string into Lex values.
@@ -39,10 +38,15 @@ import { LexParseOptions } from './lex-parse-options.js'
  */
 export function lexParse<T extends LexValue = LexValue>(
   input: string,
-  options: LexParseOptions = { strict: false },
+  options: JsonToLexOptions = { strict: false },
 ): T {
   // @NOTE see ./lex-json.bench.ts for performance comparison of implementation
   // that uses a reviver function in JSON.parse vs. the current implementation.
+
+  // @NOTE Unlike JSON.stringify, JSON.parse can handle very deeply nested
+  // structures:
+  //
+  // JSON.parse('['.repeat(40000) + ']'.repeat(40000))
   return jsonToLex(JSON.parse(input), options) as T
 }
 
@@ -51,14 +55,12 @@ export function lexParse<T extends LexValue = LexValue>(
  */
 export function lexParseJsonBytes(
   bytes: Uint8Array,
-  options?: LexParseOptions,
+  options?: JsonToLexOptions,
 ): LexValue {
-  // @NOTE see ./json-bytes-decoder.bench.ts for performance comparison of
-  // implementation that uses a decoder class that operates directly on bytes
-  // vs. the current implementation that first decodes bytes to string and then
-  // parses JSON. For more common cases, it seems that the trivial
-  // implementation works better than the decoder based solution, while having a
-  // small overhead for slower cases (~2% difference). Because of this, we keep
-  // the trivial implementation:
+  // @NOTE We explored here the option of using a streaming JSON parser that
+  // operates directly on bytes, allows to avoid creating an intermediary string
+  // representation. This was not significantly faster than the current (naive)
+  // implementation, and would add complexity and bundle size, so we decided
+  // against it.
   return lexParse(utf8FromBytes(bytes), options)
 }

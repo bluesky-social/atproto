@@ -1,5 +1,4 @@
 import { bench, describe } from 'vitest'
-import { JsonBytesDecoder } from './json-bytes-decoder.js'
 import { JsonValue } from './json.js'
 import { jsonToLex } from './lex-json.js'
 import { LexParseOptions } from './lex-parse-options.js'
@@ -116,22 +115,12 @@ function benchJson(jsonString: string, options?: LexParseOptions) {
     return jsonToLex(JSON.parse(input), options) as any
   }
 
-  const lexParseJsonBytesDecoder: typeof lexParse = (jsonString, options) => {
-    const bytes = Buffer.from(jsonString, 'utf-8')
-    const decoder = new JsonBytesDecoder(bytes, options?.strict)
-    return decoder.decode() as any
-  }
-
   bench('current', () => {
     lexParse(jsonString, options)
   })
 
   bench('with-reviver', () => {
     withReviver(jsonString, options)
-  })
-
-  bench('json-bytes-decoder', () => {
-    lexParseJsonBytesDecoder(jsonString, options)
   })
 
   bench('naive', () => {
