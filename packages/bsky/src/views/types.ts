@@ -9,6 +9,7 @@ export type ProfileViewer = app.bsky.actor.defs.ViewerState
 export type KnownFollowers = app.bsky.actor.defs.KnownFollowers
 export type ProfileAssociatedActivitySubscription =
   app.bsky.actor.defs.ProfileAssociatedActivitySubscription
+export type ProfileAssociatedChat = app.bsky.actor.defs.ProfileAssociatedChat
 export type ProfileView = app.bsky.actor.defs.ProfileView
 export type ProfileViewBasic = app.bsky.actor.defs.ProfileViewBasic
 export type ProfileViewDetailed = app.bsky.actor.defs.ProfileViewDetailed
