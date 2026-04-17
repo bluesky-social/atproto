@@ -1,5 +1,17 @@
 import { JsonValue } from './json.js'
 
+export const DEFAULT_MAX_DEPTH = 10000
+
+export type JsonStringifyDeepOptions = {
+  /**
+   * Maximum depth to serialize. This is a safeguard against infinite recursion
+   * in case of circular references.
+   *
+   * @default DEFAULT_MAX_DEPTH
+   */
+  maxDepth?: number
+}
+
 /**
  * A custom JSON stringifier that can handle deeply nested structures without
  * hitting call stack limits. It uses an iterative approach with an explicit
@@ -10,7 +22,12 @@ import { JsonValue } from './json.js'
  * maximum call stack size. By using an iterative approach, this function can
  * serialize structures with much greater depth without crashing.
  */
-export function jsonStringifyDeep(input: JsonValue): string {
+export function jsonStringifyDeep(
+  input: JsonValue,
+  options?: JsonStringifyDeepOptions,
+): string {
+  const maxDepth = options?.maxDepth ?? DEFAULT_MAX_DEPTH
+
   // Handle primitives and special types at the root level
   const rootEncoded = encodePrimitive(input)
   if (rootEncoded !== undefined) {
@@ -19,7 +36,7 @@ export function jsonStringifyDeep(input: JsonValue): string {
 
   // For objects and arrays, use iterative approach
   let result = ''
-  const stack: StackItem[] = [{ value: input, state: 'start' }]
+  const stack: StackItem[] = [{ value: input, state: 'start', depth: 0 }]
 
   while (stack.length > 0) {
     const item = stack[stack.length - 1]
@@ -61,8 +78,11 @@ export function jsonStringifyDeep(input: JsonValue): string {
         result += encoded
         item.index = idx + 1
       } else {
+        if (item.depth >= maxDepth) {
+          throw new TypeError(`Input is too deeply nested at index ${idx}`)
+        }
         // Push the encoded value to process
-        stack.push({ value: element, state: 'start' })
+        stack.push({ value: element, state: 'start', depth: item.depth + 1 })
         item.index = idx + 1
       }
     } else if (item.state === 'object') {
@@ -90,8 +110,11 @@ export function jsonStringifyDeep(input: JsonValue): string {
         result += encoded
         item.index = idx + 1
       } else {
+        if (item.depth >= maxDepth) {
+          throw new TypeError(`Input is too deeply nested at index ${idx}`)
+        }
         // Push the encoded value to process
-        stack.push({ value: value, state: 'start' })
+        stack.push({ value: value, state: 'start', depth: item.depth + 1 })
         item.index = idx + 1
       }
     }
@@ -103,6 +126,7 @@ export function jsonStringifyDeep(input: JsonValue): string {
 type StackItem = {
   value: unknown
   state: 'start' | 'array' | 'object'
+  depth: number
   index?: number
   keys?: string[]
   arrayValue?: readonly unknown[]
