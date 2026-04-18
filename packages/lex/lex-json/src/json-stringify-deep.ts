@@ -4,30 +4,17 @@ import {
   MAX_DEPTH,
   MAX_NESTING_FACTOR,
   MAX_OBJECT_ENTRIES,
-  ParentRef,
-  StackFrame,
-  StackFrameOptions,
-  createNestingFactorChecker,
-  createStackFrame,
+  type ParentRef,
+  Stack,
+  StackOptions,
   stringifyPath,
 } from './lib/stack.js'
 
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
-export interface JsonStringifyDeepOptions
-  extends Partial<StackFrameOptions>,
-    Partial<EncodePrimitiveOptions> {
-  /**
-   * Max number of objects/arrays that can be nested within the input structure.
-   * This is a safeguard against structures that use very large arrays at
-   * every level to create a huge number of nested objects/arrays (e.g. a
-   * structure with 100 levels of nesting, but each level is an array of 100
-   * items, would have a total of 100^100 nested objects/arrays, which would
-   * likely cause memory exhaustion even if the depth limit is not exceeded).
-   */
-  maxNestingFactor?: number
-}
+export type JsonStringifyDeepOptions = Partial<StackOptions> &
+  Partial<EncodePrimitiveOptions>
 
 type StringFrame = {
   type: 'string'
@@ -54,13 +41,7 @@ export function jsonStringifyDeep(
     maxObjectEntries = MAX_OBJECT_ENTRIES,
   }: JsonStringifyDeepOptions = {},
 ): string {
-  // For objects and arrays, use iterative approach
-  const options: StackFrameOptions & EncodePrimitiveOptions = {
-    allowNonInteger,
-    maxDepth: Math.min(maxDepth, maxNestingFactor),
-    maxArrayLength: Math.min(maxArrayLength, maxNestingFactor),
-    maxObjectEntries: Math.min(maxObjectEntries, maxNestingFactor),
-  }
+  const options: EncodePrimitiveOptions = { allowNonInteger }
 
   // Handle primitives and special types at the root level
   const value = applyToJSON(input)
@@ -76,12 +57,15 @@ export function jsonStringifyDeep(
     return encoded
   }
 
-  const frame = createStackFrame(value as object, undefined, options)
-  const stack: (StackFrame | StringFrame)[] = [frame]
-  const checkNestingFactor = createNestingFactorChecker(maxNestingFactor)
+  const stack = new Stack<StringFrame>(value as object, {
+    maxNestingFactor,
+    maxDepth,
+    maxArrayLength,
+    maxObjectEntries,
+  })
 
   let result = ''
-  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
+  for (const frame of stack) {
     if (frame.type === 'array') {
       if (frame.input.length === 0) {
         result += '[]'
@@ -90,7 +74,7 @@ export function jsonStringifyDeep(
 
       const { input } = frame // ArrayFrame
       result += '['
-      stack.push({ type: 'string', string: ']' })
+      stack.pushCustom({ type: 'string', string: ']' })
       for (let index = input.length - 1; index >= 0; index--) {
         const parent: ParentRef = { frame, index }
 
@@ -98,17 +82,16 @@ export function jsonStringifyDeep(
         const encoded = encodePrimitive(value, options, parent)
 
         if (index < input.length - 1) {
-          stack.push({ type: 'string', string: ',' })
+          stack.pushCustom({ type: 'string', string: ',' })
         }
 
         if (encoded === OBJECT) {
-          checkNestingFactor(parent)
-          stack.push(createStackFrame(value as object, parent, options))
+          stack.pushObject(value as object, parent)
         } else if (encoded === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
-          stack.push({ type: 'string', string: 'null' })
+          stack.pushCustom({ type: 'string', string: 'null' })
         } else {
-          stack.push({ type: 'string', string: encoded })
+          stack.pushCustom({ type: 'string', string: encoded })
         }
       }
     } else if (frame.type === 'object') {
@@ -120,7 +103,7 @@ export function jsonStringifyDeep(
       }
 
       result += '{'
-      stack.push({ type: 'string', string: '}' })
+      stack.pushCustom({ type: 'string', string: '}' })
 
       // Process entries and track if we've added any (for comma placement)
       let addedCount = 0
@@ -136,18 +119,20 @@ export function jsonStringifyDeep(
         }
 
         if (addedCount > 0) {
-          stack.push({ type: 'string', string: ',' })
+          stack.pushCustom({ type: 'string', string: ',' })
         }
         addedCount++
 
         const key = entries[index][0]
 
         if (encoded === OBJECT) {
-          checkNestingFactor(parent)
-          stack.push(createStackFrame(value as object, parent, options))
-          stack.push({ type: 'string', string: `${JSON.stringify(key)}:` })
+          stack.pushObject(value as object, parent)
+          stack.pushCustom({
+            type: 'string',
+            string: `${JSON.stringify(key)}:`,
+          })
         } else {
-          stack.push({
+          stack.pushCustom({
             type: 'string',
             string: `${JSON.stringify(key)}:${encoded}`,
           })

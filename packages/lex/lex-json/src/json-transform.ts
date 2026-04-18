@@ -5,11 +5,9 @@ import {
   MAX_NESTING_FACTOR,
   MAX_NESTING_FACTOR_STRICT,
   MAX_OBJECT_ENTRIES,
-  ParentRef,
-  StackFrame,
-  StackFrameOptions,
-  createNestingFactorChecker,
-  createStackFrame,
+  type ParentRef,
+  Stack,
+  StackOptions,
   isArrayFrame,
   stringifyPath,
 } from './lib/stack.js'
@@ -17,31 +15,20 @@ import {
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
-export interface JsonTransformOptions
-  extends Partial<StackFrameOptions>,
-    Partial<TransformValueOptions> {
-  /**
-   * If true, the function will enforce stricter default options, such as
-   * disallowing numbers that are not safe integers, and setting a lower maximum
-   * depth limit.
-   */
-  strict?: boolean
-
-  /**
-   * Max number of objects/arrays that can be nested within the input structure.
-   * This is a safeguard against structures that use the very large arrays at
-   * every level to create a huge number of nested objects/arrays (e.g. a
-   * structure with 100 levels of nesting, but each level is an array of 100
-   * items, would have a total of 100^100 nested objects/arrays, which would
-   * likely cause memory exhaustion even if the depth limit is not exceeded).
-   */
-  maxNestingFactor?: number
-}
+export type JsonTransformOptions = Partial<StackOptions> &
+  Partial<TransformValueOptions> & {
+    /**
+     * If true, the function will enforce stricter default options, such as
+     * disallowing numbers that are not safe integers, and setting a lower maximum
+     * depth limit.
+     */
+    strict?: boolean
+  }
 
 /**
  * Recursively transforms a value by applying a replacer function to all
  * nested *objects*. If the replacer function returns a non-undefined value,
- * that value is used in place of the original (without further transformation
+ * that value is used in place of the original (without further transformation∏
  * of its children). If the replacer function returns undefined, the original
  * value is used (after transforming its children).
  *
@@ -77,12 +64,7 @@ export function jsonTransform<T>(
     maxObjectEntries = MAX_OBJECT_ENTRIES,
   }: JsonTransformOptions = {},
 ): T {
-  const options: StackFrameOptions & TransformValueOptions = {
-    allowNonInteger,
-    maxDepth: Math.min(maxDepth, maxNestingFactor),
-    maxArrayLength: Math.min(maxArrayLength, maxNestingFactor),
-    maxObjectEntries: Math.min(maxObjectEntries, maxNestingFactor),
-  }
+  const options: TransformValueOptions = { allowNonInteger }
 
   const inputValue = transformValue(input, replacer, options)
   if (inputValue === OMIT) {
@@ -96,11 +78,14 @@ export function jsonTransform<T>(
     return inputValue as T
   }
 
-  const root = createStackFrame(input as any, undefined, options)
-  const stack: StackFrame[] = [root]
-  const checkNestingFactor = createNestingFactorChecker(maxNestingFactor)
+  const stack = new Stack(input as object, {
+    maxNestingFactor,
+    maxDepth,
+    maxArrayLength,
+    maxObjectEntries,
+  })
 
-  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
+  for (const frame of stack) {
     if (frame.type === 'array') {
       const { input, parent } = frame // ArrayFrame
 
@@ -109,9 +94,7 @@ export function jsonTransform<T>(
 
         const result = transformValue(value, replacer, options)
         if (result === OBJECT) {
-          const parent: ParentRef = { frame, index }
-          checkNestingFactor(parent)
-          stack.push(createStackFrame(value as object, parent, options))
+          stack.pushObject(value as object, { frame, index })
         } else if (result === OMIT) {
           // Undefined values in arrays are not allowed by lex-data.
           throw new TypeError(
@@ -134,9 +117,7 @@ export function jsonTransform<T>(
         const value = entries[index][1]
         const result = transformValue(value, replacer, options)
         if (result === OBJECT) {
-          const parent: ParentRef = { frame, index }
-          checkNestingFactor(parent)
-          stack.push(createStackFrame(value as object, parent, options))
+          stack.pushObject(value as object, { frame, index })
         } else if (result === OMIT) {
           // Omit this property (undefined values should be removed)
           frame.copy ??= performCopy(parent, Object.fromEntries(entries))
@@ -154,7 +135,7 @@ export function jsonTransform<T>(
     }
   }
 
-  return (root.copy ?? root.input) as T
+  return (stack.root.copy ?? stack.root.input) as T
 }
 
 // When a transformation is applied to a value, we need to create a copy of all

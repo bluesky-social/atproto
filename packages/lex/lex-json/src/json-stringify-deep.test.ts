@@ -8,7 +8,7 @@ describe(jsonStringifyDeep, () => {
     function testData(name: string, data: JsonValue = name) {
       test(name, () => {
         const json = JSON.stringify(data)
-        const result = jsonStringifyDeep(data)
+        const result = jsonStringifyDeep(data, { allowNonInteger: true })
         expect(result).toBe(json)
       })
     }
