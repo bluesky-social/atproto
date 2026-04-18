@@ -1,6 +1,15 @@
 import { JsonValue } from './json.js'
+import {
+  MAX_DEPTH,
+  ParentRef,
+  StackFrame,
+  StackFrameOptions,
+  createStackFrame,
+  stringifyPath,
+} from './lib/stack-frame.js'
 
-export const DEFAULT_MAX_DEPTH = 10000
+const MAX_ARRAY_LENGTH = 10_000
+const MAX_OBJECT_ENTRIES = 10_000
 
 export type JsonStringifyDeepOptions = {
   /**
@@ -10,6 +19,20 @@ export type JsonStringifyDeepOptions = {
    * @default DEFAULT_MAX_DEPTH
    */
   maxDepth?: number
+  /**
+   * Maximum length of arrays to serialize. This is a safeguard against
+   * excessively large arrays.
+   *
+   * @default MAX_ARRAY_LENGTH
+   */
+  maxArrayLength?: number
+  /**
+   * Maximum number of entries in objects to serialize. This is a safeguard
+   * against excessively large objects.
+   *
+   * @default MAX_OBJECT_ENTRIES
+   */
+  maxObjectEntries?: number
 }
 
 /**
@@ -24,10 +47,12 @@ export type JsonStringifyDeepOptions = {
  */
 export function jsonStringifyDeep(
   input: JsonValue,
-  options?: JsonStringifyDeepOptions,
+  {
+    maxDepth = MAX_DEPTH,
+    maxArrayLength = MAX_ARRAY_LENGTH,
+    maxObjectEntries = MAX_OBJECT_ENTRIES,
+  }: JsonStringifyDeepOptions = {},
 ): string {
-  const maxDepth = options?.maxDepth ?? DEFAULT_MAX_DEPTH
-
   // Handle primitives and special types at the root level
   const rootEncoded = encodePrimitive(input)
   if (rootEncoded !== undefined) {
@@ -35,87 +60,95 @@ export function jsonStringifyDeep(
   }
 
   // For objects and arrays, use iterative approach
+  const options: StackFrameOptions = {
+    maxDepth,
+    maxArrayLength,
+    maxObjectEntries,
+  }
+
+  const rootFrame = createStackFrame(input as any, undefined, options)
+  const stack: StackEntry[] = [{ state: 'start', frame: rootFrame, index: 0 }]
+
   let result = ''
-  const stack: StackItem[] = [{ value: input, state: 'start', depth: 0 }]
-
   while (stack.length > 0) {
-    const item = stack[stack.length - 1]
+    const entry = stack.pop()!
 
-    if (item.state === 'start') {
-      if (Array.isArray(item.value)) {
+    if (entry.state === 'start') {
+      if (entry.frame.type === 'array') {
         result += '['
-        item.state = 'array'
-        item.index = 0
-        item.arrayValue = item.value
-      } else if (item.value && typeof item.value === 'object') {
+        // If array is empty, close it immediately
+        if (entry.frame.input.length === 0) {
+          result += ']'
+        } else {
+          stack.push({ state: 'processing', frame: entry.frame, index: 0 })
+        }
+      } else {
         result += '{'
-        item.state = 'object'
-        item.index = 0
-        item.keys = Object.keys(item.value)
-        item.objectValue = item.value as Record<string, unknown>
-      } else {
-        // This shouldn't happen as encodeValue should handle primitives
-        throw new Error('Unexpected non-object/array value in stack')
-      }
-    } else if (item.state === 'array') {
-      const arr = item.arrayValue!
-      const idx = item.index!
-
-      if (idx >= arr.length) {
-        result += ']'
-        stack.pop()
-        continue
-      }
-
-      if (idx > 0) {
-        result += ','
-      }
-
-      const element = arr[idx]
-      const encoded = encodePrimitive(element)
-
-      if (encoded !== undefined) {
-        result += encoded
-        item.index = idx + 1
-      } else {
-        if (item.depth >= maxDepth) {
-          throw new TypeError(`Input is too deeply nested at index ${idx}`)
+        // If object has no entries, close it immediately
+        if (entry.frame.entries.length === 0) {
+          result += '}'
+        } else {
+          stack.push({ state: 'processing', frame: entry.frame, index: 0 })
         }
-        // Push the encoded value to process
-        stack.push({ value: element, state: 'start', depth: item.depth + 1 })
-        item.index = idx + 1
       }
-    } else if (item.state === 'object') {
-      const obj = item.objectValue!
-      const keys = item.keys!
-      const idx = item.index!
+    } else {
+      // state === 'processing'
+      if (entry.frame.type === 'array') {
+        const frame = entry.frame
+        const idx = entry.index
 
-      if (idx >= keys.length) {
-        result += '}'
-        stack.pop()
-        continue
-      }
-
-      if (idx > 0) {
-        result += ','
-      }
-
-      const key = keys[idx]
-      result += JSON.stringify(key) + ':'
-
-      const value = obj[key]
-      const encoded = encodePrimitive(value)
-
-      if (encoded !== undefined) {
-        result += encoded
-        item.index = idx + 1
-      } else {
-        if (item.depth >= maxDepth) {
-          throw new TypeError(`Input is too deeply nested at index ${idx}`)
+        if (idx >= frame.input.length) {
+          result += ']'
+          continue
         }
-        // Push the encoded value to process
-        stack.push({ value: value, state: 'start', depth: item.depth + 1 })
-        item.index = idx + 1
+
+        if (idx > 0) {
+          result += ','
+        }
+
+        const parent: ParentRef = { frame, index: idx }
+        const element = frame.input[idx]
+        const encoded = encodePrimitive(element, parent)
+
+        if (encoded !== undefined) {
+          result += encoded
+          stack.push({ state: 'processing', frame, index: idx + 1 })
+        } else {
+          // Push back the current frame to continue after child
+          stack.push({ state: 'processing', frame, index: idx + 1 })
+          // Push child frame to process
+          const childFrame = createStackFrame(element as any, parent, options)
+          stack.push({ state: 'start', frame: childFrame, index: 0 })
+        }
+      } else {
+        const frame = entry.frame
+        const idx = entry.index
+
+        if (idx >= frame.entries.length) {
+          result += '}'
+          continue
+        }
+
+        if (idx > 0) {
+          result += ','
+        }
+
+        const [key, value] = frame.entries[idx]
+        result += JSON.stringify(key) + ':'
+
+        const parent: ParentRef = { frame, index: idx }
+        const encoded = encodePrimitive(value, parent)
+
+        if (encoded !== undefined) {
+          result += encoded
+          stack.push({ state: 'processing', frame, index: idx + 1 })
+        } else {
+          // Push back the current frame to continue after child
+          stack.push({ state: 'processing', frame, index: idx + 1 })
+          // Push child frame to process
+          const childFrame = createStackFrame(value as any, parent, options)
+          stack.push({ state: 'start', frame: childFrame, index: 0 })
+        }
       }
     }
   }
@@ -123,22 +156,19 @@ export function jsonStringifyDeep(
   return result
 }
 
-type StackItem = {
-  value: unknown
-  state: 'start' | 'array' | 'object'
-  depth: number
-  index?: number
-  keys?: string[]
-  arrayValue?: readonly unknown[]
-  objectValue?: Record<string, unknown>
-}
+type StackEntry =
+  | { state: 'start'; frame: StackFrame; index: number }
+  | { state: 'processing'; frame: StackFrame; index: number }
 
 /**
  * Encodes a LexValue into either a JSON string (for primitives) or
  * a JSON-compatible object/array (for complex types).
  * Special Lex types (Cid, Uint8Array) are converted to their JSON representation.
  */
-function encodePrimitive(value: unknown): string | undefined {
+function encodePrimitive(
+  value: unknown,
+  parent?: ParentRef,
+): string | undefined {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
@@ -148,6 +178,8 @@ function encodePrimitive(value: unknown): string | undefined {
     case 'boolean':
       return JSON.stringify(value)
     default:
-      throw new TypeError(`Unsupported type: ${typeof value}`)
+      throw new TypeError(
+        `Unsupported type: ${typeof value} at ${stringifyPath(parent)}`,
+      )
   }
 }

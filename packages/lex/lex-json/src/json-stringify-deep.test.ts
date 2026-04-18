@@ -178,4 +178,74 @@ describe(jsonStringifyDeep, () => {
       )
     })
   })
+
+  describe('circular reference detection', () => {
+    it('detects circular reference in object', () => {
+      const obj: any = { a: 1 }
+      obj.self = obj
+      expect(() => jsonStringifyDeep(obj)).toThrow(
+        /Circular reference detected at \$\.self/,
+      )
+    })
+
+    it('detects circular reference in array', () => {
+      const arr: any = [1, 2, 3]
+      arr.push(arr)
+      expect(() => jsonStringifyDeep(arr)).toThrow(
+        /Circular reference detected at \$\[3\]/,
+      )
+    })
+
+    it('detects circular reference in nested object', () => {
+      const obj: any = { a: { b: { c: 1 } } }
+      obj.a.b.c = obj
+      expect(() => jsonStringifyDeep(obj)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('detects circular reference in nested array', () => {
+      const arr: any = [[1, [2, [3]]]]
+      arr[0][1][1].push(arr)
+      expect(() => jsonStringifyDeep(arr)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('detects circular reference in mixed structure', () => {
+      const obj: any = { items: [{ nested: { value: 1 } }] }
+      obj.items[0].nested.ref = obj
+      expect(() => jsonStringifyDeep(obj)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('detects circular reference to parent array', () => {
+      const arr: any = [1, [2, [3]]]
+      arr[1][1].push(arr[1])
+      expect(() => jsonStringifyDeep(arr)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('detects circular reference to parent object', () => {
+      const obj: any = { a: { b: { c: 1 } } }
+      obj.a.b.parent = obj.a
+      expect(() => jsonStringifyDeep(obj)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('allows repeated references to same object (not circular)', () => {
+      const shared = { shared: 'value' }
+      const obj = {
+        ref1: shared,
+        ref2: shared,
+        nested: { ref3: shared },
+        array: [shared, shared],
+      }
+      // This should not throw - it's not a circular reference
+      expect(() => jsonStringifyDeep(obj)).not.toThrow()
+    })
+  })
 })

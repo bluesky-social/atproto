@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { jsonTransform } from './json-transform.js'
+import { JsonTransformOptions, jsonTransform } from './json-transform.js'
 
 const noop = () => {}
 
@@ -278,6 +278,313 @@ describe(jsonTransform, () => {
         check = check.child
       }
       expect(check).toStrictEqual({ end: true })
+    })
+
+    it('enforces custom maxDepth option', () => {
+      let nested: unknown = []
+      for (let i = 0; i <= 10; i++) {
+        nested = [nested]
+      }
+
+      expect(() => jsonTransform(nested, noop, { maxDepth: 10 })).toThrow(
+        'Input is too deeply nested',
+      )
+    })
+
+    it('uses strict maxDepth (100) in strict mode', () => {
+      let nested: unknown = []
+      for (let i = 0; i <= 100; i++) {
+        nested = [nested]
+      }
+
+      expect(() => jsonTransform(nested, noop, { strict: true })).toThrow(
+        /Input is too deeply nested/,
+      )
+    })
+
+    it('uses lenient maxDepth (5000) in non-strict mode', () => {
+      let nested: unknown = []
+      for (let i = 0; i <= 4999; i++) {
+        nested = [nested]
+      }
+
+      // Should not throw in lenient mode
+      expect(() => jsonTransform(nested, noop, { strict: false })).not.toThrow()
+    })
+  })
+
+  describe('maxNestingFactor option', () => {
+    it('controls maximum nesting factor for repeated objects', () => {
+      // Test that maxNestingFactor limits how many times the same object
+      // can appear in the structure before being considered circular
+      const shared = { value: 'shared' }
+      const input = {
+        a: shared,
+        b: shared,
+        c: shared,
+        d: shared,
+        e: shared,
+      }
+
+      // With maxNestingFactor, repeated references should be allowed
+      const result = jsonTransform(input, noop, { maxNestingFactor: 10 })
+      expect(result).toStrictEqual({
+        a: { value: 'shared' },
+        b: { value: 'shared' },
+        c: { value: 'shared' },
+        d: { value: 'shared' },
+        e: { value: 'shared' },
+      })
+    })
+
+    it('throws when nesting factor is exceeded', () => {
+      const shared = { value: 'shared' }
+      // Create a deeply nested structure with the same object repeated
+      const input = {
+        level1: { nested: shared },
+        level2: { nested: shared },
+        level3: { nested: shared },
+      }
+
+      // With a low maxNestingFactor, this should throw
+      expect(() =>
+        jsonTransform(input, noop, { maxNestingFactor: 2 }),
+      ).toThrow()
+    })
+
+    it('allows infinite nesting factor', () => {
+      const shared = { value: 'shared' }
+      // Create many repeated references
+      const input = Array.from({ length: 100 }, () => ({ ref: shared }))
+
+      // With Infinity, all repeated references should be allowed
+      const result = jsonTransform(input, noop, {
+        maxNestingFactor: Infinity,
+      }) as any[]
+      expect(result).toHaveLength(100)
+      expect(result[0]).toStrictEqual({ ref: { value: 'shared' } })
+    })
+  })
+
+  describe('array length limits', () => {
+    it('enforces maxArrayLength option', () => {
+      const longArray = Array.from({ length: 100 }, (_, i) => i)
+      const input = { items: longArray }
+
+      expect(() => jsonTransform(input, noop, { maxArrayLength: 50 })).toThrow(
+        'Array is too long (length 100)',
+      )
+    })
+
+    it('reports path in array length error', () => {
+      const input = {
+        nested: {
+          items: Array.from({ length: 100 }, (_, i) => i),
+        },
+      }
+
+      expect(() => jsonTransform(input, noop, { maxArrayLength: 50 })).toThrow(
+        'at $.nested.items',
+      )
+    })
+
+    it('allows arrays at the limit', () => {
+      const array = Array.from({ length: 50 }, (_, i) => i)
+      const input = { items: array }
+
+      expect(() =>
+        jsonTransform(input, noop, { maxArrayLength: 50 }),
+      ).not.toThrow()
+    })
+  })
+
+  describe('object entry limits', () => {
+    it('enforces maxObjectEntries option', () => {
+      const largeObject: Record<string, number> = {}
+      for (let i = 0; i < 100; i++) {
+        largeObject[`key${i}`] = i
+      }
+      const input = { data: largeObject }
+
+      expect(() =>
+        jsonTransform(input, noop, { maxObjectEntries: 50 }),
+      ).toThrow('Object has too many entries (length 100)')
+    })
+
+    it('reports path in object entries error', () => {
+      const largeObject: Record<string, number> = {}
+      for (let i = 0; i < 100; i++) {
+        largeObject[`key${i}`] = i
+      }
+      const input = { nested: { data: largeObject } }
+
+      expect(() =>
+        jsonTransform(input, noop, { maxObjectEntries: 50 }),
+      ).toThrow('at $.nested.data')
+    })
+
+    it('allows objects at the limit', () => {
+      const object: Record<string, number> = {}
+      for (let i = 0; i < 50; i++) {
+        object[`key${i}`] = i
+      }
+      const input = { data: object }
+
+      expect(() =>
+        jsonTransform(input, noop, { maxObjectEntries: 50 }),
+      ).not.toThrow()
+    })
+  })
+
+  describe('allowNonInteger option', () => {
+    it('allows non-integers when allowNonInteger is true', () => {
+      const input = { value: 123.456, nested: { pi: 3.14159 } }
+      const result = jsonTransform(input, noop, { allowNonInteger: true })
+      expect(result).toStrictEqual({ value: 123.456, nested: { pi: 3.14159 } })
+    })
+
+    it('rejects non-integers when allowNonInteger is false', () => {
+      const input = { value: 123.456 }
+      expect(() =>
+        jsonTransform(input, noop, { allowNonInteger: false }),
+      ).toThrow('Invalid number (got 123.456)')
+    })
+
+    it('rejects non-safe integers when allowNonInteger is false', () => {
+      const input = { value: Number.MAX_SAFE_INTEGER + 1 }
+      expect(() =>
+        jsonTransform(input, noop, { allowNonInteger: false }),
+      ).toThrow('Invalid number')
+    })
+
+    it('allows safe integers when allowNonInteger is false', () => {
+      const input = { value: 42, nested: { count: -100 } }
+      const result = jsonTransform(input, noop, { allowNonInteger: false })
+      expect(result).toStrictEqual({ value: 42, nested: { count: -100 } })
+    })
+  })
+
+  describe('circular reference detection', () => {
+    const options: JsonTransformOptions = {
+      maxNestingFactor: Infinity,
+      maxDepth: Infinity,
+    }
+
+    it('detects circular references in objects at depth 50', () => {
+      const obj: any = { value: 1 }
+
+      // Build a chain of 50 nested objects
+      let current = obj
+      for (let i = 0; i < 50; i++) {
+        current.next = { value: i }
+        current = current.next
+      }
+      // Create circular reference
+      current.next = obj
+
+      expect(() => jsonTransform(obj, noop, options)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('detects circular references in arrays at depth 50', () => {
+      const arr: any[] = [1]
+
+      // Build a chain of 50 nested arrays
+      let current = arr
+      for (let i = 0; i < 50; i++) {
+        const next = [i]
+        current.push(next)
+        current = next
+      }
+      // Create circular reference
+      current.push(arr)
+      expect(() => jsonTransform(arr, noop, options)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('detects circular reference to intermediate parent', () => {
+      const root: any = { level: 0 }
+      let current = root
+
+      // Build chain of 50 levels
+      for (let i = 1; i <= 50; i++) {
+        current.child = { level: i }
+        current = current.child
+      }
+
+      // Reference an intermediate parent (level 25)
+      let intermediate = root
+      for (let i = 0; i < 25; i++) {
+        intermediate = intermediate.child
+      }
+      current.circular = intermediate
+
+      expect(() => jsonTransform(root, noop, options)).toThrow(
+        'Circular reference detected',
+      )
+    })
+
+    it('allows repeated references to same object (not circular)', () => {
+      const shared = { shared: 'value' }
+      const input = {
+        ref1: shared,
+        ref2: shared,
+        nested: { ref3: shared },
+      }
+
+      // This should not throw - it's not a circular reference
+      const result = jsonTransform(input, noop)
+      expect(result).toStrictEqual({
+        ref1: { shared: 'value' },
+        ref2: { shared: 'value' },
+        nested: { ref3: { shared: 'value' } },
+      })
+    })
+
+    it('reports path in circular reference error', () => {
+      const obj: any = { data: { value: 1 } }
+      let current = obj.data
+
+      for (let i = 0; i < 50; i++) {
+        current.next = { value: i }
+        current = current.next
+      }
+      current.circular = obj.data
+
+      expect(() => jsonTransform(obj, noop, options)).toThrow(
+        'Circular reference detected',
+      )
+    })
+  })
+
+  describe('undefined handling', () => {
+    it('rejects undefined in arrays', () => {
+      const input = [1, undefined as any, 3]
+      expect(() => jsonTransform(input, noop)).toThrow(
+        'Invalid undefined value at $[1]',
+      )
+    })
+
+    it('removes undefined properties from objects', () => {
+      const input = { a: 1, b: undefined as any, c: 3 }
+      const result = jsonTransform(input, noop)
+      expect(result).toStrictEqual({ a: 1, c: 3 })
+      expect(result).not.toHaveProperty('b')
+    })
+
+    it('removes undefined from nested objects', () => {
+      const input = {
+        outer: { a: 1, b: undefined as any },
+        keep: 'this',
+      }
+      const result = jsonTransform(input, noop)
+      expect(result).not.toBe(input) // Object was copied
+      expect(result).toStrictEqual({
+        outer: { a: 1 },
+        keep: 'this',
+      })
     })
   })
 })

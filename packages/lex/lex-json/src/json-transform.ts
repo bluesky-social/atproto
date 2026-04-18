@@ -1,9 +1,16 @@
-const STRICT_DEPTH_LIMIT = 250
-const LENIENT_DEPTH_LIMIT = 5_000
+import {
+  MAX_ARRAY_LENGTH,
+  MAX_DEPTH,
+  MAX_OBJECT_ENTRIES,
+  ParentRef,
+  StackFrame,
+  StackFrameOptions,
+  createStackFrame,
+  isArrayFrame,
+  stringifyPath,
+} from './lib/stack-frame.js'
 
-const MAX_ARRAY_LENGTH = 10_000
-
-const ERROR_PATH_MAX_DEPTH = 10
+const MAX_DEPTH_STRICT = 100
 
 /**
  * Sentinel value to indicate that a property should be omitted from the output.
@@ -18,18 +25,33 @@ const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
 export type JsonTransformOptions = {
+  /**
+   * If true, the function will enforce stricter default options, such as
+   * disallowing numbers that are not safe integers, and setting a lower maximum
+   * depth limit.
+   */
   strict?: boolean
-  maxDepth?: number
-}
+
+  /**
+   * Max number of objects/arrays that can be nested within the input structure.
+   * This is a safeguard against structures that use the very large arrays at
+   * every level to create a huge number of nested objects/arrays (e.g. a
+   * structure with 100 levels of nesting, but each level is an array of 100
+   * items, would have a total of 100^100 nested objects/arrays, which would
+   * likely cause memory exhaustion even if the depth limit is not exceeded).
+   */
+  maxNestingFactor?: number
+} & Partial<StackFrameOptions> &
+  Partial<TransformValueOptions>
 
 /**
- * Recursively transforms a value by applying a transformation function to all
- * nested *objects*. If the transform function returns a non-undefined value,
+ * Recursively transforms a value by applying a replacer function to all
+ * nested *objects*. If the replacer function returns a non-undefined value,
  * that value is used in place of the original (without further transformation
- * of its children). If the transform function returns undefined, the original
+ * of its children). If the replacer function returns undefined, the original
  * value is used (after transforming its children).
  *
- * In any transformation was applied to a branch of the nested input structure,
+ * If any transformation was applied to a branch of the nested input structure,
  * the function returns a new object/array with the transformations applied
  * (i.e. it does not mutate the original input). If no transformations were
  * applied, the original input is returned.
@@ -51,13 +73,24 @@ export type JsonTransformOptions = {
  */
 export function jsonTransform<T>(
   input: unknown,
-  transform: (child: object) => unknown,
+  replacer: (child: object) => unknown,
   {
     strict = false,
-    maxDepth = strict ? STRICT_DEPTH_LIMIT : LENIENT_DEPTH_LIMIT,
+    allowNonInteger = !strict,
+    maxNestingFactor = strict ? 100 * 100 : 100 * 1000,
+    maxDepth = strict ? MAX_DEPTH_STRICT : MAX_DEPTH,
+    maxArrayLength = MAX_ARRAY_LENGTH,
+    maxObjectEntries = MAX_OBJECT_ENTRIES,
   }: JsonTransformOptions = {},
 ): T {
-  const scalar = transformPrimitive(input, transform, strict)
+  const options: StackFrameOptions & TransformValueOptions = {
+    allowNonInteger,
+    maxDepth: Math.min(maxDepth, maxNestingFactor),
+    maxArrayLength: Math.min(maxArrayLength, maxNestingFactor),
+    maxObjectEntries: Math.min(maxObjectEntries, maxNestingFactor),
+  }
+
+  const scalar = transformValue(input, replacer, options)
   if (scalar === OMIT) {
     // @NOTE That JSON.stringify(undefined) returns undefined (although it is
     // not typed as such in TypeScript, and not valid JSON). We disallow this
@@ -69,56 +102,69 @@ export function jsonTransform<T>(
     return scalar as T
   }
 
-  const root: StackFrame = Array.isArray(input)
-    ? { type: 'array', depth: 0, copy: null, input }
-    : { type: 'object', depth: 0, copy: null, input: input as object }
+  const root = createStackFrame(input as any, undefined, options)
   const stack: StackFrame[] = [root]
+  let currentNestingFactor = 1
+  const addToStack = (
+    value: object,
+    parent: ParentRef | undefined,
+    options: StackFrameOptions & TransformValueOptions,
+  ) => {
+    if (currentNestingFactor >= maxNestingFactor) {
+      throw new TypeError(
+        `Input is too large (exceeds max nesting factor of ${maxNestingFactor}) at ${stringifyPath(parent)}`,
+      )
+    }
+    stack.push(createStackFrame(value, parent, options))
+    currentNestingFactor++
+  }
 
   while (stack.length > 0) {
     const frame = stack.pop()!
 
     if (frame.type === 'array') {
-      const { depth, input, parent } = frame // ArrayFrame
-
-      // Avoid CodeQL / Loop bound injection
-      if (input.length > MAX_ARRAY_LENGTH) {
-        throw new TypeError(
-          `Array is too long (length ${input.length}) at ${stringifyPath(parent)}`,
-        )
-      }
+      const { input, parent } = frame // ArrayFrame
 
       for (let index = 0; index < input.length; index++) {
-        const child = input[index]
+        const value = input[index]
 
-        const result = transformPrimitive(child, transform, strict)
-        if (result === OMIT) {
-          // In arrays, undefined becomes null (matching JSON.stringify behavior)
-          frame.copy ??= performCopy(parent, input.slice())
-          frame.copy[index] = null
-        } else if (result === OBJECT) {
-          addToStack(stack, depth, child as object, { frame, index }, maxDepth)
+        const result = transformValue(value, replacer, options)
+        if (result === OBJECT) {
+          addToStack(value as object, { frame, index }, options)
+        } else if (result === OMIT) {
+          // Undefined values in arrays are not allowed by lex-data.
+          throw new TypeError(
+            `Invalid undefined value at ${stringifyPath({ frame, index })}`,
+          )
         } else {
-          if (result !== child) {
+          // Leaf value. If the replacer returned a different value, we need to
+          // create a copy. Otherswise we can keep the original input value
+          // since it is unchanged.
+          if (result !== value) {
             frame.copy ??= performCopy(parent, input.slice())
             frame.copy[index] = result
           }
         }
       }
     } else {
-      const { depth, input, parent } = frame // ObjectFrame
+      const { entries, parent } = frame // ObjectFrame
 
-      for (const [key, child] of Object.entries(input) as [string, unknown][]) {
-        const result = transformPrimitive(child, transform, strict)
-        if (result === OMIT) {
+      for (let index = 0; index < entries.length; index++) {
+        const value = entries[index][1]
+        const result = transformValue(value, replacer, options)
+        if (result === OBJECT) {
+          addToStack(value as object, { frame, index }, options)
+        } else if (result === OMIT) {
           // Omit this property (undefined values should be removed)
-          frame.copy ??= performCopy(parent, { ...input })
-          delete frame.copy[key]
-        } else if (result === OBJECT) {
-          addToStack(stack, depth, child as object, { frame, key }, maxDepth)
+          frame.copy ??= performCopy(parent, Object.fromEntries(entries))
+          delete frame.copy[entries[index][0]]
         } else {
-          if (result !== child) {
-            frame.copy ??= performCopy(parent, { ...input })
-            frame.copy[key] = result
+          // Leaf value. If the replacer returned a different value, we need to
+          // create a copy. Otherswise we can keep the original input value
+          // since it is unchanged.
+          if (result !== value) {
+            frame.copy ??= performCopy(parent, Object.fromEntries(entries))
+            frame.copy[entries[index][0]] = result
           }
         }
       }
@@ -126,60 +172,6 @@ export function jsonTransform<T>(
   }
 
   return (root.copy ?? root.input) as T
-}
-
-type ArrayFrame = {
-  type: 'array'
-  depth: number
-  parent?: ParentRef
-  input: readonly unknown[]
-  copy: null | unknown[]
-}
-
-type ObjectFrame = {
-  type: 'object'
-  depth: number
-  parent?: ParentRef
-  input: object
-  copy: null | Record<string, unknown>
-}
-
-type ParentRef =
-  | { frame: ArrayFrame; index: number }
-  | { frame: ObjectFrame; key: string }
-
-type StackFrame = ArrayFrame | ObjectFrame
-
-function addToStack(
-  stack: StackFrame[],
-  depth: number,
-  child: object,
-  parent: ParentRef,
-  maxDepth: number,
-) {
-  if (depth >= maxDepth) {
-    throw new TypeError(
-      `Input is too deeply nested at ${stringifyPath(parent)}`,
-    )
-  }
-
-  if (Array.isArray(child)) {
-    stack.push({
-      type: 'array',
-      depth: depth + 1,
-      parent,
-      input: child,
-      copy: null,
-    })
-  } else {
-    stack.push({
-      type: 'object',
-      depth: depth + 1,
-      parent,
-      input: child as object,
-      copy: null,
-    })
-  }
 }
 
 // When a transformation is applied to a value, we need to create a copy of all
@@ -197,10 +189,11 @@ function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
   // We stop once we reach a parent that already has a copy.
   while (currentParent) {
     if (currentParent.frame.copy != null) {
-      if (isArrayParent(currentParent)) {
+      if (currentParent.frame.type === 'array') {
         currentParent.frame.copy[currentParent.index] = currentCopy
       } else {
-        currentParent.frame.copy[currentParent.key] = currentCopy
+        const key = currentParent.frame.entries[currentParent.index][0]
+        currentParent.frame.copy[key] = currentCopy
       }
 
       // If the parent already has a copy, it means we've already propagated the
@@ -211,12 +204,13 @@ function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
 
     // We need to create a copy of the parent's input, and save the current
     // copy in the appropriate key/index, so that the parent frame now points to
-    if (isArrayParent(currentParent)) {
+    if (isArrayFrame(currentParent.frame)) {
       currentParent.frame.copy = currentParent.frame.input.slice()
       currentParent.frame.copy[currentParent.index] = currentCopy
     } else {
-      currentParent.frame.copy = { ...currentParent.frame.input }
-      currentParent.frame.copy[currentParent.key] = currentCopy
+      currentParent.frame.copy = Object.fromEntries(currentParent.frame.entries)
+      const key = currentParent.frame.entries[currentParent.index][0]
+      currentParent.frame.copy[key] = currentCopy
     }
 
     currentCopy = currentParent.frame.copy
@@ -226,30 +220,29 @@ function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
   return newValue
 }
 
-function isArrayParent<T extends { frame: { type: string } }>(
-  ref: T,
-): ref is Extract<T, { frame: { type: 'array' } }> {
-  return ref.frame.type === 'array'
+type TransformValueOptions = {
+  allowNonInteger: boolean
 }
 
-function transformPrimitive<I, T extends (child: I & object) => any>(
+function transformValue<I, T extends (child: I & object) => any>(
   input: I,
-  transform: T,
-  strictMode: boolean,
+  replacer: T,
+  options: TransformValueOptions,
   parent?: ParentRef,
 ): typeof OBJECT | typeof OMIT | I | ReturnType<T> {
   switch (typeof input) {
     case 'object':
       if (input === null) return input
       if (!Array.isArray(input)) {
-        const transformed = transform(input)
+        const transformed = replacer(input)
         if (transformed !== undefined) return transformed
-        // We return a sentinel value to indicate that this is an object that
-        // should be traversed
       }
+
+      // We return a sentinel value to indicate that this is an object that
+      // should be traversed
       return OBJECT
     case 'number': {
-      if (!strictMode) return input
+      if (options.allowNonInteger) return input
       if (Number.isSafeInteger(input)) return input
 
       throw new TypeError(
@@ -265,30 +258,5 @@ function transformPrimitive<I, T extends (child: I & object) => any>(
       return OMIT
     default:
       throw new TypeError(`Invalid ${typeof input} at ${stringifyPath(parent)}`)
-  }
-}
-
-function stringifyPath(parent?: ParentRef): string {
-  const segments: ParentRef[] = []
-
-  while (parent) {
-    segments.push(parent)
-    parent = parent.frame.parent
-  }
-
-  if (segments.length > ERROR_PATH_MAX_DEPTH) {
-    return `$${segments.slice(-ERROR_PATH_MAX_DEPTH).reverse().map(stringifyParentRefIndex).join('')}\u2026`
-  }
-
-  return `$${segments.reverse().map(stringifyParentRefIndex).join('')}`
-}
-
-function stringifyParentRefIndex(parent: ParentRef): string {
-  if (isArrayParent(parent)) {
-    return `[${parent.index}]`
-  } else if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(parent.key)) {
-    return `.${parent.key}`
-  } else {
-    return `[${JSON.stringify(parent.key)}]`
   }
 }
