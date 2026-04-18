@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 import {
   type ParentRef,
   type StackFrameOptions,
+  createNestingFactorChecker,
   createStackFrame,
   isArrayFrame,
   stringifyPath,
-} from './stack-frame.js'
+} from './stack.js'
 
 const DEFAULT_OPTIONS: StackFrameOptions = {
   maxDepth: 100,
@@ -264,5 +265,78 @@ describe(stringifyPath, () => {
     const parent4: ParentRef = { frame: level4Frame, index: 0 } // .id
 
     expect(stringifyPath(parent4)).toBe('$[0].items[0].id')
+  })
+})
+
+describe('createNestingFactorChecker', () => {
+  it('allows nesting up to the limit', () => {
+    const checker = createNestingFactorChecker(5)
+    const frame = createStackFrame([1, 2, 3], undefined, DEFAULT_OPTIONS)
+    const parent: ParentRef = { frame, index: 0 }
+
+    // Should not throw for first 4 calls (counter starts at 1, increments before check)
+    expect(() => checker(parent)).not.toThrow()
+    expect(() => checker(parent)).not.toThrow()
+    expect(() => checker(parent)).not.toThrow()
+    expect(() => checker(parent)).not.toThrow()
+  })
+
+  it('throws when limit is exceeded', () => {
+    const checker = createNestingFactorChecker(3)
+    const frame = createStackFrame([1, 2, 3], undefined, DEFAULT_OPTIONS)
+    const parent: ParentRef = { frame, index: 0 }
+
+    // First 2 calls should succeed
+    checker(parent)
+    checker(parent)
+
+    // Third call should throw (counter is now 3, which is >= maxNestingFactor)
+    expect(() => checker(parent)).toThrow(
+      'Input is too large (exceeds max nesting factor of 3)',
+    )
+  })
+
+  it('includes path in error message', () => {
+    const checker = createNestingFactorChecker(1)
+    const frame = createStackFrame({ name: 'test' }, undefined, DEFAULT_OPTIONS)
+    const parent: ParentRef = { frame, index: 0 }
+
+    expect(() => checker(parent)).toThrow('at $.name')
+  })
+
+  it('maintains independent state per checker instance', () => {
+    const checker1 = createNestingFactorChecker(2)
+    const checker2 = createNestingFactorChecker(2)
+
+    const frame = createStackFrame([1], undefined, DEFAULT_OPTIONS)
+    const parent: ParentRef = { frame, index: 0 }
+
+    // checker1 increments its own counter
+    checker1(parent)
+
+    // checker2 should still be at initial state, not throw
+    expect(() => checker2(parent)).not.toThrow()
+
+    // checker1 should throw on second call
+    expect(() => checker1(parent)).toThrow()
+  })
+
+  it('works with nested structure paths', () => {
+    const checker = createNestingFactorChecker(1)
+
+    const rootFrame = createStackFrame(
+      { a: { b: [1] } },
+      undefined,
+      DEFAULT_OPTIONS,
+    )
+    const parent1: ParentRef = { frame: rootFrame, index: 0 } // .a
+
+    const level2Frame = createStackFrame({ b: [1] }, parent1, DEFAULT_OPTIONS)
+    const parent2: ParentRef = { frame: level2Frame, index: 0 } // .b
+
+    const level3Frame = createStackFrame([1], parent2, DEFAULT_OPTIONS)
+    const parent3: ParentRef = { frame: level3Frame, index: 0 } // [0]
+
+    expect(() => checker(parent3)).toThrow('at $.a.b[0]')
   })
 })

@@ -1,21 +1,25 @@
 import {
   MAX_ARRAY_LENGTH,
   MAX_DEPTH,
+  MAX_DEPTH_STRICT,
+  MAX_NESTING_FACTOR,
+  MAX_NESTING_FACTOR_STRICT,
   MAX_OBJECT_ENTRIES,
   ParentRef,
   StackFrame,
   StackFrameOptions,
+  createNestingFactorChecker,
   createStackFrame,
   isArrayFrame,
   stringifyPath,
-} from './lib/stack-frame.js'
-
-const MAX_DEPTH_STRICT = 100
+} from './lib/stack.js'
 
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
-export type JsonTransformOptions = {
+export interface JsonTransformOptions
+  extends Partial<StackFrameOptions>,
+    Partial<TransformValueOptions> {
   /**
    * If true, the function will enforce stricter default options, such as
    * disallowing numbers that are not safe integers, and setting a lower maximum
@@ -32,8 +36,7 @@ export type JsonTransformOptions = {
    * likely cause memory exhaustion even if the depth limit is not exceeded).
    */
   maxNestingFactor?: number
-} & Partial<StackFrameOptions> &
-  Partial<TransformValueOptions>
+}
 
 /**
  * Recursively transforms a value by applying a replacer function to all
@@ -68,7 +71,7 @@ export function jsonTransform<T>(
   {
     strict = false,
     allowNonInteger = !strict,
-    maxNestingFactor = strict ? 100 * 100 : 100 * 1000,
+    maxNestingFactor = strict ? MAX_NESTING_FACTOR_STRICT : MAX_NESTING_FACTOR,
     maxDepth = strict ? MAX_DEPTH_STRICT : MAX_DEPTH,
     maxArrayLength = MAX_ARRAY_LENGTH,
     maxObjectEntries = MAX_OBJECT_ENTRIES,
@@ -95,24 +98,9 @@ export function jsonTransform<T>(
 
   const root = createStackFrame(input as any, undefined, options)
   const stack: StackFrame[] = [root]
-  let currentNestingFactor = 1
-  const addToStack = (
-    value: object,
-    parent: ParentRef | undefined,
-    options: StackFrameOptions & TransformValueOptions,
-  ) => {
-    if (currentNestingFactor >= maxNestingFactor) {
-      throw new TypeError(
-        `Input is too large (exceeds max nesting factor of ${maxNestingFactor}) at ${stringifyPath(parent)}`,
-      )
-    }
-    stack.push(createStackFrame(value, parent, options))
-    currentNestingFactor++
-  }
+  const checkNestingFactor = createNestingFactorChecker(maxNestingFactor)
 
-  while (stack.length > 0) {
-    const frame = stack.pop()!
-
+  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
     if (frame.type === 'array') {
       const { input, parent } = frame // ArrayFrame
 
@@ -121,7 +109,9 @@ export function jsonTransform<T>(
 
         const result = transformValue(value, replacer, options)
         if (result === OBJECT) {
-          addToStack(value as object, { frame, index }, options)
+          const parent: ParentRef = { frame, index }
+          checkNestingFactor(parent)
+          stack.push(createStackFrame(value as object, parent, options))
         } else if (result === OMIT) {
           // Undefined values in arrays are not allowed by lex-data.
           throw new TypeError(
@@ -144,7 +134,9 @@ export function jsonTransform<T>(
         const value = entries[index][1]
         const result = transformValue(value, replacer, options)
         if (result === OBJECT) {
-          addToStack(value as object, { frame, index }, options)
+          const parent: ParentRef = { frame, index }
+          checkNestingFactor(parent)
+          stack.push(createStackFrame(value as object, parent, options))
         } else if (result === OMIT) {
           // Omit this property (undefined values should be removed)
           frame.copy ??= performCopy(parent, Object.fromEntries(entries))

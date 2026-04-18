@@ -208,11 +208,11 @@ describe('large strings', () => {
 })
 
 function benchData(data: JsonValue) {
-  bench('current', () => {
+  bench(jsonStringifyDeep, () => {
     jsonStringifyDeep(data)
   })
 
-  bench('native', () => {
+  bench(JSON.stringify, () => {
     JSON.stringify(data)
   })
 }

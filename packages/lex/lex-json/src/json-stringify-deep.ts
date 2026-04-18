@@ -1,41 +1,32 @@
 import { JsonValue } from './json.js'
 import {
+  MAX_ARRAY_LENGTH,
   MAX_DEPTH,
+  MAX_NESTING_FACTOR,
+  MAX_OBJECT_ENTRIES,
   ParentRef,
   StackFrame,
   StackFrameOptions,
+  createNestingFactorChecker,
   createStackFrame,
   stringifyPath,
-} from './lib/stack-frame.js'
-
-const MAX_ARRAY_LENGTH = 10_000
-const MAX_OBJECT_ENTRIES = 10_000
+} from './lib/stack.js'
 
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
-export type JsonStringifyDeepOptions = {
+export interface JsonStringifyDeepOptions
+  extends Partial<StackFrameOptions>,
+    Partial<EncodePrimitiveOptions> {
   /**
-   * Maximum depth to serialize. This is a safeguard against infinite recursion
-   * in case of circular references.
-   *
-   * @default DEFAULT_MAX_DEPTH
+   * Max number of objects/arrays that can be nested within the input structure.
+   * This is a safeguard against structures that use very large arrays at
+   * every level to create a huge number of nested objects/arrays (e.g. a
+   * structure with 100 levels of nesting, but each level is an array of 100
+   * items, would have a total of 100^100 nested objects/arrays, which would
+   * likely cause memory exhaustion even if the depth limit is not exceeded).
    */
-  maxDepth?: number
-  /**
-   * Maximum length of arrays to serialize. This is a safeguard against
-   * excessively large arrays.
-   *
-   * @default MAX_ARRAY_LENGTH
-   */
-  maxArrayLength?: number
-  /**
-   * Maximum number of entries in objects to serialize. This is a safeguard
-   * against excessively large objects.
-   *
-   * @default MAX_OBJECT_ENTRIES
-   */
-  maxObjectEntries?: number
+  maxNestingFactor?: number
 }
 
 type StringFrame = {
@@ -56,14 +47,24 @@ type StringFrame = {
 export function jsonStringifyDeep(
   input: JsonValue,
   {
+    allowNonInteger = false,
+    maxNestingFactor = MAX_NESTING_FACTOR,
     maxDepth = MAX_DEPTH,
     maxArrayLength = MAX_ARRAY_LENGTH,
     maxObjectEntries = MAX_OBJECT_ENTRIES,
   }: JsonStringifyDeepOptions = {},
 ): string {
+  // For objects and arrays, use iterative approach
+  const options: StackFrameOptions & EncodePrimitiveOptions = {
+    allowNonInteger,
+    maxDepth: Math.min(maxDepth, maxNestingFactor),
+    maxArrayLength: Math.min(maxArrayLength, maxNestingFactor),
+    maxObjectEntries: Math.min(maxObjectEntries, maxNestingFactor),
+  }
+
   // Handle primitives and special types at the root level
   const value = applyToJSON(input)
-  const encoded = encodePrimitive(value)
+  const encoded = encodePrimitive(value, options)
   if (encoded === OMIT) {
     // @NOTE That JSON.stringify(undefined) returns undefined (although it is
     // not typed as such in TypeScript, and not valid JSON). We disallow this
@@ -75,39 +76,33 @@ export function jsonStringifyDeep(
     return encoded
   }
 
-  // For objects and arrays, use iterative approach
-  const options: StackFrameOptions = {
-    maxDepth,
-    maxArrayLength,
-    maxObjectEntries,
-  }
-
   const frame = createStackFrame(value as object, undefined, options)
   const stack: (StackFrame | StringFrame)[] = [frame]
+  const checkNestingFactor = createNestingFactorChecker(maxNestingFactor)
 
   let result = ''
-  while (stack.length > 0) {
-    const frame = stack.pop()!
+  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
     if (frame.type === 'array') {
       if (frame.input.length === 0) {
         result += '[]'
         continue
       }
 
-      const { input } = frame
+      const { input } = frame // ArrayFrame
       result += '['
       stack.push({ type: 'string', string: ']' })
       for (let index = input.length - 1; index >= 0; index--) {
         const parent: ParentRef = { frame, index }
 
         const value = applyToJSON(input[index])
-        const encoded = encodePrimitive(value, parent)
+        const encoded = encodePrimitive(value, options, parent)
 
         if (index < input.length - 1) {
           stack.push({ type: 'string', string: ',' })
         }
 
         if (encoded === OBJECT) {
+          checkNestingFactor(parent)
           stack.push(createStackFrame(value as object, parent, options))
         } else if (encoded === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
@@ -117,7 +112,7 @@ export function jsonStringifyDeep(
         }
       }
     } else if (frame.type === 'object') {
-      const { entries } = frame
+      const { entries } = frame // ObjectFrame
 
       if (entries.length === 0) {
         result += '{}'
@@ -133,7 +128,7 @@ export function jsonStringifyDeep(
         const parent: ParentRef = { frame, index }
 
         const value = applyToJSON(entries[index][1])
-        const encoded = encodePrimitive(value, parent)
+        const encoded = encodePrimitive(value, options, parent)
 
         if (encoded === OMIT) {
           // Omit this property (undefined values should be removed)
@@ -148,6 +143,7 @@ export function jsonStringifyDeep(
         const key = entries[index][0]
 
         if (encoded === OBJECT) {
+          checkNestingFactor(parent)
           stack.push(createStackFrame(value as object, parent, options))
           stack.push({ type: 'string', string: `${JSON.stringify(key)}:` })
         } else {
@@ -158,6 +154,7 @@ export function jsonStringifyDeep(
         }
       }
     } else {
+      // StringFrame: just append the string to the result
       result += frame.string
     }
   }
@@ -181,6 +178,10 @@ function applyToJSON(value: unknown): unknown {
   return value
 }
 
+type EncodePrimitiveOptions = {
+  allowNonInteger: boolean
+}
+
 /**
  * Encodes a value into either a JSON string (for primitives) or
  * indicates it needs further processing (for complex types).
@@ -188,14 +189,20 @@ function applyToJSON(value: unknown): unknown {
  */
 function encodePrimitive(
   value: unknown,
+  options: EncodePrimitiveOptions,
   parent?: ParentRef,
 ): string | typeof OMIT | typeof OBJECT {
   switch (typeof value) {
     case 'object':
       if (value === null) return 'null'
       return OBJECT
-    case 'string':
     case 'number':
+      if (options.allowNonInteger) return JSON.stringify(value)
+      if (Number.isSafeInteger(value)) return JSON.stringify(value)
+      throw new TypeError(
+        `Invalid number (got ${value}) at ${stringifyPath(parent)}`,
+      )
+    case 'string':
     case 'boolean':
       return JSON.stringify(value)
     case 'undefined':

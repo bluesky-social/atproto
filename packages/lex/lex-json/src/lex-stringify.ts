@@ -28,9 +28,16 @@ export function lexStringify(
     // nested for JSON.stringify. In this case, we can use our custom iterative
     // implementation to handle deep structures.
     if (err instanceof RangeError) {
-      // @NOTE maxDepth already imposed by lexToJson, so we can set it to
-      // Infinity here.
-      return jsonStringifyDeep(json, { maxDepth: Infinity })
+      return jsonStringifyDeep(json, {
+        // @NOTE depth limits are already enforced in lexToJson, so we can set
+        // these to Infinity here since they won't be exceeded if lexToJson
+        // succeeded without throwing an error.
+        allowNonInteger: true,
+        maxDepth: Infinity,
+        maxNestingFactor: Infinity,
+        maxArrayLength: Infinity,
+        maxObjectEntries: Infinity,
+      })
     }
 
     throw err

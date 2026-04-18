@@ -1,7 +1,7 @@
 import { describe, expect, it, test } from 'vitest'
 import { jsonStringifyDeep } from './json-stringify-deep.js'
 import { JsonValue } from './json.js'
-import { MAX_DEPTH } from './lib/stack-frame.js'
+import { MAX_DEPTH } from './lib/stack.js'
 
 describe(jsonStringifyDeep, () => {
   describe('behavior matches JSON.stringify', () => {
@@ -483,6 +483,107 @@ describe(jsonStringifyDeep, () => {
       // Both should throw the same error
       expect(() => JSON.stringify(obj)).toThrow('toJSON error')
       expect(() => jsonStringifyDeep(obj as any)).toThrow('toJSON error')
+    })
+  })
+
+  describe('maxNestingFactor option', () => {
+    it('controls maximum nesting factor for nested objects', () => {
+      // Create a structure with many nested objects
+      const input = {
+        level1: { level2: { level3: { level4: { level5: 'value' } } } },
+      }
+
+      // Should work with default maxNestingFactor
+      expect(() => jsonStringifyDeep(input)).not.toThrow()
+
+      // Should work with sufficient maxNestingFactor
+      expect(() =>
+        jsonStringifyDeep(input, { maxNestingFactor: 10 }),
+      ).not.toThrow()
+
+      // Should throw when nesting factor is exceeded
+      expect(() => jsonStringifyDeep(input, { maxNestingFactor: 4 })).toThrow(
+        'Input is too large (exceeds max nesting factor of 4)',
+      )
+    })
+
+    it('counts nested arrays in nesting factor', () => {
+      const input = [[[[[]]]]]
+
+      // Should work with sufficient maxNestingFactor
+      expect(() =>
+        jsonStringifyDeep(input, { maxNestingFactor: 10 }),
+      ).not.toThrow()
+
+      // Should throw when nesting factor is exceeded
+      expect(() => jsonStringifyDeep(input, { maxNestingFactor: 4 })).toThrow(
+        'Input is too large (exceeds max nesting factor of 4)',
+      )
+    })
+
+    it('allows infinite nesting factor', () => {
+      // Create deeply nested structure
+      let nested: any = { value: 'leaf' }
+      for (let i = 0; i < 1000; i++) {
+        nested = { child: nested }
+      }
+
+      // Should work with Infinity
+      expect(() =>
+        jsonStringifyDeep(nested, {
+          maxNestingFactor: Infinity,
+          maxDepth: Infinity,
+        }),
+      ).not.toThrow()
+    })
+
+    it('reports path in nesting factor error', () => {
+      const input = {
+        data: {
+          nested: {
+            deep: {
+              value: 'here',
+            },
+          },
+        },
+      }
+
+      expect(() => jsonStringifyDeep(input, { maxNestingFactor: 3 })).toThrow(
+        'at $.data.nested.deep',
+      )
+    })
+
+    it('limits maxDepth to maxNestingFactor', () => {
+      // When maxNestingFactor is lower than maxDepth, it should be used as limit
+      let nested: any = []
+      for (let i = 0; i < 100; i++) {
+        nested = [nested]
+      }
+
+      // Should throw at maxNestingFactor even though maxDepth is higher
+      expect(() =>
+        jsonStringifyDeep(nested, {
+          maxDepth: 1000,
+          maxNestingFactor: 50,
+        }),
+      ).toThrow('Input is too large (exceeds max nesting factor of 50)')
+    })
+
+    it('counts wide structures with many children', () => {
+      // Create structure with many children at each level
+      const input = {
+        items: Array.from({ length: 10 }, () => ({
+          nested: Array.from({ length: 10 }, () => ({ value: 1 })),
+        })),
+      }
+
+      // This has: 1 root + 1 items array + 10 objects + 10 nested arrays + 100 objects = 122 total
+      expect(() =>
+        jsonStringifyDeep(input, { maxNestingFactor: 150 }),
+      ).not.toThrow()
+      expect(() => jsonStringifyDeep(input, { maxNestingFactor: 100 })).toThrow(
+        'Input is too large (exceeds max nesting factor of 100)',
+      )
     })
   })
 })

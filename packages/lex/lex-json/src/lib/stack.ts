@@ -19,9 +19,12 @@
 
 const ERROR_PATH_MAX_DEPTH = 10
 
+export const MAX_DEPTH_STRICT = 100
 export const MAX_DEPTH = 5_000
 export const MAX_ARRAY_LENGTH = 10_000
 export const MAX_OBJECT_ENTRIES = 10_000
+export const MAX_NESTING_FACTOR = 100_000
+export const MAX_NESTING_FACTOR_STRICT = 10_000
 
 /** @internal */
 export type ArrayFrame = {
@@ -162,6 +165,27 @@ export function createStackFrame(
 /** @internal */
 export function isArrayFrame(frame: StackFrame): frame is ArrayFrame {
   return frame.type === 'array'
+}
+
+/**
+ * Creates a nesting factor checker that tracks and validates the number of
+ * nested objects/arrays processed.
+ *
+ * @param maxNestingFactor - Maximum allowed nesting factor
+ * @returns A checker function that increments the counter and throws if exceeded
+ * @internal
+ */
+export function createNestingFactorChecker(maxNestingFactor: number) {
+  let currentNestingFactor = 1
+
+  return (parent: ParentRef) => {
+    if (currentNestingFactor >= maxNestingFactor) {
+      throw new TypeError(
+        `Input is too large (exceeds max nesting factor of ${maxNestingFactor}) at ${stringifyPath(parent)}`,
+      )
+    }
+    currentNestingFactor++
+  }
 }
 
 /** @internal */
