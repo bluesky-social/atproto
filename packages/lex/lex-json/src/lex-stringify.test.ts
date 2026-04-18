@@ -30,7 +30,10 @@ describe(lexStringify, () => {
 
       expect(() => JSON.stringify(nestedObject)).toThrow(RangeError)
 
-      lexStringify(nestedObject, { maxDepth: 100_000 })
+      lexStringify(nestedObject, {
+        maxDepth: 100_000,
+        maxNestingFactor: Infinity,
+      })
     })
 
     it('throws error when structure exceeds max depth', () => {

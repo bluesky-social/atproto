@@ -38,8 +38,8 @@ export type JsonStringifyDeepOptions = {
   maxObjectEntries?: number
 }
 
-type RawFrame = {
-  type: 'raw'
+type StringFrame = {
+  type: 'string'
   string: string
 }
 
@@ -62,16 +62,17 @@ export function jsonStringifyDeep(
   }: JsonStringifyDeepOptions = {},
 ): string {
   // Handle primitives and special types at the root level
-  const inputValue = encodePrimitive(input)
-  if (inputValue === OMIT) {
+  const value = applyToJSON(input)
+  const encoded = encodePrimitive(value)
+  if (encoded === OMIT) {
     // @NOTE That JSON.stringify(undefined) returns undefined (although it is
     // not typed as such in TypeScript, and not valid JSON). We disallow this
     // since it is not a valid JSON value and is likely an error in the input
     // data.
     throw new TypeError('Invalid undefined value at $')
   }
-  if (inputValue !== OBJECT) {
-    return inputValue
+  if (encoded !== OBJECT) {
+    return encoded
   }
 
   // For objects and arrays, use iterative approach
@@ -81,8 +82,8 @@ export function jsonStringifyDeep(
     maxObjectEntries,
   }
 
-  const rootFrame = createStackFrame(input as object, undefined, options)
-  const stack: (StackFrame | RawFrame)[] = [rootFrame]
+  const frame = createStackFrame(value as object, undefined, options)
+  const stack: (StackFrame | StringFrame)[] = [frame]
 
   let result = ''
   while (stack.length > 0) {
@@ -95,23 +96,24 @@ export function jsonStringifyDeep(
 
       const { input } = frame
       result += '['
-      stack.push({ type: 'raw', string: ']' })
+      stack.push({ type: 'string', string: ']' })
       for (let index = input.length - 1; index >= 0; index--) {
-        const element = input[index]
         const parent: ParentRef = { frame, index }
-        const encoded = encodePrimitive(element, parent)
+
+        const value = applyToJSON(input[index])
+        const encoded = encodePrimitive(value, parent)
 
         if (index < input.length - 1) {
-          stack.push({ type: 'raw', string: ',' })
+          stack.push({ type: 'string', string: ',' })
         }
 
         if (encoded === OBJECT) {
-          stack.push(createStackFrame(element as object, parent, options))
+          stack.push(createStackFrame(value as object, parent, options))
         } else if (encoded === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
-          stack.push({ type: 'raw', string: 'null' })
+          stack.push({ type: 'string', string: 'null' })
         } else {
-          stack.push({ type: 'raw', string: encoded })
+          stack.push({ type: 'string', string: encoded })
         }
       }
     } else if (frame.type === 'object') {
@@ -123,28 +125,35 @@ export function jsonStringifyDeep(
       }
 
       result += '{'
-      stack.push({ type: 'raw', string: '}' })
-      for (let index = entries.length - 1; index >= 0; index--) {
-        const [key, value] = entries[index]
-        const parent: ParentRef = { frame, index }
-        const encodedValue = encodePrimitive(value, parent)
+      stack.push({ type: 'string', string: '}' })
 
-        if (encodedValue === OMIT) {
+      // Process entries and track if we've added any (for comma placement)
+      let addedCount = 0
+      for (let index = entries.length - 1; index >= 0; index--) {
+        const parent: ParentRef = { frame, index }
+
+        const value = applyToJSON(entries[index][1])
+        const encoded = encodePrimitive(value, parent)
+
+        if (encoded === OMIT) {
           // Omit this property (undefined values should be removed)
           continue
         }
 
-        if (index < entries.length - 1) {
-          stack.push({ type: 'raw', string: ',' })
+        if (addedCount > 0) {
+          stack.push({ type: 'string', string: ',' })
         }
+        addedCount++
 
-        if (encodedValue === OBJECT) {
+        const key = entries[index][0]
+
+        if (encoded === OBJECT) {
           stack.push(createStackFrame(value as object, parent, options))
-          stack.push({ type: 'raw', string: `${JSON.stringify(key)}:` })
+          stack.push({ type: 'string', string: `${JSON.stringify(key)}:` })
         } else {
           stack.push({
-            type: 'raw',
-            string: `${JSON.stringify(key)}:${encodedValue}`,
+            type: 'string',
+            string: `${JSON.stringify(key)}:${encoded}`,
           })
         }
       }
@@ -157,9 +166,25 @@ export function jsonStringifyDeep(
 }
 
 /**
- * Encodes a LexValue into either a JSON string (for primitives) or
- * a JSON-compatible object/array (for complex types).
- * Special Lex types (Cid, Uint8Array) are converted to their JSON representation.
+ * Applies toJSON() transformation once if the value has one.
+ * Note: JSON.stringify only calls toJSON once per serialization step, not recursively.
+ */
+function applyToJSON(value: unknown): unknown {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toJSON' in value &&
+    typeof value.toJSON === 'function'
+  ) {
+    return value.toJSON()
+  }
+  return value
+}
+
+/**
+ * Encodes a value into either a JSON string (for primitives) or
+ * indicates it needs further processing (for complex types).
+ * Note: toJSON() should already be applied before calling this function.
  */
 function encodePrimitive(
   value: unknown,
@@ -174,6 +199,8 @@ function encodePrimitive(
     case 'boolean':
       return JSON.stringify(value)
     case 'undefined':
+    case 'function':
+      // JSON.stringify omits undefined and function values
       return OMIT
     default:
       throw new TypeError(

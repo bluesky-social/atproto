@@ -239,4 +239,250 @@ describe(jsonStringifyDeep, () => {
       expect(() => jsonStringifyDeep(obj)).not.toThrow()
     })
   })
+
+  describe('toJSON() method support', () => {
+    it('calls toJSON() on objects that have it', () => {
+      const obj = {
+        value: 42,
+        toJSON() {
+          return { transformed: true }
+        },
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('{"transformed":true}')
+    })
+
+    it('calls toJSON() on nested objects', () => {
+      const nested = {
+        data: 'test',
+        toJSON() {
+          return { serialized: this.data }
+        },
+      }
+      const obj = { wrapper: nested }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('{"wrapper":{"serialized":"test"}}')
+    })
+
+    it('calls toJSON() returning primitive', () => {
+      const obj = {
+        value: 42,
+        toJSON() {
+          return this.value
+        },
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('42')
+    })
+
+    it('calls toJSON() returning string', () => {
+      const obj = {
+        toJSON() {
+          return 'custom string'
+        },
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('"custom string"')
+    })
+
+    it('calls toJSON() returning null', () => {
+      const obj = {
+        toJSON() {
+          return null
+        },
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('null')
+    })
+
+    it('calls toJSON() returning undefined (omits from object)', () => {
+      const obj = {
+        keep: 'this',
+        remove: {
+          toJSON() {
+            return undefined
+          },
+        },
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('{"keep":"this"}')
+    })
+
+    it('calls toJSON() returning undefined (becomes null in array)', () => {
+      const obj = {
+        toJSON() {
+          return undefined
+        },
+      }
+      const arr = [1, obj, 3]
+      const expected = JSON.stringify(arr)
+      const result = jsonStringifyDeep(arr as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('[1,null,3]')
+    })
+
+    it('calls toJSON() on array elements', () => {
+      const item1 = {
+        id: 1,
+        toJSON() {
+          return { id: this.id, type: 'item' }
+        },
+      }
+      const item2 = {
+        id: 2,
+        toJSON() {
+          return { id: this.id, type: 'item' }
+        },
+      }
+      const arr = [item1, item2]
+      const expected = JSON.stringify(arr)
+      const result = jsonStringifyDeep(arr as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('[{"id":1,"type":"item"},{"id":2,"type":"item"}]')
+    })
+
+    it('handles toJSON() returning object with toJSON()', () => {
+      const innerObj = {
+        value: 'inner',
+        toJSON() {
+          return { nested: this.value }
+        },
+      }
+      const outerObj = {
+        toJSON() {
+          return innerObj
+        },
+      }
+      const expected = JSON.stringify(outerObj)
+      const result = jsonStringifyDeep(outerObj as any)
+      expect(result).toBe(expected)
+    })
+
+    it('handles chain of toJSON() calls', () => {
+      const level3 = {
+        toJSON() {
+          return 'final'
+        },
+      }
+      const level2 = {
+        toJSON() {
+          return level3
+        },
+      }
+      const level1 = {
+        toJSON() {
+          return level2
+        },
+      }
+      const expected = JSON.stringify(level1)
+      const result = jsonStringifyDeep(level1 as any)
+      expect(result).toBe(expected)
+    })
+
+    it('handles Date objects (which have toJSON)', () => {
+      const date = new Date('2024-01-01T00:00:00.000Z')
+      const obj = { timestamp: date }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(JSON.parse(result)).toStrictEqual(JSON.parse(expected))
+    })
+
+    it('handles mixed objects with and without toJSON', () => {
+      const withToJSON = {
+        value: 'a',
+        toJSON() {
+          return { converted: this.value }
+        },
+      }
+      const withoutToJSON = {
+        value: 'b',
+      }
+      const obj = {
+        first: withToJSON,
+        second: withoutToJSON,
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+    })
+
+    it('handles toJSON() in deeply nested structure', () => {
+      const deepObj = {
+        level: 1,
+        child: {
+          level: 2,
+          child: {
+            level: 3,
+            toJSON() {
+              return { transformed: 'deep' }
+            },
+          },
+        },
+      }
+      const expected = JSON.stringify(deepObj)
+      const result = jsonStringifyDeep(deepObj as any)
+      expect(result).toBe(expected)
+    })
+
+    it('handles toJSON() that returns array', () => {
+      const obj = {
+        toJSON() {
+          return [1, 2, 3]
+        },
+      }
+      const expected = JSON.stringify(obj)
+      const result = jsonStringifyDeep(obj as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('[1,2,3]')
+    })
+
+    it('handles array with toJSON() returning object', () => {
+      const arr = {
+        toJSON() {
+          return { converted: 'to object' }
+        },
+      }
+      const expected = JSON.stringify(arr)
+      const result = jsonStringifyDeep(arr as any)
+      expect(result).toBe(expected)
+      expect(result).toBe('{"converted":"to object"}')
+    })
+
+    it('toJSON() is called with correct this context', () => {
+      let contextValue: any
+      const obj = {
+        myValue: 'test',
+        toJSON() {
+          contextValue = this.myValue
+          return { value: this.myValue }
+        },
+      }
+      jsonStringifyDeep(obj as any)
+      expect(contextValue).toBe('test')
+    })
+
+    it('handles toJSON() throwing error', () => {
+      const obj = {
+        toJSON() {
+          throw new Error('toJSON error')
+        },
+      }
+      // Both should throw the same error
+      expect(() => JSON.stringify(obj)).toThrow('toJSON error')
+      expect(() => jsonStringifyDeep(obj as any)).toThrow('toJSON error')
+    })
+  })
 })
