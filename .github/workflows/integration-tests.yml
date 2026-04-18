@@ -1,0 +1,76 @@
+name: integration-tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image from branch source
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/custom-dev-env/Dockerfile
+          push: false
+          load: true
+          tags: pds-plc-dev:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start PDS + PLC container
+        run: |
+          docker run -d \
+            --name pds-plc \
+            -p 3000:3000 \
+            -p 3001:3001 \
+            pds-plc-dev:ci
+
+      - name: Wait for PDS to be healthy
+        run: |
+          echo "Waiting for PDS to start..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/xrpc/_health > /dev/null 2>&1; then
+              echo "PDS is healthy after ${i}x2s"
+              exit 0
+            fi
+            echo "  attempt $i/30..."
+            sleep 2
+          done
+          echo "PDS did not become healthy within 60s"
+          docker logs pds-plc
+          exit 1
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run integration tests
+        run: pnpm --filter @atproto/pds-plc-tests test:integration
+        env:
+          PDS_URL: http://localhost:3000
+
+      - name: Dump container logs on failure
+        if: failure()
+        run: docker logs pds-plc
+
+      - name: Stop container
+        if: always()
+        run: docker stop pds-plc && docker rm pds-plc

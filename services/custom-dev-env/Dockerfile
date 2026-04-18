@@ -4,6 +4,9 @@
 
 FROM node:20-alpine AS build
 
+# Build tools required by native modules (better-sqlite3 → node-gyp)
+RUN apk add --no-cache python3 make g++
+
 RUN corepack enable && corepack prepare pnpm@8.15.9 --activate
 
 WORKDIR /app
