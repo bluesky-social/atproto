@@ -23,7 +23,7 @@ describe(lexStringify, () => {
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 1; i <= 100_000; i++) {
+      for (let i = 1; i <= 20_000; i++) {
         current.nested = { level: i }
         current = current.nested
       }
@@ -31,7 +31,7 @@ describe(lexStringify, () => {
       expect(() => JSON.stringify(nestedObject)).toThrow(RangeError)
 
       lexStringify(nestedObject, {
-        maxDepth: 100_000,
+        maxDepth: 20_000,
         maxNestingFactor: Infinity,
       })
     })

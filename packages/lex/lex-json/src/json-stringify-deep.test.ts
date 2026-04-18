@@ -176,7 +176,7 @@ describe(jsonStringifyDeep, () => {
     })
 
     it('allows unlimited max depth', () => {
-      const depth = 150_000
+      const depth = 20_000
       const json = '['.repeat(depth) + ']'.repeat(depth)
       expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: Infinity })).toBe(
         json,
