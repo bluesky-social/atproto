@@ -12,16 +12,7 @@ import {
 
 const MAX_DEPTH_STRICT = 100
 
-/**
- * Sentinel value to indicate that a property should be omitted from the output.
- * This is used when we encounter `undefined` values in objects, which should be
- * omitted to match JSON.stringify() behavior.
- */
 const OMIT = Symbol('OMIT')
-
-/**
- *
- */
 const OBJECT = Symbol('object')
 
 export type JsonTransformOptions = {
@@ -90,16 +81,16 @@ export function jsonTransform<T>(
     maxObjectEntries: Math.min(maxObjectEntries, maxNestingFactor),
   }
 
-  const scalar = transformValue(input, replacer, options)
-  if (scalar === OMIT) {
+  const inputValue = transformValue(input, replacer, options)
+  if (inputValue === OMIT) {
     // @NOTE That JSON.stringify(undefined) returns undefined (although it is
     // not typed as such in TypeScript, and not valid JSON). We disallow this
     // since it is not a valid JSON value and is likely an error in the input
     // data.
     throw new TypeError('Invalid undefined value at $')
   }
-  if (scalar !== OBJECT) {
-    return scalar as T
+  if (inputValue !== OBJECT) {
+    return inputValue as T
   }
 
   const root = createStackFrame(input as any, undefined, options)

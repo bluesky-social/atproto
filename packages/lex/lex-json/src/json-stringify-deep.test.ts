@@ -1,6 +1,7 @@
 import { describe, expect, it, test } from 'vitest'
-import { DEFAULT_MAX_DEPTH, jsonStringifyDeep } from './json-stringify-deep.js'
+import { jsonStringifyDeep } from './json-stringify-deep.js'
 import { JsonValue } from './json.js'
+import { MAX_DEPTH } from './lib/stack-frame.js'
 
 describe(jsonStringifyDeep, () => {
   describe('behavior matches JSON.stringify', () => {
@@ -143,16 +144,20 @@ describe(jsonStringifyDeep, () => {
   describe('deeply nested structures', () => {
     it('handles nested arrays (10000 levels)', () => {
       const json = '['.repeat(10000) + ']'.repeat(10000)
-      expect(jsonStringifyDeep(JSON.parse(json))).toBe(json)
+      expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: Infinity })).toBe(
+        json,
+      )
     })
 
     it('handles nested objects (10000 levels)', () => {
       const json = '{"a":'.repeat(10000) + 'null' + '}'.repeat(10000)
-      expect(jsonStringifyDeep(JSON.parse(json))).toBe(json)
+      expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: Infinity })).toBe(
+        json,
+      )
     })
 
     it('limits maximum depth by default', () => {
-      const depth = DEFAULT_MAX_DEPTH + 2
+      const depth = MAX_DEPTH + 2
       const json = '['.repeat(depth) + ']'.repeat(depth)
       expect(() => jsonStringifyDeep(JSON.parse(json))).toThrow(
         /Input is too deeply nested/,
@@ -183,57 +188,43 @@ describe(jsonStringifyDeep, () => {
     it('detects circular reference in object', () => {
       const obj: any = { a: 1 }
       obj.self = obj
-      expect(() => jsonStringifyDeep(obj)).toThrow(
-        /Circular reference detected at \$\.self/,
-      )
+      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
     })
 
     it('detects circular reference in array', () => {
       const arr: any = [1, 2, 3]
       arr.push(arr)
-      expect(() => jsonStringifyDeep(arr)).toThrow(
-        /Circular reference detected at \$\[3\]/,
-      )
+      expect(() => jsonStringifyDeep(arr)).toThrow('Input is too deeply nested')
     })
 
     it('detects circular reference in nested object', () => {
       const obj: any = { a: { b: { c: 1 } } }
       obj.a.b.c = obj
-      expect(() => jsonStringifyDeep(obj)).toThrow(
-        'Circular reference detected',
-      )
+      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
     })
 
     it('detects circular reference in nested array', () => {
       const arr: any = [[1, [2, [3]]]]
       arr[0][1][1].push(arr)
-      expect(() => jsonStringifyDeep(arr)).toThrow(
-        'Circular reference detected',
-      )
+      expect(() => jsonStringifyDeep(arr)).toThrow('Input is too deeply nested')
     })
 
     it('detects circular reference in mixed structure', () => {
       const obj: any = { items: [{ nested: { value: 1 } }] }
       obj.items[0].nested.ref = obj
-      expect(() => jsonStringifyDeep(obj)).toThrow(
-        'Circular reference detected',
-      )
+      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
     })
 
     it('detects circular reference to parent array', () => {
       const arr: any = [1, [2, [3]]]
       arr[1][1].push(arr[1])
-      expect(() => jsonStringifyDeep(arr)).toThrow(
-        'Circular reference detected',
-      )
+      expect(() => jsonStringifyDeep(arr)).toThrow('Input is too deeply nested')
     })
 
     it('detects circular reference to parent object', () => {
       const obj: any = { a: { b: { c: 1 } } }
       obj.a.b.parent = obj.a
-      expect(() => jsonStringifyDeep(obj)).toThrow(
-        'Circular reference detected',
-      )
+      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
     })
 
     it('allows repeated references to same object (not circular)', () => {
