@@ -21,8 +21,8 @@ const ERROR_PATH_MAX_DEPTH = 10
 
 export const MAX_DEPTH_STRICT = 100
 export const MAX_DEPTH = 5_000
-export const MAX_ARRAY_LENGTH = 10_000
-export const MAX_OBJECT_ENTRIES = 10_000
+export const MAX_ARRAY_LENGTH = 1_000
+export const MAX_OBJECT_ENTRIES = 1_000
 export const MAX_NESTING_FACTOR = 100_000
 export const MAX_NESTING_FACTOR_STRICT = 10_000
 
@@ -92,16 +92,17 @@ export type StackOptions = {
  * @internal
  */
 export class Stack<TCustom extends NonNullable<unknown> = never> {
-  private currentNestingFactor = 1
-  private readonly stack: (StackFrame | TCustom)[]
   readonly root: StackFrame
+  private readonly stack: (StackFrame | TCustom)[]
+  private currentNestingFactor = 1
 
   constructor(
     input: readonly unknown[] | object,
     private readonly options: StackOptions,
   ) {
-    this.root = this.createFrame(input)
-    this.stack = [this.root]
+    const frame = this.createFrame(input)
+    this.root = frame
+    this.stack = [frame]
   }
 
   *[Symbol.iterator](): IterableIterator<StackFrame | TCustom> {
