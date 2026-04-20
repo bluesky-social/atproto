@@ -46,6 +46,8 @@ COPY --from=build /app /app
 EXPOSE 3000
 ENV BSYNC_PORT=3000
 ENV NODE_ENV=production
+ARG BSYNC_VERSION=unknown
+ENV BSYNC_VERSION=$BSYNC_VERSION
 
 # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
 USER node
