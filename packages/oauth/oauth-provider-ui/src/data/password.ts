@@ -47,7 +47,6 @@ export function useResetPasswordConfirm() {
 
   return useMutation({
     async mutationFn({ token, password }: ConfirmResetPasswordInput) {
-      if (token) return Promise.reject(new Error('AAA'))
       return api.fetch('POST', '/reset-password-confirm', { token, password })
     },
     onSuccess(_data, _variables, _context) {
