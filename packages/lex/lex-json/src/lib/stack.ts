@@ -1,21 +1,21 @@
-// This module defines utilities for working with a nested JSON like data
-// structure. It includes the definition of a stack frame used for iterative
-// traversal of nested structures, as well as functions for creating stack
-// frames and stringifying error paths.
+// This module defines utilities for working with a nested data structures (like
+// JSON). It includes the definition of a stack used for iterative traversal of
+// nested structures (instead of recursion).
 //
 // The main purpose of this module is to support the implementation of
-// `jsonTransform`, which needs to traverse and transform deeply nested
-// structures without hitting call stack limits, and provide informative error
-// messages when the input data is invalid (e.g. too deeply nested, contains
-// circular references, etc.).
+// `jsonTransform` and `jsonStringifyDeep`, which need to traverse and transform
+// deeply nested structures without hitting call stack limits.
 //
-// The `stringifyPath` function is used to generate human-readable paths for
-// error messages, which can help identify where in the input structure an error
-// occurred.
-//
-// The stack frame structure also includes checks for maximum depth and maximum
-// array/object size limits, which can help prevent excessive resource usage
-// when processing untrusted input data.
+// An added benefit of using a custom stack implementation is that it can
+// provide informative error messages when the input data is invalid (e.g. too
+// deeply nested, contains circular references, etc.).
+
+import {
+  MAX_CBOR_CONTAINER_LEN,
+  MAX_CBOR_NESTED_LEVELS,
+  MAX_CBOR_OBJECT_KEY_LEN,
+  utf8Len,
+} from '@atproto/lex-data'
 
 /** @internal */
 export type ArrayFrame = {
@@ -48,18 +48,27 @@ export type StackOptions = {
   /**
    * The maximum allowed depth of nested structures. If the input exceeds this
    * depth, a TypeError will be thrown.
+   *
+   * @see {@link MAX_CBOR_NESTED_LEVELS}
+   * @default MAX_CBOR_NESTED_LEVELS
    */
-  maxNestedLevels: number
+  maxNestedLevels?: number
   /**
    * The maximum allowed length of arrays and objects. If the input exceeds this
    * length, a TypeError will be thrown.
+   *
+   * @see {@link MAX_CBOR_CONTAINER_LEN}
+   * @default MAX_CBOR_CONTAINER_LEN
    */
-  maxContainerLength: number
+  maxContainerLength?: number
   /**
    * The maximum allowed length of object keys. If a key exceeds this length, a
    * TypeError will be thrown.
+   *
+   * @see {@link MAX_CBOR_OBJECT_KEY_LEN}
+   * @default MAX_CBOR_OBJECT_KEY_LEN
    */
-  maxObjectKeyLen: number
+  maxObjectKeyLen?: number
 }
 
 /**
@@ -73,11 +82,23 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
   public readonly root: StackFrame
 
   private readonly stack: (StackFrame | TCustom)[]
+  private readonly options: Required<StackOptions>
 
   constructor(
     input: readonly unknown[] | object,
-    private readonly options: Required<StackOptions>,
+    {
+      maxNestedLevels = MAX_CBOR_NESTED_LEVELS,
+      maxContainerLength = MAX_CBOR_CONTAINER_LEN,
+      maxObjectKeyLen = MAX_CBOR_OBJECT_KEY_LEN,
+    }: StackOptions = {},
   ) {
+    // @NOTE createFrame requires the options to be set on the instance.
+    this.options = {
+      maxNestedLevels,
+      maxContainerLength,
+      maxObjectKeyLen,
+    }
+
     const frame = this.createFrame(input)
     this.root = frame
     this.stack = [frame]
@@ -172,9 +193,16 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
       if (this.options.maxObjectKeyLen !== Infinity) {
         for (let index = 0; index < entries.length; index++) {
           const key = entries[index][0]
-          if (key.length > this.options.maxObjectKeyLen) {
+          if (
+            // Optimized version of "utf8Len(key) > maxObjectKeyLen" that only
+            // computes utf8Len if needed.
+            key.length * 3 > this.options.maxObjectKeyLen &&
+            (key.length > this.options.maxObjectKeyLen * 3 ||
+              utf8Len(key) > this.options.maxObjectKeyLen)
+          ) {
+            const keyStr = `${JSON.stringify(key.slice(0, 10)).slice(0, -1)}\u2026"`
             throw new TypeError(
-              `Object key is too long (length ${key.length}) at ${stringifyPath(parent)}`,
+              `Object key is too long (${keyStr}) at ${stringifyPath(parent)}`,
             )
           }
         }

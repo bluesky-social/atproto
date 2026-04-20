@@ -302,6 +302,7 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
 ): InputVerifierInternal<LexMethodInput<M>> {
   const schema = l.getMain(ns)
   const { blobLimit } = options
+  const { inputParseStrict = false } = options
 
   const input: l.Payload | undefined =
     'input' in schema ? schema.input : undefined
@@ -321,6 +322,9 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
   }
 
   const bodyParser = createBodyParser(input.encoding, options)
+  const parseOptions = {
+    strict: inputParseStrict,
+  }
 
   return async (req, res) => {
     if (getBodyPresence(req) === 'missing') {
@@ -342,8 +346,8 @@ export function createSchemaInputVerifier<M extends l.Procedure | l.Query>(
 
     if (input.schema) {
       try {
-        const lexBody = req.body ? jsonToLex(req.body) : req.body
-        req.body = input.schema.parse(lexBody)
+        const lexBody = req.body ? jsonToLex(req.body, parseOptions) : req.body
+        req.body = input.schema.parse(lexBody, parseOptions)
       } catch (cause) {
         throw new InvalidRequestError(
           cause instanceof Error ? cause.message : String(cause),

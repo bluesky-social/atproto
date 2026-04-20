@@ -92,18 +92,20 @@ describe(jsonTransform, () => {
 
   describe('strict mode', () => {
     it('rejects invalid numbers in strict mode', () => {
-      expect(() => jsonTransform(123.456, noop, { strict: true })).toThrow(
-        'Invalid number (got 123.456) at $',
-      )
+      expect(() =>
+        jsonTransform(123.456, noop, { allowNonSafeInteger: false }),
+      ).toThrow('Invalid number (got 123.456) at $')
       expect(() =>
         jsonTransform(Number.MAX_SAFE_INTEGER + 1, noop, {
-          strict: true,
+          allowNonSafeInteger: false,
         }),
       ).toThrow('Invalid number (got 9007199254740992) at $')
     })
 
     it('allows non-integer numbers in non-strict mode', () => {
-      expect(jsonTransform(123.456, noop, { strict: false })).toBe(123.456)
+      expect(jsonTransform(123.456, noop, { allowNonSafeInteger: true })).toBe(
+        123.456,
+      )
     })
   })
 
@@ -172,25 +174,25 @@ describe(jsonTransform, () => {
 
     it('transforms deeply nested structures', () => {
       // Create deeply nested structure with transformable objects
-      // Level 0 is innermost, level 99 is outermost
+      // Level 0 is innermost, level 31 is outermost (within MAX_CBOR_NESTED_LEVELS)
       type Nested = { level: number; child: Nested[] }
       const isNested = (obj: object): obj is Nested => {
         return 'level' in obj
       }
       let nested: Nested[] = []
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 32; i++) {
         nested = [{ level: i, child: nested }]
       }
 
       const result = jsonTransform(nested, (obj) => {
-        if (isNested(obj) && obj.level === 50) {
+        if (isNested(obj) && obj.level === 15) {
           return { transformed: true, child: obj.child }
         }
       })
 
-      // Find the transformed level - level 50 is 49 layers from the outside
+      // Find the transformed level - level 15 is 16 layers from the outside
       let check: any = result
-      for (let i = 99; i > 50; i--) {
+      for (let i = 31; i > 15; i--) {
         expect(Array.isArray(check)).toBe(true)
         expect(check[0]).toHaveProperty('level', i)
         check = check[0].child
@@ -243,37 +245,47 @@ describe(jsonTransform, () => {
   })
 
   describe('depth limits', () => {
-    it('handles deeply nested arrays (4000+ levels)', () => {
-      // Create deeply nested structure
+    it('handles deeply nested arrays (5000 levels)', () => {
+      // maxNestedLevels: 5000 allows depths 0-5000
+      // Root object at depth 0, then arrays at depths 1-5000 (5000 arrays total)
+      // Starting with nested=[] and wrapping N times creates N+1 arrays
+      // So wrap 4999 times to get 5000 arrays
       let nested: unknown = []
-      for (let i = 0; i < 4000; i++) {
+      for (let i = 0; i < 4999; i++) {
         nested = [nested]
       }
 
       const input = { nested }
-      const result = jsonTransform(input, () => {})
+      // The deepest array is at depth 5000
+      const result = jsonTransform(input, () => {}, { maxNestedLevels: 5000 })
 
-      // Verify structure
+      // Verify structure (5000 arrays)
       let check = (result as any).nested
-      for (let i = 0; i < 4000; i++) {
+      for (let i = 0; i < 4999; i++) {
         expect(Array.isArray(check)).toBe(true)
         check = check[0]
       }
+      expect(Array.isArray(check)).toBe(true)
+      expect(check).toStrictEqual([])
     })
 
     it('handles deeply nested objects', () => {
-      // Create deeply nested structure
+      // maxNestedLevels: 5000 allows depths 0-5000
+      // Root object at depth 0, then nested objects at depths 1-5000 (5000 objects)
+      // Starting with nested={end:true} and wrapping N times creates N+1 objects
+      // So wrap 4999 times to get 5000 nested objects
       let nested: unknown = { end: true }
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 4999; i++) {
         nested = { child: nested }
       }
 
       const input = { nested }
-      const result = jsonTransform(input, () => {})
+      // The deepest object is at depth 5000
+      const result = jsonTransform(input, () => {}, { maxNestedLevels: 5000 })
 
-      // Verify structure
+      // Verify structure (5000 objects)
       let check = (result as any).nested
-      for (let i = 0; i < 1000; i++) {
+      for (let i = 0; i < 4999; i++) {
         expect(check).toHaveProperty('child')
         check = check.child
       }
@@ -291,25 +303,36 @@ describe(jsonTransform, () => {
       ).toThrow('Input is too deeply nested')
     })
 
-    it('uses strict maxNestedLevels (100) in strict mode', () => {
+    it('uses strict maxNestedLevels (32) in strict mode', () => {
       let nested: unknown = []
-      for (let i = 0; i <= 100; i++) {
+      // MAX_CBOR_NESTED_LEVELS = 32, so 33 levels should fail
+      for (let i = 0; i <= 32; i++) {
         nested = [nested]
       }
 
-      expect(() => jsonTransform(nested, noop, { strict: true })).toThrow(
-        /Input is too deeply nested/,
-      )
+      expect(() =>
+        jsonTransform(nested, noop, { allowNonSafeInteger: false }),
+      ).toThrow(/Input is too deeply nested/)
     })
 
     it('uses lenient maxNestedLevels (5000) in non-strict mode', () => {
       let nested: unknown = []
-      for (let i = 0; i <= 4999; i++) {
+      // maxNestedLevels: 5000 allows depths 0-5000
+      // Start with [] and wrap 5000 times creates 5001 arrays at depths 0-5000
+      for (let i = 0; i < 5000; i++) {
         nested = [nested]
       }
 
-      // Should not throw in lenient mode
-      expect(() => jsonTransform(nested, noop, { strict: false })).not.toThrow()
+      // Should not throw at exactly the limit (depth 5000)
+      expect(() =>
+        jsonTransform(nested, noop, { maxNestedLevels: 5000 }),
+      ).not.toThrow()
+
+      // Wrap one more time creates depth 5001, which should throw
+      nested = [nested]
+      expect(() =>
+        jsonTransform(nested, noop, { maxNestedLevels: 5000 }),
+      ).toThrow(/Input is too deeply nested/)
     })
   })
 

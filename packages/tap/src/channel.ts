@@ -1,6 +1,6 @@
 import { ClientOptions } from 'ws'
 import { Deferrable, createDeferrable } from '@atproto/common'
-import { lexParse } from '@atproto/lex'
+import { lexParseJsonBytes } from '@atproto/lex'
 import { WebSocketKeepAlive } from '@atproto/ws-client'
 import { TapEvent, parseTapEvent } from './types'
 import { formatAdminAuthHeader, isCausedBySignal } from './util'
@@ -124,8 +124,8 @@ export class TapChannel implements AsyncDisposable {
   private async processWsEvent(chunk: Uint8Array) {
     let evt: TapEvent
     try {
-      const data = lexParse(chunk.toString(), {
-        // Reject invalid CIDs and blobs
+      const data = lexParseJsonBytes(chunk, {
+        // Reject invalid Lexicon data
         strict: true,
       })
       evt = parseTapEvent(data)

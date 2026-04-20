@@ -1097,7 +1097,7 @@ describe('deeply nested structures', () => {
       }
 
       const jsonString = lexStringify(deepData)
-      const parsed = lexParse(jsonString)
+      const parsed = lexParse(jsonString, { strict: false })
 
       // Navigate to the leaf level using iteration
       let current: any = parsed

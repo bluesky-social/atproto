@@ -14,17 +14,6 @@ describe(lexParse, () => {
       }
     })
 
-    it('allows deeply nested structures by default (non-strict mode)', () => {
-      const depth = 5002
-      const input = '['.repeat(depth) + ']'.repeat(depth)
-      // Should not throw in non-strict mode (default)
-      let result = lexParse(input)
-      for (let i = 0; i < depth; i++) {
-        assert(Array.isArray(result))
-        result = result[0]
-      }
-    })
-
     it('allows deeply nested structures in non-strict mode', () => {
       const depth = 2000
       const input = '['.repeat(depth) + ']'.repeat(depth)
@@ -40,7 +29,26 @@ describe(lexParse, () => {
       const input = '['.repeat(depth) + ']'.repeat(depth)
       assert.throws(
         () => lexParse(input, { strict: true }),
-        /Input is too deeply nested/,
+        'Input is too deeply nested',
+      )
+    })
+
+    it('enforces default limit (5000) in non-strict mode by default', () => {
+      // Default is strict: false with maxNestedLevels: 5000
+      // With the check being `parent.frame.depth >= maxNestedLevels`,
+      // maxNestedLevels: 5000 allows depths 0-5000, meaning 5001 nested arrays work
+      const validDepth = '['.repeat(5001) + ']'.repeat(5001)
+      let result = lexParse(validDepth)
+      for (let i = 0; i < 5001; i++) {
+        assert(Array.isArray(result))
+        result = result[0]
+      }
+
+      // Depth 5001 (5002 nested arrays) should throw
+      const tooDeep = '['.repeat(5002) + ']'.repeat(5002)
+      assert.throws(
+        () => lexParse(tooDeep),
+        'Input is too deeply nested',
       )
     })
   })

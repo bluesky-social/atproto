@@ -6,10 +6,18 @@ import {
 import { LexToJsonOptions, lexToJson } from './lex-json.js'
 
 /**
- * @note depth limits are already enforced in lexToJson, so we can set
- * these to Infinity here since they won't be exceeded if lexToJson
- * succeeded without throwing an error.
  * @internal
+ *
+ * Historically, `stringifyLex` was implemented as a simple wrapper around
+ * `JSON.stringify(lexToJson(input))`. However, this approach can lead to
+ * `RangeError: Maximum call stack size exceeded` for deeply nested structures,
+ * which can occur in some AT Protocol data. To address this, we now implement
+ * `lexStringify` using a custom iterative approach (`jsonStringifyDeep`) that
+ * can handle deep nesting without hitting call stack limits. The original
+ * implementation is still available as a fallback for cases where the structure
+ * is not deeply nested, as `JSON.stringify` is generally faster for typical use
+ * cases.
+ *
  */
 const JSON_STRINGIFY_DEEP_OPTIONS: Required<JsonStringifyDeepOptions> = {
   allowNonSafeInteger: true,

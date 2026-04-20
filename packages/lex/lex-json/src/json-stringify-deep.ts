@@ -28,7 +28,7 @@ type StringFrame = {
  */
 export function jsonStringifyDeep(
   input: JsonValue,
-  options: Required<JsonStringifyDeepOptions>,
+  options?: JsonStringifyDeepOptions,
 ): string {
   // Handle primitives and special types at the root level
   const value = applyToJSON(input)
@@ -146,7 +146,15 @@ function applyToJSON(value: unknown): unknown {
 }
 
 type EncodePrimitiveOptions = {
-  allowNonSafeInteger: boolean
+  /**
+   * AT Protocol spec does not allow numbers outside of the safe integer range
+   * (-(2^53 - 1) to 2^53 - 1)). This options allows to disable the check for
+   * safe integers, which can be useful for processing data in "non-strict"
+   * mode.
+   *
+   * @default false
+   */
+  allowNonSafeInteger?: boolean
 }
 
 /**
@@ -156,7 +164,7 @@ type EncodePrimitiveOptions = {
  */
 function encodePrimitive(
   value: unknown,
-  options: EncodePrimitiveOptions,
+  options?: EncodePrimitiveOptions,
   parent?: ParentRef,
 ): string | typeof OMIT | typeof OBJECT {
   switch (typeof value) {
@@ -164,7 +172,7 @@ function encodePrimitive(
       if (value === null) return 'null'
       return OBJECT
     case 'number':
-      if (options.allowNonSafeInteger) return JSON.stringify(value)
+      if (options?.allowNonSafeInteger) return JSON.stringify(value)
       if (Number.isSafeInteger(value)) return JSON.stringify(value)
       throw new TypeError(
         `Invalid number (got ${value}) at ${stringifyPath(parent)}`,

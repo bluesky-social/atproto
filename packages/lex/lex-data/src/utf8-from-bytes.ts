@@ -7,11 +7,10 @@ export const utf8FromBytesNode = Buffer
       // @NOTE Buffer.from(bytes) creates a copy of the ArrayBuffer. The following
       // allows us to avoid the copy by creating a Buffer that shares the same
       // memory as the input Uint8Array.
-      const buffer = Buffer.from(
-        bytes.buffer,
-        bytes.byteOffset,
-        bytes.byteLength,
-      )
+      const buffer =
+        bytes instanceof Buffer
+          ? bytes
+          : Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
       return buffer.toString('utf8')
     }
   : /* v8 ignore next -- @preserve */ null

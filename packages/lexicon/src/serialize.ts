@@ -7,6 +7,7 @@ import {
 } from '@atproto/common-web'
 import { LexValue } from '@atproto/lex-data'
 import {
+  JsonTransformOptions,
   JsonValue,
   jsonToLex,
   jsonTransform,
@@ -30,14 +31,29 @@ export type { LegacyLexValue as LexValue }
  */
 export type RepoRecord = Record<string, LegacyLexValue>
 
-// @NOTE avoiding use of check.is() here only because it makes
-// these implementations slow, and they often live in hot paths.
+/**
+ * {@link lexToIpld} and  {@link ipldToLex} used to work with a recursive
+ * implementation that effectively limited the nesting depth to ~1300 levels in
+ * v8 (based on the default --stack-size=864 kBytes). It was also "non-strict"
+ * in that it allowed numbers outside of the safe integer range, and had no
+ * limits on container lengths or object key lengths.
+ *
+ * To remain backwards consistent with existing data and avoid breaking changes,
+ * these (deprecated) functions will continue to use the same "non-strict"
+ * options and nesting limits.
+ */
+const LEGACY_IPLD_TRANSFORM_OPTIONS: JsonTransformOptions = Object.freeze({
+  allowNonSafeInteger: true,
+  maxContainerLength: Infinity,
+  maxNestedLevels: 1300,
+  maxObjectKeyLen: Infinity,
+})
 
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
 export const lexToIpld = (input: LegacyLexValue): IpldValue => {
-  return jsonTransform(input, lexObjectToIpld)
+  return jsonTransform(input, lexObjectToIpld, LEGACY_IPLD_TRANSFORM_OPTIONS)
 }
 
 /**
@@ -54,7 +70,7 @@ function lexObjectToIpld(value: object): IpldValue | void {
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
  */
 export const ipldToLex = (input: IpldValue): LegacyLexValue => {
-  return jsonTransform(input, ipldObjectToLex)
+  return jsonTransform(input, ipldObjectToLex, LEGACY_IPLD_TRANSFORM_OPTIONS)
 }
 
 /**
@@ -84,7 +100,7 @@ export const lexToJson = (val: LegacyLexValue): LegacyJsonValue => {
  * @deprecated use {@link lexStringify} from `@atproto/lex-json` instead
  */
 export const stringifyLex = (val: LegacyLexValue): string => {
-  return lexStringify(lexToIpld(val) as LexValue)
+  return lexStringify(lexToIpld(val) as LexValue, { strict: false })
 }
 
 /**
@@ -100,5 +116,5 @@ export { jsonToLexLegacy as jsonToLex }
  * @deprecated use {@link lexParse} from `@atproto/lex-json` instead
  */
 export const jsonStringToLex = (val: string): LegacyLexValue => {
-  return ipldToLex(lexParse(val))
+  return ipldToLex(lexParse(val, { strict: false }))
 }

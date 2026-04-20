@@ -8,7 +8,11 @@ import { JsonToLexOptions, jsonToLex } from './lex-json.js'
  * - `{$link: string}` objects are decoded to `Cid` instances
  * - `{$bytes: string}` objects are decoded to `Uint8Array` instances
  * - `{$type: 'blob'}` objects are validated
+ * - Objects with `$type` properties are validated for known types (e.g., 'blob') and rejected if invalid
+ * - Non-integer numbers are rejected as invalid Lex values
+ * - Deeply nested structures, excessively long arrays/objects, and excessively long object keys are rejected based on the provided options (or defaults in strict mode).
  *
+ * @see {@link jsonToLex} for details and options
  * @typeParam T - Type cast for the resulting Lex value. Use when you want to specify the expected structure of the parsed data.
  * @param input - The JSON string to parse
  * @param options - Parsing options (e.g., strict mode)
@@ -38,7 +42,7 @@ import { JsonToLexOptions, jsonToLex } from './lex-json.js'
  */
 export function lexParse<T extends LexValue = LexValue>(
   input: string,
-  options: JsonToLexOptions = { strict: false },
+  options?: JsonToLexOptions,
 ): T {
   // @NOTE see ./lex-parse.bench.ts for performance comparison of implementation
   // that uses a reviver function in JSON.parse vs. the current implementation.
@@ -57,6 +61,8 @@ export function lexParse<T extends LexValue = LexValue>(
 /**
  * A safe version of {@link lexParse} that returns `undefined` instead of
  * throwing on invalid input.
+ *
+ * @see {@link jsonToLex} for details and options.
  */
 export function lexParseSafe<T extends LexValue = LexValue>(
   input: string,
@@ -71,6 +77,8 @@ export function lexParseSafe<T extends LexValue = LexValue>(
 
 /**
  * Parses a JSON string from a byte array into Lex values.
+ *
+ * @see {@link jsonToLex} for details and options.
  */
 export function lexParseJsonBytes<T extends LexValue = LexValue>(
   bytes: Uint8Array,

@@ -178,6 +178,7 @@ export type RouteOptions = {
   jsonLimit?: number
   textLimit?: number
   paramsParseLoose?: boolean
+  inputParseStrict?: boolean
 }
 
 export type MethodAuth<

@@ -1,11 +1,4 @@
-import {
-  BlobRef,
-  Cid,
-  LexMap,
-  LexValue,
-  MAX_RECORD_BYTES_LEN,
-  isCid,
-} from '@atproto/lex-data'
+import { BlobRef, Cid, LexMap, LexValue, isCid } from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { JsonValue } from './json.js'
@@ -21,47 +14,16 @@ export type SpecialJsonObjectOptions = {
    * @default false
    */
   strict?: boolean
-
-  /**
-   * Maximum allowed byte length for `$bytes` objects. If a `$bytes` object
-   * exceeds this limit, it will be rejected with a `TypeError` in strict mode,
-   * or treated as a plain object in non-strict mode.
-   *
-   * @see {@link MAX_RECORD_BYTES_LEN}
-   * @default strict ? MAX_RECORD_BYTES_LEN : Infinity
-   */
-  maxBytesLength?: number
-}
-
-function checkBytesLength<T extends { byteLength: number }>(
-  bytes: T,
-  options?: SpecialJsonObjectOptions,
-): T {
-  if (options) {
-    const maxBytesLength =
-      options.maxBytesLength ??
-      (options.strict ? MAX_RECORD_BYTES_LEN : Infinity)
-    if (bytes.byteLength > maxBytesLength) {
-      throw new TypeError(
-        `Bytes length exceeds maximum allowed length of ${maxBytesLength} bytes`,
-      )
-    }
-  }
-
-  return bytes
 }
 
 /**
  * @internal
  */
-export function encodeSpecialJsonObject(
-  input: LexValue,
-  options?: SpecialJsonObjectOptions,
-): JsonValue | void {
+export function encodeSpecialJsonObject(input: LexValue): JsonValue | void {
   if (isCid(input)) {
     return encodeLexLink(input)
   } else if (ArrayBuffer.isView(input)) {
-    return encodeLexBytes(checkBytesLength(input, options))
+    return encodeLexBytes(input)
   }
 }
 
@@ -80,7 +42,7 @@ export function parseSpecialJsonObject(
     if (options?.strict) throw new TypeError(`Invalid $link object`)
   } else if (input.$bytes !== undefined) {
     const bytes = parseLexBytes(input)
-    if (bytes) return checkBytesLength(bytes, options)
+    if (bytes) return bytes
     if (options?.strict) throw new TypeError(`Invalid $bytes object`)
   } else if (input.$type !== undefined) {
     // @NOTE Since blobs are "just" regular lex objects with a special shape,
