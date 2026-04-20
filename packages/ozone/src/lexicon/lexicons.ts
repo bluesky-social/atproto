@@ -265,6 +265,10 @@ export const schemaDict = {
             type: 'string',
             knownValues: ['all', 'none', 'following'],
           },
+          allowGroupInvites: {
+            type: 'string',
+            knownValues: ['all', 'none', 'following'],
+          },
         },
       },
       profileAssociatedGerm: {

@@ -137,6 +137,7 @@ export function validateProfileAssociated<V>(v: V) {
 export interface ProfileAssociatedChat {
   $type?: 'app.bsky.actor.defs#profileAssociatedChat'
   allowIncoming: 'all' | 'none' | 'following' | (string & {})
+  allowGroupInvites?: 'all' | 'none' | 'following' | (string & {})
 }
 
 const hashProfileAssociatedChat = 'profileAssociatedChat'
