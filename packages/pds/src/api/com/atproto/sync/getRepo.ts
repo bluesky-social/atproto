@@ -30,7 +30,7 @@ export default function (server: Server, ctx: AppContext) {
         encoding: 'application/vnd.ipld.car' as const,
         headers:
           since === undefined
-            ? { 'atproto-car-block-order': 'preorder-deterministic' }
+            ? { 'atproto-car-block-order': 'mst-preorder' }
             : undefined,
         body: carStream,
       }

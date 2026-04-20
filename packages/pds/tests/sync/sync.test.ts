@@ -160,9 +160,7 @@ describe('repo sync', () => {
     const fullRes = await client.xrpc(com.atproto.sync.getRepo, {
       params: { did },
     })
-    expect(fullRes.headers.get('atproto-car-block-order')).toBe(
-      'preorder-deterministic',
-    )
+    expect(fullRes.headers.get('atproto-car-block-order')).toBe('mst-preorder')
 
     const diffRes = await client.xrpc(com.atproto.sync.getRepo, {
       params: { did, since: currRev },
