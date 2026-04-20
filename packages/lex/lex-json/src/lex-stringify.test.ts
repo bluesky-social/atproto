@@ -32,7 +32,7 @@ describe(lexStringify, () => {
 
       lexStringify(nestedObject, {
         maxDepth: 20_000,
-        maxNestingFactor: Infinity,
+        maxContainerCount: Infinity,
       })
     })
 

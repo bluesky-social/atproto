@@ -4,7 +4,7 @@ import {
   Cid,
   InferInput,
   InferOutput,
-  LexParseOptions,
+  JsonToLexOptions,
   LexValue,
   RecordSchema,
   Schema,
@@ -16,7 +16,7 @@ import {
 import { AtUri } from '@atproto/syntax'
 import { Record as RecordEntry } from '../proto/bsky_pb'
 
-const PARSE_OPTIONS: LexParseOptions & ValidateOptions = {
+const PARSE_OPTIONS: JsonToLexOptions & ValidateOptions = {
   strict: false,
 }
 

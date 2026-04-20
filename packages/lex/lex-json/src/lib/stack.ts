@@ -17,15 +17,6 @@
 // array/object size limits, which can help prevent excessive resource usage
 // when processing untrusted input data.
 
-const ERROR_PATH_MAX_DEPTH = 10
-
-export const MAX_DEPTH_STRICT = 100
-export const MAX_DEPTH = 5_000
-export const MAX_ARRAY_LENGTH = 1_000
-export const MAX_OBJECT_ENTRIES = 1_000
-export const MAX_NESTING_FACTOR = 100_000
-export const MAX_NESTING_FACTOR_STRICT = 10_000
-
 /** @internal */
 export type ArrayFrame = {
   type: 'array'
@@ -53,35 +44,22 @@ export type ParentRef =
 /** @internal */
 export type StackFrame = ArrayFrame | ObjectFrame
 
-/** @internal */
 export type StackOptions = {
   /**
-   * Maximum depth to serialize. This is a safeguard against infinite recursion
-   * in case of circular references.
+   * The maximum allowed depth of nested structures. If the input exceeds this
+   * depth, a TypeError will be thrown.
    */
-  maxDepth: number
+  maxNestedLevels: number
   /**
-   * Maximum length of arrays to serialize. This is a safeguard against
-   * excessively large arrays.
+   * The maximum allowed length of arrays and objects. If the input exceeds this
+   * length, a TypeError will be thrown.
    */
-  maxArrayLength: number
+  maxContainerLength: number
   /**
-   * Maximum number of entries in objects to serialize. This is a safeguard
-   * against excessively large objects.
+   * The maximum allowed length of object keys. If a key exceeds this length, a
+   * TypeError will be thrown.
    */
-  maxObjectEntries: number
-  /**
-   * Maximum nesting factor to serialize. This is a safeguard against
-   * excessively large structures with many nested objects/arrays, even if they
-   * do not exceed the max depth or max array/object size limits. The nesting
-   * factor is calculated as the total number of nested objects/arrays in the
-   * structure, which can grow much faster than the depth or size of individual
-   * arrays/objects (e.g. a structure with 100 levels of nesting, but each level
-   * is an array of 100 items, would have a total of 100^100 nested
-   * objects/arrays, which would likely cause memory exhaustion even if the
-   * depth limit is not exceeded).
-   */
-  maxNestingFactor: number
+  maxObjectKeyLen: number
 }
 
 /**
@@ -92,13 +70,13 @@ export type StackOptions = {
  * @internal
  */
 export class Stack<TCustom extends NonNullable<unknown> = never> {
-  readonly root: StackFrame
+  public readonly root: StackFrame
+
   private readonly stack: (StackFrame | TCustom)[]
-  private currentNestingFactor = 1
 
   constructor(
     input: readonly unknown[] | object,
-    private readonly options: StackOptions,
+    private readonly options: Required<StackOptions>,
   ) {
     const frame = this.createFrame(input)
     this.root = frame
@@ -126,32 +104,26 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
   pushObject(input: readonly unknown[] | object, parent: ParentRef): void {
     const { options } = this
 
-    if (this.currentNestingFactor >= options.maxNestingFactor) {
-      throw new TypeError(
-        `Input is too large (exceeds max nesting factor of ${options.maxNestingFactor}) at ${stringifyPath(parent)}`,
-      )
-    }
-    this.currentNestingFactor++
-
-    if (parent.frame.depth >= options.maxDepth) {
+    if (parent.frame.depth >= options.maxNestedLevels) {
       throw new TypeError(
         `Input is too deeply nested at ${stringifyPath(parent)}`,
       )
-    } else if (
-      parent.frame.depth >= 100 &&
-      parent.frame.depth % 100 === 0 &&
-      options.maxDepth === Infinity &&
-      options.maxNestingFactor === Infinity
+    }
+
+    if (
+      options.maxNestedLevels === Infinity &&
+      parent.frame.depth > 100 &&
+      parent.frame.depth % 100 === 0
     ) {
       // @NOTE Traversing the parentRef chain on every frame creation can add
       // significant overhead (O(n^2)) to processing large structures especially
       // when there are no cycles. Since lexicon data should never have cycles
       // (as it is impossible to represent cycles in JSON / CBOR), we perform
       // this check only if there is a risk of creating an infinite loop (i.e.
-      // when maxDepth and maxNestingFactor are both Infinity), and only at
-      // certain intervals (every 100 frames) to avoid excessive overhead.
-      // Otherwise, we rely on the depth limit to prevent infinite loops, which
-      // should be sufficient for all data.
+      // when maxNestedLevels is Infinity), and only at certain intervals (every
+      // 100 frames) to avoid excessive overhead. Otherwise,
+      // we rely on the nesting limit to prevent infinite loops, which should be
+      // sufficient for all data.
 
       // Check for circular reference by walking up the parent chain
       let current: ParentRef | undefined = parent
@@ -170,13 +142,12 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
     this.stack.push(this.createFrame(input, parent))
   }
 
-  createFrame(
+  private createFrame(
     input: readonly unknown[] | object,
     parent?: ParentRef,
   ): StackFrame {
     if (Array.isArray(input)) {
-      // Avoid Loop bound injection
-      if (input.length > this.options.maxArrayLength) {
+      if (input.length > this.options.maxContainerLength) {
         throw new TypeError(
           `Array is too long (length ${input.length}) at ${stringifyPath(parent)}`,
         )
@@ -192,11 +163,21 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
     } else {
       const entries = Object.entries(input)
 
-      // Avoid Loop bound injection
-      if (entries.length > this.options.maxObjectEntries) {
+      if (entries.length > this.options.maxContainerLength) {
         throw new TypeError(
           `Object has too many entries (length ${entries.length}) at ${stringifyPath(parent)}`,
         )
+      }
+
+      if (this.options.maxObjectKeyLen !== Infinity) {
+        for (let index = 0; index < entries.length; index++) {
+          const key = entries[index][0]
+          if (key.length > this.options.maxObjectKeyLen) {
+            throw new TypeError(
+              `Object key is too long (length ${key.length}) at ${stringifyPath(parent)}`,
+            )
+          }
+        }
       }
 
       return {
@@ -215,6 +196,9 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
 export function isArrayFrame(frame: StackFrame): frame is ArrayFrame {
   return frame.type === 'array'
 }
+
+/** @internal */
+const ERROR_PATH_MAX_DEPTH = 10
 
 /** @internal */
 export function stringifyPath(parent?: ParentRef): string {

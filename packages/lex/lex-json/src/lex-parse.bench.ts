@@ -1,7 +1,7 @@
 import { bench, describe } from 'vitest'
 import { JsonValue } from './json.js'
-import { LexParseOptions } from './lex-parse-options.js'
-import { lexParse } from './lex-parse.js'
+import { JsonToLexOptions, jsonToLex } from './lex-json.js'
+import { type lexParse } from './lex-parse.js'
 import { parseSpecialJsonObject } from './special-objects.js'
 
 // This benchmark compares the performance of two implementations of
@@ -88,11 +88,11 @@ describe('deeply nested structure', () => {
   benchJson('[{"e":'.repeat(100_000) + '"deep"' + '}]'.repeat(100_000))
 })
 
-function benchData(data: unknown, options?: LexParseOptions) {
+function benchData(data: unknown, options?: JsonToLexOptions) {
   return benchJson(JSON.stringify(data), options)
 }
 
-function benchJson(jsonString: string, options?: LexParseOptions) {
+function benchJson(jsonString: string, options?: JsonToLexOptions) {
   const withReviver: typeof lexParse = (input, options = { strict: true }) => {
     return JSON.parse(input, (key: string, value: JsonValue) => {
       switch (typeof value) {
@@ -110,8 +110,12 @@ function benchJson(jsonString: string, options?: LexParseOptions) {
     })
   }
 
-  bench('current', () => {
-    lexParse(jsonString, options)
+  const naiveParse: typeof lexParse = (input, options = { strict: true }) => {
+    return jsonToLex(JSON.parse(input), options) as any
+  }
+
+  bench('naive', () => {
+    naiveParse(jsonString, options)
   })
 
   bench('with-reviver', () => {

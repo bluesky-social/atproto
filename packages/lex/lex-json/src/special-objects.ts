@@ -1,18 +1,67 @@
-import { BlobRef, Cid, LexMap, LexValue, isCid } from '@atproto/lex-data'
+import {
+  BlobRef,
+  Cid,
+  LexMap,
+  LexValue,
+  MAX_RECORD_BYTES_LEN,
+  isCid,
+} from '@atproto/lex-data'
 import { parseTypedBlobRef } from './blob.js'
 import { encodeLexBytes, parseLexBytes } from './bytes.js'
 import { JsonValue } from './json.js'
-import { LexParseOptions } from './lex-parse-options.js'
 import { encodeLexLink, parseLexLink } from './link.js'
+
+export type SpecialJsonObjectOptions = {
+  /**
+   * When true, objects that contain a `$link`, `$bytes`, or `$type` property
+   * but do not conform to the expected structure of those special objects will
+   * be rejected with a `TypeError`. When false (default), such objects will be
+   * treated as plain JSON objects without special parsing.
+   *
+   * @default false
+   */
+  strict?: boolean
+
+  /**
+   * Maximum allowed byte length for `$bytes` objects. If a `$bytes` object
+   * exceeds this limit, it will be rejected with a `TypeError` in strict mode,
+   * or treated as a plain object in non-strict mode.
+   *
+   * @see {@link MAX_RECORD_BYTES_LEN}
+   * @default strict ? MAX_RECORD_BYTES_LEN : Infinity
+   */
+  maxBytesLength?: number
+}
+
+function checkBytesLength<T extends { byteLength: number }>(
+  bytes: T,
+  options?: SpecialJsonObjectOptions,
+): T {
+  if (options) {
+    const maxBytesLength =
+      options.maxBytesLength ??
+      (options.strict ? MAX_RECORD_BYTES_LEN : Infinity)
+    if (bytes.byteLength > maxBytesLength) {
+      throw new TypeError(
+        `Bytes length exceeds maximum allowed length of ${maxBytesLength} bytes`,
+      )
+    }
+  }
+
+  return bytes
+}
 
 /**
  * @internal
  */
-export function encodeSpecialJsonObject(input: LexValue): JsonValue | void {
+export function encodeSpecialJsonObject(
+  input: LexValue,
+  options?: SpecialJsonObjectOptions,
+): JsonValue | void {
   if (isCid(input)) {
     return encodeLexLink(input)
   } else if (ArrayBuffer.isView(input)) {
-    return encodeLexBytes(input)
+    return encodeLexBytes(checkBytesLength(input, options))
   }
 }
 
@@ -21,7 +70,7 @@ export function encodeSpecialJsonObject(input: LexValue): JsonValue | void {
  */
 export function parseSpecialJsonObject(
   input: LexMap,
-  options?: LexParseOptions,
+  options?: SpecialJsonObjectOptions,
 ): Cid | Uint8Array | BlobRef | void {
   // Hot path: use hints to avoid parsing when possible
 
@@ -31,7 +80,7 @@ export function parseSpecialJsonObject(
     if (options?.strict) throw new TypeError(`Invalid $link object`)
   } else if (input.$bytes !== undefined) {
     const bytes = parseLexBytes(input)
-    if (bytes) return bytes
+    if (bytes) return checkBytesLength(bytes, options)
     if (options?.strict) throw new TypeError(`Invalid $bytes object`)
   } else if (input.$type !== undefined) {
     // @NOTE Since blobs are "just" regular lex objects with a special shape,

@@ -1,6 +1,22 @@
 import { LexValue } from '@atproto/lex-data'
-import { jsonStringifyDeep } from './json-stringify-deep.js'
+import {
+  JsonStringifyDeepOptions,
+  jsonStringifyDeep,
+} from './json-stringify-deep.js'
 import { LexToJsonOptions, lexToJson } from './lex-json.js'
+
+/**
+ * @note depth limits are already enforced in lexToJson, so we can set
+ * these to Infinity here since they won't be exceeded if lexToJson
+ * succeeded without throwing an error.
+ * @internal
+ */
+const JSON_STRINGIFY_DEEP_OPTIONS: Required<JsonStringifyDeepOptions> = {
+  allowNonSafeInteger: true,
+  maxContainerLength: Infinity,
+  maxNestedLevels: Infinity,
+  maxObjectKeyLen: Infinity,
+}
 
 /**
  * Serialize a Lex value to a JSON string.
@@ -28,16 +44,7 @@ export function lexStringify(
     // nested for JSON.stringify. In this case, we can use our custom iterative
     // implementation to handle deep structures.
     if (err instanceof RangeError) {
-      return jsonStringifyDeep(json, {
-        // @NOTE depth limits are already enforced in lexToJson, so we can set
-        // these to Infinity here since they won't be exceeded if lexToJson
-        // succeeded without throwing an error.
-        allowNonInteger: true,
-        maxDepth: Infinity,
-        maxNestingFactor: Infinity,
-        maxArrayLength: Infinity,
-        maxObjectEntries: Infinity,
-      })
+      return jsonStringifyDeep(json, JSON_STRINGIFY_DEEP_OPTIONS)
     }
 
     throw err

@@ -1,9 +1,5 @@
 import { JsonValue } from './json.js'
 import {
-  MAX_ARRAY_LENGTH,
-  MAX_DEPTH,
-  MAX_NESTING_FACTOR,
-  MAX_OBJECT_ENTRIES,
   type ParentRef,
   Stack,
   StackOptions,
@@ -13,8 +9,7 @@ import {
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
-export type JsonStringifyDeepOptions = Partial<StackOptions> &
-  Partial<EncodePrimitiveOptions>
+export type JsonStringifyDeepOptions = StackOptions & EncodePrimitiveOptions
 
 type StringFrame = {
   type: 'string'
@@ -33,16 +28,8 @@ type StringFrame = {
  */
 export function jsonStringifyDeep(
   input: JsonValue,
-  {
-    allowNonInteger = false,
-    maxNestingFactor = MAX_NESTING_FACTOR,
-    maxDepth = MAX_DEPTH,
-    maxArrayLength = MAX_ARRAY_LENGTH,
-    maxObjectEntries = MAX_OBJECT_ENTRIES,
-  }: JsonStringifyDeepOptions = {},
+  options: Required<JsonStringifyDeepOptions>,
 ): string {
-  const options: EncodePrimitiveOptions = { allowNonInteger }
-
   // Handle primitives and special types at the root level
   const value = applyToJSON(input)
   const encoded = encodePrimitive(value, options)
@@ -57,12 +44,7 @@ export function jsonStringifyDeep(
     return encoded
   }
 
-  const stack = new Stack<StringFrame>(value as object, {
-    maxNestingFactor,
-    maxDepth,
-    maxArrayLength,
-    maxObjectEntries,
-  })
+  const stack = new Stack<StringFrame>(value as object, options)
 
   let result = ''
   for (const frame of stack) {
@@ -164,7 +146,7 @@ function applyToJSON(value: unknown): unknown {
 }
 
 type EncodePrimitiveOptions = {
-  allowNonInteger: boolean
+  allowNonSafeInteger: boolean
 }
 
 /**
@@ -182,7 +164,7 @@ function encodePrimitive(
       if (value === null) return 'null'
       return OBJECT
     case 'number':
-      if (options.allowNonInteger) return JSON.stringify(value)
+      if (options.allowNonSafeInteger) return JSON.stringify(value)
       if (Number.isSafeInteger(value)) return JSON.stringify(value)
       throw new TypeError(
         `Invalid number (got ${value}) at ${stringifyPath(parent)}`,

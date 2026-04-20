@@ -40,13 +40,17 @@ export function lexParse<T extends LexValue = LexValue>(
   input: string,
   options: JsonToLexOptions = { strict: false },
 ): T {
-  // @NOTE see ./lex-json.bench.ts for performance comparison of implementation
+  // @NOTE see ./lex-parse.bench.ts for performance comparison of implementation
   // that uses a reviver function in JSON.parse vs. the current implementation.
 
   // @NOTE Unlike JSON.stringify, JSON.parse can handle very deeply nested
-  // structures:
+  // structures. jsonToLex will enforce nesting limits and throw if they are
+  // exceeded. The nesting level should always be limited by the input JSON
+  // string itself, so using "unlimited" nesting limits here should not pose a
+  // risk of infinite loops or excessive resource usage.
   //
-  // JSON.parse('['.repeat(40000) + ']'.repeat(40000))
+  // JSON.parse('['.repeat(1_000_000) + ']'.repeat(1_000_000))
+
   return jsonToLex(JSON.parse(input), options) as T
 }
 
@@ -58,9 +62,8 @@ export function lexParseJsonBytes(
   options?: JsonToLexOptions,
 ): LexValue {
   // @NOTE We explored here the option of using a streaming JSON parser that
-  // operates directly on bytes, allows to avoid creating an intermediary string
-  // representation. This was not significantly faster than the current (naive)
-  // implementation, and would add complexity and bundle size, so we decided
-  // against it.
+  // operates directly on bytes, allowing to avoid creating an intermediary JSON
+  // string representation. This was slightly faster in some benchmarks, but it
+  // also added a significant amount of complexity bundle size.
   return lexParse(utf8FromBytes(bytes), options)
 }

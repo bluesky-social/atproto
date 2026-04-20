@@ -1,10 +1,9 @@
 import {
-  MAX_ARRAY_LENGTH,
-  MAX_DEPTH,
-  MAX_DEPTH_STRICT,
-  MAX_NESTING_FACTOR,
-  MAX_NESTING_FACTOR_STRICT,
-  MAX_OBJECT_ENTRIES,
+  MAX_CBOR_CONTAINER_LEN,
+  MAX_CBOR_NESTED_LEVELS,
+  MAX_CBOR_OBJECT_KEY_LEN,
+} from '@atproto/lex-data'
+import {
   type ParentRef,
   Stack,
   StackOptions,
@@ -15,15 +14,21 @@ import {
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
-export type JsonTransformOptions = Partial<StackOptions> &
-  Partial<TransformValueOptions> & {
-    /**
-     * If true, the function will enforce stricter default options, such as
-     * disallowing numbers that are not safe integers, and setting a lower maximum
-     * depth limit.
-     */
-    strict?: boolean
-  }
+export type JsonTransformOptions = {
+  /**
+   * When enabled, forbids the presence of invalid Lex values such as:
+   * - Non-integer numbers (only safe integers are valid in the Lex data model)
+   * - Malformed `$link` objects
+   * - Malformed `$bytes` objects
+   * - Malformed `$type: 'blob'` objects
+   * - Objects with invalid or empty `$type` properties
+   *
+   * When disabled (default), invalid special objects are left as plain objects.
+   *
+   * @default false
+   */
+  strict?: boolean
+} & Partial<StackOptions & TransformValueOptions>
 
 /**
  * Recursively transforms a value by applying a replacer function to all
@@ -57,21 +62,16 @@ export function jsonTransform<T>(
   replacer: (child: object) => unknown,
   {
     strict = false,
-    allowNonInteger = !strict,
-    maxNestingFactor = strict ? MAX_NESTING_FACTOR_STRICT : MAX_NESTING_FACTOR,
-    maxDepth = strict ? MAX_DEPTH_STRICT : MAX_DEPTH,
-    maxArrayLength = MAX_ARRAY_LENGTH,
-    maxObjectEntries = MAX_OBJECT_ENTRIES,
+    allowNonSafeInteger = !strict,
+    maxNestedLevels = strict ? MAX_CBOR_NESTED_LEVELS : Infinity,
+    maxContainerLength = strict ? MAX_CBOR_CONTAINER_LEN : Infinity,
+    maxObjectKeyLen = strict ? MAX_CBOR_OBJECT_KEY_LEN : Infinity,
   }: JsonTransformOptions = {},
 ): T {
-  const options: TransformValueOptions = { allowNonInteger }
+  const transformOpts: TransformValueOptions = { allowNonSafeInteger }
 
-  const inputValue = transformValue(input, replacer, options)
+  const inputValue = transformValue(input, replacer, transformOpts)
   if (inputValue === OMIT) {
-    // @NOTE That JSON.stringify(undefined) returns undefined (although it is
-    // not typed as such in TypeScript, and not valid JSON). We disallow this
-    // since it is not a valid JSON value and is likely an error in the input
-    // data.
     throw new TypeError('Invalid undefined value at $')
   }
   if (inputValue !== OBJECT) {
@@ -79,10 +79,9 @@ export function jsonTransform<T>(
   }
 
   const stack = new Stack(input as object, {
-    maxNestingFactor,
-    maxDepth,
-    maxArrayLength,
-    maxObjectEntries,
+    maxContainerLength,
+    maxNestedLevels,
+    maxObjectKeyLen,
   })
 
   for (const frame of stack) {
@@ -92,7 +91,7 @@ export function jsonTransform<T>(
       for (let index = 0; index < input.length; index++) {
         const value = input[index]
 
-        const result = transformValue(value, replacer, options)
+        const result = transformValue(value, replacer, transformOpts)
         if (result === OBJECT) {
           stack.pushObject(value as object, { frame, index })
         } else if (result === OMIT) {
@@ -115,7 +114,7 @@ export function jsonTransform<T>(
 
       for (let index = 0; index < entries.length; index++) {
         const value = entries[index][1]
-        const result = transformValue(value, replacer, options)
+        const result = transformValue(value, replacer, transformOpts)
         if (result === OBJECT) {
           stack.pushObject(value as object, { frame, index })
         } else if (result === OMIT) {
@@ -185,13 +184,13 @@ function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
 }
 
 type TransformValueOptions = {
-  allowNonInteger: boolean
+  allowNonSafeInteger: boolean
 }
 
 function transformValue<I, T extends (child: I & object) => any>(
   input: I,
   replacer: T,
-  options: TransformValueOptions,
+  options: Required<TransformValueOptions>,
   parent?: ParentRef,
 ): typeof OBJECT | typeof OMIT | I | ReturnType<T> {
   switch (typeof input) {
@@ -206,7 +205,7 @@ function transformValue<I, T extends (child: I & object) => any>(
       // should be traversed
       return OBJECT
     case 'number': {
-      if (options.allowNonInteger) return input
+      if (options.allowNonSafeInteger) return input
       if (Number.isSafeInteger(input)) return input
 
       throw new TypeError(

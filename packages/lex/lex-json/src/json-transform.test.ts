@@ -313,9 +313,9 @@ describe(jsonTransform, () => {
     })
   })
 
-  describe('maxNestingFactor option', () => {
+  describe('maxContainerCount option', () => {
     it('controls maximum nesting factor for repeated objects', () => {
-      // Test that maxNestingFactor limits how many times the same object
+      // Test that maxContainerCount limits how many times the same object
       // can appear in the structure before being considered circular
       const shared = { value: 'shared' }
       const input = {
@@ -326,8 +326,8 @@ describe(jsonTransform, () => {
         e: shared,
       }
 
-      // With maxNestingFactor, repeated references should be allowed
-      const result = jsonTransform(input, noop, { maxNestingFactor: 10 })
+      // With maxContainerCount, repeated references should be allowed
+      const result = jsonTransform(input, noop, { maxContainerCount: 10 })
       expect(result).toStrictEqual({
         a: { value: 'shared' },
         b: { value: 'shared' },
@@ -346,9 +346,9 @@ describe(jsonTransform, () => {
         level3: { nested: shared },
       }
 
-      // With a low maxNestingFactor, this should throw
+      // With a low maxContainerCount, this should throw
       expect(() =>
-        jsonTransform(input, noop, { maxNestingFactor: 2 }),
+        jsonTransform(input, noop, { maxContainerCount: 2 }),
       ).toThrow()
     })
 
@@ -359,7 +359,7 @@ describe(jsonTransform, () => {
 
       // With Infinity, all repeated references should be allowed
       const result = jsonTransform(input, noop, {
-        maxNestingFactor: Infinity,
+        maxContainerCount: Infinity,
       }) as any[]
       expect(result).toHaveLength(100)
       expect(result[0]).toStrictEqual({ ref: { value: 'shared' } })
@@ -436,37 +436,37 @@ describe(jsonTransform, () => {
     })
   })
 
-  describe('allowNonInteger option', () => {
-    it('allows non-integers when allowNonInteger is true', () => {
+  describe('allowNonSafeInteger option', () => {
+    it('allows non-integers when allowNonSafeInteger is true', () => {
       const input = { value: 123.456, nested: { pi: 3.14159 } }
-      const result = jsonTransform(input, noop, { allowNonInteger: true })
+      const result = jsonTransform(input, noop, { allowNonSafeInteger: true })
       expect(result).toStrictEqual({ value: 123.456, nested: { pi: 3.14159 } })
     })
 
-    it('rejects non-integers when allowNonInteger is false', () => {
+    it('rejects non-integers when allowNonSafeInteger is false', () => {
       const input = { value: 123.456 }
       expect(() =>
-        jsonTransform(input, noop, { allowNonInteger: false }),
+        jsonTransform(input, noop, { allowNonSafeInteger: false }),
       ).toThrow('Invalid number (got 123.456)')
     })
 
-    it('rejects non-safe integers when allowNonInteger is false', () => {
+    it('rejects non-safe integers when allowNonSafeInteger is false', () => {
       const input = { value: Number.MAX_SAFE_INTEGER + 1 }
       expect(() =>
-        jsonTransform(input, noop, { allowNonInteger: false }),
+        jsonTransform(input, noop, { allowNonSafeInteger: false }),
       ).toThrow('Invalid number')
     })
 
-    it('allows safe integers when allowNonInteger is false', () => {
+    it('allows safe integers when allowNonSafeInteger is false', () => {
       const input = { value: 42, nested: { count: -100 } }
-      const result = jsonTransform(input, noop, { allowNonInteger: false })
+      const result = jsonTransform(input, noop, { allowNonSafeInteger: false })
       expect(result).toStrictEqual({ value: 42, nested: { count: -100 } })
     })
   })
 
   describe('circular reference detection', () => {
     const options: JsonTransformOptions = {
-      maxNestingFactor: Infinity,
+      maxContainerCount: Infinity,
       maxDepth: Infinity,
     }
 
