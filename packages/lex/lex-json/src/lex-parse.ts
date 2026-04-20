@@ -55,15 +55,30 @@ export function lexParse<T extends LexValue = LexValue>(
 }
 
 /**
+ * A safe version of {@link lexParse} that returns `undefined` instead of
+ * throwing on invalid input.
+ */
+export function lexParseSafe<T extends LexValue = LexValue>(
+  input: string,
+  options?: JsonToLexOptions,
+): T | undefined {
+  try {
+    return lexParse<T>(input, options)
+  } catch (err) {
+    return undefined
+  }
+}
+
+/**
  * Parses a JSON string from a byte array into Lex values.
  */
-export function lexParseJsonBytes(
+export function lexParseJsonBytes<T extends LexValue = LexValue>(
   bytes: Uint8Array,
   options?: JsonToLexOptions,
-): LexValue {
+): T {
   // @NOTE We explored here the option of using a streaming JSON parser that
   // operates directly on bytes, allowing to avoid creating an intermediary JSON
   // string representation. This was slightly faster in some benchmarks, but it
   // also added a significant amount of complexity bundle size.
-  return lexParse(utf8FromBytes(bytes), options)
+  return lexParse<T>(utf8FromBytes(bytes), options)
 }

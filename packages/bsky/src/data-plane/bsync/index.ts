@@ -5,7 +5,7 @@ import { ConnectRouter } from '@connectrpc/connect'
 import { expressConnectMiddleware } from '@connectrpc/connect-express'
 import express from 'express'
 import { TID } from '@atproto/common'
-import { lexParse } from '@atproto/lex'
+import { lexParseJsonBytes } from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { app } from '../../lexicons/index.js'
 import { httpLogger } from '../../logger'
@@ -258,9 +258,10 @@ const handleSubjectActivitySubscriptionOperation = async (
       .execute()
   }
 
-  const json = Buffer.from(payload).toString('utf8')
   const parsed =
-    lexParse<app.bsky.notification.defs.SubjectActivitySubscription>(json)
+    lexParseJsonBytes<app.bsky.notification.defs.SubjectActivitySubscription>(
+      payload,
+    )
   const {
     subject,
     activitySubscription: { post, reply },
@@ -300,9 +301,8 @@ const handleAgeAssuranceEventOperation = async (
   const { actorDid, method, payload } = req
   if (method !== Method.CREATE) return
 
-  const parsed = lexParse<app.bsky.unspecced.defs.AgeAssuranceEvent>(
-    Buffer.from(payload).toString('utf8'),
-  )
+  const parsed =
+    lexParseJsonBytes<app.bsky.unspecced.defs.AgeAssuranceEvent>(payload)
 
   const { status, createdAt } = parsed
 
@@ -326,9 +326,7 @@ const handleAgeAssuranceV2EventOperation = async (
   const { actorDid, method, payload } = req
   if (method !== Method.CREATE) return
 
-  const parsed = lexParse<app.bsky.ageassurance.defs.Event>(
-    Buffer.from(payload).toString('utf8'),
-  )
+  const parsed = lexParseJsonBytes<app.bsky.ageassurance.defs.Event>(payload)
 
   const { status, createdAt, access, countryCode, regionCode } = parsed
 
@@ -373,9 +371,7 @@ const handleBookmarkOperation = async (
   }
 
   if (method === Method.CREATE) {
-    const parsed = lexParse<app.bsky.bookmark.defs.Bookmark>(
-      Buffer.from(payload).toString('utf8'),
-    )
+    const parsed = lexParseJsonBytes<app.bsky.bookmark.defs.Bookmark>(payload)
     const {
       subject: { uri, cid },
     } = parsed

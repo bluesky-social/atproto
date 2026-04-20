@@ -31,36 +31,35 @@ describe(lexStringify, () => {
       expect(() => JSON.stringify(nestedObject)).toThrow(RangeError)
 
       lexStringify(nestedObject, {
-        maxDepth: 20_000,
-        maxContainerCount: Infinity,
+        maxNestedLevels: 20_000,
       })
     })
 
     it('throws error when structure exceeds max depth', () => {
-      const maxDepth = 50_000
+      const maxNestedLevels = 50_000
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 1; i <= maxDepth + 1; i++) {
+      for (let i = 1; i <= maxNestedLevels + 1; i++) {
         current.nested = { level: i }
         current = current.nested
       }
 
-      expect(() => lexStringify(nestedObject, { maxDepth })).toThrow(
+      expect(() => lexStringify(nestedObject, { maxNestedLevels })).toThrow(
         /Input is too deeply nested/,
       )
     })
 
-    it('sets a default max depth limit to prevent infinite recursion', () => {
+    it('enforces depth limit in strict mode', () => {
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 1; i <= 100_000; i++) {
+      for (let i = 1; i <= 100; i++) {
         current.nested = { level: i }
         current = current.nested
       }
 
-      expect(() => lexStringify(nestedObject)).toThrow(
+      expect(() => lexStringify(nestedObject, { strict: true })).toThrow(
         /Input is too deeply nested/,
       )
     })

@@ -280,18 +280,18 @@ describe(jsonTransform, () => {
       expect(check).toStrictEqual({ end: true })
     })
 
-    it('enforces custom maxDepth option', () => {
+    it('enforces custom maxNestedLevels option', () => {
       let nested: unknown = []
       for (let i = 0; i <= 10; i++) {
         nested = [nested]
       }
 
-      expect(() => jsonTransform(nested, noop, { maxDepth: 10 })).toThrow(
-        'Input is too deeply nested',
-      )
+      expect(() =>
+        jsonTransform(nested, noop, { maxNestedLevels: 10 }),
+      ).toThrow('Input is too deeply nested')
     })
 
-    it('uses strict maxDepth (100) in strict mode', () => {
+    it('uses strict maxNestedLevels (100) in strict mode', () => {
       let nested: unknown = []
       for (let i = 0; i <= 100; i++) {
         nested = [nested]
@@ -302,7 +302,7 @@ describe(jsonTransform, () => {
       )
     })
 
-    it('uses lenient maxDepth (5000) in non-strict mode', () => {
+    it('uses lenient maxNestedLevels (5000) in non-strict mode', () => {
       let nested: unknown = []
       for (let i = 0; i <= 4999; i++) {
         nested = [nested]
@@ -313,79 +313,14 @@ describe(jsonTransform, () => {
     })
   })
 
-  describe('maxContainerCount option', () => {
-    it('controls maximum nesting factor for repeated objects', () => {
-      // Test that maxContainerCount limits how many times the same object
-      // can appear in the structure before being considered circular
-      const shared = { value: 'shared' }
-      const input = {
-        a: shared,
-        b: shared,
-        c: shared,
-        d: shared,
-        e: shared,
-      }
-
-      // With maxContainerCount, repeated references should be allowed
-      const result = jsonTransform(input, noop, { maxContainerCount: 10 })
-      expect(result).toStrictEqual({
-        a: { value: 'shared' },
-        b: { value: 'shared' },
-        c: { value: 'shared' },
-        d: { value: 'shared' },
-        e: { value: 'shared' },
-      })
-    })
-
-    it('throws when nesting factor is exceeded', () => {
-      const shared = { value: 'shared' }
-      // Create a deeply nested structure with the same object repeated
-      const input = {
-        level1: { nested: shared },
-        level2: { nested: shared },
-        level3: { nested: shared },
-      }
-
-      // With a low maxContainerCount, this should throw
-      expect(() =>
-        jsonTransform(input, noop, { maxContainerCount: 2 }),
-      ).toThrow()
-    })
-
-    it('allows infinite nesting factor', () => {
-      const shared = { value: 'shared' }
-      // Create many repeated references
-      const input = Array.from({ length: 100 }, () => ({ ref: shared }))
-
-      // With Infinity, all repeated references should be allowed
-      const result = jsonTransform(input, noop, {
-        maxContainerCount: Infinity,
-      }) as any[]
-      expect(result).toHaveLength(100)
-      expect(result[0]).toStrictEqual({ ref: { value: 'shared' } })
-    })
-  })
-
   describe('array length limits', () => {
-    it('enforces maxArrayLength option', () => {
-      const longArray = Array.from({ length: 100 }, (_, i) => i)
+    it('enforces maxContainerLength option', () => {
+      const longArray = Array.from({ length: 51 }, (_, i) => i)
       const input = { items: longArray }
 
-      expect(() => jsonTransform(input, noop, { maxArrayLength: 50 })).toThrow(
-        'Array is too long (length 100)',
-      )
-    })
-
-    it('reports path in array length error', () => {
-      const input = {
-        nested: {
-          items: Array.from({ length: 100 }, (_, i) => i),
-        },
-      }
-
-      expect(() => jsonTransform(input, noop, { maxArrayLength: 50 })).toThrow(
-        'at $.nested.items',
-      )
+      expect(() =>
+        jsonTransform(input, noop, { maxContainerLength: 50 }),
+      ).toThrow('Array is too long (length 51)')
     })
 
     it('allows arrays at the limit', () => {
@@ -393,34 +328,22 @@ describe(jsonTransform, () => {
       const input = { items: array }
 
       expect(() =>
-        jsonTransform(input, noop, { maxArrayLength: 50 }),
+        jsonTransform(input, noop, { maxContainerLength: 50 }),
       ).not.toThrow()
     })
   })
 
   describe('object entry limits', () => {
-    it('enforces maxObjectEntries option', () => {
+    it('enforces maxContainerLength option', () => {
       const largeObject: Record<string, number> = {}
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 51; i++) {
         largeObject[`key${i}`] = i
       }
       const input = { data: largeObject }
 
       expect(() =>
-        jsonTransform(input, noop, { maxObjectEntries: 50 }),
-      ).toThrow('Object has too many entries (length 100)')
-    })
-
-    it('reports path in object entries error', () => {
-      const largeObject: Record<string, number> = {}
-      for (let i = 0; i < 100; i++) {
-        largeObject[`key${i}`] = i
-      }
-      const input = { nested: { data: largeObject } }
-
-      expect(() =>
-        jsonTransform(input, noop, { maxObjectEntries: 50 }),
-      ).toThrow('at $.nested.data')
+        jsonTransform(input, noop, { maxContainerLength: 50 }),
+      ).toThrow('Object has too many entries (length 51)')
     })
 
     it('allows objects at the limit', () => {
@@ -431,7 +354,7 @@ describe(jsonTransform, () => {
       const input = { data: object }
 
       expect(() =>
-        jsonTransform(input, noop, { maxObjectEntries: 50 }),
+        jsonTransform(input, noop, { maxContainerLength: 50 }),
       ).not.toThrow()
     })
   })
@@ -466,8 +389,7 @@ describe(jsonTransform, () => {
 
   describe('circular reference detection', () => {
     const options: JsonTransformOptions = {
-      maxContainerCount: Infinity,
-      maxDepth: Infinity,
+      maxNestedLevels: Infinity,
     }
 
     it('detects circular references in objects at depth 50', () => {

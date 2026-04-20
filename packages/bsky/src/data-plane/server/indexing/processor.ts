@@ -1,6 +1,13 @@
 import { Insertable } from 'kysely'
 import { chunkArray } from '@atproto/common'
-import { Cid, l, lexParse, lexStringify, parseCid } from '@atproto/lex'
+import {
+  Cid,
+  l,
+  lexParse,
+  lexParseSafe,
+  lexStringify,
+  parseCid,
+} from '@atproto/lex'
 import { AtUri } from '@atproto/syntax'
 import { BackgroundQueue } from '../background'
 import { Database } from '../db'
@@ -201,8 +208,8 @@ export class RecordProcessor<TSchema extends l.RecordSchema, TRow> {
       if (!found) {
         return this.handleNotifs({ deleted })
       }
-      const record = lexParse(found.json)
-      if (!this.matchesSchema(record)) {
+      const record = lexParseSafe(found.json, { strict: false })
+      if (!record || !this.matchesSchema(record)) {
         return this.handleNotifs({ deleted })
       }
       const inserted = await this.options.insertFn(

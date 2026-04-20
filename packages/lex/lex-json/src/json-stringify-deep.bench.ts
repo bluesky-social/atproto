@@ -1,6 +1,16 @@
 import { bench, describe } from 'vitest'
-import { jsonStringifyDeep } from './json-stringify-deep.js'
+import {
+  JsonStringifyDeepOptions,
+  jsonStringifyDeep,
+} from './json-stringify-deep.js'
 import { JsonValue } from './json.js'
+
+const UNSAFE_JSON_STRINGIFY_OPTIONS: Required<JsonStringifyDeepOptions> = {
+  allowNonSafeInteger: true,
+  maxContainerLength: Infinity,
+  maxNestedLevels: Infinity,
+  maxObjectKeyLen: Infinity,
+}
 
 // This benchmark compares the performance of two implementations for
 // serializing JSON values to JSON strings:
@@ -209,7 +219,7 @@ describe('large strings', () => {
 
 function benchData(data: JsonValue) {
   bench(jsonStringifyDeep, () => {
-    jsonStringifyDeep(data)
+    jsonStringifyDeep(data, UNSAFE_JSON_STRINGIFY_OPTIONS)
   })
 
   bench(JSON.stringify, () => {

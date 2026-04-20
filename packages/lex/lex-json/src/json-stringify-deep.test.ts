@@ -1,14 +1,24 @@
 import { describe, expect, it, test } from 'vitest'
-import { jsonStringifyDeep } from './json-stringify-deep.js'
+import { MAX_CBOR_NESTED_LEVELS } from '@atproto/lex-data'
+import {
+  JsonStringifyDeepOptions,
+  jsonStringifyDeep,
+} from './json-stringify-deep.js'
 import { JsonValue } from './json.js'
-import { MAX_CBOR_NESTED_LEVELS_LENIENT } from './lib/stack.js'
+
+const UNSAFE_JSON_STRINGIFY_OPTIONS: Required<JsonStringifyDeepOptions> = {
+  allowNonSafeInteger: true,
+  maxContainerLength: Infinity,
+  maxNestedLevels: Infinity,
+  maxObjectKeyLen: Infinity,
+}
 
 describe(jsonStringifyDeep, () => {
   describe('behavior matches JSON.stringify', () => {
     function testData(name: string, data: JsonValue = name) {
       test(name, () => {
         const json = JSON.stringify(data)
-        const result = jsonStringifyDeep(data, { allowNonSafeInteger: true })
+        const result = jsonStringifyDeep(data, UNSAFE_JSON_STRINGIFY_OPTIONS)
         expect(result).toBe(json)
       })
     }
@@ -142,45 +152,46 @@ describe(jsonStringifyDeep, () => {
   })
 
   describe('deeply nested structures', () => {
-    it('handles nested arrays (10000 levels)', () => {
+    it('handles deeply nested arrays', () => {
       const json = '['.repeat(10000) + ']'.repeat(10000)
-      expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: Infinity })).toBe(
-        json,
-      )
+      expect(
+        jsonStringifyDeep(JSON.parse(json), UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toBe(json)
     })
 
-    it('handles nested objects (10000 levels)', () => {
+    it('handles deeply nested objects', () => {
       const json = '{"a":'.repeat(10000) + 'null' + '}'.repeat(10000)
-      expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: Infinity })).toBe(
-        json,
-      )
+      expect(
+        jsonStringifyDeep(JSON.parse(json), UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toBe(json)
     })
 
     it('limits maximum depth by default', () => {
-      const depth = MAX_CBOR_NESTED_LEVELS_LENIENT + 2
+      const depth = MAX_CBOR_NESTED_LEVELS + 2
       const json = '['.repeat(depth) + ']'.repeat(depth)
-      expect(() => jsonStringifyDeep(JSON.parse(json))).toThrow(
-        /Input is too deeply nested/,
-      )
+      expect(() =>
+        jsonStringifyDeep(JSON.parse(json), {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxNestedLevels: MAX_CBOR_NESTED_LEVELS,
+        }),
+      ).toThrow(/Input is too deeply nested/)
     })
 
-    it('allows custom max depth (lower than default)', () => {
+    it('allows custom max depth', () => {
       const depth = 5000
       const json = '['.repeat(depth) + ']'.repeat(depth)
-      expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: depth - 1 })).toBe(
-        json,
-      )
+      expect(
+        jsonStringifyDeep(JSON.parse(json), {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxNestedLevels: depth - 1,
+        }),
+      ).toBe(json)
       expect(() =>
-        jsonStringifyDeep(JSON.parse(json), { maxDepth: depth - 2 }),
+        jsonStringifyDeep(JSON.parse(json), {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxNestedLevels: depth - 2,
+        }),
       ).toThrow()
-    })
-
-    it('allows unlimited max depth', () => {
-      const depth = 20_000
-      const json = '['.repeat(depth) + ']'.repeat(depth)
-      expect(jsonStringifyDeep(JSON.parse(json), { maxDepth: Infinity })).toBe(
-        json,
-      )
     })
   })
 
@@ -188,43 +199,57 @@ describe(jsonStringifyDeep, () => {
     it('detects circular reference in object', () => {
       const obj: any = { a: 1 }
       obj.self = obj
-      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(obj, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('detects circular reference in array', () => {
       const arr: any = [1, 2, 3]
       arr.push(arr)
-      expect(() => jsonStringifyDeep(arr)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(arr, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('detects circular reference in nested object', () => {
       const obj: any = { a: { b: { c: 1 } } }
       obj.a.b.c = obj
-      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(obj, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('detects circular reference in nested array', () => {
       const arr: any = [[1, [2, [3]]]]
       arr[0][1][1].push(arr)
-      expect(() => jsonStringifyDeep(arr)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(arr, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('detects circular reference in mixed structure', () => {
       const obj: any = { items: [{ nested: { value: 1 } }] }
       obj.items[0].nested.ref = obj
-      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(obj, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('detects circular reference to parent array', () => {
       const arr: any = [1, [2, [3]]]
       arr[1][1].push(arr[1])
-      expect(() => jsonStringifyDeep(arr)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(arr, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('detects circular reference to parent object', () => {
       const obj: any = { a: { b: { c: 1 } } }
       obj.a.b.parent = obj.a
-      expect(() => jsonStringifyDeep(obj)).toThrow('Input is too deeply nested')
+      expect(() =>
+        jsonStringifyDeep(obj, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('Circular reference detected')
     })
 
     it('allows repeated references to same object (not circular)', () => {
@@ -236,7 +261,9 @@ describe(jsonStringifyDeep, () => {
         array: [shared, shared],
       }
       // This should not throw - it's not a circular reference
-      expect(() => jsonStringifyDeep(obj)).not.toThrow()
+      expect(() =>
+        jsonStringifyDeep(obj, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).not.toThrow()
     })
   })
 
@@ -249,7 +276,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('{"transformed":true}')
     })
@@ -263,7 +293,10 @@ describe(jsonStringifyDeep, () => {
       }
       const obj = { wrapper: nested }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('{"wrapper":{"serialized":"test"}}')
     })
@@ -276,7 +309,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('42')
     })
@@ -288,7 +324,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('"custom string"')
     })
@@ -300,7 +339,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('null')
     })
@@ -315,7 +357,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('{"keep":"this"}')
     })
@@ -328,7 +373,10 @@ describe(jsonStringifyDeep, () => {
       }
       const arr = [1, obj, 3]
       const expected = JSON.stringify(arr)
-      const result = jsonStringifyDeep(arr as any)
+      const result = jsonStringifyDeep(
+        arr as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('[1,null,3]')
     })
@@ -348,7 +396,10 @@ describe(jsonStringifyDeep, () => {
       }
       const arr = [item1, item2]
       const expected = JSON.stringify(arr)
-      const result = jsonStringifyDeep(arr as any)
+      const result = jsonStringifyDeep(
+        arr as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('[{"id":1,"type":"item"},{"id":2,"type":"item"}]')
     })
@@ -366,7 +417,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(outerObj)
-      const result = jsonStringifyDeep(outerObj as any)
+      const result = jsonStringifyDeep(
+        outerObj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
     })
 
@@ -387,7 +441,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(level1)
-      const result = jsonStringifyDeep(level1 as any)
+      const result = jsonStringifyDeep(
+        level1 as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
     })
 
@@ -395,7 +452,10 @@ describe(jsonStringifyDeep, () => {
       const date = new Date('2024-01-01T00:00:00.000Z')
       const obj = { timestamp: date }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(JSON.parse(result)).toStrictEqual(JSON.parse(expected))
     })
@@ -415,7 +475,10 @@ describe(jsonStringifyDeep, () => {
         second: withoutToJSON,
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
     })
 
@@ -433,7 +496,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(deepObj)
-      const result = jsonStringifyDeep(deepObj as any)
+      const result = jsonStringifyDeep(
+        deepObj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
     })
 
@@ -444,7 +510,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(obj)
-      const result = jsonStringifyDeep(obj as any)
+      const result = jsonStringifyDeep(
+        obj as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('[1,2,3]')
     })
@@ -456,7 +525,10 @@ describe(jsonStringifyDeep, () => {
         },
       }
       const expected = JSON.stringify(arr)
-      const result = jsonStringifyDeep(arr as any)
+      const result = jsonStringifyDeep(
+        arr as any,
+        UNSAFE_JSON_STRINGIFY_OPTIONS,
+      )
       expect(result).toBe(expected)
       expect(result).toBe('{"converted":"to object"}')
     })
@@ -470,7 +542,7 @@ describe(jsonStringifyDeep, () => {
           return { value: this.myValue }
         },
       }
-      jsonStringifyDeep(obj as any)
+      jsonStringifyDeep(obj as any, UNSAFE_JSON_STRINGIFY_OPTIONS)
       expect(contextValue).toBe('test')
     })
 
@@ -482,108 +554,84 @@ describe(jsonStringifyDeep, () => {
       }
       // Both should throw the same error
       expect(() => JSON.stringify(obj)).toThrow('toJSON error')
-      expect(() => jsonStringifyDeep(obj as any)).toThrow('toJSON error')
+      expect(() =>
+        jsonStringifyDeep(obj as any, UNSAFE_JSON_STRINGIFY_OPTIONS),
+      ).toThrow('toJSON error')
     })
   })
 
-  describe('maxContainerCount option', () => {
-    it('controls maximum nesting factor for nested objects', () => {
-      // Create a structure with many nested objects
+  describe('maxContainerLength option', () => {
+    it('enforces maximum array length', () => {
+      const input = Array.from({ length: 10 }, (_, i) => i)
+
+      // Should work with sufficient maxContainerLength
+      expect(() =>
+        jsonStringifyDeep(input, {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxContainerLength: 10,
+        }),
+      ).not.toThrow()
+
+      // Should throw when array is too long
+      expect(() =>
+        jsonStringifyDeep(input, {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxContainerLength: 5,
+        }),
+      ).toThrow('Array is too long')
+    })
+
+    it('enforces maximum object size', () => {
       const input = {
-        level1: { level2: { level3: { level4: { level5: 'value' } } } },
+        a: 1,
+        b: 2,
+        c: 3,
+        d: 4,
+        e: 5,
       }
 
-      // Should work with default maxContainerCount
-      expect(() => jsonStringifyDeep(input)).not.toThrow()
-
-      // Should work with sufficient maxContainerCount
+      // Should work with sufficient maxContainerLength
       expect(() =>
-        jsonStringifyDeep(input, { maxContainerCount: 10 }),
+        jsonStringifyDeep(input, {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxContainerLength: 10,
+        }),
       ).not.toThrow()
 
-      // Should throw when nesting factor is exceeded
-      expect(() => jsonStringifyDeep(input, { maxContainerCount: 4 })).toThrow(
-        'Input is too large (exceeds max nesting factor of 4)',
-      )
-    })
-
-    it('counts nested arrays in nesting factor', () => {
-      const input = [[[[[]]]]]
-
-      // Should work with sufficient maxContainerCount
+      // Should throw when object has too many entries
       expect(() =>
-        jsonStringifyDeep(input, { maxContainerCount: 10 }),
-      ).not.toThrow()
-
-      // Should throw when nesting factor is exceeded
-      expect(() => jsonStringifyDeep(input, { maxContainerCount: 4 })).toThrow(
-        'Input is too large (exceeds max nesting factor of 4)',
-      )
+        jsonStringifyDeep(input, {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxContainerLength: 3,
+        }),
+      ).toThrow('Object has too many entries')
     })
 
-    it('allows infinite nesting factor', () => {
-      // Create deeply nested structure
-      let nested: any = { value: 'leaf' }
-      for (let i = 0; i < 1000; i++) {
-        nested = { child: nested }
-      }
+    it('allows infinite container length', () => {
+      const input = Array.from({ length: 1000 }, (_, i) => i)
 
       // Should work with Infinity
       expect(() =>
-        jsonStringifyDeep(nested, {
-          maxContainerCount: Infinity,
-          maxDepth: Infinity,
+        jsonStringifyDeep(input, {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxContainerLength: Infinity,
         }),
       ).not.toThrow()
     })
 
-    it('reports path in nesting factor error', () => {
+    it('reports path in container length error', () => {
       const input = {
         data: {
-          nested: {
-            deep: {
-              value: 'here',
-            },
-          },
+          items: Array.from({ length: 10 }, (_, i) => i),
         },
       }
 
-      expect(() => jsonStringifyDeep(input, { maxContainerCount: 3 })).toThrow(
-        'at $.data.nested.deep',
-      )
-    })
-
-    it('limits maxDepth to maxContainerCount', () => {
-      // When maxContainerCount is lower than maxDepth, it should be used as limit
-      let nested: any = []
-      for (let i = 0; i < 100; i++) {
-        nested = [nested]
-      }
-
-      // Should throw at maxContainerCount even though maxDepth is higher
       expect(() =>
-        jsonStringifyDeep(nested, {
-          maxDepth: 1000,
-          maxContainerCount: 50,
+        jsonStringifyDeep(input, {
+          ...UNSAFE_JSON_STRINGIFY_OPTIONS,
+          maxContainerLength: 5,
         }),
-      ).toThrow('Input is too large (exceeds max nesting factor of 50)')
-    })
-
-    it('counts wide structures with many children', () => {
-      // Create structure with many children at each level
-      const input = {
-        items: Array.from({ length: 10 }, () => ({
-          nested: Array.from({ length: 10 }, () => ({ value: 1 })),
-        })),
-      }
-
-      // This has: 1 root + 1 items array + 10 objects + 10 nested arrays + 100 objects = 122 total
-      expect(() =>
-        jsonStringifyDeep(input, { maxContainerCount: 150 }),
-      ).not.toThrow()
-      expect(() =>
-        jsonStringifyDeep(input, { maxContainerCount: 100 }),
-      ).toThrow('Input is too large (exceeds max nesting factor of 100)')
+      ).toThrow('at $.data.items')
     })
   })
 })

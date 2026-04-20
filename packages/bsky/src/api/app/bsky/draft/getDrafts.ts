@@ -1,4 +1,4 @@
-import { DatetimeString, lexParse } from '@atproto/lex'
+import { DatetimeString, lexParseJsonBytes } from '@atproto/lex'
 import { Server } from '@atproto/xrpc-server'
 import { AppContext } from '../../../../context'
 import { app } from '../../../../lexicons/index.js'
@@ -16,8 +16,9 @@ export default function (server: Server, ctx: AppContext) {
       })
 
       const draftViews = drafts.map((d): app.bsky.draft.defs.DraftView => {
-        const jsonStr = Buffer.from(d.payload).toString('utf8')
-        const draftWithId = lexParse<app.bsky.draft.defs.DraftWithId>(jsonStr)
+        const draftWithId = lexParseJsonBytes<app.bsky.draft.defs.DraftWithId>(
+          d.payload,
+        )
         return {
           id: draftWithId.id,
           draft: draftWithId.draft,
