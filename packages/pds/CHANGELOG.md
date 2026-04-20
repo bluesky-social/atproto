@@ -1,5 +1,14 @@
 # @atproto/pds
 
+## 0.4.220
+
+### Patch Changes
+
+- [#4857](https://github.com/bluesky-social/atproto/pull/4857) [`c531144`](https://github.com/bluesky-social/atproto/commit/c531144d248f3b88b417fe2bf99b3260225a8cbe) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Support `InvalidCredentialsError` in PDS oauth store
+
+- Updated dependencies [[`c531144`](https://github.com/bluesky-social/atproto/commit/c531144d248f3b88b417fe2bf99b3260225a8cbe)]:
+  - @atproto/oauth-provider@0.16.1
+
 ## 0.4.219
 
 ### Patch Changes

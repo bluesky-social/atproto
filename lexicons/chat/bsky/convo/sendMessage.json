@@ -4,6 +4,8 @@
   "defs": {
     "main": {
       "type": "procedure",
+      "description": "Sends a message to a conversation.",
+      "errors": [{ "name": "ConvoLocked" }, { "name": "InvalidConvo" }],
       "input": {
         "encoding": "application/json",
         "schema": {

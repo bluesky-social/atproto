@@ -2,6 +2,10 @@
   "lexicon": 1,
   "id": "chat.bsky.actor.defs",
   "defs": {
+    "memberRole": {
+      "type": "string",
+      "knownValues": ["owner", "standard"]
+    },
     "profileViewBasic": {
       "type": "object",
       "required": ["did", "handle"],
@@ -23,6 +27,7 @@
           "type": "array",
           "items": { "type": "ref", "ref": "com.atproto.label.defs#label" }
         },
+        "createdAt": { "type": "string", "format": "datetime" },
         "chatDisabled": {
           "type": "boolean",
           "description": "Set to true when the actor cannot actively participate in conversations"
@@ -30,6 +35,33 @@
         "verification": {
           "type": "ref",
           "ref": "app.bsky.actor.defs#verificationState"
+        },
+        "kind": {
+          "description": "Union field that has data specific to different kinds of convos.",
+          "type": "union",
+          "refs": ["#directConvoMember", "#groupConvoMember"]
+        }
+      }
+    },
+    "directConvoMember": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
+      "type": "object",
+      "properties": {}
+    },
+    "groupConvoMember": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
+      "type": "object",
+      "required": ["role"],
+      "properties": {
+        "addedBy": {
+          "description": "Who added this member. Only present if the member was added (instead of joining via link).",
+          "type": "ref",
+          "ref": "#profileViewBasic"
+        },
+        "role": {
+          "description": "The member's role within this conversation. Only present in group conversation member lists.",
+          "type": "ref",
+          "ref": "#memberRole"
         }
       }
     }

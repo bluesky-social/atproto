@@ -27,6 +27,7 @@ export interface OutputSchema {
   messages: (
     | $Typed<ChatBskyConvoDefs.MessageView>
     | $Typed<ChatBskyConvoDefs.DeletedMessageView>
+    | $Typed<ChatBskyConvoDefs.SystemMessageView>
     | { $type: string }
   )[]
 }
@@ -42,6 +43,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
+  error?: 'InvalidConvo'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess

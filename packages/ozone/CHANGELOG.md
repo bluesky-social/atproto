@@ -1,5 +1,14 @@
 # @atproto/ozone
 
+## 0.1.171
+
+### Patch Changes
+
+- [#4854](https://github.com/bluesky-social/atproto/pull/4854) [`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d) Thanks [@rafaeleyng](https://github.com/rafaeleyng)! - group chat lexicons
+
+- Updated dependencies [[`1d575ed`](https://github.com/bluesky-social/atproto/commit/1d575edac971644b000c9f6e69060337af0da14d)]:
+  - @atproto/api@0.19.9
+
 ## 0.1.170
 
 ### Patch Changes

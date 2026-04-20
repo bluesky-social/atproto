@@ -1,5 +1,11 @@
 # @atproto/oauth-provider
 
+## 0.16.1
+
+### Patch Changes
+
+- [#4857](https://github.com/bluesky-social/atproto/pull/4857) [`c531144`](https://github.com/bluesky-social/atproto/commit/c531144d248f3b88b417fe2bf99b3260225a8cbe) Thanks [@DavidBuchanan314](https://github.com/DavidBuchanan314)! - Add new onSignInFailed hook, plumb clientId through to existing sign-in hooks
+
 ## 0.16.0
 
 ### Minor Changes

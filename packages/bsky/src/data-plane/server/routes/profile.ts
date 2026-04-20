@@ -173,6 +173,10 @@ export default (db: Database): Partial<ServiceImpl<typeof Service>> => ({
           typeof chatDeclaration?.['allowIncoming'] === 'string'
             ? chatDeclaration['allowIncoming']
             : undefined,
+        allowGroupChatInvitesFrom:
+          typeof chatDeclaration?.['allowGroupInvites'] === 'string'
+            ? chatDeclaration['allowGroupInvites']
+            : undefined,
         upstreamStatus: row?.upstreamStatus ?? '',
         createdAt: profiles.records[i].createdAt, // @NOTE profile creation date not trusted in production
         priorityNotifications: row?.priorityNotifs ?? false,

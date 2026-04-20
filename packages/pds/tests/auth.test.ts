@@ -1,4 +1,5 @@
 import * as jose from 'jose'
+import { request as undiciRequest } from 'undici'
 import { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth'
@@ -119,6 +120,94 @@ describe('auth', () => {
     await expect(sessionPromise).rejects.toThrow(
       'Invalid identifier or password',
     )
+  })
+
+  it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password.', async () => {
+    const probe = async (info: { identifier: string; password: string }) => {
+      const res = await fetch(
+        `${network.pds.url}/xrpc/com.atproto.server.createSession`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(info),
+        },
+      )
+      return { status: res.status, body: await res.json() }
+    }
+
+    // bob.test was created above with password 'password'.
+    const unknownIdentifier = await probe({
+      identifier: 'no-such-user.test',
+      password: 'any-password',
+    })
+    const knownIdentifierWrongPassword = await probe({
+      identifier: 'bob.test',
+      password: 'wrong-password',
+    })
+
+    expect(knownIdentifierWrongPassword).toEqual(unknownIdentifier)
+    expect(unknownIdentifier).toEqual({
+      status: 401,
+      body: {
+        error: 'AuthenticationRequired',
+        message: 'Invalid identifier or password',
+      },
+    })
+  })
+
+  it('returns identical error responses for unknown identifier and known-identifier-with-wrong-password in the OAuth sign-in flow.', async () => {
+    const issuer = new URL(network.pds.url)
+    const csrfToken = 'a'.repeat(24)
+    const probe = async (credentials: {
+      username: string
+      password: string
+    }) => {
+      // @NOTE We use undici's low-level `request` rather than fetch(),
+      // because the WHATWG fetch API treats `sec-fetch-*` as forbidden
+      // request headers and silently overwrites them with its own values
+      // (notably `sec-fetch-mode: cors` in Node). The endpoint requires
+      // `same-origin` here, so we need raw header control.
+      const res = await undiciRequest(
+        `${issuer.origin}/@atproto/oauth-provider/~api/sign-in`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            // The endpoint restricts fetches to same-origin navigations
+            // from either `/oauth/authorize` or `/account[/*]`. Use the
+            // first-party `/account` path so we don't need a live OAuth
+            // authorization request to exist in the request store.
+            'sec-fetch-mode': 'same-origin',
+            'sec-fetch-site': 'same-origin',
+            origin: issuer.origin,
+            referer: `${issuer.origin}/account`,
+            'x-csrf-token': csrfToken,
+            cookie: `csrf-token=${csrfToken}`,
+          },
+          body: JSON.stringify({ locale: 'en', ...credentials }),
+        },
+      )
+      return { status: res.statusCode, body: await res.body.json() }
+    }
+
+    // bob.test was created above with password 'password'.
+    const unknownIdentifier = await probe({
+      username: 'no-such-user.test',
+      password: 'any-password',
+    })
+    const knownIdentifierWrongPassword = await probe({
+      username: 'bob.test',
+      password: 'wrong-password',
+    })
+
+    expect(knownIdentifierWrongPassword).toEqual(unknownIdentifier)
+    expect(unknownIdentifier).toEqual({
+      status: 400,
+      body: {
+        error: 'invalid_request',
+        error_description: 'Invalid identifier or password',
+      },
+    })
   })
 
   it('provides valid access and refresh token on session refresh.', async () => {
