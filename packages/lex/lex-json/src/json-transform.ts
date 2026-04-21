@@ -12,11 +12,11 @@ const OBJECT = Symbol('object')
 export type JsonTransformOptions = StackOptions & TransformValueOptions
 
 /**
- * Recursively transforms a value by applying a replacer function to all
- * nested *objects*. If the replacer function returns a non-undefined value,
- * that value is used in place of the original (without further transformation∏
- * of its children). If the replacer function returns undefined, the original
- * value is used (after transforming its children).
+ * Recursively transforms a value by applying a replacer function to all nested
+ * *objects*. If the replacer function returns a non-undefined value, that value
+ * is used in place of the original (without further transformation of its
+ * children). If the replacer function returns undefined, the original value is
+ * used (after transforming its children).
  *
  * If any transformation was applied to a branch of the nested input structure,
  * the function returns a new object/array with the transformations applied
@@ -28,13 +28,13 @@ export type JsonTransformOptions = StackOptions & TransformValueOptions
  * recursion. It also handles cyclic references by keeping track of visited
  * parent objects.
  *
- * The main purpose of this function if to transform lex-data structures, which
- * can be deeply nested, but should always be bound in size and should never
- * contain cyclic references.
+ * The main purpose of this function if to transform data structures, without
+ * hitting call stack limits, and without mutating the original input.
  *
- * The `strict` option can be used to enforce certain constraints on the input
- * data (namely disallowing numbers that are not safe integers, and forcing a
- * maximum depth limit), which can help catch errors in the input data.
+ * **IMPORTANT NOTE** the replacer should ALWAYS return a custom value for
+ * non-plain objects (e.g. Cids, Blobs, etc.) to avoid traversing into them,
+ * which can cause issues (cyclic references, copy of custom classes into plain
+ * objects, etc.).
  *
  * @internal
  */
@@ -74,8 +74,8 @@ export function jsonTransform<T>(
           )
         } else {
           // Leaf value. If the replacer returned a different value, we need to
-          // create a copy. Otherswise we can keep the original input value
-          // since it is unchanged.
+          // create a copy. Otherwise we can keep the original input value since
+          // it is unchanged.
           if (result !== value) {
             frame.copy ??= performCopy(parent, input.slice())
             frame.copy[index] = result
@@ -162,38 +162,37 @@ type TransformValueOptions = {
 }
 
 function transformValue<I, T extends (child: I & object) => any>(
-  input: I,
+  value: I,
   replacer: T,
   options?: TransformValueOptions,
   parent?: ParentRef,
 ): typeof OBJECT | typeof OMIT | I | ReturnType<T> {
-  switch (typeof input) {
-    case 'object':
-      if (input === null) return input
-      if (!Array.isArray(input)) {
-        const transformed = replacer(input)
-        if (transformed !== undefined) return transformed
-      }
+  switch (typeof value) {
+    case 'object': {
+      if (value === null) return value
+      if (Array.isArray(value)) return OBJECT
 
-      // We return a sentinel value to indicate that this is an object that
-      // should be traversed
+      const transformed = replacer(value)
+      if (transformed !== undefined) return transformed
+
       return OBJECT
+    }
     case 'number': {
-      if (options?.allowNonSafeIntegers ?? true) return input
-      if (Number.isSafeInteger(input)) return input
+      if (options?.allowNonSafeIntegers ?? true) return value
+      if (Number.isSafeInteger(value)) return value
 
       throw new TypeError(
-        `Invalid number (got ${input}) at ${stringifyPath(parent)}`,
+        `Invalid number (got ${value}) at ${stringifyPath(parent)}`,
       )
     }
     case 'boolean':
     case 'string':
-      return input
+      return value
     case 'undefined':
       // Return sentinel to indicate this property should be omitted
       // (matching JSON.stringify behavior for object properties)
       return OMIT
     default:
-      throw new TypeError(`Invalid ${typeof input} at ${stringifyPath(parent)}`)
+      throw new TypeError(`Invalid ${typeof value} at ${stringifyPath(parent)}`)
   }
 }

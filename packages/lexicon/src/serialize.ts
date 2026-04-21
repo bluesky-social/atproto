@@ -4,12 +4,11 @@ import {
   LegacyJsonValue,
   check,
   ipldToJson,
+  jsonToIpld,
 } from '@atproto/common-web'
 import { LexValue, MAX_PAYLOAD_NESTED_LEVELS } from '@atproto/lex-data'
 import {
   JsonTransformOptions,
-  JsonValue,
-  jsonToLex,
   jsonTransform,
   lexParse,
   lexStringify,
@@ -58,6 +57,10 @@ function lexObjectToIpld(value: object): IpldValue | void {
   if (value instanceof BlobRef) {
     return value.original
   }
+  // retain cids & bytes
+  if (CID.asCID(value) || value instanceof Uint8Array) {
+    return value
+  }
 }
 
 /**
@@ -67,9 +70,7 @@ export const ipldToLex = (input: IpldValue): LegacyLexValue => {
   return jsonTransform(input, ipldObjectToLex, LEGACY_IPLD_TRANSFORM_OPTIONS)
 }
 
-/**
- * @internal
- */
+/** @internal */
 function ipldObjectToLex(value: object): LegacyLexValue | void {
   // convert blobs, using hints to avoid expensive is() check
   if ('$type' in value && value.$type !== undefined) {
@@ -80,6 +81,10 @@ function ipldObjectToLex(value: object): LegacyLexValue | void {
     if (check.is(value, untypedJsonBlobRef)) {
       return new BlobRef(CID.parse(value.cid), value.mimeType, -1, value)
     }
+  }
+  // retain cids & bytes
+  if (CID.asCID(value) || value instanceof Uint8Array) {
+    return value
   }
 }
 
@@ -100,10 +105,12 @@ export const stringifyLex = (val: LegacyLexValue): string => {
 /**
  * @deprecated use {@link jsonToLex} from `@atproto/lex-json` instead
  */
-export const jsonToLexLegacy = (val: LegacyJsonValue): LegacyLexValue => {
-  return ipldToLex(jsonToLex(val as JsonValue, { strict: false }))
+const jsonToLexLegacy = (val: LegacyJsonValue): LegacyLexValue => {
+  return ipldToLex(jsonToIpld(val))
 }
 
+// @NOTE we use a different name internally to avoid conflict with jsonToLex
+// from `@atproto/lex-json`.
 export { jsonToLexLegacy as jsonToLex }
 
 /**
