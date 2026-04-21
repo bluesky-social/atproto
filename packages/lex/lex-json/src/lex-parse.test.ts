@@ -1,5 +1,4 @@
-import assert from 'node:assert'
-import { describe, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import { lexParse } from './lex-parse.js'
 
 describe(lexParse, () => {
@@ -27,8 +26,7 @@ describe(lexParse, () => {
     it('enforces depth limit in strict mode', () => {
       const depth = 2000
       const input = '['.repeat(depth) + ']'.repeat(depth)
-      assert.throws(
-        () => lexParse(input, { strict: true }),
+      expect(() => lexParse(input, { strict: true })).toThrow(
         'Input is too deeply nested',
       )
     })
@@ -46,10 +44,7 @@ describe(lexParse, () => {
 
       // Depth 5001 (5002 nested arrays) should throw
       const tooDeep = '['.repeat(5002) + ']'.repeat(5002)
-      assert.throws(
-        () => lexParse(tooDeep),
-        'Input is too deeply nested',
-      )
+      expect(() => lexParse(tooDeep)).toThrow('Input is too deeply nested')
     })
   })
 })
