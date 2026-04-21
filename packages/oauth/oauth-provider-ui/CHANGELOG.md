@@ -1,5 +1,11 @@
 # @atproto/oauth-provider-ui
 
+## 0.5.1
+
+### Patch Changes
+
+- [#4873](https://github.com/bluesky-social/atproto/pull/4873) [`84eb5ed`](https://github.com/bluesky-social/atproto/commit/84eb5ed95d145870a85ea380df3edf6c591c6310) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Fix reset password flow
+
 ## 0.5.0
 
 ### Minor Changes
