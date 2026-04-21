@@ -34,7 +34,6 @@ export class StatsComputer {
   destroyed = false
   processingPromise: Promise<void> = Promise.resolve()
   timer?: NodeJS.Timeout
-  readonly disabled: boolean
 
   constructor(
     private db: Database,
@@ -45,8 +44,10 @@ export class StatsComputer {
      * Set to -1 to disable the stats computer.
      */
     private intervalMinutes: number,
-  ) {
-    this.disabled = intervalMinutes < 1
+  ) {}
+
+  get disabled() {
+    return this.intervalMinutes < 1
   }
 
   start() {
