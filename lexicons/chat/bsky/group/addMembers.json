@@ -40,6 +40,13 @@
             "convo": {
               "type": "ref",
               "ref": "chat.bsky.convo.defs#convoView"
+            },
+            "addedMembers": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "chat.bsky.actor.defs#profileViewBasic"
+              }
             }
           }
         }

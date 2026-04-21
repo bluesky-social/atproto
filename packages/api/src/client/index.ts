@@ -165,6 +165,7 @@ import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/dele
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
 import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetConvoMembers from './types/chat/bsky/convo/getConvoMembers.js'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
@@ -504,6 +505,7 @@ export * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/dele
 export * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
 export * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 export * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+export * as ChatBskyConvoGetConvoMembers from './types/chat/bsky/convo/getConvoMembers.js'
 export * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 export * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
 export * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
@@ -3845,6 +3847,17 @@ export class ChatBskyConvoNS {
       .call('chat.bsky.convo.getConvoForMembers', params, undefined, opts)
       .catch((e) => {
         throw ChatBskyConvoGetConvoForMembers.toKnownErr(e)
+      })
+  }
+
+  getConvoMembers(
+    params?: ChatBskyConvoGetConvoMembers.QueryParams,
+    opts?: ChatBskyConvoGetConvoMembers.CallOptions,
+  ): Promise<ChatBskyConvoGetConvoMembers.Response> {
+    return this._client
+      .call('chat.bsky.convo.getConvoMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ChatBskyConvoGetConvoMembers.toKnownErr(e)
       })
   }
 

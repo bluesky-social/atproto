@@ -128,6 +128,7 @@ import * as ChatBskyConvoDeleteMessageForSelf from './types/chat/bsky/convo/dele
 import * as ChatBskyConvoGetConvo from './types/chat/bsky/convo/getConvo.js'
 import * as ChatBskyConvoGetConvoAvailability from './types/chat/bsky/convo/getConvoAvailability.js'
 import * as ChatBskyConvoGetConvoForMembers from './types/chat/bsky/convo/getConvoForMembers.js'
+import * as ChatBskyConvoGetConvoMembers from './types/chat/bsky/convo/getConvoMembers.js'
 import * as ChatBskyConvoGetLog from './types/chat/bsky/convo/getLog.js'
 import * as ChatBskyConvoGetMessages from './types/chat/bsky/convo/getMessages.js'
 import * as ChatBskyConvoLeaveConvo from './types/chat/bsky/convo/leaveConvo.js'
@@ -2021,6 +2022,18 @@ export class ChatBskyConvoNS {
     >,
   ) {
     const nsid = 'chat.bsky.convo.getConvoForMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getConvoMembers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ChatBskyConvoGetConvoMembers.QueryParams,
+      ChatBskyConvoGetConvoMembers.HandlerInput,
+      ChatBskyConvoGetConvoMembers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'chat.bsky.convo.getConvoMembers' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

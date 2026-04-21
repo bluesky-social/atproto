@@ -10286,7 +10286,7 @@ export const schemaDict = {
           },
           members: {
             description:
-              'Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. NOTE: TBD an endpoint to list all members.',
+              'Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members.',
             type: 'array',
             items: {
               type: 'ref',
@@ -10338,13 +10338,18 @@ export const schemaDict = {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here].',
         type: 'object',
-        required: ['name', 'lockStatus'],
+        required: ['name', 'lockStatus', 'memberCount'],
         properties: {
           name: {
             type: 'string',
             description: 'The display name of the group conversation.',
             maxGraphemes: 128,
             maxLength: 1280,
+          },
+          memberCount: {
+            type: 'integer',
+            description:
+              'The total number of members in the group conversation.',
           },
           joinLink: {
             type: 'ref',
@@ -10574,8 +10579,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataAddMember',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataAddMember',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10592,8 +10599,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataRemoveMember',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataRemoveMember',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10610,8 +10619,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataMemberJoin',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataMemberJoin',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10628,8 +10639,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataMemberLeave',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataMemberLeave',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10646,8 +10659,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataLockConvo',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataLockConvo',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10664,8 +10679,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataUnlockConvo',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataUnlockConvo',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10682,8 +10699,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataLockConvoPermanently',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataLockConvoPermanently',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10700,8 +10719,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataEditGroup',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataEditGroup',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10718,8 +10739,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataCreateJoinLink',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataCreateJoinLink',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10736,8 +10759,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataEditJoinLink',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataEditJoinLink',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10754,8 +10779,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataEnableJoinLink',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataEnableJoinLink',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -10772,8 +10799,10 @@ export const schemaDict = {
             type: 'string',
           },
           message: {
+            description:
+              'A system message with data of type #systemMessageDataDisableJoinLink',
             type: 'ref',
-            ref: 'lex:chat.bsky.convo.defs#systemMessageDataDisableJoinLink',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
         },
       },
@@ -11021,6 +11050,58 @@ export const schemaDict = {
               convo: {
                 type: 'ref',
                 ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  ChatBskyConvoGetConvoMembers: {
+    lexicon: 1,
+    id: 'chat.bsky.convo.getConvoMembers',
+    defs: {
+      main: {
+        type: 'query',
+        description: 'Returns a paginated list of members from a conversation.',
+        errors: [
+          {
+            name: 'InvalidConvo',
+          },
+        ],
+        parameters: {
+          type: 'params',
+          required: ['convoId'],
+          properties: {
+            convoId: {
+              type: 'string',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 50,
+            },
+            cursor: {
+              type: 'string',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['members'],
+            properties: {
+              cursor: {
+                type: 'string',
+              },
+              members: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+                },
               },
             },
           },
@@ -11793,6 +11874,13 @@ export const schemaDict = {
               convo: {
                 type: 'ref',
                 ref: 'lex:chat.bsky.convo.defs#convoView',
+              },
+              addedMembers: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+                },
               },
             },
           },
@@ -22919,6 +23007,7 @@ export const ids = {
   ChatBskyConvoGetConvo: 'chat.bsky.convo.getConvo',
   ChatBskyConvoGetConvoAvailability: 'chat.bsky.convo.getConvoAvailability',
   ChatBskyConvoGetConvoForMembers: 'chat.bsky.convo.getConvoForMembers',
+  ChatBskyConvoGetConvoMembers: 'chat.bsky.convo.getConvoMembers',
   ChatBskyConvoGetLog: 'chat.bsky.convo.getLog',
   ChatBskyConvoGetMessages: 'chat.bsky.convo.getMessages',
   ChatBskyConvoLeaveConvo: 'chat.bsky.convo.leaveConvo',

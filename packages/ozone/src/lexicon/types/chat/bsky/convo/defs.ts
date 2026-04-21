@@ -447,7 +447,7 @@ export interface ConvoView {
   $type?: 'chat.bsky.convo.defs#convoView'
   id: string
   rev: string
-  /** Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. NOTE: TBD an endpoint to list all members. */
+  /** Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members. */
   members: ChatBskyActorDefs.ProfileViewBasic[]
   lastMessage?:
     | $Typed<MessageView>
@@ -491,6 +491,8 @@ export interface GroupConvo {
   $type?: 'chat.bsky.convo.defs#groupConvo'
   /** The display name of the group conversation. */
   name: string
+  /** The total number of members in the group conversation. */
+  memberCount: number
   joinLink?: ChatBskyGroupDefs.JoinLinkView
   lockStatus: ConvoLockStatus
 }
@@ -713,7 +715,7 @@ export interface LogAddMember {
   $type?: 'chat.bsky.convo.defs#logAddMember'
   rev: string
   convoId: string
-  message: SystemMessageDataAddMember
+  message: SystemMessageView
 }
 
 const hashLogAddMember = 'logAddMember'
@@ -731,7 +733,7 @@ export interface LogRemoveMember {
   $type?: 'chat.bsky.convo.defs#logRemoveMember'
   rev: string
   convoId: string
-  message: SystemMessageDataRemoveMember
+  message: SystemMessageView
 }
 
 const hashLogRemoveMember = 'logRemoveMember'
@@ -749,7 +751,7 @@ export interface LogMemberJoin {
   $type?: 'chat.bsky.convo.defs#logMemberJoin'
   rev: string
   convoId: string
-  message: SystemMessageDataMemberJoin
+  message: SystemMessageView
 }
 
 const hashLogMemberJoin = 'logMemberJoin'
@@ -767,7 +769,7 @@ export interface LogMemberLeave {
   $type?: 'chat.bsky.convo.defs#logMemberLeave'
   rev: string
   convoId: string
-  message: SystemMessageDataMemberLeave
+  message: SystemMessageView
 }
 
 const hashLogMemberLeave = 'logMemberLeave'
@@ -785,7 +787,7 @@ export interface LogLockConvo {
   $type?: 'chat.bsky.convo.defs#logLockConvo'
   rev: string
   convoId: string
-  message: SystemMessageDataLockConvo
+  message: SystemMessageView
 }
 
 const hashLogLockConvo = 'logLockConvo'
@@ -803,7 +805,7 @@ export interface LogUnlockConvo {
   $type?: 'chat.bsky.convo.defs#logUnlockConvo'
   rev: string
   convoId: string
-  message: SystemMessageDataUnlockConvo
+  message: SystemMessageView
 }
 
 const hashLogUnlockConvo = 'logUnlockConvo'
@@ -821,7 +823,7 @@ export interface LogLockConvoPermanently {
   $type?: 'chat.bsky.convo.defs#logLockConvoPermanently'
   rev: string
   convoId: string
-  message: SystemMessageDataLockConvoPermanently
+  message: SystemMessageView
 }
 
 const hashLogLockConvoPermanently = 'logLockConvoPermanently'
@@ -843,7 +845,7 @@ export interface LogEditGroup {
   $type?: 'chat.bsky.convo.defs#logEditGroup'
   rev: string
   convoId: string
-  message: SystemMessageDataEditGroup
+  message: SystemMessageView
 }
 
 const hashLogEditGroup = 'logEditGroup'
@@ -861,7 +863,7 @@ export interface LogCreateJoinLink {
   $type?: 'chat.bsky.convo.defs#logCreateJoinLink'
   rev: string
   convoId: string
-  message: SystemMessageDataCreateJoinLink
+  message: SystemMessageView
 }
 
 const hashLogCreateJoinLink = 'logCreateJoinLink'
@@ -879,7 +881,7 @@ export interface LogEditJoinLink {
   $type?: 'chat.bsky.convo.defs#logEditJoinLink'
   rev: string
   convoId: string
-  message: SystemMessageDataEditJoinLink
+  message: SystemMessageView
 }
 
 const hashLogEditJoinLink = 'logEditJoinLink'
@@ -897,7 +899,7 @@ export interface LogEnableJoinLink {
   $type?: 'chat.bsky.convo.defs#logEnableJoinLink'
   rev: string
   convoId: string
-  message: SystemMessageDataEnableJoinLink
+  message: SystemMessageView
 }
 
 const hashLogEnableJoinLink = 'logEnableJoinLink'
@@ -915,7 +917,7 @@ export interface LogDisableJoinLink {
   $type?: 'chat.bsky.convo.defs#logDisableJoinLink'
   rev: string
   convoId: string
-  message: SystemMessageDataDisableJoinLink
+  message: SystemMessageView
 }
 
 const hashLogDisableJoinLink = 'logDisableJoinLink'

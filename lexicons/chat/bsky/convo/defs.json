@@ -288,7 +288,7 @@
         "id": { "type": "string" },
         "rev": { "type": "string" },
         "members": {
-          "description": "Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. NOTE: TBD an endpoint to list all members.",
+          "description": "Members of this conversation. For direct convos, it will be an immutable list of the 2 members. For group convos, it will a list of important members (the first few members, the viewer, the member who invited the viewer, the member who sent the last message, the member who sent the last reaction), but will not contain the full list of members. Use chat.bsky.convo.getConvoMembers to list all members.",
           "type": "array",
           "items": {
             "type": "ref",
@@ -325,13 +325,17 @@
     "groupConvo": {
       "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
       "type": "object",
-      "required": ["name", "lockStatus"],
+      "required": ["name", "lockStatus", "memberCount"],
       "properties": {
         "name": {
           "type": "string",
           "description": "The display name of the group conversation.",
           "maxGraphemes": 128,
           "maxLength": 1280
+        },
+        "memberCount": {
+          "type": "integer",
+          "description": "The total number of members in the group conversation."
         },
         "joinLink": {
           "type": "ref",
@@ -476,7 +480,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataAddMember" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataAddMember",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logRemoveMember": {
@@ -486,7 +494,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataRemoveMember" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataRemoveMember",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logMemberJoin": {
@@ -496,7 +508,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataMemberJoin" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataMemberJoin",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logMemberLeave": {
@@ -506,7 +522,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataMemberLeave" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataMemberLeave",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logLockConvo": {
@@ -516,7 +536,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataLockConvo" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataLockConvo",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logUnlockConvo": {
@@ -526,7 +550,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataUnlockConvo" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataUnlockConvo",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logLockConvoPermanently": {
@@ -537,8 +565,9 @@
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
         "message": {
+          "description": "A system message with data of type #systemMessageDataLockConvoPermanently",
           "type": "ref",
-          "ref": "#systemMessageDataLockConvoPermanently"
+          "ref": "#systemMessageView"
         }
       }
     },
@@ -549,7 +578,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataEditGroup" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataEditGroup",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logCreateJoinLink": {
@@ -559,7 +592,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataCreateJoinLink" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataCreateJoinLink",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logEditJoinLink": {
@@ -569,7 +606,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataEditJoinLink" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataEditJoinLink",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logEnableJoinLink": {
@@ -579,7 +620,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataEnableJoinLink" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataEnableJoinLink",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logDisableJoinLink": {
@@ -589,7 +634,11 @@
       "properties": {
         "rev": { "type": "string" },
         "convoId": { "type": "string" },
-        "message": { "type": "ref", "ref": "#systemMessageDataDisableJoinLink" }
+        "message": {
+          "description": "A system message with data of type #systemMessageDataDisableJoinLink",
+          "type": "ref",
+          "ref": "#systemMessageView"
+        }
       }
     },
     "logIncomingJoinRequest": {
