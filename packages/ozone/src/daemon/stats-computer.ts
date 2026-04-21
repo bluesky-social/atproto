@@ -8,7 +8,7 @@ import { ReportStatsServiceCreator } from '../report/stats'
 const ADVISORY_LOCK_ID = 7_239_401
 
 /**
- * Background daemon that materializes report statistics every 15 minutes.
+ * Background daemon that materializes report statistics on an interval (default is 15 minutes).
  *
  * Each cycle computes calendar-day snapshots: today's stats are recomputed (in-progress day),
  * and yesterday's snapshot is finalized if it wasn't already. Historical snapshots (completed
@@ -34,22 +34,34 @@ export class StatsComputer {
   destroyed = false
   processingPromise: Promise<void> = Promise.resolve()
   timer?: NodeJS.Timeout
+  readonly disabled: boolean
 
   constructor(
     private db: Database,
     private reportStatsServiceCreator: ReportStatsServiceCreator,
-  ) {}
+    /**
+     * Minutes between stats computer cycles.
+     * Defaults to 15. Minimum is 1.
+     * Set to -1 to disable the stats computer.
+     */
+    private intervalMinutes: number,
+  ) {
+    this.disabled = intervalMinutes < 1
+  }
 
   start() {
     this.poll()
   }
 
   poll() {
-    if (this.destroyed) return
+    if (this.destroyed || this.disabled) return
     this.processingPromise = this.materializeStats()
       .catch((err) => dbLogger.error({ err }, 'stats materialization errored'))
       .finally(() => {
-        this.timer = setTimeout(() => this.poll(), getInterval())
+        this.timer = setTimeout(
+          () => this.poll(),
+          this.intervalMinutes * MINUTE,
+        )
       })
   }
 
@@ -86,6 +98,3 @@ export class StatsComputer {
     await this.processingPromise
   }
 }
-
-// Poll every 15 minutes
-const getInterval = (): number => 15 * MINUTE

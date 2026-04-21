@@ -121,7 +121,11 @@ export class DaemonContext {
     const queueRouter = new QueueRouter(db, queueService, cfg.service.did)
 
     const reportStatsService = ReportStatsService.creator()
-    const statsComputer = new StatsComputer(db, reportStatsService)
+    const statsComputer = new StatsComputer(
+      db,
+      reportStatsService,
+      cfg.stats.computerIntervalMinutes,
+    )
 
     // Only spawn the listener if verifier config exists and a jetstream URL is provided
     const verificationListener =
