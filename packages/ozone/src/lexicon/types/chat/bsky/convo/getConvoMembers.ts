@@ -9,29 +9,25 @@ import {
   is$typed as _is$typed,
   type OmitKey,
 } from '../../../../util'
-import type * as ChatBskyConvoDefs from '../convo/defs.js'
 import type * as ChatBskyActorDefs from '../actor/defs.js'
 
 const is$typed = _is$typed,
   validate = _validate
-const id = 'chat.bsky.group.addMembers'
+const id = 'chat.bsky.convo.getConvoMembers'
 
-export type QueryParams = {}
-
-export interface InputSchema {
+export type QueryParams = {
   convoId: string
-  members: string[]
+  limit: number
+  cursor?: string
 }
+export type InputSchema = undefined
 
 export interface OutputSchema {
-  convo: ChatBskyConvoDefs.ConvoView
-  addedMembers?: ChatBskyActorDefs.ProfileViewBasic[]
+  cursor?: string
+  members: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
-export interface HandlerInput {
-  encoding: 'application/json'
-  body: InputSchema
-}
+export type HandlerInput = void
 
 export interface HandlerSuccess {
   encoding: 'application/json'
@@ -42,16 +38,7 @@ export interface HandlerSuccess {
 export interface HandlerError {
   status: number
   message?: string
-  error?:
-    | 'AccountSuspended'
-    | 'BlockedActor'
-    | 'GroupInvitesDisabled'
-    | 'ConvoLocked'
-    | 'InsufficientRole'
-    | 'InvalidConvo'
-    | 'MemberLimitReached'
-    | 'NotFollowedBySender'
-    | 'RecipientNotFound'
+  error?: 'InvalidConvo'
 }
 
 export type HandlerOutput = HandlerError | HandlerSuccess
