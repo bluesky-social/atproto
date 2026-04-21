@@ -45,6 +45,9 @@ export const readEnv = (): OzoneEnvironment => {
     jetstreamUrl: envStr('OZONE_JETSTREAM_URL'),
     assignmentQueueDurationMs: envInt('OZONE_ASSIGNMENT_QUEUE_DURATION_MS'),
     assignmentReportDurationMs: envInt('OZONE_ASSIGNMENT_REPORT_DURATION_MS'),
+    statsComputerIntervalMinutes: envInt(
+      'OZONE_STATS_COMPUTER_INTERVAL_MINUTES',
+    ),
   }
 }
 
@@ -88,4 +91,5 @@ export type OzoneEnvironment = {
   jetstreamUrl?: string
   assignmentQueueDurationMs?: number
   assignmentReportDurationMs?: number
+  statsComputerIntervalMinutes?: number
 }

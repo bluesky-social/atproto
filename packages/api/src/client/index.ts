@@ -309,11 +309,14 @@ import * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 import * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 import * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 import * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+import * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
 import * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+import * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 import * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 import * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 import * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 import * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+import * as ToolsOzoneReportRefreshStats from './types/tools/ozone/report/refreshStats.js'
 import * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 import * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 import * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -647,11 +650,14 @@ export * as ToolsOzoneReportAssignModerator from './types/tools/ozone/report/ass
 export * as ToolsOzoneReportCreateActivity from './types/tools/ozone/report/createActivity.js'
 export * as ToolsOzoneReportDefs from './types/tools/ozone/report/defs.js'
 export * as ToolsOzoneReportGetAssignments from './types/tools/ozone/report/getAssignments.js'
+export * as ToolsOzoneReportGetHistoricalStats from './types/tools/ozone/report/getHistoricalStats.js'
 export * as ToolsOzoneReportGetLatestReport from './types/tools/ozone/report/getLatestReport.js'
+export * as ToolsOzoneReportGetLiveStats from './types/tools/ozone/report/getLiveStats.js'
 export * as ToolsOzoneReportGetReport from './types/tools/ozone/report/getReport.js'
 export * as ToolsOzoneReportListActivities from './types/tools/ozone/report/listActivities.js'
 export * as ToolsOzoneReportQueryReports from './types/tools/ozone/report/queryReports.js'
 export * as ToolsOzoneReportReassignQueue from './types/tools/ozone/report/reassignQueue.js'
+export * as ToolsOzoneReportRefreshStats from './types/tools/ozone/report/refreshStats.js'
 export * as ToolsOzoneReportUnassignModerator from './types/tools/ozone/report/unassignModerator.js'
 export * as ToolsOzoneSafelinkAddRule from './types/tools/ozone/safelink/addRule.js'
 export * as ToolsOzoneSafelinkDefs from './types/tools/ozone/safelink/defs.js'
@@ -5706,6 +5712,18 @@ export class ToolsOzoneReportNS {
     )
   }
 
+  getHistoricalStats(
+    params?: ToolsOzoneReportGetHistoricalStats.QueryParams,
+    opts?: ToolsOzoneReportGetHistoricalStats.CallOptions,
+  ): Promise<ToolsOzoneReportGetHistoricalStats.Response> {
+    return this._client.call(
+      'tools.ozone.report.getHistoricalStats',
+      params,
+      undefined,
+      opts,
+    )
+  }
+
   getLatestReport(
     params?: ToolsOzoneReportGetLatestReport.QueryParams,
     opts?: ToolsOzoneReportGetLatestReport.CallOptions,
@@ -5715,6 +5733,18 @@ export class ToolsOzoneReportNS {
       .catch((e) => {
         throw ToolsOzoneReportGetLatestReport.toKnownErr(e)
       })
+  }
+
+  getLiveStats(
+    params?: ToolsOzoneReportGetLiveStats.QueryParams,
+    opts?: ToolsOzoneReportGetLiveStats.CallOptions,
+  ): Promise<ToolsOzoneReportGetLiveStats.Response> {
+    return this._client.call(
+      'tools.ozone.report.getLiveStats',
+      params,
+      undefined,
+      opts,
+    )
   }
 
   getReport(
@@ -5758,6 +5788,18 @@ export class ToolsOzoneReportNS {
   ): Promise<ToolsOzoneReportReassignQueue.Response> {
     return this._client.call(
       'tools.ozone.report.reassignQueue',
+      opts?.qp,
+      data,
+      opts,
+    )
+  }
+
+  refreshStats(
+    data?: ToolsOzoneReportRefreshStats.InputSchema,
+    opts?: ToolsOzoneReportRefreshStats.CallOptions,
+  ): Promise<ToolsOzoneReportRefreshStats.Response> {
+    return this._client.call(
+      'tools.ozone.report.refreshStats',
       opts?.qp,
       data,
       opts,

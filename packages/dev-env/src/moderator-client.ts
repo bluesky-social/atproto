@@ -243,4 +243,10 @@ export class ModeratorClient {
 
     return data
   }
+
+  async computeStats() {
+    const db = this.ozone.ctx.db
+    const statsService = this.ozone.ctx.reportStatsService(db)
+    await statsService.materializeAll({ force: true })
+  }
 }

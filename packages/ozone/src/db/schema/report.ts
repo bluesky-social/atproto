@@ -19,6 +19,7 @@ export interface Report {
   updatedAt: string
   assignedTo: string | null // DID of permanently assigned moderator, null if unassigned
   assignedAt: string | null // When the permanent assignment was created
+  closedAt: string | null
 }
 
 export type PartialDB = {

@@ -30,6 +30,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .on('moderator_assignment')
     .columns(['reportId', 'endAt'])
     .execute()
+
+  // Partial index for permanent report assignments by moderator
+  await sql`CREATE INDEX idx_assignment_permanent_did ON moderator_assignment (did, "reportId") WHERE "endAt" IS NULL`.execute(
+    db,
+  )
 }
 
 export async function down(db: Kysely<unknown>): Promise<void> {

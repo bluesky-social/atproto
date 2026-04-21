@@ -380,13 +380,16 @@ export async function processReportAction(
   // Bulk UPDATE reports that passed validation
   // All valid reports share the same target status since they come from the
   // same event type, so a single UPDATE is sufficient.
+  const status = validUpdates[0].nextStatus
+  const closedAt = status === 'closed' ? now : null
   await db.db
     .updateTable('report')
     .set({
       actionEventIds: sql`COALESCE("actionEventIds", '[]'::jsonb) || ${JSON.stringify(eventId)}::jsonb`,
       actionNote: reportAction.note ?? null,
-      status: validUpdates[0].nextStatus,
+      status,
       updatedAt: now,
+      closedAt,
     })
     .where('id', 'in', updateIds)
     .execute()
