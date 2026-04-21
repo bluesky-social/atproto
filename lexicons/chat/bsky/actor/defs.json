@@ -39,7 +39,11 @@
         "kind": {
           "description": "Union field that has data specific to different kinds of convos.",
           "type": "union",
-          "refs": ["#directConvoMember", "#groupConvoMember"]
+          "refs": [
+            "#directConvoMember",
+            "#groupConvoMember",
+            "#pastGroupConvoMember"
+          ]
         }
       }
     },
@@ -49,7 +53,7 @@
       "properties": {}
     },
     "groupConvoMember": {
-      "description": "[NOTE: This is under active development and should be considered unstable while this note is here].",
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. A current group convo member.",
       "type": "object",
       "required": ["role"],
       "properties": {
@@ -64,6 +68,12 @@
           "ref": "#memberRole"
         }
       }
+    },
+    "pastGroupConvoMember": {
+      "description": "[NOTE: This is under active development and should be considered unstable while this note is here]. A past group convo member.",
+      "type": "object",
+      "required": [],
+      "properties": {}
     }
   }
 }
