@@ -44,7 +44,7 @@ export function jsonTransform<T>(
   options?: JsonTransformOptions,
 ): T {
   const transformOptions: Required<TransformValueOptions> = {
-    allowNonSafeInteger: options?.allowNonSafeInteger ?? false,
+    allowNonSafeIntegers: options?.allowNonSafeIntegers ?? false,
   }
 
   const inputValue = transformValue(input, replacer, transformOptions)
@@ -158,7 +158,7 @@ function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
 
 type TransformValueOptions = {
   /** @default true */
-  allowNonSafeInteger?: boolean
+  allowNonSafeIntegers?: boolean
 }
 
 function transformValue<I, T extends (child: I & object) => any>(
@@ -179,7 +179,7 @@ function transformValue<I, T extends (child: I & object) => any>(
       // should be traversed
       return OBJECT
     case 'number': {
-      if (options?.allowNonSafeInteger ?? true) return input
+      if (options?.allowNonSafeIntegers ?? true) return input
       if (Number.isSafeInteger(input)) return input
 
       throw new TypeError(

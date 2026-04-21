@@ -8,8 +8,8 @@ export type SpecialJsonObjectOptions = {
   /**
    * When true, objects that contain a `$link`, `$bytes`, or `$type` property
    * but do not conform to the expected structure of those special objects will
-   * be rejected with a `TypeError`. When false (default), such objects will be
-   * treated as plain JSON objects without special parsing.
+   * be rejected. When false (default), such objects will be treated as plain
+   * JSON objects without special parsing.
    *
    * @default false
    */

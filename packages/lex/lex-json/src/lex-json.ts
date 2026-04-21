@@ -1,4 +1,4 @@
-import { LexValue } from '@atproto/lex-data'
+import { LexValue, MAX_PAYLOAD_NESTED_LEVELS } from '@atproto/lex-data'
 import { JsonTransformOptions, jsonTransform } from './json-transform.js'
 import { JsonValue } from './json.js'
 import {
@@ -6,6 +6,17 @@ import {
   encodeSpecialJsonObject,
   parseSpecialJsonObject,
 } from './special-objects.js'
+
+/**
+ * Allows to ensure that if new options are added to the input options type,
+ * they will be explicitly handled in the function implementation. This is
+ * useful to prevent accidentally forgetting to handle new options added to the
+ */
+type Explicit<T> = {
+  // @NOTE The `& string` part is the trick that allows to loose the
+  // "optionality" meta property of the keys
+  [K in keyof T & string]: T[K]
+}
 
 /**
  * Options for {@link jsonToLex} function
@@ -22,7 +33,7 @@ export type JsonToLexOptions = JsonTransformOptions & SpecialJsonObjectOptions
  *
  * - `{$link: string}` objects are converted to `Cid` objects
  * - `{$bytes: string}` objects are converted to `Uint8Array` instances
- * - number should be safe integers (unless `allowNonSafeInteger` option is
+ * - number should be safe integers (unless `allowNonSafeIntegers` option is
  *   enabled)
  * - nesting levels, container lengths, and object key lengths are limited to
  *   prevent excessively large structures (limits can be configured with
@@ -72,20 +83,15 @@ export function jsonToLex(
   input: JsonValue,
   {
     strict = false,
-    allowNonSafeInteger = !strict,
-    maxNestedLevels = strict ? undefined : 5_000,
+    allowNonSafeIntegers = !strict,
+    maxNestedLevels = strict ? undefined : MAX_PAYLOAD_NESTED_LEVELS,
     maxContainerLength = strict ? undefined : Infinity,
     maxObjectKeyLen = strict ? undefined : Infinity,
   }: JsonToLexOptions = {},
 ): LexValue {
-  const options: {
-    // Ensures that new options to JsonToLexOptions are explicitly handled here.
-    // The "& string" part is the trick that allows to loose the "optionality"
-    // meta property of the keys.
-    [K in keyof JsonToLexOptions & string]: JsonToLexOptions[K] | undefined
-  } = {
+  const options: Explicit<JsonToLexOptions> = {
     strict,
-    allowNonSafeInteger,
+    allowNonSafeIntegers,
     maxNestedLevels,
     maxContainerLength,
     maxObjectKeyLen,
@@ -140,26 +146,15 @@ export function lexToJson(
   input: LexValue,
   {
     strict = false,
-    allowNonSafeInteger = !strict,
-    // @NOTE because lexToJson is often used as a step to re-serialize Lexicon
-    // data to JSON/CBOR that was may have been parsed through jsonToLex (with a
-    // potentially deep nesting level), and then is being re-serialized nested
-    // in a parent structure, we need to allow for some additional nesting
-    // levels here to avoid hitting limits when re-serializing. We avoid using
-    // Infinity here because cyclic checks are pretty expensive.
-    maxNestedLevels = strict ? undefined : 5_000 + 10,
+    allowNonSafeIntegers = !strict,
+    maxNestedLevels = strict ? undefined : MAX_PAYLOAD_NESTED_LEVELS,
     maxContainerLength = strict ? undefined : Infinity,
     maxObjectKeyLen = strict ? undefined : Infinity,
   }: LexToJsonOptions = {},
 ): JsonValue {
-  const options: {
-    // Ensures that new options to LexToJsonOptions are explicitly handled here.
-    // The "& string" part is the trick that allows to loose the "optionality"
-    // meta property of the keys.
-    [K in keyof LexToJsonOptions & string]: LexToJsonOptions[K] | undefined
-  } = {
+  const options: Explicit<LexToJsonOptions> = {
     strict,
-    allowNonSafeInteger,
+    allowNonSafeIntegers,
     maxNestedLevels,
     maxContainerLength,
     maxObjectKeyLen,

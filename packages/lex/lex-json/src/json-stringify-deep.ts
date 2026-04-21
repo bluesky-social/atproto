@@ -154,7 +154,7 @@ type EncodePrimitiveOptions = {
    *
    * @default false
    */
-  allowNonSafeInteger?: boolean
+  allowNonSafeIntegers?: boolean
 }
 
 /**
@@ -172,7 +172,7 @@ function encodePrimitive(
       if (value === null) return 'null'
       return OBJECT
     case 'number':
-      if (options?.allowNonSafeInteger) return JSON.stringify(value)
+      if (options?.allowNonSafeIntegers) return JSON.stringify(value)
       if (Number.isSafeInteger(value)) return JSON.stringify(value)
       throw new TypeError(
         `Invalid number (got ${value}) at ${stringifyPath(parent)}`,

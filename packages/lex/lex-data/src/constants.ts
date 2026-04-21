@@ -74,3 +74,9 @@ export const MAX_CBOR_CONTAINER_LEN = 131072 // 128 * 1024
  * @see {@link https://atproto.com/guides/data-validation#recommended-data-limits}
  */
 export const MAX_CBOR_OBJECT_KEY_LEN = 8192
+
+/**
+ * Similar to {@link MAX_CBOR_NESTED_LEVELS}, but for parsing of JSON payloads
+ * from other services.
+ */
+export const MAX_PAYLOAD_NESTED_LEVELS = 5_000

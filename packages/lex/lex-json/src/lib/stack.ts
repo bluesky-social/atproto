@@ -47,25 +47,22 @@ export type StackFrame = ArrayFrame | ObjectFrame
 export type StackOptions = {
   /**
    * The maximum allowed depth of nested structures. If the input exceeds this
-   * depth, a TypeError will be thrown.
+   * depth, an error will be thrown.
    *
-   * @see {@link MAX_CBOR_NESTED_LEVELS}
    * @default MAX_CBOR_NESTED_LEVELS
    */
   maxNestedLevels?: number
   /**
    * The maximum allowed length of arrays and objects. If the input exceeds this
-   * length, a TypeError will be thrown.
+   * length, an error will be thrown.
    *
-   * @see {@link MAX_CBOR_CONTAINER_LEN}
    * @default MAX_CBOR_CONTAINER_LEN
    */
   maxContainerLength?: number
   /**
-   * The maximum allowed length of object keys. If a key exceeds this length, a
-   * TypeError will be thrown.
+   * The maximum allowed length of object keys. If a key exceeds this length, an
+   * error will be thrown.
    *
-   * @see {@link MAX_CBOR_OBJECT_KEY_LEN}
    * @default MAX_CBOR_OBJECT_KEY_LEN
    */
   maxObjectKeyLen?: number

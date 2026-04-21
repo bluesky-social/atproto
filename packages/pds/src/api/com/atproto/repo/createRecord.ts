@@ -1,4 +1,4 @@
-import { parseCid } from '@atproto/lex-data'
+import { MAX_CBOR_NESTED_LEVELS, parseCid } from '@atproto/lex-data'
 import { InvalidRecordKeyError } from '@atproto/syntax'
 import {
   AuthRequiredError,
@@ -45,7 +45,12 @@ export default function (server: Server, ctx: AppContext) {
       },
     ],
     opts: {
-      inputParseStrict: true,
+      inputProcessingOptions: {
+        strict: true,
+        // @NOTE We add 1 here because the top-level body counts as a level.
+        maxNestedLevels: MAX_CBOR_NESTED_LEVELS + 1,
+        // Other limits will be derived from strict mode.
+      },
     },
     handler: async ({ input, auth }) => {
       const { repo, collection, rkey, record, swapCommit, validate } =

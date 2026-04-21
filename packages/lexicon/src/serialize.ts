@@ -5,7 +5,7 @@ import {
   check,
   ipldToJson,
 } from '@atproto/common-web'
-import { LexValue } from '@atproto/lex-data'
+import { LexValue, MAX_PAYLOAD_NESTED_LEVELS } from '@atproto/lex-data'
 import {
   JsonTransformOptions,
   JsonValue,
@@ -32,20 +32,14 @@ export type { LegacyLexValue as LexValue }
 export type RepoRecord = Record<string, LegacyLexValue>
 
 /**
- * {@link lexToIpld} and  {@link ipldToLex} used to work with a recursive
- * implementation that effectively limited the nesting depth to ~1300 levels in
- * v8 (based on the default --stack-size=864 kBytes). It was also "non-strict"
- * in that it allowed numbers outside of the safe integer range, and had no
- * limits on container lengths or object key lengths.
+ * Lenient conversion defaults for {@link jsonToLex} and {@link lexToJson}.
  *
- * To remain backwards consistent with existing data and avoid breaking changes,
- * these (deprecated) functions will continue to use the same "non-strict"
- * options and nesting limits.
+ * @internal
  */
 const LEGACY_IPLD_TRANSFORM_OPTIONS: JsonTransformOptions = Object.freeze({
-  allowNonSafeInteger: true,
+  allowNonSafeIntegers: true,
   maxContainerLength: Infinity,
-  maxNestedLevels: 1300,
+  maxNestedLevels: MAX_PAYLOAD_NESTED_LEVELS,
   maxObjectKeyLen: Infinity,
 })
 

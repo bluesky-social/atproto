@@ -2,4 +2,4 @@
 '@atproto/xrpc-server': patch
 ---
 
-Support serialization of very deeply nested JSON structures
+Fix error when "stringifying" deeply nested JSON data in responses.

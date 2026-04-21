@@ -93,17 +93,17 @@ describe(jsonTransform, () => {
   describe('strict mode', () => {
     it('rejects invalid numbers in strict mode', () => {
       expect(() =>
-        jsonTransform(123.456, noop, { allowNonSafeInteger: false }),
+        jsonTransform(123.456, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number (got 123.456) at $')
       expect(() =>
         jsonTransform(Number.MAX_SAFE_INTEGER + 1, noop, {
-          allowNonSafeInteger: false,
+          allowNonSafeIntegers: false,
         }),
       ).toThrow('Invalid number (got 9007199254740992) at $')
     })
 
     it('allows non-integer numbers in non-strict mode', () => {
-      expect(jsonTransform(123.456, noop, { allowNonSafeInteger: true })).toBe(
+      expect(jsonTransform(123.456, noop, { allowNonSafeIntegers: true })).toBe(
         123.456,
       )
     })
@@ -311,7 +311,7 @@ describe(jsonTransform, () => {
       }
 
       expect(() =>
-        jsonTransform(nested, noop, { allowNonSafeInteger: false }),
+        jsonTransform(nested, noop, { allowNonSafeIntegers: false }),
       ).toThrow(/Input is too deeply nested/)
     })
 
@@ -382,30 +382,30 @@ describe(jsonTransform, () => {
     })
   })
 
-  describe('allowNonSafeInteger option', () => {
-    it('allows non-integers when allowNonSafeInteger is true', () => {
+  describe('allowNonSafeIntegers option', () => {
+    it('allows non-integers when allowNonSafeIntegers is true', () => {
       const input = { value: 123.456, nested: { pi: 3.14159 } }
-      const result = jsonTransform(input, noop, { allowNonSafeInteger: true })
+      const result = jsonTransform(input, noop, { allowNonSafeIntegers: true })
       expect(result).toStrictEqual({ value: 123.456, nested: { pi: 3.14159 } })
     })
 
-    it('rejects non-integers when allowNonSafeInteger is false', () => {
+    it('rejects non-integers when allowNonSafeIntegers is false', () => {
       const input = { value: 123.456 }
       expect(() =>
-        jsonTransform(input, noop, { allowNonSafeInteger: false }),
+        jsonTransform(input, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number (got 123.456)')
     })
 
-    it('rejects non-safe integers when allowNonSafeInteger is false', () => {
+    it('rejects non-safe integers when allowNonSafeIntegers is false', () => {
       const input = { value: Number.MAX_SAFE_INTEGER + 1 }
       expect(() =>
-        jsonTransform(input, noop, { allowNonSafeInteger: false }),
+        jsonTransform(input, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number')
     })
 
-    it('allows safe integers when allowNonSafeInteger is false', () => {
+    it('allows safe integers when allowNonSafeIntegers is false', () => {
       const input = { value: 42, nested: { count: -100 } }
-      const result = jsonTransform(input, noop, { allowNonSafeInteger: false })
+      const result = jsonTransform(input, noop, { allowNonSafeIntegers: false })
       expect(result).toStrictEqual({ value: 42, nested: { count: -100 } })
     })
   })
