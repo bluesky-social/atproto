@@ -59,3 +59,12 @@ export type ServiceAuthOutput = {
     lxm: string
   }
 }
+
+export type SpaceCredentialOutput = {
+  credentials: {
+    type: 'space_credential'
+    iss: string
+    space: string
+    clientId: string
+  }
+}
