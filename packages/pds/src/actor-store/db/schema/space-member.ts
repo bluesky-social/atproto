@@ -1,6 +1,7 @@
 export interface SpaceMember {
   space: string
   did: string
+  memberRev: string
   addedAt: string
 }
 

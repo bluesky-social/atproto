@@ -1,8 +1,7 @@
 export interface Space {
   uri: string
   isOwner: number // 0 or 1, sqlite boolean
-  setHash: Uint8Array | null
-  rev: string | null
+  isMember: number // 0 or 1, sqlite boolean
   createdAt: string
 }
 
