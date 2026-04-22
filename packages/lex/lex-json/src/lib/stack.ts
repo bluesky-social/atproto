@@ -3,7 +3,7 @@
 // nested structures (instead of recursion).
 //
 // The main purpose of this module is to support the implementation of
-// `jsonTransform` and `jsonStringifyDeep`, which need to traverse and transform
+// `iterativeTransform` and `jsonStringifyDeep`, which need to traverse and transform
 // deeply nested structures without hitting call stack limits.
 //
 // An added benefit of using a custom stack implementation is that it can
@@ -14,8 +14,8 @@ import {
   MAX_CBOR_CONTAINER_LEN,
   MAX_CBOR_NESTED_LEVELS,
   MAX_CBOR_OBJECT_KEY_LEN,
-  utf8Len,
 } from '@atproto/lex-data'
+import { validateMaxUtf8Length } from './validate-max-utf8-length'
 
 /** @internal */
 export type ArrayFrame = {
@@ -44,6 +44,7 @@ export type ParentRef =
 /** @internal */
 export type StackFrame = ArrayFrame | ObjectFrame
 
+export type PathSegment = string | number
 export type StackOptions = {
   /**
    * The maximum allowed depth of nested structures. If the input exceeds this
@@ -101,6 +102,10 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
     this.stack = [frame]
   }
 
+  get value() {
+    return this.root.copy ?? this.root.input
+  }
+
   *[Symbol.iterator](): IterableIterator<StackFrame | TCustom> {
     // @NOTE we cannot use a simple for..of loop or yield* here since the array
     // will be mutated during iteration (new frames will be added / removed from
@@ -123,9 +128,7 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
     const { options } = this
 
     if (parent.frame.depth >= options.maxNestedLevels) {
-      throw new TypeError(
-        `Input is too deeply nested at ${stringifyPath(parent)}`,
-      )
+      throw new TypeError(`Input is too deeply nested`)
     }
 
     if (
@@ -149,9 +152,7 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
       // since the copy cannot be part of the original input structure
       while (current && current.frame.copy == null) {
         if (current.frame.input === input) {
-          throw new TypeError(
-            `Circular reference detected at ${stringifyPath(parent)}`,
-          )
+          throw new TypeError(`Circular reference detected`)
         }
         current = current.frame.parent
       }
@@ -166,9 +167,7 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
   ): StackFrame {
     if (Array.isArray(input)) {
       if (input.length > this.options.maxContainerLength) {
-        throw new TypeError(
-          `Array is too long (length ${input.length}) at ${stringifyPath(parent)}`,
-        )
+        throw new TypeError(`Array is too long (length ${input.length})`)
       }
 
       return {
@@ -183,25 +182,18 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
 
       if (entries.length > this.options.maxContainerLength) {
         throw new TypeError(
-          `Object has too many entries (length ${entries.length}) at ${stringifyPath(parent)}`,
+          `Object has too many entries (length ${entries.length})`,
         )
       }
 
-      if (this.options.maxObjectKeyLen !== Infinity) {
-        for (let index = 0; index < entries.length; index++) {
-          const key = entries[index][0]
-          if (
-            // Optimized version of "utf8Len(key) > maxObjectKeyLen" that only
-            // computes utf8Len if needed.
-            key.length * 3 > this.options.maxObjectKeyLen &&
-            (key.length > this.options.maxObjectKeyLen * 3 ||
-              utf8Len(key) > this.options.maxObjectKeyLen)
-          ) {
-            const keyStr = `${JSON.stringify(key.slice(0, 10)).slice(0, -1)}\u2026"`
-            throw new TypeError(
-              `Object key is too long (${keyStr}) at ${stringifyPath(parent)}`,
-            )
-          }
+      for (let index = 0; index < entries.length; index++) {
+        const key = entries[index][0]
+        if (key === '__proto__') {
+          throw new TypeError(`Forbidden "__proto__" key`)
+        }
+        if (!validateMaxUtf8Length(key, this.options.maxObjectKeyLen)) {
+          const keyStr = `${JSON.stringify(key.slice(0, 10)).slice(0, -1)}\u2026"`
+          throw new TypeError(`Object key is too long (${keyStr})`)
         }
       }
 
@@ -218,48 +210,73 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
 }
 
 /** @internal */
-export function isArrayFrame(frame: StackFrame): frame is ArrayFrame {
+export function isArrayFrame<T extends { type: string }>(
+  frame: T,
+): frame is Extract<T, { type: 'array' }> {
   return frame.type === 'array'
 }
 
 /** @internal */
-const ERROR_PATH_MAX_DEPTH = 10
-
-/** @internal */
-export function stringifyPath(parent?: ParentRef): string {
-  const segments = flattenParentChain(parent).reverse()
-
-  if (segments.length > ERROR_PATH_MAX_DEPTH) {
-    const truncatedSegments = segments
-      .slice(-ERROR_PATH_MAX_DEPTH)
-      .map(stringifyParentRefIndex)
-    const lastSegment = stringifyParentRefIndex(segments[segments.length - 1])
-    return `$${truncatedSegments.join('')}\u2026${lastSegment}`
-  }
-
-  return `$${segments.map(stringifyParentRefIndex).join('')}`
+export function isObjectFrame<T extends { type: string }>(
+  frame: T,
+): frame is Extract<T, { type: 'object' }> {
+  return frame.type === 'object'
 }
 
-function flattenParentChain(parent?: ParentRef): ParentRef[] {
-  const segments: ParentRef[] = []
-
-  while (parent) {
-    segments.push(parent)
-    parent = parent.frame.parent
-  }
-
-  return segments
-}
-
-function stringifyParentRefIndex(parent: ParentRef): string {
-  if (parent.frame.type === 'array') {
-    return `[${parent.index}]`
+export function getCopy(frame: ArrayFrame): unknown[]
+export function getCopy(frame: ObjectFrame): Record<string, unknown>
+export function getCopy(frame: StackFrame): unknown {
+  if (isArrayFrame(frame)) {
+    return (frame.copy ??= performCopy(frame.parent, [...frame.input]))
   } else {
-    const key = parent.frame.entries[parent.index][0]
-    if (/^[a-zA-Z_$][a-zA-Z0-9_]*$/.test(key)) {
-      return `.${key}`
-    } else {
-      return `[${JSON.stringify(key)}]`
-    }
+    return (frame.copy ??= performCopy(frame.parent, { ...frame.input }))
   }
+}
+
+// When a transformation is applied to a value, we need to create a copy of all
+// of its ancestors in the input structure, so that the transformation is
+// applied immutably. This function performs that copying and returns the new
+// value to use in place of the original transformed value. The `parent`
+// argument is a reference to the parent frame in the stack, which contains the
+// input object and the key/index of the current value being transformed.
+function performCopy<T>(parent: ParentRef | undefined, newValue: T): T {
+  let currentCopy: unknown = newValue
+  let currentParent: ParentRef | undefined = parent
+
+  // We need to propagate the copy up the parent chain, so that all ancestors of
+  // the transformed node point to the new copy instead of the original input.
+  // We stop once we reach a parent that already has a copy. Note that we cannot
+  // use recursion here since the parent chain can be arbitrarily long (up to
+  // the maxNestedLevels limit).
+  while (currentParent) {
+    if (currentParent.frame.copy != null) {
+      if (isArrayFrame(currentParent.frame)) {
+        currentParent.frame.copy[currentParent.index] = currentCopy
+      } else {
+        const key = currentParent.frame.entries[currentParent.index][0]
+        currentParent.frame.copy[key] = currentCopy
+      }
+
+      // If the parent already has a copy, it means we've already propagated the
+      // new value up to that point, so we can stop here since the rest of the
+      // chain already points to the new copy.
+      break
+    }
+
+    // We need to create a copy of the parent's input, and save the current
+    // copy in the appropriate key/index, so that the parent frame now points to
+    if (isArrayFrame(currentParent.frame)) {
+      currentParent.frame.copy = currentParent.frame.input.slice()
+      currentParent.frame.copy[currentParent.index] = currentCopy
+    } else {
+      currentParent.frame.copy = Object.fromEntries(currentParent.frame.entries)
+      const key = currentParent.frame.entries[currentParent.index][0]
+      currentParent.frame.copy[key] = currentCopy
+    }
+
+    currentCopy = currentParent.frame.copy
+    currentParent = currentParent.frame.parent
+  }
+
+  return newValue
 }

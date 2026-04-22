@@ -1,7 +1,6 @@
 import { bench, describe } from 'vitest'
 import { JsonValue } from './json.js'
-import { JsonToLexOptions, jsonToLex } from './lex-json.js'
-import { type lexParse } from './lex-parse.js'
+import { LexParseOptions, lexParse } from './lex-parse.js'
 import { parseSpecialJsonObject } from './special-objects.js'
 
 // This benchmark compares the performance of two implementations of
@@ -88,37 +87,36 @@ describe('deeply nested structure', () => {
   benchJson('[{"e":'.repeat(100_000) + '"deep"' + '}]'.repeat(100_000))
 })
 
-function benchData(data: unknown, options?: JsonToLexOptions) {
+function benchData(data: unknown, options?: LexParseOptions) {
   return benchJson(JSON.stringify(data), options)
 }
 
-function benchJson(jsonString: string, options?: JsonToLexOptions) {
-  const withReviver: typeof lexParse = (input, options = { strict: true }) => {
-    return JSON.parse(input, (key: string, value: JsonValue) => {
-      switch (typeof value) {
-        case 'object':
-          if (value === null) return null
-          if (Array.isArray(value)) return value
-          return parseSpecialJsonObject(value, options) ?? value
-        case 'number':
-          if (Number.isSafeInteger(value)) return value
-          if (options && options.strict === false) return value
-          throw new TypeError(`Invalid non-integer number: ${value}`)
-        default:
-          return value
-      }
-    })
-  }
-
-  const naiveParse: typeof lexParse = (input, options = { strict: true }) => {
-    return jsonToLex(JSON.parse(input), options) as any
-  }
-
-  bench('naive', () => {
-    naiveParse(jsonString, options)
+function benchJson(jsonString: string, options?: LexParseOptions) {
+  bench(lexParse, () => {
+    lexParse(jsonString, options)
   })
 
-  bench('with-reviver', () => {
-    withReviver(jsonString, options)
+  bench(lexParseReviver, () => {
+    lexParseReviver(jsonString, options)
+  })
+}
+
+function lexParseReviver(
+  input: string,
+  options: LexParseOptions = { strict: true },
+) {
+  return JSON.parse(input, (key: string, value: JsonValue) => {
+    switch (typeof value) {
+      case 'object':
+        if (value === null) return null
+        if (Array.isArray(value)) return value
+        return parseSpecialJsonObject(value, options) ?? value
+      case 'number':
+        if (Number.isSafeInteger(value)) return value
+        if (options && options.strict === false) return value
+        throw new TypeError(`Invalid non-integer number: ${value}`)
+      default:
+        return value
+    }
   })
 }

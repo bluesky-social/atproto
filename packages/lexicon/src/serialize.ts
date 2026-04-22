@@ -8,8 +8,8 @@ import {
 } from '@atproto/common-web'
 import { LexValue, MAX_PAYLOAD_NESTED_LEVELS } from '@atproto/lex-data'
 import {
-  JsonTransformOptions,
-  jsonTransform,
+  IterativeTransformOptions,
+  iterativeTransform,
   lexParse,
   lexStringify,
 } from '@atproto/lex-json'
@@ -35,29 +35,29 @@ export type RepoRecord = Record<string, LegacyLexValue>
  *
  * @internal
  */
-const LEGACY_IPLD_TRANSFORM_OPTIONS: JsonTransformOptions = Object.freeze({
+const IPLD_TRANSFORM_OPTS: IterativeTransformOptions = Object.freeze({
   allowNonSafeIntegers: true,
   maxContainerLength: Infinity,
   maxNestedLevels: MAX_PAYLOAD_NESTED_LEVELS,
   maxObjectKeyLen: Infinity,
-})
+} satisfies Required<IterativeTransformOptions>)
 
 /**
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead (which doesn't need conversion to IPLD).
  */
 export const lexToIpld = (input: LegacyLexValue): IpldValue => {
-  return jsonTransform(input, lexObjectToIpld, LEGACY_IPLD_TRANSFORM_OPTIONS)
+  return iterativeTransform(input, lexObjectToIpld, IPLD_TRANSFORM_OPTS)
 }
 
 /**
  * @internal
  */
 function lexObjectToIpld(value: object): IpldValue | void {
-  // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
   if (value instanceof BlobRef) {
+    // convert blobs, leaving the original encoding so that we don't change CIDs on re-encode
     return value.original
   }
-  // retain cids & bytes
+
   if (CID.asCID(value) || value instanceof Uint8Array) {
     return value
   }
@@ -67,7 +67,7 @@ function lexObjectToIpld(value: object): IpldValue | void {
  * @deprecated Use `LexValue` from `@atproto/lex-data` instead instead (which doesn't need conversion to IPLD).
  */
 export const ipldToLex = (input: IpldValue): LegacyLexValue => {
-  return jsonTransform(input, ipldObjectToLex, LEGACY_IPLD_TRANSFORM_OPTIONS)
+  return iterativeTransform(input, ipldObjectToLex, IPLD_TRANSFORM_OPTS)
 }
 
 /** @internal */
@@ -82,7 +82,7 @@ function ipldObjectToLex(value: object): LegacyLexValue | void {
       return new BlobRef(CID.parse(value.cid), value.mimeType, -1, value)
     }
   }
-  // retain cids & bytes
+
   if (CID.asCID(value) || value instanceof Uint8Array) {
     return value
   }

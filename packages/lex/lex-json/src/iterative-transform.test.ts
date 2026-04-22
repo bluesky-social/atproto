@@ -1,21 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { JsonTransformOptions, jsonTransform } from './json-transform.js'
+import {
+  IterativeTransformOptions,
+  iterativeTransform,
+} from './iterative-transform.js'
 
 const noop = () => {}
 
-describe(jsonTransform, () => {
+describe(iterativeTransform, () => {
   describe('noop transform', () => {
     it('handles primitives', () => {
-      expect(jsonTransform(null, noop)).toBe(null)
-      expect(jsonTransform(true, noop)).toBe(true)
-      expect(jsonTransform(false, noop)).toBe(false)
-      expect(jsonTransform('hello', noop)).toBe('hello')
-      expect(jsonTransform(123, noop)).toBe(123)
+      expect(iterativeTransform(null, noop)).toBe(null)
+      expect(iterativeTransform(true, noop)).toBe(true)
+      expect(iterativeTransform(false, noop)).toBe(false)
+      expect(iterativeTransform('hello', noop)).toBe('hello')
+      expect(iterativeTransform(123, noop)).toBe(123)
     })
 
     it('handles empty arrays', () => {
       const input: unknown[] = []
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -24,7 +27,7 @@ describe(jsonTransform, () => {
 
     it('handles empty objects', () => {
       const input = {}
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -33,7 +36,7 @@ describe(jsonTransform, () => {
 
     it('handles arrays with primitives', () => {
       const input = [1, 2, 3]
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -42,7 +45,7 @@ describe(jsonTransform, () => {
 
     it('handles objects with primitives', () => {
       const input = { a: 1, b: 'hello', c: true }
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -58,7 +61,7 @@ describe(jsonTransform, () => {
         objects: { nested: { value: 1 } },
       }
 
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       // No copy
       expect(result).toBe(input)
       // No transformation
@@ -72,20 +75,20 @@ describe(jsonTransform, () => {
     })
 
     it('rejects undefined', () => {
-      expect(() => jsonTransform(undefined, noop)).toThrow(
-        'Invalid undefined value at $',
+      expect(() => iterativeTransform(undefined, noop)).toThrow(
+        'Invalid undefined value',
       )
     })
 
     it('rejects functions', () => {
-      expect(() => jsonTransform(() => {}, noop)).toThrow(
-        'Invalid function at $',
+      expect(() => iterativeTransform(() => {}, noop)).toThrow(
+        'Invalid function',
       )
     })
 
     it('rejects symbols', () => {
-      expect(() => jsonTransform(Symbol('test'), noop)).toThrow(
-        'Invalid symbol at $',
+      expect(() => iterativeTransform(Symbol('test'), noop)).toThrow(
+        'Invalid symbol',
       )
     })
   })
@@ -93,26 +96,26 @@ describe(jsonTransform, () => {
   describe('strict mode', () => {
     it('rejects invalid numbers in strict mode', () => {
       expect(() =>
-        jsonTransform(123.456, noop, { allowNonSafeIntegers: false }),
-      ).toThrow('Invalid number (got 123.456) at $')
+        iterativeTransform(123.456, noop, { allowNonSafeIntegers: false }),
+      ).toThrow('Invalid number (got 123.456)')
       expect(() =>
-        jsonTransform(Number.MAX_SAFE_INTEGER + 1, noop, {
+        iterativeTransform(Number.MAX_SAFE_INTEGER + 1, noop, {
           allowNonSafeIntegers: false,
         }),
-      ).toThrow('Invalid number (got 9007199254740992) at $')
+      ).toThrow('Invalid number (got 9007199254740992)')
     })
 
     it('allows non-integer numbers in non-strict mode', () => {
-      expect(jsonTransform(123.456, noop, { allowNonSafeIntegers: true })).toBe(
-        123.456,
-      )
+      expect(
+        iterativeTransform(123.456, noop, { allowNonSafeIntegers: true }),
+      ).toBe(123.456)
     })
   })
 
   describe('transformation', () => {
     it('applies transformation to root object', () => {
       const input = { type: 'test', value: 123 }
-      const result = jsonTransform(input, (obj) => {
+      const result = iterativeTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'test') {
           return { transformed: true }
         }
@@ -125,7 +128,7 @@ describe(jsonTransform, () => {
         outer: { type: 'special', value: 1 },
         regular: 'data',
       }
-      const result = jsonTransform(input, (obj) => {
+      const result = iterativeTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'special') {
           return { replaced: true }
         }
@@ -140,7 +143,7 @@ describe(jsonTransform, () => {
       const inner = { value: 1 }
       const input = [inner, { value: 2 }, { value: 3 }]
 
-      const result = jsonTransform(input, (obj) => {
+      const result = iterativeTransform(input, (obj) => {
         if ('value' in obj && obj.value === 2) {
           return { transformed: 2 }
         }
@@ -161,7 +164,7 @@ describe(jsonTransform, () => {
         toChange: { type: 'special' },
       }
 
-      const result = jsonTransform(input, (obj) => {
+      const result = iterativeTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'special') {
           return { changed: true }
         }
@@ -184,7 +187,7 @@ describe(jsonTransform, () => {
         nested = [{ level: i, child: nested }]
       }
 
-      const result = jsonTransform(nested, (obj) => {
+      const result = iterativeTransform(nested, (obj) => {
         if (isNested(obj) && obj.level === 15) {
           return { transformed: true, child: obj.child }
         }
@@ -209,7 +212,7 @@ describe(jsonTransform, () => {
         items: [{ id: 1 }, { id: 2 }],
       }
 
-      const result = jsonTransform(input, (obj) => {
+      const result = iterativeTransform(input, (obj) => {
         if ('id' in obj && obj.id === 1) {
           return { id: 1, transformed: true }
         }
@@ -222,7 +225,7 @@ describe(jsonTransform, () => {
 
     it('handles transformation that returns primitives', () => {
       const input = { wrapper: { type: 'number', value: 42 } }
-      const result = jsonTransform(input, (obj) => {
+      const result = iterativeTransform(input, (obj) => {
         if ('type' in obj && obj.type === 'number') {
           return 42 as any
         }
@@ -234,7 +237,7 @@ describe(jsonTransform, () => {
       const input = [1, 2, 3]
       let transformCalled = false
 
-      const result = jsonTransform(input, () => {
+      const result = iterativeTransform(input, () => {
         transformCalled = true
         return { should: 'not happen' }
       })
@@ -257,7 +260,9 @@ describe(jsonTransform, () => {
 
       const input = { nested }
       // The deepest array is at depth 5000
-      const result = jsonTransform(input, () => {}, { maxNestedLevels: 5000 })
+      const result = iterativeTransform(input, () => {}, {
+        maxNestedLevels: 5000,
+      })
 
       // Verify structure (5000 arrays)
       let check = (result as any).nested
@@ -281,7 +286,9 @@ describe(jsonTransform, () => {
 
       const input = { nested }
       // The deepest object is at depth 5000
-      const result = jsonTransform(input, () => {}, { maxNestedLevels: 5000 })
+      const result = iterativeTransform(input, () => {}, {
+        maxNestedLevels: 5000,
+      })
 
       // Verify structure (5000 objects)
       let check = (result as any).nested
@@ -299,7 +306,7 @@ describe(jsonTransform, () => {
       }
 
       expect(() =>
-        jsonTransform(nested, noop, { maxNestedLevels: 10 }),
+        iterativeTransform(nested, noop, { maxNestedLevels: 10 }),
       ).toThrow('Input is too deeply nested')
     })
 
@@ -311,7 +318,7 @@ describe(jsonTransform, () => {
       }
 
       expect(() =>
-        jsonTransform(nested, noop, { allowNonSafeIntegers: false }),
+        iterativeTransform(nested, noop, { allowNonSafeIntegers: false }),
       ).toThrow(/Input is too deeply nested/)
     })
 
@@ -325,13 +332,13 @@ describe(jsonTransform, () => {
 
       // Should not throw at exactly the limit (depth 5000)
       expect(() =>
-        jsonTransform(nested, noop, { maxNestedLevels: 5000 }),
+        iterativeTransform(nested, noop, { maxNestedLevels: 5000 }),
       ).not.toThrow()
 
       // Wrap one more time creates depth 5001, which should throw
       nested = [nested]
       expect(() =>
-        jsonTransform(nested, noop, { maxNestedLevels: 5000 }),
+        iterativeTransform(nested, noop, { maxNestedLevels: 5000 }),
       ).toThrow(/Input is too deeply nested/)
     })
   })
@@ -342,7 +349,7 @@ describe(jsonTransform, () => {
       const input = { items: longArray }
 
       expect(() =>
-        jsonTransform(input, noop, { maxContainerLength: 50 }),
+        iterativeTransform(input, noop, { maxContainerLength: 50 }),
       ).toThrow('Array is too long (length 51)')
     })
 
@@ -351,7 +358,7 @@ describe(jsonTransform, () => {
       const input = { items: array }
 
       expect(() =>
-        jsonTransform(input, noop, { maxContainerLength: 50 }),
+        iterativeTransform(input, noop, { maxContainerLength: 50 }),
       ).not.toThrow()
     })
   })
@@ -365,7 +372,7 @@ describe(jsonTransform, () => {
       const input = { data: largeObject }
 
       expect(() =>
-        jsonTransform(input, noop, { maxContainerLength: 50 }),
+        iterativeTransform(input, noop, { maxContainerLength: 50 }),
       ).toThrow('Object has too many entries (length 51)')
     })
 
@@ -377,7 +384,7 @@ describe(jsonTransform, () => {
       const input = { data: object }
 
       expect(() =>
-        jsonTransform(input, noop, { maxContainerLength: 50 }),
+        iterativeTransform(input, noop, { maxContainerLength: 50 }),
       ).not.toThrow()
     })
   })
@@ -385,33 +392,37 @@ describe(jsonTransform, () => {
   describe('allowNonSafeIntegers option', () => {
     it('allows non-integers when allowNonSafeIntegers is true', () => {
       const input = { value: 123.456, nested: { pi: 3.14159 } }
-      const result = jsonTransform(input, noop, { allowNonSafeIntegers: true })
+      const result = iterativeTransform(input, noop, {
+        allowNonSafeIntegers: true,
+      })
       expect(result).toStrictEqual({ value: 123.456, nested: { pi: 3.14159 } })
     })
 
     it('rejects non-integers when allowNonSafeIntegers is false', () => {
       const input = { value: 123.456 }
       expect(() =>
-        jsonTransform(input, noop, { allowNonSafeIntegers: false }),
+        iterativeTransform(input, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number (got 123.456)')
     })
 
     it('rejects non-safe integers when allowNonSafeIntegers is false', () => {
       const input = { value: Number.MAX_SAFE_INTEGER + 1 }
       expect(() =>
-        jsonTransform(input, noop, { allowNonSafeIntegers: false }),
+        iterativeTransform(input, noop, { allowNonSafeIntegers: false }),
       ).toThrow('Invalid number')
     })
 
     it('allows safe integers when allowNonSafeIntegers is false', () => {
       const input = { value: 42, nested: { count: -100 } }
-      const result = jsonTransform(input, noop, { allowNonSafeIntegers: false })
+      const result = iterativeTransform(input, noop, {
+        allowNonSafeIntegers: false,
+      })
       expect(result).toStrictEqual({ value: 42, nested: { count: -100 } })
     })
   })
 
   describe('circular reference detection', () => {
-    const options: JsonTransformOptions = {
+    const options: IterativeTransformOptions = {
       maxNestedLevels: Infinity,
     }
 
@@ -427,7 +438,7 @@ describe(jsonTransform, () => {
       // Create circular reference
       current.next = obj
 
-      expect(() => jsonTransform(obj, noop, options)).toThrow(
+      expect(() => iterativeTransform(obj, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -444,7 +455,7 @@ describe(jsonTransform, () => {
       }
       // Create circular reference
       current.push(arr)
-      expect(() => jsonTransform(arr, noop, options)).toThrow(
+      expect(() => iterativeTransform(arr, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -466,7 +477,7 @@ describe(jsonTransform, () => {
       }
       current.circular = intermediate
 
-      expect(() => jsonTransform(root, noop, options)).toThrow(
+      expect(() => iterativeTransform(root, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -480,7 +491,7 @@ describe(jsonTransform, () => {
       }
 
       // This should not throw - it's not a circular reference
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       expect(result).toStrictEqual({
         ref1: { shared: 'value' },
         ref2: { shared: 'value' },
@@ -498,7 +509,7 @@ describe(jsonTransform, () => {
       }
       current.circular = obj.data
 
-      expect(() => jsonTransform(obj, noop, options)).toThrow(
+      expect(() => iterativeTransform(obj, noop, options)).toThrow(
         'Circular reference detected',
       )
     })
@@ -507,14 +518,14 @@ describe(jsonTransform, () => {
   describe('undefined handling', () => {
     it('rejects undefined in arrays', () => {
       const input = [1, undefined as any, 3]
-      expect(() => jsonTransform(input, noop)).toThrow(
-        'Invalid undefined value at $[1]',
+      expect(() => iterativeTransform(input, noop)).toThrow(
+        'Invalid undefined value',
       )
     })
 
     it('removes undefined properties from objects', () => {
       const input = { a: 1, b: undefined as any, c: 3 }
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       expect(result).toStrictEqual({ a: 1, c: 3 })
       expect(result).not.toHaveProperty('b')
     })
@@ -524,7 +535,7 @@ describe(jsonTransform, () => {
         outer: { a: 1, b: undefined as any },
         keep: 'this',
       }
-      const result = jsonTransform(input, noop)
+      const result = iterativeTransform(input, noop)
       expect(result).not.toBe(input) // Object was copied
       expect(result).toStrictEqual({
         outer: { a: 1 },

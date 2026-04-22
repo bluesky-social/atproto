@@ -1,7 +1,76 @@
-import { assert, describe, expect, it } from 'vitest'
-import { lexParse } from './lex-parse.js'
+import { assert, describe, expect, it, test } from 'vitest'
+import { lexEquals } from '@atproto/lex-data'
+import {
+  acceptableVectors,
+  invalidVectors,
+  validVectors,
+} from './fixtures.test.js'
+import { lexParse, lexParseJsonBytes } from './lex-parse.js'
 
 describe(lexParse, () => {
+  describe('valid vectors', () => {
+    describe('strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
+          expect(
+            lexEquals(lex, lexParse(JSON.stringify(json), { strict: true })),
+          ).toBe(true)
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
+          expect(
+            lexEquals(lex, lexParse(JSON.stringify(json), { strict: false })),
+          ).toBe(true)
+        })
+      }
+    })
+  })
+
+  describe('acceptable vectors', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: true }),
+          ).toThrow()
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: false }),
+          ).not.toThrow()
+        })
+      }
+    })
+  })
+
+  describe('invalid vectors', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: true }),
+          ).toThrow()
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
+          expect(() =>
+            lexParse(JSON.stringify(json), { strict: false }),
+          ).not.toThrow()
+        })
+      }
+    })
+  })
+
   describe('depth limits', () => {
     it('supports very deeply nested structures', () => {
       const depth = 20000
@@ -45,6 +114,86 @@ describe(lexParse, () => {
       // Depth 5001 (5002 nested arrays) should throw
       const tooDeep = '['.repeat(5002) + ']'.repeat(5002)
       expect(() => lexParse(tooDeep)).toThrow('Input is too deeply nested')
+    })
+  })
+})
+
+describe(lexParseJsonBytes, () => {
+  describe('valid vectors', () => {
+    describe('strict mode', () => {
+      describe('with pretty-printed JSON', () => {
+        for (const { name, json, lex } of validVectors) {
+          test(name, () => {
+            const jsonBytes = Buffer.from(JSON.stringify(json, undefined, 4))
+            expect(
+              lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
+            ).toBe(true)
+          })
+        }
+      })
+      describe('with compact JSON', () => {
+        for (const { name, json, lex } of validVectors) {
+          test(name, () => {
+            const jsonBytes = Buffer.from(JSON.stringify(json))
+            expect(
+              lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: true })),
+            ).toBe(true)
+          })
+        }
+      })
+    })
+
+    describe('non-strict mode', () => {
+      for (const { name, json, lex } of validVectors) {
+        test(name, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(
+            lexEquals(lex, lexParseJsonBytes(jsonBytes, { strict: false })),
+          ).toBe(true)
+        })
+      }
+    })
+  })
+
+  describe('acceptable vectors', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() => lexParseJsonBytes(jsonBytes, { strict: true })).toThrow()
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of acceptableVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() =>
+            lexParseJsonBytes(jsonBytes, { strict: false }),
+          ).not.toThrow()
+        })
+      }
+    })
+  })
+
+  describe('invalid vectors', () => {
+    describe('strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() => lexParseJsonBytes(jsonBytes, { strict: true })).toThrow()
+        })
+      }
+    })
+    describe('non-strict mode', () => {
+      for (const { note, json } of invalidVectors) {
+        test(note, () => {
+          const jsonBytes = Buffer.from(JSON.stringify(json))
+          expect(() =>
+            lexParseJsonBytes(jsonBytes, { strict: false }),
+          ).not.toThrow()
+        })
+      }
     })
   })
 })

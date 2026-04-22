@@ -631,7 +631,7 @@ describe(jsonStringifyDeep, () => {
           ...UNSAFE_JSON_STRINGIFY_OPTIONS,
           maxContainerLength: 5,
         }),
-      ).toThrow('at $.data.items')
+      ).toThrow()
     })
   })
 })

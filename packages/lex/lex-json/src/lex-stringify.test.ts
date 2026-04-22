@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from 'vitest'
-import { validVectors } from './lex-json.test.js'
+import { validVectors } from './fixtures.test.js'
 import { lexStringify } from './lex-stringify.js'
 
 describe(lexStringify, () => {
@@ -23,7 +23,7 @@ describe(lexStringify, () => {
       type NestedObject = { level: number; nested?: NestedObject }
       const nestedObject: NestedObject = { level: 0 }
       let current: NestedObject = nestedObject
-      for (let i = 1; i <= 20_000; i++) {
+      for (let i = 1; i < 20_000; i++) {
         current.nested = { level: i }
         current = current.nested
       }
@@ -46,7 +46,7 @@ describe(lexStringify, () => {
       }
 
       expect(() => lexStringify(nestedObject, { maxNestedLevels })).toThrow(
-        /Input is too deeply nested/,
+        'Input is too deeply nested',
       )
     })
 
@@ -60,7 +60,7 @@ describe(lexStringify, () => {
       }
 
       expect(() => lexStringify(nestedObject, { strict: true })).toThrow(
-        /Input is too deeply nested/,
+        'Input is too deeply nested',
       )
     })
   })

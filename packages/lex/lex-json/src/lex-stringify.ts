@@ -3,7 +3,7 @@ import {
   JsonStringifyDeepOptions,
   jsonStringifyDeep,
 } from './json-stringify-deep.js'
-import { LexToJsonOptions, lexToJson } from './lex-json.js'
+import { LexToJsonOptions, lexToJson } from './lex-to-json.js'
 
 /**
  * @internal

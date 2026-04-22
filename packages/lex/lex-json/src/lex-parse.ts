@@ -1,5 +1,7 @@
 import { LexValue, utf8FromBytes } from '@atproto/lex-data'
-import { JsonToLexOptions, jsonToLex } from './lex-json.js'
+import { JsonToLexOptions, jsonToLex } from './json-to-lex.js'
+
+export type LexParseOptions = JsonToLexOptions
 
 /**
  * Parses a JSON string into Lex values.
@@ -42,7 +44,7 @@ import { JsonToLexOptions, jsonToLex } from './lex-json.js'
  */
 export function lexParse<T extends LexValue = LexValue>(
   input: string,
-  options?: JsonToLexOptions,
+  options?: LexParseOptions,
 ): T {
   // @NOTE see ./lex-parse.bench.ts for performance comparison of implementation
   // that uses a reviver function in JSON.parse vs. the current implementation.
@@ -66,7 +68,7 @@ export function lexParse<T extends LexValue = LexValue>(
  */
 export function lexParseSafe<T extends LexValue = LexValue>(
   input: string,
-  options?: JsonToLexOptions,
+  options?: LexParseOptions,
 ): T | undefined {
   try {
     return lexParse<T>(input, options)
@@ -82,7 +84,7 @@ export function lexParseSafe<T extends LexValue = LexValue>(
  */
 export function lexParseJsonBytes<T extends LexValue = LexValue>(
   bytes: Uint8Array,
-  options?: JsonToLexOptions,
+  options?: LexParseOptions,
 ): T {
   // @NOTE We explored here the option of using a streaming JSON parser that
   // operates directly on bytes, allowing to avoid creating an intermediary JSON

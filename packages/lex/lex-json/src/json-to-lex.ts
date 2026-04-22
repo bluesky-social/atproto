@@ -1,30 +1,28 @@
-import { LexValue, MAX_PAYLOAD_NESTED_LEVELS } from '@atproto/lex-data'
-import { JsonTransformOptions, jsonTransform } from './json-transform.js'
+import {
+  LexValue,
+  MAX_CBOR_CONTAINER_LEN,
+  MAX_CBOR_NESTED_LEVELS,
+  MAX_CBOR_OBJECT_KEY_LEN,
+  MAX_PAYLOAD_NESTED_LEVELS,
+} from '@atproto/lex-data'
+import {
+  IterativeTransformOptions,
+  iterativeTransform,
+} from './iterative-transform.js'
 import { JsonValue } from './json.js'
 import {
   SpecialJsonObjectOptions,
-  encodeSpecialJsonObject,
   parseSpecialJsonObject,
 } from './special-objects.js'
 
 /**
- * Allows to ensure that if new options are added to the input options type,
- * they will be explicitly handled in the function implementation. This is
- * useful to prevent accidentally forgetting to handle new options added to the
- */
-type Explicit<T> = {
-  // @NOTE The `& string` part is the trick that allows to loose the
-  // "optionality" meta property of the keys
-  [K in keyof T & string]: T[K]
-}
-
-/**
  * Options for {@link jsonToLex} function
  *
- * @see {@link JsonTransformOptions}
+ * @see {@link IterativeTransformOptions}
  * @see {@link SpecialJsonObjectOptions}
  */
-export type JsonToLexOptions = JsonTransformOptions & SpecialJsonObjectOptions
+export type JsonToLexOptions = IterativeTransformOptions &
+  SpecialJsonObjectOptions
 
 /**
  * Converts a bare JSON representation of Lexicon value ({@link JsonValue}) into
@@ -84,80 +82,22 @@ export function jsonToLex(
   {
     strict = false,
     allowNonSafeIntegers = !strict,
-    maxNestedLevels = strict ? undefined : MAX_PAYLOAD_NESTED_LEVELS,
-    maxContainerLength = strict ? undefined : Infinity,
-    maxObjectKeyLen = strict ? undefined : Infinity,
+    maxNestedLevels = strict
+      ? MAX_CBOR_NESTED_LEVELS
+      : MAX_PAYLOAD_NESTED_LEVELS,
+    maxContainerLength = strict ? MAX_CBOR_CONTAINER_LEN : Infinity,
+    maxObjectKeyLen = strict ? MAX_CBOR_OBJECT_KEY_LEN : Infinity,
   }: JsonToLexOptions = {},
 ): LexValue {
-  const options: Explicit<JsonToLexOptions> = {
+  const options: Required<JsonToLexOptions> = {
     strict,
     allowNonSafeIntegers,
     maxNestedLevels,
     maxContainerLength,
     maxObjectKeyLen,
   }
-  return jsonTransform<LexValue>(
-    input,
-    (value) => parseSpecialJsonObject(value, options),
-    options,
-  )
-}
-
-/**
- * Options for {@link lexToJson} function.
- *
- * @see {@link JsonTransformOptions}
- * @see {@link SpecialJsonObjectOptions}
- */
-export type LexToJsonOptions = JsonTransformOptions & SpecialJsonObjectOptions
-
-/**
- * Converts a Lex value to a JSON-compatible value.
- *
- * This function transforms Lex data model values into plain JavaScript objects
- * suitable for JSON serialization:
- * - `Cid` instances are converted to `{$link: string}` objects
- * - `Uint8Array` instances are converted to `{$bytes: string}` objects (base64)
- *
- * Use this when you need to convert Lex values to plain objects (e.g., for
- * custom serialization or inspection). For direct JSON string output, use
- * {@link lexStringify} instead.
- *
- * @throws {TypeError} If the value contains unsupported types
- *
- * @note
- * Since lexToJson is often used as a step to re-serialize Lexicon data to
- * JSON/CBOR, we use "non-strict" defaults here. Strictness is expected to be
- * enforced at when the data is first parsed from JSON/CBOR (e.g. with
- * {@link lexParse}), so we can be more lenient in this transformation step.
- *
- * @example
- * ```typescript
- * import { lexToJson } from '@atproto/lex'
- *
- * // Convert Lex values to JSON-compatible objects
- * const obj = lexToJson({
- *   ref: someCid,      // Converted to { $link: string }
- *   data: someBytes    // Converted to { $bytes: string }
- * })
- * ```
- */
-export function lexToJson(
-  input: LexValue,
-  {
-    strict = false,
-    allowNonSafeIntegers = !strict,
-    maxNestedLevels = strict ? undefined : MAX_PAYLOAD_NESTED_LEVELS,
-    maxContainerLength = strict ? undefined : Infinity,
-    maxObjectKeyLen = strict ? undefined : Infinity,
-  }: LexToJsonOptions = {},
-): JsonValue {
-  const options: Explicit<LexToJsonOptions> = {
-    strict,
-    allowNonSafeIntegers,
-    maxNestedLevels,
-    maxContainerLength,
-    maxObjectKeyLen,
-  }
-  return jsonTransform<JsonValue>(input, encodeSpecialJsonObject, options)
+  // See ./json-to-lex.bench.ts for performance comparison between recursive and
+  // iterative implementations of this function. The performance difference is
+  // minimal, so we won't use a hybrid approach here.
+  return iterativeTransform(input, parseSpecialJsonObject, options) as LexValue
 }

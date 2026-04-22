@@ -1,9 +1,9 @@
 import { JsonValue } from './json.js'
 import {
-  type ParentRef,
   Stack,
   StackOptions,
-  stringifyPath,
+  isArrayFrame,
+  isObjectFrame,
 } from './lib/stack.js'
 
 const OMIT = Symbol('OMIT')
@@ -38,7 +38,7 @@ export function jsonStringifyDeep(
     // not typed as such in TypeScript, and not valid JSON). We disallow this
     // since it is not a valid JSON value and is likely an error in the input
     // data.
-    throw new TypeError('Invalid undefined value at $')
+    throw new TypeError('Invalid undefined value')
   }
   if (encoded !== OBJECT) {
     return encoded
@@ -48,7 +48,7 @@ export function jsonStringifyDeep(
 
   let result = ''
   for (const frame of stack) {
-    if (frame.type === 'array') {
+    if (isArrayFrame(frame)) {
       if (frame.input.length === 0) {
         result += '[]'
         continue
@@ -58,17 +58,15 @@ export function jsonStringifyDeep(
       result += '['
       stack.pushCustom({ type: 'string', string: ']' })
       for (let index = input.length - 1; index >= 0; index--) {
-        const parent: ParentRef = { frame, index }
-
         const value = applyToJSON(input[index])
-        const encoded = encodePrimitive(value, options, parent)
+        const encoded = encodePrimitive(value, options)
 
         if (index < input.length - 1) {
           stack.pushCustom({ type: 'string', string: ',' })
         }
 
         if (encoded === OBJECT) {
-          stack.pushObject(value as object, parent)
+          stack.pushObject(value as object, { frame, index })
         } else if (encoded === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
           stack.pushCustom({ type: 'string', string: 'null' })
@@ -76,8 +74,8 @@ export function jsonStringifyDeep(
           stack.pushCustom({ type: 'string', string: encoded })
         }
       }
-    } else if (frame.type === 'object') {
-      const { entries } = frame // ObjectFrame
+    } else if (isObjectFrame(frame)) {
+      const { entries } = frame
 
       if (entries.length === 0) {
         result += '{}'
@@ -90,10 +88,8 @@ export function jsonStringifyDeep(
       // Process entries and track if we've added any (for comma placement)
       let addedCount = 0
       for (let index = entries.length - 1; index >= 0; index--) {
-        const parent: ParentRef = { frame, index }
-
         const value = applyToJSON(entries[index][1])
-        const encoded = encodePrimitive(value, options, parent)
+        const encoded = encodePrimitive(value, options)
 
         if (encoded === OMIT) {
           // Omit this property (undefined values should be removed)
@@ -108,7 +104,7 @@ export function jsonStringifyDeep(
         const key = entries[index][0]
 
         if (encoded === OBJECT) {
-          stack.pushObject(value as object, parent)
+          stack.pushObject(value as object, { frame, index })
           stack.pushCustom({
             type: 'string',
             string: `${JSON.stringify(key)}:`,
@@ -165,7 +161,6 @@ type EncodePrimitiveOptions = {
 function encodePrimitive(
   value: unknown,
   options?: EncodePrimitiveOptions,
-  parent?: ParentRef,
 ): string | typeof OMIT | typeof OBJECT {
   switch (typeof value) {
     case 'object':
@@ -174,9 +169,7 @@ function encodePrimitive(
     case 'number':
       if (options?.allowNonSafeIntegers) return JSON.stringify(value)
       if (Number.isSafeInteger(value)) return JSON.stringify(value)
-      throw new TypeError(
-        `Invalid number (got ${value}) at ${stringifyPath(parent)}`,
-      )
+      throw new TypeError(`Invalid number (got ${value})`)
     case 'string':
     case 'boolean':
       return JSON.stringify(value)
@@ -185,8 +178,6 @@ function encodePrimitive(
       // JSON.stringify omits undefined and function values
       return OMIT
     default:
-      throw new TypeError(
-        `Unsupported type: ${typeof value} at ${stringifyPath(parent)}`,
-      )
+      throw new TypeError(`Unsupported type: ${typeof value}`)
   }
 }
