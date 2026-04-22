@@ -1,3 +1,4 @@
+import { sql } from 'kysely'
 import { LexMap } from '@atproto/lex-data'
 import { cborToLexRecord } from '@atproto/repo'
 import { ActorDb } from '../db'
@@ -31,6 +32,7 @@ export class SpaceReader {
     let builder = this.db.db
       .selectFrom('space')
       .select(['uri', 'isOwner'])
+      .where(sql`("isOwner" = 1 OR "isMember" = 1)`)
       .orderBy('uri', 'asc')
       .limit(limit)
     if (cursor !== undefined) {
