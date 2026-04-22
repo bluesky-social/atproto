@@ -3,7 +3,7 @@ import { cidForLex } from '@atproto/lex-cbor'
 import { createCommit, verifyCommit } from './commit'
 import { RecordAlreadyExistsError, RecordNotFoundError } from './error'
 import { SetHash } from './set-hash'
-import { SpaceStorage } from './storage'
+import { SpaceRepoStorage } from './storage'
 import {
   CommitData,
   PreparedWrite,
@@ -16,13 +16,13 @@ import {
 import { formatRecordElement } from './util'
 
 type Params = {
-  storage: SpaceStorage
+  storage: SpaceRepoStorage
   did: string
   setHash?: SetHash
 }
 
 export class SpaceRepo {
-  storage: SpaceStorage
+  storage: SpaceRepoStorage
   did: string
   setHash: SetHash
 
@@ -32,11 +32,11 @@ export class SpaceRepo {
     this.setHash = params.setHash ?? new SetHash()
   }
 
-  static create(storage: SpaceStorage, did: string): SpaceRepo {
+  static create(storage: SpaceRepoStorage, did: string): SpaceRepo {
     return new SpaceRepo({ storage, did })
   }
 
-  static async load(storage: SpaceStorage, did: string): Promise<SpaceRepo> {
+  static async load(storage: SpaceRepoStorage, did: string): Promise<SpaceRepo> {
     const stored = await storage.getSetHash()
     if (stored) {
       return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
@@ -44,7 +44,7 @@ export class SpaceRepo {
     return SpaceRepo.recompute(storage, did)
   }
 
-  static async loadOrCreate(storage: SpaceStorage, did: string): Promise<SpaceRepo> {
+  static async loadOrCreate(storage: SpaceRepoStorage, did: string): Promise<SpaceRepo> {
     const stored = await storage.getSetHash()
     if (stored) {
       return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
@@ -52,7 +52,7 @@ export class SpaceRepo {
     return new SpaceRepo({ storage, did })
   }
 
-  static async recompute(storage: SpaceStorage, did: string): Promise<SpaceRepo> {
+  static async recompute(storage: SpaceRepoStorage, did: string): Promise<SpaceRepo> {
     const setHash = new SetHash()
     const collections = await storage.listCollections()
     for (const collection of collections) {

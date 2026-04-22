@@ -1,2 +1,2 @@
 export * from './types'
-export * from './memory-storage'
+export * from './memory-repo-storage'

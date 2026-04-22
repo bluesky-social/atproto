@@ -1,8 +1,8 @@
 import { CommitData, RepoRecord, WriteOpAction } from '../types'
 import { formatDataKey, parseDataKey } from '../util'
-import { SpaceStorage } from './types'
+import { SpaceRepoStorage } from './types'
 
-export class MemoryStorage implements SpaceStorage {
+export class MemoryRepoStorage implements SpaceRepoStorage {
   private data = new Map<string, RepoRecord>()
   private setHash: Buffer | null = null
 

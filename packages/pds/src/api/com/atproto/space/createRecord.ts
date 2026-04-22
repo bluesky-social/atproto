@@ -2,7 +2,7 @@ import { TID } from '@atproto/common'
 import { cidForLex } from '@atproto/lex-cbor'
 import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { ScopedSpaceStorage } from '../../../../actor-store/space'
+import { ScopedSpaceRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
 
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const rkey = input.body.rkey ?? TID.nextStr()
 
       const result = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const storage = new ScopedSpaceStorage(actorTxn.space, space)
+        const storage = new ScopedSpaceRepoStorage(actorTxn.space, space)
         const repo = await SpaceRepo.loadOrCreate(storage, did)
         const commit = await repo.formatCommit({
           action: WriteOpAction.Create,

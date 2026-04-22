@@ -1,11 +1,11 @@
-import { CommitData, RepoRecord, SpaceStorage } from '@atproto/space'
+import { CommitData, RepoRecord, SpaceRepoStorage } from '@atproto/space'
 import { SpaceTransactor } from './transactor'
 
 /**
- * Adapts the multi-space SpaceTransactor into a single-space SpaceStorage
+ * Adapts the multi-space SpaceTransactor into a single-space SpaceRepoStorage
  * that the @atproto/space Repo class can work with.
  */
-export class ScopedSpaceStorage implements SpaceStorage {
+export class ScopedSpaceRepoStorage implements SpaceRepoStorage {
   constructor(
     private txn: SpaceTransactor,
     private space: string,

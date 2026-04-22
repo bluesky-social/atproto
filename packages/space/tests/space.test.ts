@@ -1,6 +1,6 @@
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
-  MemoryStorage,
+  MemoryRepoStorage,
   RecordAlreadyExistsError,
   RecordNotFoundError,
   SpaceRepo,
@@ -21,7 +21,7 @@ describe('SpaceRepo', () => {
   let repo: SpaceRepo
 
   beforeEach(() => {
-    const storage = new MemoryStorage()
+    const storage = new MemoryRepoStorage()
     repo = SpaceRepo.create(storage, 'did:example:alice')
   })
 
@@ -254,7 +254,7 @@ describe('commits', () => {
   })
 
   beforeEach(() => {
-    const storage = new MemoryStorage()
+    const storage = new MemoryRepoStorage()
     repo = SpaceRepo.create(storage, 'did:example:alice')
   })
 
@@ -315,7 +315,7 @@ describe('commits', () => {
   })
 
   it('two repos with same records produce same hash', async () => {
-    const storage2 = new MemoryStorage()
+    const storage2 = new MemoryRepoStorage()
     const repo2 = SpaceRepo.create(storage2, 'did:example:bob')
 
     await repo.applyWrites([

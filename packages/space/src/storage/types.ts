@@ -1,6 +1,6 @@
 import { CommitData, RepoRecord } from '../types'
 
-export interface SpaceStorage {
+export interface SpaceRepoStorage {
   // Record reads
   getRecord(collection: string, rkey: string): Promise<RepoRecord | null>
   hasRecord(collection: string, rkey: string): Promise<boolean>
