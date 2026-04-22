@@ -1,5 +1,5 @@
 import { TID } from '@atproto/common'
-import { RecordWriteOp, Repo, WriteOpAction } from '@atproto/space'
+import { RecordWriteOp, SpaceRepo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ScopedSpaceStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
@@ -39,7 +39,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const results = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new ScopedSpaceStorage(actorTxn.space, space)
-        const repo = await Repo.loadOrCreate(storage, did)
+        const repo = await SpaceRepo.loadOrCreate(storage, did)
         const commit = await repo.formatCommit(ops)
 
         if (swapCommit) {

@@ -1,5 +1,5 @@
 import { cidForLex } from '@atproto/lex-cbor'
-import { Repo, WriteOpAction } from '@atproto/space'
+import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
 import { ScopedSpaceStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
@@ -14,7 +14,7 @@ export default function (server: Server, ctx: AppContext) {
 
       const result = await ctx.actorStore.transact(did, async (actorTxn) => {
         const storage = new ScopedSpaceStorage(actorTxn.space, space)
-        const repo = await Repo.loadOrCreate(storage, did)
+        const repo = await SpaceRepo.loadOrCreate(storage, did)
         const exists = await storage.hasRecord(collection, rkey)
         const action = exists ? WriteOpAction.Update : WriteOpAction.Create
         const commit = await repo.formatCommit({

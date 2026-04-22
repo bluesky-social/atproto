@@ -21,7 +21,7 @@ type Params = {
   setHash?: SetHash
 }
 
-export class Repo {
+export class SpaceRepo {
   storage: SpaceStorage
   did: string
   setHash: SetHash
@@ -32,27 +32,27 @@ export class Repo {
     this.setHash = params.setHash ?? new SetHash()
   }
 
-  static create(storage: SpaceStorage, did: string): Repo {
-    return new Repo({ storage, did })
+  static create(storage: SpaceStorage, did: string): SpaceRepo {
+    return new SpaceRepo({ storage, did })
   }
 
-  static async load(storage: SpaceStorage, did: string): Promise<Repo> {
+  static async load(storage: SpaceStorage, did: string): Promise<SpaceRepo> {
     const stored = await storage.getSetHash()
     if (stored) {
-      return new Repo({ storage, did, setHash: new SetHash(stored) })
+      return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
     }
-    return Repo.recompute(storage, did)
+    return SpaceRepo.recompute(storage, did)
   }
 
-  static async loadOrCreate(storage: SpaceStorage, did: string): Promise<Repo> {
+  static async loadOrCreate(storage: SpaceStorage, did: string): Promise<SpaceRepo> {
     const stored = await storage.getSetHash()
     if (stored) {
-      return new Repo({ storage, did, setHash: new SetHash(stored) })
+      return new SpaceRepo({ storage, did, setHash: new SetHash(stored) })
     }
-    return new Repo({ storage, did })
+    return new SpaceRepo({ storage, did })
   }
 
-  static async recompute(storage: SpaceStorage, did: string): Promise<Repo> {
+  static async recompute(storage: SpaceStorage, did: string): Promise<SpaceRepo> {
     const setHash = new SetHash()
     const collections = await storage.listCollections()
     for (const collection of collections) {
@@ -61,7 +61,7 @@ export class Repo {
         await setHash.add(await formatRecordElement(collection, rkey, record))
       }
     }
-    return new Repo({ storage, did, setHash })
+    return new SpaceRepo({ storage, did, setHash })
   }
 
   async formatCommit(

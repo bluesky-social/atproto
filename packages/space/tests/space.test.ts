@@ -3,7 +3,7 @@ import {
   MemoryStorage,
   RecordAlreadyExistsError,
   RecordNotFoundError,
-  Repo,
+  SpaceRepo,
   SetHash,
   SpaceContext,
   WriteOpAction,
@@ -17,12 +17,12 @@ const testSpace: SpaceContext = {
   rev: 0,
 }
 
-describe('Repo', () => {
-  let repo: Repo
+describe('SpaceRepo', () => {
+  let repo: SpaceRepo
 
   beforeEach(() => {
     const storage = new MemoryStorage()
-    repo = Repo.create(storage, 'did:example:alice')
+    repo = SpaceRepo.create(storage, 'did:example:alice')
   })
 
   describe('formatCommit + applyCommit', () => {
@@ -246,7 +246,7 @@ describe('SetHash', () => {
 })
 
 describe('commits', () => {
-  let repo: Repo
+  let repo: SpaceRepo
   let keypair: Secp256k1Keypair
 
   beforeAll(async () => {
@@ -255,7 +255,7 @@ describe('commits', () => {
 
   beforeEach(() => {
     const storage = new MemoryStorage()
-    repo = Repo.create(storage, 'did:example:alice')
+    repo = SpaceRepo.create(storage, 'did:example:alice')
   })
 
   it('creates a valid signed commit', async () => {
@@ -316,7 +316,7 @@ describe('commits', () => {
 
   it('two repos with same records produce same hash', async () => {
     const storage2 = new MemoryStorage()
-    const repo2 = Repo.create(storage2, 'did:example:bob')
+    const repo2 = SpaceRepo.create(storage2, 'did:example:bob')
 
     await repo.applyWrites([
       {
@@ -393,7 +393,7 @@ describe('commits', () => {
     expect(afterDelete).toEqual(emptyHash)
   })
 
-  it('Repo.load recomputes set hash from storage', async () => {
+  it('SpaceRepo.load recomputes set hash from storage', async () => {
     await repo.applyWrites([
       {
         action: WriteOpAction.Create,
@@ -411,7 +411,7 @@ describe('commits', () => {
 
     const commit = await repo.commit(testSpace, keypair)
 
-    const loaded = await Repo.load(repo.storage, 'did:example:alice')
+    const loaded = await SpaceRepo.load(repo.storage, 'did:example:alice')
     expect(loaded.verifyCommit(testSpace, commit)).toBe(true)
   })
 })
