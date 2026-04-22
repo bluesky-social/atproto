@@ -48,6 +48,13 @@ export type LexToJsonOptions = IterativeTransformOptions &
      * recursion for all levels of nesting (might cause `RangeError: Maximum
      * call stack size exceeded` for deeply nested structures).
      *
+     * This options is exposed so that servers can be tuned to allow deeper
+     * nesting levels with better performances. For example, a Node.js server
+     * could be started with `--stack-size=65500` to allow deeper recursion, and
+     * then set `maxRecursionDepth` to a higher value (e.g. 10,000) to take
+     * advantage of the better performance of the recursive implementation for
+     * deeper nesting levels.
+     *
      * @default MAX_RECURSION_DEPTH_DEFAULT
      */
     maxRecursionDepth?: number
@@ -117,7 +124,12 @@ export function lexToJson(
 
   return lexToJsonHybrid(input, {
     currentDepth: 1,
-    maxRecursionDepth,
+    maxRecursionDepth:
+      // Optimization: we use Math.min when creating the context so that the
+      // most common case (currentDepth < maxRecursionDepth && currentDepth <
+      // maxNestedLevels) can be checked with a single condition when processing
+      // nested structures (type "object")
+      Math.min(maxRecursionDepth, maxNestedLevels),
 
     strict,
     allowNonSafeIntegers,
@@ -142,13 +154,18 @@ function lexToJsonHybrid(
         return input
       }
 
-      if (context.currentDepth >= context.maxNestedLevels) {
-        throw new TypeError(`Input is too deeply nested`)
-      } else if (context.currentDepth > context.maxRecursionDepth) {
-        // Switch to non-recursive implementation to handle deeper nesting
-        // levels without hitting call stack limits.
+      if (context.currentDepth >= context.maxRecursionDepth) {
+        if (context.currentDepth >= context.maxNestedLevels) {
+          throw new TypeError(`Input is too deeply nested`)
+        }
+
+        // Switch to iterative implementation to handle deeper nesting levels
+        // without hitting recursive call stack limits.
         return iterativeTransform(input, encodeSpecialJsonObject, {
           ...context,
+          // We need to adjust maxNestedLevels to account for the current depth,
+          // so that the iterative implementation can enforce the correct
+          // nesting limit.
           maxNestedLevels: context.maxNestedLevels - context.currentDepth,
         }) as JsonValue
       }
@@ -191,12 +208,12 @@ function lexArrayToJsonHybrid(
   // Lazily copy value
   let copy: LexArray | undefined
 
-  for (let i = 0; i < input.length; i++) {
-    const inputItem = input[i]
+  for (let index = 0; index < input.length; index++) {
+    const inputItem = input[index]
     const item = lexToJsonHybrid(inputItem, context)
     if (item !== inputItem) {
       copy ??= [...input]
-      copy[i] = item
+      copy[index] = item
     }
   }
 
@@ -241,13 +258,12 @@ function lexMapToJsonHybrid(
     if (lexValue === undefined) {
       copy ??= { ...input }
       delete copy[key]
-      continue
-    }
-
-    const jsonValue = lexToJsonHybrid(lexValue!, context)
-    if (jsonValue !== lexValue) {
-      copy ??= { ...input }
-      copy[key] = jsonValue
+    } else {
+      const jsonValue = lexToJsonHybrid(lexValue!, context)
+      if (jsonValue !== lexValue) {
+        copy ??= { ...input }
+        copy[key] = jsonValue
+      }
     }
   }
 

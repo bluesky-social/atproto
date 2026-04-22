@@ -178,6 +178,7 @@ function lexToJsonRecursive(
     maxContainerLength,
     maxObjectKeyLen,
     currentDepth: 1,
+    maxRecursionDepth: Infinity, // unused here
   })
 }
 
