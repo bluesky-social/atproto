@@ -2,7 +2,7 @@ import { TID } from '@atproto/common'
 import { cidForLex } from '@atproto/lex-cbor'
 import { SpaceRepo, WriteOpAction } from '@atproto/space'
 import { InvalidRequestError, Server } from '@atproto/xrpc-server'
-import { ScopedSpaceRepoStorage } from '../../../../actor-store/space'
+import { SqlRepoStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
 
@@ -15,7 +15,7 @@ export default function (server: Server, ctx: AppContext) {
       const rkey = input.body.rkey ?? TID.nextStr()
 
       const result = await ctx.actorStore.transact(did, async (actorTxn) => {
-        const storage = new ScopedSpaceRepoStorage(actorTxn.space, space)
+        const storage = new SqlRepoStorage(actorTxn.space, space)
         const repo = await SpaceRepo.loadOrCreate(storage, did)
         const commit = await repo.formatCommit({
           action: WriteOpAction.Create,
@@ -25,13 +25,13 @@ export default function (server: Server, ctx: AppContext) {
         })
 
         if (swapCommit) {
-          const currentRev = await actorTxn.space.getRev(space)
-          if (currentRev !== swapCommit) {
+          const state = await actorTxn.space.getRepoState(space)
+          if (state?.rev !== swapCommit) {
             throw new InvalidRequestError('Commit swap failed', 'InvalidSwap')
           }
         }
 
-        await actorTxn.space.applyCommit(space, commit)
+        await actorTxn.space.applyRepoCommit(space, commit)
         const cid = await cidForLex(record)
         return { cid: cid.toString(), rkey }
       })

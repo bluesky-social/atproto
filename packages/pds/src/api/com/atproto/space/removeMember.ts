@@ -1,11 +1,13 @@
 import { getPdsEndpoint } from '@atproto/common'
 import { xrpc } from '@atproto/lex'
+import { MemberOpAction, SpaceMembers } from '@atproto/space'
 import { SpaceUri } from '@atproto/syntax'
 import {
   InvalidRequestError,
   Server,
   createServiceAuthHeaders,
 } from '@atproto/xrpc-server'
+import { SqlMembersStorage } from '../../../../actor-store/space'
 import { AppContext } from '../../../../context'
 import { com } from '../../../../lexicons/index.js'
 
@@ -27,9 +29,15 @@ export default function (server: Server, ctx: AppContext) {
         throw new InvalidRequestError('Not the space owner', 'NotSpaceOwner')
       }
 
-      // Remove from owner's member list
+      // Remove from owner's member list with committed set hash
       await ctx.actorStore.transact(ownerDid, async (actorTxn) => {
-        await actorTxn.space.removeMember(space, memberDid)
+        const storage = new SqlMembersStorage(actorTxn.space, space)
+        const members = await SpaceMembers.loadOrCreate(storage)
+        const commit = await members.formatCommit({
+          action: MemberOpAction.Remove,
+          did: memberDid,
+        })
+        await actorTxn.space.applyMemberCommit(space, commit)
       })
 
       // Notify member's PDS

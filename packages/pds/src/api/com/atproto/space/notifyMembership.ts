@@ -37,18 +37,17 @@ export default function (server: Server, ctx: AppContext) {
       }
 
       // Update member's actor store
-      if (isMember) {
-        await ctx.actorStore.transact(memberDid, async (actorTxn) => {
+      await ctx.actorStore.transact(memberDid, async (actorTxn) => {
+        if (isMember) {
           const existing = await actorTxn.space.getSpace(space)
           if (!existing) {
             await actorTxn.space.createSpace(space, false)
           }
-        })
-      } else {
-        await ctx.actorStore.transact(memberDid, async (actorTxn) => {
-          await actorTxn.space.deleteSpace(space)
-        })
-      }
+          await actorTxn.space.updateMembership(space, true)
+        } else {
+          await actorTxn.space.updateMembership(space, false)
+        }
+      })
     },
   })
 }
