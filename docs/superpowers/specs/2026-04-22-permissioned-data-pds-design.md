@@ -30,7 +30,6 @@ Items flagged throughout the doc that need eventual spec decisions:
 - **notifyWrite fan-out failure**: What happens when the space owner can't reach a syncing app? Currently fire-and-forget. May need retry/backoff policy.
 - **Member grant signing key**: The grant is signed by the user's atproto signing key, mirroring service auth. The member's PDS facilitates issuance since it holds the OAuth session, but the token is from the user.
 - **Service endpoint for notifications**: How does the space owner learn a syncing app's notification endpoint? Resolved from the app's DID doc, or provided in the credential request? TBD.
-- **Write before membership**: A user can write records to any space URI on their own PDS without being a member. Enforcement is at the read boundary. Is this the right UX, or should the PDS guard against accidental writes to non-member spaces?
 
 ---
 
@@ -56,9 +55,17 @@ Each user's per-actor SQLite database gets these tables:
 |--------|------|-------------|
 | `uri` | varchar, PK | Space URI |
 | `isOwner` | integer (boolean) | Whether this actor owns the space |
-| `memberSetHash` | blob, nullable | SetHash commitment over member DIDs (owner only) |
-| `memberRev` | varchar, nullable | Member list revision (owner only) |
+| `isMember` | integer (boolean) | Whether this actor is currently a member (set via notifyMembership) |
 | `createdAt` | varchar | Timestamp |
+
+**`space_member_state`** — member list commitment state (owner only, one row per owned space)
+| Column | Type | Description |
+|--------|------|-------------|
+| `space` | varchar, PK | Space URI (FK to space) |
+| `setHash` | blob, nullable | SetHash commitment over member DIDs |
+| `rev` | varchar, nullable | Member list revision |
+
+This table only exists for owned spaces. No nullable columns — if the row exists, you're the owner. Avoids optional fields on the `space` table.
 
 **`space_repo`** — this user's permissioned repo state per space
 | Column | Type | Description |
@@ -94,24 +101,26 @@ Primary key: `(space, did)`.
 | Column | Type | Description |
 |--------|------|-------------|
 | `space` | varchar | Space URI |
-| `rev` | varchar | TID for this operation |
+| `rev` | varchar | TID for this commit (shared across ops in the same atomic batch) |
+| `idx` | integer | Index of this op within the commit (0-based) |
 | `action` | varchar | create / update / delete |
 | `collection` | varchar | Collection NSID |
 | `rkey` | varchar | Record key |
 | `cid` | varchar, nullable | Current CID (null for delete) |
 | `prev` | varchar, nullable | Previous CID (null for create) |
 
-Primary key: `(space, rev)`. Ordered by rev for `since` queries.
+Primary key: `(space, rev, idx)`. Ordered by `(rev, idx)` for `since` queries. A single commit may contain multiple ops (atomic batch), mirroring public repo commit semantics.
 
 **`space_member_oplog`** — member list operation log (owner only)
 | Column | Type | Description |
 |--------|------|-------------|
 | `space` | varchar | Space URI |
-| `rev` | varchar | TID for this operation |
+| `rev` | varchar | TID for this commit |
+| `idx` | integer | Index of this op within the commit (0-based) |
 | `action` | varchar | add / remove |
 | `did` | varchar | Member DID |
 
-Primary key: `(space, rev)`.
+Primary key: `(space, rev, idx)`. Same atomic batch semantics as `space_record_oplog`.
 
 **`space_credential_recipient`** — tracks services issued credentials (for notification fan-out)
 | Column | Type | Description |
@@ -125,11 +134,13 @@ Primary key: `(space, serviceDid)`.
 
 ### Oplog entry granularity
 
-Each individual operation (create, update, delete, add, remove) gets its own unique rev (TID) in the oplog. A batch `applyWrites` call with 3 operations produces 3 oplog entries with 3 sequential TIDs. The `space_repo.rev` (or `space.memberRev`) is set to the latest TID in the batch.
+A single commit can contain multiple operations that are applied atomically. All ops in the same commit share the same rev (TID) and are distinguished by an `idx` field (0-based). This mirrors public repo commit semantics where a single commit can contain multiple record writes. For example, an `applyWrites` batch with 3 operations produces 3 oplog entries with the same rev but `idx` 0, 1, 2. The `space_repo.rev` (or `space_member_state.rev`) is set to the commit's rev.
 
 ### Membership lifecycle on the member's PDS
 
-When a member's PDS receives `notifyMembership` with `isMember: true`, it creates a `space` entry with `isOwner: false`. This is necessary so the PDS knows to accept space credentials for that space and serve permissioned repo data to authorized requesters. When `isMember: false`, the PDS may mark the space as inactive or remove it.
+When a member's PDS receives `notifyMembership` with `isMember: true`, it creates a `space` entry with `isOwner: false, isMember: true` (or updates the existing row). This is necessary so the PDS knows to accept space credentials for that space and serve permissioned repo data to authorized requesters.
+
+When `isMember: false`, the PDS sets `isMember = false` but does **not** delete the space entry or the user's records. The user's data remains intact — they may want to rejoin, or the data may need eventual garbage collection. The PDS can surface the removal to the user and stop serving data for that space to credential-bearing requesters.
 
 The PDS does not enforce membership at write time — a user can write records scoped to any space URI on their own PDS. Membership enforcement happens at the read/sync boundary: applications check the member list when consuming data.
 
@@ -225,6 +236,8 @@ Manages the member set for a space (space owner only).
 
 **MemberGrant** — issued by member's PDS, presented to space owner to obtain a credential. Mirrors service auth token pattern.
 
+JWT header: `{ alg: "ES256K", typ: "space_member_grant" }`
+
 JWT payload:
 ```ts
 {
@@ -237,9 +250,11 @@ JWT payload:
   exp: number       // short-lived, ~5 minutes
 }
 ```
-Signed by the user's atproto signing key. The `lxm` field binds the grant to the credential issuance endpoint, preventing replay against other endpoints.
+Signed by the user's atproto signing key. The `lxm` field binds the grant to the credential issuance endpoint, preventing replay against other endpoints. The `typ` header distinguishes this from other JWT types in the system.
 
 **SpaceCredential** — issued by space owner, presented to member PDSes for read access.
+
+JWT header: `{ alg: "ES256K", typ: "space_credential" }`
 
 JWT payload:
 ```ts
@@ -251,7 +266,7 @@ JWT payload:
   exp: number       // 2-4 hours
 }
 ```
-Signed by the space owner's atproto signing key. Verifiable by any PDS by resolving the space owner's DID doc.
+Signed by the space owner's atproto signing key. Verifiable by any PDS by resolving the space owner's DID doc. The `typ` header distinguishes this from service auth tokens and other JWT types.
 
 **Functions:**
 - `createMemberGrant(opts, signingKey)` / `verifyMemberGrant(jwt, memberPubKey)`
@@ -364,14 +379,14 @@ Only the space owner can call `addMember` / `removeMember`. After a member chang
 - `listRecords(space, collection, opts)`, `listCollections(space)`
 - `getMembers(space)`, `isMember(space, did)`
 - `getRepoState(space)` -> `{ setHash, rev }`
-- `getMemberState(space)` -> `{ setHash, rev }`
+- `getMemberState(space)` -> `{ setHash, rev }` (reads from `space_member_state`)
 - `getRepoOplog(space, since, limit)` -> `{ ops[], rev, setHash }`
 - `getMemberOplog(space, since, limit)` -> `{ ops[], rev, setHash }`
 
 **SpaceTransactor** (`actor-store/space/transactor.ts`, extends SpaceReader) — writes:
 - `createSpace(uri, isOwner)`
 - `applyRepoCommit(space, commitData)` — writes records, updates setHash/rev, appends to `space_record_oplog`
-- `applyMemberCommit(space, memberCommitData)` — writes members, updates memberSetHash/memberRev, appends to `space_member_oplog`
+- `applyMemberCommit(space, memberCommitData)` — writes members, updates setHash/rev in `space_member_state`, appends to `space_member_oplog`
 - `deleteSpace(uri)`
 
 **SqlRepoStorage** (`actor-store/space/sql-repo-storage.ts`) — implements `SpaceRepoStorage` from `@atproto/space`, backed by actor store SQLite. Allows `SpaceRepo` to operate on real persistence.
