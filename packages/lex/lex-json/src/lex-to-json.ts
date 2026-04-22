@@ -19,31 +19,57 @@ import {
 } from './special-objects.js'
 
 /**
+ * Using a to low threshold (e.g. 10) can cause performance degradation due to
+ * switching to iterative implementation too early, while using a too high
+ * threshold (e.g. 10_000) can cause call stack overflow errors with deeply
+ * nested structures. Empirical tests have shown that a threshold of around
+ * 1,000 provides a good balance.
+ *
+ * @see lexToJson
+ */
+export const MAX_RECURSION_DEPTH_DEFAULT = 1000
+
+/**
  * Options for {@link lexToJson} function.
  *
  * @see {@link IterativeTransformOptions}
  * @see {@link SpecialJsonObjectOptions}
  */
 export type LexToJsonOptions = IterativeTransformOptions &
-  SpecialJsonObjectOptions
+  SpecialJsonObjectOptions & {
+    /**
+     * Maximum recursion depth before switching to iterative implementation. Set
+     * this only if you have either performances issues with the default value,
+     * or your environment has a low call stack limit and you need to support
+     * deeper nesting levels.
+     *
+     * Set to `0` or a negative value to disable recursion and use iterative
+     * implementation for all levels of nesting. Set to `Infinity` to enable
+     * recursion for all levels of nesting (might cause `RangeError: Maximum
+     * call stack size exceeded` for deeply nested structures).
+     *
+     * @default MAX_RECURSION_DEPTH_DEFAULT
+     */
+    maxRecursionDepth?: number
+  }
 
 /**
- * Converts a Lex value to a JSON-compatible value.
+ * Converts a Lexicon value ({@link LexValue}) to a JSON-compatible value
+ * ({@link JsonValue}) by transforming the input value and its nested
+ * structures to their JSON equivalents:
  *
- * This function transforms Lex data model values into plain JavaScript objects
- * suitable for JSON serialization:
  * - `Cid` instances are converted to `{$link: string}` objects
  * - `Uint8Array` instances are converted to `{$bytes: string}` objects (base64)
  *
  * Use this when you need to convert Lex values to plain objects (e.g., for
- * custom serialization or inspection). For direct JSON string output, use
+ * custom serialization or inspection). For direct serialization into JSON, use
  * {@link lexStringify} instead.
  *
  * @throws {TypeError} If the value contains unsupported types
  *
  * @note
- * Since lexToJson is often used as a step to re-serialize Lexicon data to
- * JSON/CBOR, we use "non-strict" defaults here. Strictness is expected to be
+ * Since lexToJson is often used as a step to re-serialize internal Lexicon data
+ * to JSON/CBOR, we use "non-strict" defaults here. Strictness is expected to be
  * enforced at when the data is first parsed from JSON/CBOR (e.g. with
  * {@link lexParse}), so we can be more lenient in this transformation step.
  *
@@ -68,6 +94,7 @@ export function lexToJson(
       : MAX_PAYLOAD_NESTED_LEVELS,
     maxContainerLength = strict ? MAX_CBOR_CONTAINER_LEN : Infinity,
     maxObjectKeyLen = strict ? MAX_CBOR_OBJECT_KEY_LEN : Infinity,
+    maxRecursionDepth = MAX_RECURSION_DEPTH_DEFAULT,
   }: LexToJsonOptions = {},
 ): JsonValue {
   // See ./lex-to-json.bench.ts for performance comparison of recursive vs.
@@ -76,18 +103,22 @@ export function lexToJson(
   // hybrid approach where we start with the recursive implementation, but if we
   // detect that the nesting level is too deep, we switch to the iterative
   // implementation using iterativeTransform, which can handle arbitrary nesting
-  // levels. This is equivalent to:
+  // levels.
 
-  // return iterativeTransform(input, encodeSpecialJsonObject, {
-  //   strict,
-  //   allowNonSafeIntegers,
-  //   maxNestedLevels,
-  //   maxContainerLength,
-  //   maxObjectKeyLen,
-  // }) as JsonValue
+  if (maxRecursionDepth <= 0) {
+    return iterativeTransform(input, encodeSpecialJsonObject, {
+      strict,
+      allowNonSafeIntegers,
+      maxNestedLevels,
+      maxContainerLength,
+      maxObjectKeyLen,
+    }) as JsonValue
+  }
 
   return lexToJsonHybrid(input, {
     currentDepth: 1,
+    maxRecursionDepth,
+
     strict,
     allowNonSafeIntegers,
     maxNestedLevels,
@@ -98,6 +129,7 @@ export function lexToJson(
 
 type RecursionContext = Required<LexToJsonOptions> & {
   currentDepth: number
+  maxRecursionDepth: number
 }
 
 function lexToJsonHybrid(
@@ -112,11 +144,9 @@ function lexToJsonHybrid(
 
       if (context.currentDepth >= context.maxNestedLevels) {
         throw new TypeError(`Input is too deeply nested`)
-      } else if (context.currentDepth > 500) {
-        // If current recursion level is too deep, switch to a non-recursive
-        // implementation to handle deeper nesting levels without hitting call
-        // stack limits. The threshold of 500 is chosen based on empirical
-        // testing, but can be adjusted as needed.
+      } else if (context.currentDepth > context.maxRecursionDepth) {
+        // Switch to non-recursive implementation to handle deeper nesting
+        // levels without hitting call stack limits.
         return iterativeTransform(input, encodeSpecialJsonObject, {
           ...context,
           maxNestedLevels: context.maxNestedLevels - context.currentDepth,

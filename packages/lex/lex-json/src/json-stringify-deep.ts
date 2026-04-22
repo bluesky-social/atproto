@@ -9,12 +9,20 @@ import {
 const OMIT = Symbol('OMIT')
 const OBJECT = Symbol('object')
 
+const OPEN_BRACKET = '['
+const OPEN_BRACE = '{'
+
 export type JsonStringifyDeepOptions = StackOptions & EncodePrimitiveOptions
 
-type StringFrame = {
-  type: 'string'
-  string: string
+type RawFrame = { type: 'raw'; string: string }
+function rawFrame(string: string): RawFrame {
+  return { type: 'raw', string }
 }
+
+const COMMA_FRAME = Object.freeze(rawFrame(','))
+const NULL_FRAME = Object.freeze(rawFrame('null'))
+const CLOSE_BRACKET_FRAME = Object.freeze(rawFrame(']'))
+const CLOSE_BRACE_FRAME = Object.freeze(rawFrame('}'))
 
 /**
  * A custom JSON stringifier that can handle deeply nested structures without
@@ -31,23 +39,29 @@ export function jsonStringifyDeep(
   options?: JsonStringifyDeepOptions,
 ): string {
   // Handle primitives and special types at the root level
-  const value = applyToJSON(input)
-  const encoded = encodePrimitive(value, options)
-  if (encoded === OMIT) {
-    // @NOTE That JSON.stringify(undefined) returns undefined (although it is
-    // not typed as such in TypeScript, and not valid JSON). We disallow this
-    // since it is not a valid JSON value and is likely an error in the input
-    // data.
-    throw new TypeError('Invalid undefined value')
-  }
-  if (encoded !== OBJECT) {
-    return encoded
+  const valueJson = hasToJSON(input) ? input.toJSON() : input
+  const valueEnc = encodePrimitive(valueJson, options)
+
+  if (valueEnc !== OBJECT) {
+    if (valueEnc === OMIT) {
+      // @NOTE That JSON.stringify(undefined) returns undefined (although it is
+      // not typed as such in TypeScript, and not valid JSON). We disallow this
+      // since it is not a valid JSON value and is likely an error in the input
+      // data.
+      throw new TypeError('Invalid undefined value')
+    }
+    return valueEnc
   }
 
-  const stack = new Stack<StringFrame>(value as object, options)
+  const stack = new Stack<RawFrame>(valueJson as object, options)
 
   let result = ''
 
+  // The idea of this loop is to move items from the stack to the result string.
+  // When we encounter an object or array, we push its children onto the stack,
+  // (after adding the opening bracket/brace). The stack is a
+  // "last-in-first-out" structure, so we push the children in reverse order to
+  // ensure they are processed in the correct order.
   for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
     if (isArrayFrame(frame)) {
       if (frame.input.length === 0) {
@@ -56,23 +70,24 @@ export function jsonStringifyDeep(
       }
 
       const { input } = frame // ArrayFrame
-      result += '['
-      stack.push({ type: 'string', string: ']' })
+      result += OPEN_BRACKET
+      stack.push(CLOSE_BRACKET_FRAME)
       for (let index = input.length - 1; index >= 0; index--) {
-        const value = applyToJSON(input[index])
-        const encoded = encodePrimitive(value, options)
+        const value = input[index]
+        const valueJson = hasToJSON(value) ? value.toJSON() : value
+        const valueEnc = encodePrimitive(valueJson, options)
 
         if (index < input.length - 1) {
-          stack.push({ type: 'string', string: ',' })
+          stack.push(COMMA_FRAME)
         }
 
-        if (encoded === OBJECT) {
-          stack.pushNested(value as object, { frame, index })
-        } else if (encoded === OMIT) {
+        if (valueEnc === OBJECT) {
+          stack.pushNested(valueJson as object, { frame, index })
+        } else if (valueEnc === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
-          stack.push({ type: 'string', string: 'null' })
+          stack.push(NULL_FRAME)
         } else {
-          stack.push({ type: 'string', string: encoded })
+          stack.push(rawFrame(valueEnc))
         }
       }
     } else if (isObjectFrame(frame)) {
@@ -83,38 +98,31 @@ export function jsonStringifyDeep(
         continue
       }
 
-      result += '{'
-      stack.push({ type: 'string', string: '}' })
+      result += OPEN_BRACE
+      stack.push(CLOSE_BRACE_FRAME)
 
       // Process entries and track if we've added any (for comma placement)
       let addedCount = 0
+
       for (let index = entries.length - 1; index >= 0; index--) {
-        const value = applyToJSON(entries[index][1])
-        const encoded = encodePrimitive(value, options)
+        const value = entries[index][1]
+        const valueJson = hasToJSON(value) ? value.toJSON() : value
+        const valueEnc = encodePrimitive(valueJson, options)
 
-        if (encoded === OMIT) {
-          // Omit this property (undefined values should be removed)
-          continue
-        }
+        // JSON.stringify will omit properties with undefined values, so we
+        // skip them entirely
+        if (valueEnc === OMIT) continue
 
-        if (addedCount > 0) {
-          stack.push({ type: 'string', string: ',' })
-        }
+        if (addedCount > 0) stack.push(COMMA_FRAME)
         addedCount++
 
         const key = entries[index][0]
 
-        if (encoded === OBJECT) {
-          stack.pushNested(value as object, { frame, index })
-          stack.push({
-            type: 'string',
-            string: `${JSON.stringify(key)}:`,
-          })
+        if (valueEnc === OBJECT) {
+          stack.pushNested(valueJson as object, { frame, index })
+          stack.push(rawFrame(`${JSON.stringify(key)}:`))
         } else {
-          stack.push({
-            type: 'string',
-            string: `${JSON.stringify(key)}:${encoded}`,
-          })
+          stack.push(rawFrame(`${JSON.stringify(key)}:${valueEnc}`))
         }
       }
     } else {
@@ -126,20 +134,8 @@ export function jsonStringifyDeep(
   return result
 }
 
-/**
- * Applies toJSON() transformation once if the value has one.
- * Note: JSON.stringify only calls toJSON once per serialization step, not recursively.
- */
-function applyToJSON(value: unknown): unknown {
-  if (
-    value &&
-    typeof value === 'object' &&
-    'toJSON' in value &&
-    typeof value.toJSON === 'function'
-  ) {
-    return value.toJSON()
-  }
-  return value
+function hasToJSON(value: unknown): value is { toJSON: () => unknown } {
+  return typeof (value as any)?.toJSON === 'function'
 }
 
 type EncodePrimitiveOptions = {
@@ -149,7 +145,7 @@ type EncodePrimitiveOptions = {
    * safe integers, which can be useful for processing data in "non-strict"
    * mode.
    *
-   * @default false
+   * @default true
    */
   allowNonSafeIntegers?: boolean
 }
@@ -168,7 +164,7 @@ function encodePrimitive(
       if (value === null) return 'null'
       return OBJECT
     case 'number':
-      if (options?.allowNonSafeIntegers) return JSON.stringify(value)
+      if (options?.allowNonSafeIntegers ?? true) return JSON.stringify(value)
       if (Number.isSafeInteger(value)) return JSON.stringify(value)
       throw new TypeError(`Invalid number (got ${value})`)
     case 'string':

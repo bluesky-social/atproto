@@ -40,10 +40,11 @@ export function iterativeTransform<
   options: O = {} as O,
 ): unknown {
   const inputValue = transformValue(input, replacer, options)
-  if (inputValue === OMIT) {
-    throw new TypeError('Invalid undefined value')
-  }
+
   if (inputValue !== OBJECT) {
+    if (inputValue === OMIT) {
+      throw new TypeError('Invalid undefined value')
+    }
     return inputValue
   }
 
@@ -97,7 +98,7 @@ export function iterativeTransform<
     }
   }
 
-  return stack.value
+  return stack.root.copy ?? stack.root.input
 }
 
 type TransformValueOptions = {

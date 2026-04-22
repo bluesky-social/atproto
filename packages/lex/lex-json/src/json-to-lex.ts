@@ -25,9 +25,9 @@ export type JsonToLexOptions = IterativeTransformOptions &
   SpecialJsonObjectOptions
 
 /**
- * Converts a bare JSON representation of Lexicon value ({@link JsonValue}) into
- * a {@link LexValue}. This is done by decoding AT Protocol special types, and
- * enforcing AT protocol data model constraints:
+ * Converts a parsed JSON representation of Lexicon value ({@link JsonValue})
+ * into a {@link LexValue}. This is done by decoding AT Protocol special
+ * objects, and enforcing AT protocol data model constraints:
  *
  * - `{$link: string}` objects are converted to `Cid` objects
  * - `{$bytes: string}` objects are converted to `Uint8Array` instances
@@ -37,22 +37,20 @@ export type JsonToLexOptions = IterativeTransformOptions &
  *   prevent excessively large structures (limits can be configured with
  *   options)
  *
- * Use this to convert bare JavaScript objects (e.g., from
- * {@link JSON.parse JSON.parse()}) into Lex data model values. For parsing JSON
- * strings directly, or JSON string in buffer form, use {@link lexParse} or
- * {@link lexParseJsonBytes} instead, which are using this function internally.
- *
  * @throws {TypeError} If the input contains invalid Lex values, or contains too
  * deeply nested structures
  *
+ * @note For parsing JSON strings directly, or JSON string in buffer form, use
+ * {@link lexParse} or {@link lexParseJsonBytes} instead.
+ *
  * @note This function is typically used at the boundary of JSON parsing, where
  * we need to convert user data (e.g `com.atproto.repo.createRecord` API calls)
- * into Lex values for processing. Because "write paths" are a common entry
- * point for untrusted data, these should explicitly enforce strict validation.
- * Because "read" path are most common, {@link JsonToLexOptions.strict} is
- * `false` by default.
+ * into {@link LexValue} for processing. Because "write paths" are a common
+ * entry point for untrusted data, these should explicitly enforce strict
+ * validation. Because "read" path are most common,
+ * {@link JsonToLexOptions.strict strict-mode} is disabled (`false`) by default.
  *
- * @note `JSON.parse` will typically allow any level of nesting. This can be
+ * @note `JSON.parse` will typically allow deep nesting levels. This can be
  * problematic when the parsed structures is re-serialized with
  * `JSON.stringify`, which has a call stack limit that can be exceeded with
  * deeply nested structures. To mitigate this, `jsonToLex` enforces a default

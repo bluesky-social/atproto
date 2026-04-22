@@ -102,10 +102,6 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
     this.stack = [frame]
   }
 
-  get value() {
-    return this.root.copy ?? this.root.input
-  }
-
   pop(): StackFrame | TCustom | undefined {
     return this.stack.pop()
   }
