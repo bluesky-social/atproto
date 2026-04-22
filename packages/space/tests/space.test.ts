@@ -7,6 +7,11 @@ import {
   SetHash,
   SpaceContext,
   WriteOpAction,
+  SpaceMembers,
+  MemoryMembersStorage,
+  MemberAlreadyExistsError,
+  MemberNotFoundError,
+  MemberOpAction,
 } from '../src'
 
 const testSpace: SpaceContext = {
@@ -246,6 +251,81 @@ describe('SetHash', () => {
   })
 })
 
+describe('SpaceMembers', () => {
+  let members: SpaceMembers
+
+  beforeEach(() => {
+    const storage = new MemoryMembersStorage()
+    members = SpaceMembers.create(storage)
+  })
+
+  it('creates and adds members', async () => {
+    await members.addMember('did:plc:alice')
+    await members.addMember('did:plc:bob')
+
+    const memberList = await members.getMembers()
+    expect(memberList).toHaveLength(2)
+    expect(memberList).toContain('did:plc:alice')
+    expect(memberList).toContain('did:plc:bob')
+
+    expect(await members.isMember('did:plc:alice')).toBe(true)
+    expect(await members.isMember('did:plc:bob')).toBe(true)
+  })
+
+  it('removes a member', async () => {
+    await members.addMember('did:plc:alice')
+    await members.removeMember('did:plc:alice')
+
+    expect(await members.isMember('did:plc:alice')).toBe(false)
+    const memberList = await members.getMembers()
+    expect(memberList).not.toContain('did:plc:alice')
+  })
+
+  it('setHash is order-independent', async () => {
+    const storage1 = new MemoryMembersStorage()
+    const members1 = SpaceMembers.create(storage1)
+    await members1.addMember('did:plc:alice')
+    await members1.addMember('did:plc:bob')
+
+    const storage2 = new MemoryMembersStorage()
+    const members2 = SpaceMembers.create(storage2)
+    await members2.addMember('did:plc:bob')
+    await members2.addMember('did:plc:alice')
+
+    expect(members1.setHash.equals(members2.setHash)).toBe(true)
+  })
+
+  it('remove reverses add for setHash', async () => {
+    const emptyHash = new SetHash(members.setHash.toBytes())
+
+    await members.addMember('did:plc:alice')
+    await members.removeMember('did:plc:alice')
+
+    expect(members.setHash.equals(emptyHash)).toBe(true)
+  })
+
+  it('throws on duplicate add', async () => {
+    await members.addMember('did:plc:alice')
+    await expect(members.addMember('did:plc:alice')).rejects.toThrow(
+      MemberAlreadyExistsError,
+    )
+  })
+
+  it('throws on remove of non-member', async () => {
+    await expect(members.removeMember('did:plc:unknown')).rejects.toThrow(
+      MemberNotFoundError,
+    )
+  })
+
+  it('load recomputes setHash from storage', async () => {
+    await members.addMember('did:plc:alice')
+    await members.addMember('did:plc:bob')
+
+    const loaded = await SpaceMembers.load(members.storage)
+    expect(loaded.setHash.equals(members.setHash)).toBe(true)
+  })
+})
+
 describe('commits', () => {
   let repo: SpaceRepo
   let keypair: Secp256k1Keypair
@@ -414,5 +494,39 @@ describe('commits', () => {
 
     const loaded = await SpaceRepo.load(repo.storage, 'did:example:alice')
     expect(loaded.verifyCommit(testSpace, commit)).toBe(true)
+  })
+
+  it('domain separation: records scope != members scope', async () => {
+    const recordsContext: SpaceContext = {
+      ...testSpace,
+      scope: 'records',
+    }
+    const membersContext: SpaceContext = {
+      ...testSpace,
+      scope: 'members',
+    }
+
+    // Create a repo commit with records scope
+    await repo.applyWrites({
+      action: WriteOpAction.Create,
+      collection: 'app.bsky.feed.post',
+      rkey: '1',
+      record: { text: 'hello' },
+    })
+    const repoCommit = await repo.commit(recordsContext, keypair)
+
+    // Create a members commit with members scope
+    const membersStorage = new MemoryMembersStorage()
+    const spaceMembers = SpaceMembers.create(membersStorage)
+    await spaceMembers.addMember('did:plc:alice')
+    const membersCommit = await spaceMembers.commit(membersContext, keypair)
+
+    // Verify repo commit fails with members context
+    expect(repo.verifyCommit(membersContext, repoCommit)).toBe(false)
+
+    // Verify members commit fails with records context
+    expect(spaceMembers.verifyCommit(recordsContext, membersCommit)).toBe(
+      false,
+    )
   })
 })
