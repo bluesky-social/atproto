@@ -255,10 +255,18 @@ import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrit
 import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
 import * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
 import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
+import * as ComAtprotoSpaceGetMemberGrant from './types/com/atproto/space/getMemberGrant.js'
+import * as ComAtprotoSpaceGetMemberOplog from './types/com/atproto/space/getMemberOplog.js'
+import * as ComAtprotoSpaceGetMemberState from './types/com/atproto/space/getMemberState.js'
+import * as ComAtprotoSpaceGetMembers from './types/com/atproto/space/getMembers.js'
 import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
+import * as ComAtprotoSpaceGetRepoOplog from './types/com/atproto/space/getRepoOplog.js'
+import * as ComAtprotoSpaceGetRepoState from './types/com/atproto/space/getRepoState.js'
+import * as ComAtprotoSpaceGetSpaceCredential from './types/com/atproto/space/getSpaceCredential.js'
 import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
 import * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
 import * as ComAtprotoSpaceNotifyMembership from './types/com/atproto/space/notifyMembership.js'
+import * as ComAtprotoSpaceNotifyWrite from './types/com/atproto/space/notifyWrite.js'
 import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
 import * as ComAtprotoSpaceRemoveMember from './types/com/atproto/space/removeMember.js'
 import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
@@ -588,10 +596,18 @@ export * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrit
 export * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
 export * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
 export * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
+export * as ComAtprotoSpaceGetMemberGrant from './types/com/atproto/space/getMemberGrant.js'
+export * as ComAtprotoSpaceGetMemberOplog from './types/com/atproto/space/getMemberOplog.js'
+export * as ComAtprotoSpaceGetMemberState from './types/com/atproto/space/getMemberState.js'
+export * as ComAtprotoSpaceGetMembers from './types/com/atproto/space/getMembers.js'
 export * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
+export * as ComAtprotoSpaceGetRepoOplog from './types/com/atproto/space/getRepoOplog.js'
+export * as ComAtprotoSpaceGetRepoState from './types/com/atproto/space/getRepoState.js'
+export * as ComAtprotoSpaceGetSpaceCredential from './types/com/atproto/space/getSpaceCredential.js'
 export * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
 export * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
 export * as ComAtprotoSpaceNotifyMembership from './types/com/atproto/space/notifyMembership.js'
+export * as ComAtprotoSpaceNotifyWrite from './types/com/atproto/space/notifyWrite.js'
 export * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
 export * as ComAtprotoSpaceRemoveMember from './types/com/atproto/space/removeMember.js'
 export * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
@@ -4959,6 +4975,50 @@ export class ComAtprotoSpaceNS {
       })
   }
 
+  getMemberGrant(
+    params?: ComAtprotoSpaceGetMemberGrant.QueryParams,
+    opts?: ComAtprotoSpaceGetMemberGrant.CallOptions,
+  ): Promise<ComAtprotoSpaceGetMemberGrant.Response> {
+    return this._client
+      .call('com.atproto.space.getMemberGrant', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetMemberGrant.toKnownErr(e)
+      })
+  }
+
+  getMemberOplog(
+    params?: ComAtprotoSpaceGetMemberOplog.QueryParams,
+    opts?: ComAtprotoSpaceGetMemberOplog.CallOptions,
+  ): Promise<ComAtprotoSpaceGetMemberOplog.Response> {
+    return this._client
+      .call('com.atproto.space.getMemberOplog', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetMemberOplog.toKnownErr(e)
+      })
+  }
+
+  getMemberState(
+    params?: ComAtprotoSpaceGetMemberState.QueryParams,
+    opts?: ComAtprotoSpaceGetMemberState.CallOptions,
+  ): Promise<ComAtprotoSpaceGetMemberState.Response> {
+    return this._client
+      .call('com.atproto.space.getMemberState', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetMemberState.toKnownErr(e)
+      })
+  }
+
+  getMembers(
+    params?: ComAtprotoSpaceGetMembers.QueryParams,
+    opts?: ComAtprotoSpaceGetMembers.CallOptions,
+  ): Promise<ComAtprotoSpaceGetMembers.Response> {
+    return this._client
+      .call('com.atproto.space.getMembers', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetMembers.toKnownErr(e)
+      })
+  }
+
   getRecord(
     params?: ComAtprotoSpaceGetRecord.QueryParams,
     opts?: ComAtprotoSpaceGetRecord.CallOptions,
@@ -4967,6 +5027,39 @@ export class ComAtprotoSpaceNS {
       .call('com.atproto.space.getRecord', params, undefined, opts)
       .catch((e) => {
         throw ComAtprotoSpaceGetRecord.toKnownErr(e)
+      })
+  }
+
+  getRepoOplog(
+    params?: ComAtprotoSpaceGetRepoOplog.QueryParams,
+    opts?: ComAtprotoSpaceGetRepoOplog.CallOptions,
+  ): Promise<ComAtprotoSpaceGetRepoOplog.Response> {
+    return this._client
+      .call('com.atproto.space.getRepoOplog', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetRepoOplog.toKnownErr(e)
+      })
+  }
+
+  getRepoState(
+    params?: ComAtprotoSpaceGetRepoState.QueryParams,
+    opts?: ComAtprotoSpaceGetRepoState.CallOptions,
+  ): Promise<ComAtprotoSpaceGetRepoState.Response> {
+    return this._client
+      .call('com.atproto.space.getRepoState', params, undefined, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetRepoState.toKnownErr(e)
+      })
+  }
+
+  getSpaceCredential(
+    data?: ComAtprotoSpaceGetSpaceCredential.InputSchema,
+    opts?: ComAtprotoSpaceGetSpaceCredential.CallOptions,
+  ): Promise<ComAtprotoSpaceGetSpaceCredential.Response> {
+    return this._client
+      .call('com.atproto.space.getSpaceCredential', opts?.qp, data, opts)
+      .catch((e) => {
+        throw ComAtprotoSpaceGetSpaceCredential.toKnownErr(e)
       })
   }
 
@@ -5003,6 +5096,18 @@ export class ComAtprotoSpaceNS {
       .catch((e) => {
         throw ComAtprotoSpaceNotifyMembership.toKnownErr(e)
       })
+  }
+
+  notifyWrite(
+    data?: ComAtprotoSpaceNotifyWrite.InputSchema,
+    opts?: ComAtprotoSpaceNotifyWrite.CallOptions,
+  ): Promise<ComAtprotoSpaceNotifyWrite.Response> {
+    return this._client.call(
+      'com.atproto.space.notifyWrite',
+      opts?.qp,
+      data,
+      opts,
+    )
   }
 
   putRecord(

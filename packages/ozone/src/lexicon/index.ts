@@ -210,10 +210,18 @@ import * as ComAtprotoSpaceApplyWrites from './types/com/atproto/space/applyWrit
 import * as ComAtprotoSpaceCreateRecord from './types/com/atproto/space/createRecord.js'
 import * as ComAtprotoSpaceCreateSpace from './types/com/atproto/space/createSpace.js'
 import * as ComAtprotoSpaceDeleteRecord from './types/com/atproto/space/deleteRecord.js'
+import * as ComAtprotoSpaceGetMemberGrant from './types/com/atproto/space/getMemberGrant.js'
+import * as ComAtprotoSpaceGetMemberOplog from './types/com/atproto/space/getMemberOplog.js'
+import * as ComAtprotoSpaceGetMemberState from './types/com/atproto/space/getMemberState.js'
+import * as ComAtprotoSpaceGetMembers from './types/com/atproto/space/getMembers.js'
 import * as ComAtprotoSpaceGetRecord from './types/com/atproto/space/getRecord.js'
+import * as ComAtprotoSpaceGetRepoOplog from './types/com/atproto/space/getRepoOplog.js'
+import * as ComAtprotoSpaceGetRepoState from './types/com/atproto/space/getRepoState.js'
+import * as ComAtprotoSpaceGetSpaceCredential from './types/com/atproto/space/getSpaceCredential.js'
 import * as ComAtprotoSpaceListRecords from './types/com/atproto/space/listRecords.js'
 import * as ComAtprotoSpaceListSpaces from './types/com/atproto/space/listSpaces.js'
 import * as ComAtprotoSpaceNotifyMembership from './types/com/atproto/space/notifyMembership.js'
+import * as ComAtprotoSpaceNotifyWrite from './types/com/atproto/space/notifyWrite.js'
 import * as ComAtprotoSpacePutRecord from './types/com/atproto/space/putRecord.js'
 import * as ComAtprotoSpaceRemoveMember from './types/com/atproto/space/removeMember.js'
 import * as ComAtprotoSpaceUploadBlob from './types/com/atproto/space/uploadBlob.js'
@@ -3110,6 +3118,54 @@ export class ComAtprotoSpaceNS {
     return this._server.xrpc.method(nsid, cfg)
   }
 
+  getMemberGrant<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetMemberGrant.QueryParams,
+      ComAtprotoSpaceGetMemberGrant.HandlerInput,
+      ComAtprotoSpaceGetMemberGrant.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getMemberGrant' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMemberOplog<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetMemberOplog.QueryParams,
+      ComAtprotoSpaceGetMemberOplog.HandlerInput,
+      ComAtprotoSpaceGetMemberOplog.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getMemberOplog' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMemberState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetMemberState.QueryParams,
+      ComAtprotoSpaceGetMemberState.HandlerInput,
+      ComAtprotoSpaceGetMemberState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getMemberState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getMembers<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetMembers.QueryParams,
+      ComAtprotoSpaceGetMembers.HandlerInput,
+      ComAtprotoSpaceGetMembers.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getMembers' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
   getRecord<A extends Auth = void>(
     cfg: MethodConfigOrHandler<
       A,
@@ -3119,6 +3175,42 @@ export class ComAtprotoSpaceNS {
     >,
   ) {
     const nsid = 'com.atproto.space.getRecord' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepoOplog<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetRepoOplog.QueryParams,
+      ComAtprotoSpaceGetRepoOplog.HandlerInput,
+      ComAtprotoSpaceGetRepoOplog.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getRepoOplog' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getRepoState<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetRepoState.QueryParams,
+      ComAtprotoSpaceGetRepoState.HandlerInput,
+      ComAtprotoSpaceGetRepoState.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getRepoState' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  getSpaceCredential<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceGetSpaceCredential.QueryParams,
+      ComAtprotoSpaceGetSpaceCredential.HandlerInput,
+      ComAtprotoSpaceGetSpaceCredential.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.getSpaceCredential' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 
@@ -3155,6 +3247,18 @@ export class ComAtprotoSpaceNS {
     >,
   ) {
     const nsid = 'com.atproto.space.notifyMembership' // @ts-ignore
+    return this._server.xrpc.method(nsid, cfg)
+  }
+
+  notifyWrite<A extends Auth = void>(
+    cfg: MethodConfigOrHandler<
+      A,
+      ComAtprotoSpaceNotifyWrite.QueryParams,
+      ComAtprotoSpaceNotifyWrite.HandlerInput,
+      ComAtprotoSpaceNotifyWrite.HandlerOutput
+    >,
+  ) {
+    const nsid = 'com.atproto.space.notifyWrite' // @ts-ignore
     return this._server.xrpc.method(nsid, cfg)
   }
 

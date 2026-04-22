@@ -14861,6 +14861,236 @@ export const schemaDict = {
       },
     },
   },
+  ComAtprotoSpaceGetMemberGrant: {
+    lexicon: 1,
+    id: 'com.atproto.space.getMemberGrant',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          'Get a member grant token for a space. The grant can be exchanged with the space owner for a space credential. Requires OAuth auth from a member.',
+        parameters: {
+          type: 'params',
+          required: ['space'],
+          properties: {
+            space: {
+              type: 'string',
+              format: 'uri',
+              description: 'Reference to the space.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['grant'],
+            properties: {
+              grant: {
+                type: 'string',
+                description: 'A signed JWT member grant token.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+          {
+            name: 'NotAMember',
+            description:
+              'The authenticated user is not a member of this space.',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceGetMemberOplog: {
+    lexicon: 1,
+    id: 'com.atproto.space.getMemberOplog',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get the member operation log for a space. Used for incremental sync of the member list. Must be called on the space owner's PDS. Requires a space credential.",
+        parameters: {
+          type: 'params',
+          required: ['space'],
+          properties: {
+            space: {
+              type: 'string',
+              format: 'uri',
+              description: 'Reference to the space.',
+            },
+            since: {
+              type: 'string',
+              description: 'Return operations after this revision.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 100,
+              description: 'Maximum number of operations to return.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['ops'],
+            properties: {
+              ops: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.space.getMemberOplog#opEntry',
+                },
+              },
+              setHash: {
+                type: 'string',
+                description: 'Current hex-encoded set hash.',
+              },
+              rev: {
+                type: 'string',
+                description: 'Current revision.',
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+        ],
+      },
+      opEntry: {
+        type: 'object',
+        required: ['rev', 'idx', 'action', 'did'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          idx: {
+            type: 'integer',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['add', 'remove'],
+          },
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSpaceGetMemberState: {
+    lexicon: 1,
+    id: 'com.atproto.space.getMemberState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get the current state of the member list for a space. Must be called on the space owner's PDS. Requires a space credential.",
+        parameters: {
+          type: 'params',
+          required: ['space'],
+          properties: {
+            space: {
+              type: 'string',
+              format: 'uri',
+              description: 'Reference to the space.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              setHash: {
+                type: 'string',
+                description: 'Hex-encoded set hash of the member list.',
+              },
+              rev: {
+                type: 'string',
+                description: 'Current revision of the member list.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceGetMembers: {
+    lexicon: 1,
+    id: 'com.atproto.space.getMembers',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get the member list for a space. Must be called on the space owner's PDS.",
+        parameters: {
+          type: 'params',
+          required: ['space'],
+          properties: {
+            space: {
+              type: 'string',
+              format: 'uri',
+              description: 'Reference to the space.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['members'],
+            properties: {
+              members: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.space.getMembers#member',
+                },
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+        ],
+      },
+      member: {
+        type: 'object',
+        required: ['did', 'addedAt'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+          addedAt: {
+            type: 'string',
+            format: 'datetime',
+          },
+        },
+      },
+    },
+  },
   ComAtprotoSpaceGetRecord: {
     lexicon: 1,
     id: 'com.atproto.space.getRecord',
@@ -14918,6 +15148,218 @@ export const schemaDict = {
         errors: [
           {
             name: 'RecordNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceGetRepoOplog: {
+    lexicon: 1,
+    id: 'com.atproto.space.getRepoOplog',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get the operation log for a user's permissioned repo within a space. Used for incremental sync. Requires a space credential.",
+        parameters: {
+          type: 'params',
+          required: ['space', 'did'],
+          properties: {
+            space: {
+              type: 'string',
+              format: 'uri',
+              description: 'Reference to the space.',
+            },
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the user whose oplog to retrieve.',
+            },
+            since: {
+              type: 'string',
+              description: 'Return operations after this revision.',
+            },
+            limit: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 1000,
+              default: 100,
+              description: 'Maximum number of operations to return.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['ops'],
+            properties: {
+              ops: {
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:com.atproto.space.getRepoOplog#opEntry',
+                },
+              },
+              setHash: {
+                type: 'string',
+                description: 'Current hex-encoded set hash.',
+              },
+              rev: {
+                type: 'string',
+                description: 'Current revision.',
+              },
+              cursor: {
+                type: 'string',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+        ],
+      },
+      opEntry: {
+        type: 'object',
+        required: ['rev', 'idx', 'action', 'collection', 'rkey'],
+        properties: {
+          rev: {
+            type: 'string',
+          },
+          idx: {
+            type: 'integer',
+          },
+          action: {
+            type: 'string',
+            knownValues: ['create', 'update', 'delete'],
+          },
+          collection: {
+            type: 'string',
+            format: 'nsid',
+          },
+          rkey: {
+            type: 'string',
+            format: 'record-key',
+          },
+          cid: {
+            type: 'string',
+            format: 'cid',
+          },
+          prev: {
+            type: 'string',
+            format: 'cid',
+          },
+        },
+      },
+    },
+  },
+  ComAtprotoSpaceGetRepoState: {
+    lexicon: 1,
+    id: 'com.atproto.space.getRepoState',
+    defs: {
+      main: {
+        type: 'query',
+        description:
+          "Get the current state of a user's permissioned repo within a space. Requires a space credential.",
+        parameters: {
+          type: 'params',
+          required: ['space', 'did'],
+          properties: {
+            space: {
+              type: 'string',
+              format: 'uri',
+              description: 'Reference to the space.',
+            },
+            did: {
+              type: 'string',
+              format: 'did',
+              description: 'The DID of the user whose repo state to retrieve.',
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            properties: {
+              setHash: {
+                type: 'string',
+                description: 'Hex-encoded set hash of the repo.',
+              },
+              rev: {
+                type: 'string',
+                description: 'Current revision of the repo.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+        ],
+      },
+    },
+  },
+  ComAtprotoSpaceGetSpaceCredential: {
+    lexicon: 1,
+    id: 'com.atproto.space.getSpaceCredential',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          "Exchange a member grant token for a space credential. Called on the space owner's PDS. The space credential can be used to read data from member PDSes.",
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'grant'],
+            properties: {
+              space: {
+                type: 'string',
+                format: 'uri',
+                description: 'Reference to the space.',
+              },
+              grant: {
+                type: 'string',
+                description: 'A signed JWT member grant token.',
+              },
+              serviceEndpoint: {
+                type: 'string',
+                format: 'uri',
+                description:
+                  'The service endpoint of the requesting application, used for write notifications.',
+              },
+            },
+          },
+        },
+        output: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['credential'],
+            properties: {
+              credential: {
+                type: 'string',
+                description: 'A signed JWT space credential.',
+              },
+            },
+          },
+        },
+        errors: [
+          {
+            name: 'SpaceNotFound',
+          },
+          {
+            name: 'NotAMember',
+            description: 'The grant issuer is not a member of this space.',
+          },
+          {
+            name: 'InvalidGrant',
+            description:
+              'The member grant token is invalid, expired, or not verifiable.',
           },
         ],
       },
@@ -15099,6 +15541,40 @@ export const schemaDict = {
             description: 'The specified DID is not hosted on this PDS.',
           },
         ],
+      },
+    },
+  },
+  ComAtprotoSpaceNotifyWrite: {
+    lexicon: 1,
+    id: 'com.atproto.space.notifyWrite',
+    defs: {
+      main: {
+        type: 'procedure',
+        description:
+          'Notify of a write to a permissioned repo within a space. Sent by member PDSes to the space owner, and by the space owner to syncing services.',
+        input: {
+          encoding: 'application/json',
+          schema: {
+            type: 'object',
+            required: ['space', 'did', 'rev'],
+            properties: {
+              space: {
+                type: 'string',
+                format: 'uri',
+                description: 'Reference to the space.',
+              },
+              did: {
+                type: 'string',
+                format: 'did',
+                description: 'The DID of the user who wrote data.',
+              },
+              rev: {
+                type: 'string',
+                description: 'The revision of the write.',
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -22069,10 +22545,18 @@ export const ids = {
   ComAtprotoSpaceCreateRecord: 'com.atproto.space.createRecord',
   ComAtprotoSpaceCreateSpace: 'com.atproto.space.createSpace',
   ComAtprotoSpaceDeleteRecord: 'com.atproto.space.deleteRecord',
+  ComAtprotoSpaceGetMemberGrant: 'com.atproto.space.getMemberGrant',
+  ComAtprotoSpaceGetMemberOplog: 'com.atproto.space.getMemberOplog',
+  ComAtprotoSpaceGetMemberState: 'com.atproto.space.getMemberState',
+  ComAtprotoSpaceGetMembers: 'com.atproto.space.getMembers',
   ComAtprotoSpaceGetRecord: 'com.atproto.space.getRecord',
+  ComAtprotoSpaceGetRepoOplog: 'com.atproto.space.getRepoOplog',
+  ComAtprotoSpaceGetRepoState: 'com.atproto.space.getRepoState',
+  ComAtprotoSpaceGetSpaceCredential: 'com.atproto.space.getSpaceCredential',
   ComAtprotoSpaceListRecords: 'com.atproto.space.listRecords',
   ComAtprotoSpaceListSpaces: 'com.atproto.space.listSpaces',
   ComAtprotoSpaceNotifyMembership: 'com.atproto.space.notifyMembership',
+  ComAtprotoSpaceNotifyWrite: 'com.atproto.space.notifyWrite',
   ComAtprotoSpacePutRecord: 'com.atproto.space.putRecord',
   ComAtprotoSpaceRemoveMember: 'com.atproto.space.removeMember',
   ComAtprotoSpaceUploadBlob: 'com.atproto.space.uploadBlob',
