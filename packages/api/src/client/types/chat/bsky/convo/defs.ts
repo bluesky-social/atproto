@@ -85,6 +85,25 @@ export function validateMessageView<V>(v: V) {
   return validate<MessageView & V>(v, id, hashMessageView)
 }
 
+export interface SystemMessageReferredUser {
+  $type?: 'chat.bsky.convo.defs#systemMessageReferredUser'
+  did: string
+}
+
+const hashSystemMessageReferredUser = 'systemMessageReferredUser'
+
+export function isSystemMessageReferredUser<V>(v: V) {
+  return is$typed(v, id, hashSystemMessageReferredUser)
+}
+
+export function validateSystemMessageReferredUser<V>(v: V) {
+  return validate<SystemMessageReferredUser & V>(
+    v,
+    id,
+    hashSystemMessageReferredUser,
+  )
+}
+
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. */
 export interface SystemMessageView {
   $type?: 'chat.bsky.convo.defs#systemMessageView'
@@ -120,9 +139,9 @@ export function validateSystemMessageView<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user was added to the group convo. */
 export interface SystemMessageDataAddMember {
   $type?: 'chat.bsky.convo.defs#systemMessageDataAddMember'
-  member: ChatBskyActorDefs.ProfileViewBasic
+  member: SystemMessageReferredUser
   role: ChatBskyActorDefs.MemberRole
-  addedBy: ChatBskyActorDefs.ProfileViewBasic
+  addedBy: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataAddMember = 'systemMessageDataAddMember'
@@ -142,8 +161,8 @@ export function validateSystemMessageDataAddMember<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user was removed from the group convo. */
 export interface SystemMessageDataRemoveMember {
   $type?: 'chat.bsky.convo.defs#systemMessageDataRemoveMember'
-  member: ChatBskyActorDefs.ProfileViewBasic
-  removedBy: ChatBskyActorDefs.ProfileViewBasic
+  member: SystemMessageReferredUser
+  removedBy: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataRemoveMember = 'systemMessageDataRemoveMember'
@@ -163,9 +182,9 @@ export function validateSystemMessageDataRemoveMember<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user joined the group convo via join link. */
 export interface SystemMessageDataMemberJoin {
   $type?: 'chat.bsky.convo.defs#systemMessageDataMemberJoin'
-  member: ChatBskyActorDefs.ProfileViewBasic
+  member: SystemMessageReferredUser
   role: ChatBskyActorDefs.MemberRole
-  approvedBy?: ChatBskyActorDefs.ProfileViewBasic
+  approvedBy?: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataMemberJoin = 'systemMessageDataMemberJoin'
@@ -185,7 +204,7 @@ export function validateSystemMessageDataMemberJoin<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating a user voluntarily left the group convo. */
 export interface SystemMessageDataMemberLeave {
   $type?: 'chat.bsky.convo.defs#systemMessageDataMemberLeave'
-  member: ChatBskyActorDefs.ProfileViewBasic
+  member: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataMemberLeave = 'systemMessageDataMemberLeave'
@@ -205,7 +224,7 @@ export function validateSystemMessageDataMemberLeave<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group convo was locked. */
 export interface SystemMessageDataLockConvo {
   $type?: 'chat.bsky.convo.defs#systemMessageDataLockConvo'
-  lockedBy: ChatBskyActorDefs.ProfileViewBasic
+  lockedBy: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataLockConvo = 'systemMessageDataLockConvo'
@@ -225,7 +244,7 @@ export function validateSystemMessageDataLockConvo<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group convo was unlocked. */
 export interface SystemMessageDataUnlockConvo {
   $type?: 'chat.bsky.convo.defs#systemMessageDataUnlockConvo'
-  unlockedBy: ChatBskyActorDefs.ProfileViewBasic
+  unlockedBy: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataUnlockConvo = 'systemMessageDataUnlockConvo'
@@ -245,7 +264,7 @@ export function validateSystemMessageDataUnlockConvo<V>(v: V) {
 /** [NOTE: This is under active development and should be considered unstable while this note is here]. System message indicating the group convo was locked permanently. */
 export interface SystemMessageDataLockConvoPermanently {
   $type?: 'chat.bsky.convo.defs#systemMessageDataLockConvoPermanently'
-  lockedBy: ChatBskyActorDefs.ProfileViewBasic
+  lockedBy: SystemMessageReferredUser
 }
 
 const hashSystemMessageDataLockConvoPermanently =
@@ -716,6 +735,8 @@ export interface LogAddMember {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogAddMember = 'logAddMember'
@@ -734,6 +755,8 @@ export interface LogRemoveMember {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogRemoveMember = 'logRemoveMember'
@@ -752,6 +775,8 @@ export interface LogMemberJoin {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogMemberJoin = 'logMemberJoin'
@@ -770,6 +795,8 @@ export interface LogMemberLeave {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogMemberLeave = 'logMemberLeave'
@@ -788,6 +815,8 @@ export interface LogLockConvo {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogLockConvo = 'logLockConvo'
@@ -806,6 +835,8 @@ export interface LogUnlockConvo {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogUnlockConvo = 'logUnlockConvo'
@@ -824,6 +855,8 @@ export interface LogLockConvoPermanently {
   rev: string
   convoId: string
   message: SystemMessageView
+  /** Profiles referred in the system message. */
+  relatedProfiles: ChatBskyActorDefs.ProfileViewBasic[]
 }
 
 const hashLogLockConvoPermanently = 'logLockConvoPermanently'

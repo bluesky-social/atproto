@@ -9739,6 +9739,7 @@ export const schemaDict = {
             refs: [
               'lex:chat.bsky.actor.defs#directConvoMember',
               'lex:chat.bsky.actor.defs#groupConvoMember',
+              'lex:chat.bsky.actor.defs#pastGroupConvoMember',
             ],
           },
         },
@@ -9751,7 +9752,7 @@ export const schemaDict = {
       },
       groupConvoMember: {
         description:
-          '[NOTE: This is under active development and should be considered unstable while this note is here].',
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. A current group convo member.',
         type: 'object',
         required: ['role'],
         properties: {
@@ -9768,6 +9769,13 @@ export const schemaDict = {
             ref: 'lex:chat.bsky.actor.defs#memberRole',
           },
         },
+      },
+      pastGroupConvoMember: {
+        description:
+          '[NOTE: This is under active development and should be considered unstable while this note is here]. A past group convo member.',
+        type: 'object',
+        required: [],
+        properties: {},
       },
     },
   },
@@ -10012,6 +10020,16 @@ export const schemaDict = {
           },
         },
       },
+      systemMessageReferredUser: {
+        type: 'object',
+        required: ['did'],
+        properties: {
+          did: {
+            type: 'string',
+            format: 'did',
+          },
+        },
+      },
       systemMessageView: {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here].',
@@ -10056,7 +10074,7 @@ export const schemaDict = {
           member: {
             description: 'Current view of the member who was added.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
           role: {
             description:
@@ -10066,7 +10084,7 @@ export const schemaDict = {
           },
           addedBy: {
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10079,11 +10097,11 @@ export const schemaDict = {
           member: {
             description: 'Current view of the member who was removed.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
           removedBy: {
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10096,7 +10114,7 @@ export const schemaDict = {
           member: {
             description: 'Current view of the member who joined.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
           role: {
             description:
@@ -10108,7 +10126,7 @@ export const schemaDict = {
             description:
               'If join link was configured to require approval, this will be set to who approved the request. Undefined if approval was not required.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10121,7 +10139,7 @@ export const schemaDict = {
           member: {
             description: 'Current view of the member who left the group.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10134,7 +10152,7 @@ export const schemaDict = {
           lockedBy: {
             description: 'Current view of the member who locked the group.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10147,7 +10165,7 @@ export const schemaDict = {
           unlockedBy: {
             description: 'Current view of the member who unlocked the group.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10160,7 +10178,7 @@ export const schemaDict = {
           lockedBy: {
             description: 'Current view of the member who locked the group.',
             type: 'ref',
-            ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            ref: 'lex:chat.bsky.convo.defs#systemMessageReferredUser',
           },
         },
       },
@@ -10570,7 +10588,7 @@ export const schemaDict = {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member was added to a group convo. The member who was added gets a logBeginConvo (to create the convo) but also a logAddMember (to show the system message as the first message the user sees).',
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10584,13 +10602,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logRemoveMember: {
         description:
           "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member was removed from a group convo. The member who was removed gets a logLeaveConvo (to leave the convo) but not a logRemoveMember (because they already left, so can't see the system message).",
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10604,13 +10630,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logMemberJoin: {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member joined a group convo via join link. The member who was added gets a logBeginConvo (to create the convo) but also a logMemberJoin (to show the system message as the first message the user sees).',
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10624,13 +10658,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logMemberLeave: {
         description:
           "[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a member voluntarily left a group convo. The member who was removed gets a logLeaveConvo (to leave the convo) but not a logMemberLeave (because they already left, so can't see the system message).",
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10644,13 +10686,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logLockConvo: {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a group convo was locked.',
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10664,13 +10714,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logUnlockConvo: {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a group convo was unlocked.',
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10684,13 +10742,21 @@ export const schemaDict = {
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
           },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
+          },
         },
       },
       logLockConvoPermanently: {
         description:
           '[NOTE: This is under active development and should be considered unstable while this note is here]. Event indicating a group convo was locked permanently.',
         type: 'object',
-        required: ['rev', 'convoId', 'message'],
+        required: ['rev', 'convoId', 'message', 'relatedProfiles'],
         properties: {
           rev: {
             type: 'string',
@@ -10703,6 +10769,14 @@ export const schemaDict = {
               'A system message with data of type #systemMessageDataLockConvoPermanently',
             type: 'ref',
             ref: 'lex:chat.bsky.convo.defs#systemMessageView',
+          },
+          relatedProfiles: {
+            description: 'Profiles referred in the system message.',
+            type: 'array',
+            items: {
+              type: 'ref',
+              ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
+            },
           },
         },
       },
@@ -11222,6 +11296,15 @@ export const schemaDict = {
                     'lex:chat.bsky.convo.defs#deletedMessageView',
                     'lex:chat.bsky.convo.defs#systemMessageView',
                   ],
+                },
+              },
+              relatedProfiles: {
+                description:
+                  'Set of all members who authored or reacted to the returned messages. Members referred to by system messages are also included.',
+                type: 'array',
+                items: {
+                  type: 'ref',
+                  ref: 'lex:chat.bsky.actor.defs#profileViewBasic',
                 },
               },
             },
