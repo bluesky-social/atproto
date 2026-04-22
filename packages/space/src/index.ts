@@ -1,4 +1,5 @@
 export * from './commit'
+export * from './credential'
 export * from './error'
 export * from './space-repo'
 export * from './space-members'
