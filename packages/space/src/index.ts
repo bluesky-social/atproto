@@ -1,6 +1,7 @@
 export * from './commit'
 export * from './error'
 export * from './space-repo'
+export * from './space-members'
 export * from './set-hash'
 export * from './storage'
 export * from './types'
