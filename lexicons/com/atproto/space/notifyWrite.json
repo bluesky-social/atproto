@@ -1,0 +1,33 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.notifyWrite",
+  "defs": {
+    "main": {
+      "type": "procedure",
+      "description": "Notify of a write to a permissioned repo within a space. Sent by member PDSes to the space owner, and by the space owner to syncing services.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["space", "did", "rev"],
+          "properties": {
+            "space": {
+              "type": "string",
+              "format": "uri",
+              "description": "Reference to the space."
+            },
+            "did": {
+              "type": "string",
+              "format": "did",
+              "description": "The DID of the user who wrote data."
+            },
+            "rev": {
+              "type": "string",
+              "description": "The revision of the write."
+            }
+          }
+        }
+      }
+    }
+  }
+}

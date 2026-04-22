@@ -1,0 +1,43 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getMemberGrant",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get a member grant token for a space. The grant can be exchanged with the space owner for a space credential. Requires OAuth auth from a member.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["grant"],
+          "properties": {
+            "grant": {
+              "type": "string",
+              "description": "A signed JWT member grant token."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        },
+        {
+          "name": "NotAMember",
+          "description": "The authenticated user is not a member of this space."
+        }
+      ]
+    }
+  }
+}

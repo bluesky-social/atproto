@@ -1,0 +1,101 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getRepoOplog",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the operation log for a user's permissioned repo within a space. Used for incremental sync. Requires a space credential.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "did"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the space."
+          },
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the user whose oplog to retrieve."
+          },
+          "since": {
+            "type": "string",
+            "description": "Return operations after this revision."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of operations to return."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["ops"],
+          "properties": {
+            "ops": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#opEntry"
+              }
+            },
+            "setHash": {
+              "type": "string",
+              "description": "Current hex-encoded set hash."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Current revision."
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    },
+    "opEntry": {
+      "type": "object",
+      "required": ["rev", "idx", "action", "collection", "rkey"],
+      "properties": {
+        "rev": {
+          "type": "string"
+        },
+        "idx": {
+          "type": "integer"
+        },
+        "action": {
+          "type": "string",
+          "knownValues": ["create", "update", "delete"]
+        },
+        "collection": {
+          "type": "string",
+          "format": "nsid"
+        },
+        "rkey": {
+          "type": "string",
+          "format": "record-key"
+        },
+        "cid": {
+          "type": "string",
+          "format": "cid"
+        },
+        "prev": {
+          "type": "string",
+          "format": "cid"
+        }
+      }
+    }
+  }
+}

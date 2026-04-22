@@ -1,0 +1,42 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getMemberState",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the current state of the member list for a space. Must be called on the space owner's PDS. Requires a space credential.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the space."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "setHash": {
+              "type": "string",
+              "description": "Hex-encoded set hash of the member list."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Current revision of the member list."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    }
+  }
+}

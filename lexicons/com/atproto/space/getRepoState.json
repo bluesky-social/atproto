@@ -1,0 +1,47 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getRepoState",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the current state of a user's permissioned repo within a space. Requires a space credential.",
+      "parameters": {
+        "type": "params",
+        "required": ["space", "did"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the space."
+          },
+          "did": {
+            "type": "string",
+            "format": "did",
+            "description": "The DID of the user whose repo state to retrieve."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "setHash": {
+              "type": "string",
+              "description": "Hex-encoded set hash of the repo."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Current revision of the repo."
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "lexicon": 1,
+  "id": "com.atproto.space.getMemberOplog",
+  "defs": {
+    "main": {
+      "type": "query",
+      "description": "Get the member operation log for a space. Used for incremental sync of the member list. Must be called on the space owner's PDS. Requires a space credential.",
+      "parameters": {
+        "type": "params",
+        "required": ["space"],
+        "properties": {
+          "space": {
+            "type": "string",
+            "format": "uri",
+            "description": "Reference to the space."
+          },
+          "since": {
+            "type": "string",
+            "description": "Return operations after this revision."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "default": 100,
+            "description": "Maximum number of operations to return."
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["ops"],
+          "properties": {
+            "ops": {
+              "type": "array",
+              "items": {
+                "type": "ref",
+                "ref": "#opEntry"
+              }
+            },
+            "setHash": {
+              "type": "string",
+              "description": "Current hex-encoded set hash."
+            },
+            "rev": {
+              "type": "string",
+              "description": "Current revision."
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "errors": [
+        {
+          "name": "SpaceNotFound"
+        }
+      ]
+    },
+    "opEntry": {
+      "type": "object",
+      "required": ["rev", "idx", "action", "did"],
+      "properties": {
+        "rev": {
+          "type": "string"
+        },
+        "idx": {
+          "type": "integer"
+        },
+        "action": {
+          "type": "string",
+          "knownValues": ["add", "remove"]
+        },
+        "did": {
+          "type": "string",
+          "format": "did"
+        }
+      }
+    }
+  }
+}
