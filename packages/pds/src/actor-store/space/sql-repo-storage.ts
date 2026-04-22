@@ -1,11 +1,7 @@
 import { CommitData, RepoRecord, SpaceRepoStorage } from '@atproto/space'
 import { SpaceTransactor } from './transactor'
 
-/**
- * Adapts the multi-space SpaceTransactor into a single-space SpaceRepoStorage
- * that the @atproto/space Repo class can work with.
- */
-export class ScopedSpaceRepoStorage implements SpaceRepoStorage {
+export class SqlRepoStorage implements SpaceRepoStorage {
   constructor(
     private txn: SpaceTransactor,
     private space: string,
@@ -44,11 +40,12 @@ export class ScopedSpaceRepoStorage implements SpaceRepoStorage {
   }
 
   async getSetHash(): Promise<Buffer | null> {
-    return this.txn.getSetHash(this.space)
+    const state = await this.txn.getRepoState(this.space)
+    return state?.setHash ?? null
   }
 
   async applyCommit(commit: CommitData): Promise<void> {
-    await this.txn.applyCommit(this.space, commit)
+    await this.txn.applyRepoCommit(this.space, commit)
   }
 
   async destroy(): Promise<void> {

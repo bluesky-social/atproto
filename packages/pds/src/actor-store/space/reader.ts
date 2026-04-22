@@ -8,8 +8,7 @@ export class SpaceReader {
   async getSpace(uri: string): Promise<{
     uri: string
     isOwner: boolean
-    setHash: Buffer | null
-    rev: string | null
+    isMember: boolean
   } | null> {
     const row = await this.db.db
       .selectFrom('space')
@@ -20,8 +19,7 @@ export class SpaceReader {
     return {
       uri: row.uri,
       isOwner: row.isOwner === 1,
-      setHash: row.setHash ? Buffer.from(row.setHash) : null,
-      rev: row.rev,
+      isMember: row.isMember === 1,
     }
   }
 
@@ -117,10 +115,10 @@ export class SpaceReader {
 
   async listMembers(
     space: string,
-  ): Promise<{ did: string; addedAt: string }[]> {
+  ): Promise<{ did: string; memberRev: string; addedAt: string }[]> {
     const rows = await this.db.db
       .selectFrom('space_member')
-      .select(['did', 'addedAt'])
+      .select(['did', 'memberRev', 'addedAt'])
       .where('space', '=', space)
       .orderBy('addedAt', 'asc')
       .execute()
@@ -139,19 +137,150 @@ export class SpaceReader {
 
   async getSetHash(space: string): Promise<Buffer | null> {
     const row = await this.db.db
-      .selectFrom('space')
+      .selectFrom('space_repo')
       .select('setHash')
-      .where('uri', '=', space)
+      .where('space', '=', space)
       .executeTakeFirst()
     return row?.setHash ? Buffer.from(row.setHash) : null
   }
 
   async getRev(space: string): Promise<string | null> {
     const row = await this.db.db
-      .selectFrom('space')
+      .selectFrom('space_repo')
       .select('rev')
-      .where('uri', '=', space)
+      .where('space', '=', space)
       .executeTakeFirst()
     return row?.rev ?? null
+  }
+
+  async getRepoState(
+    space: string,
+  ): Promise<{ setHash: Buffer | null; rev: string | null } | null> {
+    const row = await this.db.db
+      .selectFrom('space_repo')
+      .select(['setHash', 'rev'])
+      .where('space', '=', space)
+      .executeTakeFirst()
+    if (!row) return null
+    return {
+      setHash: row.setHash ? Buffer.from(row.setHash) : null,
+      rev: row.rev,
+    }
+  }
+
+  async getMemberState(
+    space: string,
+  ): Promise<{ setHash: Buffer | null; rev: string | null } | null> {
+    const row = await this.db.db
+      .selectFrom('space_member_state')
+      .select(['setHash', 'rev'])
+      .where('space', '=', space)
+      .executeTakeFirst()
+    if (!row) return null
+    return {
+      setHash: row.setHash ? Buffer.from(row.setHash) : null,
+      rev: row.rev,
+    }
+  }
+
+  async getRepoOplog(
+    space: string,
+    opts: { since?: string; limit?: number },
+  ): Promise<{
+    ops: Array<{
+      rev: string
+      idx: number
+      action: string
+      collection: string
+      rkey: string
+      cid: string | null
+      prev: string | null
+    }>
+    setHash: Buffer | null
+    rev: string | null
+  }> {
+    let builder = this.db.db
+      .selectFrom('space_record_oplog')
+      .selectAll()
+      .where('space', '=', space)
+      .orderBy('rev', 'asc')
+      .orderBy('idx', 'asc')
+    if (opts.since) {
+      builder = builder.where('rev', '>', opts.since)
+    }
+    if (opts.limit) {
+      builder = builder.limit(opts.limit)
+    }
+    const rows = await builder.execute()
+    const state = await this.getRepoState(space)
+    return {
+      ops: rows.map((r) => ({
+        rev: r.rev,
+        idx: r.idx,
+        action: r.action,
+        collection: r.collection,
+        rkey: r.rkey,
+        cid: r.cid,
+        prev: r.prev,
+      })),
+      setHash: state?.setHash ?? null,
+      rev: state?.rev ?? null,
+    }
+  }
+
+  async getMemberOplog(
+    space: string,
+    opts: { since?: string; limit?: number },
+  ): Promise<{
+    ops: Array<{
+      rev: string
+      idx: number
+      action: string
+      did: string
+    }>
+    setHash: Buffer | null
+    rev: string | null
+  }> {
+    let builder = this.db.db
+      .selectFrom('space_member_oplog')
+      .selectAll()
+      .where('space', '=', space)
+      .orderBy('rev', 'asc')
+      .orderBy('idx', 'asc')
+    if (opts.since) {
+      builder = builder.where('rev', '>', opts.since)
+    }
+    if (opts.limit) {
+      builder = builder.limit(opts.limit)
+    }
+    const rows = await builder.execute()
+    const state = await this.getMemberState(space)
+    return {
+      ops: rows.map((r) => ({
+        rev: r.rev,
+        idx: r.idx,
+        action: r.action,
+        did: r.did,
+      })),
+      setHash: state?.setHash ?? null,
+      rev: state?.rev ?? null,
+    }
+  }
+
+  async getCredentialRecipients(
+    space: string,
+  ): Promise<
+    Array<{
+      serviceDid: string
+      serviceEndpoint: string
+      lastIssuedAt: string
+    }>
+  > {
+    const rows = await this.db.db
+      .selectFrom('space_credential_recipient')
+      .select(['serviceDid', 'serviceEndpoint', 'lastIssuedAt'])
+      .where('space', '=', space)
+      .execute()
+    return rows
   }
 }
