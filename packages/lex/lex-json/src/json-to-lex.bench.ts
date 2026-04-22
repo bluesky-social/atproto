@@ -111,7 +111,8 @@ function benchData(data: JsonValue) {
     })
   })
 
-  bench(jsonToLexIterative, () => {
+  // Skipped because the default implementation is the same.
+  bench.skip(jsonToLexIterative, () => {
     jsonToLexIterative(data, {
       strict: true,
       allowNonSafeIntegers: false,

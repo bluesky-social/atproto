@@ -49,7 +49,7 @@ export function iterativeTransform<
 
   const stack = new Stack(input as object, options)
 
-  for (const frame of stack) {
+  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
     if (isArrayFrame(frame)) {
       const { input } = frame // ArrayFrame
 
@@ -58,7 +58,7 @@ export function iterativeTransform<
 
         const result = transformValue(value, replacer, options)
         if (result === OBJECT) {
-          stack.pushObject(value as object, { frame, index })
+          stack.pushNested(value as object, { frame, index })
         } else if (result === OMIT) {
           // Undefined values in arrays are not allowed by lex-data.
           throw new TypeError(`Invalid undefined value`)
@@ -79,7 +79,7 @@ export function iterativeTransform<
         const value = entries[index][1]
         const result = transformValue(value, replacer, options)
         if (result === OBJECT) {
-          stack.pushObject(value as object, { frame, index })
+          stack.pushNested(value as object, { frame, index })
         } else if (result === OMIT) {
           // Omit this property (undefined values should be removed)
           const copy = getCopy(frame)
@@ -138,6 +138,6 @@ function transformValue<
       // (matching JSON.stringify behavior for object properties)
       return OMIT
     default:
-      throw new TypeError(`Invalid ${typeof value}`)
+      throw new TypeError(`Invalid ${typeof value} value`)
   }
 }

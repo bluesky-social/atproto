@@ -47,7 +47,8 @@ export function jsonStringifyDeep(
   const stack = new Stack<StringFrame>(value as object, options)
 
   let result = ''
-  for (const frame of stack) {
+
+  for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
     if (isArrayFrame(frame)) {
       if (frame.input.length === 0) {
         result += '[]'
@@ -56,22 +57,22 @@ export function jsonStringifyDeep(
 
       const { input } = frame // ArrayFrame
       result += '['
-      stack.pushCustom({ type: 'string', string: ']' })
+      stack.push({ type: 'string', string: ']' })
       for (let index = input.length - 1; index >= 0; index--) {
         const value = applyToJSON(input[index])
         const encoded = encodePrimitive(value, options)
 
         if (index < input.length - 1) {
-          stack.pushCustom({ type: 'string', string: ',' })
+          stack.push({ type: 'string', string: ',' })
         }
 
         if (encoded === OBJECT) {
-          stack.pushObject(value as object, { frame, index })
+          stack.pushNested(value as object, { frame, index })
         } else if (encoded === OMIT) {
           // JSON.stringify replaces undefined values in arrays with null
-          stack.pushCustom({ type: 'string', string: 'null' })
+          stack.push({ type: 'string', string: 'null' })
         } else {
-          stack.pushCustom({ type: 'string', string: encoded })
+          stack.push({ type: 'string', string: encoded })
         }
       }
     } else if (isObjectFrame(frame)) {
@@ -83,7 +84,7 @@ export function jsonStringifyDeep(
       }
 
       result += '{'
-      stack.pushCustom({ type: 'string', string: '}' })
+      stack.push({ type: 'string', string: '}' })
 
       // Process entries and track if we've added any (for comma placement)
       let addedCount = 0
@@ -97,20 +98,20 @@ export function jsonStringifyDeep(
         }
 
         if (addedCount > 0) {
-          stack.pushCustom({ type: 'string', string: ',' })
+          stack.push({ type: 'string', string: ',' })
         }
         addedCount++
 
         const key = entries[index][0]
 
         if (encoded === OBJECT) {
-          stack.pushObject(value as object, { frame, index })
-          stack.pushCustom({
+          stack.pushNested(value as object, { frame, index })
+          stack.push({
             type: 'string',
             string: `${JSON.stringify(key)}:`,
           })
         } else {
-          stack.pushCustom({
+          stack.push({
             type: 'string',
             string: `${JSON.stringify(key)}:${encoded}`,
           })

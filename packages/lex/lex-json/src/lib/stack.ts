@@ -3,8 +3,8 @@
 // nested structures (instead of recursion).
 //
 // The main purpose of this module is to support the implementation of
-// `iterativeTransform` and `jsonStringifyDeep`, which need to traverse and transform
-// deeply nested structures without hitting call stack limits.
+// `iterativeTransform` and `jsonStringifyDeep`, which need to traverse and
+// transform deeply nested structures without hitting call stack limits.
 //
 // An added benefit of using a custom stack implementation is that it can
 // provide informative error messages when the input data is invalid (e.g. too
@@ -106,25 +106,15 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
     return this.root.copy ?? this.root.input
   }
 
-  *[Symbol.iterator](): IterableIterator<StackFrame | TCustom> {
-    // @NOTE we cannot use a simple for..of loop or yield* here since the array
-    // will be mutated during iteration (new frames will be added / removed from
-    // the stack).
-    const { stack } = this
-    for (let frame = stack.pop(); frame !== undefined; frame = stack.pop()) {
-      yield frame
-    }
-  }
-
   pop(): StackFrame | TCustom | undefined {
     return this.stack.pop()
   }
 
-  pushCustom(frame: TCustom): void {
+  push(frame: StackFrame | TCustom): void {
     this.stack.push(frame)
   }
 
-  pushObject(input: readonly unknown[] | object, parent: ParentRef): void {
+  pushNested(input: readonly unknown[] | object, parent: ParentRef): void {
     const { options } = this
 
     if (parent.frame.depth >= options.maxNestedLevels) {
@@ -142,9 +132,9 @@ export class Stack<TCustom extends NonNullable<unknown> = never> {
       // (as it is impossible to represent cycles in JSON / CBOR), we perform
       // this check only if there is a risk of creating an infinite loop (i.e.
       // when maxNestedLevels is Infinity), and only at certain intervals (every
-      // 100 frames) to avoid excessive overhead. Otherwise,
-      // we rely on the nesting limit to prevent infinite loops, which should be
-      // sufficient for all data.
+      // 100 frames) to avoid excessive overhead. Otherwise, we rely on the
+      // nesting limit (see "if" statement above) to prevent infinite loops,
+      // which should be sufficient for all data.
 
       // Check for circular reference by walking up the parent chain
       let current: ParentRef | undefined = parent
