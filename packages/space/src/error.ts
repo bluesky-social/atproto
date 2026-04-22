@@ -11,3 +11,17 @@ export class RecordNotFoundError extends Error {
     this.name = 'RecordNotFoundError'
   }
 }
+
+export class MemberAlreadyExistsError extends Error {
+  constructor(did: string) {
+    super(`Member already exists: ${did}`)
+    this.name = 'MemberAlreadyExistsError'
+  }
+}
+
+export class MemberNotFoundError extends Error {
+  constructor(did: string) {
+    super(`Member not found: ${did}`)
+    this.name = 'MemberNotFoundError'
+  }
+}

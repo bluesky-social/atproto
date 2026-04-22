@@ -42,6 +42,7 @@ const encodeCommitInfo = (space: SpaceContext): Buffer => {
     space.spaceKey,
     space.userDid,
     space.rev.toString(),
+    space.scope,
   ]
   const parts: Buffer[] = [DOMAIN_PREFIX]
   for (const field of fields) {

@@ -65,6 +65,7 @@ export type SpaceContext = {
   spaceKey: string
   userDid: string
   rev: number
+  scope: 'records' | 'members'
 }
 
 export type UnsignedCommit = {
@@ -75,4 +76,28 @@ export type UnsignedCommit = {
 
 export type SignedCommit = UnsignedCommit & {
   sig: Buffer
+}
+
+export enum MemberOpAction {
+  Add = 'add',
+  Remove = 'remove',
+}
+
+export type MemberAddOp = {
+  action: MemberOpAction.Add
+  did: string
+}
+
+export type MemberRemoveOp = {
+  action: MemberOpAction.Remove
+  did: string
+}
+
+export type MemberWriteOp = MemberAddOp | MemberRemoveOp
+
+export type PreparedMemberOp = MemberAddOp | MemberRemoveOp
+
+export type MemberCommitData = {
+  ops: PreparedMemberOp[]
+  setHash: Buffer
 }

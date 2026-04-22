@@ -15,6 +15,7 @@ const testSpace: SpaceContext = {
   spaceKey: 'test',
   userDid: 'did:example:alice',
   rev: 0,
+  scope: 'records',
 }
 
 describe('SpaceRepo', () => {
